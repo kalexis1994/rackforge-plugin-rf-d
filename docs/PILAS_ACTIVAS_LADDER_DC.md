@@ -20,6 +20,8 @@ El ejemplo de regresión usa R39 `=0,1`, R11 centrado, R49 `=250 Ω`, `V16=0 V`,
 
 ## Estado RACE y siguiente paso
 
+El [barrido de supuestos](BARRIDO_SESGO_LADDER_DC.md) muestra cómo cambian estos márgenes con RANGE, β e `I_S` en 72 escenarios calculados.
+
 Hay cierre DC de la topología nominal del ladder **sólo en el dominio activo impuesto**. Las regresiones comprueban KCL en cada tap, continuidad de corriente y tensión de cada pila, el límite β infinito y detección de márgenes negativos. El modelo no contiene la dinámica de C3/C7/C11/C16, efecto Early, saturación, dispersión, recuperación Q5–Q8 ni lazo de emphasis. Tampoco predice frecuencia, resonancia o similitud sonora. El siguiente paso es incorporar la región de saturación y barrer condiciones de panel y parámetros antes de derivar el sistema temporal.
 
 ```powershell

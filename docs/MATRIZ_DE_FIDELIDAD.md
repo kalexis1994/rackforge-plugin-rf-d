@@ -14,7 +14,7 @@ Los estados `desconocido`, `hipótesis`, `modelado`, `contrastado` y `cerrado pa
 
 ## Afirmación pública actual
 
-En el ladder, la [columna resistiva DC](COLUMNA_RESISTIVA_LADDER_DC.md) y las [pilas activas](PILAS_ACTIVAS_LADDER_DC.md) están trazadas. El cálculo DC con β e `I_S` impuestos incluye las corrientes de tap y márgenes de colector; la saturación, transferencia completa y audio permanecen desconocidos, así como el valor físico de R61.
+En el ladder, la [columna resistiva DC](COLUMNA_RESISTIVA_LADDER_DC.md) y las [pilas activas](PILAS_ACTIVAS_LADDER_DC.md) están trazadas. El cálculo DC con β e `I_S` impuestos incluye las corrientes de tap y márgenes de colector; un [barrido de 72 supuestos](BARRIDO_SESGO_LADDER_DC.md) comprueba sensibilidad numérica. La saturación, transferencia completa y audio permanecen desconocidos, así como el valor físico de R61.
 
 RF-D **pretende** recrear un Model D clásico. No hay aún una implementación sonora ni resultados de comparación que permitan afirmar fidelidad.
 
