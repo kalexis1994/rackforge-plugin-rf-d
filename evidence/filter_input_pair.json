@@ -1,0 +1,18 @@
+{
+  "scope": "Nominal Q29/Q30 bottom differential pair of board-4 ladder; ideal-law reference only",
+  "schematic": {"id": "SVC-9", "figure": "9-11", "pdf_page": 13, "full_service_pdf_page": 69},
+  "parts_list": {"id": "SVC-9", "table": "7-8", "pdf_pages": [30, 31]},
+  "connections": {
+    "Q29": {"base": "BASE after C27", "collector": "LEFT_LADDER_RAIL", "emitter": "TAIL"},
+    "Q30": {"base": "REGEN_BASE at R73 wiper", "collector": "RIGHT_LADDER_RAIL", "emitter": "TAIL"},
+    "R60": {"ohm": 680, "between": ["TAIL", "Q28_COLLECTOR"]},
+    "Q28": {"type": "TIS92, alternate 2N3904", "collector": "Q28_COLLECTOR", "emitter": "GROUND", "base": "Q26_CONTROL_NODE"}
+  },
+  "population": {"Q29_Q30": "TIS97 matched pair", "Q26_Q28": "TIS93/TIS92 matched complementary pair"},
+  "ideal_reference": {
+    "input_base_difference_v": "Q29 base minus Q30 base",
+    "tail_current_a": "imposed emitter current from both devices through R60 toward Q28",
+    "temperature_k": "imposed junction temperature",
+    "limits": ["matched saturation currents", "infinite beta", "forward active both devices", "fixed tail current", "no Early effect", "no device capacitances"]
+  }
+}

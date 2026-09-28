@@ -24,7 +24,7 @@ La tabla 7-8 asigna a C10 tolerancia **+50/−10 %**; los valores anteriores usa
 
 1. Transcribir R7/R3/C9/R6 y Q8 para calcular la impedancia real del tap, además de su voltaje.
 2. Acoplar R73/R76 al nodo `BOTTOM` de C24/R61 y modelar la corriente de base de Q30.
-3. Resolver el par Q29/Q30 con la fuente de cola Q28 antes de cerrar el lazo del ladder. Sólo entonces simular autooscilación y pérdida de graves a distintos niveles.
+3. Llevar el [límite ideal de Q29/Q30](PAR_ENTRADA_FILTRO_IDEAL.md) a un punto DC con la fuente de cola Q28 y cargas de colector antes de cerrar el lazo del ladder. Sólo entonces simular autooscilación y pérdida de graves a distintos niveles.
 
 ```powershell
 python tools/filter_regeneration_reference.py

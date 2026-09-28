@@ -14,18 +14,11 @@ import json
 import math
 from pathlib import Path
 
+from semiconductor_ideal import thermal_voltage_v
 from vco1_pair_drive_reference import ideal_pair_base_delta_v
 
 
-K_BOLTZMANN_J_PER_K = 1.380649e-23
-ELEMENTARY_CHARGE_C = 1.602176634e-19
 GRAPH_PATH = Path(__file__).resolve().parents[1] / "evidence" / "vco1_ramp_graph.json"
-
-
-def thermal_voltage_v(temperature_k: float) -> float:
-    if not math.isfinite(temperature_k) or temperature_k <= 0:
-        raise ValueError("junction temperature must be finite and above 0 K")
-    return K_BOLTZMANN_J_PER_K * temperature_k / ELEMENTARY_CHARGE_C
 
 
 def unloaded_neg4_reference_v() -> float:

@@ -22,7 +22,7 @@ I_PIN4 = C27·d(V_BUS − V_BASE)/dt
 
 La implementación usa Euler implícito para las dos cargas y devuelve residuos KCL. Las unidades internas son V, A, Ω, F y s. Con corrientes activas impuestas en cero, un voltaje **constante** del bus no cruza C27 en régimen; un escalón sí produce corriente transitoria. Esto comprueba la topología de acoplamiento, no determina la frecuencia de corte: la corriente de base de Q29, la carga del ladder y la realimentación por Q30 dependen del punto de operación y de la señal. Tampoco están incluidos ESR, fuga ni tolerancias de los electrolíticos. Sus tolerancias de tabla son **+50/−10 %** para C27/C24; la referencia utiliza sólo los nominales.
 
-La incertidumbre de R61 bloquea un parámetro DSP definitivo. Para llegar a audio se deben resolver Q29/Q30, la fuente de corriente Q28, los cuatro peldaños, el retorno de resonancia y el bus con sus cinco fuentes. La lectura de la tabla y del esquema permite **topología parcialmente modelada** y **transferencia pasiva condicionada**, no una afirmación de fidelidad del filtro.
+La incertidumbre de R61 bloquea un parámetro DSP definitivo. Ya existe una [partición ideal condicionada de Q29/Q30](PAR_ENTRADA_FILTRO_IDEAL.md); para llegar a audio se deben resolver sus corrientes de base y límites de región activa, la fuente Q28, los cuatro peldaños, el retorno de resonancia y el bus con sus cinco fuentes. La lectura de la tabla y del esquema permite **topología parcialmente modelada** y **transferencia pasiva condicionada**, no una afirmación de fidelidad del filtro.
 
 ```powershell
 python tools/filter_input_reference.py
