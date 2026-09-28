@@ -24,7 +24,7 @@ Con `V_Q1e` y `V_9B` **impuestas**, carga externa de 21B abierta y corriente de 
 
 `(V_21B−V_Q1e)/R28 + (V_21B−V_9B)/R23 = 0`.
 
-La [referencia ejecutable](../tools/vco1_triangle_passive_reference.py) devuelve `V_21B = 0,91620·V_Q1e + 0,08380·V_9B` y resistencia de Thévenin pasiva `R28 || R23 ≈ 687 Ω` con las dos fronteras fijadas. Es un **mapa resistivo de la placa aislada**, no el nivel real del conector: Q1/Q2 son no lineales, 9B depende de estas mismas ramas y el [panel añade R30/R31 y R6 según SW6](VCO1_CABLEADO_PANEL.md). La carga del cursor de R6 y del mixer sigue sin resolverse. La cifra anotada de ±1,7 V no se usa para elegir corrientes o `V_BE`.
+La [referencia ejecutable](../tools/vco1_triangle_passive_reference.py) devuelve `V_21B = 0,91620·V_Q1e + 0,08380·V_9B` y resistencia de Thévenin pasiva `R28 || R23 ≈ 687 Ω` con las dos fronteras fijadas. Es un **mapa resistivo de la placa aislada**, no el nivel real del conector: Q1/Q2 son no lineales, 9B depende de estas mismas ramas y el [panel añade R30/R31, R6 y su cursor según SW6/SW9](VCO1_CABLEADO_PANEL.md). La solución conjunta con el bus de mezcla sigue pendiente. La cifra anotada de ±1,7 V no se usa para elegir corrientes o `V_BE`.
 
 ```powershell
 python tools/vco1_triangle_passive_reference.py

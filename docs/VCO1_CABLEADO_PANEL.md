@@ -27,9 +27,24 @@ El puente externo R30+R31 de **57 kΩ** queda en paralelo con **R23 de placa, 8,
 
 Para voltajes de 9B y 21B **impuestos**, la [referencia de dos puertos](../tools/vco1_panel_waveform_reference.py) calcula las corrientes hacia el panel. En contacto 3, R6 añade **25 kΩ de 9B a masa**; en contacto 1 los añade de **21B a masa**. En contactos 4/5/6 R6 carga 20B, y el puente de 57 kΩ persiste entre 9B y 21B. En contacto 2, R6 carga la toma intermedia: con `g30=1/R30`, `g31=1/R31`, `g6=1/R6` y `G=g30+g31+g6`, su voltaje es `V_toma=(g30·V_9B+g31·V_21B)/G`; las corrientes de puerto son `(V_9B−V_toma)/R30` y `(V_21B−V_toma)/R31`. Esta red no equivale a un simple puente de 57 kΩ cuando el contacto 2 está cerrado.
 
-Estas cuentas usan la pista completa de R6 y excluyen su cursor y la carga de mezcla. Tampoco resuelven Q1/Q2, Q3, Q11/Q12 ni el punto real de 9B/21B; indican las ramas que deberá incluir el solver en cada contacto.
+Estas cuentas usan la pista completa de R6 y excluyen su cursor y la carga de mezcla. Tampoco resuelven Q1/Q2, Q3, Q11/Q12 ni el punto real de 9B/21B; indican las ramas que deberá incluir el solver en cada contacto. El cursor se trata por separado a continuación.
 
 ```powershell
 python tools/vco1_panel_waveform_reference.py
+python -m unittest discover -s tests -q
+```
+
+## Cursor de R6, SW9 encendido y bus del mixer
+
+La Fig. 9-17 (SVC-9, PDF p. 19) muestra el cursor de **R6 de panel, 25 kΩ** pasando por **R45 de panel, 33 kΩ** y **SW9 en ON** al bus común de las cinco fuentes, que entra por el **pin 4 de la placa 4**. La Fig. 9-11 (SVC-9, PDF p. 13) muestra ese pin como entrada de audio hacia **C27** y la red del filtro. La impedancia del bus depende de frecuencia, estado y las demás fuentes; no se reemplaza por una resistencia inventada. La conexión de SW9 en OFF queda fuera de esta referencia.
+
+Sea `α = R_inferior/R6`, una **fracción eléctrica** de 0 a 1: `R_superior=(1−α)·25 kΩ`, `R_inferior=α·25 kΩ`. No equivale necesariamente a la rotación física del potenciómetro. Con tensiones impuestas `V_forma` en el contacto seleccionado de SW6 y `V_mix` en el pin 4, la ley de nodos del cursor `V_c` es
+
+`(V_c−V_forma)/R_superior + V_c/R_inferior + (V_c−V_mix)/R45 = 0`.
+
+La [referencia ejecutable](../tools/vco1_panel_level_reference.py) resuelve esta ecuación como **dos puertos pasivos**, con los extremos `α=0` y `α=1` tratados como contactos ideales. Cuando se impone `V_mix=0` únicamente para explorar la carga, la resistencia vista por la forma seleccionada es `R_superior + (R_inferior || R45)`: **25 kΩ** en `α=0`, **≈21,57 kΩ** en `α=0,5` y **≈14,22 kΩ** en `α=1`. Con `α=0` y SW9 encendido, R45 todavía conecta el **bus de mezcla a masa por 33 kΩ**: bajar a cero el nivel del oscilador no elimina esa carga pasiva. El valor real requiere resolver simultáneamente el bus; la corriente a través de R45 puede depender de los otros osciladores, ruido y entrada externa. Estos números no son una curva de volumen ni amplitudes de audio.
+
+```powershell
+python tools/vco1_panel_level_reference.py
 python -m unittest discover -s tests -q
 ```

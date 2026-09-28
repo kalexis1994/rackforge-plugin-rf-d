@@ -11,7 +11,9 @@
     "sw6_upper_contacts": {"1": "TRI_OUTPUT_21B", "2": "SAW_TRI_TAP", "3": "SAW_OUTPUT_9B", "4": "RECT_OUTPUT_20B", "5": "RECT_OUTPUT_20B", "6": "RECT_OUTPUT_20B"},
     "sw6_upper_rectangular_contacts": [4, 5, 6],
     "r6_bottom": "GND",
-    "r6_wiper_next": "R45_33K_TO_OSC1_ON_SWITCH"
+    "r6_wiper_next": "R45_PANEL",
+    "sw9_on_route": {"from": "OSC1_ON_SWITCH", "to": "MIX_BUS_BOARD4_PIN4"},
+    "mixer_input_source": {"id": "SVC-9", "pdf_page": 13, "figure": "9-11", "board_pin": 4, "first_series_component": "C27"}
   },
   "parts": [
     {"ref": "R34_PANEL", "value_ohm": 1500, "terminals": ["GND", "SW6_11"]},
@@ -23,5 +25,5 @@
     {"ref": "R45_PANEL", "value_ohm": 33000, "terminals": ["R6_WIPER", "OSC1_ON_SWITCH"]}
   ],
   "sw6_lower_contacts": {"7": "NEG10_V", "8": "open", "9": "open", "10": "GND", "11": "SW6_11", "12": "SW6_12"},
-  "limits": ["The selector position-to-panel-legend map is not assigned.", "The R6 wiper and downstream mixer load are excluded from all passive load calculations.", "The -10 V rail is treated as an imposed nominal voltage only for conditional calculations."]
+  "limits": ["The selector position-to-panel-legend map is not assigned.", "The isolated 20B and 9B/21B references exclude R6 wiper loading; the ON-state two-port reference includes it with an imposed mixer-bus voltage.", "SW9 OFF topology and the frequency-dependent board-4 input are outside the ON-state two-port reference.", "The -10 V rail is treated as an imposed nominal voltage only for conditional calculations."]
 }
