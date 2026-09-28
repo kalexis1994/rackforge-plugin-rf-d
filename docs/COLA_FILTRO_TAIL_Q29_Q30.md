@@ -29,6 +29,8 @@ Como escenario ilustrativo se imponen R39 a `0,1`, R11 al centro, R49 a `250 Ω`
 
 ## Admisión RACE
 
+Actualización del trayecto: la [columna y las pilas activas](PILAS_ACTIVAS_LADDER_DC.md) ahora dan colectores e inyección de BOTTOM condicionales a β/`I_S`; si algún `V_CB` es negativo, no representan un punto de operación físico. El desarrollo de esta página sigue siendo el subcircuito TAIL.
+
 El cierre de `TAIL` es una **transferencia DC condicionada** de cuatro transistores y R60, no un punto de operación del ladder completo. El [cálculo de BOTTOM y ambas bases](BASES_FILTRO_ACOPLADAS_DC.md) realimenta corrientes de base en DC, pero deja impuesta la inyección desde el ladder superior y conserva el conflicto de R61. Siguen abiertos los voltajes de colector y cargas de Q29/Q30, los voltajes e impedancias de las fuentes del panel, dispersión, efecto Early, saturación y temperatura efectiva. Los flags de región activa son condiciones necesarias; no sustituyen un modelo de saturación. No se infiere frecuencia de corte, resonancia ni fidelidad audible.
 
 ```powershell
