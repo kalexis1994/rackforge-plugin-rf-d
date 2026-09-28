@@ -7,11 +7,11 @@ La [referencia activa](PILAS_ACTIVAS_LADDER_DC.md) se evaluó con un barrido rep
 | 200 Ω | 36 | 0 | 0 | +0,830…+1,289 V |
 | 200 kΩ | 0 | 36 | 0 | −0,632…−0,174 V |
 
-La tabla es una **salida calculada dentro del modelo activo**. En los casos de 200 kΩ, el margen negativo invalida precisamente ese modelo; sus voltajes no son soluciones físicas de saturación. La coincidencia de 36 escenarios muestra estabilidad sólo dentro de este grid restringido, con parámetros igualados. No identifica la población real de R61 ni descarta una variante de placa: esa conclusión requiere evidencia independiente y un solver que incluya saturación. También faltan otros puntos de panel, dispersión entre dispositivos, cargas externas, fuente no ideal y transitorios.
+La tabla es una **salida calculada dentro del modelo activo**. En los casos de 200 kΩ, el margen negativo invalida precisamente ese modelo; sus voltajes no son soluciones físicas de saturación. El [solver Ebers–Moll posterior](LADDER_EBERS_MOLL_DC.md) ya ofrece una solución para ese candidato con junturas base colector conduciendo, bajo β inverso impuesto. La coincidencia de 36 escenarios muestra estabilidad sólo dentro de este grid restringido, con parámetros igualados. No identifica la población real de R61 ni descarta una variante de placa: esa conclusión requiere evidencia independiente. También faltan otros puntos de panel, dispersión entre dispositivos, cargas externas, fuente no ideal y transitorios.
 
 ```powershell
 python tools/filter_ladder_active_dc_sweep.py
 python -m unittest discover -s tests -q
 ```
 
-Las regresiones comprueban los 72 casos únicos, la clasificación de salida y los signos de margen esperados. El siguiente trabajo es obtener un modelo DC de transistor válido cerca y dentro de saturación y repetir el barrido antes de usarlo como gate para el sistema temporal.
+Las regresiones comprueban los 72 casos únicos, la clasificación de salida y los signos de margen esperados. Este barrido sigue siendo la línea de base del **límite activo**. El siguiente barrido deberá usar el [solver Ebers–Moll](LADDER_EBERS_MOLL_DC.md) y variar también β inverso antes de servir como gate del sistema temporal.
