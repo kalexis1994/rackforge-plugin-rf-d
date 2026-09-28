@@ -1,0 +1,17 @@
+{
+  "scope": "Left bias-resistor spine of board-4 ladder at DC; four intermediate active-device currents remain imposed",
+  "schematic": {"id": "SVC-9", "figure": "9-11", "pdf_page": 13, "full_service_pdf_page": 69},
+  "parts_list": {"id": "SVC-9", "table": "7-8", "pdf_pages": [30, 31]},
+  "positive_rail_v": 10,
+  "nodes_top_to_bottom": ["POS10", "TAP_Q2_Q3", "TAP_Q10_Q11", "TAP_Q19_Q20", "TAP_Q23_Q24", "BOTTOM"],
+  "series_resistors_top_to_bottom": [
+    {"ref": "R4", "ohm": 220, "between": ["POS10", "TAP_Q2_Q3"]},
+    {"ref": "R16", "ohm": 150, "between": ["TAP_Q2_Q3", "TAP_Q10_Q11"]},
+    {"ref": "R32", "ohm": 150, "between": ["TAP_Q10_Q11", "TAP_Q19_Q20"]},
+    {"ref": "R41", "ohm": 150, "between": ["TAP_Q19_Q20", "TAP_Q23_Q24"]},
+    {"ref": "R52", "ohm": 150, "between": ["TAP_Q23_Q24", "BOTTOM"]}
+  ],
+  "boundary_currents": "One signed current at each of the four taps, positive when leaving the resistor spine into all attached active elements. Individual device currents and their dependence on voltage are not inferred.",
+  "dc_capacitors_open": ["C3", "C7", "C11", "C16", "C27", "C24"],
+  "caution": "Board-4 R52 is distinct from panel FILTER MOD R52; this spine does not calculate transistor collector rails or decide the R61 200/200000 ohm discrepancy."
+}

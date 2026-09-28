@@ -36,6 +36,8 @@ Los dos dan un Q28 **candidato** activo, pero exigen inyecciones distintas por u
 
 ## Límite RACE
 
+Continuación: la [columna resistiva del ladder](COLUMNA_RESISTIVA_LADDER_DC.md) calcula `I_L` condicionalmente a las cuatro corrientes de tap impuestas. Todavía se desconoce cómo las fijan los pares superiores.
+
 Se ha cerrado un **subcircuito DC condicionado** de BOTTOM, ambas bases y `TAIL`. Faltan la corriente real desde R52 y la polarización de los colectores Q29/Q30 y peldaños superiores, las fuentes de panel reales, β e `I_S` de transistores instalados, efecto Early, saturación, tolerancias y transitorios con C27/C24/C10. La [referencia pasiva temporal de entrada](ENTRADA_FILTRO.md) sigue separada; una regresión confirma que reproduce este punto DC al imponer las corrientes acopladas. No se infiere curva de corte, resonancia ni sonido.
 
 ```powershell

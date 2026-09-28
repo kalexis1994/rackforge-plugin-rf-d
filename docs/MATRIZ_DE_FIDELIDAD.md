@@ -14,6 +14,8 @@ Los estados `desconocido`, `hipótesis`, `modelado`, `contrastado` y `cerrado pa
 
 ## Afirmación pública actual
 
+En el ladder, la [columna resistiva DC](COLUMNA_RESISTIVA_LADDER_DC.md) está documentada y calculada condicionalmente a cuatro cargas de tap. El estado de transferencia completa y audio permanece desconocido; sigue pendiente resolver las corrientes activas, colectores y R61.
+
 RF-D **pretende** recrear un Model D clásico. No hay aún una implementación sonora ni resultados de comparación que permitan afirmar fidelidad.
 
 La ausencia de hardware propio es permanente para este plan. Cada bloque puede alcanzar `cerrado para alcance declarado` en **topología** y **cálculo**, mientras su audio externo permanezca abierto. Ese estado nunca se interpretará como identidad sonora con un ejemplar vintage.

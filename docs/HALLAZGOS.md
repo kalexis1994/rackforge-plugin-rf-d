@@ -15,6 +15,8 @@ Este mapa resume afirmaciones de manuales de fábrica. Son puntos de partida par
 
 ## Prioridad de derivación de circuitos
 
+Avance de la columna pasiva: [R4/R16/R32/R41/R52](COLUMNA_RESISTIVA_LADDER_DC.md) suman 820 Ω entre +10 V y BOTTOM; la inyección depende de cuatro corrientes de tap aún impuestas. Este cálculo no fija la respuesta de cuatro polos.
+
 1. **Placa de osciladores CA3046:** traducir Fig. 9-3 a nodos y parámetros y documentar discrepancias esquema/BOM. Mantener Fig. 9-2 para la variante μA726 y no inferir la primera placa discreta de ninguna de ellas. Crear una ruta de referencia de precisión antes de optimizar.
 2. **Mezclador → Q29/Q30 → ladder → recuperación → VCA 1/2 → salida:** retener no linealidades y cargas de cada frontera. La sobrecarga del mixer y la del ladder se medirán por separado.
 3. **Control:** teclado, glide, trigger y dos contornos como máquinas de estado con redes de carga/descarga. Preservar orden de contactos y comportamiento monofónico.
