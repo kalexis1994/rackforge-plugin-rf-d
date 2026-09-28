@@ -68,6 +68,41 @@ def _device(vb: float, vc: float, ve: float, is_a: float,
             "forward_junction_a": forward, "reverse_junction_a": reverse}
 
 
+def evaluate_nodal_kcl(x: list[float], *, plus: float,
+                       spine_resistances: tuple[float, ...],
+                       r54: float, r30: float, r61_ohm: int,
+                       tail_current: float, vt: float,
+                       values_is: dict[str, float],
+                       values_bf: dict[str, float],
+                       reverse_beta: dict[str, float]) -> tuple[list[float], dict]:
+    """Shared nonlinear DC residual, all 16 rows incoming minus outgoing."""
+    currents = {}
+    for name, (bi, ci, ei) in DEVICE_NODES.items():
+        currents[name] = _device(x[bi], plus if ci is None else x[ci],
+                                 x[ei], values_is[name], values_bf[name],
+                                 reverse_beta[name], vt)
+    r = [0.0] * 16
+    pairs = (("Q2", "Q3"), ("Q10", "Q11"),
+             ("Q19", "Q20"), ("Q23", "Q24"))
+    previous = plus
+    for i, pair in enumerate(pairs):
+        incoming = (previous - x[i]) / spine_resistances[i]
+        outgoing = ((x[i] - x[i + 1]) / spine_resistances[i + 1]
+                    if i < 3 else (x[i] - x[4]) / spine_resistances[4])
+        r[i] = incoming - outgoing - sum(currents[name]["base_a"] for name in pair)
+        previous = x[i]
+    r[4] = ((x[3] - x[4]) / spine_resistances[4] - x[4] / r61_ohm
+            - (x[4] - x[6]) / r54 - (x[4] - x[7]) / r30)
+    r[5] = currents["Q29"]["emitter_a"] + currents["Q30"]["emitter_a"] - tail_current
+    r[6] = (x[4] - x[6]) / r54 - currents["Q29"]["base_a"]
+    r[7] = (x[4] - x[7]) / r30 - currents["Q30"]["base_a"]
+    for side, start in ((LEFT, 8), (RIGHT, 12)):
+        for offset, (lower, higher) in enumerate(zip(side, side[1:])):
+            r[start + offset] = (currents[higher]["emitter_a"]
+                                 - currents[lower]["collector_a"])
+    return r, currents
+
+
 def conditional_ladder_ebers_moll_dc(*, cutoff_inputs: dict,
                                      is29_a: float, is30_a: float,
                                      beta29: float, beta30: float,
@@ -99,34 +134,13 @@ def conditional_ladder_ebers_moll_dc(*, cutoff_inputs: dict,
     r30 = active["lower"]["r30_bottom_path_ohm"]
     r60 = json.loads(LOWER_EVIDENCE.read_text(encoding="utf-8"))["connections"]["R60"]["ohm"]
 
+    network_parameters = dict(
+        plus=plus, spine_resistances=spine_resistances, r54=r54, r30=r30,
+        r61_ohm=r61_ohm, tail_current=tail_current, vt=vt,
+        values_is=values_is, values_bf=values_bf, reverse_beta=reverse_beta)
+
     def evaluate(x: list[float]) -> tuple[list[float], dict]:
-        currents = {}
-        for name, (bi, ci, ei) in DEVICE_NODES.items():
-            currents[name] = _device(x[bi], plus if ci is None else x[ci],
-                                     x[ei], values_is[name], values_bf[name],
-                                     reverse_beta[name], vt)
-        r = [0.0] * 16
-        pairs = (("Q2", "Q3"), ("Q10", "Q11"),
-                 ("Q19", "Q20"), ("Q23", "Q24"))
-        previous = plus
-        for i, pair in enumerate(pairs):
-            incoming = (previous - x[i]) / spine_resistances[i]
-            outgoing = ((x[i] - x[i + 1]) / spine_resistances[i + 1]
-                        if i < 3 else (x[i] - x[4]) / spine_resistances[4])
-            r[i] = incoming - outgoing - sum(currents[name]["base_a"] for name in pair)
-            previous = x[i]
-        r[4] = ((x[3] - x[4]) / spine_resistances[4] - x[4] / r61_ohm
-                - (x[4] - x[6]) / r54 - (x[4] - x[7]) / r30)
-        r[5] = currents["Q29"]["emitter_a"] + currents["Q30"]["emitter_a"] - tail_current
-        r[6] = (x[4] - x[6]) / r54 - currents["Q29"]["base_a"]
-        r[7] = (x[4] - x[7]) / r30 - currents["Q30"]["base_a"]
-        for side, start in ((LEFT, 8), (RIGHT, 12)):
-            for offset, (lower, higher) in enumerate(zip(side, side[1:])):
-                # Higher emitter injects into this node; lower collector
-                # draws from it. All 16 rows use incoming-minus-outgoing.
-                r[start + offset] = (currents[higher]["emitter_a"]
-                                     - currents[lower]["collector_a"])
-        return r, currents
+        return evaluate_nodal_kcl(x, **network_parameters)
 
     x = [*active["spine"]["tap_voltages_top_to_bottom_v"],
          active["bottom_v"], active["tail_v"],
@@ -189,6 +203,7 @@ def conditional_ladder_ebers_moll_dc(*, cutoff_inputs: dict,
             "max_kcl_residual_a": max(abs(value) for value in residual),
             "kcl_residuals_a": dict(zip(NODE_NAMES, residual)),
             "conductance_matrix_s": tuple(tuple(row) for row in conductance),
+            "network_parameters": network_parameters,
             "iterations": iterations,
             "forward_biased_base_collector_devices": reverse_forward,
             "q28_forward_active_candidate": q28_candidate,

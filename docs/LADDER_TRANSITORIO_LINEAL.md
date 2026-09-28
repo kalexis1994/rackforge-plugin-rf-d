@@ -18,6 +18,8 @@ Con el escenario condicionado previo y un escalón **pequeño de 1 mV** en BUS a
 
 Esta referencia es **offline**: resuelve una matriz densa por paso y no cumple aún el presupuesto de audio en tiempo real. No incluye la variación no lineal de las corrientes BJT al moverse lejos del sesgo, capacitancias de juntura, ESR/fuga, impedancia del mixer, recuperación ni lazo de regeneración. El siguiente bloque debe derivar un integrador no lineal de carga y acoplar las fronteras externas antes de optimizarlo para el plugin. No se infiere fidelidad sonora.
 
+La [continuación no lineal](LADDER_TRANSITORIO_NO_LINEAL.md) ya resuelve las mismas seis cargas junto con las corrientes BJT actualizadas en cada paso. Esta referencia lineal se conserva como límite diferencial independiente.
+
 ```powershell
 python tools/filter_ladder_linear_transient_reference.py
 python -m unittest discover -s tests -q
