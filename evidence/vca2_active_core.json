@@ -1,0 +1,29 @@
+{
+  "scope": "Second VCA Q14/Q13/Q21 DC with Q14/Q13 bases, Q21 base and R12 wiper imposed; Q12/Q17 base currents excluded",
+  "functional_description": {"id": "SVC-204D", "section": "2.9", "pdf_page": 12},
+  "schematic": {"id": "SVC-9", "figure": "9-11", "pdf_page": 13, "full_service_pdf_page": 69},
+  "parts_list": {"id": "SVC-9", "table": "7-8", "pdf_pages": [30, 31]},
+  "devices": ["Q14", "Q13", "Q21"],
+  "resistors": [
+    {"ref": "R12", "ohm": 100, "between": ["SECOND_BAL_LEFT", "SECOND_BAL_RIGHT"], "wiper": "SECOND_BAL_WIPER"},
+    {"ref": "R18", "ohm": 330, "between": ["SECOND_BAL_LEFT", "Q14_COLLECTOR"]},
+    {"ref": "R21", "ohm": 330, "between": ["SECOND_BAL_RIGHT", "Q13_COLLECTOR"]},
+    {"ref": "R33", "ohm": 470, "between": ["PAIR2_EMITTER", "Q21_COLLECTOR"]},
+    {"ref": "R42", "ohm": 3300, "between": ["Q21_EMITTER", "GROUND"]},
+    {"ref": "R44", "ohm": 150000, "between": ["Q21_EMITTER", "MINUS_10_V"]},
+    {"ref": "R51", "ohm": 33000, "between": ["Q21_BASE", "GROUND"]}
+  ],
+  "interstage": {
+    "Q14_BASE": "Q16_COLLECTOR",
+    "Q13_BASE": "Q15_COLLECTOR",
+    "SECOND_BAL_WIPER": "R13 to FIRST_BAL_WIPER and R11 toward supply",
+    "Q14_COLLECTOR": "next Q12/Q17 conversion stage, load excluded",
+    "Q13_COLLECTOR": "next Q12/Q17 conversion stage, load excluded"
+  },
+  "boundaries": {
+    "Q14_BASE_Q16_COLLECTOR": "voltage imposed; Q14 base current reported, not yet loaded onto first VCA",
+    "Q13_BASE_Q15_COLLECTOR": "voltage imposed; Q13 base current reported, not yet loaded onto first VCA",
+    "Q21_BASE": "voltage imposed; R51 33 kohm shunt current reported separately from transistor base current",
+    "SECOND_BAL_WIPER": "voltage imposed; R11/R10 and output supply unsolved"
+  }
+}
