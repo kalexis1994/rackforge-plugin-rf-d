@@ -36,4 +36,4 @@ python tools/filter_input_pair_reference.py
 python -m unittest discover -s tests -q
 ```
 
-La [red Q26/Q28](COLA_FILTRO_Q26_Q28.md) ya admite una carga DC **condicionada** a parámetros de transistor y voltajes impuestos. La [base pasiva de Q26](BASE_Q26_CONTROL_FILTRO.md) calcula un voltaje candidato para ramas de panel y corriente de base impuestas. El próximo gate es resolver esas fronteras y el sesgo del peldaño inferior con las cargas reales del ladder. Sólo entonces se podrá evaluar cuándo esta aproximación ideal deja de ser válida y acoplarla a la entrada y la regeneración.
+La [red Q26/Q28](COLA_FILTRO_Q26_Q28.md) ya admite una carga DC **condicionada** a parámetros de transistor y voltajes impuestos. La [base pasiva de Q26](BASE_Q26_CONTROL_FILTRO.md) calcula un voltaje candidato para las llaves J2/SW15/SW16/SW17, con fuentes aguas arriba y corriente de base impuestas. El próximo gate es resolver esas fronteras y el sesgo del peldaño inferior con las cargas reales del ladder. Sólo entonces se podrá evaluar cuándo esta aproximación ideal deja de ser válida y acoplarla a la entrada y la regeneración.

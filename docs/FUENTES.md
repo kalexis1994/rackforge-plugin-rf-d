@@ -60,7 +60,7 @@ Estos artículos originales ayudan a diseñar y contrastar el solver. **Ninguno 
 | Retorno de regeneración: C10, R14 de panel, R73, R76 y Q30 | SVC-9 PDF p. 13, Fig. 9-11, p. 19, Fig. 9-17 y tabla 7-8 PDF pp. 30–31; [derivación condicionada](REGENERACION_FILTRO.md). |
 | Par inferior Q29/Q30 y cola R60/Q28 | SVC-9 PDF p. 13, Fig. 9-11, tabla 7-8 pp. 30–31; B-804C-2 corrige nota 3 de Q26/Q28; [límite ideal del par](PAR_ENTRADA_FILTRO_IDEAL.md) usa BJT-TI-2023 p. 6 y constantes SI NIST/CODATA. |
 | Control de corriente Q26/Q28: R39 RANGE, R46, R45 y R60 | SVC-9 PDF p. 13, Fig. 9-11, tabla 7-8 pp. 30–31 y B-804C-2; [carga DC condicionada](COLA_FILTRO_Q26_Q28.md). |
-| Base de Q26: R11/R55 del panel, pin 5 directo, R74 desde pin 16, R49/R70/C18 | SVC-9 PDF pp. 13 y 19, Figs. 9-11 y 9-17; [reducción pasiva condicionada](BASE_Q26_CONTROL_FILTRO.md) y [transcripción de nodos](../evidence/filter_cutoff_base_network.json). |
+| Base de Q26: R11/R55, J2/R51, SW15/R52, SW16/R53, SW17/R54, pin 5 directo, R74 desde pin 16, R49/R70/C18 | SVC-9 PDF pp. 13 y 19, Figs. 9-11 y 9-17; [reducción pasiva y estados de panel](BASE_Q26_CONTROL_FILTRO.md), [transcripción](../evidence/filter_cutoff_base_network.json). |
 | Ruido, mezcla de modulación y entrada externa | SVC-204D PDF pp. 10–11 y 14; esquemas pp. 66 y 69 |
 | Ladder, recuperación, dos VCA | SVC-204D PDF pp. 11–12, impresa 2-7; placa p. 68, Fig. 9-10; esquema p. 69, Fig. 9-11. |
 | Contornos, gatillo y final decay | SVC-204D PDF pp. 12–13, impresas 2-7 a 2-8; esquema p. 65, Fig. 9-5 |

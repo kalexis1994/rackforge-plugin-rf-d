@@ -33,7 +33,7 @@ Por ejemplo, con `α=0,1`, `V_B26=0 V`, `I_S26=I_S28=10⁻¹⁴ A`, `T=298,15 K`
 
 ## Límite de admisión
 
-El [modelo ideal de Q29/Q30](PAR_ENTRADA_FILTRO_IDEAL.md) ya puede recibir una corriente de cola **candidata** de esta red, pero todavía no hay un punto de operación acoplado: la red pasiva de base tiene ramas de panel y corriente de base impuestas; también faltan el voltaje `TAIL` por los dispositivos del ladder y el sesgo de los colectores. Quedan `β`, efecto Early, saturación, dispersión y temperatura real. La matriz de fidelidad conserva por tanto **transferencia condicionada**, sin frecuencia de corte ni resonancia inferidas.
+El [modelo ideal de Q29/Q30](PAR_ENTRADA_FILTRO_IDEAL.md) ya puede recibir una corriente de cola **candidata** de esta red, pero todavía no hay un punto de operación acoplado: las llaves de panel están trazadas, mientras sus fuentes aguas arriba y la corriente de base Q26 siguen impuestas; también faltan el voltaje `TAIL` por los dispositivos del ladder y el sesgo de los colectores. Quedan `β`, efecto Early, saturación, dispersión y temperatura real. La matriz de fidelidad conserva por tanto **transferencia condicionada**, sin frecuencia de corte ni resonancia inferidas.
 
 ```powershell
 python tools/filter_cutoff_pair_reference.py
