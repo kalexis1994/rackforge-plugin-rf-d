@@ -2,11 +2,11 @@
 
 ## Fase A — Identidad y evidencia
 
-1. Conseguir manual técnico íntegro y esquemas legibles; registrar hash, páginas y revisión.
+1. Manual técnico íntegro y esquemas: corpus descargado e indexado en [FUENTES.md](FUENTES.md). Resolver sus contradicciones y boletines según [REVISIONES.md](REVISIONES.md).
 2. Inventariar la unidad objetivo, placas, modificaciones y ajustes existentes.
 3. Congelar la ruta de salida y el estado de calibración antes de usar audio como referencia.
 
-**Salida:** `OBJETIVO.md` congelado, `FUENTES.md` completo y mapa de nodos por placa. Sin esta salida, no se promueven constantes al motor.
+**Salida:** `OBJETIVO.md` congelado para una unidad física, fuente/esquema de esa placa, inventario de modificaciones y mapa de nodos por placa. La documentación general ya está; falta la unidad. Sin esa salida, no se promueven constantes al motor.
 
 ## Fase B — Capturas y oráculo
 

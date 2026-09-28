@@ -3,7 +3,7 @@
 ## Blanco
 
 - **Instrumento:** Moog Minimoog Model D de producción clásica, monofónico.
-- **Revisión de placas:** pendiente. Registrar número de serie, designadores y revisiones de las placas de osciladores, contornos, fuente/ruido, filtro y salida de una unidad física antes de congelar el blanco.
+- **Revisión de placas:** pendiente. Registrar número de serie, designadores y revisiones de las placas de osciladores, contornos, fuente/ruido, filtro, salida y rectificador de una unidad física antes de congelar el blanco. El manual 204D separa oscilador antiguo y estabilizado en el umbral documental 10175, pero el estabilizado también podía instalarse como reemplazo; ver [REVISIONES.md](REVISIONES.md).
 - **Estado de calibración:** pendiente. Una unidad desajustada no define automáticamente el diseño nominal.
 - **Reediciones:** 2016 y 2022 son referencias comparativas, no se fusionan con la revisión clásica elegida. Moog documenta diferencias funcionales entre ambas [aquí](https://moogmusic-help.freshdesk.com/en/support/solutions/articles/69000840518-moog-minimoog-model-d-what-are-the-differences-between-the-2022-and-the-2016-minimoog-model-d-).
 - **Unidad(es) físicas y captura:** pendientes. Identificar sin datos personales, documentando temperatura, calentamiento, carga y cadena de grabación.

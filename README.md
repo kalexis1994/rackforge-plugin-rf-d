@@ -4,7 +4,7 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
-**Investigación inicial.** Todavía no hay motor de audio, plugin instalable ni afirmación de fidelidad. La revisión de placas y la unidad de referencia siguen pendientes de identificación. El nombre RF-D designa el proyecto; no implica afiliación con Moog Music.
+**Corpus documental reunido.** Hay manual de servicio completo (82 páginas), esquemas, manual de operación temprano, boletines de fábrica, patente y hojas de componentes; sus hashes y límites están en el [registro de fuentes](docs/FUENTES.md). Todavía no hay motor de audio, plugin instalable ni afirmación de fidelidad. La revisión de placas y la unidad de referencia siguen pendientes de identificación. El nombre RF-D designa el proyecto; no implica afiliación con Moog Music.
 
 ## Objetivo musical
 
@@ -14,8 +14,8 @@ El [objetivo técnico](docs/OBJETIVO.md) define qué queda dentro de la emulaci�
 
 ## Cómo empezar
 
-1. Revisar el [plan de investigación](docs/PLAN.md) y cerrar la revisión/unidad de referencia antes de fijar constantes DSP.
-2. Completar el [registro de fuentes](docs/FUENTES.md), con hash y páginas de cada manual, esquema y captura utilizada.
+1. Revisar el [mapa de revisiones](docs/REVISIONES.md) y el [plan de investigación](docs/PLAN.md); cerrar la placa/unidad de referencia antes de fijar constantes DSP.
+2. Usar el [registro de fuentes](docs/FUENTES.md) para localizar la página exacta y los [hallazgos técnicos](docs/HALLAZGOS.md) para definir cada contraste.
 3. Derivar cada [bloque de circuito](docs/BLOQUES.md) en unidades eléctricas y registrar incertidumbres en la [matriz de fidelidad](docs/MATRIZ_DE_FIDELIDAD.md).
 4. Ejecutar el [protocolo de capturas](docs/CAPTURAS.md) con escenas y límites definidos antes de comparar el audio.
 5. Aplicar los [gates de RACE](https://github.com/kalexis1994/rackforge-race/blob/main/docs/06-circuitos.md) y el [contrato de plugins RackForge](https://github.com/kalexis1994/rackforge/blob/main/docs/PLUGIN_DEVELOPMENT.md) al implementar y publicar.

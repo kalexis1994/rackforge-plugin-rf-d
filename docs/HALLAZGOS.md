@@ -1,0 +1,28 @@
+# Hallazgos técnicos verificables y preguntas de modelado
+
+Este mapa resume afirmaciones de manuales de fábrica. Son puntos de partida para derivar circuito y experimentos; los números de página remiten a [FUENTES.md](FUENTES.md). No son constantes DSP aprobadas.
+
+| Bloque | Hecho documentado | Consecuencia para el oráculo |
+| --- | --- | --- |
+| Teclado y glide | 44 teclas, prioridad de la nota más grave (SVC-204D PDF p. 6). La placa 2 usa fuente de corriente compensada, track-and-hold y capacitor C6; el contacto de pitch precede al trigger y se libera después (p. 16). | Probar acordes, orden de pulsación, note-off, legato, retención de tono y timing CV/trigger. Medir la curva de glide entre intervalos distintos; la ley no queda definida por una cifra única de tiempo. |
+| Osciladores | Tres osciladores independientes. La placa antigua y la estabilizada usan convertidores exponenciales y formación de ondas diferentes (pp. 8–10, 14–16). En la estabilizada, el manual describe 21,0 mV/oct en la base del transistor exponencial, rampa de 5 a 0 V interna y salida sierra nominal ±1,75 V **sin carga** (pp. 8–9). | Modelar núcleo, reset, alta frecuencia, carga y selector. Medir forma a través de la cadena; no usar sin más esos voltajes internos como amplitud en la salida del plugin. Registrar temperatura y warmup. |
+| Ruido/modulación | Ruido por ruptura inversa base-emisor de transistor; ramas blanca/rosa para audio y rosa/roja para modulación (pp. 10–11). Oscilador 3 y ruido se combinan antes del Amount of Modulation (pp. 7, 10). | Medir PSD y amplitud en ambos destinos. Probar profundidad y bleed con rueda al mínimo; distinguir control opcional de boletín B-832. |
+| Entrada externa/mixer | Las cinco fuentes son 3 VCO, ruido y entrada externa (p. 6). El preamplificador externo documenta ganancia 200 y alimenta el mixer (pp. 7, 14). Las señales se suman antes de Q29/Q30 y del ladder (p. 12). | Medir nivel de cada fuente y combinaciones con filtro abierto; barrer entrada externa por el preamp. El lugar donde aparece saturación/intermodulación se determinará por etapa. |
+| Ladder | Cuatro polos por pares de transistores y capacitores C16/C11/C7/C3; Q29/Q30 convierten entrada a corriente diferencial, Q5–Q8 recuperan ganancia; Emphasis realimenta desde esa etapa (p. 12, Fig. 9-10 p. 69). Control de cutoff: sumatoria de CV y par NPN/PNP Q26/Q28 (p. 12). | Derivar ecuaciones con carga y feedback del circuito concreto; contrastar transferencia a varios niveles y resonancias, onset de autooscilación, tracking y respuesta a barridos rápidos. La patente PAT-LADDER aporta teoría, no valores del Model D. |
+| Dos VCA y salida | Señal de filtro acoplada en AC a primer multiplicador Q16/Q15 controlado por contorno; segundo multiplicador Q14/Q13 controlado por jack externo/normalizado; Q12/Q17 convierten a salida simple (p. 12). Alta y baja salida poseen rutas/niveles distintos (p. 6). | Probar carga, DC blocking, escalado, transitorios y pedales externos. Conservar dos etapas en la derivación aunque una quede normalmente abierta. |
+| Contornos | Dos generadores con RC de ataque, decay a sustain y descarga final gobernada por switch; p. 13 describe el estado de C5 y retrigger de la placa 2. Especificación de fábrica: ataque y decay de 10 ms a 10 s (p. 6). | Medir curvas y nivel real en varias posiciones, disparo corto/largo, retrigger y final decay ON/OFF. No imponer un ADSR ideal de cuatro perillas a una topología de tres controles y switch. |
+| Fuente y calibración | Regulación ±10 V con sensado remoto en placa de osciladores (pp. 11–12), ajuste ±10,000 V (p. 36). Afinación de placa nueva requiere 30 min de warmup (p. 29). La regeneración de filtro debe iniciar entre 7 y 8 en Emphasis según procedimiento de servicio (p. 33). | Registrar estado antes de cambiarlo. Las cifras son condiciones de calibración de fábrica; la unidad medida puede diferir. Comparar circuito nominal y unidad tal como está por separado. |
+
+## Prioridad de derivación de circuitos
+
+1. **Placa de osciladores identificada:** traducir Fig. 9-2 **o** 9-3 a nodos y parámetros, y documentar discrepancias esquema/BOM/placa. Crear una ruta de referencia de precisión antes de optimizar.
+2. **Mezclador → Q29/Q30 → ladder → recuperación → VCA 1/2 → salida:** retener no linealidades y cargas de cada frontera. La sobrecarga del mixer y la del ladder se medirán por separado.
+3. **Control:** teclado, glide, trigger y dos contornos como máquinas de estado con redes de carga/descarga. Preservar orden de contactos y comportamiento monofónico.
+4. **Variación:** trimmers, tolerancias y deriva se expresan como rangos vinculados a mediciones. Variación aleatoria sólo si el hardware muestra esa distribución temporal o entre unidades.
+
+## Hipótesis que no se promueven todavía
+
+- La frecuencia de cutoff declarada 40 Hz–20 kHz (p. 6) no determina la ley exacta del potenciómetro ni el recorrido efectivo bajo resonancia.
+- “24 dB/oct” describe el filtro nominal, no la respuesta completa a niveles altos, con realimentación y la carga del VCA.
+- El voltaje de una forma en el esquema no es automáticamente el nivel del jack final.
+- El manual y los boletines contienen correcciones; cualquier valor de BOM debe contrastarse con la placa seleccionada antes de modelarse.

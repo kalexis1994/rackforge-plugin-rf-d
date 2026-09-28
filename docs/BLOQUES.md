@@ -12,3 +12,5 @@ Para cada placa y ruta: designadores/nodos, referencias de esquema, alimentació
 6. **Salida:** amplificación, carga, nivel y clipping final.
 
 Este listado es un mapa de investigación. La topología exacta y sus componentes quedan sujetos a la revisión física elegida.
+
+El [mapa de hallazgos](HALLAZGOS.md) enlaza cada bloque a la descripción y al esquema original; [REVISIONES.md](REVISIONES.md) registra qué variantes y correcciones pueden cambiar su derivación. En particular, la ruta de audio continúa después del ladder por recuperación de ganancia y **dos VCA** documentados en SVC-204D (PDF p. 12), y los contornos requieren representar el switch de final decay.

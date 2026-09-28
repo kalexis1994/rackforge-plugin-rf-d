@@ -1,22 +1,60 @@
-# Registro de fuentes
+# Registro de fuentes de RF-D
 
-Este archivo identifica material de investigación; no incorpora sus imágenes, tablas ni audio. Hashes y páginas exactas se completarán al obtener y verificar los archivos concretos. Una copia en la web puede mezclar revisiones; se comprobará con las placas de la unidad objetivo.
+Investigación iniciada el 28-09-2026. Los originales descargados quedan en `references-local/` (ignorado por Git). Este repositorio guarda enlaces, hashes y conclusiones propias; no redistribuye los documentos. **Página PDF** significa índice desde 1 del archivo indicado; cuando existe, también se anota la página impresa.
 
-| ID | Fuente candidata | Uso admisible ahora | Verificación pendiente |
-| --- | --- | --- | --- |
-| SRC-SVC-D | [Minimoog Model D Technical Service Manual, R. J. Folkman](https://manuals.plus/m/60a4fe7267f2c66ac033917355bd1b8ce2fea581c4dee57692fcfa047fa44ac5) | Inventario de placas, flujo de señal y puntos de ajuste como hipótesis de revisión | Conseguir PDF íntegro, hash, fecha, páginas y compatibilidad con la unidad elegida |
-| SRC-MOOG-2016 | [Moog Model D, guía de usuario y descargas](https://www.moogmusic.com/downloads/) | Control y función de una reedición, comparación con clásico | Fijar versión exacta, hash y diferencias de circuito |
-| SRC-MOOG-2022 | [Diferencias oficiales de las reediciones 2016/2022](https://moogmusic-help.freshdesk.com/en/support/solutions/articles/69000840518-moog-minimoog-model-d-what-are-the-differences-between-the-2022-and-the-2016-minimoog-model-d-) | Evitar confundir performance MIDI/rueda con circuito clásico | No inferir identidad sonora sin medición |
-| SRC-HW-001 | Unidad física por identificar | Ajustes, nodos y audio de referencia | ID, revisión, mantenimiento, calibración, cadena, consentimiento de captura y manifiesto de hashes |
+## Corpus local verificado
+
+| ID | Documento original y procedencia | Archivo local (fuera de Git) | SHA-256 | Alcance comprobado |
+| --- | --- | --- | --- | --- |
+| SVC-204D | [Moog/Norlin, *Service Manual for Minimoog Model 204D*, 993-043232-002](https://manuals.fdiskc.com/tree/Moog/Moog%20Minimoog%20Service%20Manual.pdf) | `pdf/service_204d_full_fdiskc.pdf` | `d1f96fa26d9e25dda9d1cb0bbe9a5e0b017f7e463ec5b268c380b58d44f5b6fe` | 82 páginas; especificaciones, descripción, servicio, modificaciones, inventario de piezas y esquemas. Escaneo sin texto extraíble. |
+| SVC-9 | [Moog/Norlin, sección 9 del mismo manual: esquemas y placas](https://synthfool.com/docs/Moog/minimoog/Minimoog_Service_Manual.pdf) | `pdf/service_204d_synthfool.pdf` | `0edd35f3f9ab1eba346693545f0dcbe374bdcf6f37f9b1a34ecbdeb8ae682b4a` | 46 páginas; copias alternativas de esquemas y listas. **No es el manual completo**. |
+| SVC-RJF | [R. J. Folkman, *The Minimoog Model D Technical Service Manual*, 7/1973](https://www.vintagesynthparts.com/wp-content/uploads/2016/08/MINIMOOG-D_SERVICE_MANUAL.pdf) | `pdf/service_model_d_folkman.pdf` | `914e3e7007ee8a5e80d1145ebabc53c2500f91f3a7b5df212a3543518391ee9d` | 24 páginas, texto extraíble; placas 93-113/114/115/116 y calibración temprana. Esta copia declara ausentes sus esquemas (PDF pp. 19–20). |
+| OP-EARLY | [Moog, *A Guide to the Operation of the Mini Moog Model D*](https://funkwerkes.com/web/wp-content/techdocs/MixedProAudio/Minimoog-Manual.pdf) | `pdf/operation_model_d_funkwerkes.pdf` | `9a598c654920c87609c600ba9fc84096c7d6ddf032bd256469d173d1aed2835b` | 43 páginas: manual de operación temprano en PDF pp. 1–19, seguido por el manual Folkman en pp. 20–43. No adjudicarlo al manual de Tom Rhea de 1974 sin otra evidencia. |
+| B-804C-1 | [Norlin, Factory Service Bulletin 804C, 9/1981, hoja 1](https://synthfool.com/docs/Moog/minimoog/factory_service_bulleting_804C1.jpg) | `factory-bulletins/804C_p1.jpg` | `eb0678df1751dbaa1f75977994435da581ce255c7ee7e831ba0c2961da7f6b1b` | Corrige instrucciones y valores de manual; en §8.2 cambia **10175 por 5000** para el kit de estabilidad de placa antigua. |
+| B-804C-2 | [Norlin, Bulletin 804C, hoja 2](https://synthfool.com/docs/Moog/minimoog/factory_service_bulleting_804C2.jpg) | `factory-bulletins/804C_p2.jpg` | `d049166176480ae8a21bd1ff20e7133e72f2c5f99a2963a3af035c3857642a18` | Más correcciones, incluidas notas de selección de pares de transistores de la placa de filtro. |
+| B-832 | [Moog, Factory Service Bulletin 832, 3/1983](https://synthfool.com/docs/Moog/minimoog/factory_service_bulleting_832.jpg) | `factory-bulletins/832.jpg` | `74c31b3c6f7dc8b12432372aed20c62b8df832e4eee3ad1e45209829806cbcb5` | Modificación de potenciómetro/cableado para reducir modulación residual al mínimo; aplicable a todos los números de serie según boletín. |
+| B-TUNE | [Moog, procedimiento actualizado de afinación para osciladores antiguos](https://synthfool.com/docs/Moog/minimoog/updated_tuning_early_vcos.jpg) | `factory-bulletins/updated_tuning_early_vcos.jpg` | `54f9d170c3927ee4ba867ecf4cf40f5e79ebb255c88b6d0bd5122c04c46571fa` | Hoja que reemplaza pp. impresas 5-5 y 5-6 para seriales bajo 10175; cambia el orden/objetivos de ajuste. |
+| PAT-LADDER | [R. A. Moog, US3475623, *Electronic high-pass and low-pass filters employing the base to emitter diode resistance of bipolar transistors*](https://patents.google.com/patent/US3475623A/en) | `pdf/patent_us3475623_moog_ladder.pdf` | `464ba3222f40e8430281388b06085177702331b2d87c9ec9361c929f48480905` | 9 páginas; principio de ladder y realimentación. **No prueba** el BOM ni la calibración del Model D. |
+| DS-726 | [Fairchild, μA726, *Temperature-Controlled Differential Pair*](https://radio-hobby.org/uploads/datasheet/7/ua72/ua726.pdf) | `datasheets/fairchild_ua726.pdf` | `c1d463512dcae704c61ad7549ac4158718ca377b8e6b3f0a047e940b49301b26` | 3 páginas; componente de la placa estabilizada documentado por SVC-204D p. PDF 8. Hoja de componente, no medición del equipo. |
+| DS-3046 | [Rochester Electronics, reproducción de hoja CA3046, *General Purpose NPN Transistor Array*](https://atta.szlcsc.com/upload/public/pdf/source/20240129/4203E06A77725CA3AAC3A43A913440E8.pdf) | `datasheets/rochester_ca3046.pdf` | `27c7742de9b37256c3653c1286b7c473f729e7fb9c1e3247c60b27f29bb0de4d` | 2 páginas; referencia para identificar arrays en placa antigua. Edición posterior de fabricante; verificar marcaje del componente físico antes de adoptar parámetros. |
+| MOOG-2022 | [Moog, *Minimoog Model D User's Manual* (reedición)](https://cdn.inmusicbrands.com/Moog/Model%20D/Minimoog_Model_D_Manual.pdf) | `pdf/user_model_d_2022_moog.pdf` | `c7e6f1abd54999cad7aa232d782df397f974ff210db1e6a429a863af6e850b1f` | 84 páginas; comparación de interfaz, no especificación del clásico. |
+
+El manual Folkman está duplicado dentro de OP-EARLY. El PDF SVC-9 solapa la sección 9 de SVC-204D, pero puede ofrecer otro contraste visual de los esquemas. Se comprobó que cada descarga listada abre como PDF o JPEG real; respuestas HTML bloqueadas no se registran como fuentes.
+
+## Copias complementarias y pistas de modificación
+
+| Archivo local | Procedencia y hash SHA-256 | Uso |
+| --- | --- | --- |
+| `factory-bulletins/mini_modifications1.jpg` | [Sección 8, hoja 1](https://synthfool.com/docs/Moog/minimoog/mini_modifications1.jpg), `46dfe957c9c13ec6fbeaf73b78d456ef1c0ca2789572dc7b7c0c54f9af96fcfe3` | Escaneo alternativo de SVC-204D §8.1–8.6, útil para leer valores y seriales. |
+| `factory-bulletins/mini_modifications2.jpg` | [Sección 8, hoja 2](https://synthfool.com/docs/Moog/minimoog/mini_modifications2.jpg), `d0a0e8c72b8dcc8c7aa887ecd826b77242ee868645e860ffd3d65f58e268b6d3` | Escaneo alternativo de §8.6–8.8: fugas en placa 2, VCO 2 en torno al serial 4185 y reemplazo de placa osciladora. |
+| `factory-bulletins/mini_modifications3.jpg` | [Sección 8, hoja 3](https://synthfool.com/docs/Moog/minimoog/mini_modifications3.jpg), `30ce8107c46598d42ee1f05a7d49013df5df2a65d3b0070d96124b2f78681d27` | Escaneo alternativo de ajustes de VCO y modificación de conexión de fuente. |
+| `factory-bulletins/mini_psu_mod.jpg` | [Extracto de modificación de fuente](https://synthfool.com/docs/Moog/minimoog/mini_psu_mod.jpg), `6fb2449a71d26d6043a9b233f2313e4803f38bc8e24b76a1c9b3a5c3cbb26fa2` | Duplicado ampliado del procedimiento de conexión de alimentación. |
+| `secondary/more_mini_mods.jpg` | [Colección manuscrita de modificaciones](https://synthfool.com/docs/Moog/minimoog/more_mini_mods.jpg), `7ff308c45d3c23db8945b7d114db5b3ca71dade0d60926e1d7262cae65587232` | **Pista secundaria**, sin atribución de fábrica; sync, rueda, trigger y bleed. No define el circuito nominal. |
+| `secondary/lessdrift.jpg` | [Consejo de menor deriva](https://synthfool.com/docs/Moog/minimoog/lessdrift.jpg), `2be4fbd153559f9de0d5a3cdafc37e483d32ebbe9f954aafa9a3b417aa0893ec` | **Pista secundaria**, modificación posterior de amplificadores del VCO. No presumirla en una unidad clásica. |
+
+[Un índice de correcciones aportadas por técnicos](https://www.synthfool.com/docs/Moog/minimoog/errors/) señala posibles errores de cableado, numeración de pin y dibujos de placas. Sus afirmaciones permanecen **sin verificar** contra los esquemas y una unidad real, por lo que no se usan como evidencia primaria.
+
+## Índice de páginas decisivas
+
+| Pregunta | Fuente y ubicación |
+| --- | --- |
+| Especificaciones de fábrica: cinco fuentes, formas, rangos, salidas, teclado | SVC-204D PDF p. 6, impresa vi |
+| Placa de osciladores estabilizada: sumadores, μA726, rampas/formas | SVC-204D PDF pp. 8–10, impresas 2-3 a 2-5; esquema PDF p. 60, Fig. 9-2 |
+| Placa de osciladores antigua: convertidor, rampa, triángulo, pulso | SVC-204D PDF pp. 14–16, impresas 2-9 a 2-10A; esquema PDF p. 61, Fig. 9-3 |
+| Ruido, mezcla de modulación y entrada externa | SVC-204D PDF pp. 10–11 y 14; esquemas pp. 66 y 69 |
+| Ladder, recuperación, dos VCA | SVC-204D PDF pp. 11–12, impresa 2-7; esquema p. 69, Fig. 9-10 |
+| Contornos, gatillo y final decay | SVC-204D PDF pp. 12–13, impresas 2-7 a 2-8; esquema p. 65, Fig. 9-5 |
+| Prioridad de nota, retención CV, glide | SVC-204D PDF p. 16, impresa 2-10A; esquema p. 65, Fig. 9-5 |
+| Afinación y calibración | SVC-204D PDF pp. 26–38, sección 5; B-TUNE y B-804C tienen prioridad para los procedimientos que corrigen |
+| Modificaciones de época | SVC-204D PDF pp. 52–57, sección 8, con correcciones B-804C |
+| Revisión temprana de placas | SVC-RJF PDF pp. 4–5, impresas 4–5; ajustes pp. 11–17 |
+
+## Fuentes por conseguir o verificar
+
+- [Tom Rhea, *Minimoog Model D Operation Manual* (1974), documentado por el autor](https://www.drtomrhea.com/resources) y [ejemplar catalogado por The Henry Ford](https://www.thehenryford.org/collections/explore/artifact/429443). Falta un escaneo íntegro autenticado; no confundirlo con OP-EARLY.
+- Fotografías y marcajes de **la unidad de referencia concreta**, incluida placa 1, placa 2, placa 3, placa 4, placa 5, buffer de octavas y cualquier sustitución/reparación.
+- Audio y mediciones eléctricas de esa unidad, con calibración y cadena documentadas. Ningún PDF sustituye ese oráculo.
 
 ## Regla de admisión
 
-Cada constante DSP tendrá una conclusión identificada: fuente/página o nodo medido, derivación, unidades, dominio de validez, incertidumbre y prueba que podría refutarla. Un valor típico de una reedición o una implementación ajena no se traslada al Model D objetivo sin evidencia independiente.
-
-## Conflictos por resolver
-
-| ID | Conflicto o falta | Experimento / documento decisivo | Estado |
-| --- | --- | --- | --- |
-| GAP-REV | Versiones de placa de los Model D clásicos | Inventario de la unidad y esquemas de la misma revisión | Abierto |
-| GAP-CAL | Valores nominales frente a ajustes de servicio de la unidad | Registro de calibración y medidas previas/posteriores | Abierto |
-| GAP-UNIT | Dispersión entre unidades | Al menos una segunda unidad o declarar alcance de una sola | Abierto |
+Cada constante DSP requiere documento/página o nodo medido, derivación, unidades, dominio de validez, incertidumbre y prueba que pueda refutarla. La especificación de fábrica, el esquema nominal, la unidad ajustada y la preferencia musical son niveles de evidencia distintos. Un valor de datasheet o reedición no se traslada automáticamente a la voz clásica.
