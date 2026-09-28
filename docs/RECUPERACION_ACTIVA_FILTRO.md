@@ -30,7 +30,7 @@ El alto valor del tap corresponde a **ganancia incremental** del circuito lineal
 
 ## Validez y próximos contrastes
 
-La matriz AC es una **linealización local**; no incluye capacitancias de unión, ESR, fuga, variación de β, dispersión del par, dependencia térmica detallada ni limitación de excursión. Los dos valores R61 representan el [conflicto entre esquema y lista de piezas](ENTRADA_FILTRO.md), no dos variantes comprobadas. El siguiente cálculo debe conectar C10/R14/R73/R76 y la base activa de Q30 al tap, con `BOTTOM` dinámico, para barrer la ganancia de lazo. Luego hará falta una referencia temporal no lineal acoplada y la ruta VCA/salida. Sin unidad física ni captura comparable no se afirma fidelidad audible.
+La matriz AC es una **linealización local**; no incluye capacitancias de unión, ESR, fuga, variación de β, dispersión del par, dependencia térmica detallada ni limitación de excursión. Los dos valores R61 representan el [conflicto entre esquema y lista de piezas](ENTRADA_FILTRO.md), no dos variantes comprobadas. El [lazo AC](LAZO_EMPHASIS_PEQUENA_SENAL.md) y el [transitorio no lineal acoplado](TRANSITORIO_FILTRO_ACOPLADO.md) ya conectan C10/R14/R73/R76 a Q30. La [frontera pasiva del primer VCA](FRONTERA_ENTRADA_VCA1.md) deja abierta su carga activa y la salida. Sin unidad física ni captura comparable no se afirma fidelidad audible.
 
 ```powershell
 python tools/filter_recovery_active_dc_reference.py

@@ -19,7 +19,7 @@ Esta ecuación comprueba la orientación de C1/C5 y la KCL de cada nodo nuevo; *
 
 Para el escenario de [sesgo Ebers–Moll](LADDER_EBERS_MOLL_DC.md) y `100 Hz`, con R61 `200 Ω`, la magnitud diferencial en emisores superiores pasa de ≈`0,457 V/V` con salida abierta a ≈`0,406 V/V` cargada; en las bases Q8/Q6 es ≈`0,401 V/V`. Con R61 `200 kΩ`, las cifras correspondientes son ≈`0,127`, `0,112` y `0,111 V/V`. En DC, C27 bloquea la transferencia; el residuo KCL complejo de las pruebas es `<10⁻¹¹ A/V`. Estos números dependen de β directo/inverso e `I_S` impuestos y no son niveles de jack o promesa de sonido.
 
-Q8/Q6 **no** son cargas de base nula en el instrumento. La [recuperación activa Q5–Q8](RECUPERACION_ACTIVA_FILTRO.md) ya calcula su sesgo DC y su carga AC condicionada, incluido R7/R3. Aún faltan la realimentación C10/R14, ESR de C1/C5, VCA y salida. La [referencia no lineal temporal](LADDER_TRANSITORIO_NO_LINEAL.md) conserva por ahora los emisores superiores sin esta carga; no deben confundirse las dos fronteras.
+Q8/Q6 **no** son cargas de base nula en el instrumento. La [recuperación activa Q5–Q8](RECUPERACION_ACTIVA_FILTRO.md) ya calcula su sesgo DC y su carga AC condicionada, incluido R7/R3. El [lazo de EMPHASIS](LAZO_EMPHASIS_PEQUENA_SENAL.md) y el [transitorio acoplado](TRANSITORIO_FILTRO_ACOPLADO.md) continúan esa frontera; faltan ESR de C1/C5 y la carga activa del [primer VCA](FRONTERA_ENTRADA_VCA1.md). La [referencia no lineal temporal del núcleo aislado](LADDER_TRANSITORIO_NO_LINEAL.md) conserva los emisores superiores sin esta carga; no deben confundirse las dos fronteras.
 
 ```powershell
 python tools/filter_recovery_input_boundary_reference.py
