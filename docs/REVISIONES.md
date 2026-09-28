@@ -24,6 +24,7 @@
 3. **Placas 4/5:** Folkman 1973 enumera cuatro placas principales (93-113 a 93-116) y también el rectificador 93-118 por separado (PDF p. 9). SVC-204D numera ese rectificador/filtro de alimentación como **placa 5**. Comparar designadores y cableado, no igualar ambos inventarios sólo por número.
 4. **Unidad reparada:** un número de serie, foto externa o año anunciado no demuestra la circuitería que suena hoy. Documentar reemplazos, modificaciones, calibración y estado de mantenimiento.
 5. **Tres familias de VCO:** SVC-204D llama “antigua” a la placa de Fig. 9-3, pero testimonios de [propietarios y técnicos](https://forum.moogmusic.com/t/minimoog-model-d-differences/14878) describen una placa discreta anterior, la CA3046 y la μA726. Se necesita el dibujo #1441 para cerrar la primera; no convertir esa narración en cifras exactas de producción.
+6. **Fig. 9-3 versus tabla 7-5:** el dibujo CA3046 indica R2 = 560 kΩ y Q5/Q6 = 2N4402, mientras la lista de repuestos antigua (SVC-9 PDF p. 24, impresa 7-4) agrupa R2 con piezas de 910 kΩ y Q5/Q6 con 2N3906. B-804C no resuelve esto. Ver [derivación VCO 1](VCO1_CA3046.md); conservar ambas hipótesis hasta hallar una edición primaria o placa poblada que las distinga.
 
 ## Ficha mínima de identidad física
 
