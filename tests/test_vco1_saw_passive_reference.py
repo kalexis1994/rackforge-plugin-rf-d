@@ -15,16 +15,17 @@ class SawPassiveTests(unittest.TestCase):
         weights = result["boundary_voltage_coefficients"]
         self.assertAlmostEqual(sum(weights.values()), 1.0)
         self.assertEqual(set(weights), {
-            "SCHMITT_DRIVE", "GND", "TRI_OUTPUT_21B", "Q2_COLLECTOR", "Q11_BASE", "Q12_BASE"
+            "SCHMITT_DRIVE", "GND", "TRI_OUTPUT_21B", "Q2_COLLECTOR", "Q2_EMITTER", "Q11_BASE", "Q12_BASE"
         })
         self.assertAlmostEqual(
             result["passive_thevenin_resistance_ohm"],
-            1 / sum(1 / r for r in (4300, 4700, 8200, 150000, 390000, 100000)),
+            1 / sum(1 / r for r in (4300, 4700, 8200, 150000, 10000, 390000, 100000)),
         )
 
     def test_triangle_branch_prevents_isolated_divider_assumption(self) -> None:
         weights = passive_saw_9b()["boundary_voltage_coefficients"]
-        self.assertGreater(weights["TRI_OUTPUT_21B"], 0.20)
+        self.assertGreater(weights["TRI_OUTPUT_21B"], 0.17)
+        self.assertGreater(weights["Q2_EMITTER"], 0.14)
         self.assertLess(weights["SCHMITT_DRIVE"], 4700 / (4300 + 4700))
 
 
