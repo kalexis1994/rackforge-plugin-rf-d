@@ -178,6 +178,29 @@ class RampGraphTests(unittest.TestCase):
             self.assertEqual(parts[ref]["value"], value)
             self.assertEqual(set(parts[ref]["terminals"].values()), nodes)
 
+    def test_pulse_stage_connects_width_input_feedback_and_rectangular_20b(self) -> None:
+        graph = json.loads((ROOT / "evidence" / "vco1_ramp_graph.json").read_text(encoding="utf-8"))
+        parts = {part["ref"]: part for part in graph["parts"]}
+        self.assertEqual(parts["Q11"]["terminals"], {
+            "base": "Q11_BASE", "collector": "Q11_COLLECTOR", "emitter": "GND"
+        })
+        self.assertEqual(parts["Q12"]["terminals"], {
+            "base": "Q12_BASE", "collector": "Q12_COLLECTOR", "emitter": "SAW_OUTPUT_9B"
+        })
+        expected = {
+            "R1": (43000, {"PULSE_WIDTH_28B", "Q11_BASE"}),
+            "R40": (43000, {"SCHMITT_DRIVE", "Q11_BASE"}),
+            "R44": (390000, {"SAW_OUTPUT_9B", "Q11_BASE"}),
+            "R2": (910000, {"Q12_COLLECTOR", "Q11_BASE"}),
+            "R39": (100000, {"Q11_COLLECTOR", "Q12_BASE"}),
+            "R35": (100000, {"Q12_BASE", "SAW_OUTPUT_9B"}),
+            "R13": (6200, {"Q12_COLLECTOR", "RECT_OUTPUT_20B"}),
+            "R22": (4700, {"GND", "RECT_OUTPUT_20B"}),
+        }
+        for ref, (value, nodes) in expected.items():
+            self.assertEqual(parts[ref]["value"], value)
+            self.assertEqual(set(parts[ref]["terminals"].values()), nodes)
+
     def test_trim_and_reference_divider_keep_voltage_label_distinct(self) -> None:
         graph = json.loads((ROOT / "evidence" / "vco1_ramp_graph.json").read_text(encoding="utf-8"))
         parts = {part["ref"]: part for part in graph["parts"]}

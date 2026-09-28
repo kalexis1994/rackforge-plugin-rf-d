@@ -1,9 +1,9 @@
 {
   "board": "SVC-204D_Fig_9-3_CA3046",
   "source": {"id": "SVC-9", "pdf_page": 5, "figure": "9-3"},
-  "replacement_value_check": {"id": "SVC-9", "pdf_pages": [24, 25, 26], "table": "7-5", "refs": ["C2", "C3", "C4", "C14", "Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8", "Q9", "Q10", "Q12", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R11", "R14", "R15", "R16", "R17", "R19", "R20", "R23", "R24", "R25", "R26", "R28", "R29", "R30", "R31", "R33", "R34", "R35", "R36", "R37", "R41", "R42", "R44", "R45", "R46", "R47", "R48", "R49", "R50", "R69", "R78", "R79", "R166", "R174"]},
-  "scope": "Verified terminals around the VCO 1 timing capacitor, CA3046 current-sink network, FET ramp amplifier, Schmitt/reset path, triangle former and 9B/21B loads; this is deliberately not a complete netlist.",
-  "nodes": ["GND", "RAMP_C1", "PAIR_EMITTER", "QC_EMITTER", "QC_BASE", "QB_COLLECTOR", "QA_BASE", "QB_BASE", "IC1_SUM", "IC1_PLUS", "IC1_OUT", "IC3_OUT", "NEG4_REF", "R8_TOP", "R8_BOTTOM", "R37_TOP", "NEG5_V", "NEG10_V", "POS10_V", "FET_LEFT_DRAIN", "FET_RIGHT_DRAIN", "FET_COMMON_SOURCE", "FET_C3_LEFT", "FET_C4_LEFT", "Q4_BASE", "Q4_COLLECTOR", "Q4_EMITTER", "Q3_BASE", "SCHMITT_DRIVE", "SAW_OUTPUT_9B", "TRI_OUTPUT_21B", "Q2_COLLECTOR", "Q2_EMITTER", "Q1_EMITTER", "Q11_BASE", "Q12_BASE", "Q12_COLLECTOR", "SCHMITT_SENSE", "SCHMITT_Q5_COLLECTOR", "SCHMITT_Q6_COLLECTOR", "RESET_BIAS", "Q10_BASE"],
+  "replacement_value_check": {"id": "SVC-9", "pdf_pages": [24, 25, 26], "table": "7-5", "refs": ["C2", "C3", "C4", "C14", "Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8", "Q9", "Q10", "Q11", "Q12", "R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R11", "R13", "R14", "R15", "R16", "R17", "R19", "R20", "R22", "R23", "R24", "R25", "R26", "R28", "R29", "R30", "R31", "R33", "R34", "R35", "R36", "R37", "R39", "R40", "R41", "R42", "R44", "R45", "R46", "R47", "R48", "R49", "R50", "R69", "R78", "R79", "R166", "R174"]},
+  "scope": "Verified terminals around the VCO 1 timing capacitor, CA3046 current-sink network, FET ramp amplifier, Schmitt/reset, triangle and pulse formers, and 9B/21B/20B outputs; this is deliberately not a complete netlist.",
+  "nodes": ["GND", "RAMP_C1", "PAIR_EMITTER", "QC_EMITTER", "QC_BASE", "QB_COLLECTOR", "QA_BASE", "QB_BASE", "IC1_SUM", "IC1_PLUS", "IC1_OUT", "IC3_OUT", "NEG4_REF", "R8_TOP", "R8_BOTTOM", "R37_TOP", "NEG5_V", "NEG10_V", "POS10_V", "FET_LEFT_DRAIN", "FET_RIGHT_DRAIN", "FET_COMMON_SOURCE", "FET_C3_LEFT", "FET_C4_LEFT", "Q4_BASE", "Q4_COLLECTOR", "Q4_EMITTER", "Q3_BASE", "SCHMITT_DRIVE", "SAW_OUTPUT_9B", "TRI_OUTPUT_21B", "RECT_OUTPUT_20B", "PULSE_WIDTH_28B", "Q2_COLLECTOR", "Q2_EMITTER", "Q1_EMITTER", "Q11_BASE", "Q11_COLLECTOR", "Q12_BASE", "Q12_COLLECTOR", "SCHMITT_SENSE", "SCHMITT_Q5_COLLECTOR", "SCHMITT_Q6_COLLECTOR", "RESET_BIAS", "Q10_BASE"],
   "schematic_voltage_labels_v": {"GND": 0, "NEG4_REF": -4, "NEG5_V": -5, "NEG10_V": -10, "POS10_V": 10},
   "parts": [
     {"ref": "C1", "kind": "capacitor", "value": 1e-8, "unit": "farad", "terminals": {"a": "GND", "b": "RAMP_C1"}},
@@ -26,7 +26,10 @@
     {"ref": "Q8", "kind": "PNP_2N4058_schematic", "terminals": {"base": "FET_RIGHT_DRAIN", "emitter": "FET_C3_LEFT", "collector": "Q3_BASE"}},
     {"ref": "Q9", "kind": "PNP_2N4058_schematic", "terminals": {"base": "FET_LEFT_DRAIN", "emitter": "FET_C3_LEFT", "collector": "NEG10_V"}},
     {"ref": "Q10", "kind": "PNP_2N4402_schematic", "terminals": {"emitter": "GND", "collector": "RAMP_C1", "base": "Q10_BASE"}},
-    {"ref": "Q12", "kind": "NPN_2N3392_schematic", "terminals": {"base": "Q12_BASE", "collector": "Q12_COLLECTOR", "emitter": "SAW_OUTPUT_9B"}, "note": "Only the direct emitter connection to 9B is in scope; the pulse-stage collector network is not yet complete."},
+    {"ref": "Q11", "kind": "PNP_2N4058_schematic", "terminals": {"base": "Q11_BASE", "collector": "Q11_COLLECTOR", "emitter": "GND"}},
+    {"ref": "Q12", "kind": "NPN_2N3392_schematic", "terminals": {"base": "Q12_BASE", "collector": "Q12_COLLECTOR", "emitter": "SAW_OUTPUT_9B"}},
+    {"ref": "R1", "kind": "resistor", "value": 43000, "unit": "ohm", "terminals": {"a": "PULSE_WIDTH_28B", "b": "Q11_BASE"}},
+    {"ref": "R2", "kind": "resistor", "value": 910000, "unit": "ohm", "terminals": {"a": "Q11_BASE", "b": "Q12_COLLECTOR"}},
     {"ref": "R3", "kind": "resistor", "value": 10700, "unit": "ohm", "terminals": {"a": "POS10_V", "b": "Q2_COLLECTOR"}},
     {"ref": "R4", "kind": "resistor", "value": 33200, "unit": "ohm", "terminals": {"a": "POS10_V", "b": "FET_C4_LEFT"}},
     {"ref": "R5", "kind": "resistor", "value": 5600, "unit": "ohm", "terminals": {"a": "POS10_V", "b": "FET_RIGHT_DRAIN"}},
@@ -36,12 +39,14 @@
     {"ref": "R9", "kind": "resistor", "value": 33, "unit": "ohm", "terminals": {"a": "IC1_OUT", "b": "R8_TOP"}},
     {"ref": "R10", "kind": "resistor", "value": 1000, "unit": "ohm", "terminals": {"a": "IC1_PLUS", "b": "NEG5_V"}},
     {"ref": "R11", "kind": "trim_potentiometer", "value_end_to_end": 1000, "unit": "ohm", "terminals": {"high": "IC1_SUM", "wiper": "IC1_SUM", "low": "R37_TOP"}, "note": "The wiper is strapped to the summing-node end on Fig. 9-3."},
+    {"ref": "R13", "kind": "resistor", "value": 6200, "unit": "ohm", "terminals": {"a": "RECT_OUTPUT_20B", "b": "Q12_COLLECTOR"}},
     {"ref": "R14", "kind": "resistor", "value": 150000, "unit": "ohm", "terminals": {"a": "Q2_COLLECTOR", "b": "SAW_OUTPUT_9B"}},
     {"ref": "R15", "kind": "resistor", "value": 2200, "unit": "ohm", "terminals": {"a": "POS10_V", "b": "SCHMITT_DRIVE"}},
     {"ref": "R16", "kind": "resistor", "value": 33200, "unit": "ohm", "terminals": {"a": "POS10_V", "b": "SCHMITT_SENSE"}},
     {"ref": "R17", "kind": "resistor", "value": 10000, "unit": "ohm", "terminals": {"a": "SCHMITT_SENSE", "b": "RESET_BIAS"}},
     {"ref": "R19", "kind": "resistor", "value": 1000, "unit": "ohm", "terminals": {"a": "R8_BOTTOM", "b": "NEG5_V"}},
     {"ref": "R20", "kind": "temperature_compensating_resistor", "value": 1000, "unit": "ohm", "terminals": {"a": "IC1_OUT", "b": "IC1_SUM"}},
+    {"ref": "R22", "kind": "resistor", "value": 4700, "unit": "ohm", "terminals": {"a": "GND", "b": "RECT_OUTPUT_20B"}},
     {"ref": "R23", "kind": "resistor", "value": 8200, "unit": "ohm", "terminals": {"a": "TRI_OUTPUT_21B", "b": "SAW_OUTPUT_9B"}},
     {"ref": "R24", "kind": "resistor", "value": 10700, "unit": "ohm", "terminals": {"a": "FET_C4_LEFT", "b": "SCHMITT_DRIVE"}},
     {"ref": "R25", "kind": "resistor", "value": 15000, "unit": "ohm", "terminals": {"a": "FET_C4_LEFT", "b": "NEG10_V"}},
@@ -55,6 +60,8 @@
     {"ref": "R35", "kind": "resistor", "value": 100000, "unit": "ohm", "terminals": {"a": "Q12_BASE", "b": "SAW_OUTPUT_9B"}},
     {"ref": "R36", "kind": "resistor", "value": 2700, "unit": "ohm", "terminals": {"a": "Q3_BASE", "b": "NEG10_V"}},
     {"ref": "R37", "kind": "resistor", "value": 11800, "unit": "ohm", "terminals": {"a": "R37_TOP", "b": "NEG10_V"}},
+    {"ref": "R39", "kind": "resistor", "value": 100000, "unit": "ohm", "terminals": {"a": "Q11_COLLECTOR", "b": "Q12_BASE"}},
+    {"ref": "R40", "kind": "resistor", "value": 43000, "unit": "ohm", "terminals": {"a": "SCHMITT_DRIVE", "b": "Q11_BASE"}},
     {"ref": "R41", "kind": "resistor", "value": 910, "unit": "ohm", "terminals": {"a": "SCHMITT_Q6_COLLECTOR", "b": "Q10_BASE"}},
     {"ref": "R50", "kind": "resistor", "value": 39000, "unit": "ohm", "terminals": {"a": "GND", "b": "QB_COLLECTOR"}},
     {"ref": "R69", "kind": "resistor", "value": 15000, "unit": "ohm", "terminals": {"a": "IC3_OUT", "b": "QC_BASE"}},
@@ -75,7 +82,7 @@
   ],
   "outstanding": [
     "The shared -4 V rail connections are inventoried in neg4_reference_loads.json; determine their state-dependent currents before solving an absolute DC operating point.",
-    "The internal 9B saw loads R33/R34/R23/R14/R29/R44/R35 and Q12 emitter are traced, along with Q2/Q1 to 21B; external 9B/21B loads and nonlinear transistor currents remain unknown before calculating loaded waves.",
+    "The Q11/Q12 pulse network and 20B output are traced; input drive at 28B, external 9B/21B/20B loads and nonlinear transistor currents remain unknown before calculating duty cycle or loaded waves.",
     "Resolve Q5/Q6 part-number conflict before choosing device curves."
   ]
 }

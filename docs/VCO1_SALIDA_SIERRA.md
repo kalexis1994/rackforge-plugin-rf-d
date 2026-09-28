@@ -15,7 +15,7 @@ El esquema de la placa CA3046 para números de serie menores de 10175 es SVC-9, 
 | R29 | Emisor de Q2 | 10 kΩ, 1 % | Carga dependiente del formador triangular, omitida en el primer inventario de 9B. |
 | R44 | Base de Q11 | 390 kΩ | Carga dependiente del formador de pulso. |
 | R35 | Base de Q12 | 100 kΩ | Carga dependiente del formador de pulso. |
-| Q12 | Emisor de 2N3392 | Transistor | Corriente no lineal; su colector pertenece al formador de pulso. |
+| Q12 | Emisor de 2N3392 | Transistor | Corriente no lineal del [formador de pulso](VCO1_PULSO.md), cuya salida está en 20B. |
 | 9B | Cableado externo a la placa | Desconocido | Impedancia y estados todavía sin resolver. |
 
 La barra de −10 V pasa **por encima** de la salida de sierra, sin unión en los cruces de R33/R34. Esa distinción evita convertir R33 en una resistencia hacia −10 V. La forma rectangular sale por otro terminal, 20B, y el triángulo por 21B; el vínculo pasivo de 21B a 9B es R23.
@@ -47,4 +47,4 @@ python tools/vco1_saw_passive_reference.py
 python -m unittest discover -s tests -q
 ```
 
-Los tests verifican valores, conectividad y suma de conductancias, incluido R29 para evitar que vuelva a faltar. Para predecir audio falta resolver Q2/Q1, Q11/Q12 y el cableado de 9B junto con Q3. Hasta entonces, la sierra del [modelo de eventos de C1](../tools/vco1_reference.py) es un nodo interno idealizado y no una señal de 9B.
+Los tests verifican valores, conectividad y suma de conductancias, incluido R29 para evitar que vuelva a faltar. La topología de [Q2/Q1](VCO1_TRIANGULO.md) y [Q11/Q12](VCO1_PULSO.md) ya está trazada; para predecir audio hay que resolver sus corrientes y el cableado de 9B junto con Q3. Hasta entonces, la sierra del [modelo de eventos de C1](../tools/vco1_reference.py) es un nodo interno idealizado y no una señal de 9B.
