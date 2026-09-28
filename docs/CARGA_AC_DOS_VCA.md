@@ -6,7 +6,7 @@ Para una perturbación de BUS se resuelve `(G−j2πfC)v=b`. `G` es `∂KCL/∂V
 
 Con el escenario DC condicionado `V_UPPER=9,5 V`, `I_S=10⁻¹⁴ A`, `β_F=100`, `β_R=5`, `298,15 K`, balances eléctricos `12,5/50 Ω`, `R61=200 Ω`, `R73_L=500 Ω`, EMPHASIS eléctrico `0 Ω` y ambos controles impuestos `2 V`, a `100 Hz` salen magnitudes `|V_Q16c−V_Q15c|/BUS≈0,05519` y `|V_Q14c−V_Q13c|/BUS≈0,19613`. Con ambos controles `0 V`, la segunda magnitud es casi cero. Las cuarenta KCL complejas cierran a `<10⁻¹¹ A/V`. La diferencia de magnitudes bajo estas fronteras **no es** una ley de volumen, una ganancia de salida ni una validación de audio vintage.
 
-Las [regresiones](../tests/test_filter_vca_cascaded_small_signal_reference.py) comprueban que no se dupliquen R34/R36, que el control modifique la salida del segundo VCA, que C6 bloquee DC y que cierre la KCL en cuatro frecuencias. El próximo cierre debe llevar los seis BJT al transitorio no lineal, seguir Q12/Q17 y la salida, y reemplazar las fronteras de R10/control con sus circuitos. Hasta entonces la fidelidad sonora sigue abierta.
+Las [regresiones](../tests/test_filter_vca_cascaded_small_signal_reference.py) comprueban que no se dupliquen R34/R36, que el control modifique la salida del segundo VCA, que C6 bloquee DC y que cierre la KCL en cuatro frecuencias. Los seis BJT ya participan también en el [transitorio no lineal de cuarenta nodos](TRANSITORIO_DOS_VCA.md). Falta seguir Q12/Q17 y la salida, y reemplazar las fronteras de R10/control con sus circuitos. Hasta entonces la fidelidad sonora sigue abierta.
 
 ```powershell
 python -m unittest discover -s tests -q
