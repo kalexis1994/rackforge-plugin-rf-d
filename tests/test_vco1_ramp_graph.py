@@ -28,7 +28,9 @@ class RampGraphTests(unittest.TestCase):
         parts = {part["ref"]: part for part in graph["parts"]}
         self.assertEqual(set(parts["C1"]["terminals"].values()), {"GND", "RAMP_C1"})
         self.assertEqual(parts["IC2.Qa"]["terminals"]["collector"], "RAMP_C1")
-        self.assertEqual(parts["Q10"]["terminals"], {"emitter": "GND", "collector": "RAMP_C1"})
+        self.assertEqual(parts["Q10"]["terminals"], {
+            "emitter": "GND", "collector": "RAMP_C1", "base": "Q10_BASE"
+        })
         self.assertEqual(parts["IC2.Qc"]["terminals"]["collector"], parts["IC2.Qa"]["terminals"]["emitter"])
         self.assertEqual(set(parts["R42"]["terminals"].values()), {"IC1_SUM", "QC_EMITTER"})
         self.assertEqual(set(parts["R79"]["terminals"].values()), {"QC_EMITTER", "NEG10_V"})
@@ -52,6 +54,24 @@ class RampGraphTests(unittest.TestCase):
             {"kind": "resistor", "resistance_ohm": 2000},
             {"kind": "series_rc", "resistance_ohm": 220, "capacitance_farad": 1e-8},
         ])
+
+    def test_reset_trace_keeps_q5_q6_part_conflict_open(self) -> None:
+        graph = json.loads((ROOT / "evidence" / "vco1_ramp_graph.json").read_text(encoding="utf-8"))
+        evidence = json.loads((ROOT / "evidence" / "vco1_ca3046_parts.json").read_text(encoding="utf-8"))
+        parts = {part["ref"]: part for part in graph["parts"]}
+        source_parts = {part["ref"]: part for part in evidence["components"]}
+        for ref in ("Q5", "Q6"):
+            self.assertEqual(set(parts[ref]["part_candidates"]), {
+                source_parts[ref]["schematic"], source_parts[ref]["bom"]
+            })
+            self.assertEqual(parts[ref]["candidate_status"], "schematic_BOM_conflict")
+            self.assertEqual(parts[ref]["terminals"]["emitter"], "GND")
+        self.assertEqual(parts["Q5"]["terminals"]["collector"], parts["Q6"]["terminals"]["base"])
+        self.assertEqual(set(parts["R41"]["terminals"].values()), {
+            parts["Q6"]["terminals"]["collector"], parts["Q10"]["terminals"]["base"]
+        })
+        self.assertEqual(parts["R41"]["value"], 910)
+        self.assertEqual(parts["Q10"]["terminals"]["collector"], "RAMP_C1")
 
 
 if __name__ == "__main__":
