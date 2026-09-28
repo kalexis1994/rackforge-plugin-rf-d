@@ -9,7 +9,7 @@
     {"ref": "C1", "kind": "capacitor", "value": 1e-8, "unit": "farad", "terminals": {"a": "GND", "b": "RAMP_C1"}},
     {"ref": "C2", "kind": "capacitor", "value": 1e-10, "unit": "farad", "terminals": {"a": "QA_BASE", "b": "QB_BASE"}},
     {"ref": "C14", "kind": "capacitor", "value": 1.2e-7, "unit": "farad", "terminals": {"a": "NEG4_REF", "b": "GND"}, "note": "0.12 microfarad reference bypass; the -4 V rail has other board loads."},
-    {"ref": "IC1", "kind": "741_opamp_schematic", "package_pins": {"noninverting": 3, "inverting": 2, "output": 6}, "terminals": {"noninverting": "IC1_PLUS", "inverting": "IC1_SUM", "output": "IC1_OUT"}, "untraced_terminals": ["positive_supply", "negative_supply"]},
+    {"ref": "IC1", "kind": "741_opamp_schematic", "package_pins": {"noninverting": 3, "inverting": 2, "output": 6, "positive_supply": 7, "negative_supply": 4}, "terminals": {"noninverting": "IC1_PLUS", "inverting": "IC1_SUM", "output": "IC1_OUT", "positive_supply": "GND", "negative_supply": "NEG10_V"}},
     {"ref": "IC2.Qa", "kind": "CA3046_NPN", "package_pins": {"collector": 5, "base": 4, "emitter": 3}, "terminals": {"collector": "RAMP_C1", "base": "QA_BASE", "emitter": "PAIR_EMITTER"}},
     {"ref": "IC2.Qb", "kind": "CA3046_NPN", "package_pins": {"collector": 1, "base": 2, "emitter": 3}, "terminals": {"collector": "QB_COLLECTOR", "base": "QB_BASE", "emitter": "PAIR_EMITTER"}},
     {"ref": "IC2.Qc", "kind": "CA3046_NPN", "package_pins": {"collector": 14, "base": 12, "emitter": 13}, "terminals": {"collector": "PAIR_EMITTER", "base": "QC_BASE", "emitter": "QC_EMITTER"}},
@@ -38,7 +38,7 @@
     {"ref": "R174", "kind": "resistor", "value": 3900, "unit": "ohm", "terminals": {"a": "NEG4_REF", "b": "GND"}}
   ],
   "outstanding": [
-    "The shared -4 V rail connections are inventoried in neg4_reference_loads.json; determine their state-dependent currents and IC1/IC3 supplies before solving an absolute DC operating point.",
+    "The shared -4 V rail connections are inventoried in neg4_reference_loads.json; determine their state-dependent currents and IC3 supply before solving an absolute DC operating point.",
     "Transcribe the rest of Schmitt sense, Q6 collector loads, FET amplifier and output loads before calculating reset duration, hysteresis or loaded saw.",
     "Resolve Q5/Q6 part-number conflict before choosing device curves."
   ]
