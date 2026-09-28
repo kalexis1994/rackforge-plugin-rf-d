@@ -1,0 +1,22 @@
+{
+  "board": "SVC-204D_Fig_9-3_CA3046",
+  "source": {"id": "SVC-9", "pdf_page": 5, "figure": "9-3"},
+  "replacement_value_check": {"id": "SVC-9", "pdf_page": 25, "table": "7-5", "refs": ["R19", "R42", "R50", "R79"]},
+  "scope": "Verified terminals around the VCO 1 timing capacitor and CA3046 current sink; this is deliberately not a complete netlist.",
+  "nodes": ["GND", "RAMP_C1", "PAIR_EMITTER", "QC_EMITTER", "QB_COLLECTOR", "IC1_SUM", "NEG10_V"],
+  "parts": [
+    {"ref": "C1", "kind": "capacitor", "value": 1e-8, "unit": "farad", "terminals": {"a": "GND", "b": "RAMP_C1"}},
+    {"ref": "IC2.Qa", "kind": "CA3046_NPN", "package_pins": {"collector": 5, "emitter": 3}, "terminals": {"collector": "RAMP_C1", "emitter": "PAIR_EMITTER"}, "untraced_terminals": ["base"]},
+    {"ref": "IC2.Qb", "kind": "CA3046_NPN", "package_pins": {"collector": 1, "emitter": 3}, "terminals": {"collector": "QB_COLLECTOR", "emitter": "PAIR_EMITTER"}, "untraced_terminals": ["base"]},
+    {"ref": "IC2.Qc", "kind": "CA3046_NPN", "package_pins": {"collector": 14, "emitter": 13}, "terminals": {"collector": "PAIR_EMITTER", "emitter": "QC_EMITTER"}, "untraced_terminals": ["base"]},
+    {"ref": "Q10", "kind": "PNP_2N4402_schematic", "terminals": {"emitter": "GND", "collector": "RAMP_C1"}, "untraced_terminals": ["base"]},
+    {"ref": "R50", "kind": "resistor", "value": 39000, "unit": "ohm", "terminals": {"a": "GND", "b": "QB_COLLECTOR"}},
+    {"ref": "R79", "kind": "resistor", "value": 1000, "unit": "ohm", "terminals": {"a": "QC_EMITTER", "b": "NEG10_V"}},
+    {"ref": "R42", "kind": "resistor", "value": 160000, "unit": "ohm", "terminals": {"a": "IC1_SUM", "b": "QC_EMITTER"}}
+  ],
+  "outstanding": [
+    "Transcribe transistor bases, R8/R11 trims, C2/R7/R9/R10/R19/R37 and IC3/R69 connections.",
+    "Transcribe FET amplifier, Schmitt reset Q5/Q6 and Q10 drive before calculating reset duration or loaded saw.",
+    "Resolve Q5/Q6 part-number conflict before choosing device curves."
+  ]
+}

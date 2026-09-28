@@ -1,0 +1,39 @@
+"""Protect the traced ramp connections against later netlist transcription errors."""
+
+import json
+import unittest
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+class RampGraphTests(unittest.TestCase):
+    def test_graph_uses_only_declared_nodes_and_agrees_with_package_pins(self) -> None:
+        graph = json.loads((ROOT / "evidence" / "vco1_ramp_graph.json").read_text(encoding="utf-8"))
+        pinmap = json.loads((ROOT / "evidence" / "vco1_ic2_pinmap.json").read_text(encoding="utf-8"))
+        nodes = set(graph["nodes"])
+        refs = [part["ref"] for part in graph["parts"]]
+        self.assertEqual(len(refs), len(set(refs)))
+        for part in graph["parts"]:
+            self.assertTrue(set(part["terminals"].values()) <= nodes)
+        for device in pinmap["transistors"]:
+            part = next(part for part in graph["parts"] if part["ref"] == "IC2." + device["board_name"])
+            self.assertEqual(part["package_pins"], {
+                terminal: device[terminal] for terminal in ("collector", "emitter")
+            })
+
+    def test_ramp_has_documented_current_sink_and_reset_switch(self) -> None:
+        graph = json.loads((ROOT / "evidence" / "vco1_ramp_graph.json").read_text(encoding="utf-8"))
+        parts = {part["ref"]: part for part in graph["parts"]}
+        self.assertEqual(set(parts["C1"]["terminals"].values()), {"GND", "RAMP_C1"})
+        self.assertEqual(parts["IC2.Qa"]["terminals"]["collector"], "RAMP_C1")
+        self.assertEqual(parts["Q10"]["terminals"], {"emitter": "GND", "collector": "RAMP_C1"})
+        self.assertEqual(parts["IC2.Qc"]["terminals"]["collector"], parts["IC2.Qa"]["terminals"]["emitter"])
+        self.assertEqual(set(parts["R42"]["terminals"].values()), {"IC1_SUM", "QC_EMITTER"})
+        self.assertEqual(set(parts["R79"]["terminals"].values()), {"QC_EMITTER", "NEG10_V"})
+        self.assertNotIn("R19", parts)
+
+
+if __name__ == "__main__":
+    unittest.main()
