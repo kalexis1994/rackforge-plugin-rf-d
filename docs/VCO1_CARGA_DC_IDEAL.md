@@ -4,7 +4,7 @@
 
 La malla transcrita de **SVC-9, Fig. 9-3, PDF p. 5** (SVC-204D, PDF p. 61) une IC1, R11/R37, R20, R42, el emisor de Qc, R79, Qa/Qb y el lazo IC3/R50. El [grafo parcial](../evidence/vco1_ramp_graph.json) fija los terminales. La ley del par usa [TI SLOA059B, PDF p. 6, ecuaciones (3)–(4)](https://www.ti.com/lit/an/sloa059b/sloa059b.pdf). La [referencia compartida](REFERENCIA_MENOS4V.md) aporta sólo un voltaje **condicional** a una corriente externa impuesta.
 
-Se introducen explícitamente: seis voltajes **en las líneas de control de la placa** (BEND, TUNE, KEYBOARD, MOD, EXT, OSC1 RNG), resistencia activa `r11 ∈ [0, 1 kΩ]`, fracción `α ∈ [0, 1]` de R8, temperatura de unión, cociente hipotético `I_Sa/I_Sb` y corriente externa neta de la referencia −4 V. No conocemos los valores físicos de esas entradas ni las posiciones de ajuste de una unidad.
+Se introducen explícitamente: seis voltajes **en las líneas de control de la placa** (BEND, TUNE, KEYBOARD, MOD, EXT, OSC1 RNG), resistencia activa `r11 ∈ [0, 1 kΩ]`, fracción `α ∈ [0, 1]` de R8, temperatura de unión, cociente hipotético `I_Sa/I_Sb`, corriente externa neta de la referencia −4 V y `V_BE` hipotético de Qc. No conocemos los valores físicos de esas entradas ni las posiciones de ajuste de una unidad.
 
 ## Ecuaciones de la malla reducida
 
@@ -22,16 +22,18 @@ Si IC3 mantiene el colector de Qb en `V_ref`, sin otras cargas allí, `I_b = (0 
 
 El [explorador de carga](../tools/vco1_ideal_dc_loadline.py) elimina `E` y `O` por las dos leyes de nodos, barre `I_a` en un intervalo numérico declarado y devuelve todos los cruces de la ecuación logarítmica detectados en ese intervalo. **No** selecciona una raíz por afinación deseada. El intervalo de búsqueda (por defecto 0,001–1000 µA) es un parámetro numérico, no el rango físico demostrado del VCO.
 
+En la misma Fig. 9-3, IC3 está alimentado con **+10/−10 V**; su salida pasa por R69 = 15 kΩ a la base de Qc. La rama resistiva de R78 = 2 kΩ conecta esa base a −10 V y la rama serie `220 Ω + 0,01 µF` queda abierta en continua. Si la corriente de base de Qc es nula y se **impone** `V_BE,Qc`, entonces `B = E + V_BE,Qc` y la ley de nodos de la base exige `O_3 = B + R69·(B + 10 V)/2 kΩ`. El explorador informa si ese `O_3` cae estrictamente dentro de los rieles impresos, sin asumir que el 741 alcance el valor bajo esa carga. Es una comprobación necesaria, no un modelo de `V_BE` del chip Moog.
+
 ## Vector sintético de comprobación
 
-Como regresión matemática, fijamos las seis líneas en **−2,1 V artificiales**, `r11 = 500 Ω`, `α = 0,5`, `I_Sa/I_Sb = 1`, unión a **25 °C hipotéticos** y `I_ext = 0` en la referencia. La única raíz encontrada en el intervalo por defecto da `I_a = 17,067 µA`, `I_b = 99,010 µA`, `O = −4,9513 V` y `E = −9,8536 V`. Cumple las dos leyes de nodos y el cociente exponencial dentro del error numérico. Esos seis voltajes iguales se eligieron sólo para hacer reproducible la prueba; **no representan** una posición de panel, nota, calibración ni valor nominal publicado de corriente de Qa.
+Como regresión matemática, fijamos las seis líneas en **−2,1 V artificiales**, `r11 = 500 Ω`, `α = 0,5`, `I_Sa/I_Sb = 1`, unión a **25 °C hipotéticos** y `I_ext = 0` en la referencia. La única raíz encontrada en el intervalo por defecto da `I_a = 17,067 µA`, `I_b = 99,010 µA`, `O = −4,9513 V` y `E = −9,8536 V`. Cumple las dos leyes de nodos y el cociente exponencial dentro del error numérico. Si además se **impone** `V_BE,Qc = 0,7 V` sólo como vector numérico, la base sería `−9,1536 V`, la rama resistiva de R78 llevaría `423,21 µA` y la salida requerida de IC3 sería `−2,8055 V`. Esos seis voltajes iguales y `V_BE` se eligieron sólo para hacer reproducible la prueba; **no representan** una posición de panel, nota, calibración ni valor nominal publicado de corriente de Qa o de unión de Qc.
 
 En el mismo vector artificial, mover `r11` de 0 a 1000 Ω da raíces de 9,153 a 30,353 µA. Esto demuestra que la realimentación R42 y el trim entran en la ecuación acoplada. No demuestra el recorrido ni la escala de la perilla real. El resultado anterior de [razón incremental ideal](VCO1_CONVERTIDOR_IDEAL.md) sigue siendo una aproximación que omite la variación de E por R42.
 
 ```powershell
-python tools/vco1_ideal_dc_loadline.py --bend-v -2.1 --tune-v -2.1 --keyboard-v -2.1 --mod-v -2.1 --ext-v -2.1 --osc1-range-v -2.1 --r11-active-ohm 500 --r8-fraction 0.5 --external-reference-current-ua 0 --mismatch-is-ratio 1 --temperature-c 25
+python tools/vco1_ideal_dc_loadline.py --bend-v -2.1 --tune-v -2.1 --keyboard-v -2.1 --mod-v -2.1 --ext-v -2.1 --osc1-range-v -2.1 --r11-active-ohm 500 --r8-fraction 0.5 --external-reference-current-ua 0 --mismatch-is-ratio 1 --temperature-c 25 --qc-vbe-v 0.7
 ```
 
 ## Gate y límites
 
-La raíz sólo satisface un **subconjunto ideal de la polarización**. Falta comprobar la tensión de emisor común Qa/Qb, voltaje `V_BE` y `V_CE` de Qc, la salida exigida a IC3 a través de R69/R78, corrientes de base, límites de salida y offsets de ambos 741, regulación de −5/−10 V, cargas reales de −4 V y tolerancias. IC1 tiene alimentación **0/−10 V** en Fig. 9-3; una salida calculada entre esos rieles es condición necesaria, no comprobación de excursión válida. También faltan transitorios de C2/R78/C14 y reset de Q10. Por esas razones, el explorador **no** entrega frecuencia ni forma de onda, y C3 de RACE continúa como hipótesis condicionada.
+La raíz sólo satisface un **subconjunto ideal de la polarización**. Falta comprobar la tensión de emisor común Qa/Qb, la ley `V_BE` y `V_CE` de Qc, corrientes de base, límites de salida y offsets de ambos 741, regulación de −5/−10 V, cargas reales de −4 V y tolerancias. IC1 tiene alimentación **0/−10 V** en Fig. 9-3; las salidas calculadas dentro de los rieles de IC1/IC3 son condiciones necesarias, no comprobaciones de excursión válida bajo carga. También faltan transitorios de C2/R78/C14 y reset de Q10. Por esas razones, el explorador **no** entrega frecuencia ni forma de onda, y C3 de RACE continúa como hipótesis condicionada.

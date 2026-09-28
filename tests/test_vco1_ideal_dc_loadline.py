@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 
 from neg4_reference import conditional_reference_v
-from vco1_ideal_dc_loadline import circuit_values, evaluate_current, find_candidate_roots
+from vco1_ideal_dc_loadline import circuit_values, conditional_qc_drive, evaluate_current, find_candidate_roots
 from vco1_ideal_pair_reference import thermal_voltage_v
 
 
@@ -50,6 +50,24 @@ class CoupledIdealDcTests(unittest.TestCase):
         self.assertEqual(ic1["package_pins"]["negative_supply"], 4)
         self.assertEqual(ic1["terminals"]["positive_supply"], "GND")
         self.assertEqual(ic1["terminals"]["negative_supply"], "NEG10_V")
+
+    def test_ic3_required_output_obeys_r69_r78_dc_kcl(self) -> None:
+        import json
+        graph = json.loads((ROOT / "evidence" / "vco1_ramp_graph.json").read_text(encoding="utf-8"))
+        ic3 = next(part for part in graph["parts"] if part["ref"] == "IC3")
+        self.assertEqual(ic3["package_pins"]["positive_supply"], 7)
+        self.assertEqual(ic3["package_pins"]["negative_supply"], 4)
+        self.assertEqual(ic3["terminals"]["positive_supply"], "POS10_V")
+        self.assertEqual(ic3["terminals"]["negative_supply"], "NEG10_V")
+        root = find_candidate_roots(CONTROLS, 500, 0.5, conditional_reference_v(0), 1, 298.15)[0]
+        drive = conditional_qc_drive(root, 0.7)
+        values = circuit_values()
+        base = drive["qc_base_v_conditional"]
+        output = drive["ic3_output_v_required_if_zero_base_current"]
+        self.assertAlmostEqual((base - output) / values["R69"] +
+                               (base - values["V_NEG10"]) / values["R78_dc"], 0, places=14)
+        self.assertAlmostEqual(output, -2.8054962445, places=9)
+        self.assertTrue(drive["ic3_output_between_schematic_rails"])
 
     def test_trim_changes_candidate_without_claiming_calibration(self) -> None:
         reference = conditional_reference_v(0)

@@ -31,6 +31,7 @@ def circuit_values() -> dict:
         "R79": {"QC_EMITTER", "NEG10_V"},
         "R37": {"R37_TOP", "NEG10_V"},
         "R50": {"GND", "QB_COLLECTOR"},
+        "R69": {"IC3_OUT", "QC_BASE"},
     }
     for ref, nodes in expected.items():
         if set(parts[ref]["terminals"].values()) != nodes:
@@ -41,6 +42,15 @@ def circuit_values() -> dict:
         raise ValueError("IC1 reference topology has changed")
     if parts["IC1"]["terminals"]["positive_supply"] != "GND" or parts["IC1"]["terminals"]["negative_supply"] != "NEG10_V":
         raise ValueError("IC1 schematic supply topology has changed")
+    if parts["IC3"]["terminals"]["positive_supply"] != "POS10_V" or parts["IC3"]["terminals"]["negative_supply"] != "NEG10_V":
+        raise ValueError("IC3 schematic supply topology has changed")
+    if parts["R78"]["terminals"] != {"a": "QC_BASE", "b": "NEG10_V"}:
+        raise ValueError("R78 DC topology has changed")
+    dc_branches = [branch["resistance_ohm"] for branch in parts["R78"]["branches"]
+                   if branch["kind"] == "resistor"]
+    if len(dc_branches) != 1 or any(branch["kind"] not in ("resistor", "series_rc")
+                                     for branch in parts["R78"]["branches"]):
+        raise ValueError("R78 DC resistor branch is unresolved")
     if set(parts["R10"]["terminals"].values()) != {"IC1_PLUS", "NEG5_V"}:
         raise ValueError("IC1 noninverting reference has changed")
     evidence = load_evidence()
@@ -50,10 +60,12 @@ def circuit_values() -> dict:
         raise ValueError("expected six documented VCO 1 control resistors")
     values = {ref: parts[ref]["value"] for ref in expected}
     values["R11_total"] = parts["R11"]["value_end_to_end"]
+    values["R78_dc"] = dc_branches[0]
     values["inputs"] = inputs
     values["V_NEG5"] = graph["schematic_voltage_labels_v"]["NEG5_V"]
     values["V_NEG10"] = graph["schematic_voltage_labels_v"]["NEG10_V"]
     values["V_GND"] = graph["schematic_voltage_labels_v"]["GND"]
+    values["V_POS10"] = graph["schematic_voltage_labels_v"]["POS10_V"]
     if any(not math.isfinite(v) or v <= 0 for key, v in values.items()
            if key.startswith("R")):
         raise ValueError("documented resistances must be positive")
@@ -106,6 +118,28 @@ def evaluate_current(qa_current_a: float, control_voltages_v: dict[str, float],
         "log_pair_residual": log_pair_residual,
         "ic1_output_within_schematic_rails": vn < ic1_out < vg,
         "qc_emitter_between_minus10_and_minus5": vn < emitter < vs,
+    }
+
+
+def conditional_qc_drive(root: dict, qc_vbe_v: float, values: dict | None = None) -> dict:
+    """Required IC3 output for imposed Qc V_BE with zero Qc base current.
+
+    R78's series-RC branch is open in DC. This is a necessary voltage check,
+    not evidence that the CA3046 or 741 can attain the point under load.
+    """
+    values = circuit_values() if values is None else values
+    if not isinstance(qc_vbe_v, (int, float)) or not math.isfinite(qc_vbe_v) or qc_vbe_v <= 0:
+        raise ValueError("hypothetical Qc V_BE must be finite and positive")
+    base_v = root["qc_emitter_v"] + qc_vbe_v
+    vn = values["V_NEG10"]
+    r78_current_a = (base_v - vn) / values["R78_dc"]
+    ic3_output_v = base_v + values["R69"] * r78_current_a
+    return {
+        "qc_vbe_v_hypothetical": qc_vbe_v,
+        "qc_base_v_conditional": base_v,
+        "r78_resistive_branch_current_a_conditional": r78_current_a,
+        "ic3_output_v_required_if_zero_base_current": ic3_output_v,
+        "ic3_output_between_schematic_rails": vn < ic3_output_v < values["V_POS10"],
     }
 
 
@@ -164,6 +198,8 @@ def run_cli() -> None:
                         help="hypothetical I_Sa/I_Sb, not measured")
     parser.add_argument("--temperature-c", type=float, required=True,
                         help="hypothetical junction temperature")
+    parser.add_argument("--qc-vbe-v", type=float, required=True,
+                        help="hypothetical Qc base-emitter voltage, not measured")
     parser.add_argument("--search-min-ua", type=float, default=0.001)
     parser.add_argument("--search-max-ua", type=float, default=1000)
     args = parser.parse_args()
@@ -175,6 +211,7 @@ def run_cli() -> None:
                                      reference_v, args.mismatch_is_ratio,
                                      args.temperature_c + 273.15,
                                      args.search_min_ua * 1e-6, args.search_max_ua * 1e-6)
+        roots = [{**root, "qc_drive": conditional_qc_drive(root, args.qc_vbe_v)} for root in roots]
     except ValueError as error:
         parser.error(str(error))
     print(json.dumps({
@@ -186,11 +223,12 @@ def run_cli() -> None:
         "reference_v_conditional": reference_v,
         "saturation_current_ratio_imposed": args.mismatch_is_ratio,
         "junction_temperature_c_hypothetical": args.temperature_c,
+        "qc_vbe_v_hypothetical": args.qc_vbe_v,
         "numeric_search_current_ua": [args.search_min_ua, args.search_max_ua],
         "candidate_roots_within_search": roots,
         "absolute_tuning_or_full_operating_point_known": False,
-        "excluded": ["IC3 output and Qc base bias", "CA3046 absolute saturation currents",
-                     "device finite beta and saturation", "741 offset, bias and output swing",
+        "excluded": ["CA3046 absolute saturation currents and Qc V_BE law",
+                     "device finite beta and saturation", "741 offset, bias, loaded output swing and compensation",
                      "rail regulation", "C2/R78/C14 dynamics", "reset and loaded ramp"],
     }, indent=2))
 

@@ -43,7 +43,8 @@ class RampGraphTests(unittest.TestCase):
         graph = json.loads((ROOT / "evidence" / "vco1_ramp_graph.json").read_text(encoding="utf-8"))
         parts = {part["ref"]: part for part in graph["parts"]}
         self.assertEqual(parts["IC3"]["terminals"], {
-            "noninverting": "QB_COLLECTOR", "inverting": "NEG4_REF", "output": "IC3_OUT"
+            "noninverting": "QB_COLLECTOR", "inverting": "NEG4_REF", "output": "IC3_OUT",
+            "positive_supply": "POS10_V", "negative_supply": "NEG10_V"
         })
         self.assertEqual(parts["IC2.Qc"]["terminals"]["base"], "QC_BASE")
         self.assertEqual(set(parts["R69"]["terminals"].values()), {"IC3_OUT", "QC_BASE"})
