@@ -5,7 +5,7 @@ Los estados `desconocido`, `hipótesis`, `modelado`, `contrastado` y `cerrado pa
 | Bloque | Controles/datos | Topología/tiempo | Transferencia/cálculo | Audio externo | Riesgo audible | Próximo gate |
 | --- | --- | --- | --- | --- | --- | --- |
 | Teclado/glide/ruedas | Hipótesis | Desconocido | Desconocido | Desconocido | Medio | Grafo de placa 2 y escenas de legato simuladas |
-| Tres osciladores | Hipótesis | Subgrafo C1 de [VCO 1](VCO1_CA3046.md); resto hipótesis | Referencia ideal de C1; CA3046 pendiente | Candidatos sin analizar | Alto | Netlist, convertidor exponencial, reset y salidas cargadas |
+| Tres osciladores | Entradas IC1 cotejadas; ley de panel pendiente | Subgrafo C1 y pinout IC2 de [VCO 1](VCO1_CA3046.md); resto hipótesis | Referencias ideales de IC1 y C1 **separadas**; CA3046 pendiente | Candidatos sin analizar | Alto | Netlist, convertidor exponencial, reset y salidas cargadas |
 | Ruido/modulación | Hipótesis | Hipótesis de manual | Desconocido | Desconocido | Medio | Redes y espectro calculado |
 | Mezclador/feedback | Hipótesis | Hipótesis de manual | Desconocido | Desconocido | Alto | Grafo, niveles y saturación por fuente |
 | Filtro ladder | Hipótesis | Hipótesis de manual | Desconocido | Candidatos sin analizar | Muy alto | Ecuaciones, ajuste de servicio y barridos simulados |

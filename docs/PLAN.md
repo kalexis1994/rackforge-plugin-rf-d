@@ -42,4 +42,4 @@ Probar Note On/Off, retrigger, legato, glide, ruedas, cambios de preset y recupe
 
 Empezar por **VCO 1 aislado → mezclador → filtro abierto → VCA/salida**, con un grafo de circuito y un solver simple que admita barridos de notas y niveles. Luego filtro autooscilante y contornos. Cada etapa debe poder avanzar sin una captura privada.
 
-**Corte 0 en curso:** [VCO 1 CA3046](VCO1_CA3046.md) ya tiene subgrafo funcional, valores leídos de Fig. 9-3, discrepancias con tabla 7-5 y referencia de eventos para C1. El siguiente corte es la netlist de IC1/CA3046 y del reset; sólo después se puede traducir voltajes de controles a corriente y producir la sierra cargada para el mixer.
+**Corte 0 en curso:** [VCO 1 CA3046](VCO1_CA3046.md) ya tiene subgrafo funcional, resistencias de IC1 cotejadas con tabla 7-5, pinout de IC2, referencia incremental de voltaje para IC1 y referencia de eventos para C1. Siguen **sin conectar** por una ley de corriente inventada. El siguiente corte es la netlist completa de IC1/CA3046 y del reset; sólo después se puede traducir voltajes de controles a corriente y producir la sierra cargada para el mixer.

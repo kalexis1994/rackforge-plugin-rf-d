@@ -1,0 +1,21 @@
+{
+  "board": "SVC-204D_Fig_9-3_CA3046",
+  "package_designator": "IC2",
+  "package_type": "CA3046",
+  "board_source": {"id": "SVC-9", "pdf_page": 5, "figure": "9-3"},
+  "pinout_source": {"id": "DS-3046", "pdf_page": 2, "edition": "Harris 1996 reproduced by Rochester"},
+  "caveat": "Pin topology only; this later datasheet does not establish parameters of a period Moog-installed die.",
+  "substrate_pin": 13,
+  "transistors": [
+    {"board_name": "Qa", "array_name": "Q2", "collector": 5, "base": 4, "emitter": 3},
+    {"board_name": "Qb", "array_name": "Q1", "collector": 1, "base": 2, "emitter": 3},
+    {"board_name": "Qc", "array_name": "Q5", "collector": 14, "base": 12, "emitter": 13}
+  ],
+  "verified_internal_ties": [
+    {"description": "Qa and Qb share the differential pair emitter node", "pins": [3]},
+    {"description": "Qc emitter is the package substrate terminal", "pins": [13]}
+  ],
+  "verified_board_ties": [
+    {"description": "Shared Qa/Qb emitters connect to Qc collector on Fig. 9-3", "pins": [3, 14]}
+  ]
+}
