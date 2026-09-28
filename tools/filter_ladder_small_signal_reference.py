@@ -40,18 +40,9 @@ def _capacitances() -> tuple[tuple[tuple[int, int, float], ...], float, float]:
     return edges, parts["C24"]["farad"], parts["C27"]["farad"]
 
 
-def small_signal_at_frequency(*, dc_solution: dict, frequency_hz: float) -> dict:
-    """Solve (G - jωC)v = -jω C27 e_BASE for BUS=1 V AC.
-
-    The DC KCL used incoming-minus-outgoing signs; the capacitor terms are
-    subtracted accordingly. Returned complex transfers use volts per volt.
-    """
-    if not math.isfinite(frequency_hz) or frequency_hz < 0:
-        raise ValueError("finite nonnegative frequency in hertz required")
+def capacitance_matrix_f() -> tuple[tuple[tuple[float, ...], ...], float]:
+    """Symmetric 16-node charge matrix and BUS-to-base capacitance in F."""
     edges, c24, c27 = _capacitances()
-    g = dc_solution["conductance_matrix_s"]
-    if len(g) != 16 or any(len(row) != 16 for row in g):
-        raise ValueError("16-node DC conductance matrix required")
     c = [[0.0] * 16 for _ in range(16)]
     for left, right, value in edges:
         c[left][left] += value
@@ -60,6 +51,22 @@ def small_signal_at_frequency(*, dc_solution: dict, frequency_hz: float) -> dict
         c[right][left] -= value
     c[4][4] += c24
     c[6][6] += c27
+    return tuple(tuple(row) for row in c), c27
+
+
+def small_signal_at_frequency(*, dc_solution: dict, frequency_hz: float) -> dict:
+    """Solve (G - jωC)v = -jω C27 e_BASE for BUS=1 V AC.
+
+    The DC KCL used incoming-minus-outgoing signs; the capacitor terms are
+    subtracted accordingly. Returned complex transfers use volts per volt.
+    """
+    if not math.isfinite(frequency_hz) or frequency_hz < 0:
+        raise ValueError("finite nonnegative frequency in hertz required")
+    edges, _, _ = _capacitances()
+    c, c27 = capacitance_matrix_f()
+    g = dc_solution["conductance_matrix_s"]
+    if len(g) != 16 or any(len(row) != 16 for row in g):
+        raise ValueError("16-node DC conductance matrix required")
     angular = 2 * math.pi * frequency_hz
     s = 1j * angular
     system = [[g[i][j] - s * c[i][j] for j in range(16)] for i in range(16)]

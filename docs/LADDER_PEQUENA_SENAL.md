@@ -21,6 +21,8 @@ La [implementación](../tools/filter_ladder_small_signal_reference.py) resuelve 
 
 ## Regresión y límites
 
+La [referencia temporal lineal](LADDER_TRANSITORIO_LINEAL.md) usa exactamente esta matriz `G,C` y comprueba la respuesta ante un escalón y un seno pequeño. Para los ocho nodos internos la orientación del residuo KCL es entrante menos saliente, igual que en los demás nodos.
+
 Con el escenario de [sesgo DC](LADDER_EBERS_MOLL_DC.md) y β inverso `5`, C27 bloquea exactamente la perturbación en `f=0`. En R61 `200 Ω`, `|H_core(100 Hz)|≈0,457`, `|H_core(1 kHz)|≈5,04·10⁻⁴` y `|H_core(10 kHz)|≈5,28·10⁻⁸`. En R61 `200 kΩ`, los valores correspondientes son ≈`0,127`, `4,46·10⁻⁴` y `5,48·10⁻⁸`. Entre 10 y 100 kHz la magnitud desciende aproximadamente por un factor de `10⁴`, consistente con **cuatro celdas** en este circuito lineal y esta frontera abierta. Los residuos KCL calculados son menores que `10⁻¹¹ A/V` en la regresión. No se interpretan esas cifras como curva de corte o nivel audible del Model D.
 
 Esta red carece de capacitancias de juntura y almacenamiento de carga BJT, ESR/fuga, impedancia del mixer, carga de recuperación, efecto Early y realimentación de emphasis. La tolerancia de los componentes tampoco se ha propagado. La linealización describe perturbaciones infinitesimales alrededor de un punto DC específico; no predice saturación dinámica, autooscilación ni sonido. El siguiente bloque debe incorporar las fronteras de recuperación y regeneración, y después formular un integrador temporal no lineal con balance de carga verificable.

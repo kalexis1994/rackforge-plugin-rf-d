@@ -122,8 +122,10 @@ def conditional_ladder_ebers_moll_dc(*, cutoff_inputs: dict,
         r[7] = (x[4] - x[7]) / r30 - currents["Q30"]["base_a"]
         for side, start in ((LEFT, 8), (RIGHT, 12)):
             for offset, (lower, higher) in enumerate(zip(side, side[1:])):
-                r[start + offset] = (currents[lower]["collector_a"]
-                                     - currents[higher]["emitter_a"])
+                # Higher emitter injects into this node; lower collector
+                # draws from it. All 16 rows use incoming-minus-outgoing.
+                r[start + offset] = (currents[higher]["emitter_a"]
+                                     - currents[lower]["collector_a"])
         return r, currents
 
     x = [*active["spine"]["tap_voltages_top_to_bottom_v"],
