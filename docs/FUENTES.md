@@ -57,6 +57,7 @@ Estos artículos originales ayudan a diseñar y contrastar el solver. **Ninguno 
 | Interconexión de osciladores, SW6, ancho 22B, R30/R31, R6/R45 y SW9 | SVC-9 PDF p. 19, Fig. 9-17; SVC-204D PDF p. 75. Entrada de mixer en placa 4: SVC-9 PDF p. 13, Fig. 9-11 (SVC-204D p. 69). |
 | Bus de mezcla: cinco ramas ON, resistencias R45–R49 y entrada de placa 4 | SVC-9 PDF p. 19, Fig. 9-17; placa 4 y C27 en SVC-9 PDF p. 13, Fig. 9-11. |
 | Entrada de filtro: C27, R54, C24, R61, Q29/Q30 y retorno de regeneración | SVC-9 PDF p. 13, Fig. 9-11; tabla 7-8 PDF pp. 30–31. R61 difiere entre esquema (`200`) y lista (`200K Ohm`); ver [análisis](ENTRADA_FILTRO.md). |
+| Retorno de regeneración: C10, R14 de panel, R73, R76 y Q30 | SVC-9 PDF p. 13, Fig. 9-11, p. 19, Fig. 9-17 y tabla 7-8 PDF pp. 30–31; [derivación condicionada](REGENERACION_FILTRO.md). |
 | Ruido, mezcla de modulación y entrada externa | SVC-204D PDF pp. 10–11 y 14; esquemas pp. 66 y 69 |
 | Ladder, recuperación, dos VCA | SVC-204D PDF pp. 11–12, impresa 2-7; esquema p. 69, Fig. 9-10 |
 | Contornos, gatillo y final decay | SVC-204D PDF pp. 12–13, impresas 2-7 a 2-8; esquema p. 65, Fig. 9-5 |

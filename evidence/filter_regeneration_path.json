@@ -1,0 +1,27 @@
+{
+  "scope": "Nominal passive regeneration return, with active voltages/currents imposed",
+  "filter_schematic": {"id": "SVC-9", "figure": "9-11", "pdf_page": 13, "full_service_pdf_page": 69},
+  "panel_wiring": {"id": "SVC-9", "figure": "9-17", "pdf_page": 19, "full_service_pdf_page": 75},
+  "parts_list": {"id": "SVC-9", "table": "7-8", "pdf_pages": [30, 31]},
+  "nodes": {
+    "RECOVERY_TAP": "R7/R3 junction at Q8 collector-load path; C10 positive terminal",
+    "PIN7": "C10 negative terminal; board 4 pin 7; R14 panel wiper",
+    "PIN6": "board 4 pin 6; R14 panel upper terminal; R73 right terminal",
+    "REGEN_BASE": "R73 wiper; Q30 base",
+    "BOTTOM": "R76 left terminal, ladder bottom, C24/R61 upper terminals"
+  },
+  "parts": {
+    "C10_BOARD4": {"farad": 0.00001, "parts_list_tolerance": "+50/-10%", "between": ["RECOVERY_TAP", "PIN7"]},
+    "R14_PANEL": {"total_ohm": 50000, "label": "50K REV AUD", "electrical_path": ["PIN7", "PIN6"], "wiper_at": "PIN7", "law": "unknown"},
+    "R73_BOARD4": {"total_ohm": 1000, "type": "REGEN CAL trimmer", "between": ["BOTTOM_SIDE", "PIN6"], "wiper_at": "REGEN_BASE"},
+    "R76_BOARD4": {"ohm": 330, "between": ["BOTTOM", "BOTTOM_SIDE"]},
+    "R7_BOARD4": {"ohm": 180, "role": "upper branch of recovery tap; excluded from ideal-tap reference"},
+    "R3_BOARD4": {"ohm": 1000, "role": "lower branch to Q8 collector; excluded from ideal-tap reference"},
+    "Q30": {"type": "TIS97 matched with Q29", "base_node": "REGEN_BASE"}
+  },
+  "parameters": {
+    "r14_pin7_to_pin6_ohm": [0, 50000],
+    "r73_bottom_side_to_wiper_ohm": [0, 1000]
+  },
+  "excluded": ["Q8 and recovery-tap source impedance", "Q30 base current", "bottom-node impedance and R61 discrepancy", "R14 knob-to-resistance law", "capacitor ESR/leakage", "complete ladder loop gain and self-oscillation"]
+}
