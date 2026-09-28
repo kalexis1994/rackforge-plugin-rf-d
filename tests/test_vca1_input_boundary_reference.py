@@ -1,4 +1,4 @@
-"""C6/R34/C15/R36 passive input charge and KCL checks."""
+"""R2/C6/R34/C15/R36 passive input charge and KCL checks."""
 
 import math
 import sys
@@ -21,7 +21,7 @@ class Vca1InputBoundaryTests(unittest.TestCase):
                 self.assertGreater(abs(out["differential_base_v_per_recovery_v"]), 0)
                 self.assertLessEqual(abs(out["differential_base_v_per_recovery_v"]), 1)
 
-    def test_three_branch_currents_balance_q15_base(self):
+    def test_series_input_and_q15_base_branch_currents_balance(self):
         out = passive_vca1_input(frequency_hz=100)
         s = 2j * math.pi * 100
         left, right = (out["q16_base_v_per_recovery_v"],
@@ -29,14 +29,18 @@ class Vca1InputBoundaryTests(unittest.TestCase):
         from_r34 = (left - right) / 820
         to_ground = right / 510 + s * 220e-6 * right
         self.assertAlmostEqual(abs(from_r34 - to_ground), 0, delta=1e-12)
-        from_c6 = s * 0.33e-6 * (1 - left)
+        c6_left = out["c6_left_v_per_recovery_v"]
+        from_c6 = s * 0.33e-6 * (c6_left - left)
         self.assertAlmostEqual(abs(from_c6 - from_r34), 0, delta=1e-12)
+        self.assertAlmostEqual(abs((1 - c6_left) / 82000 - from_c6),
+                               0, delta=1e-12)
 
-    def test_conditional_rolloff_and_invalid_frequency(self):
+    def test_r2_changes_passive_low_frequency_corner_and_invalid_frequency(self):
         low = passive_vca1_input(frequency_hz=30)
         high = passive_vca1_input(frequency_hz=10000)
-        self.assertLess(abs(low["q16_base_v_per_recovery_v"]), 0.06)
-        self.assertGreater(abs(high["q16_base_v_per_recovery_v"]), 0.99)
+        self.assertGreater(abs(low["q16_base_v_per_recovery_v"]), 0.0095)
+        self.assertAlmostEqual(abs(high["q16_base_v_per_recovery_v"]),
+                               820 / (82000 + 820), delta=1e-5)
         for frequency in (-1, math.nan, math.inf):
             with self.subTest(frequency=frequency), self.assertRaises(ValueError):
                 passive_vca1_input(frequency_hz=frequency)
