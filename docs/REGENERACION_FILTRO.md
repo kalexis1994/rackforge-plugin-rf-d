@@ -20,13 +20,13 @@ H(s) = V_Q30base / V_R7R3 = s·C10·R_abajo / [1 + s·C10·(R_abajo + R_arriba)]
 
 Las entradas son Hz y Ω; C10 está en F; `s` está en rad/s y `H` es adimensional. El capacitor bloquea la componente DC de la **ruta de retorno**. El polo de esta red aislada es `1/[2π·C10·(R14ₑ + R73 + R76)]` y el límite de ganancia a frecuencia alta es `(R76 + R73_L)/(R14ₑ + R73 + R76)`. Por ejemplo, con R73 a mitad eléctrica, R14ₑ=0 da un límite de **0,624** y un polo de **11,97 Hz**; R14ₑ=50 kΩ da **0,0162** y **0,310 Hz**. Estos números son controles de aritmética de la **ruta aislada**: no son frecuencia de corte del ladder ni nivel de autooscilación. Tampoco equivalen a las posiciones físicas 0/10 de EMPHASIS.
 
-La tabla 7-8 asigna a C10 tolerancia **+50/−10 %**; los valores anteriores usan 10 µF nominal. La impedancia del tap R7/R3, el sesgo de Q30, `BOTTOM` dinámico, la carga del panel, R61 [aún conflictivo](ENTRADA_FILTRO.md), la no linealidad del par y la ganancia de la etapa recuperadora alterarán la transferencia real. Por ello el cálculo comprueba conectividad y escala pasiva sin fijar un coeficiente de resonancia para DSP.
+La tabla 7-8 asigna a C10 tolerancia **+50/−10 %**; los valores anteriores usan 10 µF nominal. La impedancia del tap R7/R3, el sesgo de Q30, `BOTTOM` dinámico, la carga del panel, R61 [aún conflictivo](ENTRADA_FILTRO.md), la no linealidad del par y la ganancia de la etapa recuperadora alterarán la transferencia real. La [red activa de pequeña señal acoplada](LAZO_EMPHASIS_PEQUENA_SENAL.md) ya incorpora esos nodos dinámicos bajo parámetros impuestos; ninguno de los dos cálculos fija un coeficiente de resonancia para DSP.
 
 ## Contrastes siguientes
 
-1. Transcribir R7/R3/C9/R6 y Q8 para calcular la impedancia real del tap, además de su voltaje.
-2. Extender el [acoplamiento DC de R73/R76 y BOTTOM](BASES_FILTRO_ACOPLADAS_DC.md) a C10/C24 y la corriente de base variable de Q30 durante audio.
-3. Acoplar las cargas de colector de Q29/Q30 y los peldaños superiores antes de cerrar el lazo del ladder. Sólo entonces simular autooscilación y pérdida de graves a distintos niveles.
+1. La [recuperación Q5–Q8](RECUPERACION_ACTIVA_FILTRO.md) ya calcula la impedancia diferencial local del tap con R7/R3/C9/R6.
+2. El [lazo AC](LAZO_EMPHASIS_PEQUENA_SENAL.md) ya incluye C10, `BOTTOM` dinámico y la base activa de Q30. El siguiente contraste debe resolver el **transitorio no lineal acoplado** con excitación de amplitudes distintas.
+3. Sólo después se podrán ensayar onset de autooscilación, tolerancias de C10 y pérdida de graves por nivel sin confundir una linealización local con audio.
 
 ```powershell
 python tools/filter_regeneration_reference.py
