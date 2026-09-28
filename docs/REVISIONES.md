@@ -26,6 +26,7 @@
 5. **Tres familias de VCO:** SVC-204D llama “antigua” a la placa de Fig. 9-3, pero testimonios de [propietarios y técnicos](https://forum.moogmusic.com/t/minimoog-model-d-differences/14878) describen una placa discreta anterior, la CA3046 y la μA726. Se necesita el dibujo #1441 para cerrar la primera; no convertir esa narración en cifras exactas de producción.
 6. **Fig. 9-3 versus tabla 7-5:** la entrada TUNE usa **R21 = 560 kΩ** y la red de pulso **R2 = 910 kΩ**; la tabla 7-5 confirma ambos valores. La lectura anterior de R21 como R2 fue corregida al ampliar el dibujo y cotejar las pp. 24–25 de SVC-9. Queda un conflicto real: Fig. 9-3 rotula Q5/Q6 como 2N4402 y la tabla 7-5 los agrupa con 2N3906. B-804C no lo resuelve. Ver [derivación VCO 1](VCO1_CA3046.md); conservar ambas hipótesis hasta hallar evidencia que las distinga.
 7. **Entrada de ancho 22B:** Fig. 9-3 se leyó inicialmente como 28B. La [interconexión Fig. 9-17](VCO1_CABLEADO_PANEL.md) la identifica claramente como **22B**, entre 20B (pulso) y 21B (triángulo). Se corrigieron el grafo y las referencias; no hay un terminal 28B confirmado para este control.
+8. **R61 de placa 4:** Fig. 9-11 rotula `200`, pero la tabla 7-8, SVC-9 PDF p. 31, lista **200K Ohm**. El [modelo de entrada](ENTRADA_FILTRO.md) conserva los dos candidatos como frontera explícita. No asignar una frecuencia o sesgo del ladder a partir de uno solo.
 
 ## Ficha mínima de identidad física
 

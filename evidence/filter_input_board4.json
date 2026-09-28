@@ -1,0 +1,25 @@
+{
+  "scope": "SVC-9 board 4, nominal filter input; documentary topology, not a complete ladder model",
+  "schematic": {"id": "SVC-9", "figure": "9-11", "pdf_page": 13, "full_service_pdf_page": 69},
+  "parts_list": {"id": "SVC-9", "table": "7-8", "pdf_pages": [30, 31]},
+  "nodes": {
+    "BUS": "board 4 pin 4 and C27 negative terminal",
+    "BASE": "C27 positive terminal, Q29 base and R54 left terminal",
+    "BOTTOM": "R54 right terminal, R52 lower terminal, C24 positive terminal and R61 upper terminal",
+    "TAIL": "Q29/Q30 common emitters, R60 upper terminal and Q28 collector",
+    "REGEN": "Q30 base and R73 wiper"
+  },
+  "parts": {
+    "C27": {"farad": 0.00001, "parts_list_tolerance": "+50/-10%", "between": ["BUS", "BASE"]},
+    "R54": {"ohm": 470, "parts_list_tolerance": "+/-5%", "between": ["BASE", "BOTTOM"]},
+    "C24": {"farad": 0.00022, "parts_list_tolerance": "+50/-10%", "between": ["BOTTOM", "GROUND"]},
+    "R61": {"schematic_label": "200", "parts_list_ohm": 200000, "candidate_ohm": [200, 200000], "status": "unresolved discrepancy", "between": ["BOTTOM", "GROUND"]},
+    "R60": {"ohm": 680, "between": ["TAIL", "Q28 collector"]},
+    "Q29_Q30": {"type": "TIS97 matched pair", "common_emitter_node": "TAIL", "base_nodes": ["BASE", "REGEN"]}
+  },
+  "boundary_currents": {
+    "Q29_base": "positive current leaves BASE toward Q29 base; imposed in passive reference",
+    "ladder_bottom": "positive current leaves BOTTOM toward the remaining ladder; imposed in passive reference"
+  },
+  "excluded": ["Q29/Q30 transistor laws", "Q28 current sink", "R73 feedback path and board 4 pin 6", "mixer bus source impedances", "electrolytic ESR/leakage", "revision-dependent population"]
+}

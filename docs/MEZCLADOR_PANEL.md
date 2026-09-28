@@ -2,7 +2,7 @@
 
 ## Evidencia y dominio
 
-El diagrama de interconexión **SVC-9, Fig. 9-17, PDF p. 19** (SVC-204D completo, PDF p. 75) muestra las cinco rutas hacia el bus común de audio. El bus termina en el **pin 4 de la placa 4**; **SVC-9, Fig. 9-11, PDF p. 13** (SVC-204D p. 69) muestra C27 como primer elemento en serie de esa entrada. La [transcripción](../evidence/mixer_panel_bus.json) usa sufijo `_PANEL` para resistores de panel, cuyos designadores se repiten en las placas. Esta referencia comprende los estados **ON**; el cableado de contactos OFF y la corriente de C27/filtro aún no se han resuelto.
+El diagrama de interconexión **SVC-9, Fig. 9-17, PDF p. 19** (SVC-204D completo, PDF p. 75) muestra las cinco rutas hacia el bus común de audio. El bus termina en el **pin 4 de la placa 4**; **SVC-9, Fig. 9-11, PDF p. 13** (SVC-204D p. 69) muestra C27 como primer elemento en serie de esa entrada. La [transcripción](../evidence/mixer_panel_bus.json) usa sufijo `_PANEL` para resistores de panel, cuyos designadores se repiten en las placas. Esta referencia comprende los estados **ON**; el cableado de contactos OFF y la corriente de C27/filtro no se resuelven aquí. La [entrada pasiva C27/R54/C24/R61](ENTRADA_FILTRO.md) se estudia por separado con fronteras activas impuestas.
 
 | Fuente | Control previo | Resistor de serie al bus | Interruptor ON |
 | --- | --- | ---: | --- |
@@ -27,4 +27,4 @@ python tools/mixer_panel_bus_reference.py
 python -m unittest discover -s tests -q
 ```
 
-Los tests comprueban los cinco valores y rutas ON, el caso de resistencias de serie, las derivaciones al bajar un cursor y la ley de nodos con una corriente externa impuesta. Para predecir mezcla, saturación o audio falta resolver la entrada de la placa 4, la carga entre fuentes por el bus, la red OFF y los generadores de señal.
+Los tests comprueban los cinco valores y rutas ON, el caso de resistencias de serie, las derivaciones al bajar un cursor y la ley de nodos con una corriente externa impuesta. Para predecir mezcla, saturación o audio falta acoplar la entrada de la placa 4 a Q29/Q30 y al ladder, resolver la carga entre fuentes por el bus, la red OFF y los generadores de señal.
