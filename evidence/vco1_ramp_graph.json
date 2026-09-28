@@ -1,9 +1,9 @@
 {
   "board": "SVC-204D_Fig_9-3_CA3046",
   "source": {"id": "SVC-9", "pdf_page": 5, "figure": "9-3"},
-  "replacement_value_check": {"id": "SVC-9", "pdf_pages": [24, 25, 26], "table": "7-5", "refs": ["C2", "C14", "Q5", "Q6", "Q10", "R7", "R8", "R9", "R10", "R11", "R19", "R20", "R37", "R41", "R42", "R50", "R69", "R78", "R79", "R166", "R174"]},
-  "scope": "Verified terminals around the VCO 1 timing capacitor and CA3046 input/current-sink network; this is deliberately not a complete netlist.",
-  "nodes": ["GND", "RAMP_C1", "PAIR_EMITTER", "QC_EMITTER", "QC_BASE", "QB_COLLECTOR", "QA_BASE", "QB_BASE", "IC1_SUM", "IC1_PLUS", "IC1_OUT", "IC3_OUT", "NEG4_REF", "R8_TOP", "R8_BOTTOM", "R37_TOP", "NEG5_V", "NEG10_V", "POS10_V", "SCHMITT_SENSE", "SCHMITT_Q5_COLLECTOR", "SCHMITT_Q6_COLLECTOR", "Q10_BASE"],
+  "replacement_value_check": {"id": "SVC-9", "pdf_pages": [24, 25, 26], "table": "7-5", "refs": ["C2", "C14", "Q5", "Q6", "Q10", "R6", "R7", "R8", "R9", "R10", "R11", "R15", "R16", "R17", "R19", "R20", "R26", "R30", "R31", "R37", "R41", "R42", "R50", "R69", "R78", "R79", "R166", "R174"]},
+  "scope": "Verified terminals around the VCO 1 timing capacitor, CA3046 current-sink network and resistive Schmitt/reset path; this is deliberately not a complete netlist.",
+  "nodes": ["GND", "RAMP_C1", "PAIR_EMITTER", "QC_EMITTER", "QC_BASE", "QB_COLLECTOR", "QA_BASE", "QB_BASE", "IC1_SUM", "IC1_PLUS", "IC1_OUT", "IC3_OUT", "NEG4_REF", "R8_TOP", "R8_BOTTOM", "R37_TOP", "NEG5_V", "NEG10_V", "POS10_V", "SCHMITT_DRIVE", "SCHMITT_SENSE", "SCHMITT_Q5_COLLECTOR", "SCHMITT_Q6_COLLECTOR", "RESET_BIAS", "Q10_BASE"],
   "schematic_voltage_labels_v": {"GND": 0, "NEG4_REF": -4, "NEG5_V": -5, "NEG10_V": -10, "POS10_V": 10},
   "parts": [
     {"ref": "C1", "kind": "capacitor", "value": 1e-8, "unit": "farad", "terminals": {"a": "GND", "b": "RAMP_C1"}},
@@ -17,13 +17,20 @@
     {"ref": "Q5", "kind": "PNP_schematic", "part_candidates": ["2N4402", "2N3906"], "candidate_status": "schematic_BOM_conflict", "terminals": {"emitter": "GND", "base": "SCHMITT_SENSE", "collector": "SCHMITT_Q5_COLLECTOR"}},
     {"ref": "Q6", "kind": "PNP_schematic", "part_candidates": ["2N4402", "2N3906"], "candidate_status": "schematic_BOM_conflict", "terminals": {"emitter": "GND", "base": "SCHMITT_Q5_COLLECTOR", "collector": "SCHMITT_Q6_COLLECTOR"}},
     {"ref": "Q10", "kind": "PNP_2N4402_schematic", "terminals": {"emitter": "GND", "collector": "RAMP_C1", "base": "Q10_BASE"}},
+    {"ref": "R6", "kind": "resistor", "value": 56, "unit": "ohm", "terminals": {"a": "SCHMITT_Q6_COLLECTOR", "b": "RESET_BIAS"}},
     {"ref": "R7", "kind": "resistor", "value": 100, "unit": "ohm", "terminals": {"a": "QA_BASE", "b": "NEG5_V"}},
     {"ref": "R8", "kind": "trim_potentiometer", "value_end_to_end": 100, "unit": "ohm", "terminals": {"high": "R8_TOP", "wiper": "QB_BASE", "low": "R8_BOTTOM"}},
     {"ref": "R9", "kind": "resistor", "value": 33, "unit": "ohm", "terminals": {"a": "IC1_OUT", "b": "R8_TOP"}},
     {"ref": "R10", "kind": "resistor", "value": 1000, "unit": "ohm", "terminals": {"a": "IC1_PLUS", "b": "NEG5_V"}},
     {"ref": "R11", "kind": "trim_potentiometer", "value_end_to_end": 1000, "unit": "ohm", "terminals": {"high": "IC1_SUM", "wiper": "IC1_SUM", "low": "R37_TOP"}, "note": "The wiper is strapped to the summing-node end on Fig. 9-3."},
+    {"ref": "R15", "kind": "resistor", "value": 2200, "unit": "ohm", "terminals": {"a": "POS10_V", "b": "SCHMITT_DRIVE"}},
+    {"ref": "R16", "kind": "resistor", "value": 33200, "unit": "ohm", "terminals": {"a": "POS10_V", "b": "SCHMITT_SENSE"}},
+    {"ref": "R17", "kind": "resistor", "value": 10000, "unit": "ohm", "terminals": {"a": "SCHMITT_SENSE", "b": "RESET_BIAS"}},
     {"ref": "R19", "kind": "resistor", "value": 1000, "unit": "ohm", "terminals": {"a": "R8_BOTTOM", "b": "NEG5_V"}},
     {"ref": "R20", "kind": "temperature_compensating_resistor", "value": 1000, "unit": "ohm", "terminals": {"a": "IC1_OUT", "b": "IC1_SUM"}},
+    {"ref": "R26", "kind": "resistor", "value": 1000, "unit": "ohm", "terminals": {"a": "RESET_BIAS", "b": "NEG10_V"}},
+    {"ref": "R30", "kind": "resistor", "value": 10700, "unit": "ohm", "terminals": {"a": "SCHMITT_DRIVE", "b": "SCHMITT_SENSE"}},
+    {"ref": "R31", "kind": "resistor", "value": 10000, "unit": "ohm", "terminals": {"a": "SCHMITT_Q5_COLLECTOR", "b": "NEG10_V"}},
     {"ref": "R37", "kind": "resistor", "value": 11800, "unit": "ohm", "terminals": {"a": "R37_TOP", "b": "NEG10_V"}},
     {"ref": "R41", "kind": "resistor", "value": 910, "unit": "ohm", "terminals": {"a": "SCHMITT_Q6_COLLECTOR", "b": "Q10_BASE"}},
     {"ref": "R50", "kind": "resistor", "value": 39000, "unit": "ohm", "terminals": {"a": "GND", "b": "QB_COLLECTOR"}},
@@ -39,7 +46,7 @@
   ],
   "outstanding": [
     "The shared -4 V rail connections are inventoried in neg4_reference_loads.json; determine their state-dependent currents before solving an absolute DC operating point.",
-    "Transcribe the rest of Schmitt sense, Q6 collector loads, FET amplifier and output loads before calculating reset duration, hysteresis or loaded saw.",
+    "Schmitt resistive branch R6/R15/R16/R17/R26/R30/R31 is traced; C3/C4, FET amplifier, Q5/Q6 device behavior, Q10 transient and output loads remain before calculating reset duration, hysteresis or loaded saw.",
     "Resolve Q5/Q6 part-number conflict before choosing device curves."
   ]
 }

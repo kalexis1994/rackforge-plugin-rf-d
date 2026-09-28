@@ -74,6 +74,25 @@ class RampGraphTests(unittest.TestCase):
         self.assertEqual(parts["R41"]["value"], 910)
         self.assertEqual(parts["Q10"]["terminals"]["collector"], "RAMP_C1")
 
+    def test_schmitt_bias_returns_to_negative_rail_not_saw_output(self) -> None:
+        graph = json.loads((ROOT / "evidence" / "vco1_ramp_graph.json").read_text(encoding="utf-8"))
+        parts = {part["ref"]: part for part in graph["parts"]}
+        expected = {
+            "R6": (56, {"SCHMITT_Q6_COLLECTOR", "RESET_BIAS"}),
+            "R15": (2200, {"POS10_V", "SCHMITT_DRIVE"}),
+            "R16": (33200, {"POS10_V", "SCHMITT_SENSE"}),
+            "R17": (10000, {"SCHMITT_SENSE", "RESET_BIAS"}),
+            "R26": (1000, {"RESET_BIAS", "NEG10_V"}),
+            "R30": (10700, {"SCHMITT_DRIVE", "SCHMITT_SENSE"}),
+            "R31": (10000, {"SCHMITT_Q5_COLLECTOR", "NEG10_V"}),
+        }
+        for ref, (value, nodes) in expected.items():
+            self.assertEqual(parts[ref]["value"], value)
+            self.assertEqual(set(parts[ref]["terminals"].values()), nodes)
+        self.assertEqual(parts["Q5"]["terminals"]["base"], "SCHMITT_SENSE")
+        self.assertEqual(parts["Q6"]["terminals"]["collector"], "SCHMITT_Q6_COLLECTOR")
+        self.assertNotIn("SAW_OUTPUT", graph["nodes"])
+
     def test_trim_and_reference_divider_keep_voltage_label_distinct(self) -> None:
         graph = json.loads((ROOT / "evidence" / "vco1_ramp_graph.json").read_text(encoding="utf-8"))
         parts = {part["ref"]: part for part in graph["parts"]}
