@@ -1,0 +1,28 @@
+{
+  "scope": "Board-4 Q8/Q6 input followers and Q7/Q5 recovery pair at DC; C1/C5/C9/C10 open",
+  "schematic": {"id": "SVC-9", "figure": "9-11", "pdf_page": 13, "full_service_pdf_page": 69},
+  "parts_list": {"id": "SVC-9", "table": "7-8", "pdf_pages": [30, 31]},
+  "devices": {
+    "Q8": {"base": "Q8_BASE", "collector": "RECOVER_COLLECTOR", "emitter": "Q8_EMITTER_Q7_BASE"},
+    "Q6": {"base": "Q6_BASE", "collector": "POS10", "emitter": "Q6_EMITTER_Q5_BASE"},
+    "Q7": {"base": "Q8_EMITTER_Q7_BASE", "collector": "RECOVER_COLLECTOR", "emitter": "RECOVER_TAIL"},
+    "Q5": {"base": "Q6_EMITTER_Q5_BASE", "collector": "POS10", "emitter": "RECOVER_TAIL"}
+  },
+  "resistors": [
+    {"ref": "R31", "ohm": 47000, "between": ["Q8_BASE", "GROUND"]},
+    {"ref": "R38", "ohm": 47000, "between": ["Q6_BASE", "GROUND"]},
+    {"ref": "R24", "ohm": 220000, "between": ["Q8_EMITTER_Q7_BASE", "NEG10"]},
+    {"ref": "R20", "ohm": 100000, "between": ["Q6_EMITTER_Q5_BASE", "NEG10"]},
+    {"ref": "R26", "ohm": 1000, "between": ["RECOVER_TAIL", "NEG10"]},
+    {"ref": "R3", "ohm": 1000, "between": ["RECOVER_R7_R3", "RECOVER_COLLECTOR"]},
+    {"ref": "R7", "ohm": 180, "between": ["RECOVER_R6_R7", "RECOVER_R7_R3"]},
+    {"ref": "R6", "ohm": 47, "between": ["POS10", "RECOVER_R6_R7"]}
+  ],
+  "dc_open_capacitors": ["C1", "C5", "C9", "C10"],
+  "ac_capacitors": {
+    "C5": {"farad": 2.2e-7, "between": ["L_Q10C_Q2E", "Q8_BASE"]},
+    "C1": {"farad": 2.2e-7, "between": ["R_Q11C_Q3E", "Q6_BASE"]},
+    "C9": {"farad": 0.0001, "between": ["RECOVER_R6_R7", "GROUND"]}
+  },
+  "caution": "Device Is and forward/reverse beta imposed; recovery stage DC is separate from ladder because C1/C5 open"
+}
