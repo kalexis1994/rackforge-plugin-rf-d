@@ -1,0 +1,11 @@
+{
+  "scope": "Passive AC coupling from top ladder emitters to recovery-transistor bases; base currents remain imposed zero",
+  "schematic": {"id": "SVC-9", "figure": "9-11", "pdf_page": 13, "full_service_pdf_page": 69},
+  "parts_list": {"id": "SVC-9", "table": "7-8", "pdf_pages": [30, 31]},
+  "branches": [
+    {"side": "left", "from": "L_Q10C_Q2E", "capacitor": "C5", "farad": 2.2e-7, "capacitor_tolerance": "+/-10%", "to": "Q8_BASE", "shunt_resistor": "R31", "shunt_ohm": 47000, "shunt_tolerance": "+/-5%"},
+    {"side": "right", "from": "R_Q11C_Q3E", "capacitor": "C1", "farad": 2.2e-7, "capacitor_tolerance": "+/-10%", "to": "Q6_BASE", "shunt_resistor": "R38", "shunt_ohm": 47000, "shunt_tolerance": "+/-5%"}
+  ],
+  "dc": "C5/C1 open; Q8_BASE/Q6_BASE return to ground through R31/R38 when base currents are imposed zero",
+  "excluded": ["Q8/Q6 active base-current loading", "Q5/Q7 recovery bias", "C10/R14 emphasis feedback", "C1/C5 ESR", "VCA input loading"]
+}
