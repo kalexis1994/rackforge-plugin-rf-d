@@ -1,0 +1,31 @@
+{
+  "scope": "First VCA Q16/Q15/Q18 DC, with imposed balance-wiper voltage and loudness source; Q14/Q13 input currents excluded",
+  "functional_description": {"id": "SVC-204D", "section": "2.9", "pdf_page": 12},
+  "schematic": {"id": "SVC-9", "figure": "9-11", "pdf_page": 13, "full_service_pdf_page": 69},
+  "parts_list": {"id": "SVC-9", "table": "7-8", "pdf_pages": [30, 31]},
+  "devices": ["Q16", "Q15", "Q18"],
+  "resistors": [
+    {"ref": "R14_BOARD4", "ohm": 25, "between": ["FIRST_BAL_LEFT", "FIRST_BAL_RIGHT"], "wiper": "FIRST_BAL_WIPER"},
+    {"ref": "R19", "ohm": 100, "between": ["FIRST_BAL_LEFT", "Q16_COLLECTOR"]},
+    {"ref": "R23", "ohm": 100, "between": ["FIRST_BAL_RIGHT", "Q15_COLLECTOR"]},
+    {"ref": "R22", "ohm": 120, "between": ["FIRST_BAL_WIPER", "Q15_BASE"]},
+    {"ref": "R34", "ohm": 820, "between": ["Q16_BASE", "Q15_BASE"]},
+    {"ref": "R35", "ohm": 1000, "between": ["PAIR_EMITTER", "Q18_COLLECTOR"]},
+    {"ref": "R36", "ohm": 510, "between": ["Q15_BASE", "GROUND"]},
+    {"ref": "R37", "ohm": 6800, "between": ["Q18_EMITTER", "GROUND"]},
+    {"ref": "R43", "ohm": 270000, "between": ["Q18_EMITTER", "MINUS_10_V"]},
+    {"ref": "R59", "ohm": 68000, "between": ["LOUDNESS_SOURCE", "Q18_BASE"]}
+  ],
+  "dc_open_capacitors": ["C6", "C15"],
+  "boundaries": {
+    "FIRST_BAL_WIPER": "imposed voltage: R13, R11, R10, second VCA and supply not solved",
+    "LOUDNESS_SOURCE": "imposed voltage beyond R59: contour law not solved",
+    "Q16_COLLECTOR_Q14_BASE": "Q14 base current set to zero",
+    "Q15_COLLECTOR_Q13_BASE": "Q13 base current set to zero"
+  },
+  "notes": [
+    "R14_BOARD4 is 1ST VCA BAL, distinct from 50 kohm panel EMPHASIS R14",
+    "R14 left and right electrical segments sum to 25 ohm; mechanical law and setting unknown",
+    "C6 and C15 are open in this DC calculation; R2 sees an open through C6"
+  ]
+}
