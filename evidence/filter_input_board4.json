@@ -5,7 +5,7 @@
   "nodes": {
     "BUS": "board 4 pin 4 and C27 negative terminal",
     "BASE": "C27 positive terminal, Q29 base and R54 left terminal",
-    "BOTTOM": "R54 right terminal, R52 lower terminal, C24 positive terminal and R61 upper terminal",
+    "BOTTOM": "R54 right terminal, R52 lower terminal, R76 left terminal, C24 positive terminal and R61 upper terminal",
     "TAIL": "Q29/Q30 common emitters and R60 upper terminal; Q28 collector is below R60",
     "REGEN": "Q30 base and R73 wiper"
   },
@@ -21,5 +21,6 @@
     "Q29_base": "positive current leaves BASE toward Q29 base; imposed in passive reference",
     "ladder_bottom": "positive current leaves BOTTOM toward the remaining ladder; imposed in passive reference"
   },
-  "excluded": ["Q29/Q30 transistor laws", "Q28 current sink", "R73 feedback path and board 4 pin 6", "mixer bus source impedances", "electrolytic ESR/leakage", "revision-dependent population"]
+  "conditional_dc_reference": {"module": "tools/filter_bottom_bias_dc_reference.py", "r61_candidates_ohm": [200, 200000], "imposed": ["upper-ladder current entering BOTTOM", "R73 electrical segment", "transistor Is/beta and upstream panel/RANGE parameters"], "solved": ["BOTTOM", "Q29/Q30 bases and base currents", "TAIL and Q28 headroom"], "excluded": ["upper-ladder collector currents", "Q29/Q30 collector headroom", "transient capacitors"]},
+  "excluded": ["Q29/Q30 transistor laws in passive transient reference; solved conditionally in filter_bottom_bias_dc_reference.py", "Q28 current sink in passive transient reference", "R73 feedback path and board 4 pin 6 in passive transient reference", "mixer bus source impedances", "electrolytic ESR/leakage", "revision-dependent population"]
 }

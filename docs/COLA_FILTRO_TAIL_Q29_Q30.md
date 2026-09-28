@@ -4,7 +4,7 @@
 
 En **SVC-9, Fig. 9-11, PDF p. 13** (SVC-204D p. 69), Q29/Q30 son el par inferior **TIS97 NPN** con emisores unidos en `TAIL`. Ese nodo baja por **R60 = 680 Ω** al colector de Q28; Q29 recibe la [entrada tras C27](ENTRADA_FILTRO.md) y Q30 el [retorno de regeneración](REGENERACION_FILTRO.md). La tabla 7-8 de SVC-9, PDF pp. 30–31, confirma designadores y valores. [Grafo](../evidence/filter_input_pair.json). La ley exponencial de colector empleada es la de [TI SLOA059B, PDF p. 6, ec. (3)](https://www.ti.com/lit/an/sloa059b/sloa059b.pdf).
 
-La [referencia ejecutable](../tools/filter_bottom_tail_dc_reference.py) obtiene la corriente de colector candidata de Q28 desde el [panel y Q26/Q28 acoplados](COLA_FILTRO_ACOPLADA_DC.md), **sin imponer `TAIL`**. Exige como fronteras los dos voltajes de base Q29/Q30 en V, sus `I_S` en A y sus β adimensionales mayores que 1; acepta β infinito para contrastar el límite anterior. Emplea la misma temperatura de unión impuesta al bloque Q26/Q28. C27/C24 se abren en DC. Ningún voltaje de base, β, `I_S` ni corriente del ejemplo procede de una unidad física.
+La [referencia ejecutable](../tools/filter_bottom_tail_dc_reference.py) obtiene la corriente de colector candidata de Q28 desde el [panel y Q26/Q28 acoplados](COLA_FILTRO_ACOPLADA_DC.md), **sin imponer `TAIL`**. Exige como fronteras los dos voltajes de base Q29/Q30 en V, sus `I_S` en A y sus β adimensionales mayores que 1; acepta β infinito para contrastar el límite anterior. El [cierre DC posterior de ambas bases](BASES_FILTRO_ACOPLADAS_DC.md) sustituye esos dos voltajes por corriente de ladder impuesta y selección explícita de R61. Emplea la misma temperatura de unión impuesta al bloque Q26/Q28. C27/C24 se abren en DC. Ningún voltaje de base, β, `I_S` ni corriente del ejemplo procede de una unidad física.
 
 ## Cierre de corriente y margen
 
@@ -29,11 +29,11 @@ Como escenario ilustrativo se imponen R39 a `0,1`, R11 al centro, R49 a `250 Ω`
 
 ## Admisión RACE
 
-El cierre de `TAIL` es una **transferencia DC condicionada** de cuatro transistores y R60, no un punto de operación del ladder completo. Siguen abiertos los voltajes de colector y cargas de Q29/Q30, la corriente de base de Q29 sobre R54/C27 y la de Q30 sobre R73/C10, el valor conflictivo de R61, los voltajes e impedancias de las fuentes del panel, dispersión, efecto Early, saturación y temperatura efectiva. Los flags de región activa son condiciones necesarias; no sustituyen un modelo de saturación. No se infiere frecuencia de corte, resonancia ni fidelidad audible.
+El cierre de `TAIL` es una **transferencia DC condicionada** de cuatro transistores y R60, no un punto de operación del ladder completo. El [cálculo de BOTTOM y ambas bases](BASES_FILTRO_ACOPLADAS_DC.md) realimenta corrientes de base en DC, pero deja impuesta la inyección desde el ladder superior y conserva el conflicto de R61. Siguen abiertos los voltajes de colector y cargas de Q29/Q30, los voltajes e impedancias de las fuentes del panel, dispersión, efecto Early, saturación y temperatura efectiva. Los flags de región activa son condiciones necesarias; no sustituyen un modelo de saturación. No se infiere frecuencia de corte, resonancia ni fidelidad audible.
 
 ```powershell
 python tools/filter_bottom_tail_dc_reference.py
 python -m unittest discover -s tests -q
 ```
 
-Las pruebas comprueban KCL de emisor y R60, relación entre corrientes de base/colector/emisor, simetría, recuperación del reparto ideal de β infinito, estabilidad con bases muy distintas, cambio de margen Q28 al variar bases y rechazo de fronteras inválidas. El próximo paso es resolver las bases inferiores con R54/R61 y R73 bajo cargas del ladder, conservando los dos candidatos de R61 hasta contar con evidencia discriminante.
+Las pruebas comprueban KCL de emisor y R60, relación entre corrientes de base/colector/emisor, simetría, recuperación del reparto ideal de β infinito, estabilidad con bases muy distintas, cambio de margen Q28 al variar bases y rechazo de fronteras inválidas. El próximo paso es calcular la inyección a BOTTOM y las cargas de colector desde los peldaños superiores, conservando los dos candidatos de R61 hasta contar con evidencia discriminante.

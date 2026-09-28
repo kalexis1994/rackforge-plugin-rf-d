@@ -63,6 +63,7 @@ Estos artículos originales ayudan a diseñar y contrastar el solver. **Ninguno 
 | Base de Q26: R11/R55, J2/R51, SW15/R52, SW16/R53, SW17/R54, pin 5 directo, R74 desde pin 16, R49/R70/C18 | SVC-9 PDF pp. 13 y 19, Figs. 9-11 y 9-17; [reducción pasiva y estados de panel](BASE_Q26_CONTROL_FILTRO.md), [transcripción](../evidence/filter_cutoff_base_network.json). |
 | Q26/Q28 con corriente de base finita y panel acoplado | SVC-9 PDF pp. 13 y 19, Figs. 9-11 y 9-17; BJT-TI-2023 PDF p. 6, ec. (3) para ley exponencial; [punto DC condicionado](COLA_FILTRO_ACOPLADA_DC.md). β e Is siguen impuestos; TAIL puede imponerse o cerrarse condicionalmente con Q29/Q30. |
 | TAIL de Q29/Q30 con R60 y corriente Q28 | SVC-9 PDF p. 13, Fig. 9-11 y tabla 7-8 pp. 30–31; BJT-TI-2023 PDF p. 6, ec. (3); [cierre DC condicionado](COLA_FILTRO_TAIL_Q29_Q30.md). Bases inferiores, β e Is siguen impuestos. |
+| BOTTOM y bases Q29/Q30 en DC, dos candidatos R61, R54/R76/R73 y pin 6 abierto por C10 | SVC-9 PDF p. 13, Fig. 9-11; p. 19, Fig. 9-17; tabla 7-8 pp. 30–31; [cierre DC condicionado](BASES_FILTRO_ACOPLADAS_DC.md). Inyección desde el ladder superior y parámetros de transistor siguen impuestos. |
 | Ruido, mezcla de modulación y entrada externa | SVC-204D PDF pp. 10–11 y 14; esquemas pp. 66 y 69 |
 | Ladder, recuperación, dos VCA | SVC-204D PDF pp. 11–12, impresa 2-7; placa p. 68, Fig. 9-10; esquema p. 69, Fig. 9-11. |
 | Contornos, gatillo y final decay | SVC-204D PDF pp. 12–13, impresas 2-7 a 2-8; esquema p. 65, Fig. 9-5 |

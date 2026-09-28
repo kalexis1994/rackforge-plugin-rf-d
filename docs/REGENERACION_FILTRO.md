@@ -6,6 +6,8 @@ La **Fig. 9-11, SVC-9 PDF p. 13** (SVC-204D completo p. 69) muestra el nodo de r
 
 De regreso en la placa 4, pin 6 alcanza el extremo derecho de **R73, 1 kΩ REGEN CAL**. Su cursor es la base de **Q30**. El extremo izquierdo llega por **R76, 330 Ω**, al nodo `BOTTOM`, que también pertenece al pie del ladder. La [transcripción](../evidence/filter_regeneration_path.json) coteja las Fig. 9-11 y 9-17 con la tabla 7-8 de piezas, SVC-9 PDF pp. 30–31. R73 es un **ajuste de servicio**, distinto de la perilla R14. El par Q29/Q30 inyecta la diferencia entre la entrada de audio y esta señal de retorno al ladder, pero aún falta su ley activa.
 
+En DC, C10 abre la ruta desde el tap y el extremo inferior de R14 está sin conexión en la Fig. 9-17. Por tanto, pin 6 no aporta una fuente DC por R14: la corriente de base Q30 vuelve a `BOTTOM` a través del segmento izquierdo de R73 y R76. El [cierre condicionado de ambas bases](BASES_FILTRO_ACOPLADAS_DC.md) usa esa ruta; la transferencia de audio de abajo sigue siendo un cálculo separado.
+
 ## Dos puertos pasivos condicionados
 
 La [referencia ejecutable](../tools/filter_regeneration_reference.py) impone el voltaje del nodo R7/R3 como fuente ideal, fija `BOTTOM` como masa de pequeña señal y deja abierta la base de Q30. Para R14 expresado como resistencia real `R14ₑ` de pin 7 a pin 6 y R73 como dos segmentos `R73_L + R73_R = 1000 Ω`:
@@ -23,8 +25,8 @@ La tabla 7-8 asigna a C10 tolerancia **+50/−10 %**; los valores anteriores usa
 ## Contrastes siguientes
 
 1. Transcribir R7/R3/C9/R6 y Q8 para calcular la impedancia real del tap, además de su voltaje.
-2. Acoplar R73/R76 al nodo `BOTTOM` de C24/R61 y modelar la corriente de base de Q30.
-3. Acoplar el [límite ideal de Q29/Q30](PAR_ENTRADA_FILTRO_IDEAL.md) con la [red Q26/Q28 condicionada](COLA_FILTRO_Q26_Q28.md) y las cargas de colector antes de cerrar el lazo del ladder. Sólo entonces simular autooscilación y pérdida de graves a distintos niveles.
+2. Extender el [acoplamiento DC de R73/R76 y BOTTOM](BASES_FILTRO_ACOPLADAS_DC.md) a C10/C24 y la corriente de base variable de Q30 durante audio.
+3. Acoplar las cargas de colector de Q29/Q30 y los peldaños superiores antes de cerrar el lazo del ladder. Sólo entonces simular autooscilación y pérdida de graves a distintos niveles.
 
 ```powershell
 python tools/filter_regeneration_reference.py
