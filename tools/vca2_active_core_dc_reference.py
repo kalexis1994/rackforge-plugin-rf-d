@@ -18,7 +18,7 @@ EVIDENCE = Path(__file__).resolve().parents[1] / "evidence" / "vca2_active_core.
 DEVICES = ("Q14", "Q13", "Q21")
 NODES = ("PAIR2_EMITTER", "Q21_COLLECTOR", "Q21_EMITTER",
          "Q14_COLLECTOR", "Q13_COLLECTOR")
-EXPECTED = {"R12": 100, "R18": 330, "R21": 330, "R33": 470,
+EXPECTED = {"R11": 150, "R12": 100, "R18": 330, "R21": 330, "R33": 470,
             "R42": 3300, "R44": 150000, "R51": 33000}
 
 

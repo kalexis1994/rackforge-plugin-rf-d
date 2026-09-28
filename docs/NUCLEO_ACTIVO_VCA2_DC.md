@@ -17,7 +17,7 @@ El retorno expone `IB14` e `IB13` como **cargas pendientes** de Q16_COLLECTOR y 
 
 Al dar como ejemplo las tensiones del [primer balance condicionado](ALIMENTACION_BALANCE_VCA1.md) con `V_cursor2=9 V`, y fijar `V_Q21b=2 V`, R12 izquierdo `50 Ω`, `I_S=10⁻¹⁴ A`, `β_F=100`, `β_R=5`, `298,15 K`, el solver obtiene `V_Q14c≈8,9079 V`, `V_Q13c≈8,9094 V`; las corrientes de base que deberían cargar el primer VCA son `≈2,42/2,38 µA`. El residuo máximo es `<10⁻¹² A`. Son valores **condicionados**: las tensiones Q14/Q13 se tomaron de una solución que aún no incluye esas corrientes, y el segundo cursor también es impuesto. No son niveles de salida del Model D.
 
-Las [pruebas](../tests/test_vca2_active_core_dc_reference.py) cubren las cinco KCL, conservación de cola, corriente externa del shunt, control y extremos del balance. El próximo sistema debe resolver ambos VCA **juntos** para cargar de verdad Q16/Q15 con IB14/IB13 y cerrar R11/R10. Después sigue Q12/Q17, la red de salida y el jack externo. El audio externo sigue sin contrastar.
+Las [pruebas](../tests/test_vca2_active_core_dc_reference.py) cubren las cinco KCL, conservación de cola, corriente externa del shunt, control y extremos del balance. El [sistema DC acoplado](VCA_CASCADA_DC.md) ya carga Q16/Q15 con IB14/IB13 y resuelve ambos cursores a través de R13/R11. Faltan R10/Q1, Q12/Q17, la red de salida y el jack externo. El audio externo sigue sin contrastar.
 
 ```powershell
 python tools/vca2_active_core_dc_reference.py
