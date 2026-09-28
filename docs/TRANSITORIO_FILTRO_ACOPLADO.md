@@ -18,7 +18,7 @@ u10_new = V_tap−V_Q30base−R_top·I10                V
 F(v_new) + I10·(e_Q30base−e_tap) − Δq/Δt = 0     A
 ```
 
-Esto admite incluso `R_top=0 Ω` sin una división por resistencia nula. `R76+R73_L` ya vive entre `BOTTOM` y la base de Q30 en `F`; la rutina comprueba que el segmento del trimmer usado en el punto DC sea el mismo durante el paso. Newton amortiguado resuelve las 24 tensiones; rechaza parámetros no finitos, condiciones fuera de dominio exponencial y pasos que no disminuyen el residuo. Como es referencia **offline**, las alocaciones y el número variable de iteraciones están permitidos aquí; no son diseño DSP para el hilo de audio.
+Esto admite incluso `R_top=0 Ω` sin una división por resistencia nula. `R76+R73_L` ya vive entre `BOTTOM` y la base de Q30 en `F`; la rutina comprueba que el segmento del trimmer usado en el punto DC sea el mismo durante el paso. Newton amortiguado resuelve las 24 tensiones; rechaza parámetros no finitos, condiciones fuera de dominio exponencial y pasos que no disminuyen el residuo. El paso usa ahora un [Jacobiano analítico](JACOBIAN_ANALITICO_FILTRO.md), con la versión de diferencias finitas disponible para regresión. Como es referencia **offline**, las alocaciones y el número variable de iteraciones están permitidos aquí; no son diseño DSP para el hilo de audio.
 
 ## Contrastes reproducibles
 

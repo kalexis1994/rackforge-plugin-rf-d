@@ -14,6 +14,7 @@ from filter_ladder_ebers_moll_dc_reference import (
 from filter_recovery_active_dc_reference import NODES as RECOVERY_NODES, _evaluate as recovery_kcl
 from filter_recovery_active_small_signal_reference import coupled_matrices
 from filter_regeneration_reference import _values
+from filter_full_analytic_jacobian import analytic_step_jacobian
 
 
 NODES = LADDER_NODES + RECOVERY_NODES
@@ -33,7 +34,8 @@ def nonlinear_coupled_step(*, ladder_dc: dict, recovery_dc: dict,
                            previous_bus_v: float, bus_v: float,
                            dt_s: float, r14_pin7_to_pin6_ohm: float,
                            r73_bottom_side_to_wiper_ohm: float,
-                           c10_farads: float | None = None) -> dict:
+                           c10_farads: float | None = None,
+                           jacobian_method: str = "analytic") -> dict:
     """Backward Euler charge/KCL step with absolute node voltages."""
     c10_nominal, r14_total, r73_total, r76 = _values()
     c10 = c10_nominal if c10_farads is None else c10_farads
@@ -45,7 +47,8 @@ def nonlinear_coupled_step(*, ladder_dc: dict, recovery_dc: dict,
                 previous_c10_capacitor_v, previous_bus_v, bus_v,
                 r14_pin7_to_pin6_ohm, r73_bottom_side_to_wiper_ohm))
             or not 0 <= r14_pin7_to_pin6_ohm <= r14_total
-            or not 0 <= r73_bottom_side_to_wiper_ohm <= r73_total):
+            or not 0 <= r73_bottom_side_to_wiper_ohm <= r73_total
+            or jacobian_method not in ("analytic", "finite_difference")):
         raise ValueError("finite state, positive step and in-range electrical settings required")
     r30_dc = ladder_dc["network_parameters"]["r30"]
     if not math.isclose(r30_dc, r76 + r73_bottom_side_to_wiper_ohm,
@@ -85,14 +88,23 @@ def nonlinear_coupled_step(*, ladder_dc: dict, recovery_dc: dict,
         if max(abs(value) for value in residual) < 1e-10 and error < 1e-3:
             iterations = iteration
             break
-        jacobian = [[0.0] * 24 for _ in range(24)]
-        for column in range(24):
-            shifted = x.copy()
-            shifted[column] += 1e-5
-            high, _, _, _, _ = evaluate(shifted)
+        if jacobian_method == "analytic":
+            jacobian = analytic_step_jacobian(
+                node_v=x, ladder_parameters=ladder_parameters,
+                recovery_parameters=recovery_parameters,
+                capacitance_matrix_f=cap, dt_s=dt_s,
+                c10_farads=c10, return_series_ohm=rtop)
             for row in range(24):
-                jacobian[row][column] = ((high[row] - residual[row])
-                                         / 1e-5 / scales[row])
+                jacobian[row] = [value / scales[row] for value in jacobian[row]]
+        else:
+            jacobian = [[0.0] * 24 for _ in range(24)]
+            for column in range(24):
+                shifted = x.copy()
+                shifted[column] += 1e-5
+                high, _, _, _, _ = evaluate(shifted)
+                for row in range(24):
+                    jacobian[row][column] = ((high[row] - residual[row])
+                                             / 1e-5 / scales[row])
         direction = _solve_linear(jacobian,
                                   [-value / scale for value, scale in zip(residual, scales)])
         accepted = False
@@ -127,6 +139,7 @@ def nonlinear_coupled_step(*, ladder_dc: dict, recovery_dc: dict,
             name for name, device in {**ladder_devices, **recovery_devices}.items()
             if device["v_bc_v"] > 0),
         "iterations": iterations,
+        "jacobian_method": jacobian_method,
         "dt_s": dt_s,
         "offline_reference_only": True,
     }
