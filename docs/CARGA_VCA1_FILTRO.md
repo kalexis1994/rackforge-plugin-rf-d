@@ -19,7 +19,7 @@ Los cambios de colector son pequeños en este punto, pero no idénticos ni forzo
 
 ## Límite de la frontera
 
-El punto DC de Q16/Q15 y Q18 sigue abierto. Sus corrientes de base, el balance R14/R19/R23/R22/R13, la carga del segundo multiplicador Q14/Q13, la conversión Q12/Q17 y el volumen/salida podrían modificar la transferencia. La [referencia temporal no lineal](TRANSITORIO_FILTRO_ACOPLADO.md) tampoco contiene aún C6 ni el VCA; el siguiente trabajo debe resolver el sesgo activo y añadirlo al transitorio antes de inferir graves o recorte de la voz completa. La discrepancia documental de R61 continúa sin resolución física.
+El punto DC de Q16/Q15 y Q18 sigue abierto. Sus corrientes de base, el balance R14/R19/R23/R22/R13, la carga del segundo multiplicador Q14/Q13, la conversión Q12/Q17 y el volumen/salida podrían modificar la transferencia. La [referencia temporal cargada](TRANSITORIO_CARGA_VCA1.md) ya incluye C6/C15 y R2/R34/R36, pero mantiene los transistores del VCA abiertos. Hay que resolver su sesgo activo antes de inferir graves o recorte de la voz completa. La discrepancia documental de R61 continúa sin resolución física.
 
 ```powershell
 python tools/filter_vca1_loaded_small_signal_reference.py

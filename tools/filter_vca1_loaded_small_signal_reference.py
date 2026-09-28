@@ -14,22 +14,10 @@ from filter_recovery_active_small_signal_reference import coupled_matrices
 from vca1_input_boundary_reference import _values as vca_values
 
 
-def filter_with_passive_vca1(*, ladder_dc: dict, recovery_dc: dict,
-                             frequency_hz: float,
-                             r14_pin7_to_pin6_ohm: float,
-                             r73_bottom_side_to_wiper_ohm: float,
-                             c10_farads: float | None = None) -> dict:
-    """Solve all circuit nodes for an ideal BUS=1 V perturbation."""
+def loaded_matrices(*, ladder_dc: dict,
+                    recovery_dc: dict) -> tuple[list[list[float]], list[list[float]], float]:
+    """27-node DC conductance and capacitor matrices, before C10 feedback."""
     r2, c6, r34, c15, r36 = vca_values()
-    r30_dc = ladder_dc["network_parameters"]["r30"]
-    if not math.isclose(r30_dc, 330 + r73_bottom_side_to_wiper_ohm,
-                        rel_tol=0, abs_tol=1e-8):
-        raise ValueError("ladder DC R73 left segment differs from AC return")
-    y_return = series_return_admittance_s(
-        frequency_hz=frequency_hz,
-        r14_pin7_to_pin6_ohm=r14_pin7_to_pin6_ohm,
-        r73_bottom_side_to_wiper_ohm=r73_bottom_side_to_wiper_ohm,
-        c10_farads=c10_farads)
     core_g, core_c, c27 = coupled_matrices(ladder_dc, recovery_dc)
     g = [[0.0] * 27 for _ in range(27)]
     c = [[0.0] * 27 for _ in range(27)]
@@ -48,6 +36,26 @@ def filter_with_passive_vca1(*, ladder_dc: dict, recovery_dc: dict,
     stamp(g, 25, 26, -1 / r34)
     stamp(g, 26, None, -1 / r36)
     stamp(c, 26, None, c15)
+    return g, c, c27
+
+
+def filter_with_passive_vca1(*, ladder_dc: dict, recovery_dc: dict,
+                             frequency_hz: float,
+                             r14_pin7_to_pin6_ohm: float,
+                             r73_bottom_side_to_wiper_ohm: float,
+                             c10_farads: float | None = None) -> dict:
+    """Solve all circuit nodes for an ideal BUS=1 V perturbation."""
+    r2, _, _, _, _ = vca_values()
+    r30_dc = ladder_dc["network_parameters"]["r30"]
+    if not math.isclose(r30_dc, 330 + r73_bottom_side_to_wiper_ohm,
+                        rel_tol=0, abs_tol=1e-8):
+        raise ValueError("ladder DC R73 left segment differs from AC return")
+    y_return = series_return_admittance_s(
+        frequency_hz=frequency_hz,
+        r14_pin7_to_pin6_ohm=r14_pin7_to_pin6_ohm,
+        r73_bottom_side_to_wiper_ohm=r73_bottom_side_to_wiper_ohm,
+        c10_farads=c10_farads)
+    g, c, c27 = loaded_matrices(ladder_dc=ladder_dc, recovery_dc=recovery_dc)
     s = 2j * math.pi * frequency_hz
     system = [[g[i][j] - s * c[i][j] for j in range(27)] for i in range(27)]
     base, tap = 7, 22

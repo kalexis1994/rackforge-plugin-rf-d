@@ -64,6 +64,7 @@ Estos artículos originales ayudan a diseñar y contrastar el solver. **Ninguno 
 | Jacobiano analítico del transitorio de 24 nodos | Topología y valores SVC-9 Fig. 9-11 p. 13, Fig. 9-17 p. 19, tabla 7-8 pp. 30–31; ley Ebers–Moll de Nagel y Pederson 1973 pp. 4–5; [derivación, regresión y coste local](JACOBIAN_ANALITICO_FILTRO.md). |
 | Entrada del primer VCA: R2, C6, R34, C15, R36, Q16/Q15 y Q18 | SVC-204D §2.9 PDF p. 12; SVC-9 Fig. 9-11 p. 13 y tabla 7-8 pp. 30–31; [frontera pasiva](FRONTERA_ENTRADA_VCA1.md). R2=82 kΩ entre colector de recuperación y C6. |
 | Carga pasiva del primer VCA sobre el colector del recuperador | Mismas fuentes; [red AC de 27 nodos](CARGA_VCA1_FILTRO.md), con C10/R14/R73 y R2/C6/R34/C15/R36. Q16/Q15 activos pendientes. |
+| Transitorio del filtro y entrada pasiva del primer VCA | SVC-204D §2.9 p. 12 y SVC-9 Fig. 9-11 p. 13, tabla 7-8 pp. 30–31; [oráculo de 27 nodos](TRANSITORIO_CARGA_VCA1.md). Q16/Q15 siguen abiertos. |
 | Retorno de regeneración: C10, R14 de panel, R73, R76 y Q30 | SVC-9 PDF p. 13, Fig. 9-11, p. 19, Fig. 9-17 y tabla 7-8 PDF pp. 30–31; [derivación condicionada](REGENERACION_FILTRO.md). |
 | Par inferior Q29/Q30 y cola R60/Q28 | SVC-9 PDF p. 13, Fig. 9-11, tabla 7-8 pp. 30–31; B-804C-2 corrige nota 3 de Q26/Q28; [límite ideal del par](PAR_ENTRADA_FILTRO_IDEAL.md) usa BJT-TI-2023 p. 6 y constantes SI NIST/CODATA. |
 | Control de corriente Q26/Q28: R39 RANGE, R46, R45 y R60 | SVC-9 PDF p. 13, Fig. 9-11, tabla 7-8 pp. 30–31 y B-804C-2; [carga DC condicionada](COLA_FILTRO_Q26_Q28.md). |
