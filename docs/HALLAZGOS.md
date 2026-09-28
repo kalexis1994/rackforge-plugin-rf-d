@@ -15,10 +15,10 @@ Este mapa resume afirmaciones de manuales de fábrica. Son puntos de partida par
 
 ## Prioridad de derivación de circuitos
 
-1. **Placa de osciladores identificada:** traducir Fig. 9-2 **o** 9-3 a nodos y parámetros, y documentar discrepancias esquema/BOM/placa. Crear una ruta de referencia de precisión antes de optimizar.
+1. **Placa de osciladores CA3046:** traducir Fig. 9-3 a nodos y parámetros y documentar discrepancias esquema/BOM. Mantener Fig. 9-2 para la variante μA726 y no inferir la primera placa discreta de ninguna de ellas. Crear una ruta de referencia de precisión antes de optimizar.
 2. **Mezclador → Q29/Q30 → ladder → recuperación → VCA 1/2 → salida:** retener no linealidades y cargas de cada frontera. La sobrecarga del mixer y la del ladder se medirán por separado.
 3. **Control:** teclado, glide, trigger y dos contornos como máquinas de estado con redes de carga/descarga. Preservar orden de contactos y comportamiento monofónico.
-4. **Variación:** trimmers, tolerancias y deriva se expresan como rangos vinculados a mediciones. Variación aleatoria sólo si el hardware muestra esa distribución temporal o entre unidades.
+4. **Variación:** trimmers y tolerancias se expresan primero como rangos de fabricante y análisis de sensibilidad. La deriva y la dispersión reales permanecen sin distribución identificada; no se añade aleatoriedad audible por intuición.
 
 ## Hipótesis que no se promueven todavía
 

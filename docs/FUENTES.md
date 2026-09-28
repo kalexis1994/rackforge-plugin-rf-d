@@ -16,7 +16,7 @@ Investigación iniciada el 28-09-2026. Los originales descargados quedan en `ref
 | B-TUNE | [Moog, procedimiento actualizado de afinación para osciladores antiguos](https://synthfool.com/docs/Moog/minimoog/updated_tuning_early_vcos.jpg) | `factory-bulletins/updated_tuning_early_vcos.jpg` | `54f9d170c3927ee4ba867ecf4cf40f5e79ebb255c88b6d0bd5122c04c46571fa` | Hoja que reemplaza pp. impresas 5-5 y 5-6 para seriales bajo 10175; cambia el orden/objetivos de ajuste. |
 | PAT-LADDER | [R. A. Moog, US3475623, *Electronic high-pass and low-pass filters employing the base to emitter diode resistance of bipolar transistors*](https://patents.google.com/patent/US3475623A/en) | `pdf/patent_us3475623_moog_ladder.pdf` | `464ba3222f40e8430281388b06085177702331b2d87c9ec9361c929f48480905` | 9 páginas; principio de ladder y realimentación. **No prueba** el BOM ni la calibración del Model D. |
 | DS-726 | [Fairchild, μA726, *Temperature-Controlled Differential Pair*](https://radio-hobby.org/uploads/datasheet/7/ua72/ua726.pdf) | `datasheets/fairchild_ua726.pdf` | `c1d463512dcae704c61ad7549ac4158718ca377b8e6b3f0a047e940b49301b26` | 3 páginas; componente de la placa estabilizada documentado por SVC-204D p. PDF 8. Hoja de componente, no medición del equipo. |
-| DS-3046 | [Rochester Electronics, reproducción de hoja CA3046, *General Purpose NPN Transistor Array*](https://atta.szlcsc.com/upload/public/pdf/source/20240129/4203E06A77725CA3AAC3A43A913440E8.pdf) | `datasheets/rochester_ca3046.pdf` | `27c7742de9b37256c3653c1286b7c473f729e7fb9c1e3247c60b27f29bb0de4d` | 2 páginas; referencia para identificar arrays en placa antigua. Edición posterior de fabricante; verificar marcaje del componente físico antes de adoptar parámetros. |
+| DS-3046 | [Rochester Electronics, reproducción de hoja CA3046, *General Purpose NPN Transistor Array*](https://atta.szlcsc.com/upload/public/pdf/source/20240129/4203E06A77725CA3AAC3A43A913440E8.pdf) | `datasheets/rochester_ca3046.pdf` | `27c7742de9b37256c3653c1286b7c473f729e7fb9c1e3247c60b27f29bb0de4d` | 2 páginas; array indicado en Fig. 9-3 para la placa antigua. Edición posterior de fabricante; sus parámetros no se transfieren sin examinar población, alimentación y rango de trabajo. |
 | MOOG-2022 | [Moog, *Minimoog Model D User's Manual* (reedición)](https://cdn.inmusicbrands.com/Moog/Model%20D/Minimoog_Model_D_Manual.pdf) | `pdf/user_model_d_2022_moog.pdf` | `c7e6f1abd54999cad7aa232d782df397f974ff210db1e6a429a863af6e850b1f` | 84 páginas; comparación de interfaz, no especificación del clásico. |
 
 El manual Folkman está duplicado dentro de OP-EARLY. El PDF SVC-9 solapa la sección 9 de SVC-204D, pero puede ofrecer otro contraste visual de los esquemas. Se comprobó que cada descarga listada abre como PDF o JPEG real; respuestas HTML bloqueadas no se registran como fuentes.
@@ -33,6 +33,18 @@ El manual Folkman está duplicado dentro de OP-EARLY. El PDF SVC-9 solapa la sec
 | `secondary/lessdrift.jpg` | [Consejo de menor deriva](https://synthfool.com/docs/Moog/minimoog/lessdrift.jpg), `2be4fbd153559f9de0d5a3cdafc37e483d32ebbe9f954aafa9a3b417aa0893ec` | **Pista secundaria**, modificación posterior de amplificadores del VCO. No presumirla en una unidad clásica. |
 
 [Un índice de correcciones aportadas por técnicos](https://www.synthfool.com/docs/Moog/minimoog/errors/) señala posibles errores de cableado, numeración de pin y dibujos de placas. Sus afirmaciones permanecen **sin verificar** contra los esquemas y una unidad real, por lo que no se usan como evidencia primaria.
+
+[Una comparación de primera mano de placas CA3046 y μA726](https://forum.moogmusic.com/t/minimoog-model-d-differences/14878) documenta que el autor midió ambos VCO antes del potenciómetro de mixer, en la misma nota, y describe diferencias de forma y pulso. Las imágenes originales alojadas en Tinypic no están accesibles; la publicación aporta una **observación cualitativa**, sin voltajes, audio crudo ni panel reproducible. [Otra nota histórica](https://forum.moogmusic.com/t/ra-minimoog/22482/7) menciona el dibujo original #1441 de la primera placa discreta. Queda como pista para localizar el documento, no como esquema verificado.
+
+## Investigación de métodos numéricos
+
+Estos artículos originales ayudan a diseñar y contrastar el solver. **Ninguno sustituye** los valores de las placas del Model D documentados por SVC-204D.
+
+| ID | Publicación y archivo local | SHA-256 | Uso y límite |
+| --- | --- | --- | --- |
+| DSP-HUV-2004 | [A. Huovilainen, *Non-Linear Digital Implementation of the Moog Ladder Filter*, DAFx 2004](https://www.dafx.de/paper-archive/2004/P_061.PDF), `research/huovilainen_dafx2004_ladder.pdf` | `d8bee4101c859f3eb8f0ccc0d08d6a3af09745ccce4c6549e46dd27138a30d67` | 4 pp.; ecuación diferencial del ladder idealizado y discretización Euler con corrección de sintonía. Sus supuestos de transistores apareados, beta infinita y carga despreciable deben examinarse frente a la placa 4 completa. |
+| DSP-DV-2013 | [S. D'Angelo y V. Välimäki, *An Improved Virtual Analog Model of the Moog Ladder Filter*, ICASSP 2013](https://dangelo.audio/icassp13-ladder), [PDF del artículo](https://raw.githubusercontent.com/ddiakopoulos/MoogLadders/master/research/DAngeloValimaki.pdf), `research/dangelo_valimaki_icassp2013_ladder.pdf` | `5d1490cf578d7e0f41de89344b905f1a3989fe19875d31ecb19f1aed35c204c1` | 5 pp.; modelo no lineal y comparación con SPICE. Referencia de método y banco de contraste; su esquema de núcleo no incluye por sí solo mixer, recuperación, dos VCA y salida del RF-D. |
+| DSP-PEK-2011 | [J. Pekonen et al., *Discrete-Time Modelling of the Moog Sawtooth Oscillator Waveform*, EURASIP 2011](https://mural.maynoothuniversity.ie/id/eprint/4185/), [PDF](https://mural.maynoothuniversity.ie/id/eprint/4185/1/VL_Discrete-time.pdf), `research/pekonen2011_voyager_sawtooth.pdf` | `dadfe0f7744ef2660d5c26551f583d013474732e170b60943ef47779a91baee8` | 15 pp.; antialias y ajuste de forma de onda. **La grabación objetivo es de un Minimoog Voyager**, indicado en el propio artículo pp. 1–2, y no mide un Model D clásico. No importar sus curvas ni parámetros como evidencia RF-D. |
 
 ## Índice de páginas decisivas
 
@@ -52,8 +64,9 @@ El manual Folkman está duplicado dentro de OP-EARLY. El PDF SVC-9 solapa la sec
 ## Fuentes por conseguir o verificar
 
 - [Tom Rhea, *Minimoog Model D Operation Manual* (1974), documentado por el autor](https://www.drtomrhea.com/resources) y [ejemplar catalogado por The Henry Ford](https://www.thehenryford.org/collections/explore/artifact/429443). Falta un escaneo íntegro autenticado; no confundirlo con OP-EARLY.
-- Fotografías y marcajes de **la unidad de referencia concreta**, incluida placa 1, placa 2, placa 3, placa 4, placa 5, buffer de octavas y cualquier sustitución/reparación.
-- Audio y mediciones eléctricas de esa unidad, con calibración y cadena documentadas. Ningún PDF sustituye ese oráculo.
+- Dibujo Moog #1441 (21-12-1970) de la primera placa osciladora discreta, citado por un técnico pero no localizado como documento primario íntegro.
+- Fotografías de placas originales de procedencia comprobable para contrastar población y cambios del esquema; no se asume que una foto de una unidad representa todo un lote.
+- Referencias audibles de autores/propietarios de unidades vintage: [candidatas y límites](VALIDACION_SIN_HARDWARE.md). No habrá captura o medición propia del instrumento.
 
 ## Regla de admisión
 

@@ -3,10 +3,10 @@
 ## Blanco
 
 - **Instrumento:** Moog Minimoog Model D de producción clásica, monofónico.
-- **Revisión de placas:** pendiente. Registrar número de serie, designadores y revisiones de las placas de osciladores, contornos, fuente/ruido, filtro, salida y rectificador de una unidad física antes de congelar el blanco. El manual 204D separa oscilador antiguo y estabilizado en el umbral documental 10175, pero el estabilizado también podía instalarse como reemplazo; ver [REVISIONES.md](REVISIONES.md).
-- **Estado de calibración:** pendiente. Una unidad desajustada no define automáticamente el diseño nominal.
+- **Primer perfil:** placa osciladora **CA3046** de SVC-204D, Fig. 9-3, junto con las placas de control, filtro y salida descritas por ese manual. Es un **perfil documental nominal**, no un ejemplar con serial conocido. La μA726 estabilizada (Fig. 9-2) y la primera placa totalmente discreta quedan como variantes separadas; ver [REVISIONES.md](REVISIONES.md) y [VALIDACION_SIN_HARDWARE.md](VALIDACION_SIN_HARDWARE.md).
+- **Estado de calibración:** valores y procedimientos de servicio documentados. Los trimmers de una unidad real y su envejecimiento son incógnitas; no se inventarán ajustes para igualar una demo.
 - **Reediciones:** 2016 y 2022 son referencias comparativas, no se fusionan con la revisión clásica elegida. Moog documenta diferencias funcionales entre ambas [aquí](https://moogmusic-help.freshdesk.com/en/support/solutions/articles/69000840518-moog-minimoog-model-d-what-are-the-differences-between-the-2022-and-the-2016-minimoog-model-d-).
-- **Unidad(es) físicas y captura:** pendientes. Identificar sin datos personales, documentando temperatura, calentamiento, carga y cadena de grabación.
+- **Acceso físico:** no disponible ni previsto. Las grabaciones públicas se registran por autor, instrumento declarado, controles visibles, procesado y límites conocidos; no equivalen a capturas de laboratorio.
 
 ## Sonido y comportamiento que se estudiarán
 
@@ -30,6 +30,6 @@ Las etapas son candidatas de investigación, no una declaración de que ya esté
 - Windows, WebAssembly y otras plataformas RackForge compartirán un motor portable. Sample rates y presupuesto se fijarán tras el primer oráculo y perfil.
 - No se usará un filtro ladder genérico como sustituto de la ruta completa.
 
-## Decisión pendiente para iniciar el modelado
+## Siguiente paso de modelado
 
-Identificar una unidad de referencia y contrastar sus placas con el manual de servicio correspondiente. Hasta entonces, la topología es una hipótesis de familia y no se fijan parámetros sonoros de producción.
+Transcribir el esquema CA3046 y fijar el grafo eléctrico de cada bloque. Los parámetros nominales derivados podrán entrar al solver con incertidumbre explícita. Sólo se promoverán a una afirmación de fidelidad audible los resultados que resistan los contrastes descritos en [VALIDACION_SIN_HARDWARE.md](VALIDACION_SIN_HARDWARE.md).

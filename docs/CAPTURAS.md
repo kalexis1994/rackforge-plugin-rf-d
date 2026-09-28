@@ -1,35 +1,30 @@
-# Protocolo inicial de captura
+# Escenas de prueba y comparación
 
-El plan se cierra antes de medir. Capturas crudas en `captures/`, manifiesto de hashes y resultados derivados separados. No subir WAV, fotos internas ni archivos de referencia al repo.
+RF-D no tendrá capturas propias de un Minimoog. Este documento define **estímulos del circuito simulado** y los mínimos de metadatos para aprovechar grabaciones públicas. Los WAV ajenos, si están ofrecidos para descarga, permanecen en `references-local/` y fuera del paquete. Los resultados derivados guardan enlace, fecha, hash cuando exista, escena y limitaciones.
 
-## Identidad de sesión
+## Identidad de una referencia externa
 
-Unidad/revisión, fecha, temperatura, tiempo de calentamiento, calibración, carga, salida, cables, interfaz, impedancia/ganancia, sample rate, profundidad, reloj, latencia, nivel de calibración y firmware/herramienta de secuenciación MIDI.
+Autor y enlace original; declaración sobre vintage/reedición; serial o año sólo si el autor lo aporta; controles visibles o descritos; salida, efectos, carga, interfaz, formato y compresión cuando se conozcan. Cada campo desconocido permanece **desconocido**. Una foto externa no identifica la placa instalada.
 
-## Escenas
+## Escenas reproducibles del solver
 
-| Grupo | Contraste mínimo | Medida principal |
-| --- | --- | --- |
-| Osciladores | Fuente 1/2/3 sola; cada forma y rango; notas grave/media/aguda | Fundamental, espectro, nivel, deriva, arranque |
-| Mixer | Una fuente a distintos niveles; pares; entrada externa | Ganancia, intermodulación, distorsión antes del filtro |
-| Filtro | Cutoff y emphasis en extremos/intermedios, seguimiento, autooscilación | Respuesta, onset, nivel, grave, transitorio |
-| Contornos | Gate corto/largo, retrigger, sustain, decay switch | Tiempo y curva, continuidad, cola |
-| Performance | Glide, bend, mod wheel, notas repetidas, legato | CV/tono y respuesta temporal |
-| Salida | Niveles de salida y cargas documentadas | Headroom, respuesta, ruido y recorte |
+| Grupo | Estímulo mínimo | Medida del modelo | Comparación externa posible |
+| --- | --- | --- | --- |
+| Osciladores | Fuente 1/2/3 aislada; cada forma, rango y nota grave/media/aguda | Fundamental, ciclo, armónicos, nivel interno y final, arranque | Ciclos publicados sólo para forma/armónicos; video sólo rasgos amplios. |
+| Mixer | Una fuente a varios niveles, pares y entrada externa | Ganancia e intermodulación por etapa | Escucha de saturación cuando controles/ganancia sean visibles. |
+| Filtro | Cutoff/emphasis extremos e intermedios, tracking y autooscilación | Respuesta, onset, atenuación grave, transitorios | Barridos visibles con identidad de equipo; sin nivel absoluto si la cadena es desconocida. |
+| Contornos | Gate corto/largo, retrigger, sustain y final decay | Curva, tiempos, continuidad y cola | Comparación de articulación cuando la nota y el panel se observen. |
+| Performance | Glide, bend, mod wheel, legato y orden de notas | CV/tono y transiciones | Escucha de gesto en demos de performance, sin inferir constantes exactas. |
+| Salida | Salidas HIGH/LOW, cargas declaradas y niveles | Headroom, respuesta y recorte simulado | Sin umbral externo si carga, ganancia o normalización son desconocidas. |
 
-## Escenas dirigidas por el manual de servicio
+## Controles de fábrica que sí se pueden probar sin equipo
 
-- Dejar constancia del tiempo desde encendido y repetir afinación al inicio y tras **30 min**: SVC-204D PDF p. 29 pide ese calentamiento para la placa estabilizada.
-- Probar osciladores con los tres selectores de rango en combinaciones distintas y registrar si existe buffer de octavas: SVC-204D pp. 53 y 57 describe interacción de selectores y kit correctivo.
-- Medir el inicio de autooscilación con mixer apagado, contorno abierto y Emphasis barrido; el ajuste de servicio espera inicio entre **7 y 8** (SVC-204D p. 33). Repetir con distintas temperaturas/niveles antes de usar ese rango como objetivo DSP.
-- Capturar legato con dos y tres teclas, pulsando y soltando en distinto orden, para distinguir prioridad de nota grave de retención de CV y orden pitch/trigger (SVC-204D p. 16).
-- Si la placa 2 coincide con las tandas documentadas en SVC-204D §8.6–8.7, medir deriva del pitch sostenido y la respuesta del VCO 2 al trigger con ATTACK del contorno de filtro en cero y por encima de cero; anotar humedad y transistores instalados.
-- Medir pulso de modulación con rueda al mínimo y, si hay residual, determinar si el control incorpora la modificación B-832 antes de decidir si es comportamiento nominal.
-- Capturar release con final decay ON y OFF y ataques con retrigger breve; comparar la curva de cada contorno por separado (SVC-204D pp. 12–13).
-- Capturar jack **HIGH** y **LOW MAIN OUTPUT** con la impedancia de entrada anotada. Los niveles de fábrica de SVC-204D p. 6 son típicos y dependen de la carga; no compararlos sin esa condición.
+- El solver debe reproducir condiciones de alimentación y las relaciones de ajuste de SVC-204D §5; no tratar ±10,000 V como medición de una unidad concreta.
+- La placa μA726 tiene un procedimiento tras 30 min de calentamiento (SVC-204D PDF p. 29). Se conserva como contraste de revisión, sin aplicar ese ajuste a la ruta CA3046. Modelar temperatura sólo con mecanismos y parámetros documentados; el warmup real queda sin validar.
+- El procedimiento de servicio espera inicio de regeneración entre 7 y 8 en Emphasis (SVC-204D PDF p. 33). Esta condición de calibración sirve como objetivo nominal de control, con tolerancia visible y sin prometer que toda unidad se comporta igual.
+- Probar prioridad de nota grave, orden pitch/trigger y final decay de acuerdo con SVC-204D PDF pp. 12–16. Las pruebas del plugin verifican su implementación, no la latencia exacta de contactos de una unidad antigua.
+- Conservar los efectos de kits y defectos de [REVISIONES.md](REVISIONES.md) fuera del perfil base, salvo evidencia de que pertenecen a él.
 
-Repetir escenas, conservar datos fallidos y reservar configuraciones no usadas para ajuste. Alinear latencia de forma declarada; reportar nivel sin normalización y también comparación con ganancia igualada cuando ayude a aislar timbre. Evaluar diferencias por escena y peores casos. Una grabación de una sola unidad no representa todas las unidades fabricadas.
+## Gate de audio
 
-## Primer gate de audio
-
-No se declarará similitud auditiva hasta tener una unidad identificada y capturas que cubran fuente, filtro, contornos y salida. Antes de esa etapa sólo se podrá afirmar topología o diseño nominal con alcance explícito.
+Se permite informar **plausibilidad** cuando varias referencias vintage independientes comparten un rasgo audible en escenas identificables y RF-D lo reproduce de forma repetible. Un video con compresión o un ciclo único no permite calibrar deriva, amplitud absoluta, tiempo de contorno o distorsión de una etapa concreta. El contraste riguroso con hardware identificado queda como brecha explícita en la [matriz](MATRIZ_DE_FIDELIDAD.md).

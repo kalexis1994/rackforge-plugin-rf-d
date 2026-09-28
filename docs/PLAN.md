@@ -1,33 +1,43 @@
 # Plan de investigación RACE para RF-D
 
-## Fase A — Identidad y evidencia
+No habrá acceso a una unidad física. El [protocolo sin hardware](VALIDACION_SIN_HARDWARE.md) define qué podemos comprobar y qué afirmaciones quedan fuera de alcance.
 
-1. Manual técnico íntegro y esquemas: corpus descargado e indexado en [FUENTES.md](FUENTES.md). Resolver sus contradicciones y boletines según [REVISIONES.md](REVISIONES.md).
-2. Inventariar la unidad objetivo, placas, modificaciones y ajustes existentes.
-3. Congelar la ruta de salida y el estado de calibración antes de usar audio como referencia.
+## Fase A — Perfil documental y circuito
 
-**Salida:** `OBJETIVO.md` congelado para una unidad física, fuente/esquema de esa placa, inventario de modificaciones y mapa de nodos por placa. La documentación general ya está; falta la unidad. Sin esa salida, no se promueven constantes al motor.
+1. El corpus de manuales, esquemas, boletines y datasheets está indexado en [FUENTES.md](FUENTES.md); resolver conflictos mediante [REVISIONES.md](REVISIONES.md).
+2. Congelar la primera variante en la placa osciladora CA3046 Fig. 9-3 de SVC-204D. No fusionar Fig. 9-2, la primera placa discreta ni reediciones.
+3. Transcribir cada placa a grafo de nodos, valores, conexiones y estados de control. Documentar calibración de fábrica, tolerancias y componentes no identificados.
 
-## Fase B — Capturas y oráculo
+**Salida:** perfil documental en [OBJETIVO.md](OBJETIVO.md), mapa de nodos reproducible y derivaciones por bloque. La falta de un serial físico no impide modelar el circuito nominal.
 
-1. Preparar escenas secas por fuente, barridos de filtro, contornos, teclas y performance.
-2. Capturar repetidamente la unidad con identidad de configuración y niveles.
-3. Derivar un oráculo por bloque en unidades eléctricas; primero circuito nominal y luego variación observada.
+## Fase B — Solver y banco de pruebas
 
-**Salida:** resultados reproducibles y decisiones de aceptación predefinidas, siguiendo [CAPTURAS.md](CAPTURAS.md).
+1. Crear un solver fuera de tiempo real para VCO, mixer, filtro, contornos, VCA y salida; derivar frecuencia, transferencia, puntos DC y transitorios.
+2. Ejecutar las escenas de [CAPTURAS.md](CAPTURAS.md) como estímulos simulados, con controles y unidades reproducibles.
+3. Contrastar las cifras con el manual, boletines y límites de datasheets. Reservar escenas para detectar sobreajuste de parámetros libres.
 
-## Fase C — Motor portable
+**Salida:** oráculo **numérico del circuito seleccionado**, con incertidumbre declarada. El oráculo no demuestra equivalencia con un ejemplar antiguo.
 
-1. Implementar módulos separados para contrato/estado, control, osciladores, mezcla, filtro, contornos/VCA, salida y adaptador RackForge.
-2. Comparar cada bloque con el oráculo y el equipo, incluyendo notas y controles reservados.
-3. Optimizar WebAssembly/tiempo real sólo con errores medidos; conservar una ruta de referencia fuera de tiempo real.
+## Fase C — Referencias audibles públicas
 
-**Salida:** pruebas de circuito y audio, matriz por bloque, perfil de CPU y plugin `.rfplugin` sin recursos privados.
+1. Catalogar las grabaciones de autores/propietarios de Model D vintage candidatas en [VALIDACION_SIN_HARDWARE.md](VALIDACION_SIN_HARDWARE.md).
+2. Clasificar escenas por identidad del instrumento, visibilidad de controles, formato y procesado. Las demos sin ajustes reconstruibles sirven para escucha musical, no para ajuste de constantes.
+3. Comparar formas/rasgos y documentar coincidencias y fallas por fuente independiente; mantener aparte las reediciones.
 
-## Fase D — Uso en vivo
+**Salida:** informe de plausibilidad sonora por escena, sin reclamar proximidad cuantitativa a una unidad no medida.
 
-Probar Note On/Off, retrigger, legato, glide, ruedas, cambios de preset del host y recuperación de estado. Mantener la voz mono y describir las comodidades de RackForge como extensiones de workflow. Validar transiciones sin discontinuidades accidentales ni asignaciones en el hilo de audio.
+## Fase D — Motor portable y plugin
 
-## Prioridad de la primera campaña
+1. Implementar contrato/estado, control, osciladores, mezcla, filtro, contornos/VCA, salida y adaptador RackForge.
+2. Comparar cada bloque con el solver, incluyendo límites de controles y escenas reservadas.
+3. Optimizar WebAssembly/tiempo real sólo después de medir errores; conservar ruta de referencia de precisión.
 
-Comenzar por identidad de placas y captura limpia de **un oscilador aislado → mezclador → filtro abierto → VCA/salida**, y luego filtro autooscilante y contornos. Esa secuencia permite atribuir diferencias antes de ajustar el sonido completo.
+**Salida:** pruebas de circuito y audio, matriz por bloque, perfil de CPU y plugin `.rfplugin` sin material ajeno redistribuido.
+
+## Fase E — Uso en vivo
+
+Probar Note On/Off, retrigger, legato, glide, ruedas, cambios de preset y recuperación de estado. Mantener la voz mono y describir las comodidades de RackForge como extensiones. Validar transiciones sin discontinuidades accidentales ni asignaciones en el hilo de audio.
+
+## Primer corte de implementación
+
+Empezar por **VCO 1 aislado → mezclador → filtro abierto → VCA/salida**, con un grafo de circuito y un solver simple que admita barridos de notas y niveles. Luego filtro autooscilante y contornos. Cada etapa debe poder avanzar sin una captura privada.
