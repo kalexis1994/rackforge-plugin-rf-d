@@ -11,12 +11,17 @@ from vco1_ideal_pair_reference import (  # noqa: E402
     conditional_qb_collector_current_a,
     ideal_qa_current_and_frequency_ratio,
     thermal_voltage_v,
+    unloaded_neg4_reference_v,
 )
 
 
 class IdealPairTests(unittest.TestCase):
     def test_ic3_reference_sets_qb_load_current_only_conditionally(self) -> None:
         self.assertAlmostEqual(conditional_qb_collector_current_a(), 4 / 39000)
+        unloaded = unloaded_neg4_reference_v()
+        self.assertAlmostEqual(unloaded, -10 * 3900 / (6200 + 3900))
+        self.assertNotAlmostEqual(unloaded, -4)
+        self.assertAlmostEqual(conditional_qb_collector_current_a(unloaded), -unloaded / 39000)
 
     def test_one_keyboard_volt_brackets_an_octave_at_25_c(self) -> None:
         low = ideal_qa_current_and_frequency_ratio({"KEYBOARD": 1}, 0)

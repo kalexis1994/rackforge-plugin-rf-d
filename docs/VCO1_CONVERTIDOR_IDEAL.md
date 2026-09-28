@@ -10,13 +10,15 @@ Este documento obtiene una **relación de corrientes/frecuencias entre dos estad
 
 La Fig. 9-3 conecta el colector de **Qb** (IC2 pin 1) a R50 de **39 kΩ** hacia masa y a la entrada **no inversora** de IC3 (pin 3). Su entrada inversora (pin 2) recibe la referencia marcada **−4 V**. IC3 (741) lleva su salida (pin 6) por **R69 = 15 kΩ** a la base de Qc (IC2 pin 12). R69 es un resistor fijo en la lista de repuestos, no un trimmer.
 
-La base de Qc también conecta a **R78** hacia −10 V. El dibujo muestra una rama de **2 kΩ** y otra de **220 Ω en serie con 0,01 µF**. La tabla 7-5, PDF p. 26, cataloga R78/R106/R128 como una **red de resistencia y capacitancia**. El modelo de continua abre la rama capacitiva; su efecto en estabilidad y transitorios sigue pendiente. La alimentación y el origen de la referencia −4 V aún deben seguirse en las hojas adyacentes.
+La base de Qc también conecta a **R78** hacia −10 V. El dibujo muestra una rama de **2 kΩ** y otra de **220 Ω en serie con 0,01 µF**. La tabla 7-5, PDF p. 26, cataloga R78/R106/R128 como una **red de resistencia y capacitancia**. El modelo de continua abre la rama capacitiva; su efecto en estabilidad y transitorios sigue pendiente.
 
-Si el lazo de IC3 está estable, no satura y su corriente de entrada es despreciable, entonces `V_Qb_colector ≈ −4 V`. Sin otra carga en ese nodo, la corriente que baja desde masa por R50 es:
+La línea rotulada **−4 V** nace en la misma Fig. 9-3 de **R166 = 6,2 kΩ** hacia −10 V y **R174 = 3,9 kΩ** hacia masa, con **C14 = 0,12 µF** a masa. Es una referencia compartida con otras cargas de la placa. El divisor **sin carga** y con −10 V ideales daría `−10·3900/(6200+3900) = −3,861 V`, distinto de la etiqueta redondeada −4 V. Ni el valor del divisor sin carga ni la etiqueta bastan para declarar la tensión real de la línea cargada. La alimentación de IC3 y todas esas cargas aún requieren una netlist completa.
 
-`I_Qb ≈ [0 V − (−4 V)] / 39 000 Ω = 102,56 µA`.
+Si el lazo de IC3 está estable, no satura y su corriente de entrada es despreciable, entonces `V_Qb_colector ≈ V_referencia`. Sin otra carga en ese nodo, la corriente que baja desde masa por R50 es:
 
-Esta **corriente condicional de Qb** no es la de Qa que descarga C1. Una lectura de −4 V impresa en el esquema tampoco garantiza que un 741 y una placa concreta la mantengan en todo el teclado y temperatura.
+`I_Qb ≈ [0 V − V_referencia] / 39 000 Ω`.
+
+Si se usa sólo la **etiqueta** −4 V, sale **102,56 µA**; si se usa el divisor **sin carga** a −3,861 V, sale **99,01 µA**. Son dos cálculos condicionados, **no un intervalo demostrado** para la placa real. Esta corriente de Qb no es la de Qa que descarga C1. La carga de la referencia, los offsets del 741 y la regulación pueden desplazar ambos supuestos.
 
 ## Ley ideal del par y razón de frecuencia
 
@@ -45,10 +47,11 @@ python -m unittest discover -s tests -v
 
 | Condición ideal fija | Resultado | Qué podría refutar la extrapolación al circuito real |
 | --- | ---: | --- |
-| IC3 retiene Qb colector en −4 V, R50 = 39 kΩ | `I_Qb = 102,56 µA` | Offset/corriente de entrada del 741, saturación, otra carga del nodo o referencia distinta. |
+| IC3 retiene Qb colector en la etiqueta −4 V, R50 = 39 kΩ | `I_Qb = 102,56 µA` **condicional** | Divisor sin carga da −3,861 V; cargas, offset, saturación o regulación cambian la referencia efectiva. |
+| IC3 retiene Qb colector en el divisor sin carga | `I_Qb = 99,01 µA` **condicional** | No se conocen aún todas las cargas de la línea −4 V. |
 | +1 V de teclado, R8 `α=0`, unión a 25 °C | Razón `I_Qa,2/I_Qa,1 = 1,9587` | R42, corrientes de base, temperatura y trimmer cambian la ganancia efectiva. |
 | +1 V de teclado, R8 `α=0,5`, unión a 25 °C | Razón `2,0256` | Igual; no identifica posición real de R8. |
 | +1 V de teclado, R8 `α=1`, unión a 25 °C | Razón `2,0949` | Igual; los extremos eléctricos del potenciómetro no son límites medidos de una unidad. |
 | Paso `−1 V` con los mismos supuestos | Razón recíproca de `+1 V` | Histéresis, memoria RC o límites del lazo pueden romper la reciprocidad. |
 
-**Estado RACE:** C1 parcial: la malla IC3→Qc→Qb está trazada, pero faltan alimentación, generación de −4 V, R11/R37 y reset completo. C2 parcial: el voltio usado es la **línea de teclado en la placa**, no el panel ni MIDI. C3 hipótesis condicionada: ecuación bipolar y razón normalizada comprobables en el modelo ideal, sin validación de corriente absoluta, rango de lazo ni audio. C4 abierto para dispersión y ley térmica de R20; C6 abierto sin instrumento. El siguiente solver deberá resolver IC1/R42, Qa/Qb/Qc e IC3 juntos, con R78 dinámica, y contrastar puntos DC y transitorios antes de producir audio.
+**Estado RACE:** C1 parcial: la malla IC3→Qc→Qb y el divisor de referencia están trazados, pero faltan alimentación, cargas de −4 V y reset completo. R11/R37 ya constan en el grafo, sin punto de ajuste conocido. C2 parcial: el voltio usado es la **línea de teclado en la placa**, no el panel ni MIDI. C3 hipótesis condicionada: ecuación bipolar y razón normalizada comprobables en el modelo ideal, sin validación de corriente absoluta, rango de lazo ni audio. C4 abierto para dispersión y ley térmica de R20; C6 abierto sin instrumento. El siguiente solver deberá resolver IC1/R42, Qa/Qb/Qc e IC3 juntos, con R78 dinámica, y contrastar puntos DC y transitorios antes de producir audio.

@@ -1,13 +1,15 @@
 {
   "board": "SVC-204D_Fig_9-3_CA3046",
   "source": {"id": "SVC-9", "pdf_page": 5, "figure": "9-3"},
-  "replacement_value_check": {"id": "SVC-9", "pdf_pages": [24, 25, 26], "table": "7-5", "refs": ["C2", "Q5", "Q6", "Q10", "R7", "R8", "R9", "R19", "R20", "R41", "R42", "R50", "R69", "R78", "R79"]},
+  "replacement_value_check": {"id": "SVC-9", "pdf_pages": [24, 25, 26], "table": "7-5", "refs": ["C2", "C14", "Q5", "Q6", "Q10", "R7", "R8", "R9", "R10", "R11", "R19", "R20", "R37", "R41", "R42", "R50", "R69", "R78", "R79", "R166", "R174"]},
   "scope": "Verified terminals around the VCO 1 timing capacitor and CA3046 input/current-sink network; this is deliberately not a complete netlist.",
-  "nodes": ["GND", "RAMP_C1", "PAIR_EMITTER", "QC_EMITTER", "QC_BASE", "QB_COLLECTOR", "QA_BASE", "QB_BASE", "IC1_SUM", "IC1_OUT", "IC3_OUT", "NEG4_REF", "R8_TOP", "R8_BOTTOM", "NEG5_V", "NEG10_V", "SCHMITT_SENSE", "SCHMITT_Q5_COLLECTOR", "SCHMITT_Q6_COLLECTOR", "Q10_BASE"],
+  "nodes": ["GND", "RAMP_C1", "PAIR_EMITTER", "QC_EMITTER", "QC_BASE", "QB_COLLECTOR", "QA_BASE", "QB_BASE", "IC1_SUM", "IC1_PLUS", "IC1_OUT", "IC3_OUT", "NEG4_REF", "R8_TOP", "R8_BOTTOM", "R37_TOP", "NEG5_V", "NEG10_V", "SCHMITT_SENSE", "SCHMITT_Q5_COLLECTOR", "SCHMITT_Q6_COLLECTOR", "Q10_BASE"],
   "schematic_voltage_labels_v": {"GND": 0, "NEG4_REF": -4, "NEG5_V": -5, "NEG10_V": -10},
   "parts": [
     {"ref": "C1", "kind": "capacitor", "value": 1e-8, "unit": "farad", "terminals": {"a": "GND", "b": "RAMP_C1"}},
     {"ref": "C2", "kind": "capacitor", "value": 1e-10, "unit": "farad", "terminals": {"a": "QA_BASE", "b": "QB_BASE"}},
+    {"ref": "C14", "kind": "capacitor", "value": 1.2e-7, "unit": "farad", "terminals": {"a": "NEG4_REF", "b": "GND"}, "note": "0.12 microfarad reference bypass; the -4 V rail has other board loads."},
+    {"ref": "IC1", "kind": "741_opamp_schematic", "package_pins": {"noninverting": 3, "inverting": 2, "output": 6}, "terminals": {"noninverting": "IC1_PLUS", "inverting": "IC1_SUM", "output": "IC1_OUT"}, "untraced_terminals": ["positive_supply", "negative_supply"]},
     {"ref": "IC2.Qa", "kind": "CA3046_NPN", "package_pins": {"collector": 5, "base": 4, "emitter": 3}, "terminals": {"collector": "RAMP_C1", "base": "QA_BASE", "emitter": "PAIR_EMITTER"}},
     {"ref": "IC2.Qb", "kind": "CA3046_NPN", "package_pins": {"collector": 1, "base": 2, "emitter": 3}, "terminals": {"collector": "QB_COLLECTOR", "base": "QB_BASE", "emitter": "PAIR_EMITTER"}},
     {"ref": "IC2.Qc", "kind": "CA3046_NPN", "package_pins": {"collector": 14, "base": 12, "emitter": 13}, "terminals": {"collector": "PAIR_EMITTER", "base": "QC_BASE", "emitter": "QC_EMITTER"}},
@@ -18,8 +20,11 @@
     {"ref": "R7", "kind": "resistor", "value": 100, "unit": "ohm", "terminals": {"a": "QA_BASE", "b": "NEG5_V"}},
     {"ref": "R8", "kind": "trim_potentiometer", "value_end_to_end": 100, "unit": "ohm", "terminals": {"high": "R8_TOP", "wiper": "QB_BASE", "low": "R8_BOTTOM"}},
     {"ref": "R9", "kind": "resistor", "value": 33, "unit": "ohm", "terminals": {"a": "IC1_OUT", "b": "R8_TOP"}},
+    {"ref": "R10", "kind": "resistor", "value": 1000, "unit": "ohm", "terminals": {"a": "IC1_PLUS", "b": "NEG5_V"}},
+    {"ref": "R11", "kind": "trim_potentiometer", "value_end_to_end": 1000, "unit": "ohm", "terminals": {"high": "IC1_SUM", "wiper": "IC1_SUM", "low": "R37_TOP"}, "note": "The wiper is strapped to the summing-node end on Fig. 9-3."},
     {"ref": "R19", "kind": "resistor", "value": 1000, "unit": "ohm", "terminals": {"a": "R8_BOTTOM", "b": "NEG5_V"}},
     {"ref": "R20", "kind": "temperature_compensating_resistor", "value": 1000, "unit": "ohm", "terminals": {"a": "IC1_OUT", "b": "IC1_SUM"}},
+    {"ref": "R37", "kind": "resistor", "value": 11800, "unit": "ohm", "terminals": {"a": "R37_TOP", "b": "NEG10_V"}},
     {"ref": "R41", "kind": "resistor", "value": 910, "unit": "ohm", "terminals": {"a": "SCHMITT_Q6_COLLECTOR", "b": "Q10_BASE"}},
     {"ref": "R50", "kind": "resistor", "value": 39000, "unit": "ohm", "terminals": {"a": "GND", "b": "QB_COLLECTOR"}},
     {"ref": "R69", "kind": "resistor", "value": 15000, "unit": "ohm", "terminals": {"a": "IC3_OUT", "b": "QC_BASE"}},
@@ -28,10 +33,12 @@
       {"kind": "series_rc", "resistance_ohm": 220, "capacitance_farad": 1e-8}
     ], "note": "Fig. 9-3 shows both branches within a dashed package; Table 7-5 lists R78 as a resistance-capacitance network."},
     {"ref": "R79", "kind": "resistor", "value": 1000, "unit": "ohm", "terminals": {"a": "QC_EMITTER", "b": "NEG10_V"}},
-    {"ref": "R42", "kind": "resistor", "value": 160000, "unit": "ohm", "terminals": {"a": "IC1_SUM", "b": "QC_EMITTER"}}
+    {"ref": "R42", "kind": "resistor", "value": 160000, "unit": "ohm", "terminals": {"a": "IC1_SUM", "b": "QC_EMITTER"}},
+    {"ref": "R166", "kind": "resistor", "value": 6200, "unit": "ohm", "terminals": {"a": "NEG10_V", "b": "NEG4_REF"}},
+    {"ref": "R174", "kind": "resistor", "value": 3900, "unit": "ohm", "terminals": {"a": "NEG4_REF", "b": "GND"}}
   ],
   "outstanding": [
-    "Transcribe R11/R37 frequency trim, R10 reference, IC3 supply and the provenance/generation of the -4 V reference.",
+    "Transcribe other loads on the -4 V rail and IC1/IC3 supplies before solving an absolute DC operating point.",
     "Transcribe the rest of Schmitt sense, Q6 collector loads, FET amplifier and output loads before calculating reset duration, hysteresis or loaded saw.",
     "Resolve Q5/Q6 part-number conflict before choosing device curves."
   ]

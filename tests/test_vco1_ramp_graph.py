@@ -73,6 +73,21 @@ class RampGraphTests(unittest.TestCase):
         self.assertEqual(parts["R41"]["value"], 910)
         self.assertEqual(parts["Q10"]["terminals"]["collector"], "RAMP_C1")
 
+    def test_trim_and_reference_divider_keep_voltage_label_distinct(self) -> None:
+        graph = json.loads((ROOT / "evidence" / "vco1_ramp_graph.json").read_text(encoding="utf-8"))
+        parts = {part["ref"]: part for part in graph["parts"]}
+        self.assertEqual(parts["R11"]["terminals"], {
+            "high": "IC1_SUM", "wiper": "IC1_SUM", "low": "R37_TOP"
+        })
+        self.assertEqual(set(parts["R37"]["terminals"].values()), {"R37_TOP", "NEG10_V"})
+        self.assertEqual(parts["R37"]["value"], 11800)
+        self.assertEqual(parts["IC1"]["terminals"]["noninverting"], "IC1_PLUS")
+        self.assertEqual(set(parts["R10"]["terminals"].values()), {"IC1_PLUS", "NEG5_V"})
+        self.assertEqual(set(parts["R166"]["terminals"].values()), {"NEG10_V", "NEG4_REF"})
+        self.assertEqual(set(parts["R174"]["terminals"].values()), {"NEG4_REF", "GND"})
+        self.assertEqual(set(parts["C14"]["terminals"].values()), {"NEG4_REF", "GND"})
+        self.assertEqual(graph["schematic_voltage_labels_v"]["NEG4_REF"], -4)
+
 
 if __name__ == "__main__":
     unittest.main()

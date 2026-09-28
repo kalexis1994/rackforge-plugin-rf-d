@@ -28,8 +28,30 @@ def thermal_voltage_v(temperature_k: float) -> float:
     return K_BOLTZMANN_J_PER_K * temperature_k / ELEMENTARY_CHARGE_C
 
 
-def conditional_qb_collector_current_a() -> float:
-    """R50 current if IC3 holds Qb collector at its -4 V reference."""
+def unloaded_neg4_reference_v() -> float:
+    """R166/R174 divider voltage at DC with no other -4 V rail load."""
+    graph = json.loads(GRAPH_PATH.read_text(encoding="utf-8"))
+    parts = {part["ref"]: part for part in graph["parts"]}
+    if set(parts["R166"]["terminals"].values()) != {"NEG10_V", "NEG4_REF"}:
+        raise ValueError("R166 is not the documented reference divider leg")
+    if set(parts["R174"]["terminals"].values()) != {"NEG4_REF", "GND"}:
+        raise ValueError("R174 is not the documented reference divider leg")
+    if set(parts["C14"]["terminals"].values()) != {"NEG4_REF", "GND"}:
+        raise ValueError("C14 is not the documented reference bypass")
+    r166 = parts["R166"]["value"]
+    r174 = parts["R174"]["value"]
+    if any(not isinstance(r, (int, float)) or not math.isfinite(r) or r <= 0 for r in (r166, r174)):
+        raise ValueError("reference divider resistances must be finite and positive")
+    labels = graph["schematic_voltage_labels_v"]
+    return (labels["NEG10_V"] * r174 + labels["GND"] * r166) / (r166 + r174)
+
+
+def conditional_qb_collector_current_a(reference_v: float | None = None) -> float:
+    """R50 current if IC3 holds Qb collector at a specified reference.
+
+    The default is the schematic's rounded -4 V label. It is not an observed
+    voltage or a prediction of the loaded reference divider.
+    """
     graph = json.loads(GRAPH_PATH.read_text(encoding="utf-8"))
     parts = {part["ref"]: part for part in graph["parts"]}
     if parts["IC3"]["terminals"]["noninverting"] != "QB_COLLECTOR":
@@ -42,7 +64,10 @@ def conditional_qb_collector_current_a() -> float:
     labels = graph["schematic_voltage_labels_v"]
     if not math.isfinite(load_ohm) or load_ohm <= 0:
         raise ValueError("R50 must be finite and positive")
-    drop_v = labels["GND"] - labels["NEG4_REF"]
+    reference_v = labels["NEG4_REF"] if reference_v is None else reference_v
+    if not isinstance(reference_v, (int, float)) or not math.isfinite(reference_v):
+        raise ValueError("reference voltage must be finite")
+    drop_v = labels["GND"] - reference_v
     if not math.isfinite(drop_v) or drop_v <= 0:
         raise ValueError("the documented Qb collector drop must be positive")
     return drop_v / load_ohm
@@ -77,7 +102,9 @@ def run_cli() -> None:
     }
     temperature_k = args.temperature_c + 273.15
     try:
-        current_b = conditional_qb_collector_current_a()
+        current_b_label = conditional_qb_collector_current_a()
+        unloaded_ref_v = unloaded_neg4_reference_v()
+        current_b_unloaded = conditional_qb_collector_current_a(unloaded_ref_v)
         ratio = ideal_qa_current_and_frequency_ratio(deltas, args.r8_fraction, temperature_k)
         vt = thermal_voltage_v(temperature_k)
     except ValueError as error:
@@ -88,7 +115,10 @@ def run_cli() -> None:
         "r8_fraction_from_low": args.r8_fraction,
         "junction_temperature_c_hypothetical": args.temperature_c,
         "thermal_voltage_v": vt,
-        "qb_current_a_if_ic3_ideal": current_b,
+        "unloaded_r166_r174_reference_v": unloaded_ref_v,
+        "qb_current_a_if_ic3_holds_minus4_label": current_b_label,
+        "qb_current_a_if_ic3_holds_unloaded_divider": current_b_unloaded,
+        "loaded_reference_and_actual_qb_current_known": False,
         "qa_current_and_frequency_ratio": ratio,
         "absolute_current_or_frequency_known": False,
         "excluded": ["IC1 R42 feedback", "base and opamp input currents", "IC3 finite gain/limits", "BJT nonideality", "reset time", "ramp parasitics", "R20 temperature law"],
