@@ -1,5 +1,7 @@
 # Transitorio con carga pasiva del primer VCA
 
+La [referencia posterior de 33 nodos](TRANSITORIO_VCA1_ACTIVO.md) incorpora Q16/Q15/Q18 de forma no lineal bajo fronteras de balance y contorno impuestas. Este modelo de 27 nodos conserva valor como control pasivo aislado.
+
 ## Frontera documentada
 
 La [referencia offline de 27 nodos](../tools/filter_vca1_passive_transient_reference.py) continúa el [transitorio de 24 nodos](TRANSITORIO_FILTRO_ACOPLADO.md) con R2 `82 kΩ`, C6 `0,33 µF`, R34 `820 Ω`, C15 `220 µF` y R36 `510 Ω` de la [entrada del primer VCA](FRONTERA_ENTRADA_VCA1.md). Fuentes: **SVC-204D §2.9, PDF p. 12; SVC-9 Fig. 9-11, PDF p. 13; tabla 7-8, pp. 30–31**. El colector del recuperador Q5–Q8 alimenta R2; C6 llega a la base de Q16, y R34/C15/R36 fijan la frontera de la base Q15. Las leyes Ebers–Moll de los catorce BJT **del filtro y recuperador** permanecen activas. Q16/Q15 y los siguientes transistores del VCA siguen sin corrientes ni ganancia modeladas.
