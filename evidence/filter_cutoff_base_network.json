@@ -1,0 +1,23 @@
+{
+  "scope": "Reduced passive path from panel CUTOFF and board-4 contour input to Q26 base; other panel branches and transistor base current are imposed boundaries",
+  "board4": {"id": "SVC-9", "figure": "9-11", "pdf_page": 13, "full_service_pdf_page": 69},
+  "panel": {"id": "SVC-9", "figure": "9-17", "pdf_page": 19, "full_service_pdf_page": 75},
+  "rails_v": {"NEG10": -10, "POS10": 10, "GROUND": 0},
+  "parts": {
+    "R11": {"ohm": 5000, "type": "panel FILTER CUTOFF potentiometer", "ends": ["NEG10", "POS10"], "wiper": "CUTOFF_WIPER"},
+    "R55": {"ohm": 200000, "between": ["CUTOFF_WIPER", "CONTROL_BASE"]},
+    "R74": {"ohm": 47000, "between": ["BOARD4_PIN16_AMT_OF_CONTOUR", "CONTROL_BASE"]},
+    "R49": {"ohm": 500, "type": "board-4 SCALE trimmer", "ends": ["R70_OUTPUT", "CONTROL_BASE"], "wiper": "CONTROL_BASE"},
+    "R70": {"ohm": 1800, "between": ["GROUND", "R70_OUTPUT"]},
+    "C18": {"farad": 1e-10, "between": ["CONTROL_BASE", "GROUND"]},
+    "Q26": {"terminal": "base", "node": "CONTROL_BASE"}
+  },
+  "direct_connection": ["PANEL_FILTER_CONT_IN", "BOARD4_PIN5_CONTROL_NODE", "CONTROL_BASE"],
+  "unresolved_panel_branches": [
+    "J2 external FILTER CONTROL IN through R51 100k; jack normal state",
+    "SW15 FILTER MOD through R52 33k; switch and source state",
+    "SW16 keyboard 1/3 through R53 300k; switch state",
+    "SW17 keyboard 2/3 through R54 150k; switch state"
+  ],
+  "boundary_convention": "Other branches can be represented by imposed Thevenin voltages and positive series resistances at CONTROL_BASE; Q26 base current is signed positive when leaving CONTROL_BASE. These values are scenario inputs, not measured device calibration."
+}
