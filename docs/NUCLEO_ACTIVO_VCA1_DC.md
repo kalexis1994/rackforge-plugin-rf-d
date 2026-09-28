@@ -6,7 +6,7 @@ La **Fig. 9-11 de SVC-9, PDF p. 13** (manual SVC-204D completo p. 69) muestra Q1
 
 La misma Fig. 9-11 lleva el colector de Q16 por R19 `100 Ω` al extremo izquierdo de **R14 de placa 4, `25 Ω` (`1ST VCA BAL`) y el de Q15 por R23 `100 Ω` al derecho. El cursor llega por R22 `120 Ω` a **Q15_BASE**. La pista se representa mediante dos segmentos que suman `25 Ω`; el cursor se expresa en ohmios eléctricos, porque su posición mecánica no está calibrada. Este R14 es distinto del R14 de panel `50 kΩ` de EMPHASIS. C6 y C15 se abren para DC; la [frontera pasiva anterior](FRONTERA_ENTRADA_VCA1.md) permanece como referencia aislada AC.
 
-El [grafo](../evidence/vca1_active_core.json) registra esas conexiones. El [solver DC](../tools/vca1_active_core_dc_reference.py) impone el voltaje del cursor R14 y el voltaje **más allá de R59**. El primer voltaje representa la red aún no cerrada R13/R11/R10, segundo VCA y riel positivo. Las bases de Q14/Q13, conectadas a los colectores Q16/Q15, absorben corriente cero en este corte. Por ello el solver **no** predice el sesgo real de una placa completa.
+El [grafo](../evidence/vca1_active_core.json) registra esas conexiones. El [solver DC](../tools/vca1_active_core_dc_reference.py) impone el voltaje del cursor R14 y el voltaje **más allá de R59**. El primer voltaje representa la red aún no cerrada R13/R11/R10, segundo VCA y riel positivo. La [extensión de nueve nodos](ALIMENTACION_BALANCE_VCA1.md) ya calcula el primer cursor a través de R13 con el **segundo** cursor impuesto. Las bases de Q14/Q13, conectadas a los colectores Q16/Q15, absorben corriente cero en ambos cortes. Por ello todavía no se predice el sesgo real de una placa completa.
 
 ## Ecuaciones y dominio
 

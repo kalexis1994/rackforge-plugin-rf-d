@@ -6,6 +6,7 @@
   "devices": ["Q16", "Q15", "Q18"],
   "resistors": [
     {"ref": "R14_BOARD4", "ohm": 25, "between": ["FIRST_BAL_LEFT", "FIRST_BAL_RIGHT"], "wiper": "FIRST_BAL_WIPER"},
+    {"ref": "R13", "ohm": 120, "between": ["FIRST_BAL_WIPER", "SECOND_BAL_WIPER"]},
     {"ref": "R19", "ohm": 100, "between": ["FIRST_BAL_LEFT", "Q16_COLLECTOR"]},
     {"ref": "R23", "ohm": 100, "between": ["FIRST_BAL_RIGHT", "Q15_COLLECTOR"]},
     {"ref": "R22", "ohm": 120, "between": ["FIRST_BAL_WIPER", "Q15_BASE"]},
@@ -18,7 +19,8 @@
   ],
   "dc_open_capacitors": ["C6", "C15"],
   "boundaries": {
-    "FIRST_BAL_WIPER": "imposed voltage: R13, R11, R10, second VCA and supply not solved",
+    "FIRST_BAL_WIPER": "imposed voltage in eight-node core; nine-node extension solves this via R13",
+    "SECOND_BAL_WIPER": "imposed voltage in nine-node extension: second VCA, R11/R10 and supply not solved",
     "LOUDNESS_SOURCE": "imposed voltage beyond R59: contour law not solved",
     "Q16_COLLECTOR_Q14_BASE": "Q14 base current set to zero",
     "Q15_COLLECTOR_Q13_BASE": "Q13 base current set to zero"
