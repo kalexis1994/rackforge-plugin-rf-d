@@ -18,7 +18,7 @@ La figura dibuja los dos FET de **Q7 E402** con fuentes unidas. Este documento i
 | `FET_C3_LEFT` | Emisores de Q8/Q9, R45 de 1,2 kΩ a +10 V y C3 de 100 pF | Acoplamiento capacitivo hacia el colector de Q3. |
 | `Q3_BASE` | Colector de Q8 y R36 de 2,7 kΩ a −10 V | Excitación del transistor de salida interno. |
 | `SCHMITT_DRIVE` | Colector de Q3, R15 a +10 V, R24/C4, C3, R30 hacia Q5 y R34 | Sierra **interna** que alimenta el disparo. |
-| `SAW_OUTPUT_9B` | R34 de 4,3 kΩ desde el colector de Q3 y conector 9B | Salida de sierra de la placa; tiene otras conexiones sin transcribir. |
+| `SAW_OUTPUT_9B` | R34 de 4,3 kΩ desde el colector de Q3 y conector 9B | Salida de sierra con [cargas internas trazadas](VCO1_SALIDA_SIERRA.md); carga externa desconocida. |
 
 Q9 tiene el colector en la barra de **−10 V**, que cruza sin unión la línea inferior rotulada **−4 V** que alimenta R49. Q3 tiene el emisor en −10 V. En la parte inferior también hay dos líneas distintas: la barra de −10 V y la que termina en **9B**. Así, R34 lleva señal al conector, mientras R36 y R25 vuelven al riel negativo. Confundir cualquiera de estos cruces alteraría la carga y la realimentación.
 
@@ -37,7 +37,7 @@ con `R4 = 33,2 kΩ`, `R25 = 15 kΩ` y `R24 = 10,7 kΩ`. Para los dos extremos **
 
 La puerta derecha se mueve casi por el mismo intervalo nominal de 0 a −4 V que describe la rampa en la otra puerta. Esa coincidencia es una **deducción de la red resistiva con extremos impuestos**, no una medición, ni prueba que el par produzca la ganancia, linealidad o fase necesarias. La derivada condicionada `dV_G/dV_Q3 = (1/R24)/(1/R4+1/R25+1/R24) ≈ 0,4913 V/V` no incluye la respuesta de Q7/Q8/Q3. Si cambian rieles, valores, corriente de puerta o el extremo real de Q3, cambian ambas cifras.
 
-El conflicto de **C4 = 10 pF en el esquema frente a 100 pF en la tabla 7-5** no afecta esta cuenta de continua; sí afecta un eventual transitorio. C3, Q7, Q8, Q9, Q3 y la carga de 9B impiden deducir aún tiempo de reset, oscilación de alta frecuencia, sierra cargada o audio. La descripción funcional del manual tampoco proporciona una respuesta transitoria medida que cierre esos grados de libertad.
+El conflicto de **C4 = 10 pF en el esquema frente a 100 pF en la tabla 7-5** no afecta esta cuenta de continua; sí afecta un eventual transitorio. C3, Q7, Q8, Q9, Q3, las [cargas de 9B](VCO1_SALIDA_SIERRA.md) y el cableado externo impiden deducir aún tiempo de reset, oscilación de alta frecuencia, sierra cargada o audio. La descripción funcional del manual tampoco proporciona una respuesta transitoria medida que cierre esos grados de libertad.
 
 ```powershell
 python tools/vco1_fet_gate_reference.py --q3-collector-v 4
@@ -45,4 +45,4 @@ python tools/vco1_fet_gate_reference.py --q3-collector-v -4
 python -m unittest discover -s tests -q
 ```
 
-Los tests comprueban la ley de nodos y que el grafo conserve los cruces y valores transcritos; **no** validan fidelidad de una unidad vintage. El siguiente paso es obtener curvas primarias utilizables para E402/2N4058/2N3392, resolver dos perfiles de C4 y completar la carga del conector 9B antes de simular el lazo.
+Los tests comprueban la ley de nodos y que el grafo conserve los cruces y valores transcritos; **no** validan fidelidad de una unidad vintage. El siguiente paso es obtener curvas primarias utilizables para E402/2N4058/2N3392, resolver dos perfiles de C4 y el cableado externo de 9B antes de simular el lazo.

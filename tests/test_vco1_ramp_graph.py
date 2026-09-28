@@ -140,6 +140,23 @@ class RampGraphTests(unittest.TestCase):
             "base": "Q4_BASE", "collector": "Q4_COLLECTOR", "emitter": "Q4_EMITTER"
         })
 
+    def test_saw_9b_includes_triangle_and_pulse_stage_loads(self) -> None:
+        graph = json.loads((ROOT / "evidence" / "vco1_ramp_graph.json").read_text(encoding="utf-8"))
+        parts = {part["ref"]: part for part in graph["parts"]}
+        expected = {
+            "R33": (4700, {"GND", "SAW_OUTPUT_9B"}),
+            "R34": (4300, {"SCHMITT_DRIVE", "SAW_OUTPUT_9B"}),
+            "R23": (8200, {"TRI_OUTPUT_21B", "SAW_OUTPUT_9B"}),
+            "R14": (150000, {"Q2_COLLECTOR", "SAW_OUTPUT_9B"}),
+            "R44": (390000, {"Q11_BASE", "SAW_OUTPUT_9B"}),
+            "R35": (100000, {"Q12_BASE", "SAW_OUTPUT_9B"}),
+        }
+        for ref, (value, nodes) in expected.items():
+            self.assertEqual(parts[ref]["value"], value)
+            self.assertEqual(set(parts[ref]["terminals"].values()), nodes)
+        self.assertEqual(parts["Q12"]["terminals"]["emitter"], "SAW_OUTPUT_9B")
+        self.assertEqual(parts["Q12"]["kind"], "NPN_2N3392_schematic")
+
     def test_trim_and_reference_divider_keep_voltage_label_distinct(self) -> None:
         graph = json.loads((ROOT / "evidence" / "vco1_ramp_graph.json").read_text(encoding="utf-8"))
         parts = {part["ref"]: part for part in graph["parts"]}
