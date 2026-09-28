@@ -93,6 +93,19 @@ class RampGraphTests(unittest.TestCase):
         self.assertEqual(parts["Q6"]["terminals"]["collector"], "SCHMITT_Q6_COLLECTOR")
         self.assertNotIn("SAW_OUTPUT", graph["nodes"])
 
+    def test_fet_coupling_keeps_c4_value_disagreement_explicit(self) -> None:
+        graph = json.loads((ROOT / "evidence" / "vco1_ramp_graph.json").read_text(encoding="utf-8"))
+        parts = {part["ref"]: part for part in graph["parts"]}
+        self.assertEqual(set(parts["C3"]["terminals"].values()), {"FET_C3_LEFT", "SCHMITT_DRIVE"})
+        self.assertEqual(parts["C3"]["value"], 1e-10)
+        self.assertEqual(set(parts["C4"]["terminals"].values()), {"FET_C4_LEFT", "SCHMITT_DRIVE"})
+        self.assertEqual(set(parts["R24"]["terminals"].values()), set(parts["C4"]["terminals"].values()))
+        self.assertEqual(parts["C4"]["value"], 1e-11)
+        self.assertEqual(parts["C4"]["bom_value"], 1e-10)
+        self.assertEqual(parts["C4"]["candidate_status"], "schematic_BOM_conflict")
+        self.assertEqual(set(parts["R4"]["terminals"].values()), {"POS10_V", "FET_C4_LEFT"})
+        self.assertEqual(set(parts["R45"]["terminals"].values()), {"POS10_V", "FET_C3_LEFT"})
+
     def test_trim_and_reference_divider_keep_voltage_label_distinct(self) -> None:
         graph = json.loads((ROOT / "evidence" / "vco1_ramp_graph.json").read_text(encoding="utf-8"))
         parts = {part["ref"]: part for part in graph["parts"]}
