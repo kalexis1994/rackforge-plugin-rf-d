@@ -36,4 +36,4 @@ python tools/filter_input_pair_reference.py
 python -m unittest discover -s tests -q
 ```
 
-El próximo gate es resolver la fuente Q26/Q28 y el sesgo del peldaño inferior con las cargas reales del ladder. Sólo entonces se podrá evaluar cuándo esta aproximación ideal deja de ser válida y acoplarla a la entrada y la regeneración.
+La [red Q26/Q28](COLA_FILTRO_Q26_Q28.md) ya admite una carga DC **condicionada** a parámetros de transistor y voltajes impuestos. El próximo gate es resolver su base y el sesgo del peldaño inferior con las cargas reales del ladder. Sólo entonces se podrá evaluar cuándo esta aproximación ideal deja de ser válida y acoplarla a la entrada y la regeneración.

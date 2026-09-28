@@ -1,0 +1,33 @@
+{
+  "scope": "Nominal board-4 cutoff current-control subgraph; Q26 base and ladder tail remain boundaries",
+  "schematic": {"id": "SVC-9", "figure": "9-11", "pdf_page": 13, "full_service_pdf_page": 69},
+  "parts_list": {"id": "SVC-9", "table": "7-8", "pdf_page": 31},
+  "rails_v": {"positive": 10, "negative": -10, "ground": 0},
+  "nodes": {
+    "RANGE_WIPER": "R39 wiper feeding R46",
+    "CONTROL_BASE": "Q26 base, R49/C18/R74 junction; imposed in load-line reference",
+    "SHARED": "Q26 PNP emitter, Q28 NPN base and R46 output",
+    "Q26_COLLECTOR": "Q26 collector and R45 upper terminal",
+    "Q28_COLLECTOR": "Q28 collector and R60 lower terminal",
+    "TAIL": "R60 upper terminal and common emitters of Q29/Q30; imposed for headroom check"
+  },
+  "parts": {
+    "R39": {"ohm": 10000, "type": "RANGE trimmer", "ends": ["GROUND", "POS10"], "wiper": "RANGE_WIPER"},
+    "R46": {"ohm": 68000, "between": ["RANGE_WIPER", "SHARED"]},
+    "Q26": {"type": "TIS93 PNP; alternate 2N3906", "base": "CONTROL_BASE", "emitter": "SHARED", "collector": "Q26_COLLECTOR"},
+    "R45": {"ohm": 330, "between": ["Q26_COLLECTOR", "NEG10"]},
+    "Q28": {"type": "TIS92 NPN; alternate 2N3904", "base": "SHARED", "emitter": "GROUND", "collector": "Q28_COLLECTOR"},
+    "R60": {"ohm": 680, "between": ["Q28_COLLECTOR", "TAIL"]},
+    "R74": {"ohm": 47000, "role": "control-node path to Q26 base; not solved here"},
+    "R49": {"ohm": 500, "type": "SCALE trimmer", "role": "Q26 base bias; not solved here"},
+    "R70": {"ohm": 1800, "role": "Q26 base shunt path; not solved here"},
+    "C18": {"farad": 1e-10, "role": "Q26 base to ground; open at DC"}
+  },
+  "matching": {"source": "B-804C-2, correction to SVC-204D Fig. 9-11 note 3", "Q26_Q28": "Vbe within +/-3 mV at collector current 20 mA; selection criterion, not operating current"},
+  "ideal_reference": {
+    "range_fraction": "electrical resistance fraction from GROUND to R39 wiper, 0..1; not a calibrated knob law",
+    "boundaries": ["Q26 base voltage", "Q26/Q28 saturation currents", "junction temperature", "TAIL voltage"],
+    "assumptions": ["both beta infinite", "ideal exponential collector law", "Q26 emitter current equals collector current", "Q28 base current zero", "no Early effect", "DC only"],
+    "excluded": ["loaded SCALE/control-node network", "actual transistor saturation currents", "collector loads beyond R45/R60", "ladder tail feedback", "transistor capacitances and self-heating"]
+  }
+}
