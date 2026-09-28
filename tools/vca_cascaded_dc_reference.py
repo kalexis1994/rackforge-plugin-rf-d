@@ -117,10 +117,20 @@ def conditional_cascaded_vca_dc(*, upper_supply_v: float,
     else:
         raise ValueError("coupled VCA Newton iteration did not converge")
     residual, devices = _evaluate(x, **parameters)
+    conductance = [[0.0] * 15 for _ in range(15)]
+    for col in range(15):
+        high_x, low_x = x.copy(), x.copy()
+        high_x[col] += 1e-6
+        low_x[col] -= 1e-6
+        high, _ = _evaluate(high_x, **parameters)
+        low, _ = _evaluate(low_x, **parameters)
+        for row in range(15):
+            conductance[row][col] = (high[row] - low[row]) / 2e-6
     return {
         "nodes_v": dict(zip(NODES, x)), "devices": devices,
         "kcl_residuals_a": dict(zip(NODES, residual)),
         "max_kcl_residual_a": max(abs(v) for v in residual),
+        "conductance_matrix_s": tuple(tuple(row) for row in conductance),
         "first_to_second_base_currents_a": (
             devices["Q14"]["base_a"], devices["Q13"]["base_a"]),
         "iterations": iteration, "network_parameters": parameters,

@@ -13,7 +13,7 @@ Las corrientes de las ramas de balance incluyen las resistencias de R12/R14 y R1
 
 En un escenario numérico elegido (`V_UPPER=9,5 V`, ambos controles de base/fuente `2 V`, balances `12,5/50 Ω`, riel −10 V, `I_S=10⁻¹⁴ A`, `β_F=100`, `β_R=5`, `298,15 K`), salen `Vw1≈6,557 V`, `Vw2≈7,833 V`; Q14/Q13 consumen `≈2,423/2,383 µA` de las salidas del primer VCA. Las quince KCL cierran a `<10⁻¹² A`. La caída de suministro cambia los dos cursores al cambiar los controles. Estos números son **escenarios condicionados**, no voltajes medidos de una unidad Model D. Tampoco implican una respuesta audible: faltan Q12/Q17 y la red de salida.
 
-Las [regresiones](../tests/test_vca_cascaded_dc_reference.py) comprueban los quince nodos, dos corrientes de cola, cargas base/colector entre etapas y KCL de R11/R13 bajo varios controles. El paso siguiente es llevar este punto de operación a la matriz AC y al transitorio para que la salida diferencial del primer VCA reciba la carga real del segundo, y completar R10/Q1/Q12/Q17. La [AC de 33 nodos](CARGA_ACTIVA_VCA1_FILTRO.md) y su [transitorio](TRANSITORIO_VCA1_ACTIVO.md) todavía usan el primer cursor ideal y el segundo VCA abierto.
+Las [regresiones](../tests/test_vca_cascaded_dc_reference.py) comprueban los quince nodos, dos corrientes de cola, cargas base/colector entre etapas y KCL de R11/R13 bajo varios controles. El punto de operación ya alimenta la [matriz AC conjunta de cuarenta nodos](CARGA_AC_DOS_VCA.md). El próximo paso es llevarlo al transitorio no lineal y completar R10/Q1/Q12/Q17. El [transitorio de 33 nodos](TRANSITORIO_VCA1_ACTIVO.md) todavía usa el primer cursor ideal y el segundo VCA abierto.
 
 ```powershell
 python tools/vca_cascaded_dc_reference.py
