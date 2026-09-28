@@ -33,11 +33,11 @@ Por ejemplo, con `α=0,1`, `V_B26=0 V`, `I_S26=I_S28=10⁻¹⁴ A`, `T=298,15 K`
 
 ## Límite de admisión
 
-El [modelo ideal de Q29/Q30](PAR_ENTRADA_FILTRO_IDEAL.md) ya puede recibir una corriente de cola **candidata** de esta red. El [acoplamiento DC con β finito](COLA_FILTRO_ACOPLADA_DC.md) cierra la base de Q26 y el nodo compartido bajo parámetros de dispositivo impuestos; siguen abiertos `TAIL` por el ladder, los voltajes e impedancias reales de las fuentes, efecto Early, saturación, dispersión y temperatura real. La matriz de fidelidad conserva por tanto **transferencia condicionada**, sin frecuencia de corte ni resonancia inferidas.
+El [modelo ideal de Q29/Q30](PAR_ENTRADA_FILTRO_IDEAL.md) ya puede recibir una corriente de cola **candidata** de esta red. El [acoplamiento DC con β finito](COLA_FILTRO_ACOPLADA_DC.md) cierra la base de Q26 y el nodo compartido bajo parámetros de dispositivo impuestos; el [par inferior](COLA_FILTRO_TAIL_Q29_Q30.md) calcula `TAIL` para bases también impuestas. Siguen abiertos los colectores del ladder, los voltajes e impedancias reales de las fuentes, efecto Early, saturación, dispersión y temperatura real. La matriz de fidelidad conserva por tanto **transferencia condicionada**, sin frecuencia de corte ni resonancia inferidas.
 
 ```powershell
 python tools/filter_cutoff_pair_reference.py
 python -m unittest discover -s tests -q
 ```
 
-Las pruebas comprueban el equivalente cargado de R39, KCL, razón exponencial y fallo de margen en el colector Q28. El próximo paso es acoplar el voltaje `TAIL` a Q29/Q30 y al ladder inferior.
+Las pruebas comprueban el equivalente cargado de R39, KCL, razón exponencial y fallo de margen en el colector Q28. El próximo paso es resolver las bases y colectores de Q29/Q30 con el ladder inferior.

@@ -3,8 +3,8 @@
   "schematic": {"id": "SVC-9", "figure": "9-11", "pdf_page": 13, "full_service_pdf_page": 69},
   "parts_list": {"id": "SVC-9", "table": "7-8", "pdf_pages": [30, 31]},
   "connections": {
-    "Q29": {"base": "BASE after C27", "collector": "LEFT_LADDER_RAIL", "emitter": "TAIL"},
-    "Q30": {"base": "REGEN_BASE at R73 wiper", "collector": "RIGHT_LADDER_RAIL", "emitter": "TAIL"},
+    "Q29": {"type": "TIS97 NPN", "base": "BASE after C27", "collector": "LEFT_LADDER_RAIL", "emitter": "TAIL"},
+    "Q30": {"type": "TIS97 NPN", "base": "REGEN_BASE at R73 wiper", "collector": "RIGHT_LADDER_RAIL", "emitter": "TAIL"},
     "R60": {"ohm": 680, "between": ["TAIL", "Q28_COLLECTOR"]},
     "Q28": {"type": "TIS92, alternate 2N3904", "collector": "Q28_COLLECTOR", "emitter": "GROUND", "base": "SHARED_Q26_EMITTER"}
   },
@@ -14,5 +14,11 @@
     "tail_current_a": "imposed emitter current from both devices through R60 toward Q28",
     "temperature_k": "imposed junction temperature",
     "limits": ["matched saturation currents", "infinite beta", "forward active both devices", "fixed tail current", "no Early effect", "no device capacitances"]
+  },
+  "finite_beta_tail_reference": {
+    "module": "tools/filter_bottom_tail_dc_reference.py",
+    "boundaries": ["Q29/Q30 base voltages", "Q29/Q30 saturation currents and beta", "common imposed junction temperature", "Q28 current from conditional cutoff model"],
+    "solved": ["TAIL voltage", "Q28 collector voltage through R60", "Q29/Q30 emitter, collector and base currents"],
+    "excluded": ["Q29/Q30 collector rails and headroom", "lower-pair base network loading", "R61 discrepancy", "Early effect and saturation", "ladder dynamics"]
   }
 }

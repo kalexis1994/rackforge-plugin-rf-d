@@ -22,11 +22,12 @@ def _check_topology() -> None:
     nodes = data["connections"]
     if (data["schematic"]["figure"], data["parts_list"]["table"],
             data["population"]["Q29_Q30"],
+            nodes["Q29"]["type"], nodes["Q30"]["type"],
             nodes["Q29"]["base"], nodes["Q30"]["base"],
             nodes["Q29"]["emitter"], nodes["Q30"]["emitter"],
             nodes["R60"]["ohm"], nodes["R60"]["between"],
             nodes["Q28"]["collector"], nodes["Q28"]["base"]) != (
-                "9-11", "7-8", "TIS97 matched pair", "BASE after C27",
+                "9-11", "7-8", "TIS97 matched pair", "TIS97 NPN", "TIS97 NPN", "BASE after C27",
                 "REGEN_BASE at R73 wiper", "TAIL", "TAIL", 680,
                 ["TAIL", "Q28_COLLECTOR"], "Q28_COLLECTOR", "SHARED_Q26_EMITTER"):
         raise ValueError("Q29/Q30 tail topology differs from documentary source")

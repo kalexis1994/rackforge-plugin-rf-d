@@ -19,7 +19,8 @@ def conditional_coupled_cutoff_dc(*, panel_inputs: dict,
                                   range_fraction_from_ground: float,
                                   is26_a: float, is28_a: float,
                                   beta26: float, beta28: float,
-                                  temperature_k: float, tail_v: float) -> dict:
+                                  temperature_k: float,
+                                  tail_v: float | None = None) -> dict:
     """Solve Q26 collector current and derive both base voltages/currents.
 
     ``panel_inputs`` are arguments for ``conditional_panel_q26_base`` except
@@ -32,8 +33,8 @@ def conditional_coupled_cutoff_dc(*, panel_inputs: dict,
     if (not math.isfinite(range_fraction_from_ground)
             or not 0 <= range_fraction_from_ground <= 1
             or not all(math.isfinite(x) and x > 0 for x in (is26_a, is28_a))
-            or not math.isfinite(tail_v)):
-        raise ValueError("finite range/tail boundaries and positive Is required")
+            or (tail_v is not None and not math.isfinite(tail_v))):
+        raise ValueError("finite range/optional tail boundaries and positive Is required")
     for beta in (beta26, beta28):
         if math.isnan(beta) or beta <= 1:
             raise ValueError("beta must exceed one or be positive infinity")
@@ -85,7 +86,7 @@ def conditional_coupled_cutoff_dc(*, panel_inputs: dict,
     loaded_panel = conditional_panel_q26_base(
         **panel_inputs, q26_base_current_a=ib26_signed_a)
     vc26 = minus + ic26_a * r45
-    vc28 = tail_v - ic28_a * r60
+    vc28 = None if tail_v is None else tail_v - ic28_a * r60
     return {
         "q26_base_v": vbase,
         "q26_base_unloaded_v": vbase_unloaded,
@@ -99,7 +100,8 @@ def conditional_coupled_cutoff_dc(*, panel_inputs: dict,
         "q26_collector_v": vc26,
         "q28_collector_v_candidate": vc28,
         "q26_forward_active_candidate": vc26 < vbase < shared_v,
-        "q28_forward_active_candidate": 0 < shared_v < vc28,
+        "q28_forward_active_candidate": (
+            None if vc28 is None else 0 < shared_v < vc28),
         "shared_kcl_residual_a": shared_residual_a,
         "base_kcl_residual_a": loaded_panel["resistive_kcl_residual_a"],
         "base_coupling_residual_v": vbase - loaded_panel["q26_base_v"],

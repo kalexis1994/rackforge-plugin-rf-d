@@ -1,5 +1,5 @@
 {
-  "scope": "Nominal board-4 cutoff current-control subgraph; Q26 base is solved conditionally by filter_cutoff_coupled_dc_reference.py, ladder TAIL remains imposed",
+  "scope": "Nominal board-4 cutoff current-control subgraph; Q26 base is solved conditionally by filter_cutoff_coupled_dc_reference.py and TAIL can be closed conditionally by filter_bottom_tail_dc_reference.py",
   "schematic": {"id": "SVC-9", "figure": "9-11", "pdf_page": 13, "full_service_pdf_page": 69},
   "parts_list": {"id": "SVC-9", "table": "7-8", "pdf_page": 31},
   "rails_v": {"positive": 10, "negative": -10, "ground": 0},
@@ -9,7 +9,7 @@
     "SHARED": "Q26 PNP emitter, Q28 NPN base and R46 output",
     "Q26_COLLECTOR": "Q26 collector and R45 upper terminal",
     "Q28_COLLECTOR": "Q28 collector and R60 lower terminal",
-    "TAIL": "R60 upper terminal and common emitters of Q29/Q30; imposed for headroom check"
+    "TAIL": "R60 upper terminal and common emitters of Q29/Q30; imposed in isolated headroom check or solved conditionally by lower-pair reference"
   },
   "parts": {
     "R39": {"ohm": 10000, "type": "RANGE trimmer", "ends": ["GROUND", "POS10"], "wiper": "RANGE_WIPER"},
@@ -26,7 +26,7 @@
   "matching": {"source": "B-804C-2, correction to SVC-204D Fig. 9-11 note 3", "Q26_Q28": "Vbe within +/-3 mV at collector current 20 mA; selection criterion, not operating current"},
   "finite_beta_reference": {
     "module": "tools/filter_cutoff_coupled_dc_reference.py",
-    "boundaries": ["Q26/Q28 Is and beta", "junction temperature", "panel upstream voltages and resistances", "TAIL voltage"],
+    "boundaries": ["Q26/Q28 Is and beta", "junction temperature", "panel upstream voltages and resistances", "optional TAIL voltage for isolated headroom check"],
     "assumptions": ["forward-active ideal exponential collector laws", "constant imposed beta", "R39/R11 rails ideal", "DC only; C18 open"],
     "excluded": ["measured transistor parameters", "Early effect and saturation", "ladder-derived TAIL voltage", "C18 nonlinear transient", "self-heating"]
   },
