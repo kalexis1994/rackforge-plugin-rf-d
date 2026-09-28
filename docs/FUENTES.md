@@ -74,7 +74,7 @@ Estos artículos originales ayudan a diseñar y contrastar el solver. **Ninguno 
 
 ## Fuentes por conseguir o verificar
 
-La [columna resistiva DC del ladder](COLUMNA_RESISTIVA_LADDER_DC.md) transcribe R4, R16, R32, R41 y R52 de placa 4 desde SVC-9 Fig. 9-11, PDF p. 13, y tabla 7-8, pp. 30–31. Conserva las corrientes de tap como fronteras desconocidas.
+La [columna resistiva DC del ladder](COLUMNA_RESISTIVA_LADDER_DC.md) transcribe R4, R16, R32, R41 y R52 de placa 4 desde SVC-9 Fig. 9-11, PDF p. 13, y tabla 7-8, pp. 30–31. Las [pilas activas](PILAS_ACTIVAS_LADDER_DC.md) trazan los dos recorridos colector/emisor y derivan las corrientes de tap condicionalmente a β e `I_S` impuestos.
 
 - [Tom Rhea, *Minimoog Model D Operation Manual* (1974), documentado por el autor](https://www.drtomrhea.com/resources) y [ejemplar catalogado por The Henry Ford](https://www.thehenryford.org/collections/explore/artifact/429443). Falta un escaneo íntegro autenticado; no confundirlo con OP-EARLY.
 - Dibujo Moog #1441 (21-12-1970) de la primera placa osciladora discreta, citado por un técnico pero no localizado como documento primario íntegro.

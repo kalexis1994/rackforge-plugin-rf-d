@@ -8,7 +8,7 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Objetivo musical
 
-La [columna resistiva del ladder en DC](docs/COLUMNA_RESISTIVA_LADDER_DC.md) ya tiene una referencia ejecutable acoplada a BOTTOM para ambos candidatos R61. Las cuatro cargas de sus taps siguen como fronteras impuestas.
+La [columna resistiva del ladder en DC](docs/COLUMNA_RESISTIVA_LADDER_DC.md) y las [dos pilas activas](docs/PILAS_ACTIVAS_LADDER_DC.md) tienen referencias ejecutables. Las cargas de tap se derivan con β e `I_S` impuestos; la región de saturación sigue pendiente.
 
 Recrear la voz **monofónica** de un Model D para bajos, leads y articulación en vivo: tres osciladores, ruido, mezclador, filtro ladder, contornos de filtro y volumen, glide, ruedas y ruta de salida. Los presets y el cambio de sonidos en RackForge serán funciones del host/plugin; no se presentarán como memoria del instrumento histórico.
 

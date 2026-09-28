@@ -27,6 +27,8 @@ El cálculo de ejemplo con los parámetros hipotéticos de [bases inferiores](BA
 
 ## Estado RACE
 
+La [continuación con las dos pilas activas](PILAS_ACTIVAS_LADDER_DC.md) deriva las cuatro corrientes de tap si se imponen β e `I_S` para los ocho dispositivos superiores y se cumple la región activa.
+
 La topología y la ecuación de esta **columna pasiva** están documentadas y sometidas a regresión. El acoplamiento es condicional: faltan funciones de corriente de los cuatro pares, sesgos de colector, región de operación, parámetros de transistores instalados y la resolución física de R61. No es todavía un modelo de cuatro polos, frecuencia de corte, resonancia ni sonido. El siguiente paso es cerrar las dos ramas de transistores y comprobar márgenes de tensión antes de trasladar este sesgo a un modelo temporal.
 
 ```powershell
