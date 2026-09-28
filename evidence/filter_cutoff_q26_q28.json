@@ -1,5 +1,5 @@
 {
-  "scope": "Nominal board-4 cutoff current-control subgraph; Q26 base and ladder tail remain boundaries",
+  "scope": "Nominal board-4 cutoff current-control subgraph; Q26 base is solved conditionally by filter_cutoff_coupled_dc_reference.py, ladder TAIL remains imposed",
   "schematic": {"id": "SVC-9", "figure": "9-11", "pdf_page": 13, "full_service_pdf_page": 69},
   "parts_list": {"id": "SVC-9", "table": "7-8", "pdf_page": 31},
   "rails_v": {"positive": 10, "negative": -10, "ground": 0},
@@ -24,6 +24,12 @@
     "C18": {"farad": 1e-10, "between": ["CONTROL_BASE", "GROUND"], "role": "open at DC"}
   },
   "matching": {"source": "B-804C-2, correction to SVC-204D Fig. 9-11 note 3", "Q26_Q28": "Vbe within +/-3 mV at collector current 20 mA; selection criterion, not operating current"},
+  "finite_beta_reference": {
+    "module": "tools/filter_cutoff_coupled_dc_reference.py",
+    "boundaries": ["Q26/Q28 Is and beta", "junction temperature", "panel upstream voltages and resistances", "TAIL voltage"],
+    "assumptions": ["forward-active ideal exponential collector laws", "constant imposed beta", "R39/R11 rails ideal", "DC only; C18 open"],
+    "excluded": ["measured transistor parameters", "Early effect and saturation", "ladder-derived TAIL voltage", "C18 nonlinear transient", "self-heating"]
+  },
   "ideal_reference": {
     "range_fraction": "electrical resistance fraction from GROUND to R39 wiper, 0..1; not a calibrated knob law",
     "boundaries": ["Q26 base voltage", "Q26/Q28 saturation currents", "junction temperature", "TAIL voltage"],

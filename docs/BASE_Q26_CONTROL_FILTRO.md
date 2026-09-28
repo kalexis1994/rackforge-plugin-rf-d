@@ -4,7 +4,7 @@
 
 La **Fig. 9-17 de SVC-9, PDF p. 19** (SVC-204D p. 75) dibuja el potenciómetro de panel **R11 FILTER CUTOFF, 5 kΩ** entre −10 V y +10 V. Su cursor llega por **R55, 200 kΩ** al bus `FILTER CONT IN`. Ese bus entra por el **pin 5 CONTROL NODE** de la placa 4 y se conecta **directamente** a la base de Q26 en la **Fig. 9-11, PDF p. 13** (SVC-204D p. 69). En la placa, **R74, 47 kΩ** viene desde el **pin 16 AMT OF CONTOUR** y termina en esa misma base. No está en serie con el pin 5. La base también tiene **C18, 100 pF** a masa y **R49 SCALE, 500 Ω**, con el cursor unido al extremo de la base; el otro extremo llega a masa mediante **R70, 1,8 kΩ**. [Nodos y fuentes](../evidence/filter_cutoff_base_network.json).
 
-El bus de panel recibe además J2 por R51 (100 kΩ), SW15 por R52 (33 kΩ) y SW16/SW17 por R53/R54 (300/150 kΩ). El [modelo del nodo pasivo](../tools/filter_cutoff_base_reference.py) acepta ramas de Thévenin `(voltaje, resistencia positiva)` y la corriente de base Q26 con signo positivo al salir del nodo. El [modelo de las llaves del panel](../tools/filter_cutoff_panel_reference.py) genera esas ramas para los estados trazados. Los voltajes y las impedancias **aguas arriba** siguen siendo fronteras de escenario. Para combinarlo con el [par Q26/Q28 ideal de β infinito](COLA_FILTRO_Q26_Q28.md), la corriente de base debe ser cero.
+El bus de panel recibe además J2 por R51 (100 kΩ), SW15 por R52 (33 kΩ) y SW16/SW17 por R53/R54 (300/150 kΩ). El [modelo del nodo pasivo](../tools/filter_cutoff_base_reference.py) acepta ramas de Thévenin `(voltaje, resistencia positiva)` y la corriente de base Q26 con signo positivo al salir del nodo. El [modelo de las llaves del panel](../tools/filter_cutoff_panel_reference.py) genera esas ramas para los estados trazados. Los voltajes y las impedancias **aguas arriba** siguen siendo fronteras de escenario. Para combinarlo con el [par Q26/Q28 ideal de β infinito](COLA_FILTRO_Q26_Q28.md), la corriente de base debe ser cero; el [modelo DC acoplado con β finito](COLA_FILTRO_ACOPLADA_DC.md) resuelve esa corriente bajo parámetros impuestos.
 
 ### Ramas y estados de la Fig. 9-17
 
@@ -44,7 +44,7 @@ Un ejemplo numérico del **nodo aislado** con `a=0,5`, `r=250 Ω`, `V16=0 V`, si
 
 ## Admisión RACE
 
-La topología, resistencias nominales, estados de J2/SW15/SW16/SW17 y C18 están **trazados**; la transferencia pasiva está **calculada bajo fronteras impuestas**. El punto de operación transistor por transistor, los voltajes e impedancias reales de teclado/modulación/entrada externa, las tolerancias, la posición de SCALE, los rieles cargados y la frecuencia real del ladder siguen abiertos. En particular, el modelo Q26/Q28 de β infinito no calcula una corriente de base con la cual realimentar este nodo. El siguiente acoplamiento debe resolver esa corriente y las fuentes aguas arriba antes de convertir este voltaje en control musical.
+La topología, resistencias nominales, estados de J2/SW15/SW16/SW17 y C18 están **trazados**; la transferencia pasiva está **calculada bajo fronteras impuestas**. El [punto DC de Q26/Q28 con β finito](COLA_FILTRO_ACOPLADA_DC.md) realimenta la corriente de base a este nodo, pero sus parámetros son impuestos. Los voltajes e impedancias reales de teclado/modulación/entrada externa, las tolerancias, la posición de SCALE, los rieles cargados y la frecuencia real del ladder siguen abiertos.
 
 ```powershell
 python tools/filter_cutoff_base_reference.py

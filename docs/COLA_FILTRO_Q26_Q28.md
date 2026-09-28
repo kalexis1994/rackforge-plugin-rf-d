@@ -25,7 +25,7 @@ I_28/I_26 = (I_S28/I_S26)·exp(V_B26/V_T)
 V_T = kT/q
 ```
 
-La última razón cancela el nodo compartido, **sólo** bajo las hipótesis de transistores activos directos, misma temperatura, `β→∞` y ley exponencial ideal. `V_B26` está en V, `I_S26` e `I_S28` en A, `T` es temperatura de unión en K y `V_T` en V. Las [constantes SI exactas](https://physics.nist.gov/cuu/pdf/all.pdf) se comparten con la referencia del VCO. La ecuación de carga se resuelve por bisección; no ajusta una curva auditiva.
+La última razón cancela el nodo compartido bajo las hipótesis de transistores activos directos, misma temperatura y ley exponencial ideal. **La razón entre corrientes de colector no exige β infinito**; esa hipótesis sólo simplifica las KCL que fijan `V_B26` y `V_X`. La [referencia DC con β finito](COLA_FILTRO_ACOPLADA_DC.md) resuelve ambas cargas de base. `V_B26` está en V, `I_S26` e `I_S28` en A, `T` es temperatura de unión en K y `V_T` en V. Las [constantes SI exactas](https://physics.nist.gov/cuu/pdf/all.pdf) se comparten con la referencia del VCO. La ecuación de carga se resuelve por bisección; no ajusta una curva auditiva.
 
 La referencia también calcula `V_C26 = −10 V + I_26·R45` y, para un `V_TAIL` impuesto, `V_C28 = V_TAIL − I_28·R60`. Comprueba como **candidatos** de región activa `V_C26 < V_B26 < V_X` y `0 < V_X < V_C28`. Si falla alguno, las corrientes exponenciales devueltas ya no son una solución física válida del transistor correspondiente. La tensión de TAIL tampoco sale de esta red aislada: depende del par Q29/Q30 y del ladder.
 
@@ -33,11 +33,11 @@ Por ejemplo, con `α=0,1`, `V_B26=0 V`, `I_S26=I_S28=10⁻¹⁴ A`, `T=298,15 K`
 
 ## Límite de admisión
 
-El [modelo ideal de Q29/Q30](PAR_ENTRADA_FILTRO_IDEAL.md) ya puede recibir una corriente de cola **candidata** de esta red, pero todavía no hay un punto de operación acoplado: las llaves de panel están trazadas, mientras sus fuentes aguas arriba y la corriente de base Q26 siguen impuestas; también faltan el voltaje `TAIL` por los dispositivos del ladder y el sesgo de los colectores. Quedan `β`, efecto Early, saturación, dispersión y temperatura real. La matriz de fidelidad conserva por tanto **transferencia condicionada**, sin frecuencia de corte ni resonancia inferidas.
+El [modelo ideal de Q29/Q30](PAR_ENTRADA_FILTRO_IDEAL.md) ya puede recibir una corriente de cola **candidata** de esta red. El [acoplamiento DC con β finito](COLA_FILTRO_ACOPLADA_DC.md) cierra la base de Q26 y el nodo compartido bajo parámetros de dispositivo impuestos; siguen abiertos `TAIL` por el ladder, los voltajes e impedancias reales de las fuentes, efecto Early, saturación, dispersión y temperatura real. La matriz de fidelidad conserva por tanto **transferencia condicionada**, sin frecuencia de corte ni resonancia inferidas.
 
 ```powershell
 python tools/filter_cutoff_pair_reference.py
 python -m unittest discover -s tests -q
 ```
 
-Las pruebas comprueban el equivalente cargado de R39, KCL, razón exponencial y fallo de margen en el colector Q28. El próximo paso es resolver las ramas restantes del panel y el ladder inferior de forma simultánea.
+Las pruebas comprueban el equivalente cargado de R39, KCL, razón exponencial y fallo de margen en el colector Q28. El próximo paso es acoplar el voltaje `TAIL` a Q29/Q30 y al ladder inferior.
