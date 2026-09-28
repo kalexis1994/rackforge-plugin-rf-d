@@ -37,6 +37,22 @@ class RampGraphTests(unittest.TestCase):
         self.assertEqual(set(parts["C2"]["terminals"].values()), {"QA_BASE", "QB_BASE"})
         self.assertEqual(set(parts["R7"]["terminals"].values()), {"QA_BASE", "NEG5_V"})
 
+    def test_ic3_reference_loop_and_rc_network_are_traced_as_drawn(self) -> None:
+        graph = json.loads((ROOT / "evidence" / "vco1_ramp_graph.json").read_text(encoding="utf-8"))
+        parts = {part["ref"]: part for part in graph["parts"]}
+        self.assertEqual(parts["IC3"]["terminals"], {
+            "noninverting": "QB_COLLECTOR", "inverting": "NEG4_REF", "output": "IC3_OUT"
+        })
+        self.assertEqual(parts["IC2.Qc"]["terminals"]["base"], "QC_BASE")
+        self.assertEqual(set(parts["R69"]["terminals"].values()), {"IC3_OUT", "QC_BASE"})
+        self.assertEqual(parts["R69"]["kind"], "resistor")
+        self.assertEqual(parts["R78"]["kind"], "resistance_capacitance_network")
+        self.assertEqual(parts["R78"]["terminals"], {"a": "QC_BASE", "b": "NEG10_V"})
+        self.assertEqual(parts["R78"]["branches"], [
+            {"kind": "resistor", "resistance_ohm": 2000},
+            {"kind": "series_rc", "resistance_ohm": 220, "capacitance_farad": 1e-8},
+        ])
+
 
 if __name__ == "__main__":
     unittest.main()
