@@ -1,12 +1,15 @@
 {
   "source": {"id": "SVC-9", "pdf_page": 19, "figure": "9-17", "alternate": {"id": "SVC-204D", "pdf_page": 75}},
-  "scope": "External wiring of VCO 1 pulse width and rectangular output; SW6 contact positions are electrical contacts, not verified front-panel legends.",
+  "scope": "External wiring of VCO 1 saw, triangle, pulse, pulse width and level control; SW6 contact numbers are electrical contacts, not verified front-panel legends.",
   "links": {
     "board_pulse_width": "22B",
     "board_rectangular_output": "20B",
+    "board_saw_output": "9B",
+    "board_triangle_output": "21B",
     "sw6_lower_common": 14,
-    "sw6_upper_rectangular_contacts": [4, 5, 6],
     "sw6_upper_common": "R6_TOP",
+    "sw6_upper_contacts": {"1": "TRI_OUTPUT_21B", "2": "SAW_TRI_TAP", "3": "SAW_OUTPUT_9B", "4": "RECT_OUTPUT_20B", "5": "RECT_OUTPUT_20B", "6": "RECT_OUTPUT_20B"},
+    "sw6_upper_rectangular_contacts": [4, 5, 6],
     "r6_bottom": "GND",
     "r6_wiper_next": "R45_33K_TO_OSC1_ON_SWITCH"
   },
@@ -14,9 +17,11 @@
     {"ref": "R34_PANEL", "value_ohm": 1500, "terminals": ["GND", "SW6_11"]},
     {"ref": "R33_PANEL", "value_ohm": 1000, "terminals": ["SW6_11", "SW6_12"]},
     {"ref": "R32_PANEL", "value_ohm": 7500, "terminals": ["SW6_12", "NEG10_V"]},
+    {"ref": "R30_PANEL", "value_ohm": 47000, "terminals": ["SAW_OUTPUT_9B", "SAW_TRI_TAP"]},
+    {"ref": "R31_PANEL", "value_ohm": 10000, "terminals": ["SAW_TRI_TAP", "TRI_OUTPUT_21B"]},
     {"ref": "R6_PANEL", "value_ohm": 25000, "kind": "potentiometer_total_track", "terminals": ["R6_TOP", "GND"]},
     {"ref": "R45_PANEL", "value_ohm": 33000, "terminals": ["R6_WIPER", "OSC1_ON_SWITCH"]}
   ],
   "sw6_lower_contacts": {"7": "NEG10_V", "8": "open", "9": "open", "10": "GND", "11": "SW6_11", "12": "SW6_12"},
-  "limits": ["The selector position-to-panel-legend map is not assigned.", "The R6 wiper and downstream mixer load are excluded from the 20B passive load calculation.", "The -10 V rail is treated as an imposed nominal voltage only for conditional calculations."]
+  "limits": ["The selector position-to-panel-legend map is not assigned.", "The R6 wiper and downstream mixer load are excluded from all passive load calculations.", "The -10 V rail is treated as an imposed nominal voltage only for conditional calculations."]
 }
