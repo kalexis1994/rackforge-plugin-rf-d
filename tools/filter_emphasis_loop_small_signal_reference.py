@@ -16,10 +16,13 @@ from filter_regeneration_reference import _values
 
 def series_return_admittance_s(*, frequency_hz: float,
                                r14_pin7_to_pin6_ohm: float,
-                               r73_bottom_side_to_wiper_ohm: float) -> complex:
+                               r73_bottom_side_to_wiper_ohm: float,
+                               c10_farads: float | None = None) -> complex:
     """C10 plus panel/trimmer series impedance, in siemens."""
-    c10, r14_total, r73_total, _ = _values()
+    c10_nominal, r14_total, r73_total, _ = _values()
+    c10 = c10_nominal if c10_farads is None else c10_farads
     if (not math.isfinite(frequency_hz) or frequency_hz < 0
+            or not math.isfinite(c10) or not 0.9 * c10_nominal <= c10 <= 1.5 * c10_nominal
             or not math.isfinite(r14_pin7_to_pin6_ohm)
             or not 0 <= r14_pin7_to_pin6_ohm <= r14_total
             or not math.isfinite(r73_bottom_side_to_wiper_ohm)
@@ -34,7 +37,8 @@ def series_return_admittance_s(*, frequency_hz: float,
 def coupled_emphasis_small_signal(*, ladder_dc: dict, recovery_dc: dict,
                                   frequency_hz: float,
                                   r14_pin7_to_pin6_ohm: float,
-                                  r73_bottom_side_to_wiper_ohm: float) -> dict:
+                                  r73_bottom_side_to_wiper_ohm: float,
+                                  c10_farads: float | None = None) -> dict:
     """Closed 24-node incremental network for BUS=1 V; no input clipping.
 
     The ladder's Q30 base-to-BOTTOM path must have been solved with the same
@@ -49,7 +53,8 @@ def coupled_emphasis_small_signal(*, ladder_dc: dict, recovery_dc: dict,
     admittance = series_return_admittance_s(
         frequency_hz=frequency_hz,
         r14_pin7_to_pin6_ohm=r14_pin7_to_pin6_ohm,
-        r73_bottom_side_to_wiper_ohm=r73_bottom_side_to_wiper_ohm)
+        r73_bottom_side_to_wiper_ohm=r73_bottom_side_to_wiper_ohm,
+        c10_farads=c10_farads)
     g, c, c27 = coupled_matrices(ladder_dc, recovery_dc)
     s = 2j * math.pi * frequency_hz
     system = [[g[i][j] - s * c[i][j] for j in range(24)] for i in range(24)]
@@ -69,6 +74,7 @@ def coupled_emphasis_small_signal(*, ladder_dc: dict, recovery_dc: dict,
         "frequency_hz": frequency_hz,
         "r14_pin7_to_pin6_ohm": r14_pin7_to_pin6_ohm,
         "r73_bottom_side_to_wiper_ohm": r73_bottom_side_to_wiper_ohm,
+        "c10_farads": _values()[0] if c10_farads is None else c10_farads,
         "node_v_per_bus_v": tuple(v),
         "q30_base_v_per_bus_v": v[base],
         "bottom_v_per_bus_v": v[4],

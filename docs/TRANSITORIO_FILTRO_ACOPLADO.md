@@ -29,7 +29,7 @@ Con ±10 V nominal, `I_S=10⁻¹⁴ A`, β directo `100`, β inverso `5`, `T=298
 - Un primer paso de `10 µV` coincide con Euler implícito de la [matriz de pequeña señal cerrada](LAZO_EMPHASIS_PEQUENA_SENAL.md) dentro del `1 %` por nodo o `0,1 nV` para valores próximos a cero, en el escenario ensayado.
 - En 32 muestras tras un escalón, con R61 `200 Ω` y `R14_e=0 Ω`, el cambio del tap es `≈38,6 µV` para un BUS de `1 mV` y `≈1,95 mV` para un BUS de `0,1 V`. El segundo no es 100 veces el primero: muestra no linealidad **del modelo condicionado**. No se interpreta como ganancia o saturación de un Model D medido.
 
-Estas pruebas comprueban conservación y consistencia de la discretización; no prueban autooscilación, estabilidad en todos los parámetros, respuesta audible ni fidelidad. El siguiente trabajo debe barrer tolerancias, identificar las variantes de placa y trasladar un modelo reducido a un solver de tiempo acotado, contrastado con este oráculo y con referencias sonoras de procedencia conocida.
+Estas pruebas comprueban conservación y consistencia de la discretización; no prueban autooscilación, estabilidad en todos los parámetros, respuesta audible ni fidelidad. La [malla de sensibilidad AC](SENSIBILIDAD_EMPHASIS.md) ya barre C10, R14, R73 y R61; falta hacerlo con excitación temporal y variar los parámetros BJT. Después habrá que identificar las variantes de placa y trasladar un modelo reducido a un solver de tiempo acotado, contrastado con este oráculo y con referencias sonoras de procedencia conocida.
 
 ```powershell
 python -m unittest discover -s tests -q

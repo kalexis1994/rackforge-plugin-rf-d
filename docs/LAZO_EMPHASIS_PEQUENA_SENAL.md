@@ -32,7 +32,7 @@ El valor R61 del esquema (`200 Ω`) contradice la lista de piezas (`200 kΩ`), d
 
 ## Límites para el siguiente bloque
 
-El cálculo usa un punto DC por escenario y un Jacobiano local. No representa excursiones grandes, capacitancias de juntura, fuga/ESR de C10, tolerancia `+50/−10 %`, cargas del VCA, saturación de etapas, estabilidad temporal de la autooscilación ni variantes reales de placa. En particular, una magnitud mayor que uno para una fuente de *1 V normalizado* no puede interpretarse como una excursión físicamente válida de varios voltios. La [referencia temporal no lineal acoplada](TRANSITORIO_FILTRO_ACOPLADO.md) ya conserva las cargas y ambas junturas BJT; antes de elegir constantes DSP faltan barridos de tolerancia y polarización, un solver de tiempo acotado y comparación audible de procedencia trazable.
+El cálculo usa un punto DC por escenario y un Jacobiano local. No representa excursiones grandes, capacitancias de juntura, fuga/ESR de C10, cargas del VCA, saturación de etapas, estabilidad temporal de la autooscilación ni variantes reales de placa. En particular, una magnitud mayor que uno para una fuente de *1 V normalizado* no puede interpretarse como una excursión físicamente válida de varios voltios. La [referencia temporal no lineal acoplada](TRANSITORIO_FILTRO_ACOPLADO.md) ya conserva las cargas y ambas junturas BJT; la [malla de sensibilidad](SENSIBILIDAD_EMPHASIS.md) varía C10 dentro de su tolerancia `+50/−10 %` y controles eléctricos discretos. Antes de elegir constantes DSP faltan barridos más amplios de polarización, un solver de tiempo acotado y comparación audible de procedencia trazable.
 
 ```powershell
 python tools/filter_emphasis_loop_small_signal_reference.py

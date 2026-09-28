@@ -115,6 +115,7 @@ class FullNonlinearTransientTests(unittest.TestCase):
     def test_invalid_step_and_mismatched_trimmer_rejected(self):
         for change in (dict(dt_s=0), dict(bus_v=math.inf),
                        dict(r14_pin7_to_pin6_ohm=-1),
+                       dict(c10_farads=16e-6),
                        dict(r73_bottom_side_to_wiper_ohm=501)):
             with self.subTest(change=change), self.assertRaises(ValueError):
                 self.step(200, 0, **change)

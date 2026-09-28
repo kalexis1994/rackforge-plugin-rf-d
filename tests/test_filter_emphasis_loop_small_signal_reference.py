@@ -46,6 +46,13 @@ class EmphasisLoopTests(unittest.TestCase):
             frequency_hz=1e8, r14_pin7_to_pin6_ohm=25000,
             r73_bottom_side_to_wiper_ohm=500)
         self.assertAlmostEqual(y.real, 1 / 25500, delta=1e-11)
+        low = series_return_admittance_s(
+            frequency_hz=30, r14_pin7_to_pin6_ohm=0,
+            r73_bottom_side_to_wiper_ohm=500, c10_farads=9e-6)
+        high = series_return_admittance_s(
+            frequency_hz=30, r14_pin7_to_pin6_ohm=0,
+            r73_bottom_side_to_wiper_ohm=500, c10_farads=15e-6)
+        self.assertNotEqual(low, high)
 
     def test_open_and_closed_differ_and_c10_blocks_dc(self):
         for r61, ladder in self.ladders.items():
@@ -92,7 +99,8 @@ class EmphasisLoopTests(unittest.TestCase):
                     r73_bottom_side_to_wiper_ohm=500)
         for override in (dict(r73_bottom_side_to_wiper_ohm=501),
                          dict(r14_pin7_to_pin6_ohm=-1),
-                         dict(frequency_hz=math.nan)):
+                         dict(frequency_hz=math.nan),
+                         dict(c10_farads=8e-6)):
             with self.subTest(override=override), self.assertRaises(ValueError):
                 coupled_emphasis_small_signal(**(args | override))
 

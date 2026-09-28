@@ -32,10 +32,13 @@ def nonlinear_coupled_step(*, ladder_dc: dict, recovery_dc: dict,
                            previous_c10_capacitor_v: float,
                            previous_bus_v: float, bus_v: float,
                            dt_s: float, r14_pin7_to_pin6_ohm: float,
-                           r73_bottom_side_to_wiper_ohm: float) -> dict:
+                           r73_bottom_side_to_wiper_ohm: float,
+                           c10_farads: float | None = None) -> dict:
     """Backward Euler charge/KCL step with absolute node voltages."""
-    c10, r14_total, r73_total, r76 = _values()
+    c10_nominal, r14_total, r73_total, r76 = _values()
+    c10 = c10_nominal if c10_farads is None else c10_farads
     if (not math.isfinite(dt_s) or dt_s <= 0
+            or not math.isfinite(c10) or not 0.9 * c10_nominal <= c10 <= 1.5 * c10_nominal
             or len(previous_node_v) != 24
             or not all(math.isfinite(v) for v in previous_node_v)
             or not all(math.isfinite(v) for v in (
@@ -113,6 +116,7 @@ def nonlinear_coupled_step(*, ladder_dc: dict, recovery_dc: dict,
     return {
         "node_v": tuple(x),
         "c10_capacitor_v": c10_v,
+        "c10_farads": c10,
         "return_current_a": current,
         "return_capacitor_current_a": c10 * (
             c10_v - previous_c10_capacitor_v) / dt_s,

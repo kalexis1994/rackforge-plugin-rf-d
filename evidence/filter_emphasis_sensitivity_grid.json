@@ -1,0 +1,23 @@
+{
+  "scope": "Conditional small-signal sensitivity grid, not a distribution of actual units",
+  "sources": {
+    "circuit": "SVC-9 Fig. 9-11 PDF p. 13, Fig. 9-17 PDF p. 19",
+    "parts": "SVC-9 table 7-8 PDF pp. 30-31",
+    "r61_conflict": "Fig. 9-11 shows 200 ohm; table 7-8 lists 200 kilohm",
+    "c10_tolerance": "10 uF +50/-10 percent"
+  },
+  "grid": {
+    "frequency_hz": [30, 100, 300],
+    "r61_ohm": [200, 200000],
+    "r73_bottom_side_to_wiper_ohm": [0, 500, 1000],
+    "r14_pin7_to_pin6_ohm": [0, 25000, 50000],
+    "c10_farads": [0.000009, 0.00001, 0.000015]
+  },
+  "imposed_device_model": {
+    "is_a_all_ladder_and_recovery_bjt": 1e-14,
+    "beta_forward_all": 100,
+    "beta_reverse_all": 5,
+    "temperature_k": 298.15
+  },
+  "caution": "Each of 162 points is an incremental transfer around a conditioned DC solution; no statistical weighting or fidelity claim"
+}
