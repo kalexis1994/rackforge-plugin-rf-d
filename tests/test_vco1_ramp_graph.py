@@ -20,7 +20,7 @@ class RampGraphTests(unittest.TestCase):
         for device in pinmap["transistors"]:
             part = next(part for part in graph["parts"] if part["ref"] == "IC2." + device["board_name"])
             self.assertEqual(part["package_pins"], {
-                terminal: device[terminal] for terminal in ("collector", "emitter")
+                terminal: device[terminal] for terminal in part["package_pins"]
             })
 
     def test_ramp_has_documented_current_sink_and_reset_switch(self) -> None:
@@ -32,7 +32,10 @@ class RampGraphTests(unittest.TestCase):
         self.assertEqual(parts["IC2.Qc"]["terminals"]["collector"], parts["IC2.Qa"]["terminals"]["emitter"])
         self.assertEqual(set(parts["R42"]["terminals"].values()), {"IC1_SUM", "QC_EMITTER"})
         self.assertEqual(set(parts["R79"]["terminals"].values()), {"QC_EMITTER", "NEG10_V"})
-        self.assertNotIn("R19", parts)
+        self.assertEqual(set(parts["R19"]["terminals"].values()), {"R8_BOTTOM", "NEG5_V"})
+        self.assertEqual(parts["R8"]["terminals"]["wiper"], parts["IC2.Qb"]["terminals"]["base"])
+        self.assertEqual(set(parts["C2"]["terminals"].values()), {"QA_BASE", "QB_BASE"})
+        self.assertEqual(set(parts["R7"]["terminals"].values()), {"QA_BASE", "NEG5_V"})
 
 
 if __name__ == "__main__":

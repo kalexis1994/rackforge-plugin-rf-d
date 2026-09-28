@@ -1,21 +1,27 @@
 {
   "board": "SVC-204D_Fig_9-3_CA3046",
   "source": {"id": "SVC-9", "pdf_page": 5, "figure": "9-3"},
-  "replacement_value_check": {"id": "SVC-9", "pdf_page": 25, "table": "7-5", "refs": ["R19", "R42", "R50", "R79"]},
-  "scope": "Verified terminals around the VCO 1 timing capacitor and CA3046 current sink; this is deliberately not a complete netlist.",
-  "nodes": ["GND", "RAMP_C1", "PAIR_EMITTER", "QC_EMITTER", "QB_COLLECTOR", "IC1_SUM", "NEG10_V"],
+  "replacement_value_check": {"id": "SVC-9", "pdf_pages": [24, 25], "table": "7-5", "refs": ["C2", "R7", "R8", "R9", "R19", "R20", "R42", "R50", "R79"]},
+  "scope": "Verified terminals around the VCO 1 timing capacitor and CA3046 input/current-sink network; this is deliberately not a complete netlist.",
+  "nodes": ["GND", "RAMP_C1", "PAIR_EMITTER", "QC_EMITTER", "QB_COLLECTOR", "QA_BASE", "QB_BASE", "IC1_SUM", "IC1_OUT", "R8_TOP", "R8_BOTTOM", "NEG5_V", "NEG10_V"],
   "parts": [
     {"ref": "C1", "kind": "capacitor", "value": 1e-8, "unit": "farad", "terminals": {"a": "GND", "b": "RAMP_C1"}},
-    {"ref": "IC2.Qa", "kind": "CA3046_NPN", "package_pins": {"collector": 5, "emitter": 3}, "terminals": {"collector": "RAMP_C1", "emitter": "PAIR_EMITTER"}, "untraced_terminals": ["base"]},
-    {"ref": "IC2.Qb", "kind": "CA3046_NPN", "package_pins": {"collector": 1, "emitter": 3}, "terminals": {"collector": "QB_COLLECTOR", "emitter": "PAIR_EMITTER"}, "untraced_terminals": ["base"]},
+    {"ref": "C2", "kind": "capacitor", "value": 1e-10, "unit": "farad", "terminals": {"a": "QA_BASE", "b": "QB_BASE"}},
+    {"ref": "IC2.Qa", "kind": "CA3046_NPN", "package_pins": {"collector": 5, "base": 4, "emitter": 3}, "terminals": {"collector": "RAMP_C1", "base": "QA_BASE", "emitter": "PAIR_EMITTER"}},
+    {"ref": "IC2.Qb", "kind": "CA3046_NPN", "package_pins": {"collector": 1, "base": 2, "emitter": 3}, "terminals": {"collector": "QB_COLLECTOR", "base": "QB_BASE", "emitter": "PAIR_EMITTER"}},
     {"ref": "IC2.Qc", "kind": "CA3046_NPN", "package_pins": {"collector": 14, "emitter": 13}, "terminals": {"collector": "PAIR_EMITTER", "emitter": "QC_EMITTER"}, "untraced_terminals": ["base"]},
     {"ref": "Q10", "kind": "PNP_2N4402_schematic", "terminals": {"emitter": "GND", "collector": "RAMP_C1"}, "untraced_terminals": ["base"]},
+    {"ref": "R7", "kind": "resistor", "value": 100, "unit": "ohm", "terminals": {"a": "QA_BASE", "b": "NEG5_V"}},
+    {"ref": "R8", "kind": "trim_potentiometer", "value_end_to_end": 100, "unit": "ohm", "terminals": {"high": "R8_TOP", "wiper": "QB_BASE", "low": "R8_BOTTOM"}},
+    {"ref": "R9", "kind": "resistor", "value": 33, "unit": "ohm", "terminals": {"a": "IC1_OUT", "b": "R8_TOP"}},
+    {"ref": "R19", "kind": "resistor", "value": 1000, "unit": "ohm", "terminals": {"a": "R8_BOTTOM", "b": "NEG5_V"}},
+    {"ref": "R20", "kind": "temperature_compensating_resistor", "value": 1000, "unit": "ohm", "terminals": {"a": "IC1_OUT", "b": "IC1_SUM"}},
     {"ref": "R50", "kind": "resistor", "value": 39000, "unit": "ohm", "terminals": {"a": "GND", "b": "QB_COLLECTOR"}},
     {"ref": "R79", "kind": "resistor", "value": 1000, "unit": "ohm", "terminals": {"a": "QC_EMITTER", "b": "NEG10_V"}},
     {"ref": "R42", "kind": "resistor", "value": 160000, "unit": "ohm", "terminals": {"a": "IC1_SUM", "b": "QC_EMITTER"}}
   ],
   "outstanding": [
-    "Transcribe transistor bases, R8/R11 trims, C2/R7/R9/R10/R19/R37 and IC3/R69 connections.",
+    "Transcribe Qc base, R11/R37 frequency trim, R10 reference and IC3/R69 connections.",
     "Transcribe FET amplifier, Schmitt reset Q5/Q6 and Q10 drive before calculating reset duration or loaded saw.",
     "Resolve Q5/Q6 part-number conflict before choosing device curves."
   ]
