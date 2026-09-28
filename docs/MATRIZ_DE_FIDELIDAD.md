@@ -5,7 +5,7 @@ Los estados `desconocido`, `hipótesis`, `modelado`, `contrastado` y `cerrado pa
 | Bloque | Controles/datos | Topología/tiempo | Transferencia/cálculo | Audio externo | Riesgo audible | Próximo gate |
 | --- | --- | --- | --- | --- | --- | --- |
 | Teclado/glide/ruedas | Hipótesis | Desconocido | Desconocido | Desconocido | Medio | Grafo de placa 2 y escenas de legato simuladas |
-| Tres osciladores | Entradas IC1 cotejadas; ley de panel pendiente | Rampa C1, bases Qa/Qb/Qc, lazo IC3, tramo Q5/Q6→Q10 y pinout IC2 de [VCO 1](VCO1_CA3046.md); resto de reset hipótesis | [Razón exponencial ideal](VCO1_CONVERTIDOR_IDEAL.md) **condicionada**, corriente absoluta y solver pendientes | Candidatos sin analizar | Alto | Punto DC del convertidor, R78 dinámica, completar Schmitt/reset y salidas cargadas |
+| Tres osciladores | Entradas IC1 cotejadas; ley de panel pendiente | Rampa C1, bases Qa/Qb/Qc, lazo IC3, [etapa FET/Q3](VCO1_AMPLIFICADOR_FET.md), ramal Q5/Q6→Q10 y pinout IC2 de [VCO 1](VCO1_CA3046.md); reset y carga 9B incompletos | [Razón exponencial ideal](VCO1_CONVERTIDOR_IDEAL.md) y puerta FET en continua **condicionadas**; corriente absoluta y solver pendientes | Candidatos sin analizar | Alto | Punto DC del convertidor, curvas FET/BJT, R78 dinámica, Schmitt/reset y salida cargada |
 | Ruido/modulación | Hipótesis | Hipótesis de manual | Desconocido | Desconocido | Medio | Redes y espectro calculado |
 | Mezclador/feedback | Hipótesis | Hipótesis de manual | Desconocido | Desconocido | Alto | Grafo, niveles y saturación por fuente |
 | Filtro ladder | Hipótesis | Hipótesis de manual | Desconocido | Candidatos sin analizar | Muy alto | Ecuaciones, ajuste de servicio y barridos simulados |

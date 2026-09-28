@@ -106,6 +106,40 @@ class RampGraphTests(unittest.TestCase):
         self.assertEqual(set(parts["R4"]["terminals"].values()), {"POS10_V", "FET_C4_LEFT"})
         self.assertEqual(set(parts["R45"]["terminals"].values()), {"POS10_V", "FET_C3_LEFT"})
 
+    def test_dual_fet_amplifier_reaches_q3_and_saw_connector(self) -> None:
+        graph = json.loads((ROOT / "evidence" / "vco1_ramp_graph.json").read_text(encoding="utf-8"))
+        parts = {part["ref"]: part for part in graph["parts"]}
+        self.assertEqual(parts["Q7"]["terminals"], {
+            "left_gate": "RAMP_C1", "left_drain": "FET_LEFT_DRAIN",
+            "right_gate": "FET_C4_LEFT", "right_drain": "FET_RIGHT_DRAIN",
+            "common_source": "FET_COMMON_SOURCE",
+        })
+        self.assertEqual(parts["Q8"]["terminals"], {
+            "base": "FET_RIGHT_DRAIN", "emitter": "FET_C3_LEFT", "collector": "Q3_BASE"
+        })
+        self.assertEqual(parts["Q9"]["terminals"], {
+            "base": "FET_LEFT_DRAIN", "emitter": "FET_C3_LEFT", "collector": "NEG10_V"
+        })
+        self.assertEqual(parts["Q3"]["terminals"], {
+            "base": "Q3_BASE", "collector": "SCHMITT_DRIVE", "emitter": "NEG10_V"
+        })
+        expected = {
+            "R5": (5600, {"POS10_V", "FET_RIGHT_DRAIN"}),
+            "R46": (5600, {"POS10_V", "FET_LEFT_DRAIN"}),
+            "R47": (100, {"FET_COMMON_SOURCE", "Q4_COLLECTOR"}),
+            "R48": (12000, {"Q4_EMITTER", "NEG10_V"}),
+            "R49": (1000, {"NEG4_REF", "Q4_BASE"}),
+            "R25": (15000, {"FET_C4_LEFT", "NEG10_V"}),
+            "R36": (2700, {"Q3_BASE", "NEG10_V"}),
+            "R34": (4300, {"SCHMITT_DRIVE", "SAW_OUTPUT_9B"}),
+        }
+        for ref, (value, nodes) in expected.items():
+            self.assertEqual(parts[ref]["value"], value)
+            self.assertEqual(set(parts[ref]["terminals"].values()), nodes)
+        self.assertEqual(parts["Q4"]["terminals"], {
+            "base": "Q4_BASE", "collector": "Q4_COLLECTOR", "emitter": "Q4_EMITTER"
+        })
+
     def test_trim_and_reference_divider_keep_voltage_label_distinct(self) -> None:
         graph = json.loads((ROOT / "evidence" / "vco1_ramp_graph.json").read_text(encoding="utf-8"))
         parts = {part["ref"]: part for part in graph["parts"]}
