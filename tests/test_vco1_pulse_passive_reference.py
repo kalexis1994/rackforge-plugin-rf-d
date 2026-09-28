@@ -14,14 +14,14 @@ class PulsePassiveTests(unittest.TestCase):
         result = passive_pulse_network()
         weights = result["q11_base_boundary_voltage_coefficients"]
         self.assertAlmostEqual(sum(weights.values()), 1.0)
-        self.assertAlmostEqual(weights["PULSE_WIDTH_28B"], weights["SCHMITT_DRIVE"])
+        self.assertAlmostEqual(weights["PULSE_WIDTH_22B"], weights["SCHMITT_DRIVE"])
         boundaries = {
-            "PULSE_WIDTH_28B": -1.0, "SCHMITT_DRIVE": -4.0,
+            "PULSE_WIDTH_22B": -1.0, "SCHMITT_DRIVE": -4.0,
             "SAW_OUTPUT_9B": -2.0, "Q12_COLLECTOR": -7.0,
         }
         base = sum(weights[node] * voltage for node, voltage in boundaries.items())
         kcl = sum((base - boundaries[node]) / resistance for node, resistance in (
-            ("PULSE_WIDTH_28B", 43000), ("SCHMITT_DRIVE", 43000),
+            ("PULSE_WIDTH_22B", 43000), ("SCHMITT_DRIVE", 43000),
             ("SAW_OUTPUT_9B", 390000), ("Q12_COLLECTOR", 910000),
         ))
         self.assertAlmostEqual(kcl, 0.0, places=12)

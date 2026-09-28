@@ -188,7 +188,7 @@ class RampGraphTests(unittest.TestCase):
             "base": "Q12_BASE", "collector": "Q12_COLLECTOR", "emitter": "SAW_OUTPUT_9B"
         })
         expected = {
-            "R1": (43000, {"PULSE_WIDTH_28B", "Q11_BASE"}),
+            "R1": (43000, {"PULSE_WIDTH_22B", "Q11_BASE"}),
             "R40": (43000, {"SCHMITT_DRIVE", "Q11_BASE"}),
             "R44": (390000, {"SAW_OUTPUT_9B", "Q11_BASE"}),
             "R2": (910000, {"Q12_COLLECTOR", "Q11_BASE"}),

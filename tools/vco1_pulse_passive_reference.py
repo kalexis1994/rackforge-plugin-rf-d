@@ -14,7 +14,7 @@ from pathlib import Path
 
 GRAPH_PATH = Path(__file__).resolve().parents[1] / "evidence" / "vco1_ramp_graph.json"
 Q11_INPUTS = {
-    "R1": (43000, "PULSE_WIDTH_28B"),
+    "R1": (43000, "PULSE_WIDTH_22B"),
     "R40": (43000, "SCHMITT_DRIVE"),
     "R44": (390000, "SAW_OUTPUT_9B"),
     "R2": (910000, "Q12_COLLECTOR"),
