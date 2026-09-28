@@ -36,7 +36,7 @@ python -m unittest discover -s tests -q
 
 ## Cursor de R6, SW9 encendido y bus del mixer
 
-La Fig. 9-17 (SVC-9, PDF p. 19) muestra el cursor de **R6 de panel, 25 kΩ** pasando por **R45 de panel, 33 kΩ** y **SW9 en ON** al bus común de las cinco fuentes, que entra por el **pin 4 de la placa 4**. La Fig. 9-11 (SVC-9, PDF p. 13) muestra ese pin como entrada de audio hacia **C27** y la red del filtro. La impedancia del bus depende de frecuencia, estado y las demás fuentes; no se reemplaza por una resistencia inventada. La conexión de SW9 en OFF queda fuera de esta referencia.
+La Fig. 9-17 (SVC-9, PDF p. 19) muestra el cursor de **R6 de panel, 25 kΩ** pasando por **R45 de panel, 33 kΩ** y **SW9 en ON** al [bus común de las cinco fuentes](MEZCLADOR_PANEL.md), que entra por el **pin 4 de la placa 4**. La Fig. 9-11 (SVC-9, PDF p. 13) muestra ese pin como entrada de audio hacia **C27** y la red del filtro. La impedancia del bus depende de frecuencia, estado y las demás fuentes; no se reemplaza por una resistencia inventada. La conexión de SW9 en OFF queda fuera de esta referencia.
 
 Sea `α = R_inferior/R6`, una **fracción eléctrica** de 0 a 1: `R_superior=(1−α)·25 kΩ`, `R_inferior=α·25 kΩ`. No equivale necesariamente a la rotación física del potenciómetro. Con tensiones impuestas `V_forma` en el contacto seleccionado de SW6 y `V_mix` en el pin 4, la ley de nodos del cursor `V_c` es
 

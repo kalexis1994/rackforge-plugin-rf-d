@@ -32,6 +32,15 @@ def _port_currents(source_v: float, mixer_v: float, alpha: float,
     return (source_v - wiper_v) / r_top, (mixer_v - wiper_v) / series_ohm
 
 
+def pot_series_admittance(alpha: float, pot_ohm: float, series_ohm: float) -> list[list[float]]:
+    """Two-port matrix for a grounded level pot with wiper series resistor."""
+    if not 0.0 <= alpha <= 1.0 or pot_ohm <= 0 or series_ohm <= 0:
+        raise ValueError("invalid pot fraction or resistance")
+    source_1, mixer_1 = _port_currents(1.0, 0.0, alpha, pot_ohm, series_ohm)
+    source_2, mixer_2 = _port_currents(0.0, 1.0, alpha, pot_ohm, series_ohm)
+    return [[source_1, source_2], [mixer_1, mixer_2]]
+
+
 def panel_level_reference(alpha: float) -> dict[str, object]:
     if not 0.0 <= alpha <= 1.0:
         raise ValueError("alpha must be in [0, 1]")
@@ -52,15 +61,14 @@ def panel_level_reference(alpha: float) -> dict[str, object]:
     }:
         raise ValueError("mixer-bus destination differs from Fig. 9-11")
     pot, series = r6["value_ohm"], r45["value_ohm"]
-    source_1, mixer_1 = _port_currents(1.0, 0.0, alpha, pot, series)
-    source_2, mixer_2 = _port_currents(0.0, 1.0, alpha, pot, series)
+    admittance = pot_series_admittance(alpha, pot, series)
     return {
         "wiper_fraction_from_ground": alpha,
         "r_top_ohm": (1 - alpha) * pot,
         "r_bottom_ohm": alpha * pot,
         "ports": ["SW6_SELECTED_OUTPUT", "MIX_BUS_BOARD4_PIN4"],
-        "admittance_siemens": [[source_1, source_2], [mixer_1, mixer_2]],
-        "selected_output_resistance_with_mixer_held_at_zero_ohm": 1 / source_1,
+        "admittance_siemens": admittance,
+        "selected_output_resistance_with_mixer_held_at_zero_ohm": 1 / admittance[0][0],
         "excluded": ["SW9 OFF", "board-4 C27 and active input impedance", "other mixer sources", "oscillator device currents"],
     }
 

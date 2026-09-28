@@ -55,6 +55,7 @@ Estos artículos originales ayudan a diseñar y contrastar el solver. **Ninguno 
 | Placa de osciladores estabilizada: sumadores, μA726, rampas/formas | SVC-204D PDF pp. 8–10, impresas 2-3 a 2-5; esquema PDF p. 60, Fig. 9-2 |
 | Placa de osciladores antigua: convertidor, rampa, triángulo, pulso | SVC-204D PDF pp. 14–16, impresas 2-9 a 2-10A; esquema PDF p. 61, Fig. 9-3 |
 | Interconexión de osciladores, SW6, ancho 22B, R30/R31, R6/R45 y SW9 | SVC-9 PDF p. 19, Fig. 9-17; SVC-204D PDF p. 75. Entrada de mixer en placa 4: SVC-9 PDF p. 13, Fig. 9-11 (SVC-204D p. 69). |
+| Bus de mezcla: cinco ramas ON, resistencias R45–R49 y entrada de placa 4 | SVC-9 PDF p. 19, Fig. 9-17; placa 4 y C27 en SVC-9 PDF p. 13, Fig. 9-11. |
 | Ruido, mezcla de modulación y entrada externa | SVC-204D PDF pp. 10–11 y 14; esquemas pp. 66 y 69 |
 | Ladder, recuperación, dos VCA | SVC-204D PDF pp. 11–12, impresa 2-7; esquema p. 69, Fig. 9-10 |
 | Contornos, gatillo y final decay | SVC-204D PDF pp. 12–13, impresas 2-7 a 2-8; esquema p. 65, Fig. 9-5 |
