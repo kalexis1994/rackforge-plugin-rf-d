@@ -74,7 +74,7 @@ Estos artículos originales ayudan a diseñar y contrastar el solver. **Ninguno 
 
 ## Fuentes por conseguir o verificar
 
-Para el [cierre DC con saturación simple del ladder](LADDER_EBERS_MOLL_DC.md), la fuente metodológica primaria es [Nagel y Pederson, *SPICE*, 1973, PDF pp. 4–5](https://www2.eecs.berkeley.edu/Pubs/TechRpts/1973/ERL-m-382.pdf), con β directo e inverso en Ebers–Moll. El [manual de ngspice §7.3.3](https://ngspice.sourceforge.io/docs/ngspice-manual.pdf) delimita efectos adicionales del modelo Gummel–Poon. Ninguna fuente aporta β inverso medido de la placa 4.
+Para el [cierre DC con saturación simple del ladder](LADDER_EBERS_MOLL_DC.md), la fuente metodológica primaria es [Nagel y Pederson, *SPICE*, 1973, PDF pp. 4–5](https://www2.eecs.berkeley.edu/Pubs/TechRpts/1973/ERL-m-382.pdf), con β directo e inverso en Ebers–Moll. El [manual de ngspice §7.3.3](https://ngspice.sourceforge.io/docs/ngspice-manual.pdf) delimita efectos adicionales del modelo Gummel–Poon. La [red de pequeña señal](LADDER_PEQUENA_SENAL.md) toma C3/C7/C11/C16 de SVC-9 Fig. 9-11 y tabla 7-8, p. 30. Ninguna fuente aporta β inverso medido de la placa 4.
 
 La [columna resistiva DC del ladder](COLUMNA_RESISTIVA_LADDER_DC.md) transcribe R4, R16, R32, R41 y R52 de placa 4 desde SVC-9 Fig. 9-11, PDF p. 13, y tabla 7-8, pp. 30–31. Las [pilas activas](PILAS_ACTIVAS_LADDER_DC.md) trazan los dos recorridos colector/emisor y derivan las corrientes de tap condicionalmente a β e `I_S` impuestos.
 

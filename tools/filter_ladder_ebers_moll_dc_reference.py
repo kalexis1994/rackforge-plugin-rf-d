@@ -167,6 +167,18 @@ def conditional_ladder_ebers_moll_dc(*, cutoff_inputs: dict,
         raise ValueError("Ebers-Moll DC Newton iteration did not converge")
 
     residual, currents = evaluate(x)
+    # Jacobian of incoming-minus-outgoing DC KCL in siemens. This is the
+    # exact interface for small-signal capacitor stamping at this bias.
+    conductance = [[0.0] * 16 for _ in range(16)]
+    for column in range(16):
+        high = x.copy()
+        low = x.copy()
+        high[column] += 1e-6
+        low[column] -= 1e-6
+        high_r, _ = evaluate(high)
+        low_r, _ = evaluate(low)
+        for row in range(16):
+            conductance[row][column] = (high_r[row] - low_r[row]) / 2e-6
     q28_collector_v = x[5] - tail_current * r60
     q28_candidate = 0 < cutoff["shared_node_v"] < q28_collector_v
     reverse_forward = tuple(name for name, part in currents.items()
@@ -174,6 +186,7 @@ def conditional_ladder_ebers_moll_dc(*, cutoff_inputs: dict,
     return {"nodes_v": dict(zip(NODE_NAMES, x)), "devices": currents,
             "max_kcl_residual_a": max(abs(value) for value in residual),
             "kcl_residuals_a": dict(zip(NODE_NAMES, residual)),
+            "conductance_matrix_s": tuple(tuple(row) for row in conductance),
             "iterations": iterations,
             "forward_biased_base_collector_devices": reverse_forward,
             "q28_forward_active_candidate": q28_candidate,
