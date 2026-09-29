@@ -24,6 +24,8 @@ El [objetivo técnico](docs/OBJETIVO.md) define qué queda dentro de la emulaci�
 
 La [derivación parcial de VCO 1](docs/VCO1_CA3046.md) explica los límites de la referencia ejecutable. Puede comprobarse con `python -m unittest discover -s tests -v`; no necesita instalar dependencias.
 
+La ruta experimental BUS→J7 dispone de [vectores de admisión numérica](docs/VECTORES_PORTABILIDAD_AURICULARES.md) para un futuro motor nativo. Contienen entradas, estado inicial, salidas y checkpoints internos con tolerancias fijadas; superarlos no probaría por sí solo fidelidad sonora.
+
 ## Límites de recursos
 
 Manuales descargados, esquemas, fotos internas, mediciones y WAV de referencia pertenecen a `references-local/` o `captures/`, fuera de Git. El repo guarda identificadores, hashes, derivaciones, pruebas y resultados. Ningún paquete `.rfplugin` incluirá material original que no se pueda distribuir.

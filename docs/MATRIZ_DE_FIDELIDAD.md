@@ -22,6 +22,8 @@ Un [presupuesto Newton 16/16](PRESUPUESTO_NEWTON_AURICULARES.md) cerró KCL en 3
 
 El [reintento por subpasos](REINTENTO_SUBPASOS_AURICULARES.md) es un experimento offline de recuperación; muestra una diferencia de discretización medible y no se admite automáticamente como política del motor de audio.
 
+Los [vectores de portabilidad BUS→J7](VECTORES_PORTABILIDAD_AURICULARES.md) fijan tolerancias de equivalencia numérica antes de implementar la ruta nativa. Todavía no existe un motor que pase ese gate ni evidencia de fidelidad sonora.
+
 En el ladder, la [columna resistiva DC](COLUMNA_RESISTIVA_LADDER_DC.md), las [pilas activas](PILAS_ACTIVAS_LADDER_DC.md) y el [cierre Ebers–Moll de 16 nodos](LADDER_EBERS_MOLL_DC.md) están trazados. El cálculo condicionado incluye corrientes de tap y conducción base colector; un [barrido de 72 supuestos](BARRIDO_SESGO_LADDER_DC.md) comprueba el límite activo. Transferencia temporal y audio permanecen desconocidos, así como β inverso y el valor físico de R61.
 
 RF-D **pretende** recrear un Model D clásico. No hay aún una implementación sonora ni resultados de comparación que permitan afirmar fidelidad.
