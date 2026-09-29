@@ -17,3 +17,5 @@ La [regresión](../tests/test_headphone_amp_active_jacobian_reference.py) contra
 En la [malla corta de 256 pasos](ESTRES_TRANSITORIO_AURICULARES.md), una corrida local pasó de `11,7 s` con el grafo ya preparado a `10,1 s` con estas columnas analíticas (≈`39 ms/paso`). El máximo residuo KCL se mantuvo en `9,6969×10⁻¹¹ A` y el máximo de iteraciones en 7. Es una medición orientativa de Python, no una garantía de rendimiento ni una mejora de fidelidad física. La matriz densa y el resto del Jacobiano numérico siguen impidiendo usar este solver en audio en vivo.
 
 La [comparación de trazas](COMPARACION_JACOBIAN_AURICULARES.md) conserva una ruta de 62 columnas por diferencias finitas y coteja estados completos, KCL, conmutación y coste con la ruta híbrida.
+
+En la ruta híbrida, además, las primeras cincuenta perturbaciones evalúan sólo las KCL anteriores y actualizan analíticamente la carga lineal; el único acoplamiento de una de esas columnas a las filas activas es `−C19/Δt` desde el cursor R21 a la base de Q16. La derivación y su cotejo temporal están en la comparación anterior.

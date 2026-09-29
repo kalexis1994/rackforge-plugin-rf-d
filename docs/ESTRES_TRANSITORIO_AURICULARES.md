@@ -11,3 +11,5 @@ Una reducción concreta de coste prepara y valida el [grafo de placa 3](../tools
 Quedan por ejercitar mayor duración, amplitudes y controles, excitación bipolar/banda ancha, cambios de SW18 y cargas en marcha, semiconductores fuera del escenario, deriva térmica y comparación de audio externo. La malla prueba el comportamiento numérico declarado, no fidelidad sonora.
 
 Con el [Jacobiano analítico de placa 3](JACOBIAN_ANALITICO_AURICULARES.md) aplicado a las últimas doce columnas de la matriz acoplada, otra corrida local de la misma malla tardó `10,1 s` (≈`39 ms/paso`); conservó `9,6969×10⁻¹¹ A` de residuo máximo y 7 iteraciones máximas. El resultado depende del host y permanece muy lejos de tiempo real.
+
+Una [optimización posterior](COMPARACION_JACOBIAN_AURICULARES.md) evita reevaluar la placa 3 para cada columna anterior y reutiliza la carga lineal `C·ΔV`. En otra corrida local de estos mismos 256 pasos, el total bajó a `5,38 s` (≈`21 ms/paso`), con residuo máximo `9,6969×10⁻¹¹ A` y 7 iteraciones máximas. La ruta completa de diferencias finitas sigue disponible para cotejar trazas.

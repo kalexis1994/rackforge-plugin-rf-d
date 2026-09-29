@@ -133,7 +133,8 @@ def nonlinear_coupled_headphone_step(*, ladder_dc: dict,
     y10 = gc10/(1+gc10*rtop)
     delta_bus = bus_v-previous_state["bus_v"]
 
-    def evaluate(x: list[float]) -> tuple[list[float], dict]:
+    def evaluate(x: list[float], *, upstream_only: bool = False,
+                 charge_override: list[float] | None = None) -> tuple[list[float], dict]:
         if (vp["output_parameters"]["diode_model"] is None
                 and not 0 <= x[46] <= vp["plus_v"]):
             raise ValueError("diode-open output domain exceeded")
@@ -154,19 +155,25 @@ def nonlinear_coupled_headphone_step(*, ladder_dc: dict,
         f[22] -= i10
         f[7] += i10
         dv = [x[j]-old_v[j] for j in range(48)]
-        charge = [sum(cap[i][j]*dv[j] for j in range(48))
-                  - (bus_c*delta_bus if i == 6 else 0.0)
-                  for i in range(48)]
+        charge = (charge_override if charge_override is not None else
+                  [sum(cap[i][j]*dv[j] for j in range(48))
+                   - (bus_c*delta_bus if i == 6 else 0.0)
+                   for i in range(48)])
         residual = [f[i]-charge[i]/dt_s for i in range(48)]
         residual += [r21_upper_current-r77_current,
                      (x[R21_WIPER]-x[PIN22])/upper21
                      + x[R21_WIPER]/r21_wiper_to_ground_ohm]
+        c19_current = amp_cap["C19"]/dt_s*(
+            x[R21_WIPER]-x[AMP_FIRST]-old_amp_cap["C19"])
+        residual[R21_WIPER] += c19_current
+        if upstream_only:
+            return residual, {}
         active, amp_parts = evaluate_headphone_amp_dc(
             x[AMP_FIRST:J7], **amp_params)
         residual += active+[load_g*x[J7]]
-        cap_currents = {}
-        for name, left, right in (("C19", R21_WIPER, AMP_FIRST),
-                                  ("C15", AMP_FIRST+7, AMP_FIRST+8),
+        residual[AMP_FIRST] -= c19_current
+        cap_currents = {"C19": c19_current}
+        for name, left, right in (("C15", AMP_FIRST+7, AMP_FIRST+8),
                                   ("C21", AMP_FIRST+10, J7)):
             current = amp_cap[name]/dt_s*(
                 x[left]-x[right]-old_amp_cap[name])
@@ -194,10 +201,23 @@ def nonlinear_coupled_headphone_step(*, ladder_dc: dict,
         for col in range(numeric_columns):
             trial = x.copy()
             trial[col] += 1e-5
-            high, _ = evaluate(trial)
-            for row in range(NODE_COUNT):
+            if jacobian_method == "hybrid":
+                # C of the upstream circuit is constant. Reuse its base
+                # charge and avoid recalculating the board-3 KCL for every
+                # upstream column; only C19 couples col 49 to row 50.
+                shifted_charge = (
+                    [parts["charge"][row]+cap[row][col]*1e-5
+                     for row in range(48)] if col < 48
+                    else parts["charge"])
+                high, _ = evaluate(trial, upstream_only=True,
+                                   charge_override=shifted_charge)
+            else:
+                high, _ = evaluate(trial)
+            for row in range(len(high)):
                 jacobian[row][col] = (high[row]-residual[row])/1e-5/SCALES[row]
         if jacobian_method == "hybrid":
+            jacobian[AMP_FIRST][R21_WIPER] = (
+                -amp_cap["C19"]/dt_s/SCALES[AMP_FIRST])
             active = headphone_amp_dc_jacobian(x[AMP_FIRST:J7], **amp_params)
             for local_row, values in enumerate(active):
                 row = AMP_FIRST+local_row
