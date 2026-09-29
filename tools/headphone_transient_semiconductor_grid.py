@@ -17,7 +17,9 @@ EVIDENCE = (Path(__file__).resolve().parents[1] / "evidence"
             / "headphone_transient_semiconductor_grid.json")
 
 
-def semiconductor_grid() -> dict:
+def semiconductor_grid(*, newton_max_iterations: int = 80,
+                       line_search_max_halvings: int = 32,
+                       linear_solver: str = "python") -> dict:
     assumption = _scenario()
     if (assumption["board3_beta_forward"] != 160
             or assumption["diode_forward_voltage_at_100ma_v"] != 0.7
@@ -38,6 +40,7 @@ def semiconductor_grid() -> dict:
                       (temp, 298.15, 160, 0.7, "board4_only"),
                       (temp, temp, 160, 0.7, "both")))
     rows = []
+    grid_halvings_max = 0
     board4_bases = {}
     for board4_temp, board3_temp, beta, forward_v, scope in cases:
         source = assumption | {"temperature_k": board4_temp}
@@ -59,12 +62,17 @@ def semiconductor_grid() -> dict:
             state = nonlinear_coupled_headphone_step(
                 **base, **panel, previous_state=state,
                 bus_v=bus, dt_s=1/9600, sw18_on=True,
-                tip_load_ohm=32, ring_load_ohm=32)
+                tip_load_ohm=32, ring_load_ohm=32,
+                linear_solver=linear_solver,
+                newton_max_iterations=newton_max_iterations,
+                line_search_max_halvings=line_search_max_halvings)
             samples.append((state["j7_tip_v"], state["r21_wiper_v"],
                             state["c2_right_v"]))
             worst_kcl = max(worst_kcl,
                             state["max_charge_kcl_residual_a"])
             most_iterations = max(most_iterations, state["iterations"])
+            grid_halvings_max = max(grid_halvings_max,
+                                   state["max_halvings_used"])
         j7 = [row[0] for row in samples]
         rows.append({
             "board4_temperature_k": board4_temp,
@@ -107,6 +115,7 @@ def semiconductor_grid() -> dict:
                                              and row["diode_forward_voltage_at_100ma_v"] == 0.7),
         "max_kcl_residual_a": max(row["max_kcl_residual_a"] for row in rows),
         "max_newton_iterations": max(row["max_newton_iterations"] for row in rows),
+        "max_halvings_used": grid_halvings_max,
         "rows": rows,
         "interpretation": "One synthetic BUS cycle from DC, not steady-state or vintage measurements."}
 

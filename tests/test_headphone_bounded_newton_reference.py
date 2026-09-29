@@ -15,13 +15,20 @@ from headphone_transient_stress_reference import _scenario, reference_dc
 
 
 class HeadphoneBoundedNewtonTest(unittest.TestCase):
-    def test_declared_short_and_bipolar_grids_close_with_budget(self):
+    def test_all_declared_grids_close_with_budget(self):
         result = bounded_grid()
-        self.assertEqual(result["scenario_count"], 20)
-        self.assertEqual(result["step_count"], 1024)
+        self.assertEqual(result["scenario_count"], 38)
+        self.assertEqual(result["step_count"], 3136)
         self.assertLessEqual(result["max_newton_iterations"], 15)
         self.assertLess(result["max_halvings_used"], 16)
         self.assertLess(result["max_kcl_residual_a"], 1e-10)
+        self.assertEqual(result["convergence"]["total_steps"], 672)
+        for ratio in result["convergence"]["max_error_ratios"].values():
+            self.assertGreater(ratio, 1.5)
+        self.assertEqual(result["semiconductors"]["total_steps"], 1440)
+        self.assertAlmostEqual(
+            result["semiconductors"]["baseline_j7_rms_v"],
+            0.0064834403251276046, delta=1e-6)
 
     def test_exhausted_budget_does_not_mutate_input_state(self):
         scenario = _scenario()

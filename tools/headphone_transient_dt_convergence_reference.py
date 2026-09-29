@@ -14,7 +14,9 @@ from headphone_transient_stress_reference import _scenario, reference_dc
 EVIDENCE = Path(__file__).resolve().parents[1] / "evidence" / "headphone_transient_dt_convergence.json"
 
 
-def convergence_grid() -> dict:
+def convergence_grid(*, newton_max_iterations: int = 80,
+                     line_search_max_halvings: int = 32,
+                     linear_solver: str = "python") -> dict:
     config = json.loads(EVIDENCE.read_text(encoding="utf-8"))["scenario"]
     if (config["frequency_hz"] != 100
             or config["bus_amplitude_v"] != 0.5
@@ -33,6 +35,7 @@ def convergence_grid() -> dict:
     traces = {}
     residual_max = 0.0
     iteration_max = 0
+    max_halvings = 0
     for rate in config["sample_rates_hz"]:
         state = initial_coupled_headphone_state(**base)
         trace = []
@@ -46,11 +49,14 @@ def convergence_grid() -> dict:
                 bus_v=bus, dt_s=1/rate,
                 tip_load_ohm=config["tip_ring_ohm"],
                 ring_load_ohm=config["tip_ring_ohm"],
-                sw18_on=True)
+                sw18_on=True, linear_solver=linear_solver,
+                newton_max_iterations=newton_max_iterations,
+                line_search_max_halvings=line_search_max_halvings)
             trace.append((state["j7_tip_v"], state["r21_wiper_v"],
                           state["c2_right_v"]))
             residual_max = max(residual_max, state["max_charge_kcl_residual_a"])
             iteration_max = max(iteration_max, state["iterations"])
+            max_halvings = max(max_halvings, state["max_halvings_used"])
         traces[rate] = trace
 
     def compare(coarse_rate: int, fine_rate: int) -> dict:
@@ -73,6 +79,7 @@ def convergence_grid() -> dict:
             "total_steps": sum(len(trace) for trace in traces.values()),
             "max_kcl_residual_a": residual_max,
             "max_newton_iterations": iteration_max,
+            "max_halvings_used": max_halvings,
             "coarse_to_medium": low,
             "medium_to_fine": high,
             "max_error_ratios": {name: low[name]["max_abs_error_v"]
