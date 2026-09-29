@@ -1,0 +1,29 @@
+{
+  "source": "SVC-9 Fig. 9-8 circuit 11 board 3 headphone amplifier, PDF p. 10 (SVC-204D PDF p. 66)",
+  "rails": {"BOARD3_PIN18": -10, "BOARD3_PIN21": -20, "BOARD3_PINS9_10": 0},
+  "resistors": [
+    {"ref": "R50", "ohm": 6200, "between": ["Q16_BASE", "MINUS_10"]},
+    {"ref": "R53", "ohm": 24000, "between": ["Q16_BASE", "GROUND"]},
+    {"ref": "R36", "ohm": 390, "between": ["Q16_EMITTER_DIODE_TOP", "Q11_BASE"]},
+    {"ref": "R44", "ohm": 10, "between": ["MINUS_20", "Q11_COLLECTOR"]},
+    {"ref": "R33", "ohm": 4.7, "between": ["Q11_EMITTER", "AMP_OUTPUT_BEFORE_C21"]},
+    {"ref": "R32", "ohm": 4.7, "between": ["AMP_OUTPUT_BEFORE_C21", "Q10_EMITTER"]},
+    {"ref": "R35", "ohm": 390, "between": ["DIODE_BOTTOM", "Q10_BASE"]},
+    {"ref": "R49", "ohm": 1200, "between": ["DIODE_BOTTOM", "GROUND"]},
+    {"ref": "R40", "ohm": 10, "between": ["Q10_COLLECTOR", "GROUND"]}
+  ],
+  "capacitors": [
+    {"ref": "C19", "farad": 2.5e-6, "between": ["BOARD3_PIN7", "Q16_BASE"]},
+    {"ref": "C15", "farad": 220e-12, "between": ["Q10_BASE", "Q10_COLLECTOR"]},
+    {"ref": "C21", "farad": 400e-6, "between": ["AMP_OUTPUT_BEFORE_C21", "BOARD3_PIN8"]}
+  ],
+  "active_devices": [
+    {"ref": "Q16", "marking": "TIS-93", "base": "Q16_BASE", "collector": "MINUS_20", "emitter": "Q16_EMITTER_DIODE_TOP"},
+    {"ref": "Q11", "marking": "TIS-93", "base": "Q11_BASE", "collector": "Q11_COLLECTOR", "emitter": "Q11_EMITTER"},
+    {"ref": "Q10", "marking": "TIS-92", "base": "Q10_BASE", "collector": "Q10_COLLECTOR", "emitter": "Q10_EMITTER"},
+    {"ref": "CR2", "marking": "1N458A", "cathode": "Q16_EMITTER_DIODE_TOP", "anode": "DIODE_MIDDLE"},
+    {"ref": "CR1", "marking": "1N458A", "cathode": "DIODE_MIDDLE", "anode": "DIODE_BOTTOM"}
+  ],
+  "scope": "Schematic connectivity and Q16 base passive DC Thevenin boundary; active device currents and bias must be solved together before a nonlinear transfer claim",
+  "uncertainty": "No TIS-92/TIS-93 device curves or vintage population, diode bias current, capacitor parasitics, output resistance, contact behavior or actual headphone load have been measured."
+}

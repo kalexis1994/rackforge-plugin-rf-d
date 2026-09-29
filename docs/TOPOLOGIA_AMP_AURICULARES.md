@@ -1,0 +1,12 @@
+# Etapa activa de auriculares: grafo y frontera DC
+
+La Fig. 9-8 de **SVC-9, PDF p. 10** (SVC-204D PDF p. 66), circuito 11 de placa 3, dibuja tres transistores y dos diodos entre la [entrada C19](ENTRADA_AMP_AURICULARES.md) y la [salida C21](ACOPLAMIENTO_SALIDA_AURICULARES.md). La [transcripción de conexiones](../evidence/headphone_amp_active_board3.json) fija los terminales que aparecen en el esquema:
+
+- Q16 y Q11 llevan marca **TIS-93** (PNP); Q10 lleva **TIS-92** (NPN). Q16 tiene colector a −20 V; su base recibe C19 y R50/R53. Su emisor alimenta R36=390 Ω hacia la base de Q11 y la serie CR2–CR1.
+- La rama inferior de diodos termina en R49=1,2 kΩ hacia masa y R35=390 Ω hacia base de Q10. Los diodos figuran como **1N458A**. Esta rama es parte de la polarización de salida y no se reemplaza por un voltaje de diodo fijo. **CR1/CR2 de placa 3 son componentes distintos** de los [CR1/CR2 limitadores de placa 4](DIODOS_SALIDA_1N458A.md), aunque repitan designadores y tipo.
+- Q11 tiene colector a −20 V por R44=10 Ω y emisor a la salida común por R33=4,7 Ω. Q10 tiene colector a masa por R40=10 Ω y emisor a esa salida por R32=4,7 Ω. C15=220 pF une base y colector de Q10. C21 arranca en la unión de R33/R32.
+- Los rieles indicados son pin 18 = −10 V, pin 21 = −20 V y pines 9/10 = masa. Estos son valores nominales del esquema; no hay medición de regulación o rizado en un ejemplar.
+
+Como **frontera DC anterior a la solución activa**, C19 queda abierto. La base de Q16 tiene `R_Th = R50 ∥ R53 = 4927,15 Ω` y, si su corriente es cero, `V_Th = (−10/R50)/(1/R50+1/R53) = −7,9470 V`. Para una corriente de base impuesta `I_B` **saliendo** del nodo, la [referencia de sesgo](../tools/headphone_amp_bias_reference.py) calcula `V_B = V_Th − I_B R_Th`. Por ejemplo, `I_B=+10 µA` desplaza `V_B` `−49,27 mV`. El signo real y magnitud de `I_B` deben salir del modelo PNP, y la pequeña perturbación no es una estimación de una placa concreta.
+
+Las [pruebas](../tests/test_headphone_amp_bias_reference.py) conservan KCL para corrientes positivas y negativas, verifican el límite de base abierta y el desplazamiento de Thévenin. Aún falta resolver simultáneamente Q16, Q11, Q10, CR1/CR2, R33/R32 y la carga reflejada por C21. El grafo de componentes no demuestra el punto de reposo, clase de operación, distorsión, potencia entregada ni sonido. Los parámetros y la variación de los TIS vintage siguen sin medir; una ficha técnica de familia sólo daría límites de diseño, no una curva de este instrumento.
