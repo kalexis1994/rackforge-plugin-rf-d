@@ -5,6 +5,7 @@
 //! The processing path uses fixed stack arrays and has no I/O or allocation.
 
 pub mod output;
+pub mod output_conversion;
 pub mod panel;
 
 const N: usize = 12;

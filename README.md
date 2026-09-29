@@ -24,7 +24,7 @@ El [objetivo técnico](docs/OBJETIVO.md) define qué queda dentro de la emulaci�
 
 La [derivación parcial de VCO 1](docs/VCO1_CA3046.md) explica los límites de la referencia ejecutable. Puede comprobarse con `python -m unittest discover -s tests -v`; no necesita instalar dependencias.
 
-La ruta experimental BUS→J7 dispone de [vectores de admisión numérica](docs/VECTORES_PORTABILIDAD_AURICULARES.md) para un futuro motor nativo completo. Ya existen un [puerto Rust de la placa 3](docs/PUERTO_NATIVO_PLACA3_AURICULARES.md), la [frontera R77/R21](docs/PUERTO_NATIVO_PANEL_AURICULARES.md) y la [salida desde C2 hasta J7](docs/PUERTO_NATIVO_C2_SALIDAS.md), contrastados con oráculos aislados. Q17_COLLECTOR sigue impuesto: aún no es una voz ni supera el gate acoplado de 62 nodos. Puede comprobarse con `cargo test --workspace`.
+La ruta experimental BUS→J7 dispone de [vectores de admisión numérica](docs/VECTORES_PORTABILIDAD_AURICULARES.md) para un futuro motor nativo completo. Ya existen un [puerto Rust de la placa 3](docs/PUERTO_NATIVO_PLACA3_AURICULARES.md), la [frontera R77/R21](docs/PUERTO_NATIVO_PANEL_AURICULARES.md), la [salida desde C2 hasta J7](docs/PUERTO_NATIVO_C2_SALIDAS.md) y un [punto DC nativo de Q1/Q12/Q17](docs/PUERTO_NATIVO_CONVERSION_SALIDA_DC.md), contrastados con oráculos independientes. Las bases de esa etapa y su acoplamiento temporal siguen pendientes: aún no es una voz ni supera el gate de 62 nodos. Puede comprobarse con `cargo test --workspace`.
 
 ## Límites de recursos
 

@@ -4,6 +4,10 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use rf_d_circuit::output::{
     initial_output_state, solve_output_boundary, solve_output_input_port, OutputBoundary,
 };
+use rf_d_circuit::output_conversion::{
+    solve_dc as solve_conversion_dc, Boundary as ConversionBoundary,
+    Parameters as ConversionParameters,
+};
 use rf_d_circuit::panel::{initial_panel_state, solve_panel_boundary, PanelBoundary};
 use rf_d_circuit::{initial_state, solve_input_port, step, Parameters, SolverBudget};
 
@@ -46,6 +50,22 @@ fn dc_initialization_and_audio_steps_do_not_allocate() {
         diode_ideality: 1.5,
     };
     let before = ALLOCATIONS.load(Ordering::Relaxed);
+    solve_conversion_dc(
+        ConversionParameters {
+            transistor_is_a: 1e-14,
+            beta_forward: 100.0,
+            beta_reverse: 5.0,
+            temperature_k: 298.15,
+            diode: None,
+        },
+        ConversionBoundary {
+            q1_base_v: 8.3,
+            q12_base_v: 7.75,
+            q17_base_v: 7.75,
+            plus_v: 10.0,
+        },
+    )
+    .expect("board-4 conversion DC");
     let mut state = initial_state(p).expect("DC initialization");
     for i in 0..1000 {
         let input = if i % 200 < 100 { 0.5 } else { -0.5 };

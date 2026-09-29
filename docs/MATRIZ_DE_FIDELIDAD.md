@@ -24,6 +24,8 @@ El [reintento por subpasos](REINTENTO_SUBPASOS_AURICULARES.md) es un experimento
 
 Los [vectores de portabilidad BUS→J7](VECTORES_PORTABILIDAD_AURICULARES.md) fijan tolerancias de equivalencia numérica para la ruta acoplada. El [puerto nativo de placa 3](PUERTO_NATIVO_PLACA3_AURICULARES.md) coincide con 192 pasos aislados, la [frontera R77/R21→placa 3](PUERTO_NATIVO_PANEL_AURICULARES.md) con 96 pasos y la [salida C2→J7](PUERTO_NATIVO_C2_SALIDAS.md) con otros 96. Q17_COLLECTOR sigue impuesto; todavía no pasan el gate de 62 nodos ni aportan evidencia de fidelidad sonora.
 
+El [punto DC nativo de Q1/Q12/Q17](PUERTO_NATIVO_CONVERSION_SALIDA_DC.md) reproduce tres escenarios condicionados de placa 4 y puede inicializar el lado izquierdo de C2. Las bases y los parámetros de semiconductor siguen impuestos; el acoplamiento temporal con C2 y los VCA no está cerrado.
+
 En el ladder, la [columna resistiva DC](COLUMNA_RESISTIVA_LADDER_DC.md), las [pilas activas](PILAS_ACTIVAS_LADDER_DC.md) y el [cierre Ebers–Moll de 16 nodos](LADDER_EBERS_MOLL_DC.md) están trazados. El cálculo condicionado incluye corrientes de tap y conducción base colector; un [barrido de 72 supuestos](BARRIDO_SESGO_LADDER_DC.md) comprueba el límite activo. Transferencia temporal y audio permanecen desconocidos, así como β inverso y el valor físico de R61.
 
 RF-D **pretende** recrear un Model D clásico. No hay aún una implementación sonora ni resultados de comparación que permitan afirmar fidelidad.

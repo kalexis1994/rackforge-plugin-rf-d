@@ -1,0 +1,117 @@
+{
+  "schema": "rf-d/output-conversion-dc-vectors/v1",
+  "sources": [
+    "SVC-9 Fig. 9-11 PDF p. 13",
+    "SVC-9 Table 7-8 PDF pp. 30-31"
+  ],
+  "node_order": [
+    "Q1_EMITTER",
+    "Q1_COLLECTOR",
+    "Q12_EMITTER",
+    "Q17_EMITTER",
+    "Q12_COLLECTOR",
+    "Q17_COLLECTOR"
+  ],
+  "method": "isolated six-node Ebers-Moll DC, bases imposed, C2/C4 open",
+  "units": {
+    "voltage": "V",
+    "current": "A",
+    "temperature": "K"
+  },
+  "cases": [
+    {
+      "id": "nominal_open",
+      "boundary": {
+        "q1_base_v": 8.3,
+        "q12_base_v": 7.75,
+        "q17_base_v": 7.75,
+        "plus_v": 10.0
+      },
+      "parameters": {
+        "is_a": 1e-14,
+        "beta_forward": 100.0,
+        "beta_reverse": 5.0,
+        "temperature_k": 298.15,
+        "diode_model": null
+      },
+      "node_v": [
+        9.021383171506091,
+        8.517393024336027,
+        8.453318782971008,
+        8.453318782971008,
+        5.260865023934386,
+        5.260865023934386
+      ],
+      "max_kcl_residual_a": 4.388850394221322e-15,
+      "diode_currents_a": {
+        "CR1": 0.0,
+        "CR2": 0.0
+      }
+    },
+    {
+      "id": "nominal_diode",
+      "boundary": {
+        "q1_base_v": 8.3,
+        "q12_base_v": 7.75,
+        "q17_base_v": 7.75,
+        "plus_v": 10.0
+      },
+      "parameters": {
+        "is_a": 1e-14,
+        "beta_forward": 100.0,
+        "beta_reverse": 5.0,
+        "temperature_k": 298.15,
+        "diode_model": {
+          "is_a": 1.293303751274349e-09,
+          "ideality": 1.5
+        }
+      },
+      "node_v": [
+        9.021383171506091,
+        8.517393024336027,
+        8.453318782971008,
+        8.453318782971008,
+        5.260865023934386,
+        5.260865023934386
+      ],
+      "max_kcl_residual_a": 4.388850394221322e-15,
+      "diode_currents_a": {
+        "CR1": -1.293303751274349e-09,
+        "CR2": -1.293303751274349e-09
+      }
+    },
+    {
+      "id": "cool_unbalanced",
+      "boundary": {
+        "q1_base_v": 8.35,
+        "q12_base_v": 7.8,
+        "q17_base_v": 7.65,
+        "plus_v": 10.0
+      },
+      "parameters": {
+        "is_a": 1e-14,
+        "beta_forward": 100.0,
+        "beta_reverse": 5.0,
+        "temperature_k": 285.0,
+        "diode_model": {
+          "is_a": 5.594118074984015e-10,
+          "ideality": 1.5
+        }
+      },
+      "node_v": [
+        9.039117202868523,
+        8.45356833160915,
+        8.437825579977503,
+        8.343484846632586,
+        1.2925707690812684,
+        8.312014976436032
+      ],
+      "max_kcl_residual_a": 6.002143226879753e-16,
+      "diode_currents_a": {
+        "CR1": -5.594118074984015e-10,
+        "CR2": -5.594118074984015e-10
+      }
+    }
+  ],
+  "interpretation": "Conditional laboratory parameters; no measured 2N4058 population."
+}
