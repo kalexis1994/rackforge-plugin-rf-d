@@ -1,0 +1,32 @@
+{
+  "sources": ["SVC-9 Fig. 9-8 PDF p. 10", "SVC-9 Fig. 9-11 PDF p. 13", "SVC-9 Fig. 9-17 PDF p. 19"],
+  "assumed_grid": {
+    "bus_peak_v": [0.1, 1.0],
+    "dt_s": [2.0833333333333333e-5, 1.0416666666666666e-5],
+    "sw18_on": [false, true],
+    "tip_ring_ohm": [null, 32],
+    "steps_per_scenario": 16,
+    "r20_wiper_to_ground_ohm": 2500,
+    "r21_wiper_to_ground_ohm": 2000,
+    "hi_load_ohm": 10000,
+    "lo_load_ohm": 100000,
+    "r14_pin7_to_pin6_ohm": 0,
+    "r73_bottom_side_to_wiper_ohm": 500,
+    "r61_ohm_schematic_candidate": 200,
+    "first_loudness_v": 2,
+    "second_loudness_base_v": 2,
+    "first_balance_left_ohm": 12.5,
+    "second_balance_left_ohm": 50,
+    "board4_is_a": 1e-14,
+    "board4_beta_forward": 100,
+    "board4_beta_reverse": 5,
+    "board3_is_a": 1e-14,
+    "board3_beta_forward": 160,
+    "board3_beta_reverse": 5,
+    "temperature_k": 298.15,
+    "diode_ideality": 1.5,
+    "diode_forward_voltage_at_100ma_v": 0.7
+  },
+  "ramp": "BUS = peak * min(step_index / 7, 1), step_index=0..15; fresh DC state per scenario",
+  "interpretation": "Numerical stress scenarios, not a distribution of vintage parts, real BUS voltages or a measured headphone load. Runtime depends on host and Python environment."
+}
