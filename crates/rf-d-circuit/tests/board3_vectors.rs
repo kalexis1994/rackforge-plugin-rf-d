@@ -1,4 +1,4 @@
-use rf_d_circuit::{step, Parameters, SolverBudget, State, StepError, NODE_NAMES};
+use rf_d_circuit::{initial_state, step, Parameters, SolverBudget, State, StepError, NODE_NAMES};
 use serde_json::Value;
 
 fn number(v: &Value) -> f64 {
@@ -25,6 +25,44 @@ fn fixture() -> Value {
     .expect("frozen reference JSON")
 }
 
+fn parameters(v: &Value) -> Parameters {
+    Parameters {
+        transistor_is_a: number(&v["transistor_is_a"]),
+        beta_forward: number(&v["beta_forward"]),
+        beta_reverse: number(&v["beta_reverse"]),
+        temperature_k: number(&v["temperature_k"]),
+        diode_is_a: number(&v["diode_model"]["is_a"]),
+        diode_ideality: number(&v["diode_model"]["ideality"]),
+    }
+}
+
+#[test]
+fn solves_frozen_dc_initial_states() {
+    let fixture = fixture();
+    for case in fixture["cases"].as_array().unwrap() {
+        let state = initial_state(parameters(&case["parameters"]))
+            .unwrap_or_else(|e| panic!("{} DC initialization: {e:?}", case["id"]));
+        let expected_nodes = nodes(&case["initial"]["node_v"]);
+        let expected_caps = capacitors(&case["initial"]["capacitor_v"]);
+        for (i, expected) in expected_nodes.iter().enumerate() {
+            assert!(
+                (state.node_v[i] - expected).abs() < 1e-8,
+                "{} DC node {}",
+                case["id"],
+                NODE_NAMES[i]
+            );
+        }
+        for (i, expected) in expected_caps.iter().enumerate() {
+            assert!(
+                (state.capacitor_v[i] - expected).abs() < 1e-8,
+                "{} DC capacitor {}",
+                case["id"],
+                i
+            );
+        }
+    }
+}
+
 #[test]
 fn follows_every_frozen_board3_step() {
     let fixture = fixture();
@@ -34,15 +72,7 @@ fn follows_every_frozen_board3_step() {
     }
     let mut checked = 0;
     for case in fixture["cases"].as_array().unwrap() {
-        let params = &case["parameters"];
-        let p = Parameters {
-            transistor_is_a: number(&params["transistor_is_a"]),
-            beta_forward: number(&params["beta_forward"]),
-            beta_reverse: number(&params["beta_reverse"]),
-            temperature_k: number(&params["temperature_k"]),
-            diode_is_a: number(&params["diode_model"]["is_a"]),
-            diode_ideality: number(&params["diode_model"]["ideality"]),
-        };
+        let p = parameters(&case["parameters"]);
         let mut state = State {
             node_v: nodes(&case["initial"]["node_v"]),
             capacitor_v: capacitors(&case["initial"]["capacitor_v"]),
@@ -91,15 +121,7 @@ fn follows_every_frozen_board3_step() {
 fn invalid_input_and_budget_failure_preserve_state() {
     let fixture = fixture();
     let case = &fixture["cases"][0];
-    let params = &case["parameters"];
-    let p = Parameters {
-        transistor_is_a: number(&params["transistor_is_a"]),
-        beta_forward: number(&params["beta_forward"]),
-        beta_reverse: number(&params["beta_reverse"]),
-        temperature_k: number(&params["temperature_k"]),
-        diode_is_a: number(&params["diode_model"]["is_a"]),
-        diode_ideality: number(&params["diode_model"]["ideality"]),
-    };
+    let p = parameters(&case["parameters"]);
     let mut state = State {
         node_v: nodes(&case["initial"]["node_v"]),
         capacitor_v: capacitors(&case["initial"]["capacitor_v"]),

@@ -443,3 +443,55 @@ pub fn step(
     }
     Err(StepError::IterationBudget)
 }
+
+/// Solve the conditional DC operating point with pin 7 at zero and J7
+/// connected to its 390-ohm shunt. Capacitors are open at DC and receive the
+/// voltage difference of their terminals. This is not a vintage calibration.
+pub fn initial_state(p: Parameters) -> Result<State, StepError> {
+    // The eleven-node seed is documented in the Python DC reference. Its
+    // numerical value is only a solver starting point, never an audio constant.
+    let mut state = State {
+        node_v: [
+            -8.0, -7.3, -6.7, -6.1, -7.4, -19.9, -6.7, -6.1, -0.1, -6.8, -6.7, 0.0,
+        ],
+        capacitor_v: [0.0; 3],
+    };
+    let budget = SolverBudget::default();
+    let load_g = validate(&state, p, 0.0, 1.0, None, None, budget)?;
+    // Infinite step opens all capacitors. This is an internal DC stamp; the
+    // public transient step requires a finite positive time interval.
+    let dc = Boundary {
+        pin7_v: 0.0,
+        dt_s: f64::INFINITY,
+        load_g,
+        previous_cap_v: [0.0; 3],
+        p,
+    };
+    let mut x = state.node_v;
+    for _ in 0..budget.iterations {
+        let (residual, jacobian) = evaluate(&x, dc)?;
+        let error = max_abs(&residual);
+        if error < 1e-11 {
+            state.node_v = x;
+            state.capacitor_v = [-x[0], x[7] - x[8], x[10] - x[J7]];
+            return Ok(state);
+        }
+        let direction = solve(jacobian, residual.map(|v| -v))?;
+        let mut accepted = false;
+        for power in 0..budget.line_search_halvings {
+            let scale = 0.5_f64.powi(power as i32);
+            let trial = std::array::from_fn(|i| x[i] + scale * direction[i]);
+            if let Ok((candidate, _)) = evaluate(&trial, dc) {
+                if max_abs(&candidate) < error {
+                    x = trial;
+                    accepted = true;
+                    break;
+                }
+            }
+        }
+        if !accepted {
+            return Err(StepError::NoDecrease);
+        }
+    }
+    Err(StepError::IterationBudget)
+}
