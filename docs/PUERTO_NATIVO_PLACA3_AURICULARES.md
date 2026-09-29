@@ -11,3 +11,19 @@ El paso integra C19 `2,5 µF`, C15 `220 pF` y C21 `400 µF` mediante Euler impl�
 La [herramienta de generación](../tools/headphone_board3_port_vectors.py) congela [`192 pasos`](../evidence/headphone_board3_port_vectors.json) del [oráculo Python](../tools/headphone_amp_active_transient_reference.py): 48 a 48 kHz con dos cargas de `32 Ω` y escalones bipolares, 96 a 9,6 kHz con J7 abierto y seno impuesto, y 48 a 4,8 kHz con cargas de `32 Ω` a `285 K`. Cada paso registra los 12 nodos, tres tensiones de capacitor y residuo. La [regresión Rust](../crates/rf-d-circuit/tests/board3_vectors.rs) exige error absoluto `<1 µV` en cada nodo y estado y KCL `<10⁻¹⁰ A`, además de comprobar que un paso fallido no muta el estado. Estas tolerancias se refieren sólo a la **equivalencia numérica** con el oráculo condicionado. El gate BUS→J7 de 62 nodos sigue [definido por separado](VECTORES_PORTABILIDAD_AURICULARES.md).
 
 Para comprobar este bloque: `cargo test --workspace`. Para toda la investigación Python: `python -m unittest discover -s tests`.
+
+## Coste local y asignaciones
+
+La [prueba de asignaciones](../crates/rf-d-circuit/tests/no_alloc.rs) intercepta el asignador global de su proceso: el arranque DC más `1000` pasos bipolares de placa 3 con dos cargas de `32 Ω` generaron **cero asignaciones** de heap. No se extiende esta afirmación a un adaptador de host o a otros circuitos.
+
+La [sonda reproducible](../crates/rf-d-circuit/examples/bench_board3.rs) ejecuta `cargo run --release -p rf-d-circuit --example bench_board3`. Una pasada de calentamiento y una medida de **48 000 muestras** por escena usan bloques de 64 muestras a 48 kHz, temperatura `300 K`, `I_S(BJT)=10⁻¹⁴ A`, `β_F=160`, `β_R=5`, diodos `n=1,5` con `I_S=1,4465886434575519·10⁻⁹ A`, y entrada senoidal de `100 Hz` que invierte polaridad a mitad de la escena. La generación de la entrada y la llamada a `step` quedan dentro del tiempo medido; el acumulado y la ordenación de duraciones quedan fuera. El presupuesto de audio teórico por bloque es `1333,3 µs`.
+
+Una ejecución local en Windows, **AMD Ryzen 5 5600X**, `rustc 1.97.0`, build `--release`, produjo:
+
+| Escena | Media/bloque | p99/bloque | Máximo/bloque | Iteraciones Newton media/máxima | Fallos |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| J7 32 Ω + 32 Ω, 0,5 V pico | 288,3 µs | 382,9 µs | 574,6 µs | 2,49 / 3 | 0 |
+| J7 abierto, 0,5 V pico | 244,2 µs | 317,3 µs | 667,4 µs | 1,99 / 3 | 0 |
+| J7 32 Ω + 32 Ω, 1 V pico | 293,5 µs | 359,5 µs | 685,2 µs | 2,55 / 3 | 0 |
+
+El mayor residuo KCL reportado fue `<10⁻¹⁰ A` en las tres escenas. Estos máximos son **observaciones de una corrida**, sensibles a planificación del sistema operativo y equipo. La placa 3 aislada consume una fracción importante del presupuesto, y habrá que medir de nuevo al acoplarla a los otros 50 nodos y al host, con la frecuencia interna y calidad de audio previstas. No se infiere un deadline garantizado ni la conveniencia de ejecutar el solver completo a cada muestra.
