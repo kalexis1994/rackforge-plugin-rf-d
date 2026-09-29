@@ -32,8 +32,8 @@ def _scenario() -> dict:
     return grid
 
 
-def stress_grid() -> dict:
-    scenario = _scenario()
+def reference_dc(scenario: dict) -> dict:
+    """Common imposed board-4 DC condition for headphone experiments."""
     is_a = scenario["board4_is_a"]
     beta = scenario["board4_beta_forward"]
     reverse = scenario["board4_beta_reverse"]
@@ -76,6 +76,12 @@ def stress_grid() -> dict:
                 beta_forward=scenario["board3_beta_forward"],
                 beta_reverse=scenario["board3_beta_reverse"],
                 temperature_k=temp, diode_model=diode)
+    return base
+
+
+def stress_grid() -> dict:
+    scenario = _scenario()
+    base = reference_dc(scenario)
     panel = dict(r14_pin7_to_pin6_ohm=scenario["r14_pin7_to_pin6_ohm"],
                  r73_bottom_side_to_wiper_ohm=scenario["r73_bottom_side_to_wiper_ohm"],
                  r20_wiper_to_ground_ohm=scenario["r20_wiper_to_ground_ohm"],
