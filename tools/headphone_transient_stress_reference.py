@@ -79,7 +79,9 @@ def reference_dc(scenario: dict) -> dict:
     return base
 
 
-def stress_grid() -> dict:
+def stress_grid(*, newton_max_iterations: int = 80,
+                line_search_max_halvings: int = 32,
+                linear_solver: str = "python") -> dict:
     scenario = _scenario()
     base = reference_dc(scenario)
     panel = dict(r14_pin7_to_pin6_ohm=scenario["r14_pin7_to_pin6_ohm"],
@@ -95,6 +97,7 @@ def stress_grid() -> dict:
         state = initial_coupled_headphone_state(**base)
         worst_kcl = 0.0
         max_iterations = 0
+        max_halvings = 0
         max_j7 = 0.0
         start = perf_counter()
         for index in range(scenario["steps_per_scenario"]):
@@ -103,9 +106,12 @@ def stress_grid() -> dict:
                 **base, **panel, previous_state=state,
                 bus_v=bus, dt_s=dt,
                 tip_load_ohm=load, ring_load_ohm=load,
-                sw18_on=switch)
+                sw18_on=switch, linear_solver=linear_solver,
+                newton_max_iterations=newton_max_iterations,
+                line_search_max_halvings=line_search_max_halvings)
             worst_kcl = max(worst_kcl, state["max_charge_kcl_residual_a"])
             max_iterations = max(max_iterations, state["iterations"])
+            max_halvings = max(max_halvings, state["max_halvings_used"])
             max_j7 = max(max_j7, abs(state["j7_tip_v"]))
             if not all(math.isfinite(value) for value in state["node_v"]):
                 raise ValueError("nonfinite transient state")
@@ -115,12 +121,14 @@ def stress_grid() -> dict:
                      "steps": scenario["steps_per_scenario"],
                      "max_kcl_residual_a": worst_kcl,
                      "max_newton_iterations": max_iterations,
+                     "max_halvings_used": max_halvings,
                      "max_abs_j7_v": max_j7,
                      "elapsed_s": elapsed,
                      "mean_step_s": elapsed/scenario["steps_per_scenario"]})
     return {"scenario_count": len(rows), "step_count": sum(r["steps"] for r in rows),
             "max_kcl_residual_a": max(r["max_kcl_residual_a"] for r in rows),
             "max_newton_iterations": max(r["max_newton_iterations"] for r in rows),
+            "max_halvings_used": max(r["max_halvings_used"] for r in rows),
             "total_elapsed_s": sum(r["elapsed_s"] for r in rows),
             "rows": rows,
             "interpretation": "Numerical stress only; timing is host-dependent and no vintage audio is measured."}

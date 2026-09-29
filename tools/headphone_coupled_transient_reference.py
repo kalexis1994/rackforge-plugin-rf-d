@@ -33,6 +33,18 @@ SCALES = ([1e-5]*5 + [1e-7]*3 + [1e-7]*8
           + [1e-3]*6 + [1e-3]*8 + [1e-3]*14)
 
 
+class HeadphoneStepConvergenceError(ValueError):
+    """A bounded Newton step failed without changing its input state."""
+
+    def __init__(self, reason: str, *, iteration: int,
+                 scaled_residual: float):
+        super().__init__(f"{reason} at iteration {iteration}; "
+                         f"scaled KCL residual={scaled_residual:.6g}")
+        self.reason = reason
+        self.iteration = iteration
+        self.scaled_residual = scaled_residual
+
+
 def initial_coupled_headphone_state(*, ladder_dc: dict, recovery_dc: dict,
                                     cascaded_output_dc: dict,
                                     transistor_is_a: float,
@@ -74,7 +86,9 @@ def nonlinear_coupled_headphone_step(*, ladder_dc: dict,
                                      sw18_on: bool = True,
                                      c10_farads: float | None = None,
                                      jacobian_method: str = "hybrid",
-                                     linear_solver: str = "python") -> dict:
+                                     linear_solver: str = "python",
+                                     newton_max_iterations: int = 80,
+                                     line_search_max_halvings: int = 32) -> dict:
     """One simultaneous implicit step; no imposed R21 wiper resistance."""
     old_v = previous_state["node_v"]
     old_amp_cap = previous_state["amp_capacitor_v"]
@@ -88,7 +102,11 @@ def nonlinear_coupled_headphone_step(*, ladder_dc: dict,
                 r73_bottom_side_to_wiper_ohm))
             or dt_s <= 0 or not isinstance(sw18_on, bool)
             or jacobian_method not in ("hybrid", "finite_difference")
-            or linear_solver not in ("python", "numpy")):
+            or linear_solver not in ("python", "numpy")
+            or type(newton_max_iterations) is not int
+            or not 1 <= newton_max_iterations <= 80
+            or type(line_search_max_halvings) is not int
+            or not 1 <= line_search_max_halvings <= 32):
         raise ValueError("finite complete 62-node state and valid step required")
     c10_nominal, r14_total, r73_total, r76 = regeneration_values()
     c10 = c10_nominal if c10_farads is None else c10_farads
@@ -191,7 +209,8 @@ def nonlinear_coupled_headphone_step(*, ladder_dc: dict,
                           "upstream_devices": devices}
 
     x = list(old_v)
-    for iteration in range(80):
+    max_halvings_used = 0
+    for iteration in range(newton_max_iterations):
         residual, parts = evaluate(x)
         error = max(abs(v/scale) for v, scale in zip(residual, SCALES))
         if max(abs(v) for v in residual) < 1e-10 and error < 1e-3:
@@ -241,7 +260,7 @@ def nonlinear_coupled_headphone_step(*, ladder_dc: dict,
         direction = solve_headphone_linear(
             jacobian, [-v/scale for v, scale in zip(residual, SCALES)],
             method=linear_solver)
-        for power in range(32):
+        for power in range(line_search_max_halvings):
             trial = [v+0.5**power*dv for v, dv in zip(x, direction)]
             try:
                 next_residual, _ = evaluate(trial)
@@ -249,11 +268,16 @@ def nonlinear_coupled_headphone_step(*, ladder_dc: dict,
                 continue
             if max(abs(v/scale) for v, scale in zip(next_residual, SCALES)) < error:
                 x = trial
+                max_halvings_used = max(max_halvings_used, power)
                 break
         else:
-            raise ValueError("coupled headphone Newton iteration did not decrease KCL")
+            raise HeadphoneStepConvergenceError(
+                "line search exhausted without KCL decrease",
+                iteration=iteration, scaled_residual=error)
     else:
-        raise ValueError("coupled headphone Newton iteration did not converge")
+        raise HeadphoneStepConvergenceError(
+            "Newton iteration budget exhausted",
+            iteration=newton_max_iterations, scaled_residual=error)
     residual, parts = evaluate(x)
     pin21 = x[47]*main_load/(out_r["R75"]+main_load)
     hi = pin21*reduced["hi_to_pin21_ratio"] if sw18_on else 0.0
@@ -275,6 +299,9 @@ def nonlinear_coupled_headphone_step(*, ladder_dc: dict,
             "c21_current_a": parts["cap_currents"]["C21"],
             "max_charge_kcl_residual_a": max(abs(v) for v in residual),
             "iterations": iteration, "sw18_on_imposed": sw18_on,
+            "max_halvings_used": max_halvings_used,
+            "newton_max_iterations": newton_max_iterations,
+            "line_search_max_halvings": line_search_max_halvings,
             "jacobian_method": jacobian_method,
             "linear_solver": linear_solver,
             "offline_reference_only": True}

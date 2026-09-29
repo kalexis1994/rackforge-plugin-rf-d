@@ -18,6 +18,8 @@ La [malla temporal de 15 supuestos de semiconductores y temperatura](SENSIBILIDA
 
 El [solver denso NumPy opcional](SOLVER_DENSO_AURICULARES.md) acelera esos barridos offline y fue cotejado contra la ruta Python; no es aún una implementación DSP de tiempo real.
 
+Un [presupuesto Newton 16/16](PRESUPUESTO_NEWTON_AURICULARES.md) cerró KCL en 1024 pasos sintéticos de salida. La política de fallo y el cumplimiento de plazos en DSP nativo siguen pendientes.
+
 En el ladder, la [columna resistiva DC](COLUMNA_RESISTIVA_LADDER_DC.md), las [pilas activas](PILAS_ACTIVAS_LADDER_DC.md) y el [cierre Ebers–Moll de 16 nodos](LADDER_EBERS_MOLL_DC.md) están trazados. El cálculo condicionado incluye corrientes de tap y conducción base colector; un [barrido de 72 supuestos](BARRIDO_SESGO_LADDER_DC.md) comprueba el límite activo. Transferencia temporal y audio permanecen desconocidos, así como β inverso y el valor físico de R61.
 
 RF-D **pretende** recrear un Model D clásico. No hay aún una implementación sonora ni resultados de comparación que permitan afirmar fidelidad.

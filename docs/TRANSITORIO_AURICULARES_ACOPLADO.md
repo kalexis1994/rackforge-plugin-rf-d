@@ -13,3 +13,5 @@ Quedan pendientes un barrido temporal de estímulos y condiciones que ejercite s
 La ruta anterior de **62 columnas numéricas** se conserva mediante `jacobian_method="finite_difference"` para [comparar trazas completas](COMPARACION_JACOBIAN_AURICULARES.md) con el modo híbrido predeterminado. Ese cotejo incluye excitación bipolar, SW18 y cambios de carga; no sustituye una validación física.
 
 Para barridos offline largos puede elegirse el [solver lineal NumPy opcional](SOLVER_DENSO_AURICULARES.md) mediante `linear_solver="numpy"`. El valor predeterminado `"python"` conserva la ruta portable y ambas soluciones se contrastan con las mismas trazas y KCL.
+
+Los argumentos `newton_max_iterations` y `line_search_max_halvings` permiten un [presupuesto explícito](PRESUPUESTO_NEWTON_AURICULARES.md) con falla diagnosticada y sin mutación del estado anterior cuando se agota. El ensayo `16/16` de 1024 pasos es una observación del dominio declarado, no garantía de convergencia universal ni de tiempo real.

@@ -16,7 +16,9 @@ from headphone_transient_stress_reference import _scenario, reference_dc
 EVIDENCE = Path(__file__).resolve().parents[1] / "evidence" / "headphone_transient_bipolar_grid.json"
 
 
-def bipolar_stress() -> dict:
+def bipolar_stress(*, newton_max_iterations: int = 80,
+                   line_search_max_halvings: int = 32,
+                   linear_solver: str = "python") -> dict:
     config = json.loads(EVIDENCE.read_text(encoding="utf-8"))["scenario"]
     if (config["dt_s"] != [1/48000, 1/4800]
             or config["bus_segments"] != [[1.0, 32], [-1.0, 32],
@@ -44,6 +46,7 @@ def bipolar_stress() -> dict:
         j7 = []
         kcl_max = 0.0
         iteration_max = 0
+        max_halvings = 0
         off_hi_max = 0.0
         start = perf_counter()
         for bus_v, sw18_on in zip(bus, switches):
@@ -51,10 +54,13 @@ def bipolar_stress() -> dict:
                 **base, **panel, previous_state=state,
                 bus_v=bus_v, dt_s=dt,
                 tip_load_ohm=load, ring_load_ohm=load,
-                sw18_on=sw18_on)
+                sw18_on=sw18_on, linear_solver=linear_solver,
+                newton_max_iterations=newton_max_iterations,
+                line_search_max_halvings=line_search_max_halvings)
             j7.append(state["j7_tip_v"])
             kcl_max = max(kcl_max, state["max_charge_kcl_residual_a"])
             iteration_max = max(iteration_max, state["iterations"])
+            max_halvings = max(max_halvings, state["max_halvings_used"])
             if not sw18_on:
                 off_hi_max = max(off_hi_max, abs(state["j4_hi_v"]),
                                  abs(state["j5_lo_v"]))
@@ -65,10 +71,12 @@ def bipolar_stress() -> dict:
                      "last_j7_v": j7[-1],
                      "max_kcl_residual_a": kcl_max,
                      "max_newton_iterations": iteration_max,
+                     "max_halvings_used": max_halvings,
                      "max_off_hi_lo_v": off_hi_max,
                      "elapsed_s": perf_counter()-start})
     return {"scenario_count": len(rows),
             "step_count": len(bus)*len(rows),
+            "max_halvings_used": max(row["max_halvings_used"] for row in rows),
             "rows": rows,
             "interpretation": "Numerical bipolar/switching stress only; no audio fidelity inference."}
 
