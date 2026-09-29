@@ -1,6 +1,7 @@
 use std::alloc::{GlobalAlloc, Layout, System};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
+use rf_d_circuit::panel::{initial_panel_state, solve_panel_boundary, PanelBoundary};
 use rf_d_circuit::{initial_state, solve_input_port, step, Parameters, SolverBudget};
 
 struct CountingAllocator;
@@ -69,6 +70,23 @@ fn dc_initialization_and_audio_steps_do_not_allocate() {
         )
         .expect("dynamic C19 port")
         .next_state;
+    }
+    let mut panel = initial_panel_state(p).expect("panel DC initialization");
+    for i in 0..100 {
+        let source = if i % 20 < 10 { 0.1 } else { -0.1 };
+        solve_panel_boundary(
+            &mut panel,
+            p,
+            PanelBoundary {
+                c2_right_v: source,
+                r21_lower_ohm: 2000.0,
+                dt_s: 1.0 / 48000.0,
+                tip_load_ohm: Some(32.0),
+                ring_load_ohm: Some(32.0),
+            },
+            SolverBudget::default(),
+        )
+        .expect("panel and board-3 step");
     }
     let after = ALLOCATIONS.load(Ordering::Relaxed);
     assert_eq!(after - before, 0, "processing allocated heap memory");
