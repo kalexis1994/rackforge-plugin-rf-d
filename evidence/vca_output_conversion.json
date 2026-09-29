@@ -1,0 +1,26 @@
+{
+  "source": {"id": "SVC-9", "schematic": "Fig. 9-11, PDF p. 13", "parts": "Table 7-8, PDF pp. 30-31", "functional": "SVC-204D section 2.9, PDF p. 12"},
+  "scope": "Board 4 output conversion; Q12/Q17 bases and Q1 base can be imposed for isolated DC",
+  "devices": {"Q1": "PNP 2N4058", "Q12": "PNP 2N4058", "Q17": "PNP 2N4058", "CR1": "1N458A", "CR2": "1N458A"},
+  "base_connections": {"Q12_BASE": "Q14_COLLECTOR", "Q17_BASE": "Q13_COLLECTOR", "Q1_BASE": "R10_R11_C4_JUNCTION"},
+  "resistors": [
+    {"ref": "R8", "ohm": 8.2, "between": ["Q1_COLLECTOR", "Q12_EMITTER"]},
+    {"ref": "R28", "ohm": 8.2, "between": ["Q1_COLLECTOR", "Q17_EMITTER"]},
+    {"ref": "R9", "ohm": 62, "between": ["PLUS10", "Q1_EMITTER"]},
+    {"ref": "R10", "ohm": 120, "between": ["PLUS10", "Q1_BASE"]},
+    {"ref": "R11", "ohm": 150, "between": ["Q1_BASE", "SECOND_BAL_WIPER"]},
+    {"ref": "R30", "ohm": 680, "between": ["Q12_COLLECTOR", "GROUND"]},
+    {"ref": "R29", "ohm": 680, "between": ["Q17_COLLECTOR", "GROUND"]},
+    {"ref": "R75", "ohm": 1000, "between": ["C2_RIGHT", "MAIN_OUTPUT_PIN21"]},
+    {"ref": "R77", "ohm": 1000, "between": ["C2_RIGHT", "HEADPHONE_AMP_PIN22"]}
+  ],
+  "capacitors": [
+    {"ref": "C4", "farad": 0.00022, "between": ["Q1_BASE", "PLUS10"], "positive": "PLUS10", "tolerance": "+50/-10%"},
+    {"ref": "C2", "farad": 0.00001, "between": ["Q17_COLLECTOR", "C2_RIGHT"], "positive": "Q17_COLLECTOR", "tolerance": "+50/-10%"}
+  ],
+  "diodes": [
+    {"ref": "CR1", "anode": "Q17_COLLECTOR", "cathode": "PLUS10"},
+    {"ref": "CR2", "anode": "GROUND", "cathode": "Q17_COLLECTOR"}
+  ],
+  "uncertainty": "No measured 2N4058 or 1N458A parameters, capacitor ESR/leakage, or external output termination. Original scanned schematic remains ignored locally."
+}
