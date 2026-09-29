@@ -71,7 +71,8 @@ def nonlinear_coupled_headphone_step(*, ladder_dc: dict,
                                      tip_load_ohm: float | None = None,
                                      ring_load_ohm: float | None = None,
                                      sw18_on: bool = True,
-                                     c10_farads: float | None = None) -> dict:
+                                     c10_farads: float | None = None,
+                                     jacobian_method: str = "hybrid") -> dict:
     """One simultaneous implicit step; no imposed R21 wiper resistance."""
     old_v = previous_state["node_v"]
     old_amp_cap = previous_state["amp_capacitor_v"]
@@ -83,7 +84,8 @@ def nonlinear_coupled_headphone_step(*, ladder_dc: dict,
                 previous_state["c10_capacitor_v"], previous_state["bus_v"],
                 bus_v, dt_s, r14_pin7_to_pin6_ohm,
                 r73_bottom_side_to_wiper_ohm))
-            or dt_s <= 0 or not isinstance(sw18_on, bool)):
+            or dt_s <= 0 or not isinstance(sw18_on, bool)
+            or jacobian_method not in ("hybrid", "finite_difference")):
         raise ValueError("finite complete 62-node state and valid step required")
     c10_nominal, r14_total, r73_total, r76 = regeneration_values()
     c10 = c10_nominal if c10_farads is None else c10_farads
@@ -185,31 +187,34 @@ def nonlinear_coupled_headphone_step(*, ladder_dc: dict,
         if max(abs(v) for v in residual) < 1e-10 and error < 1e-3:
             break
         jacobian = [[0.0]*NODE_COUNT for _ in range(NODE_COUNT)]
-        # Upstream 50 columns retain their numerical tangent. The board-3
-        # device columns use the exact Ebers-Moll/Shockley conductance stamp.
-        for col in range(AMP_FIRST):
+        # The full finite-difference path is retained as an independent
+        # regression oracle for the twelve exact board-3 columns.
+        numeric_columns = (AMP_FIRST if jacobian_method == "hybrid"
+                           else NODE_COUNT)
+        for col in range(numeric_columns):
             trial = x.copy()
             trial[col] += 1e-5
             high, _ = evaluate(trial)
             for row in range(NODE_COUNT):
                 jacobian[row][col] = (high[row]-residual[row])/1e-5/SCALES[row]
-        active = headphone_amp_dc_jacobian(x[AMP_FIRST:J7], **amp_params)
-        for local_row, values in enumerate(active):
-            row = AMP_FIRST+local_row
-            for local_col, value in enumerate(values):
-                jacobian[row][AMP_FIRST+local_col] = value/SCALES[row]
+        if jacobian_method == "hybrid":
+            active = headphone_amp_dc_jacobian(x[AMP_FIRST:J7], **amp_params)
+            for local_row, values in enumerate(active):
+                row = AMP_FIRST+local_row
+                for local_col, value in enumerate(values):
+                    jacobian[row][AMP_FIRST+local_col] = value/SCALES[row]
 
-        def stamp_cap(left: int, right: int, farad: float) -> None:
-            g = farad/dt_s
-            for row, col, sign in ((left, left, 1), (left, right, -1),
-                                   (right, left, -1), (right, right, 1)):
-                if col >= AMP_FIRST:
-                    jacobian[row][col] += sign*g/SCALES[row]
+            def stamp_cap(left: int, right: int, farad: float) -> None:
+                g = farad/dt_s
+                for row, col, sign in ((left, left, 1), (left, right, -1),
+                                       (right, left, -1), (right, right, 1)):
+                    if col >= AMP_FIRST:
+                        jacobian[row][col] += sign*g/SCALES[row]
 
-        stamp_cap(R21_WIPER, AMP_FIRST, amp_cap["C19"])
-        stamp_cap(AMP_FIRST+7, AMP_FIRST+8, amp_cap["C15"])
-        stamp_cap(AMP_FIRST+10, J7, amp_cap["C21"])
-        jacobian[J7][J7] += load_g/SCALES[J7]
+            stamp_cap(R21_WIPER, AMP_FIRST, amp_cap["C19"])
+            stamp_cap(AMP_FIRST+7, AMP_FIRST+8, amp_cap["C15"])
+            stamp_cap(AMP_FIRST+10, J7, amp_cap["C21"])
+            jacobian[J7][J7] += load_g/SCALES[J7]
         direction = _solve_linear(jacobian,
                                   [-v/scale for v, scale in zip(residual, SCALES)])
         for power in range(32):
@@ -246,4 +251,5 @@ def nonlinear_coupled_headphone_step(*, ladder_dc: dict,
             "c21_current_a": parts["cap_currents"]["C21"],
             "max_charge_kcl_residual_a": max(abs(v) for v in residual),
             "iterations": iteration, "sw18_on_imposed": sw18_on,
+            "jacobian_method": jacobian_method,
             "offline_reference_only": True}
