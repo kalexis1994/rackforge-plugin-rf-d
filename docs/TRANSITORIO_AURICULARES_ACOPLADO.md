@@ -15,3 +15,5 @@ La ruta anterior de **62 columnas numéricas** se conserva mediante `jacobian_me
 Para barridos offline largos puede elegirse el [solver lineal NumPy opcional](SOLVER_DENSO_AURICULARES.md) mediante `linear_solver="numpy"`. El valor predeterminado `"python"` conserva la ruta portable y ambas soluciones se contrastan con las mismas trazas y KCL.
 
 Los argumentos `newton_max_iterations` y `line_search_max_halvings` permiten un [presupuesto explícito](PRESUPUESTO_NEWTON_AURICULARES.md) con falla diagnosticada y sin mutación del estado anterior cuando se agota. El ensayo `16/16` de 3136 pasos es una observación del dominio declarado, no garantía de convergencia universal ni de tiempo real.
+
+Un [reintento offline por subdivisión](REINTENTO_SUBPASOS_AURICULARES.md) demuestra cómo recuperar un caso de estrés que supera un presupuesto más pequeño. Los medios pasos usan BUS retenido al inicio del intervalo; cambian la solución temporal y pueden multiplicar el coste, por lo que no son una política de salida de audio.
