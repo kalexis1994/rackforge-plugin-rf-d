@@ -1,7 +1,9 @@
 use std::alloc::{GlobalAlloc, Layout, System};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-use rf_d_circuit::output::{initial_output_state, solve_output_boundary, OutputBoundary};
+use rf_d_circuit::output::{
+    initial_output_state, solve_output_boundary, solve_output_input_port, OutputBoundary,
+};
 use rf_d_circuit::panel::{initial_panel_state, solve_panel_boundary, PanelBoundary};
 use rf_d_circuit::{initial_state, solve_input_port, step, Parameters, SolverBudget};
 
@@ -109,6 +111,27 @@ fn dc_initialization_and_audio_steps_do_not_allocate() {
             SolverBudget::default(),
         )
         .expect("C2, main panel and headphone step");
+    }
+    for i in 0..100 {
+        let q17 = if i % 20 < 10 { 5.1 } else { 4.9 };
+        output = solve_output_input_port(
+            &output,
+            p,
+            OutputBoundary {
+                q17_collector_v: q17,
+                r20_lower_ohm: 2500.0,
+                hi_load_ohm: 10000.0,
+                lo_load_ohm: 100000.0,
+                sw18_on: true,
+                r21_lower_ohm: 2000.0,
+                tip_load_ohm: Some(32.0),
+                ring_load_ohm: Some(32.0),
+                dt_s: 1.0 / 48000.0,
+            },
+            SolverBudget::default(),
+        )
+        .expect("Q17 C2 dynamic port")
+        .next_state;
     }
     let after = ALLOCATIONS.load(Ordering::Relaxed);
     assert_eq!(after - before, 0, "processing allocated heap memory");

@@ -50,6 +50,17 @@ pub struct OutputStepResult {
     pub panel: PanelStepResult,
 }
 
+/// Dynamic load presented to the upstream Q17 collector by C2 and both
+/// output branches. Current is positive from Q17 into C2.
+#[derive(Clone, Copy, Debug)]
+pub struct OutputInputPort {
+    pub next_state: OutputState,
+    pub output: OutputStepResult,
+    pub current_a: f64,
+    /// d(I_C2)/d(V_Q17c) at fixed previous capacitor/device state.
+    pub conductance_s: f64,
+}
+
 #[derive(Clone, Copy)]
 struct MainLoad {
     equivalent_ohm: f64,
@@ -279,4 +290,34 @@ pub fn solve_output_boundary(
         }
     }
     Err(StepError::IterationBudget)
+}
+
+/// Return a provisional output solve and its exact local input tangent.
+/// An upstream Newton must retry from the same `previous_state` on every
+/// candidate and commit `next_state` only after the joint system converges.
+pub fn solve_output_input_port(
+    previous_state: &OutputState,
+    p: Parameters,
+    b: OutputBoundary,
+    budget: SolverBudget,
+) -> Result<OutputInputPort, StepError> {
+    let mut next_state = *previous_state;
+    let output = solve_output_boundary(&mut next_state, p, b, budget)?;
+    let load = main_load(b)?;
+    let c2_g = C2_F / b.dt_s;
+    let main_g = 1.0 / (R75_OHM + load.equivalent_ohm);
+    let denominator = c2_g + main_g + output.panel.r77_input_conductance_s;
+    if !denominator.is_finite() || denominator.abs() < 1e-15 {
+        return Err(StepError::SingularJacobian);
+    }
+    let conductance_s = c2_g * (1.0 - c2_g / denominator);
+    if !conductance_s.is_finite() {
+        return Err(StepError::ExponentialDomain);
+    }
+    Ok(OutputInputPort {
+        next_state,
+        current_a: output.c2_current_a,
+        conductance_s,
+        output,
+    })
 }

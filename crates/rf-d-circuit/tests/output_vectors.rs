@@ -1,4 +1,6 @@
-use rf_d_circuit::output::{initial_output_state, solve_output_boundary, OutputBoundary};
+use rf_d_circuit::output::{
+    initial_output_state, solve_output_boundary, solve_output_input_port, OutputBoundary,
+};
 use rf_d_circuit::{Parameters, SolverBudget, StepError};
 use serde_json::Value;
 
@@ -36,6 +38,7 @@ fn c2_main_panel_and_board3_match_independent_python() {
             initial_output_state(p, number(&case["initial"]["c2_capacitor_v"])).unwrap();
         assert_eq!(state.c2_right_v, number(&case["initial"]["c2_right_v"]));
         for (index, row) in case["steps"].as_array().unwrap().iter().enumerate() {
+            let previous = state;
             let boundary = OutputBoundary {
                 q17_collector_v: number(&row["q17_collector_v"]),
                 r20_lower_ohm: number(&case["r20_lower_ohm"]),
@@ -91,6 +94,29 @@ fn c2_main_panel_and_board3_match_independent_python() {
             );
             assert!(output.panel.diagnostics.max_panel_kcl_residual_a < 1e-10);
             assert!(output.panel.diagnostics.board3.max_kcl_residual_a < 1e-10);
+            if [0usize, 8, 16, 24].contains(&index) {
+                let nominal =
+                    solve_output_input_port(&previous, p, boundary, SolverBudget::default())
+                        .unwrap();
+                assert_eq!(nominal.next_state, state);
+                assert_eq!(nominal.current_a, output.c2_current_a);
+                let h = 1e-5;
+                let mut shifted = boundary;
+                shifted.q17_collector_v += h;
+                let plus = solve_output_input_port(&previous, p, shifted, SolverBudget::default())
+                    .unwrap();
+                shifted.q17_collector_v -= 2.0 * h;
+                let minus = solve_output_input_port(&previous, p, shifted, SolverBudget::default())
+                    .unwrap();
+                let finite_difference = (plus.current_a - minus.current_a) / (2.0 * h);
+                assert!(
+                    (nominal.conductance_s - finite_difference).abs()
+                        < 1e-9 + 1e-5 * finite_difference.abs(),
+                    "{} step {index} Q17 input admittance: {} vs {finite_difference}",
+                    case["id"],
+                    nominal.conductance_s
+                );
+            }
             count += 1;
         }
     }

@@ -22,3 +22,9 @@ La [sonda de coste](../crates/rf-d-circuit/examples/bench_output.rs) midió una 
 | C2_RIGHT eliminado por KCL | 602,4 µs | 667,7 µs | 834,2 µs | 0 |
 
 El plazo teórico de ese bloque es `1333,3 µs`. La [sonda de traza](../crates/rf-d-circuit/examples/trace_output.rs) guardó las tres salidas de las 48 000 muestras antes y después de la reducción. Las diferencias máximas fueron `4,25×10⁻¹² V` en J7, `1,85×10⁻¹¹ V` en HI y `5,40×10⁻¹³ V` en LO; los RMS de diferencia fueron `8,81×10⁻¹³`, `3,80×10⁻¹²` y `1,11×10⁻¹³ V`, respectivamente. La [regresión de 96 pasos](../crates/rf-d-circuit/tests/output_vectors.rs) siguió pasando. Son comparaciones **numéricas**, no un juicio perceptual. Los máximos corresponden a una sola corrida de cada variante y no garantizan plazos en otro equipo, en el host o con los 47 nodos faltantes.
+
+## Puerto de carga hacia Q17
+
+El [puerto de entrada de salida](../crates/rf-d-circuit/src/output.rs) entrega el estado provisional, `I_C2` positivo desde Q17 hacia C2 y su derivada respecto de `V_Q17colector`, con el estado previo fijo. Si `Y_R77=∂I_R77/∂V_C2_RIGHT` incluye el ajuste implícito del cursor, `g_C=C2/Δt` y `g_M=1/(R75+R_main)`, entonces `∂V_C2_RIGHT/∂V_Q17colector=g_C/(g_C+g_M+Y_R77)` y `Y_entrada=g_C[1−g_C/(g_C+g_M+Y_R77)]`. Es una tangente en siemens de la carga dinámica completa, no una resistencia independiente de frecuencia, amplitud o estado.
+
+La [regresión Rust](../crates/rf-d-circuit/tests/output_vectors.rs) compara esta derivada con perturbaciones simétricas de Q17 en doce puntos de los tres escenarios, incluidos SW18 ON/OFF y J7 abierto/cargado. La [prueba de asignaciones](../crates/rf-d-circuit/tests/no_alloc.rs) añade 100 evaluaciones del puerto sin asignaciones de heap. El futuro Newton de placa 4 deberá conservar el **mismo estado anterior** en todas sus pruebas de Q17 y confirmar sólo la solución conjunta final; la presente prueba no equivale a ese acoplamiento.
