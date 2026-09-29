@@ -23,7 +23,8 @@ def initial_headphone_amp_state(*, transistor_is_a: float,
         beta_forward=beta_forward, beta_reverse=beta_reverse,
         temperature_k=temperature_k, diode_model=diode_model)
     values = [dc["node_v"][name] for name in NODES]+[0.0]
-    cap = {row["ref"]: row["farad"] for row in _graph()["capacitors"]}
+    graph = _graph()
+    cap = {row["ref"]: row["farad"] for row in graph["capacitors"]}
     if cap != {"C19": 2.5e-6, "C15": 220e-12, "C21": 400e-6}:
         raise ValueError("headphone capacitor values differ from schematic")
     cap_v = {"C19": -values[0], "C15": values[7]-values[8],
@@ -51,13 +52,15 @@ def nonlinear_headphone_amp_step(*, previous_state: dict,
             or set(old_cap) != set(CAP_NODES)
             or not all(math.isfinite(v) for v in old_cap.values())):
         raise ValueError("complete finite previous headphone state required")
-    cap = {row["ref"]: row["farad"] for row in _graph()["capacitors"]}
+    graph = _graph()
+    cap = {row["ref"]: row["farad"] for row in graph["capacitors"]}
     if cap != {"C19": 2.5e-6, "C15": 220e-12, "C21": 400e-6}:
         raise ValueError("headphone capacitor values differ from schematic")
     load_g = _shunt_conductance_s(tip_load_ohm, ring_load_ohm)
     parameters = dict(transistor_is_a=transistor_is_a,
                       beta_forward=beta_forward, beta_reverse=beta_reverse,
-                      temperature_k=temperature_k, diode_model=diode_model)
+                      temperature_k=temperature_k, diode_model=diode_model,
+                      _prepared_graph=graph)
 
     def evaluate(x: list[float]) -> tuple[list[float], dict]:
         residual, parts = evaluate_headphone_amp_dc(x[:J7], **parameters)

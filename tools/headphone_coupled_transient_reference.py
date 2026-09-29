@@ -111,7 +111,8 @@ def nonlinear_coupled_headphone_step(*, ladder_dc: dict,
         ladder_dc=ladder_dc, recovery_dc=recovery_dc,
         cascaded_output_dc=cascaded_output_dc,
         main_load_ohm=main_load, headphone_input_ohm=1e12)
-    amp_cap = {row["ref"]: row["farad"] for row in _graph()["capacitors"]}
+    amp_graph = _graph()
+    amp_cap = {row["ref"]: row["farad"] for row in amp_graph["capacitors"]}
     if amp_cap != {"C19": 2.5e-6, "C15": 220e-12, "C21": 400e-6}:
         raise ValueError("headphone capacitor values differ from schematic")
     load_g = _shunt_conductance_s(tip_load_ohm, ring_load_ohm)
@@ -122,7 +123,8 @@ def nonlinear_coupled_headphone_step(*, ladder_dc: dict,
     vp = cascaded_output_dc["network_parameters"]
     amp_params = dict(transistor_is_a=transistor_is_a,
                       beta_forward=beta_forward, beta_reverse=beta_reverse,
-                      temperature_k=temperature_k, diode_model=diode_model)
+                      temperature_k=temperature_k, diode_model=diode_model,
+                      _prepared_graph=amp_graph)
     rtop = r14_pin7_to_pin6_ohm+r73_total-r73_bottom_side_to_wiper_ohm
     gc10 = c10/dt_s
     y10 = gc10/(1+gc10*rtop)

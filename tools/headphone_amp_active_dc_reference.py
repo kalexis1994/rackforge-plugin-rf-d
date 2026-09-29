@@ -44,7 +44,8 @@ def evaluate_headphone_amp_dc(node_v: list[float], *,
                               beta_forward: float,
                               beta_reverse: float,
                               temperature_k: float,
-                              diode_model: dict) -> tuple[list[float], dict]:
+                              diode_model: dict,
+                              _prepared_graph: dict | None = None) -> tuple[list[float], dict]:
     """Outgoing-current KCL for eleven unknowns; capacitors open at DC."""
     if len(node_v) != len(NODES) or not all(math.isfinite(v) for v in node_v):
         raise ValueError("eleven finite node voltages required")
@@ -54,7 +55,7 @@ def evaluate_headphone_amp_dc(node_v: list[float], *,
     vt = thermal_voltage_v(temperature_k)
     if diode_model["temperature_k"] != temperature_k:
         raise ValueError("diode and transistor temperatures must agree")
-    graph = _graph()
+    graph = _graph() if _prepared_graph is None else _prepared_graph
     voltage = dict(zip(NODES, node_v))
     voltage.update(MINUS_10=-10.0, MINUS_20=-20.0, GROUND=0.0)
     kcl = {name: 0.0 for name in NODES}
@@ -105,7 +106,8 @@ def conditional_headphone_amp_dc(*, transistor_is_a: float,
     """Damped Newton solution for a specified common TIS family scenario."""
     parameters = dict(transistor_is_a=transistor_is_a,
                       beta_forward=beta_forward, beta_reverse=beta_reverse,
-                      temperature_k=temperature_k, diode_model=diode_model)
+                      temperature_k=temperature_k, diode_model=diode_model,
+                      _prepared_graph=_graph())
     x = list(INITIAL_V)
     for iteration in range(80):
         residual, parts = evaluate_headphone_amp_dc(x, **parameters)
