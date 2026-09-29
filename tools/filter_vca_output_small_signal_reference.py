@@ -30,12 +30,14 @@ def _capacitors() -> dict[str, float]:
 
 def loaded_output_matrices(*, ladder_dc: dict, recovery_dc: dict,
                            cascaded_output_dc: dict,
-                           main_load_ohm: float,
+                           main_load_ohm: float | None,
                            headphone_input_ohm: float,
                            ) -> tuple[list[list[float]], list[list[float]], float]:
     """Stamp full local Jacobian, C4, C2 and two declared output loads."""
-    if not all(math.isfinite(v) and v > 0 for v in
-               (main_load_ohm, headphone_input_ohm)):
+    if (not math.isfinite(headphone_input_ohm)
+            or headphone_input_ohm <= 0
+            or (main_load_ohm is not None and
+                (not math.isfinite(main_load_ohm) or main_load_ohm <= 0))):
         raise ValueError("positive finite output terminations required")
     old_g, old_c, bus_c = loaded_matrices(
         ladder_dc=ladder_dc, recovery_dc=recovery_dc)
@@ -65,8 +67,9 @@ def loaded_output_matrices(*, ladder_dc: dict, recovery_dc: dict,
     c[q17c][C2_RIGHT] -= capacitors["C2"]
     c[C2_RIGHT][q17c] -= capacitors["C2"]
     r = output_parts()
-    g[C2_RIGHT][C2_RIGHT] += (1/(r["R75"] + main_load_ohm)
-                              + 1/(r["R77"] + headphone_input_ohm))
+    g[C2_RIGHT][C2_RIGHT] -= 1/(r["R77"] + headphone_input_ohm)
+    if main_load_ohm is not None:
+        g[C2_RIGHT][C2_RIGHT] -= 1/(r["R75"] + main_load_ohm)
     return g, c, bus_c
 
 

@@ -47,7 +47,7 @@ class FilterVcaOutputSmallSignalTest(unittest.TestCase):
         self.assertAlmostEqual(c[40][40], 220e-6)
         self.assertAlmostEqual(c[46][47], -10e-6)
         self.assertAlmostEqual(c[47][46], -10e-6)
-        self.assertAlmostEqual(g[47][47], 1/11000 + 1/101000)
+        self.assertAlmostEqual(g[47][47], -1/11000 - 1/101000)
 
     def test_dc_blocking_and_loaded_signal(self):
         for frequency in (0, 30, 100, 1000):

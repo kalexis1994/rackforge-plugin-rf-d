@@ -24,7 +24,7 @@ class FilterVcaOutputTransientTest(unittest.TestCase):
         cls.recovery = fixture.recovery
         cls.output_dc = fixture.dc()
 
-    def step(self, bus, state=None):
+    def step(self, bus, state=None, main_load=10000, headphone_load=100000):
         if state is None:
             state = initial_output_state(
                 ladder_dc=self.ladder, recovery_dc=self.recovery,
@@ -37,7 +37,8 @@ class FilterVcaOutputTransientTest(unittest.TestCase):
             previous_bus_v=state["bus_v"], bus_v=bus,
             dt_s=1/48000, r14_pin7_to_pin6_ohm=0,
             r73_bottom_side_to_wiper_ohm=500,
-            main_load_ohm=10000, headphone_input_ohm=100000)
+            main_load_ohm=main_load,
+            headphone_input_ohm=headphone_load)
 
     def test_dc_fixed_point_and_charge_conservation(self):
         initial, rest = self.step(0)
@@ -56,27 +57,33 @@ class FilterVcaOutputTransientTest(unittest.TestCase):
                 self.assertTrue(all(math.isfinite(v) for v in out["node_v"]))
 
     def test_small_step_matches_linear_backward_euler(self):
-        initial, out = self.step(1e-5)
-        g, c, bus_c = loaded_output_matrices(
-            ladder_dc=self.ladder, recovery_dc=self.recovery,
-            cascaded_output_dc=self.output_dc,
-            main_load_ohm=10000, headphone_input_ohm=100000)
-        dt = 1/48000
-        gc = 10e-6/dt
-        y = gc/(1 + gc*500)
-        matrix = [[g[i][j]-c[i][j]/dt for j in range(48)]
-                  for i in range(48)]
-        for index in (7, 22):
-            matrix[index][index] -= y
-        matrix[7][22] += y
-        matrix[22][7] += y
-        rhs = [0.0]*48
-        rhs[6] = -bus_c*1e-5/dt
-        linear = _solve_linear(matrix, rhs)
-        for actual, predicted, dc in zip(out["node_v"], linear,
-                                         initial["node_v"]):
-            self.assertAlmostEqual(actual-dc, predicted,
-                                   delta=max(1e-9, 0.02*abs(predicted)))
+        for main_load, headphone_load in ((10000, 100000), (100, 100)):
+            with self.subTest(main_load=main_load):
+                initial, out = self.step(
+                    1e-5, main_load=main_load,
+                    headphone_load=headphone_load)
+                g, c, bus_c = loaded_output_matrices(
+                    ladder_dc=self.ladder, recovery_dc=self.recovery,
+                    cascaded_output_dc=self.output_dc,
+                    main_load_ohm=main_load,
+                    headphone_input_ohm=headphone_load)
+                dt = 1/48000
+                gc = 10e-6/dt
+                y = gc/(1 + gc*500)
+                matrix = [[g[i][j]-c[i][j]/dt for j in range(48)]
+                          for i in range(48)]
+                for index in (7, 22):
+                    matrix[index][index] -= y
+                matrix[7][22] += y
+                matrix[22][7] += y
+                rhs = [0.0]*48
+                rhs[6] = -bus_c*1e-5/dt
+                linear = _solve_linear(matrix, rhs)
+                for actual, predicted, dc in zip(out["node_v"], linear,
+                                                 initial["node_v"]):
+                    self.assertAlmostEqual(actual-dc, predicted,
+                                           delta=max(1e-9,
+                                                     0.005*abs(predicted)))
 
     def test_short_trace_reaches_output_pin(self):
         state = initial_output_state(
