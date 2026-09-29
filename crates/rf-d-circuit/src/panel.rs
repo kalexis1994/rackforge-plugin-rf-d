@@ -2,7 +2,8 @@
 //! C2_RIGHT is imposed; the 48-node upstream circuit is not solved here.
 
 use crate::{
-    initial_state, solve_input_port, Parameters, SolverBudget, State, StepDiagnostics, StepError,
+    initial_state, solve_input_port, InputPortResponse, Parameters, SolverBudget, State,
+    StepDiagnostics, StepError,
 };
 
 const R77_OHM: f64 = 1000.0;
@@ -81,16 +82,20 @@ pub fn solve_panel_boundary(
     let g_lower = 1.0 / r21_lower_ohm;
     let old_amp = state.amp;
     let mut wiper_v = state.r21_wiper_v;
+    let mut cached_port: Option<InputPortResponse> = None;
     for iteration in 0..budget.iterations {
-        let port = solve_input_port(
-            &old_amp,
-            p,
-            wiper_v,
-            dt_s,
-            tip_load_ohm,
-            ring_load_ohm,
-            budget,
-        )?;
+        let port = match cached_port.take() {
+            Some(response) => response,
+            None => solve_input_port(
+                &old_amp,
+                p,
+                wiper_v,
+                dt_s,
+                tip_load_ohm,
+                ring_load_ohm,
+                budget,
+            )?,
+        };
         let residual = (wiper_v - c2_right_v) * g_series + wiper_v * g_lower + port.current_a;
         if residual.abs() < KCL_TOLERANCE_A {
             let pin22_v = c2_right_v + (wiper_v - c2_right_v) * R77_OHM / series_ohm;
@@ -131,6 +136,7 @@ pub fn solve_panel_boundary(
                     (trial_v - c2_right_v) * g_series + trial_v * g_lower + trial.current_a;
                 if trial_residual.abs() < residual.abs() {
                     wiper_v = trial_v;
+                    cached_port = Some(trial);
                     accepted = true;
                     break;
                 }

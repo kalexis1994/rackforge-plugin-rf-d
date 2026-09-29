@@ -1,5 +1,5 @@
 use rf_d_circuit::panel::{solve_panel_boundary, PanelBoundary, PanelState};
-use rf_d_circuit::{Parameters, SolverBudget, State, StepError};
+use rf_d_circuit::{solve_input_port, Parameters, SolverBudget, State, StepError};
 use serde_json::Value;
 
 fn n(v: &Value) -> f64 {
@@ -48,6 +48,7 @@ fn simultaneous_panel_and_board3_match_independent_python() {
         let mut state = state(&case["initial"]);
         let p = params(&case["parameters"]);
         for (index, reference) in case["steps"].as_array().unwrap().iter().enumerate() {
+            let previous = state;
             let output = solve_panel_boundary(
                 &mut state,
                 p,
@@ -85,6 +86,20 @@ fn simultaneous_panel_and_board3_match_independent_python() {
             }
             assert!(output.diagnostics.max_panel_kcl_residual_a < 1e-10);
             assert!(output.diagnostics.board3.max_kcl_residual_a < 1e-10);
+            // The cached accepted port must be bitwise identical to resolving
+            // it again from the same previous state, as the uncached path did.
+            let recomputed = solve_input_port(
+                &previous.amp,
+                p,
+                output.r21_wiper_v,
+                n(&case["dt_s"]),
+                optional(&case["tip_load_ohm"]),
+                optional(&case["ring_load_ohm"]),
+                SolverBudget::default(),
+            )
+            .unwrap();
+            assert_eq!(state.amp, recomputed.next_state);
+            assert_eq!(output.c19_current_a, recomputed.current_a);
             count += 1;
         }
     }
