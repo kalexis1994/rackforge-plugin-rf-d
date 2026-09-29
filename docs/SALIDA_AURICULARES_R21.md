@@ -7,3 +7,5 @@ La [referencia AC de 53 nodos](../tools/filter_panel_headphone_reference.py) agr
 Las [pruebas](../tests/test_filter_panel_headphone_reference.py) comprueban estampado de R77/R21 y su signo KCL, equivalencia de las transferencias AC explícita y reducida a `0/100/1000 Hz`, efecto de la carga del cursor sobre el nodo C2 compartido con HI/LO, y conservación de corrientes en un paso no lineal. El BUS=`1 V` de AC normaliza una derivada local, no predice una excursión real de 1 V.
 
 Queda pendiente seguir el cursor hasta la etapa activa y J7, además de contactos del jack, ley angular, resistencias de contacto y carga física. El cálculo se cierra **sólo hasta el cursor de R21** y no demuestra respuesta de auriculares ni fidelidad sonora.
+
+El [barrido conjunto de 54 escenarios](SENSIBILIDAD_PANEL_SALIDA.md) cuantifica cuánto cambia esta tensión de cursor cuando varían R20, R21, SW18 y una carga impuesta.

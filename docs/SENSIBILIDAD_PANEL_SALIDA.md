@@ -1,0 +1,9 @@
+# Sensibilidad conjunta de R20, R21 y SW18
+
+La [malla declarada](../evidence/output_panel_sensitivity_grid.json) parte de los valores y conexiones en **SVC-9 Fig. 9-11, PDF p. 13; Fig. 9-17, PDF p. 19; tabla 7-8, pp. 30–31**. Los potenciómetros R20 y R21 son de `5 kΩ` y SW18 tiene posiciones ON/OFF. Las posiciones **eléctricas** `500/2500/4500 Ω`, la carga del cursor R21 `100 Ω/32 kΩ/1 MΩ` y las cargas HI/LO `10/100 kΩ` son escenarios impuestos. No describen una ley angular, tolerancia de fabricación, impedancia real de auriculares ni frecuencia de uso.
+
+La [herramienta](../tools/output_panel_sensitivity_reference.py) fija un único sesgo DC condicionado del filtro, dos VCA y salida: `I_S=10⁻¹⁴ A`, `β_F=100`, `β_R=5`, `298,15 K`, controles `2 V`, R61=`200 Ω` como candidato del esquema, R73 inferior=`500 Ω`. Calcula la derivada AC local a `100 Hz` con BUS normalizado a `1 V` para `2×3×3×3=54` combinaciones. El máximo residuo KCL AC es `<10⁻¹¹ A/V`; las [pruebas](../tests/test_output_panel_sensitivity_reference.py) verifican las combinaciones, SW18 OFF y el efecto cruzado de las cargas.
+
+En esta malla, J4 HI ocupa `0,185–1,867 V/V` en ON y `0` en OFF. El cursor R21 ocupa `0,042–2,210 V/V` en ON y `0,034–2,193 V/V` en OFF. Los rangos son **extremos del cálculo local**, no voltajes físicos de salida. Que R20 altere el resultado de R21 incluso con SW18 OFF se deriva de las cargas paralelas sobre C2_RIGHT: cambiar el tramo R20 superior modifica la tensión común. El usuario no debe inferir clipping, nivel nominal, respuesta de un jack real ni identidad sonora a partir de esta malla.
+
+Antes de traducir estos números a sonido faltan parámetros BJT y diodos medidos o acotados con mejores datos, ruta posterior al cursor R21, cargas reales, estados de contactos de jack, ley de control y audio externo comparable. La topología puede evaluarse sin hardware, pero la columna de audio permanece abierta.
