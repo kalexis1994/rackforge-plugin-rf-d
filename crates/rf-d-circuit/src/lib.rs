@@ -4,6 +4,7 @@
 //! imposed laboratory values, not measurements of a vintage unit.
 //! The processing path uses fixed stack arrays and has no I/O or allocation.
 
+pub mod output;
 pub mod panel;
 
 const N: usize = 12;

@@ -100,6 +100,32 @@ fn simultaneous_panel_and_board3_match_independent_python() {
             .unwrap();
             assert_eq!(state.amp, recomputed.next_state);
             assert_eq!(output.c19_current_a, recomputed.current_a);
+            if [0usize, 8, 16, 24].contains(&index) {
+                let h = 1e-5;
+                let mut shifted = previous;
+                let mut boundary = PanelBoundary {
+                    c2_right_v: n(&reference["c2_right_v"]),
+                    r21_lower_ohm: n(&case["r21_lower_ohm"]),
+                    dt_s: n(&case["dt_s"]),
+                    tip_load_ohm: optional(&case["tip_load_ohm"]),
+                    ring_load_ohm: optional(&case["ring_load_ohm"]),
+                };
+                boundary.c2_right_v += h;
+                let plus = solve_panel_boundary(&mut shifted, p, boundary, SolverBudget::default())
+                    .unwrap();
+                shifted = previous;
+                boundary.c2_right_v -= 2.0 * h;
+                let minus =
+                    solve_panel_boundary(&mut shifted, p, boundary, SolverBudget::default())
+                        .unwrap();
+                let finite_difference = (plus.r77_current_a - minus.r77_current_a) / (2.0 * h);
+                assert!(
+                    (output.r77_input_conductance_s - finite_difference).abs()
+                        < 1e-9 + 1e-5 * finite_difference.abs(),
+                    "{} step {index} R77 admittance",
+                    case["id"]
+                );
+            }
             count += 1;
         }
     }

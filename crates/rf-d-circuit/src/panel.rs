@@ -30,6 +30,8 @@ pub struct PanelStepResult {
     pub j7_v: f64,
     /// Current drawn from C2_RIGHT through R77, positive toward panel.
     pub r77_current_a: f64,
+    /// Local derivative d(I_R77)/d(V_C2_RIGHT), with prior state fixed.
+    pub r77_input_conductance_s: f64,
     pub c19_current_a: f64,
     pub diagnostics: PanelStepDiagnostics,
 }
@@ -100,6 +102,11 @@ pub fn solve_panel_boundary(
         if residual.abs() < KCL_TOLERANCE_A {
             let pin22_v = c2_right_v + (wiper_v - c2_right_v) * R77_OHM / series_ohm;
             let r77_current_a = (c2_right_v - wiper_v) * g_series;
+            let panel_slope = g_series + g_lower + port.conductance_s;
+            if !panel_slope.is_finite() || panel_slope.abs() < 1e-15 {
+                return Err(StepError::SingularJacobian);
+            }
+            let r77_input_conductance_s = g_series * (1.0 - g_series / panel_slope);
             state.amp = port.next_state;
             state.r21_wiper_v = wiper_v;
             return Ok(PanelStepResult {
@@ -107,6 +114,7 @@ pub fn solve_panel_boundary(
                 r21_wiper_v: wiper_v,
                 j7_v: port.next_state.node_v[11],
                 r77_current_a,
+                r77_input_conductance_s,
                 c19_current_a: port.current_a,
                 diagnostics: PanelStepDiagnostics {
                     outer_iterations: iteration,
