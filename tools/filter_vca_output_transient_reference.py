@@ -1,7 +1,7 @@
 """Offline 48-node nonlinear transient through C2 and loaded output pins.
 
-All 23 BJT laws are reevaluated each step. The open-diode condition is
-checked at every accepted point; this is not a clipping or realtime model.
+All 23 BJT laws are reevaluated each step. CR1/CR2 can use the conditioned
+Shockley law carried by the DC state; this is not a realtime model.
 """
 
 from __future__ import annotations
@@ -82,7 +82,8 @@ def nonlinear_output_step(*, ladder_dc: dict, recovery_dc: dict,
               + [1e-3]*6 + [1e-3]*8)
 
     def evaluate(x: list[float]) -> tuple[list[float], list[float], float, dict]:
-        if not 0 <= x[46] <= vp["plus_v"]:
+        if (vp["output_parameters"]["diode_model"] is None
+                and not 0 <= x[46] <= vp["plus_v"]):
             raise ValueError("diode-open transient domain exceeded")
         ladder, _ = evaluate_nodal_kcl(x[:16], **lp)
         recovery, _ = recovery_kcl(x[16:24], **rp)
@@ -152,5 +153,5 @@ def nonlinear_output_step(*, ladder_dc: dict, recovery_dc: dict,
         "charge_change_c": tuple(charge),
         "max_charge_kcl_residual_a": max(abs(v) for v in residual),
         "iterations": iteration, "offline_reference_only": True,
-        "diodes_assumed_open": True,
+        "diodes_assumed_open": vp["output_parameters"]["diode_model"] is None,
     }

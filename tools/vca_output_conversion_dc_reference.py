@@ -13,6 +13,7 @@ from pathlib import Path
 
 from filter_ladder_ebers_moll_dc_reference import _device, _solve_linear
 from semiconductor_ideal import thermal_voltage_v
+from output_diode_reference import diode_current_a
 
 
 EVIDENCE = Path(__file__).resolve().parents[1] / "evidence" / "vca_output_conversion.json"
@@ -49,13 +50,18 @@ def _evaluate(x: list[float], *, q1_base_v: float, q12_base_v: float,
               q17_base_v: float, plus_v: float, r: dict[str, float],
               vt: float, is_a: dict[str, float],
               beta_forward: dict[str, float],
-              beta_reverse: dict[str, float]) -> tuple[list[float], dict]:
+              beta_reverse: dict[str, float],
+              diode_model: dict[str, float] | None = None) -> tuple[list[float], dict]:
     q1 = _pnp(q1_base_v, x[1], x[0], is_a["Q1"],
               beta_forward["Q1"], beta_reverse["Q1"], vt)
     q12 = _pnp(q12_base_v, x[4], x[2], is_a["Q12"],
                beta_forward["Q12"], beta_reverse["Q12"], vt)
     q17 = _pnp(q17_base_v, x[5], x[3], is_a["Q17"],
                beta_forward["Q17"], beta_reverse["Q17"], vt)
+    cr1 = cr2 = 0.0
+    if diode_model is not None:
+        cr1 = diode_current_a(x[5]-plus_v, model=diode_model, vt=vt)
+        cr2 = diode_current_a(-x[5], model=diode_model, vt=vt)
     residual = [
         (plus_v - x[0]) / r["R9"] - q1["emitter_a"],
         q1["collector_a"] - (x[1] - x[2]) / r["R8"]
@@ -63,7 +69,7 @@ def _evaluate(x: list[float], *, q1_base_v: float, q12_base_v: float,
         (x[1] - x[2]) / r["R8"] - q12["emitter_a"],
         (x[1] - x[3]) / r["R28"] - q17["emitter_a"],
         q12["collector_a"] - x[4] / r["R30"],
-        q17["collector_a"] - x[5] / r["R29"],
+        q17["collector_a"] - x[5] / r["R29"] - cr1 + cr2,
     ]
     return residual, {"Q1": q1, "Q12": q12, "Q17": q17}
 
@@ -74,8 +80,9 @@ def conditional_output_conversion_dc(*, q1_base_v: float,
                                      beta_forward: dict[str, float],
                                      beta_reverse: dict[str, float],
                                      temperature_k: float,
-                                     plus_v: float = 10.0) -> dict:
-    """Six DC nodes with C2/C4 open and CR1/CR2 required reverse biased."""
+                                     plus_v: float = 10.0,
+                                     diode_model: dict[str, float] | None = None) -> dict:
+    """Six DC nodes; CR1/CR2 open or parameterized with Shockley law."""
     if not all(math.isfinite(v) for v in (q1_base_v, q12_base_v,
                                          q17_base_v, plus_v)):
         raise ValueError("finite output-conversion boundaries required")
@@ -89,10 +96,15 @@ def conditional_output_conversion_dc(*, q1_base_v: float,
     if not all(math.isfinite(v) and v > 0 for v in beta_reverse.values()):
         raise ValueError("positive finite reverse beta required")
     r = _parts()
+    if diode_model is not None and (diode_model["temperature_k"] != temperature_k
+                                    or not math.isfinite(diode_model["is_a"])
+                                    or diode_model["is_a"] <= 0):
+        raise ValueError("diode model temperature and Is must match DC scenario")
     params = dict(q1_base_v=q1_base_v, q12_base_v=q12_base_v,
                   q17_base_v=q17_base_v, plus_v=plus_v, r=r,
                   vt=thermal_voltage_v(temperature_k), is_a=is_a,
-                  beta_forward=beta_forward, beta_reverse=beta_reverse)
+                  beta_forward=beta_forward, beta_reverse=beta_reverse,
+                  diode_model=diode_model)
     x = [q1_base_v + 0.6, q1_base_v + 0.35,
          q12_base_v + 0.6, q17_base_v + 0.6, 2.0, 2.0]
     scales = [1e-3] * 6
@@ -124,16 +136,24 @@ def conditional_output_conversion_dc(*, q1_base_v: float,
     else:
         raise ValueError("output-conversion Newton iteration did not converge")
     residual, devices = _evaluate(x, **params)
-    if not 0 <= x[5] <= plus_v:
+    if diode_model is None and not 0 <= x[5] <= plus_v:
         raise ValueError("diode-open assumption fails at Q17 collector")
+    cr1 = cr2 = 0.0
+    if diode_model is not None:
+        cr1 = diode_current_a(x[5]-plus_v, model=diode_model,
+                              vt=params["vt"])
+        cr2 = diode_current_a(-x[5], model=diode_model,
+                              vt=params["vt"])
     return {
         "nodes_v": dict(zip(NODES, x)), "devices": devices,
         "kcl_residuals_a": dict(zip(NODES, residual)),
         "max_kcl_residual_a": max(abs(v) for v in residual),
         "base_source_currents_out_a": {n: devices[n]["base_a"] for n in DEVICES},
         "q17_collector_output_v": x[5], "iterations": iteration,
-        "network_parameters": params, "diodes_assumed_open": True,
+        "network_parameters": params,
+        "diodes_assumed_open": diode_model is None,
         "c2_c4_open_at_dc": True,
+        "diode_currents_a": {"CR1": cr1, "CR2": cr2},
     }
 
 

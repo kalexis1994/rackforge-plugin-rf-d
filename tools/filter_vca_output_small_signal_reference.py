@@ -129,6 +129,6 @@ def filter_with_output(*, ladder_dc: dict, recovery_dc: dict,
         "headphone_pin22_current_a_per_bus_v": (v[C2_RIGHT]
                                                  /(r["R77"]+headphone_input_ohm)),
         "max_linear_kcl_residual_a_per_bus_v": residual,
-        "diodes_assumed_open": True,
+        "diodes_assumed_open": cascaded_output_dc["diodes_assumed_open"],
         "plus_rail_and_controls_ac_ground_imposed": True,
     }

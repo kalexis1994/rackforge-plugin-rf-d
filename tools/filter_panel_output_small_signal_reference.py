@@ -130,5 +130,5 @@ def filter_with_panel_output(*, ladder_dc: dict, recovery_dc: dict,
         "hi_to_lo_ratio": v[LO]/v[HI] if v[HI] else None,
         "max_linear_kcl_residual_a_per_bus_v": residual,
         "sw18_on_imposed": True,
-        "diodes_assumed_open": True,
+        "diodes_assumed_open": cascaded_output_dc["diodes_assumed_open"],
     }

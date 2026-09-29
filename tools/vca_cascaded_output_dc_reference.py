@@ -54,7 +54,8 @@ def conditional_cascaded_output_dc(*, first_loudness_v: float,
                                    beta_reverse: dict[str, float],
                                    temperature_k: float,
                                    plus_v: float = 10.0,
-                                   minus_v: float = -10.0) -> dict:
+                                   minus_v: float = -10.0,
+                                   diode_model: dict[str, float] | None = None) -> dict:
     """Solve both VCA wipers, R10/R11 and Q1/Q12/Q17 together."""
     if not all(math.isfinite(v) for v in (first_loudness_v,
                                          second_loudness_base_v,
@@ -81,14 +82,16 @@ def conditional_cascaded_output_dc(*, first_loudness_v: float,
         is_a={n: is_a[n] for n in OUTPUT_DEVICES},
         beta_forward={n: beta_forward[n] for n in OUTPUT_DEVICES},
         beta_reverse={n: beta_reverse[n] for n in OUTPUT_DEVICES},
-        temperature_k=temperature_k, plus_v=plus_v)
+        temperature_k=temperature_k, plus_v=plus_v,
+        diode_model=diode_model)
     output_parameters = dict(r=output_parts(),
                              vt=thermal_voltage_v(temperature_k),
                              is_a={n: is_a[n] for n in OUTPUT_DEVICES},
                              beta_forward={n: beta_forward[n]
                                            for n in OUTPUT_DEVICES},
                              beta_reverse={n: beta_reverse[n]
-                                           for n in OUTPUT_DEVICES})
+                                           for n in OUTPUT_DEVICES},
+                             diode_model=diode_model)
     params = dict(first_parameters=vca["network_parameters"]["first_parameters"],
                   second_parameters=vca["network_parameters"]["second_parameters"],
                   output_parameters=output_parameters, plus_v=plus_v)
@@ -127,7 +130,7 @@ def conditional_cascaded_output_dc(*, first_loudness_v: float,
     else:
         raise ValueError("cascaded-output Newton iteration did not converge")
     residual, devices = _evaluate(x, **params)
-    if not 0 <= x[21] <= plus_v:
+    if diode_model is None and not 0 <= x[21] <= plus_v:
         raise ValueError("diode-open assumption fails at Q17 collector")
     conductance = [[0.0] * len(x) for _ in x]
     for col in range(len(x)):
@@ -150,7 +153,8 @@ def conditional_cascaded_output_dc(*, first_loudness_v: float,
             "Q12": devices["Q12"]["base_a"],
             "Q17": devices["Q17"]["base_a"]},
         "iterations": iteration, "network_parameters": params,
-        "diodes_assumed_open": True, "output_coupling_open_at_dc": True,
+        "diodes_assumed_open": diode_model is None,
+        "output_coupling_open_at_dc": True,
         "input_and_controls_imposed": True,
     }
 
