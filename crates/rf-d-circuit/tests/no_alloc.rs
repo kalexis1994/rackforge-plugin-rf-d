@@ -1,7 +1,7 @@
 use std::alloc::{GlobalAlloc, Layout, System};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-use rf_d_circuit::{initial_state, step, Parameters, SolverBudget};
+use rf_d_circuit::{initial_state, solve_input_port, step, Parameters, SolverBudget};
 
 struct CountingAllocator;
 static ALLOCATIONS: AtomicUsize = AtomicUsize::new(0);
@@ -55,6 +55,20 @@ fn dc_initialization_and_audio_steps_do_not_allocate() {
             SolverBudget::default(),
         )
         .expect("bounded board-3 step");
+    }
+    for i in 0..100 {
+        let input = if i % 20 < 10 { 0.25 } else { -0.25 };
+        state = solve_input_port(
+            &state,
+            p,
+            input,
+            1.0 / 48000.0,
+            Some(32.0),
+            Some(32.0),
+            SolverBudget::default(),
+        )
+        .expect("dynamic C19 port")
+        .next_state;
     }
     let after = ALLOCATIONS.load(Ordering::Relaxed);
     assert_eq!(after - before, 0, "processing allocated heap memory");

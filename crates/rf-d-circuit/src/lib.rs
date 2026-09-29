@@ -64,6 +64,17 @@ pub struct StepDiagnostics {
     pub line_search_halvings: usize,
 }
 
+/// Dynamic C19 input port at board-3 pin 7. Current is positive into C19
+/// from the upstream R21 wiper; conductance is its local derivative with
+/// respect to pin-7 voltage while the previous capacitor state is held fixed.
+#[derive(Clone, Copy, Debug)]
+pub struct InputPortResponse {
+    pub next_state: State,
+    pub diagnostics: StepDiagnostics,
+    pub current_a: f64,
+    pub conductance_s: f64,
+}
+
 #[derive(Clone, Copy, Debug)]
 pub struct SolverBudget {
     pub iterations: usize,
@@ -442,6 +453,62 @@ pub fn step(
         }
     }
     Err(StepError::IterationBudget)
+}
+
+/// Solve board 3 as a dynamic input port for a simultaneous upstream solver.
+/// The returned state is provisional: an outer Newton iteration must retain
+/// the same `previous_state` for every trial and commit only its final result.
+pub fn solve_input_port(
+    previous_state: &State,
+    p: Parameters,
+    pin7_v: f64,
+    dt_s: f64,
+    tip_load_ohm: Option<f64>,
+    ring_load_ohm: Option<f64>,
+    budget: SolverBudget,
+) -> Result<InputPortResponse, StepError> {
+    let mut next_state = *previous_state;
+    let diagnostics = step(
+        &mut next_state,
+        p,
+        pin7_v,
+        dt_s,
+        tip_load_ohm,
+        ring_load_ohm,
+        budget,
+    )?;
+    let load_g = validate(
+        previous_state,
+        p,
+        pin7_v,
+        dt_s,
+        tip_load_ohm,
+        ring_load_ohm,
+        budget,
+    )?;
+    let boundary = Boundary {
+        pin7_v,
+        dt_s,
+        load_g,
+        previous_cap_v: previous_state.capacitor_v,
+        p,
+    };
+    let (_, jacobian) = evaluate(&next_state.node_v, boundary)?;
+    let g = C19 / dt_s;
+    let mut rhs = [0.0; N];
+    rhs[0] = g;
+    let response = solve(jacobian, rhs)?;
+    let current_a = g * (next_state.capacitor_v[0] - previous_state.capacitor_v[0]);
+    let conductance_s = g * (1.0 - response[0]);
+    if !current_a.is_finite() || !conductance_s.is_finite() {
+        return Err(StepError::ExponentialDomain);
+    }
+    Ok(InputPortResponse {
+        next_state,
+        diagnostics,
+        current_a,
+        conductance_s,
+    })
 }
 
 /// Solve the conditional DC operating point with pin 7 at zero and J7

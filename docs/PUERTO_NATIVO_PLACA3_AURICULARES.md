@@ -14,7 +14,7 @@ Para comprobar este bloque: `cargo test --workspace`. Para toda la investigació
 
 ## Coste local y asignaciones
 
-La [prueba de asignaciones](../crates/rf-d-circuit/tests/no_alloc.rs) intercepta el asignador global de su proceso: el arranque DC más `1000` pasos bipolares de placa 3 con dos cargas de `32 Ω` generaron **cero asignaciones** de heap. No se extiende esta afirmación a un adaptador de host o a otros circuitos.
+La [prueba de asignaciones](../crates/rf-d-circuit/tests/no_alloc.rs) intercepta el asignador global de su proceso: el arranque DC, `1000` pasos bipolares de placa 3 y `100` evaluaciones del puerto dinámico C19 con dos cargas de `32 Ω` generan **cero asignaciones** de heap. No se extiende esta afirmación a un adaptador de host o a otros circuitos.
 
 La [sonda reproducible](../crates/rf-d-circuit/examples/bench_board3.rs) ejecuta `cargo run --release -p rf-d-circuit --example bench_board3`. Una pasada de calentamiento y una medida de **48 000 muestras** por escena usan bloques de 64 muestras a 48 kHz, temperatura `300 K`, `I_S(BJT)=10⁻¹⁴ A`, `β_F=160`, `β_R=5`, diodos `n=1,5` con `I_S=1,4465886434575519·10⁻⁹ A`, y entrada senoidal de `100 Hz` que invierte polaridad a mitad de la escena. La generación de la entrada y la llamada a `step` quedan dentro del tiempo medido; el acumulado y la ordenación de duraciones quedan fuera. El presupuesto de audio teórico por bloque es `1333,3 µs`.
 
@@ -27,3 +27,9 @@ Una ejecución local en Windows, **AMD Ryzen 5 5600X**, `rustc 1.97.0`, build `-
 | J7 32 Ω + 32 Ω, 1 V pico | 293,5 µs | 359,5 µs | 685,2 µs | 2,55 / 3 | 0 |
 
 El mayor residuo KCL reportado fue `<10⁻¹⁰ A` en las tres escenas. Estos máximos son **observaciones de una corrida**, sensibles a planificación del sistema operativo y equipo. La placa 3 aislada consume una fracción importante del presupuesto, y habrá que medir de nuevo al acoplarla a los otros 50 nodos y al host, con la frecuencia interna y calidad de audio previstas. No se infiere un deadline garantizado ni la conveniencia de ejecutar el solver completo a cada muestra.
+
+## Puerto dinámico para el acoplamiento
+
+La función [`solve_input_port`](../crates/rf-d-circuit/src/lib.rs) permite a un solver anterior imponer temporalmente `V_pin7` y obtener el estado provisional de placa 3, la corriente de C19 **que sale del cursor R21** y su conductancia diferencial local. Con `g=C19/Δt`, estado previo fijo y nodo 0 igual a la base Q16, `I_19=g·(V_pin7−V_0−V_C19,previo)`. Si `J` es el Jacobiano de KCL de los doce nodos, la derivada interna cumple `J·(∂x/∂V_pin7)=g·e₀`, y el puerto devuelve `∂I_19/∂V_pin7=g·(1−∂V_0/∂V_pin7)`, en siemens. La [regresión](../crates/rf-d-circuit/tests/board3_vectors.rs) compara esta derivada con perturbaciones simétricas en doce puntos de las tres escenas, incluidos cambios de signo y temperatura.
+
+El estado anterior permanece idéntico en cada prueba del Newton externo; sólo se debe confirmar el `next_state` correspondiente a la solución final del sistema acoplado. La conductancia es una tangente **dependiente del punto y del paso**, no una resistencia fija con la que reemplazar C19. El solver de 62 nodos y su gate de [portabilidad BUS→J7](VECTORES_PORTABILIDAD_AURICULARES.md) siguen pendientes; el coste del puerto anidado también necesita medición antes de elegir la factorización definitiva.
