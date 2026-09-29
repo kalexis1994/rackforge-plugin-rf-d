@@ -12,8 +12,8 @@ from headphone_transient_semiconductor_grid import semiconductor_grid
 class HeadphoneTransientSemiconductorGridTest(unittest.TestCase):
     def test_board3_and_temperature_scenarios(self):
         result = semiconductor_grid()
-        self.assertEqual(result["scenario_count"], 11)
-        self.assertEqual(result["total_steps"], 1056)
+        self.assertEqual(result["scenario_count"], 15)
+        self.assertEqual(result["total_steps"], 1440)
         self.assertLess(result["max_kcl_residual_a"], 1.1e-10)
         self.assertLessEqual(result["max_newton_iterations"], 8)
         self.assertGreater(result["board3_grid_j7_rms_max_v"],
@@ -26,12 +26,20 @@ class HeadphoneTransientSemiconductorGridTest(unittest.TestCase):
             self.assertLess(row["max_kcl_residual_a"], 1.1e-10)
         for beta in (80, 160, 300):
             rms = [next(row["j7_rms_v"] for row in result["rows"] if
-                        row["temperature_k"] == 298.15 and
+                        row["board4_temperature_k"] == 298.15 and
+                        row["board3_temperature_k"] == 298.15 and
                         row["board3_beta_forward"] == beta and
                         row["diode_forward_voltage_at_100ma_v"] == forward)
                    for forward in (0.65, 0.7, 0.75)]
             self.assertLess(rms[0], rms[1])
             self.assertLess(rms[1], rms[2])
+        for scope in ("board3_only", "board4_only", "both"):
+            count = sum(
+                row["temperature_scope"] == scope and
+                (row["board3_temperature_k"] != 298.15 or
+                 row["board4_temperature_k"] != 298.15)
+                for row in result["rows"])
+            self.assertEqual(count, 2)
 
 
 if __name__ == "__main__":

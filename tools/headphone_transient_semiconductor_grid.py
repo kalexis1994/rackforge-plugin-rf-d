@@ -30,18 +30,26 @@ def semiconductor_grid() -> dict:
         hi_load_ohm=assumption["hi_load_ohm"],
         lo_load_ohm=assumption["lo_load_ohm"],
         r21_wiper_to_ground_ohm=assumption["r21_wiper_to_ground_ohm"])
-    cases = [(298.15, beta, vf) for beta, vf in itertools.product(
-        (80, 160, 300), (0.65, 0.7, 0.75))]
-    cases += [(temp, 160, 0.7) for temp in (285.0, 315.0)]
+    cases = [(298.15, 298.15, beta, vf, "both")
+             for beta, vf in itertools.product(
+                 (80, 160, 300), (0.65, 0.7, 0.75))]
+    for temp in (285.0, 315.0):
+        cases.extend(((298.15, temp, 160, 0.7, "board3_only"),
+                      (temp, 298.15, 160, 0.7, "board4_only"),
+                      (temp, temp, 160, 0.7, "both")))
     rows = []
-    for temperature, beta, forward_v in cases:
-        source = assumption | {"temperature_k": temperature}
-        base = reference_dc(source)
+    board4_bases = {}
+    for board4_temp, board3_temp, beta, forward_v, scope in cases:
+        source = assumption | {"temperature_k": board4_temp}
+        if board4_temp not in board4_bases:
+            board4_bases[board4_temp] = reference_dc(source)
+        base = board4_bases[board4_temp].copy()
+        base["temperature_k"] = board3_temp
         base["beta_forward"] = beta
         base["diode_model"] = diode_model_from_reference(
             ideality=assumption["diode_ideality"],
             forward_voltage_at_100ma_v=forward_v,
-            temperature_k=temperature)
+            temperature_k=board3_temp)
         state = initial_coupled_headphone_state(**base)
         samples = []
         worst_kcl = 0.0
@@ -59,7 +67,9 @@ def semiconductor_grid() -> dict:
             most_iterations = max(most_iterations, state["iterations"])
         j7 = [row[0] for row in samples]
         rows.append({
-            "temperature_k": temperature,
+            "board4_temperature_k": board4_temp,
+            "board3_temperature_k": board3_temp,
+            "temperature_scope": scope,
             "board3_beta_forward": beta,
             "diode_forward_voltage_at_100ma_v": forward_v,
             "steps": len(samples),
@@ -70,9 +80,10 @@ def semiconductor_grid() -> dict:
             "max_kcl_residual_a": worst_kcl,
             "max_newton_iterations": most_iterations})
     baseline = next(row for row in rows if
-                    (row["temperature_k"], row["board3_beta_forward"],
+                    (row["board4_temperature_k"],
+                     row["board3_temperature_k"], row["board3_beta_forward"],
                      row["diode_forward_voltage_at_100ma_v"])
-                    == (298.15, 160, 0.7))
+                    == (298.15, 298.15, 160, 0.7))
     return {
         "scenario_count": len(rows),
         "total_steps": sum(row["steps"] for row in rows),
@@ -81,14 +92,18 @@ def semiconductor_grid() -> dict:
                      "sw18_on": True, "tip_ring_ohm": 32},
         "baseline_j7_rms_v": baseline["j7_rms_v"],
         "board3_grid_j7_rms_min_v": min(row["j7_rms_v"] for row in rows
-                                        if row["temperature_k"] == 298.15),
+                                        if row["board4_temperature_k"] == 298.15
+                                        and row["board3_temperature_k"] == 298.15),
         "board3_grid_j7_rms_max_v": max(row["j7_rms_v"] for row in rows
-                                        if row["temperature_k"] == 298.15),
+                                        if row["board4_temperature_k"] == 298.15
+                                        and row["board3_temperature_k"] == 298.15),
         "temperature_grid_j7_rms_min_v": min(row["j7_rms_v"] for row in rows
-                                             if row["board3_beta_forward"] == 160
+                                             if row["temperature_scope"] == "both"
+                                             and row["board3_beta_forward"] == 160
                                              and row["diode_forward_voltage_at_100ma_v"] == 0.7),
         "temperature_grid_j7_rms_max_v": max(row["j7_rms_v"] for row in rows
-                                             if row["board3_beta_forward"] == 160
+                                             if row["temperature_scope"] == "both"
+                                             and row["board3_beta_forward"] == 160
                                              and row["diode_forward_voltage_at_100ma_v"] == 0.7),
         "max_kcl_residual_a": max(row["max_kcl_residual_a"] for row in rows),
         "max_newton_iterations": max(row["max_newton_iterations"] for row in rows),

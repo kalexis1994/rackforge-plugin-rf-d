@@ -14,7 +14,7 @@ Los estados `desconocido`, `hipótesis`, `modelado`, `contrastado` y `cerrado pa
 
 ## Afirmación pública actual
 
-La [malla temporal de 11 supuestos de semiconductores y temperatura](SENSIBILIDAD_TRANSITORIA_SEMICONDUCTORES_AURICULARES.md) amplía la evidencia numérica de la fila **Salida**. Sus amplitudes BUS→J7 no cambian el estado de audio externo ni validan la población vintage.
+La [malla temporal de 15 supuestos de semiconductores y temperatura](SENSIBILIDAD_TRANSITORIA_SEMICONDUCTORES_AURICULARES.md) amplía la evidencia numérica de la fila **Salida**. Sus amplitudes BUS→J7 no cambian el estado de audio externo ni validan la población vintage.
 
 En el ladder, la [columna resistiva DC](COLUMNA_RESISTIVA_LADDER_DC.md), las [pilas activas](PILAS_ACTIVAS_LADDER_DC.md) y el [cierre Ebers–Moll de 16 nodos](LADDER_EBERS_MOLL_DC.md) están trazados. El cálculo condicionado incluye corrientes de tap y conducción base colector; un [barrido de 72 supuestos](BARRIDO_SESGO_LADDER_DC.md) comprueba el límite activo. Transferencia temporal y audio permanecen desconocidos, así como β inverso y el valor físico de R61.
 
