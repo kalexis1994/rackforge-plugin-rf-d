@@ -98,6 +98,79 @@ def evaluate_headphone_amp_dc(node_v: list[float], *,
         "diode_anode_to_cathode_a": diode_currents}
 
 
+def headphone_amp_dc_jacobian(node_v: list[float], *,
+                              transistor_is_a: float,
+                              beta_forward: float,
+                              beta_reverse: float,
+                              temperature_k: float,
+                              diode_model: dict,
+                              _prepared_graph: dict | None = None) -> list[list[float]]:
+    """Exact 11x11 derivative of outgoing-current KCL at a finite trial."""
+    if len(node_v) != len(NODES) or not all(math.isfinite(v) for v in node_v):
+        raise ValueError("eleven finite node voltages required")
+    if not all(math.isfinite(v) and v > 0 for v in (
+            transistor_is_a, beta_forward, beta_reverse)):
+        raise ValueError("positive finite imposed transistor parameters required")
+    vt = thermal_voltage_v(temperature_k)
+    if diode_model["temperature_k"] != temperature_k:
+        raise ValueError("diode and transistor temperatures must agree")
+    graph = _graph() if _prepared_graph is None else _prepared_graph
+    index = {name: i for i, name in enumerate(NODES)}
+    voltage = dict(zip(NODES, node_v))
+    voltage.update(MINUS_10=-10.0, MINUS_20=-20.0, GROUND=0.0)
+    jac = [[0.0]*len(NODES) for _ in NODES]
+
+    def add(row: str, col: str, value: float) -> None:
+        if row in index and col in index:
+            jac[index[row]][index[col]] += value
+
+    for row in graph["resistors"]:
+        left, right = row["between"]
+        g = 1/row["ohm"]
+        for a, b in ((left, right), (right, left)):
+            add(a, a, g)
+            add(a, b, -g)
+    for row in graph["active_devices"]:
+        if not row["ref"].startswith("Q"):
+            continue
+        b, c, e = (row[key] for key in ("base", "collector", "emitter"))
+        polarity = -1 if row["marking"] == "TIS-93" else 1
+        xbe = polarity*(voltage[b]-voltage[e])/vt
+        xbc = polarity*(voltage[b]-voltage[c])/vt
+        if max(xbe, xbc) > 45:
+            raise ValueError("trial voltage outside finite BJT exponential domain")
+        gf = transistor_is_a*math.exp(xbe)/vt
+        gr = transistor_is_a*math.exp(xbc)/vt
+        # Polarity appears twice when differentiating a PNP's signed
+        # current against its inverted voltages, so the slopes have the
+        # same stamp signs as for an NPN at the transformed operating point.
+        slopes = {
+            b: (gf/beta_forward+gr/beta_reverse,
+                -gr/beta_reverse, -gf/beta_forward),
+            c: (gf-(1+1/beta_reverse)*gr,
+                (1+1/beta_reverse)*gr, -gf),
+            e: (-(1+1/beta_forward)*gf+gr,
+                -gr, (1+1/beta_forward)*gf),
+        }
+        for terminal, derivatives in slopes.items():
+            for wrt, derivative in zip((b, c, e), derivatives):
+                add(terminal, wrt, derivative)
+    for row in graph["active_devices"]:
+        if not row["ref"].startswith("CR"):
+            continue
+        anode, cathode = row["anode"], row["cathode"]
+        exponent = (voltage[anode]-voltage[cathode])/(
+            diode_model["ideality"]*vt)
+        if not math.isfinite(exponent) or exponent > 45:
+            raise ValueError("diode trial exceeds finite exponential domain")
+        g = diode_model["is_a"]*math.exp(exponent)/(
+            diode_model["ideality"]*vt)
+        for a, b in ((anode, cathode), (cathode, anode)):
+            add(a, a, g)
+            add(a, b, -g)
+    return jac
+
+
 def conditional_headphone_amp_dc(*, transistor_is_a: float,
                                  beta_forward: float,
                                  beta_reverse: float,
@@ -114,13 +187,7 @@ def conditional_headphone_amp_dc(*, transistor_is_a: float,
         error = max(abs(value) for value in residual)
         if error < 1e-11:
             break
-        jacobian = [[0.0]*len(NODES) for _ in NODES]
-        for column in range(len(NODES)):
-            shifted = x.copy()
-            shifted[column] += 1e-5
-            perturbed, _ = evaluate_headphone_amp_dc(shifted, **parameters)
-            for row in range(len(NODES)):
-                jacobian[row][column] = (perturbed[row]-residual[row])/1e-5
+        jacobian = headphone_amp_dc_jacobian(x, **parameters)
         direction = _solve_linear(jacobian, [-value for value in residual])
         for power in range(24):
             step = 0.5**power

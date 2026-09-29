@@ -12,7 +12,8 @@ from filter_recovery_active_dc_reference import _evaluate as recovery_kcl
 from filter_regeneration_reference import _values as regeneration_values
 from filter_vca_output_small_signal_reference import LOCAL_TO_SYSTEM, loaded_output_matrices
 from filter_vca_output_transient_reference import initial_output_state
-from headphone_amp_active_dc_reference import _graph, evaluate_headphone_amp_dc
+from headphone_amp_active_dc_reference import (
+    _graph, evaluate_headphone_amp_dc, headphone_amp_dc_jacobian)
 from headphone_amp_active_transient_reference import initial_headphone_amp_state
 from headphone_output_coupling_reference import _shunt_conductance_s
 from vca1_input_boundary_reference import _values as vca_values
@@ -184,12 +185,31 @@ def nonlinear_coupled_headphone_step(*, ladder_dc: dict,
         if max(abs(v) for v in residual) < 1e-10 and error < 1e-3:
             break
         jacobian = [[0.0]*NODE_COUNT for _ in range(NODE_COUNT)]
-        for col in range(NODE_COUNT):
+        # Upstream 50 columns retain their numerical tangent. The board-3
+        # device columns use the exact Ebers-Moll/Shockley conductance stamp.
+        for col in range(AMP_FIRST):
             trial = x.copy()
             trial[col] += 1e-5
             high, _ = evaluate(trial)
             for row in range(NODE_COUNT):
                 jacobian[row][col] = (high[row]-residual[row])/1e-5/SCALES[row]
+        active = headphone_amp_dc_jacobian(x[AMP_FIRST:J7], **amp_params)
+        for local_row, values in enumerate(active):
+            row = AMP_FIRST+local_row
+            for local_col, value in enumerate(values):
+                jacobian[row][AMP_FIRST+local_col] = value/SCALES[row]
+
+        def stamp_cap(left: int, right: int, farad: float) -> None:
+            g = farad/dt_s
+            for row, col, sign in ((left, left, 1), (left, right, -1),
+                                   (right, left, -1), (right, right, 1)):
+                if col >= AMP_FIRST:
+                    jacobian[row][col] += sign*g/SCALES[row]
+
+        stamp_cap(R21_WIPER, AMP_FIRST, amp_cap["C19"])
+        stamp_cap(AMP_FIRST+7, AMP_FIRST+8, amp_cap["C15"])
+        stamp_cap(AMP_FIRST+10, J7, amp_cap["C21"])
+        jacobian[J7][J7] += load_g/SCALES[J7]
         direction = _solve_linear(jacobian,
                                   [-v/scale for v, scale in zip(residual, SCALES)])
         for power in range(32):

@@ -12,7 +12,7 @@ from filter_emphasis_loop_small_signal_reference import series_return_admittance
 from filter_ladder_ebers_moll_dc_reference import _solve_linear
 from filter_panel_headphone_reference import panel_with_headphone_matrices
 from headphone_amp_active_dc_reference import (
-    NODES, conditional_headphone_amp_dc, evaluate_headphone_amp_dc)
+    NODES, conditional_headphone_amp_dc, headphone_amp_dc_jacobian)
 from headphone_coupled_ac_reference import coupled_headphone_ac
 from output_diode_reference import diode_model_from_reference
 
@@ -84,14 +84,10 @@ class HeadphoneCoupledAcTest(unittest.TestCase):
             "temperature_k", "diode_model")}
         dc = conditional_headphone_amp_dc(**device)
         bias = [dc["node_v"][name] for name in NODES]
-        for col in range(11):
-            plus, minus = bias.copy(), bias.copy()
-            plus[col] += 1e-5
-            minus[col] -= 1e-5
-            higher, _ = evaluate_headphone_amp_dc(plus, **device)
-            lower, _ = evaluate_headphone_amp_dc(minus, **device)
-            for row in range(11):
-                matrix[53+row][53+col] += (higher[row]-lower[row])/2e-5
+        tangent = headphone_amp_dc_jacobian(bias, **device)
+        for row in range(11):
+            for col in range(11):
+                matrix[53+row][53+col] += tangent[row][col]
 
         def cap(i, j, farad):
             y = s*farad

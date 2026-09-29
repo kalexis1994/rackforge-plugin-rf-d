@@ -6,7 +6,7 @@ import math
 
 from filter_ladder_ebers_moll_dc_reference import _solve_linear
 from headphone_amp_active_dc_reference import (
-    NODES, _graph, conditional_headphone_amp_dc, evaluate_headphone_amp_dc)
+    NODES, _graph, conditional_headphone_amp_dc, headphone_amp_dc_jacobian)
 from headphone_output_coupling_reference import _shunt_conductance_s
 
 
@@ -36,15 +36,10 @@ def conditional_headphone_amp_ac(*, frequency_hz: float,
     bias = [dc["node_v"][name] for name in NODES]
     count = len(AC_NODES)
     matrix = [[0j]*count for _ in range(count)]
-    derivative_step_v = 1e-5
-    for column in range(len(NODES)):
-        plus, minus = bias.copy(), bias.copy()
-        plus[column] += derivative_step_v
-        minus[column] -= derivative_step_v
-        higher, _ = evaluate_headphone_amp_dc(plus, **parameters)
-        lower, _ = evaluate_headphone_amp_dc(minus, **parameters)
-        for row in range(len(NODES)):
-            matrix[row][column] = (higher[row]-lower[row])/(2*derivative_step_v)
+    tangent = headphone_amp_dc_jacobian(bias, **parameters)
+    for row in range(len(NODES)):
+        for column in range(len(NODES)):
+            matrix[row][column] = tangent[row][column]
     index = {name: i for i, name in enumerate(AC_NODES)}
     s = 2j*math.pi*frequency_hz
 
@@ -76,5 +71,4 @@ def conditional_headphone_amp_ac(*, frequency_hz: float,
             "dc_max_kcl_residual_a": dc["max_kcl_residual_a"],
             "dc_output_v": dc["node_v"]["AMP_OUTPUT_BEFORE_C21"],
             "linearized_at_same_dc_parameters": True,
-            "jacobian_voltage_step_v": derivative_step_v,
-            "central_difference_jacobian": True}
+            "analytic_device_jacobian": True}

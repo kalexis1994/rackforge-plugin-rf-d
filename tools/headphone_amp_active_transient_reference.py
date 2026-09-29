@@ -6,7 +6,8 @@ import math
 
 from filter_ladder_ebers_moll_dc_reference import _solve_linear
 from headphone_amp_active_dc_reference import (
-    NODES, _graph, conditional_headphone_amp_dc, evaluate_headphone_amp_dc)
+    NODES, _graph, conditional_headphone_amp_dc, evaluate_headphone_amp_dc,
+    headphone_amp_dc_jacobian)
 from headphone_output_coupling_reference import _shunt_conductance_s
 
 
@@ -83,13 +84,17 @@ def nonlinear_headphone_amp_step(*, previous_state: dict,
         error = max(abs(value) for value in residual)
         if error < 1e-10:
             break
-        jacobian = [[0.0]*len(x) for _ in x]
-        for column in range(len(x)):
-            shifted = x.copy()
-            shifted[column] += 1e-5
-            higher, _ = evaluate(shifted)
-            for row in range(len(x)):
-                jacobian[row][column] = (higher[row]-residual[row])/1e-5
+        tangent = headphone_amp_dc_jacobian(x[:J7], **parameters)
+        jacobian = [row+[0.0] for row in tangent]
+        jacobian.append([0.0]*len(x))
+        jacobian[J7][J7] = load_g
+        for name, (left, right) in CAP_NODES.items():
+            g = cap[name]/dt_s
+            if left is not None:
+                jacobian[left][left] += g
+                jacobian[left][right] -= g
+                jacobian[right][left] -= g
+            jacobian[right][right] += g
         direction = _solve_linear(jacobian, [-value for value in residual])
         for power in range(24):
             step = 0.5**power
