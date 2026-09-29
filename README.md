@@ -24,7 +24,7 @@ El [objetivo técnico](docs/OBJETIVO.md) define qué queda dentro de la emulaci�
 
 La [derivación parcial de VCO 1](docs/VCO1_CA3046.md) explica los límites de la referencia ejecutable. Puede comprobarse con `python -m unittest discover -s tests -v`; no necesita instalar dependencias.
 
-La ruta experimental BUS→J7 dispone de [vectores de admisión numérica](docs/VECTORES_PORTABILIDAD_AURICULARES.md) para un futuro motor nativo. Contienen entradas, estado inicial, salidas y checkpoints internos con tolerancias fijadas; superarlos no probaría por sí solo fidelidad sonora.
+La ruta experimental BUS→J7 dispone de [vectores de admisión numérica](docs/VECTORES_PORTABILIDAD_AURICULARES.md) para un futuro motor nativo completo. Ya existe un [primer puerto Rust de la placa 3 de auriculares](docs/PUERTO_NATIVO_PLACA3_AURICULARES.md), comprobado contra 192 pasos del oráculo aislado. Todavía no es una voz ni supera el gate acoplado de 62 nodos. Puede comprobarse con `cargo test --workspace`.
 
 ## Límites de recursos
 
