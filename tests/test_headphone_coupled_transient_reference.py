@@ -126,6 +126,10 @@ class HeadphoneCoupledTransientTest(unittest.TestCase):
             nonlinear_coupled_headphone_step(
                 **args, previous_state=state, bus_v=0.1,
                 dt_s=1/48000, jacobian_method="unknown")
+        with self.assertRaises(ValueError):
+            nonlinear_coupled_headphone_step(
+                **args, previous_state=state, bus_v=0.1,
+                dt_s=1/48000, linear_solver="unknown")
 
 
 if __name__ == "__main__":

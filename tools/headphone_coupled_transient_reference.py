@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 
-from filter_ladder_ebers_moll_dc_reference import _solve_linear, evaluate_nodal_kcl
+from filter_ladder_ebers_moll_dc_reference import evaluate_nodal_kcl
 from filter_panel_headphone_reference import _headphone_parts
 from filter_panel_output_small_signal_reference import _panel_parts
 from filter_panel_output_transient_reference import panel_load_reduction
@@ -15,6 +15,7 @@ from filter_vca_output_transient_reference import initial_output_state
 from headphone_amp_active_dc_reference import (
     _graph, evaluate_headphone_amp_dc, headphone_amp_dc_jacobian)
 from headphone_amp_active_transient_reference import initial_headphone_amp_state
+from headphone_dense_linear_reference import solve_headphone_linear
 from headphone_output_coupling_reference import _shunt_conductance_s
 from vca1_input_boundary_reference import _values as vca_values
 from vca_cascaded_output_dc_reference import _evaluate as output_kcl
@@ -72,7 +73,8 @@ def nonlinear_coupled_headphone_step(*, ladder_dc: dict,
                                      ring_load_ohm: float | None = None,
                                      sw18_on: bool = True,
                                      c10_farads: float | None = None,
-                                     jacobian_method: str = "hybrid") -> dict:
+                                     jacobian_method: str = "hybrid",
+                                     linear_solver: str = "python") -> dict:
     """One simultaneous implicit step; no imposed R21 wiper resistance."""
     old_v = previous_state["node_v"]
     old_amp_cap = previous_state["amp_capacitor_v"]
@@ -85,7 +87,8 @@ def nonlinear_coupled_headphone_step(*, ladder_dc: dict,
                 bus_v, dt_s, r14_pin7_to_pin6_ohm,
                 r73_bottom_side_to_wiper_ohm))
             or dt_s <= 0 or not isinstance(sw18_on, bool)
-            or jacobian_method not in ("hybrid", "finite_difference")):
+            or jacobian_method not in ("hybrid", "finite_difference")
+            or linear_solver not in ("python", "numpy")):
         raise ValueError("finite complete 62-node state and valid step required")
     c10_nominal, r14_total, r73_total, r76 = regeneration_values()
     c10 = c10_nominal if c10_farads is None else c10_farads
@@ -235,8 +238,9 @@ def nonlinear_coupled_headphone_step(*, ladder_dc: dict,
             stamp_cap(AMP_FIRST+7, AMP_FIRST+8, amp_cap["C15"])
             stamp_cap(AMP_FIRST+10, J7, amp_cap["C21"])
             jacobian[J7][J7] += load_g/SCALES[J7]
-        direction = _solve_linear(jacobian,
-                                  [-v/scale for v, scale in zip(residual, SCALES)])
+        direction = solve_headphone_linear(
+            jacobian, [-v/scale for v, scale in zip(residual, SCALES)],
+            method=linear_solver)
         for power in range(32):
             trial = [v+0.5**power*dv for v, dv in zip(x, direction)]
             try:
@@ -272,4 +276,5 @@ def nonlinear_coupled_headphone_step(*, ladder_dc: dict,
             "max_charge_kcl_residual_a": max(abs(v) for v in residual),
             "iterations": iteration, "sw18_on_imposed": sw18_on,
             "jacobian_method": jacobian_method,
+            "linear_solver": linear_solver,
             "offline_reference_only": True}

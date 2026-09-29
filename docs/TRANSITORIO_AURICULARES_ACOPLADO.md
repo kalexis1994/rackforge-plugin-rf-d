@@ -11,3 +11,5 @@ Las [pruebas](../tests/test_headphone_coupled_transient_reference.py) verifican 
 Quedan pendientes un barrido temporal de estímulos y condiciones que ejercite saturación/temperatura/cargas, estabilidad y coste numérico, curvas de semiconductores representativos, contactos/impedancias reales, y comparación de audio externo. No se puede declarar fidelidad de auriculares a partir de este circuito condicionado.
 
 La ruta anterior de **62 columnas numéricas** se conserva mediante `jacobian_method="finite_difference"` para [comparar trazas completas](COMPARACION_JACOBIAN_AURICULARES.md) con el modo híbrido predeterminado. Ese cotejo incluye excitación bipolar, SW18 y cambios de carga; no sustituye una validación física.
+
+Para barridos offline largos puede elegirse el [solver lineal NumPy opcional](SOLVER_DENSO_AURICULARES.md) mediante `linear_solver="numpy"`. El valor predeterminado `"python"` conserva la ruta portable y ambas soluciones se contrastan con las mismas trazas y KCL.
