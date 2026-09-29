@@ -1,14 +1,14 @@
 //! C2 and R75/main panel coupled to the R77/R21/board-3 dynamic port.
 //! The Q17 collector voltage is imposed until the upstream 47 nodes are ported.
 
-use crate::panel::{
-    initial_panel_state, solve_panel_boundary, PanelBoundary, PanelState, PanelStepResult,
-};
-use crate::{Parameters, SolverBudget, StepError};
+use crate::panel::{initial_panel_state, PanelState, PanelStepDiagnostics, PanelStepResult};
+use crate::{solve_input_port, InputPortResponse, Parameters, SolverBudget, StepError};
 
 const C2_F: f64 = 10e-6;
 const R75_OHM: f64 = 1000.0;
+const R77_OHM: f64 = 1000.0;
 const R20_OHM: f64 = 5000.0;
+const R21_OHM: f64 = 5000.0;
 const R57_OHM: f64 = 33000.0;
 const R58_OHM: f64 = 1000.0;
 const KCL_TOLERANCE_A: f64 = 1e-10;
@@ -108,40 +108,58 @@ pub fn initial_output_state(
     })
 }
 
-fn trial(
+#[derive(Clone, Copy)]
+struct ReducedTrial {
+    wiper_v: f64,
+    c2_right_v: f64,
+    port: InputPortResponse,
+    wiper_kcl_a: f64,
+    slope_s: f64,
+}
+
+#[allow(clippy::too_many_arguments)]
+fn reduced_trial(
     previous_panel: PanelState,
     previous_c2_cap_v: f64,
     p: Parameters,
     b: OutputBoundary,
     budget: SolverBudget,
-    c2_right_v: f64,
+    wiper_v: f64,
     main_g: f64,
-) -> Result<(PanelState, PanelStepResult, f64, f64), StepError> {
-    let mut panel = previous_panel;
-    let response = solve_panel_boundary(
-        &mut panel,
+    series_g: f64,
+    lower_g: f64,
+) -> Result<ReducedTrial, StepError> {
+    let port = solve_input_port(
+        &previous_panel.amp,
         p,
-        PanelBoundary {
-            c2_right_v,
-            r21_lower_ohm: b.r21_lower_ohm,
-            dt_s: b.dt_s,
-            tip_load_ohm: b.tip_load_ohm,
-            ring_load_ohm: b.ring_load_ohm,
-        },
+        wiper_v,
+        b.dt_s,
+        b.tip_load_ohm,
+        b.ring_load_ohm,
         budget,
     )?;
     let c2_g = C2_F / b.dt_s;
-    let c2_current = c2_g * (b.q17_collector_v - c2_right_v - previous_c2_cap_v);
-    let residual = main_g * c2_right_v + response.r77_current_a - c2_current;
-    let slope = main_g + response.r77_input_conductance_s + c2_g;
-    if !residual.is_finite() || !slope.is_finite() {
+    let denominator = main_g + series_g + c2_g;
+    let c2_right_v =
+        (series_g * wiper_v + c2_g * (b.q17_collector_v - previous_c2_cap_v)) / denominator;
+    let wiper_kcl_a = (wiper_v - c2_right_v) * series_g + wiper_v * lower_g + port.current_a;
+    let slope_s = series_g * (1.0 - series_g / denominator) + lower_g + port.conductance_s;
+    if !c2_right_v.is_finite() || !wiper_kcl_a.is_finite() || !slope_s.is_finite() {
         return Err(StepError::ExponentialDomain);
     }
-    Ok((panel, response, residual, slope))
+    Ok(ReducedTrial {
+        wiper_v,
+        c2_right_v,
+        port,
+        wiper_kcl_a,
+        slope_s,
+    })
 }
 
 /// Implicitly solve C2_RIGHT, the passive main output and the complete
-/// dynamic headphone boundary. Every trial uses one immutable previous state.
+/// dynamic headphone boundary. Linear C2/R75/R77 KCL eliminates C2_RIGHT;
+/// the one remaining Newton unknown is the R21 wiper. All trials use one
+/// immutable previous state.
 pub fn solve_output_boundary(
     state: &mut OutputState,
     p: Parameters,
@@ -151,34 +169,69 @@ pub fn solve_output_boundary(
     let load = main_load(b)?;
     if !state.c2_right_v.is_finite()
         || !state.c2_capacitor_v.is_finite()
+        || !state.panel.r21_wiper_v.is_finite()
+        || !b.r21_lower_ohm.is_finite()
+        || b.r21_lower_ohm <= 0.0
+        || b.r21_lower_ohm >= R21_OHM
         || !(1..=16).contains(&budget.iterations)
         || !(1..=16).contains(&budget.line_search_halvings)
     {
         return Err(StepError::InvalidInput);
     }
     let main_g = 1.0 / (R75_OHM + load.equivalent_ohm);
+    let series_ohm = R77_OHM + R21_OHM - b.r21_lower_ohm;
+    let series_g = 1.0 / series_ohm;
+    let lower_g = 1.0 / b.r21_lower_ohm;
     let previous = *state;
-    let mut x = state.c2_right_v;
-    let mut cached: Option<(PanelState, PanelStepResult, f64, f64)> = None;
+    let mut wiper_v = state.panel.r21_wiper_v;
+    let mut cached: Option<ReducedTrial> = None;
     for iteration in 0..budget.iterations {
-        let (panel_state, panel_result, residual, slope) = match cached.take() {
+        let point = match cached.take() {
             Some(value) => value,
-            None => trial(
+            None => reduced_trial(
                 previous.panel,
                 previous.c2_capacitor_v,
                 p,
                 b,
                 budget,
-                x,
+                wiper_v,
                 main_g,
+                series_g,
+                lower_g,
             )?,
         };
-        if residual.abs() < KCL_TOLERANCE_A {
+        if point.wiper_kcl_a.abs() < KCL_TOLERANCE_A {
+            let x = point.c2_right_v;
             let c2_current = C2_F / b.dt_s * (b.q17_collector_v - x - previous.c2_capacitor_v);
+            let r77_current = (x - point.wiper_v) * series_g;
+            let c2_kcl = main_g * x + r77_current - c2_current;
+            if !c2_kcl.is_finite() || c2_kcl.abs() >= KCL_TOLERANCE_A {
+                return Err(StepError::NoDecrease);
+            }
+            let panel_slope = series_g + lower_g + point.port.conductance_s;
+            if !panel_slope.is_finite() || panel_slope.abs() < 1e-15 {
+                return Err(StepError::SingularJacobian);
+            }
+            let panel_result = PanelStepResult {
+                board4_pin22_v: x + (point.wiper_v - x) * R77_OHM / series_ohm,
+                r21_wiper_v: point.wiper_v,
+                j7_v: point.port.next_state.node_v[11],
+                r77_current_a: r77_current,
+                r77_input_conductance_s: series_g * (1.0 - series_g / panel_slope),
+                c19_current_a: point.port.current_a,
+                diagnostics: PanelStepDiagnostics {
+                    outer_iterations: iteration,
+                    max_panel_kcl_residual_a: point.wiper_kcl_a.abs(),
+                    board3: point.port.diagnostics,
+                },
+            };
             let pin21 = x * load.equivalent_ohm / (R75_OHM + load.equivalent_ohm);
             let hi = pin21 * load.hi_to_pin21;
             let lo = hi * load.lo_to_hi;
-            state.panel = panel_state;
+            state.panel = PanelState {
+                amp: point.port.next_state,
+                r21_wiper_v: point.wiper_v,
+            };
             state.c2_right_v = x;
             state.c2_capacitor_v = b.q17_collector_v - x;
             return Ok(OutputStepResult {
@@ -189,30 +242,32 @@ pub fn solve_output_boundary(
                 j7_v: panel_result.j7_v,
                 c2_current_a: c2_current,
                 r75_current_a: main_g * x,
-                r77_current_a: panel_result.r77_current_a,
+                r77_current_a: r77_current,
                 outer_iterations: iteration,
-                max_c2_right_kcl_residual_a: residual.abs(),
+                max_c2_right_kcl_residual_a: c2_kcl.abs(),
                 panel: panel_result,
             });
         }
-        if slope.abs() < 1e-15 {
+        if point.slope_s.abs() < 1e-15 {
             return Err(StepError::SingularJacobian);
         }
-        let direction = -residual / slope;
+        let direction = -point.wiper_kcl_a / point.slope_s;
         let mut accepted = false;
         for power in 0..budget.line_search_halvings {
-            let candidate_x = x + 0.5_f64.powi(power as i32) * direction;
-            if let Ok(candidate) = trial(
+            let candidate_wiper = wiper_v + 0.5_f64.powi(power as i32) * direction;
+            if let Ok(candidate) = reduced_trial(
                 previous.panel,
                 previous.c2_capacitor_v,
                 p,
                 b,
                 budget,
-                candidate_x,
+                candidate_wiper,
                 main_g,
+                series_g,
+                lower_g,
             ) {
-                if candidate.2.abs() < residual.abs() {
-                    x = candidate_x;
+                if candidate.wiper_kcl_a.abs() < point.wiper_kcl_a.abs() {
+                    wiper_v = candidate_wiper;
                     cached = Some(candidate);
                     accepted = true;
                     break;
