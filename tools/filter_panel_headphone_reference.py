@@ -11,6 +11,7 @@ from filter_ladder_ebers_moll_dc_reference import _solve_linear
 from filter_panel_output_small_signal_reference import (
     NODE_COUNT as MAIN_COUNT, _panel_parts, panel_output_matrices)
 from filter_panel_output_transient_reference import nonlinear_panel_output_step
+from filter_vca_output_transient_reference import nonlinear_output_step
 from vca_output_conversion_dc_reference import _parts as board_parts
 
 
@@ -53,7 +54,8 @@ def panel_with_headphone_matrices(*, ladder_dc: dict, recovery_dc: dict,
                                   r20_wiper_to_ground_ohm: float,
                                   hi_load_ohm: float, lo_load_ohm: float,
                                   r21_wiper_to_ground_ohm: float,
-                                  headphone_wiper_load_ohm: float
+                                  headphone_wiper_load_ohm: float,
+                                  sw18_on: bool = True
                                   ) -> tuple[list[list[float]], list[list[float]], float]:
     """Expand the 51-node HI/LO graph with pin 22 and R21 wiper."""
     hp = headphone_load_reduction(
@@ -71,6 +73,16 @@ def panel_with_headphone_matrices(*, ladder_dc: dict, recovery_dc: dict,
         for j in range(MAIN_COUNT):
             g[i][j] = old_g[i][j]
             c[i][j] = old_c[i][j]
+    if not isinstance(sw18_on, bool):
+        raise ValueError("explicit SW18 state required")
+    if not sw18_on:
+        upper = _panel_parts()["R20_PANEL"]-r20_wiper_to_ground_ohm
+        lower = r20_wiper_to_ground_ohm
+        # Remove ON branches pin21--HI and HI--ground. The OFF contacts
+        # ground the R20 wiper, leaving its upper segment at pin 21.
+        g[48][49] -= 1/upper
+        g[49][48] -= 1/upper
+        g[49][49] += 1/upper+1/lower
     r = _headphone_parts()
     g[47][47] += 1/(r["R77_BOARD4"]+hp["equivalent_headphone_input_ohm"])
 
@@ -98,6 +110,7 @@ def filter_with_panel_and_headphone(*, ladder_dc: dict, recovery_dc: dict,
                                     hi_load_ohm: float, lo_load_ohm: float,
                                     r21_wiper_to_ground_ohm: float,
                                     headphone_wiper_load_ohm: float,
+                                    sw18_on: bool = True,
                                     c10_farads: float | None = None) -> dict:
     """Local BUS-normalized transfer to HI, LO and R21 wiper."""
     if not math.isfinite(frequency_hz) or frequency_hz < 0:
@@ -119,7 +132,8 @@ def filter_with_panel_and_headphone(*, ladder_dc: dict, recovery_dc: dict,
         r20_wiper_to_ground_ohm=r20_wiper_to_ground_ohm,
         hi_load_ohm=hi_load_ohm, lo_load_ohm=lo_load_ohm,
         r21_wiper_to_ground_ohm=r21_wiper_to_ground_ohm,
-        headphone_wiper_load_ohm=headphone_wiper_load_ohm)
+        headphone_wiper_load_ohm=headphone_wiper_load_ohm,
+        sw18_on=sw18_on)
     s = 2j*math.pi*frequency_hz
     matrix = [[g[i][j]-s*c[i][j] for j in range(NODE_COUNT)]
               for i in range(NODE_COUNT)]
@@ -140,11 +154,13 @@ def filter_with_panel_and_headphone(*, ladder_dc: dict, recovery_dc: dict,
             "r21_wiper_v_per_bus_v": v[R21_WIPER],
             "max_linear_kcl_residual_a_per_bus_v": residual,
             "diodes_assumed_open": cascaded_output_dc["diodes_assumed_open"],
+            "sw18_on_imposed": sw18_on,
             "downstream_headphone_stage_imposed_load": True}
 
 
 def nonlinear_panel_headphone_step(*, r21_wiper_to_ground_ohm: float,
                                    headphone_wiper_load_ohm: float,
+                                   sw18_on: bool = True,
                                    **panel_step_parameters) -> dict:
     """Reduce R21 exactly, take one nonlinear step, reconstruct its nodes."""
     if "headphone_input_ohm" in panel_step_parameters:
@@ -152,9 +168,36 @@ def nonlinear_panel_headphone_step(*, r21_wiper_to_ground_ohm: float,
     hp = headphone_load_reduction(
         r21_wiper_to_ground_ohm=r21_wiper_to_ground_ohm,
         headphone_wiper_load_ohm=headphone_wiper_load_ohm)
-    out = nonlinear_panel_output_step(
-        headphone_input_ohm=hp["equivalent_headphone_input_ohm"],
-        **panel_step_parameters)
+    if not isinstance(sw18_on, bool):
+        raise ValueError("explicit SW18 state required")
+    if sw18_on:
+        out = nonlinear_panel_output_step(
+            headphone_input_ohm=hp["equivalent_headphone_input_ohm"],
+            **panel_step_parameters)
+    else:
+        if "main_load_ohm" in panel_step_parameters:
+            raise ValueError("main load is derived from R20 in OFF")
+        r20_lower = panel_step_parameters.pop("r20_wiper_to_ground_ohm")
+        hi_load = panel_step_parameters.pop("hi_load_ohm")
+        lo_load = panel_step_parameters.pop("lo_load_ohm")
+        if not all(math.isfinite(v) and v > 0 for v in (hi_load, lo_load)):
+            raise ValueError("positive finite HI/LO jack loads required")
+        panel_r = _panel_parts()
+        if not math.isfinite(r20_lower) or not 0 < r20_lower < panel_r["R20_PANEL"]:
+            raise ValueError("interior R20 wiper position required")
+        upper = panel_r["R20_PANEL"]-r20_lower
+        core = nonlinear_output_step(
+            main_load_ohm=upper,
+            headphone_input_ohm=hp["equivalent_headphone_input_ohm"],
+            **panel_step_parameters)
+        out = {**core, "board4_pin21_v": core["main_pin21_v"],
+               "j4_hi_v": 0.0, "j5_lo_v": 0.0,
+               "j4_hi_external_current_a": 0.0,
+               "j5_lo_external_current_a": 0.0,
+               "r57_current_a": 0.0, "r58_current_a": 0.0,
+               "r20_upper_current_a": core["main_pin21_v"]/upper,
+               "r20_lower_current_a": 0.0,
+               "sw18_on_imposed": False}
     pin22 = out["headphone_pin22_v"]
     wiper = pin22*hp["wiper_to_pin22_ratio"]
     return {**out,
@@ -164,4 +207,5 @@ def nonlinear_panel_headphone_step(*, r21_wiper_to_ground_ohm: float,
             "r21_lower_current_a": wiper/r21_wiper_to_ground_ohm,
             "headphone_wiper_load_current_a": wiper/headphone_wiper_load_ohm,
             "headphone_reduction": hp,
+            "sw18_on_imposed": sw18_on,
             "downstream_headphone_stage_imposed_load": True}

@@ -12,6 +12,7 @@ from filter_panel_headphone_reference import (
     headphone_load_reduction, nonlinear_panel_headphone_step,
     panel_with_headphone_matrices)
 from filter_panel_output_small_signal_reference import filter_with_panel_output
+from filter_vca_output_small_signal_reference import filter_with_output
 from filter_vca_output_transient_reference import initial_output_state
 
 
@@ -105,6 +106,52 @@ class PanelHeadphoneTest(unittest.TestCase):
                                out["main_pin21_current_a"]
                                + out["headphone_pin22_current_a"],
                                delta=1e-10)
+
+    def test_sw18_off_shunts_r20_wiper_and_silences_hi_lo(self):
+        args = self.args()
+        hp = headphone_load_reduction(
+            r21_wiper_to_ground_ohm=2000,
+            headphone_wiper_load_ohm=32000)
+        g, _, _ = panel_with_headphone_matrices(**args, sw18_on=False)
+        self.assertEqual(g[48][49], 0)
+        self.assertEqual(g[49][48], 0)
+        self.assertAlmostEqual(g[48][48], -1/1000-1/2500)
+        off = filter_with_panel_and_headphone(
+            **args, sw18_on=False, frequency_hz=100,
+            r14_pin7_to_pin6_ohm=0, r73_bottom_side_to_wiper_ohm=500)
+        simple = filter_with_output(
+            ladder_dc=self.ladder, recovery_dc=self.recovery,
+            cascaded_output_dc=self.output_dc,
+            frequency_hz=100, r14_pin7_to_pin6_ohm=0,
+            r73_bottom_side_to_wiper_ohm=500,
+            main_load_ohm=2500,
+            headphone_input_ohm=hp["equivalent_headphone_input_ohm"])
+        self.assertEqual(off["j4_hi_v_per_bus_v"], 0)
+        self.assertEqual(off["j5_lo_v_per_bus_v"], 0)
+        self.assertAlmostEqual(off["c2_right_v_per_bus_v"],
+                               simple["c2_right_v_per_bus_v"], delta=1e-10)
+        self.assertLess(off["max_linear_kcl_residual_a_per_bus_v"], 1e-11)
+        initial = initial_output_state(
+            ladder_dc=self.ladder, recovery_dc=self.recovery,
+            cascaded_output_dc=self.output_dc)
+        step = nonlinear_panel_headphone_step(
+            ladder_dc=self.ladder, recovery_dc=self.recovery,
+            cascaded_output_dc=self.output_dc,
+            previous_node_v=initial["node_v"],
+            previous_c10_capacitor_v=initial["c10_capacitor_v"],
+            previous_bus_v=0, bus_v=0.1, dt_s=1/48000,
+            r14_pin7_to_pin6_ohm=0, r73_bottom_side_to_wiper_ohm=500,
+            r20_wiper_to_ground_ohm=2500,
+            hi_load_ohm=10000, lo_load_ohm=100000,
+            r21_wiper_to_ground_ohm=2000,
+            headphone_wiper_load_ohm=32000, sw18_on=False)
+        self.assertEqual(step["j4_hi_v"], 0)
+        self.assertEqual(step["j5_lo_v"], 0)
+        self.assertAlmostEqual(step["main_pin21_current_a"],
+                               step["r20_upper_current_a"], delta=1e-12)
+        self.assertAlmostEqual(step["headphone_pin22_current_a"],
+                               step["r21_upper_current_a"], delta=1e-12)
+        self.assertLess(step["max_charge_kcl_residual_a"], 1e-10)
 
 
 if __name__ == "__main__":

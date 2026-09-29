@@ -1,7 +1,7 @@
 {
   "source": "SVC-9 Fig. 9-17 interconnecting wiring diagram, PDF p. 19 (SVC-204D PDF p. 75)",
   "scope": "Main output in SW18 ON state; board-4 output pin 21 through R20 volume cursor and HI/LO divider",
-  "switch_boundary": "SW18 ON; OFF contact shunting and jack switching are not modeled",
+  "switch_boundary": "SW18 sections 5/2 common connect the R20 wiper to 6/3 (J4 HI) in ON or 4/1 (ground) in OFF; jack switching remains outside the model",
   "resistors": [
     {"ref": "R75_BOARD4", "ohm": 1000, "between": ["C2_RIGHT", "BOARD4_PIN21"]},
     {"ref": "R20_PANEL", "ohm": 5000, "between": ["BOARD4_PIN21", "GROUND"], "wiper": "R20_WIPER"},
@@ -9,6 +9,7 @@
     {"ref": "R58_PANEL", "ohm": 1000, "between": ["J5_LO", "GROUND"]}
   ],
   "connections_on": {"R20_WIPER": "J4_HI", "J4_HI": "main high output", "J5_LO": "main low output"},
+  "connections_off": {"SW18_COMMON_5_2": "R20_WIPER", "SW18_CONTACTS_4_1": "GROUND", "R20_WIPER": "GROUND", "J4_HI": "disconnected from R20 wiper"},
   "loads": "External HI and LO jack loads are independent imposed positive resistances to ground",
   "uncertainty": "SW18 OFF routing, jack contacts, tolerance of panel resistors and external loads remain outside this conditional network"
 }
