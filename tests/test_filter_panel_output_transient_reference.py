@@ -36,18 +36,23 @@ class FilterPanelOutputTransientTest(unittest.TestCase):
             previous_bus_v=state["bus_v"], bus_v=bus,
             dt_s=1/48000, r14_pin7_to_pin6_ohm=0,
             r73_bottom_side_to_wiper_ohm=500,
+            r20_wiper_to_ground_ohm=2500,
             hi_load_ohm=hi_load, lo_load_ohm=lo_load,
             headphone_input_ohm=100000)
 
     def test_reduction_and_current_conservation(self):
         reduction = panel_load_reduction(
+            r20_wiper_to_ground_ohm=2500,
             hi_load_ohm=10000, lo_load_ohm=100000)
         self.assertGreater(reduction["equivalent_main_load_ohm"], 0)
         self.assertLess(reduction["equivalent_main_load_ohm"], 10000)
         out = self.step(0.1)
         self.assertLess(out["max_charge_kcl_residual_a"], 1e-10)
         self.assertAlmostEqual(out["main_pin21_current_a"],
-                               out["j4_hi_external_current_a"]
+                               out["r20_upper_current_a"], delta=1e-12)
+        self.assertAlmostEqual(out["r20_upper_current_a"],
+                               out["r20_lower_current_a"]
+                               + out["j4_hi_external_current_a"]
                                + out["r57_current_a"], delta=1e-12)
         self.assertAlmostEqual(out["r57_current_a"],
                                out["r58_current_a"]

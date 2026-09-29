@@ -1,4 +1,4 @@
-"""50-node conditional AC through the front-panel HI/LO output divider."""
+"""51-node conditional AC through R20 volume and panel HI/LO divider."""
 
 from __future__ import annotations
 
@@ -12,9 +12,10 @@ from filter_vca_output_small_signal_reference import loaded_output_matrices
 
 
 EVIDENCE = Path(__file__).resolve().parents[1] / "evidence" / "output_panel_hi_lo.json"
-NODE_COUNT = 50
-HI = 48
-LO = 49
+NODE_COUNT = 51
+PIN21 = 48
+HI = 49
+LO = 50
 
 
 def _panel_parts() -> dict[str, float]:
@@ -22,7 +23,8 @@ def _panel_parts() -> dict[str, float]:
     parts = {row["ref"]: row["ohm"] for row in data["resistors"]}
     if (data["source"], parts) != (
             "SVC-9 Fig. 9-17 interconnecting wiring diagram, PDF p. 19 (SVC-204D PDF p. 75)",
-            {"R75_BOARD4": 1000, "R57_PANEL": 33000,
+            {"R75_BOARD4": 1000, "R20_PANEL": 5000,
+             "R57_PANEL": 33000,
              "R58_PANEL": 1000}):
         raise ValueError("panel output graph differs from documentary values")
     return parts
@@ -30,10 +32,15 @@ def _panel_parts() -> dict[str, float]:
 
 def panel_output_matrices(*, ladder_dc: dict, recovery_dc: dict,
                           cascaded_output_dc: dict,
+                          r20_wiper_to_ground_ohm: float,
                           hi_load_ohm: float, lo_load_ohm: float,
                           headphone_input_ohm: float,
                           ) -> tuple[list[list[float]], list[list[float]], float]:
-    """Connect C2_RIGHT/R75 to panel HI/LO while SW18 is ON."""
+    """Connect C2_RIGHT/R75 to R20 and panel HI/LO while SW18 is ON.
+
+    R20 positions are interior to avoid a zero-ohm branch in this explicit
+    nodal matrix; the resistive reduction can later cover exact endpoints.
+    """
     if not all(math.isfinite(v) and v > 0 for v in
                (hi_load_ohm, lo_load_ohm, headphone_input_ohm)):
         raise ValueError("positive finite HI/LO/headphone loads required")
@@ -48,6 +55,9 @@ def panel_output_matrices(*, ladder_dc: dict, recovery_dc: dict,
             g[row][col] = old_g[row][col]
             c[row][col] = old_c[row][col]
     r = _panel_parts()
+    if (not math.isfinite(r20_wiper_to_ground_ohm)
+            or not 0 < r20_wiper_to_ground_ohm < r["R20_PANEL"]):
+        raise ValueError("interior electrical R20 wiper segment required")
 
     def stamp(left: int, right: int | None, ohm: float) -> None:
         conductance = 1/ohm
@@ -57,7 +67,9 @@ def panel_output_matrices(*, ladder_dc: dict, recovery_dc: dict,
             g[left][right] += conductance
             g[right][left] += conductance
 
-    stamp(47, HI, r["R75_BOARD4"])
+    stamp(47, PIN21, r["R75_BOARD4"])
+    stamp(PIN21, HI, r["R20_PANEL"]-r20_wiper_to_ground_ohm)
+    stamp(HI, None, r20_wiper_to_ground_ohm)
     stamp(HI, LO, r["R57_PANEL"])
     stamp(LO, None, r["R58_PANEL"])
     stamp(HI, None, hi_load_ohm)
@@ -69,10 +81,11 @@ def filter_with_panel_output(*, ladder_dc: dict, recovery_dc: dict,
                              cascaded_output_dc: dict, frequency_hz: float,
                              r14_pin7_to_pin6_ohm: float,
                              r73_bottom_side_to_wiper_ohm: float,
+                             r20_wiper_to_ground_ohm: float,
                              hi_load_ohm: float, lo_load_ohm: float,
                              headphone_input_ohm: float,
                              c10_farads: float | None = None) -> dict:
-    """BUS=1 V local transfer to panel J4 HI and J5 LO with declared loads."""
+    """BUS=1 V local transfer through R20 to loaded J4 HI and J5 LO."""
     if not math.isfinite(frequency_hz) or frequency_hz < 0:
         raise ValueError("finite nonnegative frequency required")
     if not cascaded_output_dc["input_and_controls_imposed"]:
@@ -89,6 +102,7 @@ def filter_with_panel_output(*, ladder_dc: dict, recovery_dc: dict,
     g, c, bus_c = panel_output_matrices(
         ladder_dc=ladder_dc, recovery_dc=recovery_dc,
         cascaded_output_dc=cascaded_output_dc,
+        r20_wiper_to_ground_ohm=r20_wiper_to_ground_ohm,
         hi_load_ohm=hi_load_ohm, lo_load_ohm=lo_load_ohm,
         headphone_input_ohm=headphone_input_ohm)
     s = 2j*math.pi*frequency_hz
@@ -108,6 +122,7 @@ def filter_with_panel_output(*, ladder_dc: dict, recovery_dc: dict,
         "frequency_hz": frequency_hz,
         "node_v_per_bus_v": tuple(v),
         "c2_right_v_per_bus_v": v[47],
+        "board4_pin21_v_per_bus_v": v[PIN21],
         "j4_hi_v_per_bus_v": v[HI],
         "j5_lo_v_per_bus_v": v[LO],
         "j4_hi_current_a_per_bus_v": v[HI]/hi_load_ohm,
