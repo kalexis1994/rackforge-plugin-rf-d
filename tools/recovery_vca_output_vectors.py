@@ -133,6 +133,10 @@ def generate_vectors() -> dict:
         hi = pin21*reduced["hi_to_pin21_ratio"] if sw18 else 0.0
         lo = hi*reduced["lo_to_hi_ratio"] if sw18 else 0.0
         rows.append(dict(boundary=b, sw18_on=sw18, node_v=x[:31],
+                         upstream_port_current_a=[
+                             0.22e-6/dt * (b["ladder_left_v"]-x[0]+previous_caps[0]),
+                             0.22e-6/dt * (b["ladder_right_v"]-x[1]+previous_caps[1]),
+                         ],
                          recovery_capacitor_v=[x[0]-b["ladder_left_v"],
                                                x[1]-b["ladder_right_v"], x[7]],
                          c6_capacitor_v=x[8]-x[9], c15_capacitor_v=x[10],

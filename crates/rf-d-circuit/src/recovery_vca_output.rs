@@ -1,7 +1,9 @@
 //! Q8/Q6/Q7/Q5 recovery through R2/C6, both VCAs and J7.
 //! Ladder top emitters remain imposed voltage boundaries; C10 is open.
 
-use crate::output_conversion::{max_abs, solve_linear, Parameters as ConversionParameters};
+use crate::output_conversion::{
+    max_abs, solve_linear, solve_linear_many, Parameters as ConversionParameters,
+};
 use crate::vca1_output::{
     initial_state as initial_vca, solve_input_port as vca_port, Boundary as VcaBoundary,
     State as VcaState,
@@ -52,6 +54,20 @@ pub struct StepResult {
     pub vca_port_evaluations: usize,
     pub predictor_fallback: bool,
     pub max_kcl_residual_a: f64,
+    /// Accepted R2 current and tangent returned by the first VCA.
+    pub vca_current_a: f64,
+    pub vca_conductance_s: f64,
+}
+
+/// Dynamic two-port load at the two upper ladder emitters through C5/C1.
+#[derive(Clone, Copy, Debug)]
+pub struct InputPort {
+    pub next_state: State,
+    pub result: StepResult,
+    /// Positive from the imposed ladder nodes into C5 and C1, in amperes.
+    pub current_a: [f64; 2],
+    /// Row = input current; column = imposed ladder voltage, in siemens.
+    pub conductance_s: [[f64; 2]; 2],
 }
 
 fn vca_boundary(x: &[f64; N], b: Boundary) -> VcaBoundary {
@@ -273,6 +289,8 @@ fn trial(
         vca_port_evaluations: 0,
         predictor_fallback: false,
         max_kcl_residual_a: max_abs(&r),
+        vca_current_a: port.current_a,
+        vca_conductance_s: port.conductance_s,
     };
     Ok((r, j, port.next_state, result))
 }
@@ -387,4 +405,50 @@ pub fn step(
     let mut result = solution.2;
     result.predictor_fallback = fallback;
     Ok(result)
+}
+
+/// Provisional C5/C1 load for a future coupled ladder Newton. Every trial
+/// starts from the same previous capacitor state; commit only next_state.
+pub fn solve_input_port(
+    previous: &State,
+    p: TransistorParameters,
+    conversion: ConversionParameters,
+    headphone: HeadphoneParameters,
+    b: Boundary,
+    budget: SolverBudget,
+) -> Result<InputPort, StepError> {
+    let mut next_state = *previous;
+    let result = step(&mut next_state, p, conversion, headphone, b, budget)?;
+    let x = next_state.node_v;
+    let (_, jacobian) = evaluate(
+        &x,
+        p,
+        b,
+        Some(previous.capacitor_v),
+        Some((result.vca_current_a, result.vca_conductance_s)),
+    )?;
+    let dt = b.vca.second.output.output.dt_s;
+    let g = [C5_F / dt, C1_F / dt];
+    let mut rhs = [[0.0; 2]; N];
+    rhs[0][0] = g[0];
+    rhs[1][1] = g[1];
+    let response = solve_linear_many(jacobian, rhs)?;
+    let current_a = [
+        g[0] * (b.ladder_left_v - x[0] + previous.capacitor_v[0]),
+        g[1] * (b.ladder_right_v - x[1] + previous.capacitor_v[1]),
+    ];
+    let conductance_s = std::array::from_fn(|row| {
+        std::array::from_fn(|column| g[row] * (f64::from(row == column) - response[row][column]))
+    });
+    if current_a.iter().any(|v| !v.is_finite())
+        || conductance_s.iter().flatten().any(|v| !v.is_finite())
+    {
+        return Err(StepError::ExponentialDomain);
+    }
+    Ok(InputPort {
+        next_state,
+        result,
+        current_a,
+        conductance_s,
+    })
 }

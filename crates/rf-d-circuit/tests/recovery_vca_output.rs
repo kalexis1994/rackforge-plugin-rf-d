@@ -1,7 +1,9 @@
 use rf_d_circuit::output::OutputBoundary;
 use rf_d_circuit::output_conversion::{DiodeParameters, Parameters as ConversionParameters};
 use rf_d_circuit::output_conversion_c4::BoundaryC4;
-use rf_d_circuit::recovery_vca_output::{initial_state, step, Boundary, NODE_NAMES};
+use rf_d_circuit::recovery_vca_output::{
+    initial_state, solve_input_port, step, Boundary, NODE_NAMES,
+};
 use rf_d_circuit::vca1_output::Boundary as FirstBoundary;
 use rf_d_circuit::vca2_output::{Boundary as SecondBoundary, Parameters as TransistorParameters};
 use rf_d_circuit::{Parameters as HeadphoneParameters, SolverBudget, StepError};
@@ -123,6 +125,7 @@ fn joint_recovery_c1_c5_c9_vca_to_j7_matches_independent_33_variable_python() {
         );
     }
     for (index, row) in case["steps"].as_array().unwrap().iter().enumerate() {
+        let previous = state;
         let b = boundary(case, &row["boundary"], row["sw18_on"].as_bool().unwrap());
         let result = step(
             &mut state,
@@ -210,6 +213,63 @@ fn joint_recovery_c1_c5_c9_vca_to_j7_matches_independent_33_variable_python() {
             );
         }
         assert!(result.max_kcl_residual_a < 1e-10);
+        let port = solve_input_port(
+            &previous,
+            transistors,
+            conversion,
+            headphone,
+            b,
+            SolverBudget::default(),
+        )
+        .unwrap();
+        assert_eq!(port.next_state, state);
+        for output in 0..2 {
+            let expected = n(&row["upstream_port_current_a"][output]);
+            assert!(
+                (port.current_a[output] - expected).abs() < 1e-9,
+                "step {index} ladder port {output}: {} vs {expected}",
+                port.current_a[output]
+            );
+        }
+        if [0usize, 6, 11].contains(&index) {
+            for column in 0..2 {
+                let mut plus = b;
+                let mut minus = b;
+                if column == 0 {
+                    plus.ladder_left_v += 1e-4;
+                    minus.ladder_left_v -= 1e-4;
+                } else {
+                    plus.ladder_right_v += 1e-4;
+                    minus.ladder_right_v -= 1e-4;
+                }
+                let high = solve_input_port(
+                    &previous,
+                    transistors,
+                    conversion,
+                    headphone,
+                    plus,
+                    SolverBudget::default(),
+                )
+                .unwrap();
+                let low = solve_input_port(
+                    &previous,
+                    transistors,
+                    conversion,
+                    headphone,
+                    minus,
+                    SolverBudget::default(),
+                )
+                .unwrap();
+                for output in 0..2 {
+                    let fd = (high.current_a[output] - low.current_a[output]) / 2e-4;
+                    assert!(
+                        (port.conductance_s[output][column] - fd).abs() < 2e-7 + 1e-3 * fd.abs(),
+                        "step {index} Y[{output},{column}]: {} vs {fd}",
+                        port.conductance_s[output][column]
+                    );
+                }
+            }
+        }
     }
 }
 
