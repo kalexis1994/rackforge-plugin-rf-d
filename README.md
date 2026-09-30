@@ -4,7 +4,9 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
-El [criterio temporal de voltaje](docs/CRITERIO_VOLTAJE_TRANSITORIO_GLOBAL.md) corrige las 96 sondas de apagado (máximo interno 0,150 nV frente a las raíces independientes). Pasa de nuevo el estrés de 752384 muestras y heap cero. El costo sube a 3,939 ms/bloque; aún no cumple tiempo real. Los saltos abruptos y el contorno real siguen pendientes.
+La [dirección Newton reutilizada](docs/DIRECCION_NEWTON_REUTILIZADA.md) conserva en bits los 23224 valores de las capturas de apagado y reduce 23,18 % el costo de la política precisa: **2,953 ms/bloque**. Mantiene heap cero y los gates de voltaje. Todavía excede el deadline de 1,333 ms.
+
+El [criterio temporal de voltaje](docs/CRITERIO_VOLTAJE_TRANSITORIO_GLOBAL.md) corrige las 96 sondas de apagado (máximo interno 0,150 nV frente a las raíces independientes). Pasa de nuevo el estrés de 752384 muestras y heap cero. Su primera implementación costó 3,939 ms/bloque, luego reducido reutilizando direcciones; aún no cumple tiempo real. Los saltos abruptos y el contorno real siguen pendientes.
 
 El [apagado sintético de VCAs](docs/APAGADO_VCA_GLOBAL_66.md) registró 20/96 sondas con error interno >1 µV en la política anterior, hasta 1,318 mV. El criterio de voltaje corrige esa brecha; los saltos de una muestra siguen fallando. Estos estímulos no modelan el contorno.
 

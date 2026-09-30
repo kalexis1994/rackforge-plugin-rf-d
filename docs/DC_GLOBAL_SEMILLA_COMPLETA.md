@@ -1,5 +1,7 @@
 # DC global con semilla completa y criterio de voltaje
 
+Este corte introdujo el criterio primero para DC. Posteriormente se [extendió a los pasos temporales](CRITERIO_VOLTAJE_TRANSITORIO_GLOBAL.md) y se [reutilizaron direcciones aceptadas](DIRECCION_NEWTON_REUTILIZADA.md). Las comparaciones y costos de esta ficha son del corte DC original.
+
 ## Problema observado
 
 El [barrido de controles](EXTREMOS_CONTROLES_GLOBAL_66.md) encontró arranque en frío fallido con cutoff máximo. `initial_state` requería primero resolver la cadena anidada; ese solve podía agotar su presupuesto antes de intentar las 66 ecuaciones simultáneas.

@@ -1,5 +1,7 @@
 # Corrección de voltaje en el paso temporal global
 
+La [reutilización posterior de direcciones Newton](DIRECCION_NEWTON_REUTILIZADA.md) conserva esta política y reduce su costo a 2,953 ms/bloque en otra comparación alternada. Las cifras de 3,939 ms de esta ficha corresponden al primer cierre estricto sin caché.
+
 ## Política y alcance
 
 El [barrido de apagado](APAGADO_VCA_GLOBAL_66.md) demostró 20/96 sondas con error interno >1 µV aun cumpliendo KCL. El máximo era 1,318 mV en los emisores comunes del segundo VCA. Se extiende al paso temporal la política de [corrección DC](DC_GLOBAL_SEMILLA_COMPLETA.md): **KCL <10 pA y corrección Newton completa <10 nV**, con las 66 ecuaciones y los mismos historiales de capacitor durante todos los candidatos/reintentos.

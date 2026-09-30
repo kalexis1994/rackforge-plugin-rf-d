@@ -14,6 +14,8 @@ Los estados `desconocido`, `hipótesis`, `modelado`, `contrastado` y `cerrado pa
 
 ## Afirmación pública actual
 
+La [reutilización de dirección Newton](DIRECCION_NEWTON_REUTILIZADA.md) conserva 23224 valores en bits en las capturas de apagado, los gates globales y heap cero. Reduce 23,18 % la media precisa a 2,953 ms/bloque; 640/640 bloques aún exceden deadline. No amplía audio externo ni admite el host.
+
 El [criterio temporal KCL + corrección de voltaje](CRITERIO_VOLTAJE_TRANSITORIO_GLOBAL.md) corrige las 96 sondas de apagado (0,150 nV máximo), pasa heap cero y 752384 muestras de estrés. Su costo aumenta 69,3 % a 3,939 ms/bloque; C7 sigue fallido. No resuelve los saltos abruptos ni el contorno físico.
 
 El [apagado de los VCAs con rampas impuestas](APAGADO_VCA_GLOBAL_66.md) registró 20/96 sondas >1 µV interno con la política anterior, hasta 1,318 mV. El criterio de voltaje corrige esa brecha. Las cuatro escenas de salto directo siguen fallando de forma atómica.

@@ -575,6 +575,7 @@ fn solve(
     evaluations: &mut usize,
 ) -> Result<([f64; N], usize, f64, f64, f64), StepError> {
     let mut cached = None;
+    let mut cached_direction = None;
     for iteration in 0..budget.iterations {
         let (r, j, i10) = match cached.take() {
             Some(v) => v,
@@ -590,7 +591,10 @@ fn solve(
             let control = std::array::from_fn::<_, 4, _>(|i| r[62 + i]);
             return Ok((x, iteration, error, i10, max_abs(&control)));
         }
-        let ordered_direction = solve_linear_sparse(j, std::array::from_fn(|i| -r[ORDER[i]]))?;
+        let ordered_direction = match cached_direction.take() {
+            Some(d) => d,
+            None => solve_linear_sparse(j, std::array::from_fn(|i| -r[ORDER[i]]))?,
+        };
         let direction: [f64; N] = std::array::from_fn(|i| ordered_direction[POSITION[i]]);
         // At weak operating points, 10 pA alone can leave mV in internal
         // high-impedance nodes. Require the full Newton correction as well.
@@ -630,14 +634,20 @@ fn solve(
                     next_error < error
                 };
                 if decreases {
-                    accepted = Some((candidate, next));
+                    accepted = Some((candidate, next, next_voltage_direction));
                     break;
                 }
             }
         }
-        if let Some((candidate, next)) = accepted {
+        if let Some((candidate, next, next_direction)) = accepted {
             x = candidate;
             cached = Some(next);
+            // Exact same J and residual at the accepted point, at immutable
+            // boundaries/history. Never reuse rejected trials or cross calls.
+            // Keep the ordered direction to avoid changing summation order.
+            if !cfg!(feature = "solver-uncached-direction") {
+                cached_direction = next_direction;
+            }
         } else {
             return Err(StepError::NoDecrease);
         }
