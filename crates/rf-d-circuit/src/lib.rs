@@ -6,6 +6,7 @@
 
 pub mod output;
 pub mod output_conversion;
+pub mod output_conversion_c4;
 pub mod panel;
 
 const N: usize = 12;

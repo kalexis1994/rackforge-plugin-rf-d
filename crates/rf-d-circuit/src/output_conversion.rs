@@ -7,7 +7,7 @@ use crate::output::{
 };
 use crate::{Parameters as HeadphoneParameters, SolverBudget, StepError};
 
-const N: usize = 6;
+pub(crate) const N: usize = 6;
 const K_B: f64 = 1.380_649e-23;
 const Q_E: f64 = 1.602_176_634e-19;
 const KCL_TOLERANCE_A: f64 = 1e-12;
@@ -101,7 +101,7 @@ fn positive(v: f64) -> bool {
     v.is_finite() && v > 0.0
 }
 
-fn validate(p: Parameters, b: Boundary) -> Result<(), StepError> {
+pub(crate) fn validate(p: Parameters, b: Boundary) -> Result<(), StepError> {
     if !positive(p.transistor_is_a)
         || !positive(p.beta_forward)
         || !positive(p.beta_reverse)
@@ -182,7 +182,7 @@ fn diode_current(exponent: f64, p: DiodeParameters, vt: f64) -> Result<(f64, f64
     ))
 }
 
-fn evaluate(
+pub(crate) fn evaluate(
     x: &[f64; N],
     p: Parameters,
     b: Boundary,
@@ -210,22 +210,25 @@ fn evaluate(
     Ok((r, j))
 }
 
-fn max_abs(x: &[f64; N]) -> f64 {
+pub(crate) fn max_abs<const M: usize>(x: &[f64; M]) -> f64 {
     x.iter().fold(0.0_f64, |a, v| a.max(v.abs()))
 }
 
-fn solve_linear(mut j: [[f64; N]; N], mut rhs: [f64; N]) -> Result<[f64; N], StepError> {
-    let mut scale = [0.0; N];
-    for i in 0..N {
+pub(crate) fn solve_linear<const M: usize>(
+    mut j: [[f64; M]; M],
+    mut rhs: [f64; M],
+) -> Result<[f64; M], StepError> {
+    let mut scale = [0.0; M];
+    for i in 0..M {
         scale[i] = max_abs(&j[i]);
         if scale[i] == 0.0 {
             return Err(StepError::SingularJacobian);
         }
     }
-    for col in 0..N {
+    for col in 0..M {
         let mut pivot = col;
         let mut best = 0.0;
-        for row in col..N {
+        for row in col..M {
             let score = j[row][col].abs() / scale[row];
             if score > best {
                 best = score;
@@ -239,20 +242,20 @@ fn solve_linear(mut j: [[f64; N]; N], mut rhs: [f64; N]) -> Result<[f64; N], Ste
         rhs.swap(col, pivot);
         scale.swap(col, pivot);
         let diagonal = j[col][col];
-        for row in (col + 1)..N {
+        for row in (col + 1)..M {
             let factor = j[row][col] / diagonal;
             j[row][col] = 0.0;
             #[allow(clippy::needless_range_loop)]
-            for k in (col + 1)..N {
+            for k in (col + 1)..M {
                 j[row][k] -= factor * j[col][k];
             }
             rhs[row] -= factor * rhs[col];
         }
     }
-    let mut out = [0.0; N];
-    for row in (0..N).rev() {
+    let mut out = [0.0; M];
+    for row in (0..M).rev() {
         let mut value = rhs[row];
-        for k in (row + 1)..N {
+        for k in (row + 1)..M {
             value -= j[row][k] * out[k];
         }
         out[row] = value / j[row][row];
@@ -356,21 +359,30 @@ pub fn solve_coupled_step(
     if predicted.iter().any(|v| !v.is_finite()) {
         return Err(StepError::InvalidInput);
     }
-    let (solution, predictor_fallback) =
-        match solve_coupled_from_seed(previous, predicted, p, headphone, b, budget) {
-            Ok(solution) => (solution, false),
-            Err(_) => (
-                solve_coupled_from_seed(
-                    previous,
-                    previous.conversion.node_v,
-                    p,
-                    headphone,
-                    b,
-                    budget,
-                )?,
-                true,
-            ),
-        };
+    let mut output_port_evaluations = 0;
+    let (solution, predictor_fallback) = match solve_coupled_from_seed(
+        previous,
+        predicted,
+        p,
+        headphone,
+        b,
+        budget,
+        &mut output_port_evaluations,
+    ) {
+        Ok(solution) => (solution, false),
+        Err(_) => (
+            solve_coupled_from_seed(
+                previous,
+                previous.conversion.node_v,
+                p,
+                headphone,
+                b,
+                budget,
+                &mut output_port_evaluations,
+            )?,
+            true,
+        ),
+    };
     state.previous_conversion_node_v = previous.conversion.node_v;
     state.conversion.node_v = solution.0;
     state.output = solution.1.next_state;
@@ -386,14 +398,14 @@ fn solve_coupled_from_seed(
     headphone: HeadphoneParameters,
     b: CoupledBoundary,
     budget: SolverBudget,
+    output_port_evaluations: &mut usize,
 ) -> Result<([f64; N], OutputInputPort, CoupledResult), StepError> {
     let mut cached: Option<([f64; N], [[f64; N]; N], OutputInputPort)> = None;
-    let mut output_port_evaluations = 0;
     for iteration in 0..budget.iterations {
         let (residual, jacobian, port) = match cached.take() {
             Some(value) => value,
             None => {
-                output_port_evaluations += 1;
+                *output_port_evaluations += 1;
                 coupled_trial(previous, &x, p, headphone, b, budget)?
             }
         };
@@ -405,7 +417,7 @@ fn solve_coupled_from_seed(
             let result = CoupledResult {
                 output: port.output,
                 iterations: iteration,
-                output_port_evaluations,
+                output_port_evaluations: *output_port_evaluations,
                 predictor_fallback: false,
                 max_conversion_kcl_residual_a: error,
             };
@@ -416,7 +428,7 @@ fn solve_coupled_from_seed(
         for power in 0..budget.line_search_halvings {
             let factor = 0.5_f64.powi(power as i32);
             let candidate = std::array::from_fn(|i| x[i] + factor * direction[i]);
-            output_port_evaluations += 1;
+            *output_port_evaluations += 1;
             if let Ok(trial) = coupled_trial(previous, &candidate, p, headphone, b, budget) {
                 if max_abs(&trial.0) < error {
                     accepted = Some((candidate, trial));

@@ -9,6 +9,9 @@ use rf_d_circuit::output_conversion::{
     Boundary as ConversionBoundary, CoupledBoundary, DiodeParameters,
     Parameters as ConversionParameters,
 };
+use rf_d_circuit::output_conversion_c4::{
+    initial_state as initial_c4_state, step as step_c4, BoundaryC4,
+};
 use rf_d_circuit::panel::{initial_panel_state, solve_panel_boundary, PanelBoundary};
 use rf_d_circuit::{initial_state, solve_input_port, step, Parameters, SolverBudget};
 
@@ -195,6 +198,54 @@ fn dc_initialization_and_audio_steps_do_not_allocate() {
             SolverBudget::default(),
         )
         .expect("atomic board4/C2/panel/board3 step");
+    }
+    let mut c4 = initial_c4_state(
+        conversion,
+        p,
+        BoundaryC4 {
+            second_balance_wiper_v: 6.2,
+            q12_base_v: 7.75,
+            q17_base_v: 7.75,
+            plus_v: 10.0,
+            output: OutputBoundary {
+                q17_collector_v: 0.0,
+                r20_lower_ohm: 2500.0,
+                hi_load_ohm: 10000.0,
+                lo_load_ohm: 100000.0,
+                sw18_on: true,
+                r21_lower_ohm: 2000.0,
+                tip_load_ohm: Some(32.0),
+                ring_load_ohm: Some(32.0),
+                dt_s: 1.0 / 48000.0,
+            },
+        },
+    )
+    .expect("C4 and output DC state");
+    for i in 0..100 {
+        step_c4(
+            &mut c4,
+            conversion,
+            p,
+            BoundaryC4 {
+                second_balance_wiper_v: if i % 20 < 10 { 6.2 } else { 6.23 },
+                q12_base_v: 7.75,
+                q17_base_v: 7.75 + if i % 20 < 10 { 0.018 } else { -0.018 },
+                plus_v: 10.0,
+                output: OutputBoundary {
+                    q17_collector_v: 0.0,
+                    r20_lower_ohm: 2500.0,
+                    hi_load_ohm: 10000.0,
+                    lo_load_ohm: 100000.0,
+                    sw18_on: i % 40 < 20,
+                    r21_lower_ohm: 2000.0,
+                    tip_load_ohm: Some(32.0),
+                    ring_load_ohm: Some(32.0),
+                    dt_s: 1.0 / 48000.0,
+                },
+            },
+            SolverBudget::default(),
+        )
+        .expect("atomic C4 and complete output step");
     }
     let after = ALLOCATIONS.load(Ordering::Relaxed);
     assert_eq!(after - before, 0, "processing allocated heap memory");
