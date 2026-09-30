@@ -584,17 +584,18 @@ fn solve(
             }
         };
         let error = max_abs(&r);
-        let dc_requires_correction = old.is_none();
-        if error < 1e-11 && !dc_requires_correction {
+        let requires_voltage_correction =
+            old.is_none() || !cfg!(feature = "solver-kcl-only-transient");
+        if error < 1e-11 && !requires_voltage_correction {
             let control = std::array::from_fn::<_, 4, _>(|i| r[62 + i]);
             return Ok((x, iteration, error, i10, max_abs(&control)));
         }
         let ordered_direction = solve_linear_sparse(j, std::array::from_fn(|i| -r[ORDER[i]]))?;
         let direction: [f64; N] = std::array::from_fn(|i| ordered_direction[POSITION[i]]);
-        // At weak DC operating points, 10 pA alone can leave tens of uV in
-        // high-impedance nodes. Require a small *full* Newton correction too.
-        // No such extra factorization is added to the transient path.
-        if dc_requires_correction && error < 1e-11 && max_abs(&direction) < 1e-8 {
+        // At weak operating points, 10 pA alone can leave mV in internal
+        // high-impedance nodes. Require the full Newton correction as well.
+        // The reference feature retains only the historical transient gate.
+        if requires_voltage_correction && error < 1e-11 && max_abs(&direction) < 1e-8 {
             let control = std::array::from_fn::<_, 4, _>(|i| r[62 + i]);
             return Ok((x, iteration, error, i10, max_abs(&control)));
         }
@@ -605,9 +606,9 @@ fn solve(
             *evaluations += 1;
             if let Ok(next) = evaluate(&candidate, p, conversion, headphone, b, prepared, old) {
                 let next_error = max_abs(&next.0);
-                let next_dc_direction = if dc_requires_correction {
+                let next_voltage_direction = if requires_voltage_correction {
                     // A trial with unusable J is rejected inside the bounded
-                    // line search, rather than becoming the next DC iterate.
+                    // line search, rather than becoming the next iterate.
                     match solve_linear_sparse(next.1, std::array::from_fn(|i| -next.0[ORDER[i]])) {
                         Ok(d) => Some(d),
                         Err(_) => continue,
@@ -615,13 +616,13 @@ fn solve(
                 } else {
                     None
                 };
-                let decreases = if dc_requires_correction && error < 1e-11 {
+                let decreases = if requires_voltage_correction && error < 1e-11 {
                     // Once KCL is admitted, reduce the voltage correction
                     // merit. Strong rows can be at their rounding floor while
-                    // weak DC nodes still need motion. Every candidate must
+                    // weak nodes still need motion. Every candidate must
                     // keep the same KCL gate, never a relaxed current bound.
                     if next_error < 1e-11 {
-                        next_dc_direction.is_some_and(|d| max_abs(&d) < max_abs(&direction))
+                        next_voltage_direction.is_some_and(|d| max_abs(&d) < max_abs(&direction))
                     } else {
                         false
                     }

@@ -14,7 +14,9 @@ Los estados `desconocido`, `hipótesis`, `modelado`, `contrastado` y `cerrado pa
 
 ## Afirmación pública actual
 
-El [apagado de los VCAs con rampas impuestas](APAGADO_VCA_GLOBAL_66.md) converge en 7104 muestras, pero 20/96 sondas exceden 1 µV interno, máximo 1,318 mV en los emisores del segundo par. El error de salida es pequeño; el gate interno sigue fallido. Las cuatro escenas de salto directo fallan de forma atómica.
+El [criterio temporal KCL + corrección de voltaje](CRITERIO_VOLTAJE_TRANSITORIO_GLOBAL.md) corrige las 96 sondas de apagado (0,150 nV máximo), pasa heap cero y 752384 muestras de estrés. Su costo aumenta 69,3 % a 3,939 ms/bloque; C7 sigue fallido. No resuelve los saltos abruptos ni el contorno físico.
+
+El [apagado de los VCAs con rampas impuestas](APAGADO_VCA_GLOBAL_66.md) registró 20/96 sondas >1 µV interno con la política anterior, hasta 1,318 mV. El criterio de voltaje corrige esa brecha. Las cuatro escenas de salto directo siguen fallando de forma atómica.
 
 La [semilla DC completa y el criterio de corrección de voltaje](DC_GLOBAL_SEMILLA_COMPLETA.md) contrastan 14 puntos (2,25 nV máximo) y resuelven cutoff máximo desde el centro. Dos semillas desplazadas fallan en RANGE=0; no se garantiza cualquier semilla. La nueva observación de stack es 324 KiB y C7 sigue abierto.
 

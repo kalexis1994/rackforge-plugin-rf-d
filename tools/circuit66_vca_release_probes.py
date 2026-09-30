@@ -110,6 +110,12 @@ def generate_vectors():
 
 
 if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input",type=Path,default=INPUT)
+    parser.add_argument("--output",type=Path,default=OUTPUT)
+    args = parser.parse_args()
+    INPUT, OUTPUT = args.input, args.output
     report = generate_vectors()
     OUTPUT.write_text(json.dumps(report,indent=2)+"\n",encoding="utf-8")
     print(json.dumps(dict(passed=report["passed"],probes=len(report["probes"]),

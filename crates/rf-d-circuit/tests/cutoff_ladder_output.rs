@@ -25,6 +25,8 @@ fn independently_refined_vca_release_roots_close_native_kcl_with_same_histories(
         serde_json::from_str(include_str!("../../../evidence/cutoff_j7_vectors.json")).unwrap();
     let mut count = 0;
     let mut max_kcl = 0.0_f64;
+    #[cfg(not(feature = "solver-kcl-only-transient"))]
+    let mut max_node_error = 0.0_f64;
     for probe in fixture["probes"].as_array().unwrap() {
         let p = Parameters {
             ladder_transistor: bjt,
@@ -54,10 +56,45 @@ fn independently_refined_vca_release_roots_close_native_kcl_with_same_histories(
             max_kcl = max_kcl.max(v.abs());
             assert!(v.abs() < 1e-11);
         }
+        #[cfg(not(feature = "solver-kcl-only-transient"))]
+        {
+            let mut state = previous;
+            let result = global::step(
+                &mut state,
+                p,
+                conversion,
+                headphone,
+                b,
+                SolverBudget::default(),
+            )
+            .unwrap_or_else(|e| {
+                panic!(
+                    "refined ramp {} sample {}: {e:?}",
+                    probe["ramp_samples"], probe["sample"]
+                )
+            });
+            for i in 0..66 {
+                let error = (state.node_v[i] - candidate[i]).abs();
+                max_node_error = max_node_error.max(error);
+                assert!(
+                    error < 1e-6,
+                    "release root node {i} ramp {} sample {}: {error}",
+                    probe["ramp_samples"],
+                    probe["sample"]
+                );
+            }
+            for i in 0..17 {
+                assert!((state.capacitor_v[i] - n(&probe["capacitor_v"][i])).abs() < 1e-6);
+            }
+            assert!((state.c10_capacitor_v - n(&probe["c10_v"])).abs() < 1e-6);
+            assert!((result.output.j7_v - candidate[61]).abs() < 1e-6);
+        }
         count += 1;
     }
     assert_eq!(count, 96);
     println!("refined release roots: points={count} max_native_kcl_a={max_kcl:.9e}");
+    #[cfg(not(feature = "solver-kcl-only-transient"))]
+    println!("strict release root max_node_error_v={max_node_error:.9e}");
 }
 
 #[test]
