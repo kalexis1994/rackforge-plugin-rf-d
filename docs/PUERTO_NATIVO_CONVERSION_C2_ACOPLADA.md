@@ -19,3 +19,16 @@ La [sonda nativa](../crates/rf-d-circuit/examples/bench_output_conversion_couple
 | `2011,6 µs` | `2290,7 µs` | `2499,8 µs` | `1333,3 µs` | `2,99` de media; máximo `3` | `0` |
 
 El solve exterior necesitó `1,99` iteraciones por muestra de media, máximo `2`, y su peor KCL fue `9,796×10⁻¹¹ A`. **Este bloque no supera el gate de 64 muestras en tiempo real** en ese equipo y escenario. Cada iteración de Q1/Q12/Q17 evalúa la placa 3 no lineal por el puerto de salida; las casi tres evaluaciones por muestra identifican el coste principal a reducir. Una corrida no establece percentiles estables para otras máquinas, cargas, notas o integración con RackForge. El gate se repetirá tras cualquier cambio de solver, con comparación de audio y de deadlines sobre la misma traza.
+
+## Predictor lineal de Newton
+
+El solver ahora conserva las seis tensiones aceptadas de la muestra anterior (`V_n`, `V_n−1`, en voltios) y prueba `V_inicial,n+1=2V_n−V_n−1`. Es una **extrapolación numérica**, no un componente del circuito ni un nuevo parámetro de sonido. Si ese intento no converge, vuelve al estado `V_n` y repite el Newton acotado: como máximo dos intentos de `16` iteraciones y `16` divisiones de línea cada uno. La KCL, la ley de C2, el criterio `<10⁻¹⁰ A` y el estado previo de capacitores son iguales en ambas rutas. La [regresión](../crates/rf-d-circuit/tests/output_conversion_coupled.rs) incluye un predictor deliberadamente divergente y verifica el retorno al solve ordinario. El historial añade seis `f64` al estado; el [test de asignaciones](../crates/rf-d-circuit/tests/no_alloc.rs) sigue sin heap.
+
+La misma [sonda](../crates/rf-d-circuit/examples/bench_output_conversion_coupled.rs) desactiva el predictor en una segunda pasada del **mismo binario** y compara las 48 000 muestras de J7/HI/LO. Una corrida aislada en el equipo anterior produjo:
+
+| Inicio de Newton | Media/bloque | p99/bloque | Máximo/bloque | Puerto/muestra |
+| --- | ---: | ---: | ---: | ---: |
+| Desde `V_n` | `1915,2 µs` | `2215,7 µs` | `2479,0 µs` | `2,99` |
+| Extrapolado, con retorno | `1283,8 µs` | `1445,7 µs` | `2033,1 µs` | `2,00` |
+
+Hubo **cero fallos y cero retornos** en esta sinusoide continua; la prueba de regresión cubre un retorno forzado. Las diferencias máximas extrapolado frente a inicio ordinario fueron `7,53×10⁻¹⁰ V` en J7, `2,22×10⁻⁹ V` en HI y `6,47×10⁻¹¹ V` en LO; RMS `1,01×10⁻¹⁰`, `5,31×10⁻¹⁰` y `1,55×10⁻¹¹ V`, respectivamente. La sonda exige máximo `<10⁻⁷ V` antes de aceptar la corrida. El p99 `1445,7 µs` y el máximo `2033,1 µs` aún superan el plazo de `1333,3 µs`; **el gate de tiempo real permanece abierto**. Estos números dependen de carga del sistema y equipo; el resultado de 32 pasos Python comprueba también cambios de base y SW18, pero no representa todos los controles ni componentes reales.

@@ -165,3 +165,49 @@ fn invalid_joint_boundary_preserves_every_state() {
     );
     assert_eq!(state, before);
 }
+
+#[test]
+fn divergent_predictor_falls_back_to_previous_solution() {
+    let fixture: Value = serde_json::from_str(include_str!(
+        "../../../evidence/output_conversion_c2_vectors.json"
+    ))
+    .unwrap();
+    let case = &fixture["cases"][0];
+    let row = &case["steps"][0];
+    let (conversion, headphone) = parameters(case);
+    let mut reference =
+        initial_coupled_state(conversion, boundary(&case["initial_boundary"]), headphone).unwrap();
+    let mut divergent = reference;
+    divergent.previous_conversion_node_v[5] = 1e6;
+    let b = CoupledBoundary {
+        conversion: boundary(&row["boundary"]),
+        output: output_boundary(case, row),
+    };
+    let expected = solve_coupled_step(
+        &mut reference,
+        conversion,
+        headphone,
+        b,
+        SolverBudget::default(),
+    )
+    .unwrap();
+    let result = solve_coupled_step(
+        &mut divergent,
+        conversion,
+        headphone,
+        b,
+        SolverBudget::default(),
+    )
+    .unwrap();
+    assert!(result.predictor_fallback);
+    assert!((result.output.j7_v - expected.output.j7_v).abs() < 1e-9);
+    assert!((result.output.j4_hi_v - expected.output.j4_hi_v).abs() < 1e-9);
+    for (actual, expected) in divergent
+        .conversion
+        .node_v
+        .iter()
+        .zip(reference.conversion.node_v)
+    {
+        assert!((actual - expected).abs() < 1e-8);
+    }
+}

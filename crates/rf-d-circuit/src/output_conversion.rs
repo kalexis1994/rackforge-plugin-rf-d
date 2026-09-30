@@ -61,6 +61,8 @@ pub struct DcResult {
 pub struct CoupledState {
     pub conversion: DcState,
     pub output: OutputState,
+    /// Previous accepted conversion nodes, used only as a Newton predictor.
+    pub previous_conversion_node_v: [f64; N],
 }
 
 /// The collector field of `output` is replaced by the solved Q17 collector
@@ -77,6 +79,7 @@ pub struct CoupledResult {
     pub iterations: usize,
     /// Number of nonlinear C2/panel/board-3 port solves, including line trials.
     pub output_port_evaluations: usize,
+    pub predictor_fallback: bool,
     pub max_conversion_kcl_residual_a: f64,
 }
 
@@ -87,7 +90,11 @@ pub fn initial_coupled_state(
 ) -> Result<CoupledState, StepError> {
     let conversion = solve_dc(p, b)?.state;
     let output = initial_output_state(headphone, conversion.node_v[5])?;
-    Ok(CoupledState { conversion, output })
+    Ok(CoupledState {
+        previous_conversion_node_v: conversion.node_v,
+        conversion,
+        output,
+    })
 }
 
 fn positive(v: f64) -> bool {
@@ -331,14 +338,55 @@ pub fn solve_coupled_step(
     budget: SolverBudget,
 ) -> Result<CoupledResult, StepError> {
     validate(p, b.conversion)?;
-    if state.conversion.node_v.iter().any(|v| !v.is_finite())
+    if state
+        .conversion
+        .node_v
+        .iter()
+        .chain(state.previous_conversion_node_v.iter())
+        .any(|v| !v.is_finite())
         || !(1..=16).contains(&budget.iterations)
         || !(1..=16).contains(&budget.line_search_halvings)
     {
         return Err(StepError::InvalidInput);
     }
     let previous = *state;
-    let mut x = state.conversion.node_v;
+    let predicted = std::array::from_fn(|i| {
+        2.0 * state.conversion.node_v[i] - state.previous_conversion_node_v[i]
+    });
+    if predicted.iter().any(|v| !v.is_finite()) {
+        return Err(StepError::InvalidInput);
+    }
+    let (solution, predictor_fallback) =
+        match solve_coupled_from_seed(previous, predicted, p, headphone, b, budget) {
+            Ok(solution) => (solution, false),
+            Err(_) => (
+                solve_coupled_from_seed(
+                    previous,
+                    previous.conversion.node_v,
+                    p,
+                    headphone,
+                    b,
+                    budget,
+                )?,
+                true,
+            ),
+        };
+    state.previous_conversion_node_v = previous.conversion.node_v;
+    state.conversion.node_v = solution.0;
+    state.output = solution.1.next_state;
+    let mut result = solution.2;
+    result.predictor_fallback = predictor_fallback;
+    Ok(result)
+}
+
+fn solve_coupled_from_seed(
+    previous: CoupledState,
+    mut x: [f64; N],
+    p: Parameters,
+    headphone: HeadphoneParameters,
+    b: CoupledBoundary,
+    budget: SolverBudget,
+) -> Result<([f64; N], OutputInputPort, CoupledResult), StepError> {
     let mut cached: Option<([f64; N], [[f64; N]; N], OutputInputPort)> = None;
     let mut output_port_evaluations = 0;
     for iteration in 0..budget.iterations {
@@ -354,14 +402,14 @@ pub fn solve_coupled_step(
             if p.diode.is_none() && !(0.0..=b.conversion.plus_v).contains(&x[5]) {
                 return Err(StepError::ExponentialDomain);
             }
-            state.conversion.node_v = x;
-            state.output = port.next_state;
-            return Ok(CoupledResult {
+            let result = CoupledResult {
                 output: port.output,
                 iterations: iteration,
                 output_port_evaluations,
+                predictor_fallback: false,
                 max_conversion_kcl_residual_a: error,
-            });
+            };
+            return Ok((x, port, result));
         }
         let direction = solve_linear(jacobian, residual.map(|v| -v))?;
         let mut accepted = None;
