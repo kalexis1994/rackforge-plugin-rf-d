@@ -4,6 +4,7 @@
 //! imposed laboratory values, not measurements of a vintage unit.
 //! The processing path uses fixed stack arrays and has no I/O or allocation.
 
+pub mod circuit66;
 pub mod cutoff;
 pub mod cutoff_ladder_output;
 pub mod ladder_recovery_output;

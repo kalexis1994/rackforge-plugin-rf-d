@@ -386,7 +386,10 @@ fn solve_from_seed(
             }
         };
         let error = max_abs(&r);
-        if error < 1e-10 {
+        // First-VCA base error is amplified by both following stages.
+        // 10 pA is required by the 8192-sample, 2 µV internal comparison gate.
+        // See SOLVER_GLOBAL_66_NODOS.md; the former bound was 100 pA.
+        if error < 1e-11 {
             result.iterations = iteration;
             result.second_port_evaluations = *evaluations;
             result.max_kcl_residual_a = error;

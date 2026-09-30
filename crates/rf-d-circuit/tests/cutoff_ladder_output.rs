@@ -287,3 +287,167 @@ fn cutoff_ladder_emphasis_vcas_and_j7_match_128_monolithic_66_node_steps() {
     assert!(max_j7 < 1e-6);
     assert!(snr > 90.0);
 }
+
+#[test]
+fn global_analytic_newton_matches_oracle_and_preserves_history_on_rejection() {
+    use rf_d_circuit::circuit66 as global;
+    let fixture: Value =
+        serde_json::from_str(include_str!("../../../evidence/cutoff_j7_vectors.json")).unwrap();
+    let (bjt, conversion, headphone, rb) = setup();
+    let mut max_node = 0.0_f64;
+    let mut max_j7 = 0.0_f64;
+    let mut signal = 0.0;
+    let mut error_power = 0.0;
+    for case in fixture["cases"].as_array().unwrap() {
+        let p = Parameters {
+            ladder_transistor: bjt,
+            cutoff: cutoff::Parameters { q26: bjt, q28: bjt },
+            r61_ohm: n(&case["r61_ohm"]),
+            r30_ohm: 830.0,
+        };
+        let base = Boundary {
+            bus_v: 0.0,
+            recovery: rb,
+            panel: panel(&case["controls"]["panel"]),
+            range_fraction_from_ground: 0.1,
+            r14_ohm: Some(0.0),
+        };
+        let seed = std::array::from_fn(|i| n(&case["initial"]["node_v"][i]));
+        let mut state = global::initial_state(p, conversion, headphone, base, seed).unwrap();
+        let mut nested = circuit::initial_state(p, conversion, headphone, base, seed).unwrap();
+        for row in case["rows"].as_array().unwrap() {
+            let index = row["index"].as_u64().unwrap();
+            let mut b = Boundary {
+                bus_v: n(&row["bus_v"]),
+                panel: panel(&row["panel"]),
+                range_fraction_from_ground: n(&row["range_fraction"]),
+                r14_ohm: Some(n(&row["r14_ohm"])),
+                ..base
+            };
+            b.recovery.vca.second.output.output.sw18_on = row["sw18_on"].as_bool().unwrap();
+            let old = state;
+            let result = global::step(
+                &mut state,
+                p,
+                conversion,
+                headphone,
+                b,
+                SolverBudget::default(),
+            )
+            .unwrap_or_else(|e| panic!("global R61 {} step {index}: {e:?}", p.r61_ohm));
+            let split = circuit::step(
+                &mut nested,
+                p,
+                conversion,
+                headphone,
+                b,
+                SolverBudget::default(),
+            )
+            .unwrap();
+            assert!((split.j7_v - result.output.j7_v).abs() < 1e-6);
+            for (i, actual) in state.node_v.iter().enumerate() {
+                let error = (actual - n(&row["node_v"][i])).abs();
+                max_node = max_node.max(error);
+                assert!(
+                    error < 1e-6,
+                    "global R61 {} step {index} node {i}: {actual} vs {}",
+                    p.r61_ohm,
+                    row["node_v"][i]
+                );
+            }
+            let error = result.output.j7_v - n(&row["j7_v"]);
+            max_j7 = max_j7.max(error.abs());
+            signal += n(&row["j7_v"]).powi(2);
+            error_power += error.powi(2);
+            assert!((state.c10_capacitor_v - n(&row["c10_v"])).abs() < 1e-6);
+            assert!((state.capacitor_v[16] - n(&row["c18_v"])).abs() < 1e-7);
+            assert!((result.output.tail_current_a - n(&row["tail_current_a"])).abs() < 1e-9);
+            assert!((result.output.j4_hi_v - n(&row["j4_hi_v"])).abs() < 1e-6);
+            assert!((result.output.j5_lo_v - n(&row["j5_lo_v"])).abs() < 1e-6);
+            assert!(result.output.max_ladder_kcl_residual_a < 1e-11);
+            if [0, 24, 48].contains(&index) {
+                // Every column, including BJT-controlled bases and the series
+                // C10 return, checked with independent symmetric differences.
+                let (_, j) =
+                    global::linearize(&old, p, conversion, headphone, b, &state.node_v).unwrap();
+                for col in 0..66 {
+                    let mut high = state.node_v;
+                    let mut low = high;
+                    high[col] += 1e-7;
+                    low[col] -= 1e-7;
+                    let rh = global::linearize(&old, p, conversion, headphone, b, &high)
+                        .unwrap()
+                        .0;
+                    let rl = global::linearize(&old, p, conversion, headphone, b, &low)
+                        .unwrap()
+                        .0;
+                    for row in 0..66 {
+                        let fd = (rh[row] - rl[row]) / 2e-7;
+                        assert!(
+                            (fd - j[row][col]).abs() < 1e-8 + 3e-6 * fd.abs(),
+                            "global analytic row {row} col {col}: {} vs {fd}",
+                            j[row][col]
+                        );
+                    }
+                }
+            }
+        }
+        let old = state;
+        assert_eq!(
+            global::step(
+                &mut state,
+                p,
+                conversion,
+                headphone,
+                Boundary {
+                    range_fraction_from_ground: f64::NAN,
+                    ..base
+                },
+                SolverBudget::default()
+            )
+            .unwrap_err(),
+            StepError::InvalidInput
+        );
+        assert_eq!(state, old);
+        assert!(global::step(
+            &mut state,
+            p,
+            conversion,
+            headphone,
+            base,
+            SolverBudget {
+                iterations: 1,
+                line_search_halvings: 16
+            }
+        )
+        .is_err());
+        assert_eq!(state, old);
+        let mut failed_predictor = state;
+        failed_predictor.previous_node_v[1] -= 1e6;
+        let a = global::step(
+            &mut state,
+            p,
+            conversion,
+            headphone,
+            base,
+            SolverBudget::default(),
+        )
+        .unwrap();
+        let z = global::step(
+            &mut failed_predictor,
+            p,
+            conversion,
+            headphone,
+            base,
+            SolverBudget::default(),
+        )
+        .unwrap();
+        assert!(z.output.predictor_fallback);
+        assert!((a.output.j7_v - z.output.j7_v).abs() < 1e-7);
+        assert!((state.capacitor_v[16] - failed_predictor.capacitor_v[16]).abs() < 1e-7);
+    }
+    let snr = 10.0 * (signal / error_power).log10();
+    println!("global 128 steps: max_node_error_v={max_node:.3e} max_j7_error_v={max_j7:.3e} numerical_snr_db={snr:.1}");
+    assert!(max_j7 < 1e-6);
+    assert!(snr > 90.0);
+}

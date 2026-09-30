@@ -88,6 +88,7 @@ fn boundary(sample: usize) -> Boundary {
 enum BenchState {
     Fixed(rf_d_circuit::ladder_recovery_output::State),
     Controlled(cutoff_ladder_output::State),
+    Global(rf_d_circuit::circuit66::State),
 }
 
 fn controlled_boundary(sample: usize, closed: bool) -> cutoff_ladder_output::Boundary {
@@ -107,7 +108,8 @@ fn controlled_boundary(sample: usize, closed: bool) -> cutoff_ladder_output::Bou
 
 fn main() {
     let closed = std::env::args().any(|arg| arg == "--emphasis");
-    let controlled = std::env::args().any(|arg| arg == "--cutoff");
+    let global = std::env::args().any(|arg| arg == "--global");
+    let controlled = global || std::env::args().any(|arg| arg == "--cutoff");
     let transistors = TransistorParameters {
         transistor_is_a: 1e-14,
         beta_forward: 100.0,
@@ -147,8 +149,14 @@ fn main() {
         r61_ohm: ladder.r61_ohm,
         r30_ohm: ladder.r30_ohm,
     };
+    if std::env::args().any(|arg| arg == "--compare") {
+        compare_waveforms(dynamic, conversion, headphone, closed);
+        return;
+    }
     let mut durations_us = Vec::with_capacity(MEASURED_SAMPLES / BLOCK);
     let mut evaluations = 0usize;
+    let mut global_evaluations = 0usize;
+    let mut max_global_evaluations = 0usize;
     let mut max_evaluations = 0usize;
     let mut fallbacks = 0usize;
     let mut failures = 0usize;
@@ -158,7 +166,18 @@ fn main() {
     let mut max_tail = f64::NEG_INFINITY;
     let mut final_j7 = 0.0;
     for measured in [false, true] {
-        let mut state = if controlled {
+        let mut state = if global {
+            BenchState::Global(
+                rf_d_circuit::circuit66::initial_state(
+                    dynamic,
+                    conversion,
+                    headphone,
+                    controlled_boundary(0, closed),
+                    SEED,
+                )
+                .expect("global cutoff/ladder/output DC"),
+            )
+        } else if controlled {
             BenchState::Controlled(
                 cutoff_ladder_output::initial_state(
                     dynamic,
@@ -180,6 +199,22 @@ fn main() {
             for offset in 0..BLOCK {
                 let sample = block * BLOCK + offset;
                 let outcome = match &mut state {
+                    BenchState::Global(state) => rf_d_circuit::circuit66::step(
+                        state,
+                        dynamic,
+                        conversion,
+                        headphone,
+                        controlled_boundary(sample, closed),
+                        SolverBudget::default(),
+                    )
+                    .map(|result| {
+                        if measured {
+                            global_evaluations += result.residual_evaluations;
+                            max_global_evaluations =
+                                max_global_evaluations.max(result.residual_evaluations);
+                        }
+                        result.output
+                    }),
                     BenchState::Controlled(state) => cutoff_ladder_output::step(
                         state,
                         dynamic,
@@ -230,6 +265,7 @@ fn main() {
                 durations_us.push(begin.elapsed().as_secs_f64() * 1e6);
             }
             final_j7 = black_box(match &state {
+                BenchState::Global(state) => state.node_v[61],
                 BenchState::Fixed(state) => {
                     state.recovery.vca.second.downstream.output.panel.amp.node_v[11]
                 }
@@ -253,11 +289,84 @@ fn main() {
     let deadline = BLOCK as f64 * 1e6 / SAMPLE_RATE as f64;
     let missed = durations_us.iter().filter(|v| **v > deadline).count();
     println!(
-        "ladder_to_j7: cutoff_connected={controlled} emphasis_closed={closed} blocks={} samples={} deadline_us={deadline:.1} deadline_misses={missed} mean_us={mean:.1} p99_us={:.1} max_us={:.1} mean_recovery_evals={:.2} max_recovery_evals={} fallbacks={} max_kcl_a={max_kcl:.3e} max_cutoff_kcl_a={max_cutoff_kcl:.3e} tail_min_a={min_tail:.3e} tail_max_a={max_tail:.3e} failures={} final_j7_v={final_j7:.9}",
+        "ladder_to_j7: global_newton={global} cutoff_connected={controlled} emphasis_closed={closed} blocks={} samples={} deadline_us={deadline:.1} deadline_misses={missed} mean_us={mean:.1} p99_us={:.1} max_us={:.1} mean_recovery_evals={:.2} max_recovery_evals={} mean_global_evals={:.2} max_global_evals={max_global_evaluations} fallbacks={} max_kcl_a={max_kcl:.3e} max_cutoff_kcl_a={max_cutoff_kcl:.3e} tail_min_a={min_tail:.3e} tail_max_a={max_tail:.3e} failures={} final_j7_v={final_j7:.9}",
         durations_us.len(), MEASURED_SAMPLES,
         percentile(&durations_us,0.99), durations_us.last().unwrap(),
         evaluations as f64/MEASURED_SAMPLES as f64, max_evaluations,
+        global_evaluations as f64/MEASURED_SAMPLES as f64,
         fallbacks, failures,
     );
     assert_eq!(failures, 0);
+}
+
+fn compare_waveforms(
+    p: cutoff_ladder_output::Parameters,
+    c: ConversionParameters,
+    h: HeadphoneParameters,
+    closed: bool,
+) {
+    let mut nested =
+        cutoff_ladder_output::initial_state(p, c, h, controlled_boundary(0, closed), SEED)
+            .expect("comparison nested DC");
+    let mut global =
+        rf_d_circuit::circuit66::initial_state(p, c, h, controlled_boundary(0, closed), SEED)
+            .expect("comparison global DC");
+    let mut max_j7 = 0.0_f64;
+    let mut max_nodes = 0.0_f64;
+    let mut max_node_index = 0;
+    let mut max_node_sample = 0;
+    let mut max_c10 = 0.0_f64;
+    let mut max_tail = 0.0_f64;
+    let mut signal = 0.0;
+    let mut error_power = 0.0;
+    for sample in 0..MEASURED_SAMPLES {
+        let b = controlled_boundary(sample, closed);
+        let old_c19 = nested
+            .chain
+            .recovery
+            .vca
+            .second
+            .downstream
+            .output
+            .panel
+            .amp
+            .capacitor_v[0];
+        let a = cutoff_ladder_output::step(&mut nested, p, c, h, b, SolverBudget::default())
+            .expect("comparison nested step");
+        let z = rf_d_circuit::circuit66::step(&mut global, p, c, h, b, SolverBudget::default())
+            .expect("comparison global step")
+            .output;
+        let error = a.j7_v - z.j7_v;
+        max_j7 = max_j7.max(error.abs());
+        signal += a.j7_v * a.j7_v;
+        error_power += error * error;
+        max_c10 = max_c10.max((nested.chain.c10_capacitor_v - global.c10_capacitor_v).abs());
+        max_tail = max_tail.max((a.tail_current_a - z.tail_current_a).abs());
+        let mut x = [0.0; 66];
+        x[..16].copy_from_slice(&nested.chain.node_v);
+        let r = &nested.chain.recovery;
+        x[16..24].copy_from_slice(&r.node_v);
+        x[24..34].copy_from_slice(&r.vca.node_v);
+        x[34..40].copy_from_slice(&r.vca.second.node_v);
+        let out = &r.vca.second.downstream;
+        x[40..47].copy_from_slice(&out.node_v);
+        x[47] = out.output.c2_right_v;
+        x[49] = out.output.panel.r21_wiper_v;
+        x[50..62].copy_from_slice(&out.output.panel.amp.node_v);
+        let r21 = b.recovery.vca.second.output.output.r21_lower_ohm;
+        let dt = b.recovery.vca.second.output.output.dt_s;
+        x[48] = x[49] + (5000.0 - r21) * (x[49] / r21 + 2.5e-6 / dt * (x[49] - x[50] - old_c19));
+        x[62..].copy_from_slice(&nested.cutoff.node_v);
+        for i in 0..66 {
+            let difference = (x[i] - global.node_v[i]).abs();
+            if difference > max_nodes {
+                max_nodes = difference;
+                max_node_index = i;
+                max_node_sample = sample;
+            }
+        }
+    }
+    let snr = 10.0 * (signal / error_power).log10();
+    println!("waveform_comparison: samples={MEASURED_SAMPLES} max_j7_error_v={max_j7:.9e} max_node_error_v={max_nodes:.9e} max_node_index={max_node_index} max_node_sample={max_node_sample} max_c10_error_v={max_c10:.9e} max_tail_error_a={max_tail:.9e} numerical_snr_db={snr:.3}");
+    assert!(max_j7 < 1e-6 && max_nodes < 2e-6 && max_c10 < 1e-6 && max_tail < 1e-9 && snr > 90.0);
 }

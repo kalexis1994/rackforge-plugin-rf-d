@@ -1,0 +1,37 @@
+{
+  "schema": "rf-d/circuit66-precision-gate/v1",
+  "date": "2026-09-30",
+  "samples": 8192,
+  "sample_rate_hz": 48000,
+  "command": "cargo run --release -p rf-d-circuit --example bench_ladder_recovery_output -- --compare --emphasis",
+  "internal_voltage_limit_v": 2e-6,
+  "j7_voltage_limit_v": 1e-6,
+  "rejected": {
+    "first_vca_kcl_tolerance_a": 1e-10,
+    "max_node_error_v": 2.438926155e-6,
+    "max_node_index": 45,
+    "max_node_name": "Q12_COLLECTOR",
+    "max_node_sample": 8,
+    "max_j7_error_v": 3.976372334e-8,
+    "numerical_snr_db": 139.106,
+    "passed": false
+  },
+  "isolated_trials_restored": [
+    "VCA2 10 pA alone left the same maximum node error",
+    "Conversion C4 10 pA alone left the same maximum node error"
+  ],
+  "accepted": {
+    "first_vca_kcl_tolerance_a": 1e-11,
+    "max_node_error_v": 1.321840231e-6,
+    "max_node_index": 45,
+    "max_node_sample": 16,
+    "max_j7_error_v": 2.148478884e-8,
+    "max_c10_error_v": 6.107558903e-11,
+    "max_tail_error_a": 1.822069513e-16,
+    "numerical_snr_db": 141.512,
+    "passed": true
+  },
+  "voltage_criteria_relaxed": false,
+  "python_vectors_changed": false,
+  "audio_fidelity_claim": false
+}

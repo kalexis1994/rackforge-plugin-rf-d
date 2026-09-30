@@ -10,6 +10,8 @@ Con Euler implícito y `dt` en segundos, `I_C6=(0,33×10⁻⁶ F/dt)·[(V_C6LEFT
 
 ## Regresión y plazo
 
+El [contraste global de 66 nodos](SOLVER_GLOBAL_66_NODOS.md) detectó error de sesgo amplificado en una traza de 8192 muestras. La tolerancia temporal del primer VCA pasó de 100 pA a **10 pA**; las regresiones exigen ahora esa cota. Las medidas de costo originales de esta página corresponden a la versión anterior.
+
 El [oráculo Python](../tools/vca1_output_vectors.py) formula **25 ecuaciones** para C6_LEFT, los 22 nodos de la [cascada DC](CASCADA_HASTA_SALIDA_DC.md), C2_RIGHT y R21_WIPER. Diferencia numéricamente su Jacobiano y resuelve placa 3 por separado; no llama al código ni a la tangente Rust. El [fixture](../evidence/vca1_output_vectors.json) contiene DC y **12 pasos** a 48 kHz, con cambios de entrada, volumen, Q21 y SW18. La [regresión Rust](../crates/rf-d-circuit/tests/vca1_output.rs) compara los 23 voltajes internos, C6/C15/C4/C2, salidas HI/LO/J7 y los 12 nodos de placa 3 con tolerancia `<1 µV`, además de KCL `<10⁻¹⁰ A` y preservación completa del estado ante una entrada inválida. La [prueba de heap](../crates/rf-d-circuit/tests/no_alloc.rs) cubre inicialización y 100 pasos adicionales sin asignaciones.
 
 La [corriente y admisión en R2](PUERTO_NATIVO_HACIA_FILTRO.md) quedan disponibles para el próximo cierre con el recuperador del filtro.

@@ -534,6 +534,29 @@ fn dc_initialization_and_audio_steps_do_not_allocate() {
         )
         .expect("dynamic cutoff ladder through J7 step");
     }
+    let mut global = rf_d_circuit::circuit66::initial_state(
+        dynamic_parameters,
+        conversion,
+        p,
+        dynamic_boundary,
+        ladder_seed,
+    )
+    .expect("global cutoff ladder and output DC state");
+    for i in 0..64 {
+        let mut b = dynamic_boundary;
+        b.bus_v = if i % 20 < 10 { 0.001 } else { -0.001 };
+        b.panel.contour_pin16_v = if i < 32 { 0.0 } else { 0.04 };
+        b.r14_ohm = if i < 16 { None } else { Some(25_000.0) };
+        rf_d_circuit::circuit66::step(
+            &mut global,
+            dynamic_parameters,
+            conversion,
+            p,
+            b,
+            SolverBudget::default(),
+        )
+        .expect("global circuit step");
+    }
     let after = ALLOCATIONS.load(Ordering::Relaxed);
     assert_eq!(after - before, 0, "processing allocated heap memory");
 }

@@ -28,6 +28,8 @@ La ruta experimental BUS→J7 dispone de [vectores de admisión numérica](docs/
 
 El [control Q26/Q28 nativo](docs/CUTOFF_NATIVO_Q26_Q28.md) incluye C18, ambas junturas BJT y las ramas de cutoff, contorno, teclado, modulación y jack. La [cadena integrada hasta J7](docs/CUTOFF_LADDER_J7_NATIVO.md) calcula la cola desde el circuito y coincide con un oráculo monolítico de 66 nodos en 128 pasos (error J7 22,4 nV). Tarda ~25,7 ms por bloque de 64 frente a 1,33 ms disponibles. BUS y las fuentes de contorno/teclado/modulación siguen impuestos; falta una voz completa y el gate de tiempo real.
 
+El [solver global analítico experimental de 66 nodos](docs/SOLVER_GLOBAL_66_NODOS.md) conserva el mismo circuito y evita los solves anidados. Se contrastó contra Python, por diferencias finitas de todo el Jacobiano y en 8192 muestras contra la ruta por puertos. Cinco comparaciones alternadas dieron **9,39 veces menos costo medio**: **2,559 ms** por bloque frente a **24,037 ms**. Conserva los criterios de error y cero heap; todavía excede los **1,333 ms** disponibles y no se admite como motor del plugin.
+
 ## Límites de recursos
 
 Manuales descargados, esquemas, fotos internas, mediciones y WAV de referencia pertenecen a `references-local/` o `captures/`, fuera de Git. El repo guarda identificadores, hashes, derivaciones, pruebas y resultados. Ningún paquete `.rfplugin` incluirá material original que no se pueda distribuir.

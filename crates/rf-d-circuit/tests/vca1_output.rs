@@ -187,7 +187,7 @@ fn joint_vca1_c6_c15_vca2_c4_c2_j7_matches_python_25_variables() {
                 "step {index} board3 node {i}"
             );
         }
-        assert!(result.max_kcl_residual_a < 1e-10);
+        assert!(result.max_kcl_residual_a < 1e-11);
         let port = solve_input_port(
             &previous,
             vca,
@@ -306,7 +306,7 @@ fn four_cycle_signal_and_control_trace_matches_independent_oracle() {
         max_j7_error = max_j7_error.max(error.abs());
         squared_j7_error += error * error;
         squared_j7_signal += expected * expected;
-        assert!(result.max_kcl_residual_a < 1e-10);
+        assert!(result.max_kcl_residual_a < 1e-11);
     }
     let rms_error = (squared_j7_error / rows.len() as f64).sqrt();
     let rms_signal = (squared_j7_signal / rows.len() as f64).sqrt();

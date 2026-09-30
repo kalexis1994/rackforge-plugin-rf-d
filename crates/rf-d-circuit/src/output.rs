@@ -62,13 +62,13 @@ pub struct OutputInputPort {
 }
 
 #[derive(Clone, Copy)]
-struct MainLoad {
-    equivalent_ohm: f64,
-    hi_to_pin21: f64,
-    lo_to_hi: f64,
+pub(crate) struct MainLoad {
+    pub equivalent_ohm: f64,
+    pub hi_to_pin21: f64,
+    pub lo_to_hi: f64,
 }
 
-fn main_load(b: OutputBoundary) -> Result<MainLoad, StepError> {
+pub(crate) fn main_load(b: OutputBoundary) -> Result<MainLoad, StepError> {
     if !b.q17_collector_v.is_finite()
         || !b.r20_lower_ohm.is_finite()
         || b.r20_lower_ohm <= 0.0

@@ -215,6 +215,22 @@ pub(crate) fn max_abs<const M: usize>(x: &[f64; M]) -> f64 {
 }
 
 pub(crate) fn solve_linear<const M: usize>(
+    j: [[f64; M]; M],
+    rhs: [f64; M],
+) -> Result<[f64; M], StepError> {
+    solve_linear_internal::<M, false>(j, rhs)
+}
+
+/// Same scaled pivots and elimination, skipping only an exactly zero entry.
+/// No small coefficient is dropped; finite matrices have the same solution.
+pub(crate) fn solve_linear_sparse<const M: usize>(
+    j: [[f64; M]; M],
+    rhs: [f64; M],
+) -> Result<[f64; M], StepError> {
+    solve_linear_internal::<M, true>(j, rhs)
+}
+
+fn solve_linear_internal<const M: usize, const SKIP_ZERO: bool>(
     mut j: [[f64; M]; M],
     mut rhs: [f64; M],
 ) -> Result<[f64; M], StepError> {
@@ -229,6 +245,9 @@ pub(crate) fn solve_linear<const M: usize>(
         let mut pivot = col;
         let mut best = 0.0;
         for row in col..M {
+            if SKIP_ZERO && j[row][col] == 0.0 {
+                continue;
+            }
             let score = j[row][col].abs() / scale[row];
             if score > best {
                 best = score;
@@ -243,6 +262,9 @@ pub(crate) fn solve_linear<const M: usize>(
         scale.swap(col, pivot);
         let diagonal = j[col][col];
         for row in (col + 1)..M {
+            if SKIP_ZERO && j[row][col] == 0.0 {
+                continue;
+            }
             let factor = j[row][col] / diagonal;
             j[row][col] = 0.0;
             #[allow(clippy::needless_range_loop)]
@@ -326,6 +348,37 @@ pub(crate) fn solve_linear_many<const M: usize, const R: usize>(
 #[cfg(test)]
 mod multi_rhs_tests {
     use super::*;
+
+    #[test]
+    fn exact_zero_elimination_matches_dense_pivots_and_keeps_small_coefficients() {
+        for j in [
+            [
+                [0.0, 2.0, 0.0, 3.0],
+                [1.0, 0.0, 4.0, 0.0],
+                [0.0, 0.0, 0.0, 5.0],
+                [6.0, 7.0, 8.0, 0.0],
+            ],
+            [
+                [1e-40, 0.0, 0.0, 0.0],
+                [0.0, 1e40, 0.0, 0.0],
+                [0.0, 0.0, -3.0, 0.0],
+                [0.0, 0.0, 0.0, 4.0],
+            ],
+        ] {
+            let expected = [1.0, -2.0, 3.0, 4.0];
+            let rhs = j.map(|row| row.iter().zip(expected).map(|(a, b)| a * b).sum());
+            let dense = solve_linear(j, rhs).unwrap();
+            let sparse = solve_linear_sparse(j, rhs).unwrap();
+            assert_eq!(sparse, dense);
+            for i in 0..4 {
+                assert!((sparse[i] - expected[i]).abs() < 1e-12);
+            }
+        }
+        assert_eq!(
+            solve_linear_sparse([[1.0, 0.0], [0.0, 0.0]], [1.0, 0.0]).unwrap_err(),
+            StepError::SingularJacobian
+        );
+    }
 
     #[test]
     fn pivoted_multiple_rhs_reproduces_independent_solutions() {
