@@ -1,12 +1,14 @@
-param([string]$Output = 'evidence/circuit66_long_stress.json')
+param([string]$Output = 'evidence/circuit66_long_stress.json', [switch]$CaptureProbes)
 # Build the release example first; no build or timing assumptions here.
 $ErrorActionPreference = 'Stop'
 $taskRepo = Split-Path -Parent $PSScriptRoot
 $taskBench = Join-Path $taskRepo 'target/release/examples/bench_ladder_recovery_output.exe'
 if (-not (Test-Path -LiteralPath $taskBench)) { throw 'Build the release example first.' }
-$taskRaw = & $taskBench '--stress'
+$taskFlag = if ($CaptureProbes) { '--stress-probes' } else { '--stress' }
+$taskRaw = & $taskBench $taskFlag
 $taskExit = $LASTEXITCODE
 $taskReport = ($taskRaw -join "`n") | ConvertFrom-Json
+if ($CaptureProbes -and $taskReport.probe_windows.Count -ne 48) { throw '48 captured windows required.' }
 $taskMetadata = [ordered]@{
     date = (Get-Date).ToString('o')
     cpu = (Get-CimInstance Win32_Processor).Name.Trim()

@@ -149,8 +149,9 @@ fn main() {
         r61_ohm: ladder.r61_ohm,
         r30_ohm: ladder.r30_ohm,
     };
-    if std::env::args().any(|arg| arg == "--stress") {
-        stress_global(dynamic, conversion, headphone);
+    let probes = std::env::args().any(|arg| arg == "--stress-probes");
+    if probes || std::env::args().any(|arg| arg == "--stress") {
+        stress_global(dynamic, conversion, headphone, probes);
         return;
     }
     if std::env::args().any(|arg| arg == "--compare") {
@@ -383,13 +384,24 @@ fn stress_global(
     p: cutoff_ladder_output::Parameters,
     c: ConversionParameters,
     h: HeadphoneParameters,
+    capture_probes: bool,
 ) {
     use rf_d_circuit::circuit66;
     use serde_json::json;
     let mut records = Vec::new();
+    let mut probes = Vec::new();
     let mut passed = true;
     for rate in [44100.0, 48000.0, 96000.0] {
         for r61 in [200.0, 200000.0] {
+            let starts: Vec<usize> = if capture_probes {
+                (1..=7)
+                    .map(|q| (q as f64 * 0.25 * rate).ceil() as usize - 2)
+                    .chain(std::iter::once((1.9 * rate).ceil() as usize - 2))
+                    .collect()
+            } else {
+                Vec::new()
+            };
+            let mut windows = Vec::new();
             let p = cutoff_ladder_output::Parameters { r61_ohm: r61, ..p };
             let b = stress_boundary(0, rate);
             let count = ((2.0 * rate) as usize / BLOCK) * BLOCK;
@@ -420,8 +432,23 @@ fn stress_global(
             for sample in 0..count {
                 let b = stress_boundary(sample, rate);
                 let previous = state;
+                if starts.contains(&sample) {
+                    windows.push(json!({
+                        "sample_rate_hz":rate, "r61_ohm":r61, "first_sample":sample,
+                        "previous_bus_v":stress_boundary(sample - 1,rate).bus_v,
+                        "initial":probe_state(&previous), "rows":[],
+                    }));
+                }
                 match circuit66::step(&mut state, p, c, h, b, SolverBudget::default()) {
                     Ok(result) => {
+                        if let Some(window) = windows.last_mut() {
+                            if sample < window["first_sample"].as_u64().unwrap() as usize + 4 {
+                                window["rows"].as_array_mut().unwrap().push(json!({
+                                    "sample":sample, "boundary":probe_boundary(b),
+                                    "native":probe_state(&state),
+                                }));
+                            }
+                        }
                         accepted += 1;
                         iterations[result.output.iterations] += 1;
                         max_evals = max_evals.max(result.residual_evaluations);
@@ -472,6 +499,7 @@ fn stress_global(
             record["tail_current_max_a"] = json!(max_tail);
             record["final_node_v"] = json!(state.node_v.to_vec());
             records.push(record);
+            probes.extend(windows);
         }
     }
     println!("{}", serde_json::to_string_pretty(&json!({
@@ -479,10 +507,36 @@ fn stress_global(
         "passed":passed, "audio_fidelity_claim":false,
         "scene":"multitone BUS, slow controls, quarter-second switch/load changes; see stress_boundary",
         "runs":records,
+        "probe_windows":probes,
     })).unwrap());
     if !passed {
         std::process::exit(1);
     }
+}
+
+fn probe_state(s: &rf_d_circuit::circuit66::State) -> serde_json::Value {
+    serde_json::json!({"node_v":s.node_v.to_vec(), "previous_node_v":s.previous_node_v.to_vec(),
+        "capacitor_v":s.capacitor_v, "c10_v":s.c10_capacitor_v})
+}
+
+fn probe_boundary(b: cutoff_ladder_output::Boundary) -> serde_json::Value {
+    let p = b.panel;
+    let o = b.recovery.vca.second.output.output;
+    serde_json::json!({
+        "bus_v":b.bus_v, "range_fraction":b.range_fraction_from_ground, "r14_ohm":b.r14_ohm,
+        "loudness_v":b.recovery.vca.loudness_v, "q21_base_v":b.recovery.vca.second.q21_base_v,
+        "r21_lower_ohm":o.r21_lower_ohm, "tip_load_ohm":o.tip_load_ohm,
+        "ring_load_ohm":o.ring_load_ohm, "sw18_on":o.sw18_on,
+        "panel":{
+            "cutoff_fraction_from_neg10":p.cutoff_fraction_from_neg10,
+            "scale_active_ohm":p.scale_active_ohm, "contour_pin16_v":p.contour_pin16_v,
+            "external_control_v":p.external_control_v, "external_source_ohm":p.external_source_ohm,
+            "filter_mod_on":p.filter_mod_on, "modulation_source_v":p.modulation_source_v,
+            "modulation_source_ohm":p.modulation_source_ohm,
+            "keyboard_1_3_on":p.keyboard_1_3_on, "keyboard_2_3_on":p.keyboard_2_3_on,
+            "keyboard_cv_v":p.keyboard_cv_v, "keyboard_source_ohm":p.keyboard_source_ohm,
+        },
+    })
 }
 
 fn compare_waveforms(

@@ -12,6 +12,103 @@ use serde_json::Value;
 fn n(v: &Value) -> f64 {
     v.as_f64().unwrap()
 }
+
+#[test]
+fn long_trace_switch_windows_match_independent_fd_from_shared_histories() {
+    use rf_d_circuit::circuit66 as global;
+    let fixture: Value = serde_json::from_str(include_str!(
+        "../../../evidence/circuit66_stress_probe_vectors.json"
+    ))
+    .unwrap();
+    let (bjt, conversion, headphone, rb) = setup();
+    let windows = fixture["windows"].as_array().unwrap();
+    assert_eq!(windows.len(), 48);
+    let mut max_node = 0.0_f64;
+    let mut max_j7 = 0.0_f64;
+    let mut count = 0;
+    for window in windows {
+        let rate = n(&window["sample_rate_hz"]);
+        let p = Parameters {
+            ladder_transistor: bjt,
+            cutoff: cutoff::Parameters { q26: bjt, q28: bjt },
+            r61_ohm: n(&window["r61_ohm"]),
+            r30_ohm: 830.0,
+        };
+        let initial = &window["initial"];
+        let mut state = global::State {
+            node_v: std::array::from_fn(|i| n(&initial["node_v"][i])),
+            previous_node_v: std::array::from_fn(|i| n(&initial["previous_node_v"][i])),
+            capacitor_v: std::array::from_fn(|i| n(&initial["capacitor_v"][i])),
+            c10_capacitor_v: n(&initial["c10_v"]),
+        };
+        let rows = window["rows"].as_array().unwrap();
+        assert_eq!(rows.len(), 4);
+        for row in rows {
+            let v = &row["boundary"];
+            let mut b = Boundary {
+                bus_v: n(&v["bus_v"]),
+                recovery: rb,
+                panel: panel(&v["panel"]),
+                range_fraction_from_ground: n(&v["range_fraction"]),
+                r14_ohm: v["r14_ohm"].as_f64(),
+            };
+            b.recovery.vca.loudness_v = n(&v["loudness_v"]);
+            b.recovery.vca.second.q21_base_v = n(&v["q21_base_v"]);
+            let ob = &mut b.recovery.vca.second.output.output;
+            ob.dt_s = 1.0 / rate;
+            ob.r21_lower_ohm = n(&v["r21_lower_ohm"]);
+            ob.tip_load_ohm = v["tip_load_ohm"].as_f64();
+            ob.ring_load_ohm = v["ring_load_ohm"].as_f64();
+            ob.sw18_on = v["sw18_on"].as_bool().unwrap();
+            let previous = state;
+            let result = global::step(
+                &mut state,
+                p,
+                conversion,
+                headphone,
+                b,
+                SolverBudget::default(),
+            )
+            .unwrap_or_else(|e| {
+                panic!(
+                    "probe rate {rate} R61 {} sample {}: {e:?}",
+                    p.r61_ohm, row["sample"]
+                )
+            });
+            for i in 0..66 {
+                let error = (state.node_v[i] - n(&row["node_v"][i])).abs();
+                max_node = max_node.max(error);
+                assert!(
+                    error < 1e-6,
+                    "probe rate {rate} R61 {} sample {} node {i}: {error}",
+                    p.r61_ohm,
+                    row["sample"]
+                );
+            }
+            let error = (result.output.j7_v - n(&row["j7_v"])).abs();
+            max_j7 = max_j7.max(error);
+            assert!(error < 1e-6);
+            assert!((result.output.j4_hi_v - n(&row["j4_hi_v"])).abs() < 1e-6);
+            assert!((result.output.j5_lo_v - n(&row["j5_lo_v"])).abs() < 1e-6);
+            assert!((result.output.tail_current_a - n(&row["tail_current_a"])).abs() < 1e-9);
+            assert!((state.c10_capacitor_v - n(&row["c10_v"])).abs() < 1e-6);
+            assert!((state.capacitor_v[16] - n(&row["c18_v"])).abs() < 1e-7);
+            for (i, name) in [(13, "C19"), (14, "C15"), (15, "C21")] {
+                assert!((state.capacitor_v[i] - n(&row["amp_capacitor_v"][name])).abs() < 1e-6);
+            }
+            if b.r14_ohm.is_none() {
+                assert_eq!(
+                    state.c10_capacitor_v.to_bits(),
+                    previous.c10_capacitor_v.to_bits()
+                );
+            }
+            assert!(result.output.max_ladder_kcl_residual_a < 1e-11);
+            count += 1;
+        }
+    }
+    assert_eq!(count, 192);
+    println!("stress FD windows: steps={count} max_node_error_v={max_node:.9e} max_j7_error_v={max_j7:.9e}");
+}
 fn panel(v: &Value) -> PanelBoundary {
     PanelBoundary {
         cutoff_fraction_from_neg10: n(&v["cutoff_fraction_from_neg10"]),

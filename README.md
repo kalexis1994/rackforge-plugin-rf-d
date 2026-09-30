@@ -6,6 +6,8 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 El [ensamblado global ordenado](docs/ENSAMBLADO_GLOBAL_ORDENADO.md) y las [exponenciales compartidas](docs/EXPONENCIALES_GLOBAL_66.md) reducen el costo medio a 2,233 ms/bloque, con los gates independientes y heap cero. El [estrés largo](docs/ESTRES_LARGO_GLOBAL_66.md) añade 752384 muestras a 44,1/48/96 kHz con ambos R61, sin fallos y con cambios de controles, EMPHASIS y cargas. El deadline de 1,333 ms sigue excedido.
 
+Las [48 ventanas contrastadas con Python](docs/VENTANAS_INDEPENDIENTES_ESTRES_GLOBAL.md) añaden 192 pasos alrededor de switches y en tramos tardíos, con historiales eléctricos compartidos: máximo interno 0,205 µV y J7 0,398 nV. Amplían el contraste numérico de la escena.
+
 **Corpus documental reunido.** Hay manual de servicio completo (82 páginas), esquemas, manual de operación temprano, boletines de fábrica, patente y hojas de componentes; sus hashes y límites están en el [registro de fuentes](docs/FUENTES.md). El proyecto [avanza sin acceso físico](docs/VALIDACION_SIN_HARDWARE.md): la primera ruta tiene como blanco la placa osciladora **CA3046** documentada. Ya existe un [subgrafo de VCO 1](docs/VCO1_CA3046.md), referencias ejecutables de sus primeras etapas, un [bus de mezcla de cinco fuentes](docs/MEZCLADOR_PANEL.md) y un [punto DC condicionado del ladder completo](docs/LADDER_EBERS_MOLL_DC.md) con [recuperación y EMPHASIS temporales](docs/TRANSITORIO_FILTRO_ACOPLADO.md). Faltan la identificación de parámetros de una placa real, el motor de audio y el plugin instalable. No hay afirmación de fidelidad sonora. El nombre RF-D designa el proyecto; no implica afiliación con Moog Music.
 
 ## Objetivo musical

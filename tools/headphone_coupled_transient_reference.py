@@ -70,7 +70,7 @@ def nonlinear_coupled_headphone_step(*, ladder_dc: dict,
                                      cascaded_output_dc: dict,
                                      previous_state: dict,
                                      bus_v: float, dt_s: float,
-                                     r14_pin7_to_pin6_ohm: float,
+                                     r14_pin7_to_pin6_ohm: float | None,
                                      r73_bottom_side_to_wiper_ohm: float,
                                      r20_wiper_to_ground_ohm: float,
                                      hi_load_ohm: float,
@@ -108,7 +108,7 @@ def nonlinear_coupled_headphone_step(*, ladder_dc: dict,
             or set(old_amp_cap) != {"C19", "C15", "C21"}
             or not all(math.isfinite(v) for v in (
                 previous_state["c10_capacitor_v"], previous_state["bus_v"],
-                bus_v, dt_s, r14_pin7_to_pin6_ohm,
+                bus_v, dt_s,
                 r73_bottom_side_to_wiper_ohm))
             or dt_s <= 0 or not isinstance(sw18_on, bool)
             or jacobian_method not in ("hybrid", "finite_difference")
@@ -121,7 +121,9 @@ def nonlinear_coupled_headphone_step(*, ladder_dc: dict,
     c10_nominal, r14_total, r73_total, r76 = regeneration_values()
     c10 = c10_nominal if c10_farads is None else c10_farads
     if (not math.isfinite(c10) or not 0.9*c10_nominal <= c10 <= 1.5*c10_nominal
-            or not 0 <= r14_pin7_to_pin6_ohm <= r14_total
+            or (r14_pin7_to_pin6_ohm is not None and
+                (not math.isfinite(r14_pin7_to_pin6_ohm) or
+                 not 0 <= r14_pin7_to_pin6_ohm <= r14_total))
             or not 0 <= r73_bottom_side_to_wiper_ohm <= r73_total
             or not math.isclose(ladder_dc["network_parameters"]["r30"],
                                 r76+r73_bottom_side_to_wiper_ohm,
@@ -159,9 +161,10 @@ def nonlinear_coupled_headphone_step(*, ladder_dc: dict,
                       beta_forward=beta_forward, beta_reverse=beta_reverse,
                       temperature_k=temperature_k, diode_model=diode_model,
                       _prepared_graph=amp_graph)
-    rtop = r14_pin7_to_pin6_ohm+r73_total-r73_bottom_side_to_wiper_ohm
+    c10_connected = r14_pin7_to_pin6_ohm is not None
+    rtop = (r14_pin7_to_pin6_ohm or 0)+r73_total-r73_bottom_side_to_wiper_ohm
     gc10 = c10/dt_s
-    y10 = gc10/(1+gc10*rtop)
+    y10 = gc10/(1+gc10*rtop) if c10_connected else 0.0
     delta_bus = bus_v-previous_state["bus_v"]
 
     def evaluate(x: list[float], *, upstream_only: bool = False,
@@ -305,7 +308,8 @@ def nonlinear_coupled_headphone_step(*, ladder_dc: dict,
     hi = pin21*reduced["hi_to_pin21_ratio"] if sw18_on else 0.0
     lo = hi*reduced["lo_to_hi_ratio"] if sw18_on else 0.0
     result = {"node_v": tuple(x),
-            "c10_capacitor_v": x[22]-x[7]-rtop*parts["i10"],
+            "c10_capacitor_v": (x[22]-x[7]-rtop*parts["i10"] if c10_connected
+                               else previous_state["c10_capacitor_v"]),
             "amp_capacitor_v": {
                 "C19": x[R21_WIPER]-x[AMP_FIRST],
                 "C15": x[AMP_FIRST+7]-x[AMP_FIRST+8],

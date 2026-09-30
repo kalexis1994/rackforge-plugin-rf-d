@@ -14,6 +14,8 @@ Los estados `desconocido`, `hipótesis`, `modelado`, `contrastado` y `cerrado pa
 
 ## Afirmación pública actual
 
+Las [ventanas de estrés con oráculo independiente](VENTANAS_INDEPENDIENTES_ESTRES_GLOBAL.md) contrastan 192 pasos a tres tasas y ambos R61, con historiales nativos declarados. Error máximo interno 0,204625 µV y J7 0,397665 nV. El alcance son cuatro pasos por ventana; C6 y C7 siguen abiertos.
+
 El [estrés largo global](ESTRES_LARGO_GLOBAL_66.md) acepta 752384 muestras en seis escenas, sin fallos ni reintentos: 11756 auditorías de KCL y 188084 controles de historial C10 abierto. Amplía la validación de convergencia con fronteras sintéticas; no es un oráculo independiente de esas nuevas trazas ni una admisión de deadlines.
 
 La [evaluación compartida de exponenciales](EXPONENCIALES_GLOBAL_66.md) añade un gate específico de corriente/derivada y reduce otro 9,306 % la media global a 2,23336 ms/bloque. No altera las ecuaciones ni admite la ruta en el host; C6 y C7 siguen abiertos.

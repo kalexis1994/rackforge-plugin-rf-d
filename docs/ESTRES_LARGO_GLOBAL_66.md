@@ -34,6 +34,8 @@ Esta auditoría usa el ensamblador Rust y detecta errores de convergencia/public
 
 ## Resultado
 
+Las [48 ventanas independientes posteriores](VENTANAS_INDEPENDIENTES_ESTRES_GLOBAL.md) añaden 192 pasos Python alrededor de siete transiciones y a 1,9 s por escenario. Usan el historial nativo capturado y después integran cuatro pasos propios; pasan todos los nodos y salidas con las cotas fijadas.
+
 `evidence/circuit66_long_stress.json` conserva las seis corridas y metadatos de compilador, CPU, fuentes y ejecutable. Se aceptaron **752384 muestras**, con cero fallos y cero reintentos del predictor. Hubo **11756 auditorías de KCL** y **188084 comprobaciones de conservación de C10 abierto**. El máximo fue cinco iteraciones Newton y seis evaluaciones de residual por muestra, dentro del presupuesto.
 
 Máximo KCL declarado: 9,999814 pA; máximo auditado: 9,998210 pA. La cola recorre 4,781–15,874 µA en la escena. Son resultados eléctricos condicionados, no mediciones de una placa.

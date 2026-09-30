@@ -28,7 +28,7 @@ No habrá acceso a una unidad física. El [protocolo sin hardware](VALIDACION_SI
 
 ## Fase D — Motor portable y plugin
 
-La ruta global Q26/Q28→ladder→VCAs→J7 tiene Jacobiano analítico, optimizaciones contrastadas y [752384 muestras de estrés largo](ESTRES_LARGO_GLOBAL_66.md). La media local aún excede el plazo de audio. El siguiente corte numérico debe contrastar esas escenas con una referencia temporal independiente, medir stack y completar extremos de controles; VCO, mezclador cargado y contornos siguen pendientes para la voz completa.
+La ruta global Q26/Q28→ladder→VCAs→J7 tiene Jacobiano analítico, optimizaciones contrastadas, [752384 muestras de estrés largo](ESTRES_LARGO_GLOBAL_66.md) y [192 pasos independientes en ventanas de switches/tramos tardíos](VENTANAS_INDEPENDIENTES_ESTRES_GLOBAL.md). La media local aún excede el plazo de audio. El siguiente corte numérico debe estudiar refinamiento temporal, medir stack y completar extremos de controles; VCO, mezclador cargado y contornos siguen pendientes para la voz completa.
 
 1. Implementar contrato/estado, control, osciladores, mezcla, filtro, contornos/VCA, salida y adaptador RackForge.
 2. Comparar cada bloque con el solver, incluyendo límites de controles y escenas reservadas.
