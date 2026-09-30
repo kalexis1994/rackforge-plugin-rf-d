@@ -20,7 +20,7 @@ use rf_d_circuit::{Parameters as HeadphoneParameters, SolverBudget};
 const SAMPLE_RATE: usize = 48_000;
 const BLOCK: usize = 64;
 const MEASURED_SAMPLES: usize = 8192;
-const SEED: [f64; 16] = [
+pub(crate) const SEED: [f64; 16] = [
     7.8431017460109675,
     6.372499040594479,
     4.9019061730679665,
@@ -91,7 +91,7 @@ enum BenchState {
     Global(rf_d_circuit::circuit66::State),
 }
 
-fn controlled_boundary(sample: usize, closed: bool) -> cutoff_ladder_output::Boundary {
+pub(crate) fn controlled_boundary(sample: usize, closed: bool) -> cutoff_ladder_output::Boundary {
     let b = boundary(sample);
     cutoff_ladder_output::Boundary {
         bus_v: b.bus_v,
@@ -106,10 +106,11 @@ fn controlled_boundary(sample: usize, closed: bool) -> cutoff_ladder_output::Bou
     }
 }
 
-fn main() {
-    let closed = std::env::args().any(|arg| arg == "--emphasis");
-    let global = std::env::args().any(|arg| arg == "--global");
-    let controlled = global || std::env::args().any(|arg| arg == "--cutoff");
+pub(crate) fn lab_parameters() -> (
+    cutoff_ladder_output::Parameters,
+    ConversionParameters,
+    HeadphoneParameters,
+) {
     let transistors = TransistorParameters {
         transistor_is_a: 1e-14,
         beta_forward: 100.0,
@@ -134,20 +135,28 @@ fn main() {
         diode_is_a: 1.293_303_751_274_349e-9,
         diode_ideality: 1.5,
     };
-    let ladder = Parameters {
-        transistor: transistors,
-        tail_current_a: 6.824_898_505_905_974e-6,
-        r61_ohm: 200.0,
-        r30_ohm: 830.0,
-    };
     let dynamic = cutoff_ladder_output::Parameters {
         ladder_transistor: transistors,
         cutoff: cutoff::Parameters {
             q26: transistors,
             q28: transistors,
         },
-        r61_ohm: ladder.r61_ohm,
-        r30_ohm: ladder.r30_ohm,
+        r61_ohm: 200.0,
+        r30_ohm: 830.0,
+    };
+    (dynamic, conversion, headphone)
+}
+
+fn main() {
+    let closed = std::env::args().any(|arg| arg == "--emphasis");
+    let global = std::env::args().any(|arg| arg == "--global");
+    let controlled = global || std::env::args().any(|arg| arg == "--cutoff");
+    let (dynamic, conversion, headphone) = lab_parameters();
+    let ladder = Parameters {
+        transistor: dynamic.ladder_transistor,
+        tail_current_a: 6.824_898_505_905_974e-6,
+        r61_ohm: dynamic.r61_ohm,
+        r30_ohm: dynamic.r30_ohm,
     };
     let probes = std::env::args().any(|arg| arg == "--stress-probes");
     if probes || std::env::args().any(|arg| arg == "--stress") {
@@ -341,7 +350,7 @@ fn main() {
 
 // Synthetic electrical boundaries, expressed in V/ohm/s. This exercises the
 // solver and capacitor history; it does not synthesize or identify a Model D.
-fn stress_boundary(sample: usize, rate: f64) -> cutoff_ladder_output::Boundary {
+pub(crate) fn stress_boundary(sample: usize, rate: f64) -> cutoff_ladder_output::Boundary {
     let t = sample as f64 / rate;
     let sine = |hz: f64| (2.0 * std::f64::consts::PI * hz * t).sin();
     let segment = (t / 0.25).floor() as usize;

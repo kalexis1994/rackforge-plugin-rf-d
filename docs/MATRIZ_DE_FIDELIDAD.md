@@ -14,6 +14,8 @@ Los estados `desconocido`, `hipótesis`, `modelado`, `contrastado` y `cerrado pa
 
 ## Afirmación pública actual
 
+El [refinamiento global 48/96/192 kHz](REFINAMIENTO_TEMPORAL_GLOBAL_66.md) pasa 26880 pasos con descenso máximo/RMS de J7, C2 y R21. El cociente cercano a dos es consistente con Euler de primer orden en las escenas suaves. No fija error absoluto contra tiempo continuo ni admite oversampling del plugin.
+
 Las [ventanas de estrés con oráculo independiente](VENTANAS_INDEPENDIENTES_ESTRES_GLOBAL.md) contrastan 192 pasos a tres tasas y ambos R61, con historiales nativos declarados. Error máximo interno 0,204625 µV y J7 0,397665 nV. El alcance son cuatro pasos por ventana; C6 y C7 siguen abiertos.
 
 El [estrés largo global](ESTRES_LARGO_GLOBAL_66.md) acepta 752384 muestras en seis escenas, sin fallos ni reintentos: 11756 auditorías de KCL y 188084 controles de historial C10 abierto. Amplía la validación de convergencia con fronteras sintéticas; no es un oráculo independiente de esas nuevas trazas ni una admisión de deadlines.
