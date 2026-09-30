@@ -79,6 +79,15 @@ pub struct DcContinuation {
     pub max_physical_kcl_a: f64,
 }
 
+#[derive(Clone, Copy, Debug)]
+pub struct TransientContinuation {
+    pub result: Result66,
+    /// Numerical solves at ONE time step; no intermediate charges published.
+    pub solves: usize,
+    pub total_iterations: usize,
+    pub max_stage_kcl_a: f64,
+}
+
 #[derive(Clone, Copy)]
 enum Terminal {
     Node(usize),
@@ -1071,6 +1080,113 @@ pub fn step(
             true,
         ),
     };
+    Ok(publish_step(
+        state,
+        p,
+        b,
+        prepared.1,
+        solution,
+        fallback,
+        evaluations,
+    ))
+}
+
+/// Experimental numerical source continuation, not physical substeps or a
+/// contour. All stages use this call's original capacitor histories, requested
+/// BUS, dt and other boundaries. Only VCA sources interpolate from the supplied
+/// numerical anchor to the requested values. Sources must lie within 0..=2 V;
+/// stage_count within 1..=32. Each solve retains the given 1..=16 / 1..=16
+/// Newton budget and strict gates. Publication happens only after the final
+/// requested boundary converges. This expensive route is not selected by
+/// `step` and does not claim admission to the audio deadline.
+pub fn step_vca_continuation(
+    state: &mut State,
+    p: Parameters,
+    conversion: ConversionParameters,
+    headphone: HeadphoneParameters,
+    b: Boundary,
+    source_start_v: [f64; 2],
+    stage_count: usize,
+    budget: SolverBudget,
+) -> Result<TransientContinuation, StepError> {
+    let prepared = prepare(p, conversion, headphone, b, budget)?;
+    let target = [b.recovery.vca.loudness_v, b.recovery.vca.second.q21_base_v];
+    if !(1..=32).contains(&stage_count)
+        || source_start_v
+            .iter()
+            .chain(target.iter())
+            .any(|v| !v.is_finite() || !(0.0..=2.0).contains(v))
+        || state
+            .node_v
+            .iter()
+            .chain(state.previous_node_v.iter())
+            .chain(state.capacitor_v.iter())
+            .any(|v| !v.is_finite())
+        || !state.c10_capacitor_v.is_finite()
+    {
+        return Err(StepError::InvalidInput);
+    }
+    let count = if source_start_v == target {
+        0
+    } else {
+        stage_count
+    };
+    let mut seed = state.node_v;
+    let mut evaluations = 0;
+    let mut iterations = 0;
+    let mut max_kcl = 0.0_f64;
+    let mut final_solution = None;
+    for stage in 0..=count {
+        let mut intermediate = b;
+        if stage < count {
+            let f = stage as f64 / count as f64;
+            intermediate.recovery.vca.loudness_v =
+                source_start_v[0] + (target[0] - source_start_v[0]) * f;
+            intermediate.recovery.vca.second.q21_base_v =
+                source_start_v[1] + (target[1] - source_start_v[1]) * f;
+        }
+        let solved = solve(
+            seed,
+            p,
+            conversion,
+            headphone,
+            intermediate,
+            prepared,
+            Some(state),
+            budget,
+            &mut evaluations,
+        )?;
+        seed = solved.0;
+        iterations += solved.1;
+        max_kcl = max_kcl.max(solved.2);
+        final_solution = Some(solved);
+    }
+    let result = publish_step(
+        state,
+        p,
+        b,
+        prepared.1,
+        final_solution.unwrap(),
+        false,
+        evaluations,
+    );
+    Ok(TransientContinuation {
+        result,
+        solves: count + 1,
+        total_iterations: iterations,
+        max_stage_kcl_a: max_kcl,
+    })
+}
+
+fn publish_step(
+    state: &mut State,
+    p: Parameters,
+    b: Boundary,
+    main: MainLoad,
+    solution: ([f64; N], usize, f64, f64, f64),
+    fallback: bool,
+    evaluations: usize,
+) -> Result66 {
     let x = solution.0;
     let ob = b.recovery.vca.second.output.output;
     let voltage_constraint_error_v = r21_constraint(&x, ob.r21_lower_ohm).abs();
@@ -1088,12 +1204,12 @@ pub fn step(
     } else {
         state.c10_capacitor_v
     };
-    let pin21 = x[47] * prepared.1.equivalent_ohm / (1000.0 + prepared.1.equivalent_ohm);
-    let hi = pin21 * prepared.1.hi_to_pin21;
+    let pin21 = x[47] * main.equivalent_ohm / (1000.0 + main.equivalent_ohm);
+    let hi = pin21 * main.hi_to_pin21;
     let result = StepResult {
         j7_v: x[61],
         j4_hi_v: hi,
-        j5_lo_v: hi * prepared.1.lo_to_hi,
+        j5_lo_v: hi * main.lo_to_hi,
         iterations: solution.1,
         recovery_port_evaluations: 0,
         predictor_fallback: fallback,
@@ -1114,10 +1230,10 @@ pub fn step(
         capacitor_v: charges(&x, b),
         c10_capacitor_v: c10_v,
     };
-    Ok(Result66 {
+    Result66 {
         output: result,
         residual_evaluations: evaluations,
         voltage_constraint_error_v,
         r21_short_current_a,
-    })
+    }
 }

@@ -1,9 +1,11 @@
 param(
-    [ValidateSet('temporal','stack','controls','dc-seeds','vca-release','r21','vca-dc')][string]$Mode = 'temporal',
+    [ValidateSet('temporal','stack','controls','dc-seeds','vca-release','r21','vca-dc','vca-jump')][string]$Mode = 'temporal',
     [Parameter(Mandatory)][string]$Output,
     [int]$StackKib = 2048,
     [switch]$R21Endpoints,
-    [switch]$VcaDcContinuation
+    [switch]$VcaDcContinuation,
+    [switch]$VcaJump,
+    [ValidateRange(1,32)][int]$VcaStages = 32
 )
 # Build the release example first. Diagnostics run outside the audio thread.
 $ErrorActionPreference = 'Stop'
@@ -12,6 +14,7 @@ $taskBench = Join-Path $taskRepo 'target/release/examples/circuit66_admission.ex
 if (-not (Test-Path -LiteralPath $taskBench)) { throw 'Build the release example first.' }
 $taskArgs = @("--$Mode")
 if ($Mode -eq 'stack') { $taskArgs += "--stack-kib=$StackKib" }
+if ($Mode -eq 'vca-jump') { $taskArgs += "--vca-stages=$VcaStages" }
 if ($R21Endpoints) {
     if ($Mode -ne 'stack') { throw 'R21Endpoints applies only to stack mode.' }
     $taskArgs += '--stack-r21'
@@ -19,6 +22,10 @@ if ($R21Endpoints) {
 if ($VcaDcContinuation) {
     if ($Mode -ne 'stack') { throw 'VcaDcContinuation applies only to stack mode.' }
     $taskArgs += '--stack-vca-dc'
+}
+if ($VcaJump) {
+    if ($Mode -ne 'stack') { throw 'VcaJump applies only to stack mode.' }
+    $taskArgs += '--stack-vca-jump'
 }
 $taskRaw = & $taskBench @taskArgs
 $taskExit = $LASTEXITCODE

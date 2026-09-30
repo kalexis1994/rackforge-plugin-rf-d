@@ -4,6 +4,8 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+Los [saltos VCA con historial fijo](docs/SALTOS_VCA_HISTORIAL_FIJO.md) pasan 384 muestras independientes, incluyendo apagado y restauración: error interno máximo 7,15 nV. La API rescata 16 rechazos sin subpasos físicos ni borrar cargas. Es una ruta experimental explícita, todavía demasiado costosa; el banco de stack conserva una diferencia de 1,30 pV frente a su gate de identidad de 1 pV.
+
 La [inicialización DC por continuación VCA](docs/DC_VCA_CONTINUACION.md) añade una ruta explícita de preparación para uno o ambos controles en cero. Pasa 18 semillas frente a raíces independientes (1,57 nV), reconstruye las 18 cargas y acepta 1152 pasos posteriores de reposo. Conserva los gates por etapa y heap cero. El salto abrupto durante audio sigue pendiente.
 
 Los [topes exactos de R21](docs/R21_EXTREMOS_EXACTOS.md) ya identifican cursor→masa y PIN22→cursor en el solver global. Pasan 128 pasos de integración Python independiente (máximo de nodo 0,22 nV), Jacobianos, corrientes de los cortos, heap cero y stack con cambios entre topes. El barrido acepta 17408 muestras y conserva los seis fallos previos.

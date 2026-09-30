@@ -2,6 +2,8 @@
 
 Los errores de esta ficha describen la política histórica de KCL sola. El [criterio temporal de voltaje](CRITERIO_VOLTAJE_TRANSITORIO_GLOBAL.md) corrige sus 96 sondas, con costo medido; los informes fallidos se conservan.
 
+La nueva [continuación temporal con cargas fijas](SALTOS_VCA_HISTORIAL_FIJO.md) rescata apagados y reactivaciones en una API explícita y contrasta 384 muestras completas. El camino normal descrito aquí conserva sus rechazos y la continuación todavía excede el presupuesto de audio.
+
 ## Fronteras ensayadas
 
 SVC-9 Fig. 9-11, PDF p. 13: Q18 controla el primer VCA y Q21 el segundo, con sus pares diferenciales completos. Se conservan los componentes, Ebers–Moll, temperatura nominal y ambos candidatos de R61. El banco impone fuentes lineales **2→0→2 V** a Q21, o simultáneamente a ambos controles. No identifica sus niveles reales ni genera el contorno del instrumento. No se introduce smoothing en DSP.

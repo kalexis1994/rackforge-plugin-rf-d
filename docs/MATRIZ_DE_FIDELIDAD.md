@@ -18,6 +18,8 @@ La [reutilización de dirección Newton](DIRECCION_NEWTON_REUTILIZADA.md) conser
 
 La [continuación DC de fuentes VCA](DC_VCA_CONTINUACION.md) admite 18 semillas para primer/segundo/ambos controles a cero, con 1,568833 nV frente a raíces independientes, 576 puntos intermedios y 18 cargas reconstruidas. Añade 1152 pasos nativos manteniendo esas fuentes. Es preparación fuera de audio, con 33 solves DC; no resuelve Note Off ni reemplaza el contorno, ni modifica C6/C7.
 
+Los [saltos temporales VCA con cargas fijas](SALTOS_VCA_HISTORIAL_FIJO.md) pasan 384 muestras con integración independiente (7,150162 nV), 24 Jacobianos y rescate de 16 rechazos. No se integra el tiempo entre etapas y sólo se publica el estado final. El costo y un gate de identidad de stack de 1 pV siguen fallidos; no se selecciona automáticamente ni identifica el contorno.
+
 El [criterio temporal KCL + corrección de voltaje](CRITERIO_VOLTAJE_TRANSITORIO_GLOBAL.md) corrige las 96 sondas de apagado (0,150 nV máximo), pasa heap cero y 752384 muestras de estrés. Su costo aumenta 69,3 % a 3,939 ms/bloque; C7 sigue fallido. No resuelve los saltos abruptos ni el contorno físico.
 
 El [apagado de los VCAs con rampas impuestas](APAGADO_VCA_GLOBAL_66.md) registró 20/96 sondas >1 µV interno con la política anterior, hasta 1,318 mV. El criterio de voltaje corrige esa brecha. Las cuatro escenas de salto directo siguen fallando de forma atómica.

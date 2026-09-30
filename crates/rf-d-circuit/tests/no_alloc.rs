@@ -562,6 +562,30 @@ fn dc_initialization_and_audio_steps_do_not_allocate() {
     )
     .expect("VCA zero DC continuation without allocation");
     assert_eq!(continued.dc_solves, 33);
+    let mut jump = global;
+    let result = rf_d_circuit::circuit66::step_vca_continuation(
+        &mut jump,
+        dynamic_parameters,
+        conversion,
+        p,
+        zero,
+        [2.0, 2.0],
+        32,
+        SolverBudget::default(),
+    )
+    .expect("abrupt VCA step without allocation");
+    assert_eq!(result.solves, 33);
+    rf_d_circuit::circuit66::step_vca_continuation(
+        &mut jump,
+        dynamic_parameters,
+        conversion,
+        p,
+        dynamic_boundary,
+        [0.0, 0.0],
+        32,
+        SolverBudget::default(),
+    )
+    .expect("abrupt VCA restore without allocation");
     for lower in [0.0, 5000.0] {
         let mut endpoint = dynamic_boundary;
         endpoint.recovery.vca.second.output.output.r21_lower_ohm = lower;

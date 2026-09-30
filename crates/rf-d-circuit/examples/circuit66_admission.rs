@@ -23,6 +23,8 @@ fn main() {
         r21_grid()
     } else if std::env::args().any(|v| v == "--vca-dc") {
         vca_dc_grid()
+    } else if std::env::args().any(|v| v == "--vca-jump") {
+        vca_jump_grid()
     } else {
         temporal_grid()
     };
@@ -38,6 +40,88 @@ fn main() {
             std::process::exit(1);
         }
     }
+}
+
+fn vca_jump_grid() -> Result<Value, String> {
+    let stage_count = std::env::args()
+        .find_map(|s| s.strip_prefix("--vca-stages=").map(str::to_owned))
+        .unwrap_or_else(|| "32".into())
+        .parse::<usize>()
+        .map_err(|e| e.to_string())?;
+    let (base, c, h) = lab::lab_parameters();
+    let mut cases = Vec::new();
+    for r61 in [200.0, 200000.0] {
+        let p = cutoff_ladder_output::Parameters {
+            r61_ohm: r61,
+            ..base
+        };
+        let centre = lab::controlled_boundary(0, true);
+        let initial = circuit66::initial_state(p, c, h, centre, lab::SEED)
+            .map_err(|e| format!("DC: {e:?}"))?;
+        for mode in ["first", "second", "both"] {
+            let mut state = initial;
+            let mut sources = [2.0, 2.0];
+            let mut rows = Vec::new();
+            let mut max_us = 0.0_f64;
+            let mut total_us = 0.0;
+            let mut continuations = 0;
+            for sample in 0..64 {
+                let off = (8..24).contains(&sample) || (40..56).contains(&sample);
+                let mut b = centre;
+                b.bus_v = 0.02
+                    * (2.0 * std::f64::consts::PI * 100.0 * (sample + 1) as f64 / 48000.0).sin();
+                if off && mode != "second" {
+                    b.recovery.vca.loudness_v = 0.0;
+                }
+                if off && mode != "first" {
+                    b.recovery.vca.second.q21_base_v = 0.0;
+                }
+                let target = [b.recovery.vca.loudness_v, b.recovery.vca.second.q21_base_v];
+                let old = state;
+                let start = std::time::Instant::now();
+                let primary = circuit66::step(&mut state, p, c, h, b, SolverBudget::default());
+                let primary_error = primary.as_ref().err().map(|e| format!("{e:?}"));
+                let result = match primary {
+                    Ok(r) => r,
+                    Err(_) => {
+                        assert_eq!(state, old);
+                        continuations += 1;
+                        circuit66::step_vca_continuation(
+                            &mut state,
+                            p,
+                            c,
+                            h,
+                            b,
+                            sources,
+                            stage_count,
+                            SolverBudget::default(),
+                        )
+                        .map_err(|e| {
+                            assert_eq!(state, old);
+                            format!("R61 {r61} {mode} sample {sample} stages {stage_count}: {e:?}")
+                        })?
+                        .result
+                    }
+                };
+                let elapsed_us = start.elapsed().as_secs_f64() * 1e6;
+                total_us += elapsed_us;
+                max_us = max_us.max(elapsed_us);
+                sources = target;
+                rows.push(json!({"sample":sample,"bus_v":b.bus_v,"loudness_v":target[0],"q21_base_v":target[1],
+                    "primary_error":primary_error,"node_v":state.node_v.to_vec(),"capacitor_v":state.capacitor_v.to_vec(),
+                    "c10_v":state.c10_capacitor_v,"j7_v":result.output.j7_v,"j4_hi_v":result.output.j4_hi_v,
+                    "j5_lo_v":result.output.j5_lo_v,"tail_current_a":result.output.tail_current_a,
+                    "kcl_a":result.output.max_ladder_kcl_residual_a}));
+            }
+            cases.push(json!({"r61_ohm":r61,"mode":mode,"initial_node_v":initial.node_v.to_vec(),"rows":rows,
+                "continuations":continuations,"block_us":total_us,"max_sample_us":max_us}));
+        }
+    }
+    Ok(
+        json!({"schema":"rf-d/circuit66-vca-jump-native/v1","passed":true,"cases":cases,"stage_count":stage_count,
+        "scope":"source continuation at one immutable incoming capacitor history, not physical substeps",
+        "audio_fidelity_claim":false,"audio_deadline_claim":false}),
+    )
 }
 
 fn vca_dc_grid() -> Result<Value, String> {
@@ -99,7 +183,7 @@ fn vca_dc_grid() -> Result<Value, String> {
                                 accepted_hold += 1;
                                 hold_kcl = hold_kcl.max(result.output.max_ladder_kcl_residual_a);
                                 hold_fallbacks += usize::from(result.output.predictor_fallback);
-                            },
+                            }
                             Err(e) => {
                                 assert_eq!(held, old);
                                 hold_error = Some(format!("{e:?}"));
@@ -110,7 +194,10 @@ fn vca_dc_grid() -> Result<Value, String> {
                     let (r, _) = circuit66::linearize_dc(p, c, h, target, &state.node_v)
                         .map_err(|e| format!("{e:?}"))?;
                     let max_kcl = r.into_iter().map(f64::abs).fold(0.0, f64::max);
-                    let passed = max_error < 1e-6 && max_kcl < 1e-11 && accepted_hold == 64 && hold_kcl < 1e-11;
+                    let passed = max_error < 1e-6
+                        && max_kcl < 1e-11
+                        && accepted_hold == 64
+                        && hold_kcl < 1e-11;
                     failures += usize::from(!passed);
                     rows.push(json!({"name":case["name"],"r61_ohm":p.r61_ohm,"seed_shift_v":shift,
                         "direct_error":direct.err().map(|e|format!("{e:?}")),"continuation_error":null,
@@ -567,6 +654,8 @@ fn stack_grid() -> Result<Value, String> {
         max_kcl: f64,
         fallbacks: usize,
         dc_continuation: Option<(usize, usize, f64)>,
+        transient_continuations: usize,
+        initial_node: [f64; 66],
     }
     // A separate no-inline worker observes its own allocation. Serialization
     // happens after joining, outside the measured worker.
@@ -576,6 +665,7 @@ fn stack_grid() -> Result<Value, String> {
         p: cutoff_ladder_output::Parameters,
         r21_endpoints: bool,
         vca_continuation: bool,
+        vca_jump: bool,
     ) -> Result<Run, String> {
         let (_, c, h) = lab::lab_parameters();
         let before = snapshot()?;
@@ -605,14 +695,21 @@ fn stack_grid() -> Result<Value, String> {
         // The measured audio scene retains its nominal initial state. The
         // discarded DC probe above measures initialization resources only.
         let after_dc = snapshot()?;
+        let initial_node = state.node_v;
         let mut max_kcl = 0.0_f64;
         let mut fallbacks = 0;
+        let mut sources = [2.0, 2.0];
+        let mut transient_continuations = 0;
         for sample in 0..8192 {
             if sample == 4096 {
                 state.previous_node_v[1] -= 1e6;
             }
             let old = state;
             let mut b = lab::controlled_boundary(sample, true);
+            if vca_jump && ((2048..3072).contains(&sample) || (6144..7168).contains(&sample)) {
+                b.recovery.vca.loudness_v = 0.0;
+                b.recovery.vca.second.q21_base_v = 0.0;
+            }
             if r21_endpoints {
                 b.recovery.vca.second.output.output.r21_lower_ohm = match sample % 3072 / 1024 {
                     1 => 0.0,
@@ -620,11 +717,29 @@ fn stack_grid() -> Result<Value, String> {
                     _ => 2000.0,
                 };
             }
-            let result =
-                circuit66::step(&mut state, p, c, h, b, SolverBudget::default()).map_err(|e| {
+            let result = match circuit66::step(&mut state, p, c, h, b, SolverBudget::default()) {
+                Ok(r) => r,
+                Err(e) => {
                     assert_eq!(state, old);
-                    format!("Worker sample {sample}: {e:?}")
-                })?;
+                    if !vca_jump {
+                        return Err(format!("Worker sample {sample}: {e:?}"));
+                    }
+                    transient_continuations += 1;
+                    circuit66::step_vca_continuation(
+                        &mut state,
+                        p,
+                        c,
+                        h,
+                        b,
+                        sources,
+                        32,
+                        SolverBudget::default(),
+                    )
+                    .map_err(|e| format!("Worker continuation sample {sample}: {e:?}"))?
+                    .result
+                }
+            };
+            sources = [b.recovery.vca.loudness_v, b.recovery.vca.second.q21_base_v];
             max_kcl = max_kcl.max(result.output.max_ladder_kcl_residual_a);
             fallbacks += usize::from(result.output.predictor_fallback);
         }
@@ -655,7 +770,7 @@ fn stack_grid() -> Result<Value, String> {
         }
         assert_eq!(state, old);
         let after_steps = snapshot()?;
-        if max_kcl >= 1e-11 || fallbacks != 1 {
+        if max_kcl >= 1e-11 || (!vca_jump && fallbacks != 1) || (vca_jump && fallbacks < 1) {
             return Err("Worker KCL or forced predictor fallback gate failed".into());
         }
         Ok(Run {
@@ -666,6 +781,8 @@ fn stack_grid() -> Result<Value, String> {
             max_kcl,
             fallbacks,
             dc_continuation,
+            transient_continuations,
+            initial_node,
         })
     }
     let requested = std::env::args()
@@ -679,7 +796,9 @@ fn stack_grid() -> Result<Value, String> {
     let (base, c, h) = lab::lab_parameters();
     let r21_endpoints = std::env::args().any(|v| v == "--stack-r21");
     let vca_continuation = std::env::args().any(|v| v == "--stack-vca-dc");
+    let vca_jump = std::env::args().any(|v| v == "--stack-vca-jump");
     let mut rows = Vec::new();
+    let mut path_mismatches = 0;
     for r61 in [200.0, 200000.0] {
         let p = cutoff_ladder_output::Parameters {
             r61_ohm: r61,
@@ -697,7 +816,7 @@ fn stack_grid() -> Result<Value, String> {
             let run = std::thread::Builder::new()
                 .name("rf-d-stack-probe".into())
                 .stack_size(requested * 1024)
-                .spawn(move || worker(initial, p, r21_endpoints, vca_continuation))
+                .spawn(move || worker(initial, p, r21_endpoints, vca_continuation, vca_jump))
                 .map_err(|e| e.to_string())?
                 .join()
                 .map_err(|_| "Worker panicked".to_string())??;
@@ -712,21 +831,25 @@ fn stack_grid() -> Result<Value, String> {
                 0.0
             };
             if difference > 1e-12 {
-                return Err("Worker initialization paths differ numerically".into());
+                path_mismatches += 1;
             }
             rows.push(json!({"r61_ohm":r61,"dc_in_worker":dc_in_worker,"requested_stack_bytes":requested*1024,
                 "before":windows_stack::json(run.before),"after_dc":windows_stack::json(run.after_dc),
                 "after_steps_and_failure_paths":windows_stack::json(run.after_steps),
                 "samples":8192,"forced_predictor_fallbacks":run.fallbacks,"atomic_rejections":2,
                 "zero_dc_continuation_solves_iterations_kcl":run.dc_continuation,
+                "transient_continuations":run.transient_continuations,
+                "initial_node_v":run.initial_node.to_vec(),
                 "max_kcl_a":run.max_kcl,"final_node_v":run.final_node.to_vec(),
                 "initialization_path_max_difference_v":difference}));
         }
     }
     Ok(
-        json!({"schema":"rf-d/circuit66-stack-regions/v1","passed":true,"platform":"windows-x86_64",
+        json!({"schema":"rf-d/circuit66-stack-regions/v1","passed":path_mismatches==0,"platform":"windows-x86_64",
+        "initialization_path_mismatches":path_mismatches,"initialization_path_gate_v":1e-12,
         "r21_endpoints_exercised":r21_endpoints,
         "zero_dc_continuation_exercised":vca_continuation,
+        "abrupt_vca_sources_exercised":vca_jump,
         "method":"separate Rust workers; read-only GetCurrentThreadStackLimits/VirtualQuery at phase boundaries",
         "precise_stack_high_water_measured":false,"audio_deadline_claim":false,"runs":rows}),
     )
