@@ -64,11 +64,21 @@ fn control_grid() -> Result<Value, String> {
         ("r14_min", |_, b| b.r14_ohm = Some(0.0)),
         ("r14_max", |_, b| b.r14_ohm = Some(50000.0)),
         ("r14_disconnected", |_, b| b.r14_ohm = None),
-        ("r20_min_unsupported", |_, b| {
+        ("r20_min", |_, b| {
             b.recovery.vca.second.output.output.r20_lower_ohm = 0.0
         }),
-        ("r20_max_unsupported", |_, b| {
+        ("r20_max", |_, b| {
             b.recovery.vca.second.output.output.r20_lower_ohm = 5000.0
+        }),
+        ("r20_min_sw18_off", |_, b| {
+            let o = &mut b.recovery.vca.second.output.output;
+            o.r20_lower_ohm = 0.0;
+            o.sw18_on = false;
+        }),
+        ("r20_max_sw18_off", |_, b| {
+            let o = &mut b.recovery.vca.second.output.output;
+            o.r20_lower_ohm = 5000.0;
+            o.sw18_on = false;
         }),
         ("r21_near_min", |_, b| {
             b.recovery.vca.second.output.output.r21_lower_ohm = 0.001
@@ -210,7 +220,7 @@ fn control_grid() -> Result<Value, String> {
     Ok(
         json!({"schema":"rf-d/circuit66-control-survey/v1","passed":failures==0,"survey_completed":true,
         "sample_rate_hz":48000,"requested_samples_per_supported_case":256,"accepted_samples":total,
-        "supported_case_failures":failures,"expected_endpoint_rejections":8,
+        "supported_case_failures":failures,"expected_endpoint_rejections":4,
         "scope":"one control/trim/source at a time; abrupt centre-target-centre, nominal imposed devices",
         "audio_fidelity_claim":false,"cases":cases}),
     )

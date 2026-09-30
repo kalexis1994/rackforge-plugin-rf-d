@@ -71,8 +71,8 @@ pub(crate) struct MainLoad {
 pub(crate) fn main_load(b: OutputBoundary) -> Result<MainLoad, StepError> {
     if !b.q17_collector_v.is_finite()
         || !b.r20_lower_ohm.is_finite()
-        || b.r20_lower_ohm <= 0.0
-        || b.r20_lower_ohm >= R20_OHM
+        || b.r20_lower_ohm < 0.0
+        || b.r20_lower_ohm > R20_OHM
         || !b.hi_load_ohm.is_finite()
         || b.hi_load_ohm <= 0.0
         || !b.lo_load_ohm.is_finite()
@@ -93,7 +93,15 @@ pub(crate) fn main_load(b: OutputBoundary) -> Result<MainLoad, StepError> {
     let low_shunt = 1.0 / (1.0 / R58_OHM + 1.0 / b.lo_load_ohm);
     let low_leg = R57_OHM + low_shunt;
     let hi_shunt = 1.0 / (1.0 / b.hi_load_ohm + 1.0 / low_leg);
-    let wiper_shunt = 1.0 / (1.0 / b.r20_lower_ohm + 1.0 / hi_shunt);
+    // Exact lower-end short: HI and LO are grounded. At the upper end
+    // upper=0 joins PIN21 to HI; R75 remains in series in every caller.
+    // SW18 OFF at the upper end has equivalent=0 (PIN21 grounded), also
+    // finite after adding R75. No epsilon resistor or zero-ohm division.
+    let wiper_shunt = if b.r20_lower_ohm == 0.0 {
+        0.0
+    } else {
+        1.0 / (1.0 / b.r20_lower_ohm + 1.0 / hi_shunt)
+    };
     let equivalent = upper + wiper_shunt;
     if !equivalent.is_finite() || equivalent <= 0.0 {
         return Err(StepError::InvalidInput);

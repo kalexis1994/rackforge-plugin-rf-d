@@ -14,7 +14,7 @@ Los estados `desconocido`, `hipótesis`, `modelado`, `contrastado` y `cerrado pa
 
 ## Afirmación pública actual
 
-El [barrido de extremos global](EXTREMOS_CONTROLES_GLOBAL_66.md) no pasa: seis casos soportados fallan, en cutoff máximo DC y Q21 a cero. R20/R21 exactos quedan fuera del dominio actual. Los 14336 pasos aceptados y rechazos atómicos delimitan el alcance sin cerrar esos extremos.
+El [barrido de extremos global](EXTREMOS_CONTROLES_GLOBAL_66.md) no pasa: seis casos soportados fallan, en cutoff máximo DC y Q21 a cero. [R20 exacto](R20_EXTREMOS_EXACTOS.md) pasa ocho escenas ON/OFF y 128 pasos independientes (error interno máximo 0,279225 µV). El nuevo barrido acepta 16384 muestras; R21 exacto sigue fuera del dominio actual.
 
 El [banco de stack Win64](STACK_GLOBAL_66_WIN64.md) pasa 98304 muestras en workers de 2 MiB/1 MiB/512 KiB. Observa 288 KiB comprometidos, incluidas guardas. Valida inicialización, reintento y rechazo atómico para la escena; no mide el pico exacto ni admite el host.
 

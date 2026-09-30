@@ -4,7 +4,7 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
-El [barrido de extremos global](docs/EXTREMOS_CONTROLES_GLOBAL_66.md) registra 68 escenarios y 14336 muestras aceptadas. Detecta fallos de arranque con cutoff máximo y de transición al apagar Q21; R20/R21 exactos todavía se rechazan. Es evidencia de brechas pendientes, no una admisión.
+El [barrido de extremos global](docs/EXTREMOS_CONTROLES_GLOBAL_66.md) detectó fallos de arranque con cutoff máximo y de transición al apagar Q21. [R20 ya admite sus extremos exactos](docs/R20_EXTREMOS_EXACTOS.md), con 128 pasos independientes y SW18 ON/OFF. El nuevo barrido acepta 16384 muestras; mantiene seis casos fallidos y R21 exacto pendiente.
 
 El [banco de stack Win64](docs/STACK_GLOBAL_66_WIN64.md) pasa hilos de 512 KiB, con 288 KiB comprometidos observados durante DC/procesamiento y reintentos. La observación por páginas deja pendiente el pico exacto y la admisión en RackForge.
 

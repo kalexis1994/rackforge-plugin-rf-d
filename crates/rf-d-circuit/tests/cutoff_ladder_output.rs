@@ -14,6 +14,96 @@ fn n(v: &Value) -> f64 {
 }
 
 #[test]
+fn r20_exact_shorts_and_sw18_match_independent_full_circuit() {
+    use rf_d_circuit::circuit66 as global;
+    let fixture: Value =
+        serde_json::from_str(include_str!("../../../evidence/r20_endpoint_vectors.json")).unwrap();
+    let (bjt, conversion, headphone, rb) = setup();
+    let mut count = 0;
+    let mut max_node = 0.0_f64;
+    let mut max_jack = 0.0_f64;
+    for case in fixture["cases"].as_array().unwrap() {
+        let p = Parameters {
+            ladder_transistor: bjt,
+            cutoff: cutoff::Parameters { q26: bjt, q28: bjt },
+            r61_ohm: n(&case["r61_ohm"]),
+            r30_ohm: 830.0,
+        };
+        let mut b = Boundary {
+            bus_v: 0.0,
+            recovery: rb,
+            panel: panel(&case["controls"]["panel"]),
+            range_fraction_from_ground: 0.1,
+            r14_ohm: Some(25000.0),
+        };
+        let seed = std::array::from_fn(|i| n(&case["initial"]["node_v"][i]));
+        let mut state = global::initial_state(p, conversion, headphone, b, seed).unwrap();
+        let mut dc_boundary = b;
+        let ob = &mut dc_boundary.recovery.vca.second.output.output;
+        ob.r20_lower_ohm = n(&case["target_lower_ohm"]);
+        ob.sw18_on = case["target_sw18_on"].as_bool().unwrap();
+        let dc = global::initial_state(p, conversion, headphone, dc_boundary, seed).unwrap();
+        for i in 0..66 {
+            assert!((dc.node_v[i] - state.node_v[i]).abs() < 1e-6);
+        }
+        for row in case["rows"].as_array().unwrap() {
+            b.bus_v = n(&row["bus_v"]);
+            let ob = &mut b.recovery.vca.second.output.output;
+            ob.r20_lower_ohm = n(&row["r20_lower_ohm"]);
+            ob.sw18_on = row["sw18_on"].as_bool().unwrap();
+            let ob = b.recovery.vca.second.output.output;
+            let previous = state;
+            let result = global::step(
+                &mut state,
+                p,
+                conversion,
+                headphone,
+                b,
+                SolverBudget::default(),
+            )
+            .unwrap();
+            for i in 0..66 {
+                let error = (state.node_v[i] - n(&row["node_v"][i])).abs();
+                max_node = max_node.max(error);
+                assert!(
+                    error < 1e-6,
+                    "R61 {} R20 {} SW18 {} sample {} node {i}: {error}",
+                    p.r61_ohm,
+                    ob.r20_lower_ohm,
+                    ob.sw18_on,
+                    row["index"]
+                );
+            }
+            for (actual, name) in [
+                (result.output.j7_v, "j7_v"),
+                (result.output.j4_hi_v, "j4_hi_v"),
+                (result.output.j5_lo_v, "j5_lo_v"),
+            ] {
+                let error = (actual - n(&row[name])).abs();
+                max_jack = max_jack.max(error);
+                assert!(error < 1e-6);
+            }
+            if ob.r20_lower_ohm == 0.0 || !ob.sw18_on {
+                assert_eq!(result.output.j4_hi_v, 0.0);
+                assert_eq!(result.output.j5_lo_v, 0.0);
+            }
+            assert!((state.c10_capacitor_v - n(&row["c10_v"])).abs() < 1e-6);
+            assert!((state.capacitor_v[16] - n(&row["c18_v"])).abs() < 1e-7);
+            for (i, name) in [(13, "C19"), (14, "C15"), (15, "C21")] {
+                assert!((state.capacitor_v[i] - n(&row["amp_capacitor_v"][name])).abs() < 1e-6);
+            }
+            assert!((result.output.tail_current_a - n(&row["tail_current_a"])).abs() < 1e-9);
+            let (residual, _) =
+                global::linearize(&previous, p, conversion, headphone, b, &state.node_v).unwrap();
+            assert!(residual.iter().all(|v| v.abs() < 1e-11));
+            count += 1;
+        }
+    }
+    assert_eq!(count, 128);
+    println!("R20 endpoint FD: steps={count} max_node_error_v={max_node:.9e} max_jack_error_v={max_jack:.9e}");
+}
+
+#[test]
 fn long_trace_switch_windows_match_independent_fd_from_shared_histories() {
     use rf_d_circuit::circuit66 as global;
     let fixture: Value = serde_json::from_str(include_str!(

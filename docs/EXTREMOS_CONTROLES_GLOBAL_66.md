@@ -10,6 +10,8 @@ Los límites resistivos provienen de SVC-9, Fig. 9-11 (PDF p. 13), Fig. 9-8 (p. 
 
 ## Resultado previo a correcciones
 
+La [corrección de R20](R20_EXTREMOS_EXACTOS.md) admite ahora sus extremos, con ON/OFF contrastados. Los registros de esta sección son históricos; el informe posterior acepta 16384 muestras y mantiene las brechas cutoff DC/Q21/R21.
+
 [Informe](../evidence/circuit66_control_survey.json), esquema `rf-d/circuit66-control-survey/v1`: **no pasa**, 14336 muestras aceptadas, seis fallos de casos soportados y ocho rechazos de extremos todavía fuera del dominio de las API.
 
 | Frontera, en ambos R61 | DC en frío | Salto y restauración | Lectura |

@@ -21,12 +21,13 @@ def panel_load_reduction(*, r20_wiper_to_ground_ohm: float,
         raise ValueError("positive finite HI/LO jack loads required")
     r = _panel_parts()
     if (not math.isfinite(r20_wiper_to_ground_ohm)
-            or not 0 < r20_wiper_to_ground_ohm < r["R20_PANEL"]):
-        raise ValueError("interior electrical R20 wiper segment required")
+            or not 0 <= r20_wiper_to_ground_ohm <= r["R20_PANEL"]):
+        raise ValueError("electrical R20 segment in [0, 5000] ohm required")
     low_shunt = 1/(1/r["R58_PANEL"] + 1/lo_load_ohm)
     low_leg = r["R57_PANEL"] + low_shunt
     hi_shunt = 1/(1/hi_load_ohm + 1/low_leg)
-    wiper_shunt = 1/(1/r20_wiper_to_ground_ohm + 1/hi_shunt)
+    wiper_shunt = (0.0 if r20_wiper_to_ground_ohm == 0 else
+                   1/(1/r20_wiper_to_ground_ohm + 1/hi_shunt))
     upper_segment = r["R20_PANEL"] - r20_wiper_to_ground_ohm
     equivalent_main = upper_segment + wiper_shunt
     return {"low_shunt_ohm": low_shunt,
@@ -66,8 +67,10 @@ def nonlinear_panel_output_step(*, r20_wiper_to_ground_ohm: float,
         "j5_lo_external_current_a": lo/lo_load_ohm,
         "r57_current_a": low_leg_current,
         "r58_current_a": lo/r["R58_PANEL"],
-        "r20_upper_current_a": (pin21-hi)/reduced["r20_upper_ohm"],
-        "r20_lower_current_a": hi/r20_wiper_to_ground_ohm,
+        "r20_upper_current_a": (out["main_pin21_current_a"] if reduced["r20_upper_ohm"] == 0
+                                else (pin21-hi)/reduced["r20_upper_ohm"]),
+        "r20_lower_current_a": (out["main_pin21_current_a"] if r20_wiper_to_ground_ohm == 0
+                                else hi/r20_wiper_to_ground_ohm),
         "panel_reduction": reduced,
         "sw18_on_imposed": True,
     }

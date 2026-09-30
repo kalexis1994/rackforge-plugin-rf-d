@@ -135,7 +135,7 @@ fn invalid_boundary_preserves_all_output_state() {
         p,
         OutputBoundary {
             q17_collector_v: 5.5,
-            r20_lower_ohm: 0.0,
+            r20_lower_ohm: -1.0,
             hi_load_ohm: 10000.0,
             lo_load_ohm: 100000.0,
             sw18_on: true,

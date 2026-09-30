@@ -1,5 +1,7 @@
 # Salidas HI/LO del panel en SW18 ON
 
+La [reducción de extremos exactos de R20](R20_EXTREMOS_EXACTOS.md) cubre ahora L=0 y L=5 kΩ en ON/OFF, contrastados por KCL explícita y 128 pasos del circuito global. La matriz AC explícita de 51 nodos descrita más abajo conserva su dominio interior.
+
 La rama paralela desde C2_RIGHT por R77 y [R21 HEADPHONE VOL](SALIDA_AURICULARES_R21.md) tiene ahora una referencia explícita hasta el cursor. Su carga condicionada modifica la señal disponible en esta misma red HI/LO.
 
 La posición [SW18 OFF](SW18_OFF_SALIDA.md) también está trazada: pone el cursor de R20 a masa y desacopla J4/J5 de la señal de placa 4. La referencia de 53 nodos y su reducción temporal incluyen ese estado nominal.

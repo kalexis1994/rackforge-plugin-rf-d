@@ -37,8 +37,8 @@ def loaded_output_matrices(*, ladder_dc: dict, recovery_dc: dict,
     if (not math.isfinite(headphone_input_ohm)
             or headphone_input_ohm <= 0
             or (main_load_ohm is not None and
-                (not math.isfinite(main_load_ohm) or main_load_ohm <= 0))):
-        raise ValueError("positive finite output terminations required")
+                (not math.isfinite(main_load_ohm) or main_load_ohm < 0))):
+        raise ValueError("positive finite headphone termination and nonnegative main load required")
     old_g, old_c, bus_c = loaded_matrices(
         ladder_dc=ladder_dc, recovery_dc=recovery_dc)
     g = [[0.0] * NODE_COUNT for _ in range(NODE_COUNT)]
