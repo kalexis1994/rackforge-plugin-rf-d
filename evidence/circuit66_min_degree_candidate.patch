@@ -1,0 +1,111 @@
+diff --git a/crates/rf-d-circuit/examples/bench_ladder_recovery_output.rs b/crates/rf-d-circuit/examples/bench_ladder_recovery_output.rs
+index 76c2fd6..8ffe002 100644
+--- a/crates/rf-d-circuit/examples/bench_ladder_recovery_output.rs
++++ b/crates/rf-d-circuit/examples/bench_ladder_recovery_output.rs
+@@ -111 +111,2 @@ fn main() {
+-    let global = std::env::args().any(|arg| arg == "--global");
++    let ordered = std::env::args().any(|arg| arg == "--ordered");
++    let global = ordered || std::env::args().any(|arg| arg == "--global");
+@@ -153 +154 @@ fn main() {
+-        compare_waveforms(dynamic, conversion, headphone, closed);
++        compare_waveforms(dynamic, conversion, headphone, closed, ordered);
+@@ -169,0 +171,5 @@ fn main() {
++            let initializer = if ordered {
++                rf_d_circuit::circuit66::initial_state_ordered
++            } else {
++                rf_d_circuit::circuit66::initial_state
++            };
+@@ -171 +177 @@ fn main() {
+-                rf_d_circuit::circuit66::initial_state(
++                initializer(
+@@ -306,0 +313 @@ fn compare_waveforms(
++    ordered: bool,
+@@ -310,0 +318,5 @@ fn compare_waveforms(
++    let initializer = if ordered {
++        rf_d_circuit::circuit66::initial_state_ordered
++    } else {
++        rf_d_circuit::circuit66::initial_state
++    };
+@@ -312,2 +324 @@ fn compare_waveforms(
+-        rf_d_circuit::circuit66::initial_state(p, c, h, controlled_boundary(0, closed), SEED)
+-            .expect("comparison global DC");
++        initializer(p, c, h, controlled_boundary(0, closed), SEED).expect("comparison global DC");
+diff --git a/crates/rf-d-circuit/src/circuit66.rs b/crates/rf-d-circuit/src/circuit66.rs
+index 5cc1ffd..86af678 100644
+--- a/crates/rf-d-circuit/src/circuit66.rs
++++ b/crates/rf-d-circuit/src/circuit66.rs
+@@ -25,0 +26,2 @@ pub struct State {
++    /// Numerical ordering only; every coefficient is retained at each step.
++    elimination_order: Option<[usize; N]>,
+@@ -510 +512,13 @@ fn solve(
+-        let direction = solve_linear_sparse(j, r.map(|v| -v))?;
++        let direction = if let Some(order) = old.and_then(|s| s.elimination_order) {
++            let matrix: [[f64; N]; N] =
++                std::array::from_fn(|i| std::array::from_fn(|k| j[order[i]][order[k]]));
++            let rhs = std::array::from_fn(|i| -r[order[i]]);
++            let ordered = solve_linear_sparse(matrix, rhs)?;
++            let mut result = [0.0; N];
++            for i in 0..N {
++                result[order[i]] = ordered[i];
++            }
++            result
++        } else {
++            solve_linear_sparse(j, r.map(|v| -v))?
++        };
+@@ -610,0 +625 @@ pub fn initial_state(
++        elimination_order: None,
+@@ -613,0 +629,52 @@ pub fn initial_state(
++/// Experimental minimum-degree ordering computed once outside processing.
++/// The initial Jacobian's symmetric graph includes C10 even if it is open.
++/// All coefficients of every future Jacobian are still evaluated and solved.
++pub fn initial_state_ordered(
++    p: Parameters,
++    conversion: ConversionParameters,
++    headphone: HeadphoneParameters,
++    b: Boundary,
++    ladder_seed: [f64; 16],
++) -> Result<State, StepError> {
++    let mut state = initial_state(p, conversion, headphone, b, ladder_seed)?;
++    let (_, j) = linearize(&state, p, conversion, headphone, b, &state.node_v)?;
++    let mut graph = std::array::from_fn::<_, N, _>(|i| {
++        std::array::from_fn::<_, N, _>(|k| i != k && (j[i][k] != 0.0 || j[k][i] != 0.0))
++    });
++    graph[7][22] = true;
++    graph[22][7] = true;
++    let mut removed = [false; N];
++    let mut order = [0; N];
++    for selected in &mut order {
++        let mut best_node = 0;
++        let mut best_degree = N + 1;
++        for i in 0..N {
++            if removed[i] {
++                continue;
++            }
++            let degree = (0..N).filter(|k| !removed[*k] && graph[i][*k]).count();
++            if degree < best_degree {
++                best_degree = degree;
++                best_node = i;
++            }
++        }
++        *selected = best_node;
++        let mut neighbors = [false; N];
++        for i in 0..N {
++            neighbors[i] = !removed[i] && graph[best_node][i];
++        }
++        for i in 0..N {
++            if neighbors[i] {
++                for k in 0..N {
++                    if neighbors[k] && i != k {
++                        graph[i][k] = true;
++                    }
++                }
++            }
++        }
++        removed[best_node] = true;
++    }
++    state.elimination_order = Some(order);
++    Ok(state)
++}
++
+@@ -699,0 +767 @@ pub fn step(
++        elimination_order: state.elimination_order,

@@ -58,6 +58,8 @@ cargo run --release -p rf-d-circuit --example bench_ladder_recovery_output -- --
 
 ## Lecciones para RACE
 
+El [ensayo posterior de ordenación por grado mínimo](ORDENACION_GLOBAL_RECHAZADA.md) conservó la señal pero aumentó el costo medio 3,416 %. Se rechazó y se restituyó el código anterior; el parche y las mediciones quedan registrados.
+
 - Contrastar voltajes internos junto a la salida: una salida precisa puede ocultar error de sesgo en etapas anteriores.
 - Elegir tolerancias por sensibilidad de la cascada; una cota KCL local no asegura por sí sola una cota de voltaje global.
 - Conservar puertos como referencia funcional, y medir la anidación antes de usarla en audio.
