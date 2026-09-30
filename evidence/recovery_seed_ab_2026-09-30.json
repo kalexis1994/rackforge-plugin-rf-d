@@ -1,0 +1,45 @@
+{
+  "schema": "rf-d/recovery-seed-ab/v1",
+  "date": "2026-09-30",
+  "host": "Windows, AMD Ryzen 5 5600X 6-Core Processor",
+  "baseline_commit": "c95aba5",
+  "candidate": "Uncommitted trial: seed the recovery eight-node Newton from the neighboring ladder line-search trial while retaining the previous capacitor state",
+  "build": "cargo build --release -p rf-d-circuit --example bench_ladder_recovery_output",
+  "command": "bench_ladder_recovery_output.exe --emphasis",
+  "scenario": {
+    "sample_rate_hz": 48000,
+    "block_samples": 64,
+    "warmup_samples": 8192,
+    "measured_samples": 8192,
+    "bus_sine_hz": 100,
+    "bus_peak_v": 0.1,
+    "r61_ohm": 200,
+    "r14_ohm": 25000,
+    "deadline_us": 1333.3333333333333
+  },
+  "ordered_runs": [
+    {"variant": "baseline", "mean_block_us": 23875.8, "p99_block_us": 35413.1, "max_block_us": 37067.9},
+    {"variant": "seeded", "mean_block_us": 23138.7, "p99_block_us": 28144.0, "max_block_us": 28480.6},
+    {"variant": "seeded", "mean_block_us": 22940.5, "p99_block_us": 25778.9, "max_block_us": 27350.2},
+    {"variant": "baseline", "mean_block_us": 22727.3, "p99_block_us": 27770.0, "max_block_us": 28003.3},
+    {"variant": "baseline", "mean_block_us": 22451.7, "p99_block_us": 26089.7, "max_block_us": 26153.7},
+    {"variant": "seeded", "mean_block_us": 23327.4, "p99_block_us": 28258.4, "max_block_us": 30470.3},
+    {"variant": "seeded", "mean_block_us": 23381.1, "p99_block_us": 28939.0, "max_block_us": 32061.8},
+    {"variant": "baseline", "mean_block_us": 22784.9, "p99_block_us": 28326.0, "max_block_us": 29052.2},
+    {"variant": "baseline", "mean_block_us": 22676.2, "p99_block_us": 28263.1, "max_block_us": 31007.5},
+    {"variant": "seeded", "mean_block_us": 23248.0, "p99_block_us": 28885.2, "max_block_us": 31521.7}
+  ],
+  "aggregate_mean_block_us": {
+    "baseline": 22903.18,
+    "seeded": 23207.14,
+    "candidate_relative_change_percent": 1.3271519500785534
+  },
+  "invariants": {
+    "failures_per_run": 0,
+    "predictor_fallbacks_per_run": 0,
+    "max_ladder_kcl_residual_a": 4.083e-12,
+    "final_j7_v": -0.009578716,
+    "candidate_192_sample_numerical_snr_db": 115.0
+  },
+  "decision": "Rejected and source restored: no reproducible speed gain; mean was 1.33% slower across five runs of each variant. Both miss deadline."
+}

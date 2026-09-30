@@ -1,0 +1,9 @@
+# Semilla de Newton de recuperación: experimento descartado
+
+Después de cerrar [C10/EMPHASIS](EMPHASIS_NATIVO_C10.md), se probó iniciar cada solve provisional de Q5–Q8 con los ocho voltajes de la evaluación anterior del Newton externo del ladder. Los capacitores y todo el VCA siguieron usando **el estado de la muestra anterior**; sólo cambió la semilla de voltajes. La intención era reducir iteraciones anidadas sin alterar las ecuaciones ni introducir heap.
+
+La candidata conservó la [traza BUS→J7 de 192 muestras](../evidence/ladder_j7_closed_loop_vectors.json), con máximo error J7 `2,563×10⁻⁸ V` y razón señal/error numérica `115,0 dB`. Se contrastó asimismo carga de C10 y KCL; una nueva solución del puerto desde la semilla original variaba en picovoltios dentro del umbral KCL, por lo que la comparación de estado se hizo con tolerancia de solver. No se cambió el modelo eléctrico.
+
+Se compilaron ejecutables separados de la versión `c95aba5` y de la candidata `--release`, y se ejecutaron alternando el orden en Windows/AMD Ryzen 5 5600X. El [registro A/B](../evidence/recovery_seed_ab_2026-09-30.json) contiene las diez medidas con 8192 muestras de calentamiento y 8192 medidas a 48 kHz, bloques de 64, BUS senoidal 100 Hz/0,1 V, R61=200 Ω y R14=25 kΩ. La media de las cinco corridas base fue `22 903,18 µs/bloque`; la candidata `23 207,14 µs/bloque`, **1,33 % más lenta**. La primera pareja favorecía a la candidata, pero la segunda tanda invirtió el resultado; p99 y máximo variaron con Windows. Los dos ejecutables conservaron cero fallos, cero fallback y KCL máximo `4,083×10⁻¹² A`.
+
+**Decisión:** se descartó la semilla y se restauró el código base. No hay evidencia de una mejora reproducible y ambas rutas exceden ampliamente el plazo de `1333,3 µs/bloque`. La próxima optimización debe reducir la cantidad de solves profundos o formular el sistema conjuntamente; una semilla más cercana por sí sola no justificó complejidad adicional en esta carga.
