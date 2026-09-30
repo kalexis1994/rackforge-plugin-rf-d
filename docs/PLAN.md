@@ -44,6 +44,10 @@ El [barrido global de extremos](EXTREMOS_CONTROLES_GLOBAL_66.md) encontró depen
 
 Probar Note On/Off, retrigger, legato, glide, ruedas, cambios de preset y recuperación de estado. Mantener la voz mono y describir las comodidades de RackForge como extensiones. Validar transiciones sin discontinuidades accidentales ni asignaciones en el hilo de audio.
 
+## Contorno de volumen: avance y gate pendiente
+
+El [grafo eléctrico y oráculo de placa 2](CONTORNO_VOLUMEN_CIRCUITO.md) reconstruye diez BJTs, gatillo, tres memorias capacitivas, panel y decay final. El biestable presenta dos raíces diferentes para el mismo paso; quedan registradas sin selección. Primero cerrar seguidor/carga como puerto comprobable; estudiar estabilidad de conmutación y cargas compartidas antes de unir contorno/VCA o afirmar Note On/Off físico.
+
 ## Primer corte de implementación
 
 Empezar por **VCO 1 aislado → mezclador → filtro abierto → VCA/salida**, con un grafo de circuito y un solver simple que admita barridos de notas y niveles. Luego filtro autooscilante y contornos. Cada etapa debe poder avanzar sin una captura privada.

@@ -1,0 +1,487 @@
+{
+  "schema": 1,
+  "scope": "Isolated board-2 loudness contour and common trigger; ideal supply, omitted filter loading",
+  "sources": [
+    {
+      "id": "SVC-9",
+      "pdf_page": 9,
+      "figure": "9-7",
+      "regions": "left lower loudness; lower-left trigger"
+    },
+    {
+      "id": "SVC-9",
+      "pdf_page": 19,
+      "figure": "9-17",
+      "regions": "board 2 panel R13/R16/R19 and output 7B to board4 pin9"
+    },
+    {
+      "id": "SVC-9",
+      "pdf_page": 17,
+      "figure": "9-15",
+      "regions": "left-hand controller J1402/SW1402/PL2"
+    },
+    {
+      "id": "SVC-9",
+      "pdf_pages": [
+        26,
+        27
+      ],
+      "table": "7-6"
+    },
+    {
+      "id": "SVC-9",
+      "pdf_page": 21,
+      "table": "7-3"
+    },
+    {
+      "id": "SVC-204D",
+      "pdf_pages": [
+        12,
+        13,
+        14
+      ],
+      "section": "2.9/2.10"
+    }
+  ],
+  "rails": {
+    "GROUND": 0,
+    "PLUS_10": 10,
+    "MINUS_10": -10,
+    "CONTOUR_SUPPLY": 9.3
+  },
+  "imposed_inputs": [
+    "KEYBOARD_TRIGGER",
+    "EXTERNAL_S_TRIGGER",
+    "VCA_CONTROL_LOAD"
+  ],
+  "resistors": [
+    {
+      "ref": "R23",
+      "between": [
+        "CONTOUR_SUPPLY",
+        "TRIGGER_COLLECTOR"
+      ],
+      "ohm": 3300
+    },
+    {
+      "ref": "R25_DRAWING",
+      "between": [
+        "CONTOUR_SUPPLY",
+        "RESET_DRIVER"
+      ],
+      "ohm": 3300
+    },
+    {
+      "ref": "R_TRIGGER_BASE_DRAWING",
+      "between": [
+        "TRIGGER_COLLECTOR",
+        "Q12_BASE"
+      ],
+      "ohm": 10000
+    },
+    {
+      "ref": "R49",
+      "between": [
+        "EXTERNAL_S_TRIGGER",
+        "TRIGGER_COLLECTOR"
+      ],
+      "ohm": 220
+    },
+    {
+      "ref": "R55",
+      "between": [
+        "Q20_BASE",
+        "KEY_RC"
+      ],
+      "ohm": 47000
+    },
+    {
+      "ref": "R60",
+      "between": [
+        "KEY_RC",
+        "KEY_DIODE_K"
+      ],
+      "ohm": 100000
+    },
+    {
+      "ref": "R28",
+      "between": [
+        "RESET_DRIVER",
+        "C4_LEFT"
+      ],
+      "ohm": 10000
+    },
+    {
+      "ref": "R36",
+      "between": [
+        "TRIGGER_COLLECTOR",
+        "RESET_DIODE_A"
+      ],
+      "ohm": 10000
+    },
+    {
+      "ref": "R38",
+      "between": [
+        "SET_BASE",
+        "ATTACK_GATE_LOWER"
+      ],
+      "ohm": 10000
+    },
+    {
+      "ref": "R39",
+      "between": [
+        "CONTOUR_SUPPLY",
+        "ATTACK_GATE_LOWER"
+      ],
+      "ohm": 10000
+    },
+    {
+      "ref": "R40",
+      "between": [
+        "ATTACK_PNP_BASE",
+        "RESET_COLLECTOR"
+      ],
+      "ohm": 3300
+    },
+    {
+      "ref": "R41",
+      "between": [
+        "CONTOUR_SUPPLY",
+        "ATTACK_PNP_BASE"
+      ],
+      "ohm": 560
+    },
+    {
+      "ref": "R42",
+      "between": [
+        "ATTACK_OUT",
+        "ATTACK_PANEL_IN"
+      ],
+      "ohm": 100
+    },
+    {
+      "ref": "PANEL_R13",
+      "between": [
+        "ATTACK_PANEL_IN",
+        "TIMING_C2"
+      ],
+      "ohm": "attack_ohm"
+    },
+    {
+      "ref": "PANEL_R16",
+      "between": [
+        "DECAY_OUT",
+        "TIMING_C2"
+      ],
+      "ohm": "decay_ohm"
+    },
+    {
+      "ref": "R56",
+      "between": [
+        "RESET_COLLECTOR",
+        "RESET_BASE"
+      ],
+      "ohm": 33000
+    },
+    {
+      "ref": "R43",
+      "between": [
+        "DECAY_DRIVER_EMITTER",
+        "MINUS_10"
+      ],
+      "ohm": 10000
+    },
+    {
+      "ref": "R44",
+      "between": [
+        "DECAY_DRIVER_EMITTER",
+        "DECAY_SWITCH_BASE"
+      ],
+      "ohm": 4700
+    },
+    {
+      "ref": "R45",
+      "between": [
+        "CONTOUR_SUPPLY",
+        "SUSTAIN_DRIVER_EMITTER"
+      ],
+      "ohm": 27000
+    },
+    {
+      "ref": "R51",
+      "between": [
+        "SUSTAIN_WIPER",
+        "SUSTAIN_BASE"
+      ],
+      "ohm": 4700
+    },
+    {
+      "ref": "R47_POSITION",
+      "between": [
+        "SUSTAIN_BASE",
+        "GROUND"
+      ],
+      "ohm": 4700
+    },
+    {
+      "ref": "R46",
+      "between": [
+        "SUSTAIN_COLLECTOR",
+        "GROUND"
+      ],
+      "ohm": 100
+    },
+    {
+      "ref": "PANEL_R19_LOWER",
+      "between": [
+        "SUSTAIN_WIPER",
+        "GROUND"
+      ],
+      "ohm": "sustain_lower_ohm"
+    },
+    {
+      "ref": "PANEL_R19_UPPER",
+      "between": [
+        "PLUS_10",
+        "SUSTAIN_WIPER"
+      ],
+      "ohm": "sustain_upper_ohm"
+    },
+    {
+      "ref": "R16",
+      "between": [
+        "TIMING_C2",
+        "FOLLOWER_BASE"
+      ],
+      "ohm": 10000
+    },
+    {
+      "ref": "R15",
+      "between": [
+        "CONTOUR_SUPPLY",
+        "FOLLOWER_SUPPLY"
+      ],
+      "ohm": 560
+    },
+    {
+      "ref": "R27",
+      "between": [
+        "RESET_FEEDBACK",
+        "MINUS_10"
+      ],
+      "ohm": 16900
+    },
+    {
+      "ref": "R24",
+      "between": [
+        "RESET_FEEDBACK",
+        "LOUDNESS_OUT"
+      ],
+      "ohm": 6800
+    },
+    {
+      "ref": "LHC_FAST_DECAY",
+      "between": [
+        "FAST_DIODE_K",
+        "RESET_DRIVER"
+      ],
+      "ohm": 1500
+    }
+  ],
+  "capacitors": [
+    {
+      "ref": "C2",
+      "between": [
+        "TIMING_C2",
+        "GROUND"
+      ],
+      "farad": 0.00001,
+      "tolerance_fraction": [
+        -0.1,
+        0.5
+      ]
+    },
+    {
+      "ref": "C4",
+      "between": [
+        "C4_LEFT",
+        "SET_BASE"
+      ],
+      "farad": 1e-8,
+      "tolerance_fraction": [
+        -0.1,
+        0.1
+      ]
+    },
+    {
+      "ref": "C7",
+      "between": [
+        "KEY_RC",
+        "GROUND"
+      ],
+      "farad": 1e-7,
+      "tolerance_fraction": [
+        -0.1,
+        0.1
+      ]
+    }
+  ],
+  "transistors": [
+    {
+      "ref": "Q25",
+      "kind": "NPN",
+      "base": "SET_BASE",
+      "collector": "RESET_COLLECTOR",
+      "emitter": "GROUND",
+      "marking": "2N3392"
+    },
+    {
+      "ref": "Q15",
+      "kind": "NPN",
+      "base": "RESET_BASE",
+      "collector": "ATTACK_GATE_LOWER",
+      "emitter": "GROUND",
+      "marking": "2N3392"
+    },
+    {
+      "ref": "Q16",
+      "kind": "PNP",
+      "base": "ATTACK_PNP_BASE",
+      "collector": "ATTACK_OUT",
+      "emitter": "CONTOUR_SUPPLY",
+      "marking": "TIS93 / alternate 2N3906"
+    },
+    {
+      "ref": "Q17",
+      "kind": "NPN",
+      "base": "RESET_COLLECTOR",
+      "collector": "CONTOUR_SUPPLY",
+      "emitter": "DECAY_DRIVER_EMITTER",
+      "marking": "2N3392"
+    },
+    {
+      "ref": "Q18",
+      "kind": "NPN",
+      "base": "DECAY_SWITCH_BASE",
+      "collector": "DECAY_OUT",
+      "emitter": "SUSTAIN_DRIVER_EMITTER",
+      "marking": "2N3392"
+    },
+    {
+      "ref": "Q19",
+      "kind": "PNP",
+      "base": "SUSTAIN_BASE",
+      "collector": "SUSTAIN_COLLECTOR",
+      "emitter": "SUSTAIN_DRIVER_EMITTER",
+      "marking": "TIS93 / alternate 2N3906"
+    },
+    {
+      "ref": "Q3",
+      "kind": "NPN",
+      "base": "FOLLOWER_BASE",
+      "collector": "FOLLOWER_SUPPLY",
+      "emitter": "FOLLOWER_MID",
+      "marking": "2N3392"
+    },
+    {
+      "ref": "Q2",
+      "kind": "NPN",
+      "base": "FOLLOWER_MID",
+      "collector": "FOLLOWER_SUPPLY",
+      "emitter": "LOUDNESS_OUT",
+      "marking": "2N3392"
+    },
+    {
+      "ref": "Q12",
+      "kind": "NPN",
+      "base": "Q12_BASE",
+      "collector": "RESET_DRIVER",
+      "emitter": "GROUND",
+      "marking": "2N3415 / alternate 2N3392; drawing alternative"
+    },
+    {
+      "ref": "Q20",
+      "kind": "NPN",
+      "base": "Q20_BASE",
+      "collector": "TRIGGER_COLLECTOR",
+      "emitter": "GROUND",
+      "marking": "2N3392"
+    }
+  ],
+  "diodes": [
+    {
+      "ref": "CR6",
+      "anode": "RESET_FEEDBACK",
+      "cathode": "RESET_BASE",
+      "marking": "1N34A"
+    },
+    {
+      "ref": "CR8",
+      "anode": "RESET_DIODE_A",
+      "cathode": "RESET_BASE",
+      "marking": "1N34A"
+    },
+    {
+      "ref": "CR10",
+      "anode": "KEYBOARD_TRIGGER",
+      "cathode": "KEY_DIODE_K",
+      "marking": "1N34A"
+    },
+    {
+      "ref": "CR9",
+      "anode": "SUSTAIN_DRIVER_EMITTER",
+      "cathode": "RESET_DRIVER",
+      "marking": "1N4004"
+    },
+    {
+      "ref": "CR4",
+      "anode": "TIMING_C2",
+      "cathode": "FAST_DIODE_K",
+      "marking": "1N4004",
+      "condition": "final_decay_off"
+    }
+  ],
+  "ports": {
+    "board2_pin7": "LOUDNESS_OUT",
+    "board2_pin9": "TIMING_C2",
+    "board2_pin17": "DECAY_OUT",
+    "board2_pin18": "ATTACK_PANEL_IN",
+    "board2_pin16": "SUSTAIN_WIPER",
+    "board2_pin20": "KEYBOARD_TRIGGER",
+    "board2_pin19": "EXTERNAL_S_TRIGGER",
+    "board4_load": "R59=68k to Q18_BASE; measured at circuit66 node32, not a 68k shunt to ground"
+  },
+  "conflicts": [
+    {
+      "part": "R25",
+      "drawing": "3.3k",
+      "bom": "1k",
+      "policy": "explicit candidate; do not silently combine"
+    },
+    {
+      "part": "trigger Q12-base resistor",
+      "drawing": "R9 10k at trigger position; R9 also labels filter 4.7k",
+      "bom": "R9 grouped 4.7k",
+      "policy": "unresolved designator; electrical candidates explicit"
+    },
+    {
+      "part": "sustain base shunt",
+      "drawing": "R41/47-looking label, 4.7k; R41 also at PNP attack 560ohm",
+      "bom": "R47 4.7k and R41 560ohm",
+      "policy": "identify by terminals and value; R47_POSITION alias"
+    },
+    {
+      "part": "R60",
+      "drawing": "100k at trigger RC",
+      "bom": "appears in both 100ohm and 100k groups",
+      "policy": "retain drawing 100k; not a resolved population"
+    }
+  ],
+  "boundaries": {
+    "supply": "9.3V imposed: Q26/R62/R63 and raw rail not closed",
+    "filter": "omit R26/C1 and R37/R35/CR1 filter trigger/reset loads; no claim of coupled board",
+    "external_s_trigger": "open removes R49; short grounds R49 far end; ideal contact with no bounce",
+    "final_decay": "normalled J1402 and ideal LHC switch; ON opens fast branch; OFF connects through 1.5k",
+    "vca_load": "external current or differential conductance only; no ideal pin7 voltage"
+  }
+}

@@ -101,7 +101,7 @@ Estos artículos originales ayudan a diseñar y contrastar el solver. **Ninguno 
 | BOTTOM y bases Q29/Q30 en DC, dos candidatos R61, R54/R76/R73 y pin 6 abierto por C10 | SVC-9 PDF p. 13, Fig. 9-11; p. 19, Fig. 9-17; tabla 7-8 pp. 30–31; [cierre DC condicionado](BASES_FILTRO_ACOPLADAS_DC.md). Inyección desde el ladder superior y parámetros de transistor siguen impuestos. |
 | Ruido, mezcla de modulación y entrada externa | SVC-204D PDF pp. 10–11 y 14; esquemas pp. 66 y 69 |
 | Ladder, recuperación, dos VCA | SVC-204D PDF pp. 11–12, impresa 2-7; placa p. 68, Fig. 9-10; esquema p. 69, Fig. 9-11. |
-| Contornos, gatillo y final decay | SVC-204D PDF pp. 12–13, impresas 2-7 a 2-8; esquema p. 65, Fig. 9-5 |
+| Contornos, gatillo y final decay | SVC-204D PDF pp. 12–14, impresas 2-7 a 2-9; esquema p. 65, Fig. 9-5. La copia SVC-9 lo rotula **Fig. 9-7, PDF p. 9**; BOM tabla 7-6 pp. 26–27; panel tabla 7-3 p. 21 y Fig. 9-17 p. 19; LHC Fig. 9-15 p. 17. [Grafo y ambigüedad del biestable](CONTORNO_VOLUMEN_CIRCUITO.md). |
 | Prioridad de nota, retención CV, glide | SVC-204D PDF p. 16, impresa 2-10A; esquema p. 65, Fig. 9-5 |
 | Afinación y calibración | SVC-204D PDF pp. 26–38, sección 5; B-TUNE y B-804C tienen prioridad para los procedimientos que corrigen |
 | Modificaciones de época | SVC-204D PDF pp. 52–57, sección 8, con correcciones B-804C |
