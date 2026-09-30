@@ -12,6 +12,8 @@ Con Euler implícito y `dt` en segundos, `I_C6=(0,33×10⁻⁶ F/dt)·[(V_C6LEFT
 
 El [oráculo Python](../tools/vca1_output_vectors.py) formula **25 ecuaciones** para C6_LEFT, los 22 nodos de la [cascada DC](CASCADA_HASTA_SALIDA_DC.md), C2_RIGHT y R21_WIPER. Diferencia numéricamente su Jacobiano y resuelve placa 3 por separado; no llama al código ni a la tangente Rust. El [fixture](../evidence/vca1_output_vectors.json) contiene DC y **12 pasos** a 48 kHz, con cambios de entrada, volumen, Q21 y SW18. La [regresión Rust](../crates/rf-d-circuit/tests/vca1_output.rs) compara los 23 voltajes internos, C6/C15/C4/C2, salidas HI/LO/J7 y los 12 nodos de placa 3 con tolerancia `<1 µV`, además de KCL `<10⁻¹⁰ A` y preservación completa del estado ante una entrada inválida. La [prueba de heap](../crates/rf-d-circuit/tests/no_alloc.rs) cubre inicialización y 100 pasos adicionales sin asignaciones.
 
+La [corriente y admisión en R2](PUERTO_NATIVO_HACIA_FILTRO.md) quedan disponibles para el próximo cierre con el recuperador del filtro.
+
 El [sondeo de 48 000 muestras](../crates/rf-d-circuit/examples/bench_vca1_output.rs) en Ryzen 5 5600X, compilación `--release`, bloques de 64 y señal impuesta de 100 Hz dio `mean 6019,0 µs`, `p99 6847,9 µs`, máximo `7596,6 µs` frente al plazo de `1333,3 µs`. Hubo **0 fallos**, **0 retornos al predictor**, media **2,00** evaluaciones del puerto posterior por muestra y KCL máximo `2,398×10⁻¹¹ A`. La ruta conjunta **no pasa** el gate de tiempo real; estos resultados no son rendimiento de un plugin ni de una voz completa. El costo de resolver reiteradamente la cadena posterior será el siguiente objeto de optimización y se contrastará contra esta referencia antes de reemplazarla.
 
 ## Incertidumbre y alcance

@@ -1,7 +1,7 @@
 use rf_d_circuit::output::OutputBoundary;
 use rf_d_circuit::output_conversion::{DiodeParameters, Parameters as ConversionParameters};
 use rf_d_circuit::output_conversion_c4::BoundaryC4;
-use rf_d_circuit::vca1_output::{initial_state, step, Boundary, NODE_NAMES};
+use rf_d_circuit::vca1_output::{initial_state, solve_input_port, step, Boundary, NODE_NAMES};
 use rf_d_circuit::vca2_output::{Boundary as SecondBoundary, Parameters as VcaParameters};
 use rf_d_circuit::{Parameters as HeadphoneParameters, SolverBudget, StepError};
 use serde_json::Value;
@@ -116,6 +116,7 @@ fn joint_vca1_c6_c15_vca2_c4_c2_j7_matches_python_25_variables() {
         );
     }
     for (index, row) in case["steps"].as_array().unwrap().iter().enumerate() {
+        let previous = state;
         let b = boundary(case, &row["boundary"], row["sw18_on"].as_bool().unwrap());
         let result = step(
             &mut state,
@@ -187,6 +188,52 @@ fn joint_vca1_c6_c15_vca2_c4_c2_j7_matches_python_25_variables() {
             );
         }
         assert!(result.max_kcl_residual_a < 1e-10);
+        let port = solve_input_port(
+            &previous,
+            vca,
+            conversion,
+            headphone,
+            b,
+            SolverBudget::default(),
+        )
+        .unwrap();
+        assert_eq!(port.next_state, state);
+        let expected = n(&row["upstream_port_current_a"]);
+        assert!(
+            (port.current_a - expected).abs() < 1e-9,
+            "step {index} R2 current: {} vs {expected}",
+            port.current_a
+        );
+        if [0usize, 6, 10].contains(&index) {
+            let mut plus = b;
+            let mut minus = b;
+            plus.recover_collector_v += 1e-3;
+            minus.recover_collector_v -= 1e-3;
+            let high = solve_input_port(
+                &previous,
+                vca,
+                conversion,
+                headphone,
+                plus,
+                SolverBudget::default(),
+            )
+            .unwrap();
+            let low = solve_input_port(
+                &previous,
+                vca,
+                conversion,
+                headphone,
+                minus,
+                SolverBudget::default(),
+            )
+            .unwrap();
+            let fd = (high.current_a - low.current_a) / 2e-3;
+            assert!(
+                (port.conductance_s - fd).abs() < 2e-8 + 1e-3 * fd.abs(),
+                "step {index} R2 admittance: {} vs {fd}",
+                port.conductance_s
+            );
+        }
     }
 }
 

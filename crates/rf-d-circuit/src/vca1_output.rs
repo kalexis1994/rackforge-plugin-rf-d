@@ -55,6 +55,20 @@ pub struct StepResult {
     pub second_port_evaluations: usize,
     pub predictor_fallback: bool,
     pub max_kcl_residual_a: f64,
+    /// Accepted VCA2 four-port current and tangent; reused by the R2 input port.
+    pub second_current_a: [f64; 4],
+    pub second_conductance_s: [[f64; 4]; 4],
+}
+
+/// Dynamic load seen at the filter recovery collector through R2 and C6.
+#[derive(Clone, Copy, Debug)]
+pub struct InputPort {
+    pub next_state: State,
+    pub result: StepResult,
+    /// Positive from RECOVER_COLLECTOR into R2, in amperes.
+    pub current_a: f64,
+    /// d(current_a)/d(recover_collector_v), previous capacitors fixed, in S.
+    pub conductance_s: f64,
 }
 
 fn second_boundary(x: &[f64; N], b: Boundary) -> SecondBoundary {
@@ -346,6 +360,8 @@ fn transient_trial(
         second_port_evaluations: 0,
         predictor_fallback: false,
         max_kcl_residual_a: max_abs(&r),
+        second_current_a: port.current_a,
+        second_conductance_s: port.conductance_s,
     };
     Ok((r, j, port.next_state, result))
 }
@@ -459,4 +475,41 @@ pub fn step(
     let mut result = solution.2;
     result.predictor_fallback = fallback;
     Ok(result)
+}
+
+/// Provisional input-port solve for the future filter/VCA joint Newton.
+/// Each trial begins at the same previous state; only commit the accepted one.
+pub fn solve_input_port(
+    previous: &State,
+    p: VcaParameters,
+    conversion: ConversionParameters,
+    headphone: HeadphoneParameters,
+    b: Boundary,
+    budget: SolverBudget,
+) -> Result<InputPort, StepError> {
+    let mut next_state = *previous;
+    let result = step(&mut next_state, p, conversion, headphone, b, budget)?;
+    let x = next_state.node_v;
+    let (_, jacobian) = evaluate(
+        &x,
+        p,
+        b,
+        Some([previous.c6_capacitor_v, previous.c15_capacitor_v]),
+        result.second_current_a,
+        Some(result.second_conductance_s),
+    )?;
+    let mut rhs = [0.0; N];
+    rhs[0] = 1.0 / 82000.0;
+    let response = solve_linear(jacobian, rhs)?;
+    let current_a = (b.recover_collector_v - x[0]) / 82000.0;
+    let conductance_s = (1.0 - response[0]) / 82000.0;
+    if !current_a.is_finite() || !conductance_s.is_finite() {
+        return Err(StepError::ExponentialDomain);
+    }
+    Ok(InputPort {
+        next_state,
+        result,
+        current_a,
+        conductance_s,
+    })
 }
