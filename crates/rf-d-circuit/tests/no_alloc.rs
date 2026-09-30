@@ -14,6 +14,9 @@ use rf_d_circuit::output_conversion_c4::{
     BoundaryC4,
 };
 use rf_d_circuit::panel::{initial_panel_state, solve_panel_boundary, PanelBoundary};
+use rf_d_circuit::vca1_output::{
+    initial_state as initial_vca1_output_state, step as step_vca1_output, Boundary as Vca1Boundary,
+};
 use rf_d_circuit::vca2_output::{
     initial_state as initial_vca2_output_state, solve_input_port as solve_vca2_output_input_port,
     step as step_vca2_output, Boundary as Vca2Boundary, Parameters as Vca2Parameters,
@@ -340,6 +343,26 @@ fn dc_initialization_and_audio_steps_do_not_allocate() {
         )
         .expect("four-port toward first VCA")
         .next_state;
+    }
+    let vca1_boundary = Vca1Boundary {
+        recover_collector_v: 5.0,
+        loudness_v: 2.0,
+        first_balance_left_ohm: 12.5,
+        second: Vca2Boundary {
+            q14_base_v: 0.0,
+            q13_base_v: 0.0,
+            first_balance_wiper_v: 0.0,
+            ..vca2_base
+        },
+    };
+    let mut vca1 = initial_vca1_output_state(vca2, conversion, p, vca1_boundary)
+        .expect("first VCA to J7 DC state");
+    for i in 0..100 {
+        let mut b = vca1_boundary;
+        b.recover_collector_v += if i % 20 < 10 { 0.03 } else { -0.03 };
+        b.second.output.output.sw18_on = i % 40 < 20;
+        step_vca1_output(&mut vca1, vca2, conversion, p, b, SolverBudget::default())
+            .expect("first VCA to J7 step");
     }
     let after = ALLOCATIONS.load(Ordering::Relaxed);
     assert_eq!(after - before, 0, "processing allocated heap memory");
