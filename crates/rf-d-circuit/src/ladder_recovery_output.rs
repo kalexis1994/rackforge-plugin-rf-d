@@ -1,8 +1,10 @@
 //! Conditional board-4 ladder through Q5-Q8, both VCAs and J7.
-//! C10/EMPHASIS is open. Q28 is a fixed tail-current boundary.
+//! Optional C10/EMPHASIS return; Q28 is a fixed tail-current boundary.
 
 use crate::output_conversion::{max_abs, solve_linear, Parameters as ConversionParameters};
-use crate::recovery_vca_output::{self, Boundary as RecoveryBoundary, State as RecoveryState};
+use crate::recovery_vca_output::{
+    self, Boundary as RecoveryBoundary, EmphasisBoundary, State as RecoveryState,
+};
 use crate::vca2_output::Parameters as TransistorParameters;
 use crate::{Parameters as HeadphoneParameters, SolverBudget, StepError};
 
@@ -12,6 +14,8 @@ const Q_E: f64 = 1.602_176_634e-19;
 const C_CELL: f64 = 68e-9;
 const C24: f64 = 220e-6;
 const C27: f64 = 10e-6;
+#[cfg(test)]
+const C10: f64 = 10e-6;
 const CELLS: [(usize, usize); 4] = [(8, 12), (9, 13), (10, 14), (11, 15)];
 const DEVICES: [(usize, Option<usize>, usize); 10] = [
     (6, Some(8), 5),
@@ -67,6 +71,8 @@ pub struct State {
     pub previous_node_v: [f64; N],
     /// C16/C11/C7/C3 left minus right, C24 BOTTOM, C27 BASE minus BUS.
     pub capacitor_v: [f64; 6],
+    /// C10 voltage from recovery R7/R3 tap toward Q30 base.
+    pub c10_capacitor_v: f64,
     pub recovery: RecoveryState,
 }
 
@@ -81,6 +87,9 @@ pub struct StepResult {
     pub max_ladder_kcl_residual_a: f64,
     pub board_input_current_a: f64,
     pub c5_c1_current_a: [f64; 2],
+    /// Positive from recovery R7/R3 tap toward Q30 base, zero when open.
+    pub c10_return_current_a: f64,
+    pub c10_capacitor_v: f64,
 }
 
 fn validate(p: Parameters, b: Boundary, budget: SolverBudget) -> Result<f64, StepError> {
@@ -108,6 +117,14 @@ fn validate(p: Parameters, b: Boundary, budget: SolverBudget) -> Result<f64, Ste
         return Err(StepError::InvalidInput);
     }
     Ok(dt)
+}
+
+fn return_series_ohm(p: Parameters, r14_ohm: f64) -> Result<f64, StepError> {
+    if !r14_ohm.is_finite() || !(0.0..=50_000.0).contains(&r14_ohm) {
+        return Err(StepError::InvalidInput);
+    }
+    // R73 totals 1 kΩ; R30 already includes R76=330 Ω and R73_L.
+    Ok(r14_ohm + 1000.0 - (p.r30_ohm - 330.0))
 }
 
 fn resistor(
@@ -208,7 +225,7 @@ fn evaluate(
     bus: f64,
     dt: Option<f64>,
     old: [f64; 6],
-    load: Option<([f64; 2], [[f64; 2]; 2])>,
+    load: Option<([f64; 3], [[f64; 3]; 3])>,
 ) -> Result<([f64; N], [[f64; N]; N]), StepError> {
     let mut r = [0.0; N];
     let mut j = [[0.0; N]; N];
@@ -241,9 +258,9 @@ fn evaluate(
         capacitor(x, &mut r, &mut j, 6, None, bus, old[5], C27, dt);
     }
     if let Some((current, tangent)) = load {
-        for (row, node) in [11, 15].into_iter().enumerate() {
+        for (row, node) in [11, 15, 7].into_iter().enumerate() {
             r[node] += current[row];
-            for (col, other) in [11, 15].into_iter().enumerate() {
+            for (col, other) in [11, 15, 7].into_iter().enumerate() {
                 j[node][other] += tangent[row][col];
             }
         }
@@ -292,6 +309,7 @@ pub fn initial_state(
                 node_v: x,
                 previous_node_v: x,
                 capacitor_v: charges(&x, b.bus_v),
+                c10_capacitor_v: recovery.node_v[6] - x[7],
                 recovery,
             });
         }
@@ -326,38 +344,81 @@ fn trial(
     b: Boundary,
     dt: f64,
     budget: SolverBudget,
+    return_series: Option<f64>,
 ) -> Result<Trial, StepError> {
     let mut rb = b.recovery;
     rb.ladder_left_v = x[11];
     rb.ladder_right_v = x[15];
-    let port = recovery_vca_output::solve_input_port(
-        &previous.recovery,
-        p.transistor,
-        conversion,
-        headphone,
-        rb,
-        budget,
-    )?;
+    let (next_recovery, port_result, currents, tangent, c10_v, return_current) =
+        if let Some(series_ohm) = return_series {
+            let port = recovery_vca_output::solve_feedback_port(
+                &previous.recovery,
+                p.transistor,
+                conversion,
+                headphone,
+                rb,
+                EmphasisBoundary {
+                    q30_base_v: x[7],
+                    previous_capacitor_v: previous.c10_capacitor_v,
+                    series_ohm,
+                },
+                budget,
+            )?;
+            (
+                port.next_state,
+                port.result,
+                port.current_a,
+                port.conductance_s,
+                port.c10_capacitor_v,
+                -port.current_a[2],
+            )
+        } else {
+            let port = recovery_vca_output::solve_input_port(
+                &previous.recovery,
+                p.transistor,
+                conversion,
+                headphone,
+                rb,
+                budget,
+            )?;
+            let currents = [port.current_a[0], port.current_a[1], 0.0];
+            let mut tangent = [[0.0; 3]; 3];
+            for row in 0..2 {
+                for col in 0..2 {
+                    tangent[row][col] = port.conductance_s[row][col];
+                }
+            }
+            (
+                port.next_state,
+                port.result,
+                currents,
+                tangent,
+                previous.c10_capacitor_v,
+                0.0,
+            )
+        };
     let (r, j) = evaluate(
         x,
         p,
         b.bus_v,
         Some(dt),
         previous.capacitor_v,
-        Some((port.current_a, port.conductance_s)),
+        Some((currents, tangent)),
     )?;
     let result = StepResult {
-        j7_v: port.result.j7_v,
-        j4_hi_v: port.result.j4_hi_v,
-        j5_lo_v: port.result.j5_lo_v,
+        j7_v: port_result.j7_v,
+        j4_hi_v: port_result.j4_hi_v,
+        j5_lo_v: port_result.j5_lo_v,
         iterations: 0,
         recovery_port_evaluations: 0,
         predictor_fallback: false,
         max_ladder_kcl_residual_a: max_abs(&r),
         board_input_current_a: C27 / dt * (b.bus_v - x[6] + previous.capacitor_v[5]),
-        c5_c1_current_a: port.current_a,
+        c5_c1_current_a: [currents[0], currents[1]],
+        c10_return_current_a: return_current,
+        c10_capacitor_v: c10_v,
     };
-    Ok((r, j, port.next_state, result))
+    Ok((r, j, next_recovery, result))
 }
 
 fn solve_from_seed(
@@ -370,6 +431,7 @@ fn solve_from_seed(
     dt: f64,
     budget: SolverBudget,
     evaluations: &mut usize,
+    return_series: Option<f64>,
 ) -> Result<([f64; N], RecoveryState, StepResult), StepError> {
     let mut cached = None;
     for iteration in 0..budget.iterations {
@@ -377,7 +439,17 @@ fn solve_from_seed(
             Some(value) => value,
             None => {
                 *evaluations += 1;
-                trial(previous, &x, p, conversion, headphone, b, dt, budget)?
+                trial(
+                    previous,
+                    &x,
+                    p,
+                    conversion,
+                    headphone,
+                    b,
+                    dt,
+                    budget,
+                    return_series,
+                )?
             }
         };
         let error = max_abs(&r);
@@ -394,7 +466,15 @@ fn solve_from_seed(
             let candidate = std::array::from_fn(|i| x[i] + s * direction[i]);
             *evaluations += 1;
             if let Ok(next) = trial(
-                previous, &candidate, p, conversion, headphone, b, dt, budget,
+                previous,
+                &candidate,
+                p,
+                conversion,
+                headphone,
+                b,
+                dt,
+                budget,
+                return_series,
             ) {
                 if max_abs(&next.0) < error {
                     accepted = Some((candidate, next));
@@ -412,15 +492,14 @@ fn solve_from_seed(
     Err(StepError::IterationBudget)
 }
 
-/// Advance the complete open-EMPHASIS signal chain. Every nested port trial
-/// uses the same previous state; failure leaves the caller's state untouched.
-pub fn step(
+fn step_internal(
     state: &mut State,
     p: Parameters,
     conversion: ConversionParameters,
     headphone: HeadphoneParameters,
     b: Boundary,
     budget: SolverBudget,
+    return_series: Option<f64>,
 ) -> Result<StepResult, StepError> {
     let dt = validate(p, b, budget)?;
     if state
@@ -429,6 +508,7 @@ pub fn step(
         .chain(state.previous_node_v.iter())
         .chain(state.capacitor_v.iter())
         .any(|v| !v.is_finite())
+        || !state.c10_capacitor_v.is_finite()
     {
         return Err(StepError::InvalidInput);
     }
@@ -448,6 +528,7 @@ pub fn step(
         dt,
         budget,
         &mut evaluations,
+        return_series,
     ) {
         Ok(value) => (value, false),
         Err(_) => (
@@ -461,6 +542,7 @@ pub fn step(
                 dt,
                 budget,
                 &mut evaluations,
+                return_series,
             )?,
             true,
         ),
@@ -468,10 +550,39 @@ pub fn step(
     state.previous_node_v = previous.node_v;
     state.node_v = solution.0;
     state.capacitor_v = charges(&solution.0, b.bus_v);
+    state.c10_capacitor_v = solution.2.c10_capacitor_v;
     state.recovery = solution.1;
     let mut result = solution.2;
     result.predictor_fallback = fallback;
     Ok(result)
+}
+
+/// Advance the complete open-EMPHASIS laboratory chain. Failure is atomic.
+pub fn step(
+    state: &mut State,
+    p: Parameters,
+    conversion: ConversionParameters,
+    headphone: HeadphoneParameters,
+    b: Boundary,
+    budget: SolverBudget,
+) -> Result<StepResult, StepError> {
+    step_internal(state, p, conversion, headphone, b, budget, None)
+}
+
+/// Close C10/R14/R73 between the recovery tap and Q30 base. `r14_ohm` is
+/// pin-7-to-pin-6 electrical resistance, not a panel angle.
+pub fn step_with_emphasis(
+    state: &mut State,
+    p: Parameters,
+    conversion: ConversionParameters,
+    headphone: HeadphoneParameters,
+    b: Boundary,
+    r14_ohm: f64,
+    budget: SolverBudget,
+) -> Result<StepResult, StepError> {
+    validate(p, b, budget)?;
+    let series = return_series_ohm(p, r14_ohm)?;
+    step_internal(state, p, conversion, headphone, b, budget, Some(series))
 }
 
 #[cfg(test)]
@@ -716,13 +827,19 @@ mod tests {
                     assert!((port.current_a[i] - result.c5_c1_current_a[i]).abs() < 1e-12);
                 }
                 let dt = n(&case["dt_s"]);
+                let mut tangent = [[0.0; 3]; 3];
+                for row in 0..2 {
+                    for col in 0..2 {
+                        tangent[row][col] = port.conductance_s[row][col];
+                    }
+                }
                 let (residual, _) = evaluate(
                     &state.node_v,
                     p,
                     bus_v,
                     Some(dt),
                     previous.capacitor_v,
-                    Some((port.current_a, port.conductance_s)),
+                    Some(([port.current_a[0], port.current_a[1], 0.0], tangent)),
                 )
                 .unwrap();
                 assert!(max_abs(&residual) < 1e-10);
@@ -750,5 +867,302 @@ mod tests {
             assert_eq!(error, StepError::InvalidInput);
             assert_eq!(state, previous);
         }
+    }
+
+    #[test]
+    fn c10_closed_loop_conserves_charge_with_loaded_output_for_both_r61() {
+        let ladder: Value =
+            serde_json::from_str(include_str!("../../../evidence/ladder_native_vectors.json"))
+                .unwrap();
+        let downstream: Value = serde_json::from_str(include_str!(
+            "../../../evidence/recovery_vca_output_vectors.json"
+        ))
+        .unwrap();
+        let case = &downstream["case"];
+        let (conversion, headphone, rb) = output_setup(case);
+        let t = &ladder["bjt"];
+        let transistor = TransistorParameters {
+            transistor_is_a: n(&t["is_a"]),
+            beta_forward: n(&t["beta_forward"]),
+            beta_reverse: n(&t["beta_reverse"]),
+            temperature_k: n(&t["temperature_k"]),
+        };
+        let dt = n(&case["dt_s"]);
+        for scenario in ladder["scenarios"].as_array().unwrap() {
+            let p = Parameters {
+                transistor,
+                tail_current_a: n(&scenario["tail_current_a"]),
+                r61_ohm: n(&scenario["r61_ohm"]),
+                r30_ohm: n(&scenario["r30_ohm"]),
+            };
+            let seed = std::array::from_fn(|i| n(&scenario["initial_node_v"][i]));
+            let mut state = initial_state(
+                p,
+                conversion,
+                headphone,
+                Boundary {
+                    bus_v: 0.0,
+                    recovery: rb,
+                },
+                seed,
+            )
+            .unwrap();
+            for (index, bus_v) in [0.0, 0.001, 0.01, 0.01, -0.01, -0.01, 0.0, 0.001, -0.001]
+                .into_iter()
+                .enumerate()
+            {
+                let previous = state;
+                let r14 = [0.0, 25_000.0, 50_000.0][index % 3];
+                let result = step_with_emphasis(
+                    &mut state,
+                    p,
+                    conversion,
+                    headphone,
+                    Boundary {
+                        bus_v,
+                        recovery: rb,
+                    },
+                    r14,
+                    SolverBudget::default(),
+                )
+                .unwrap_or_else(|e| panic!("R61={} C10 step {index}: {e:?}", p.r61_ohm));
+                assert!(result.max_ladder_kcl_residual_a < 1e-10);
+                let cap_current = C10 / dt * (state.c10_capacitor_v - previous.c10_capacitor_v);
+                assert!((result.c10_return_current_a - cap_current).abs() < 1e-10);
+                assert!((state.c10_capacitor_v - result.c10_capacitor_v).abs() < 1e-12);
+                let series = return_series_ohm(p, r14).unwrap();
+                assert!(
+                    (state.c10_capacitor_v
+                        - (state.recovery.node_v[6]
+                            - state.node_v[7]
+                            - series * result.c10_return_current_a))
+                        .abs()
+                        < 1e-10
+                );
+                let mut port_boundary = rb;
+                port_boundary.ladder_left_v = state.node_v[11];
+                port_boundary.ladder_right_v = state.node_v[15];
+                let port = recovery_vca_output::solve_feedback_port(
+                    &previous.recovery,
+                    transistor,
+                    conversion,
+                    headphone,
+                    port_boundary,
+                    EmphasisBoundary {
+                        q30_base_v: state.node_v[7],
+                        previous_capacitor_v: previous.c10_capacitor_v,
+                        series_ohm: series,
+                    },
+                    SolverBudget::default(),
+                )
+                .unwrap();
+                assert_eq!(port.next_state, state.recovery);
+                assert!((-port.current_a[2] - result.c10_return_current_a).abs() < 1e-12);
+                let (r, _) = evaluate(
+                    &state.node_v,
+                    p,
+                    bus_v,
+                    Some(dt),
+                    previous.capacitor_v,
+                    Some((port.current_a, port.conductance_s)),
+                )
+                .unwrap();
+                assert!(max_abs(&r) < 1e-10);
+            }
+            let previous = state;
+            assert_eq!(
+                step_with_emphasis(
+                    &mut state,
+                    p,
+                    conversion,
+                    headphone,
+                    Boundary {
+                        bus_v: 0.0,
+                        recovery: rb
+                    },
+                    50_001.0,
+                    SolverBudget::default()
+                )
+                .unwrap_err(),
+                StepError::InvalidInput
+            );
+            assert_eq!(state, previous);
+        }
+    }
+
+    #[test]
+    fn closed_loop_bus_to_j7_matches_independent_62_node_python() {
+        let fixture: Value = serde_json::from_str(include_str!(
+            "../../../evidence/ladder_j7_closed_loop_vectors.json"
+        ))
+        .unwrap();
+        assert_eq!(fixture["schema"], "rf-d/ladder-j7-closed-loop-vectors/v1");
+        let downstream: Value = serde_json::from_str(include_str!(
+            "../../../evidence/recovery_vca_output_vectors.json"
+        ))
+        .unwrap();
+        let (conversion, headphone, rb) = output_setup(&downstream["case"]);
+        let transistor = TransistorParameters {
+            transistor_is_a: 1e-14,
+            beta_forward: 100.0,
+            beta_reverse: 5.0,
+            temperature_k: 298.15,
+        };
+        for scenario in fixture["scenarios"].as_array().unwrap() {
+            let p = Parameters {
+                transistor,
+                tail_current_a: n(&scenario["tail_current_a"]),
+                r61_ohm: n(&scenario["r61_ohm"]),
+                r30_ohm: n(&scenario["r30_ohm"]),
+            };
+            let seed = std::array::from_fn(|i| n(&scenario["initial_ladder_node_v"][i]));
+            let mut state = initial_state(
+                p,
+                conversion,
+                headphone,
+                Boundary {
+                    bus_v: 0.0,
+                    recovery: rb,
+                },
+                seed,
+            )
+            .unwrap();
+            for (index, row) in scenario["trace"].as_array().unwrap().iter().enumerate() {
+                let result = step_with_emphasis(
+                    &mut state,
+                    p,
+                    conversion,
+                    headphone,
+                    Boundary {
+                        bus_v: n(&row["bus_v"]),
+                        recovery: rb,
+                    },
+                    n(&row["r14_ohm"]),
+                    SolverBudget::default(),
+                )
+                .unwrap_or_else(|e| panic!("R61={} oracle step {index}: {e:?}", p.r61_ohm));
+                for i in 0..16 {
+                    let expected = n(&row["ladder_recovery_node_v"][i]);
+                    assert!(
+                        (state.node_v[i] - expected).abs() < 1e-6,
+                        "R61={} step {index} ladder {}: {} vs {expected}",
+                        p.r61_ohm,
+                        NODE_NAMES[i],
+                        state.node_v[i]
+                    );
+                }
+                for i in 0..8 {
+                    let expected = n(&row["ladder_recovery_node_v"][16 + i]);
+                    assert!(
+                        (state.recovery.node_v[i] - expected).abs() < 1e-6,
+                        "R61={} step {index} recovery {}: {} vs {expected}",
+                        p.r61_ohm,
+                        recovery_vca_output::NODE_NAMES[i],
+                        state.recovery.node_v[i]
+                    );
+                }
+                for (name, actual) in [
+                    ("c10_capacitor_v", state.c10_capacitor_v),
+                    ("j7_v", result.j7_v),
+                    ("j4_hi_v", result.j4_hi_v),
+                    ("j5_lo_v", result.j5_lo_v),
+                ] {
+                    let expected = n(&row[name]);
+                    assert!(
+                        (actual - expected).abs() < 1e-6,
+                        "R61={} step {index} {name}: {actual} vs {expected}",
+                        p.r61_ohm
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn closed_loop_192_sample_j7_control_trace_matches_python() {
+        let fixture: Value = serde_json::from_str(include_str!(
+            "../../../evidence/ladder_j7_closed_loop_vectors.json"
+        ))
+        .unwrap();
+        let downstream: Value = serde_json::from_str(include_str!(
+            "../../../evidence/recovery_vca_output_vectors.json"
+        ))
+        .unwrap();
+        let (conversion, headphone, mut rb) = output_setup(&downstream["case"]);
+        let scenario = &fixture["scenarios"][0];
+        let p = Parameters {
+            transistor: TransistorParameters {
+                transistor_is_a: 1e-14,
+                beta_forward: 100.0,
+                beta_reverse: 5.0,
+                temperature_k: 298.15,
+            },
+            tail_current_a: n(&scenario["tail_current_a"]),
+            r61_ohm: n(&scenario["r61_ohm"]),
+            r30_ohm: n(&scenario["r30_ohm"]),
+        };
+        let seed = std::array::from_fn(|i| n(&scenario["initial_ladder_node_v"][i]));
+        let mut state = initial_state(
+            p,
+            conversion,
+            headphone,
+            Boundary {
+                bus_v: 0.0,
+                recovery: rb,
+            },
+            seed,
+        )
+        .unwrap();
+        let mut signal_power = 0.0;
+        let mut error_power = 0.0;
+        let mut max_j7 = 0.0_f64;
+        let mut max_nodes = 0.0_f64;
+        for (index, row) in fixture["audio_trace"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .enumerate()
+        {
+            rb.vca.second.output.output.sw18_on = row["sw18_on"].as_bool().unwrap();
+            let result = step_with_emphasis(
+                &mut state,
+                p,
+                conversion,
+                headphone,
+                Boundary {
+                    bus_v: n(&row["bus_v"]),
+                    recovery: rb,
+                },
+                n(&row["r14_ohm"]),
+                SolverBudget::default(),
+            )
+            .unwrap_or_else(|e| panic!("audio sample {index}: {e:?}"));
+            let expected_j7 = n(&row["j7_v"]);
+            let error = result.j7_v - expected_j7;
+            signal_power += expected_j7 * expected_j7;
+            error_power += error * error;
+            max_j7 = max_j7.max(error.abs());
+            assert!((state.c10_capacitor_v - n(&row["c10_capacitor_v"])).abs() < 1e-6);
+            assert!((result.j4_hi_v - n(&row["j4_hi_v"])).abs() < 1e-6);
+            assert!((result.j5_lo_v - n(&row["j5_lo_v"])).abs() < 1e-6);
+            if let Some(nodes) = row["ladder_recovery_node_v"].as_array() {
+                for i in 0..16 {
+                    max_nodes = max_nodes.max((state.node_v[i] - n(&nodes[i])).abs());
+                }
+                for i in 0..8 {
+                    max_nodes = max_nodes.max((state.recovery.node_v[i] - n(&nodes[16 + i])).abs());
+                }
+            }
+            assert!(result.max_ladder_kcl_residual_a < 1e-10);
+        }
+        let numerical_snr_db = 10.0 * (signal_power / error_power).log10();
+        println!(
+            "C10 192 samples: max_j7_error_v={max_j7:.3e} \
+                  max_checkpoint_node_error_v={max_nodes:.3e} \
+                  numerical_snr_db={numerical_snr_db:.1}"
+        );
+        assert!(max_j7 < 1e-6);
+        assert!(max_nodes < 1e-6);
+        assert!(numerical_snr_db > 100.0);
     }
 }

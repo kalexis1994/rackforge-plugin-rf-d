@@ -4,7 +4,9 @@
 use std::hint::black_box;
 use std::time::Instant;
 
-use rf_d_circuit::ladder_recovery_output::{initial_state, step, Boundary, Parameters};
+use rf_d_circuit::ladder_recovery_output::{
+    initial_state, step, step_with_emphasis, Boundary, Parameters,
+};
 use rf_d_circuit::output::OutputBoundary;
 use rf_d_circuit::output_conversion::{DiodeParameters, Parameters as ConversionParameters};
 use rf_d_circuit::output_conversion_c4::BoundaryC4;
@@ -82,6 +84,7 @@ fn boundary(sample: usize) -> Boundary {
 }
 
 fn main() {
+    let closed = std::env::args().any(|arg| arg == "--emphasis");
     let transistors = TransistorParameters {
         transistor_is_a: 1e-14,
         beta_forward: 100.0,
@@ -126,14 +129,27 @@ fn main() {
             let begin = Instant::now();
             for offset in 0..BLOCK {
                 let sample = block * BLOCK + offset;
-                match step(
-                    &mut state,
-                    ladder,
-                    conversion,
-                    headphone,
-                    boundary(sample),
-                    SolverBudget::default(),
-                ) {
+                let outcome = if closed {
+                    step_with_emphasis(
+                        &mut state,
+                        ladder,
+                        conversion,
+                        headphone,
+                        boundary(sample),
+                        25_000.0,
+                        SolverBudget::default(),
+                    )
+                } else {
+                    step(
+                        &mut state,
+                        ladder,
+                        conversion,
+                        headphone,
+                        boundary(sample),
+                        SolverBudget::default(),
+                    )
+                };
+                match outcome {
                     Ok(result) => {
                         if measured {
                             evaluations += result.recovery_port_evaluations;
@@ -154,7 +170,7 @@ fn main() {
     durations_us.sort_by(|a, b| a.total_cmp(b));
     let mean = durations_us.iter().sum::<f64>() / durations_us.len() as f64;
     println!(
-        "ladder_to_j7: blocks={} samples={} deadline_us={:.1} mean_us={mean:.1} p99_us={:.1} max_us={:.1} mean_recovery_evals={:.2} max_recovery_evals={} fallbacks={} max_kcl_a={max_kcl:.3e} failures={} final_j7_v={final_j7:.9}",
+        "ladder_to_j7: emphasis_closed={closed} blocks={} samples={} deadline_us={:.1} mean_us={mean:.1} p99_us={:.1} max_us={:.1} mean_recovery_evals={:.2} max_recovery_evals={} fallbacks={} max_kcl_a={max_kcl:.3e} failures={} final_j7_v={final_j7:.9}",
         durations_us.len(), MEASURED_SAMPLES, BLOCK as f64*1e6/SAMPLE_RATE as f64,
         percentile(&durations_us,0.99), durations_us.last().unwrap(),
         evaluations as f64/MEASURED_SAMPLES as f64, max_evaluations,

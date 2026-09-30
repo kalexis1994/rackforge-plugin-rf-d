@@ -1,5 +1,5 @@
 //! Q8/Q6/Q7/Q5 recovery through R2/C6, both VCAs and J7.
-//! Ladder top emitters remain imposed voltage boundaries; C10 is open.
+//! The ordinary two-port keeps C10 open; a three-port can load its tap.
 
 use crate::output_conversion::{
     max_abs, solve_linear, solve_linear_many, Parameters as ConversionParameters,
@@ -17,6 +17,7 @@ const Q_E: f64 = 1.602_176_634e-19;
 const C5_F: f64 = 0.22e-6;
 const C1_F: f64 = 0.22e-6;
 const C9_F: f64 = 100e-6;
+const C10_F: f64 = 10e-6;
 
 pub const NODE_NAMES: [&str; N] = [
     "Q8_BASE",
@@ -68,6 +69,42 @@ pub struct InputPort {
     pub current_a: [f64; 2],
     /// Row = input current; column = imposed ladder voltage, in siemens.
     pub conductance_s: [[f64; 2]; 2],
+}
+
+/// Series C10/R14/R73 branch at the recovery R7/R3 tap. The supplied
+/// capacitor voltage is tap-side minus base-side from the previous sample.
+#[derive(Clone, Copy, Debug)]
+pub struct EmphasisBoundary {
+    pub q30_base_v: f64,
+    pub previous_capacitor_v: f64,
+    pub series_ohm: f64,
+}
+
+/// Ladder-facing load at C5, C1 and Q30 base, all currents positive leaving
+/// those nodes. The third current is opposite the tap-to-base C10 current.
+#[derive(Clone, Copy, Debug)]
+pub struct FeedbackPort {
+    pub next_state: State,
+    pub result: StepResult,
+    pub current_a: [f64; 3],
+    pub conductance_s: [[f64; 3]; 3],
+    pub c10_capacitor_v: f64,
+}
+
+fn emphasis_admittance(e: EmphasisBoundary, dt: f64) -> Result<f64, StepError> {
+    if !e.q30_base_v.is_finite()
+        || !e.previous_capacitor_v.is_finite()
+        || !e.series_ohm.is_finite()
+        || !(0.0..=51_000.0).contains(&e.series_ohm)
+    {
+        return Err(StepError::InvalidInput);
+    }
+    let gc = C10_F / dt;
+    let y = gc / (1.0 + gc * e.series_ohm);
+    if !y.is_finite() || y <= 0.0 {
+        return Err(StepError::InvalidInput);
+    }
+    Ok(y)
 }
 
 fn vca_boundary(x: &[f64; N], b: Boundary) -> VcaBoundary {
@@ -216,6 +253,24 @@ fn evaluate(
     Ok((r, j))
 }
 
+fn evaluate_with_emphasis(
+    x: &[f64; N],
+    p: TransistorParameters,
+    b: Boundary,
+    old_caps: Option<[f64; 3]>,
+    load: Option<(f64, f64)>,
+    emphasis: Option<EmphasisBoundary>,
+) -> Result<([f64; N], [[f64; N]; N]), StepError> {
+    let (mut r, mut j) = evaluate(x, p, b, old_caps, load)?;
+    if let Some(e) = emphasis {
+        let dt = b.vca.second.output.output.dt_s;
+        let y = emphasis_admittance(e, dt)?;
+        r[6] += y * (x[6] - e.q30_base_v - e.previous_capacitor_v);
+        j[6][6] += y;
+    }
+    Ok((r, j))
+}
+
 /// DC initializer: C1/C5/C9/C10 and all downstream capacitors are open.
 pub fn initial_state(
     p: TransistorParameters,
@@ -265,6 +320,7 @@ fn trial(
     headphone: HeadphoneParameters,
     b: Boundary,
     budget: SolverBudget,
+    emphasis: Option<EmphasisBoundary>,
 ) -> Result<([f64; N], [[f64; N]; N], VcaState, StepResult), StepError> {
     let port = vca_port(
         &previous.vca,
@@ -274,12 +330,13 @@ fn trial(
         vca_boundary(x, b),
         budget,
     )?;
-    let (r, j) = evaluate(
+    let (r, j) = evaluate_with_emphasis(
         x,
         p,
         b,
         Some(previous.capacitor_v),
         Some((port.current_a, port.conductance_s)),
+        emphasis,
     )?;
     let result = StepResult {
         j7_v: port.result.j7_v,
@@ -304,6 +361,7 @@ fn solve_from_seed(
     b: Boundary,
     budget: SolverBudget,
     evaluations: &mut usize,
+    emphasis: Option<EmphasisBoundary>,
 ) -> Result<([f64; N], VcaState, StepResult), StepError> {
     let mut cached = None;
     for iteration in 0..budget.iterations {
@@ -311,7 +369,7 @@ fn solve_from_seed(
             Some(value) => value,
             None => {
                 *evaluations += 1;
-                trial(previous, &x, p, conversion, headphone, b, budget)?
+                trial(previous, &x, p, conversion, headphone, b, budget, emphasis)?
             }
         };
         let error = max_abs(&r);
@@ -327,7 +385,9 @@ fn solve_from_seed(
             let factor = 0.5_f64.powi(power as i32);
             let candidate = std::array::from_fn(|i| x[i] + factor * direction[i]);
             *evaluations += 1;
-            if let Ok(next) = trial(previous, &candidate, p, conversion, headphone, b, budget) {
+            if let Ok(next) = trial(
+                previous, &candidate, p, conversion, headphone, b, budget, emphasis,
+            ) {
                 if max_abs(&next.0) < error {
                     accepted = Some((candidate, next));
                     break;
@@ -344,16 +404,20 @@ fn solve_from_seed(
     Err(StepError::IterationBudget)
 }
 
-/// Joint step. Failure leaves recovery, C1/C5/C9 and the entire output unchanged.
-pub fn step(
+/// Joint step implementation. The optional return loads R7/R3 via C10.
+fn step_internal(
     state: &mut State,
     p: TransistorParameters,
     conversion: ConversionParameters,
     headphone: HeadphoneParameters,
     b: Boundary,
     budget: SolverBudget,
+    emphasis: Option<EmphasisBoundary>,
 ) -> Result<StepResult, StepError> {
     validate(p, b, budget)?;
+    if let Some(e) = emphasis {
+        emphasis_admittance(e, b.vca.second.output.output.dt_s)?;
+    }
     if state
         .node_v
         .iter()
@@ -378,6 +442,7 @@ pub fn step(
         b,
         budget,
         &mut evaluations,
+        emphasis,
     ) {
         Ok(value) => (value, false),
         Err(_) => (
@@ -390,6 +455,7 @@ pub fn step(
                 b,
                 budget,
                 &mut evaluations,
+                emphasis,
             )?,
             true,
         ),
@@ -405,6 +471,18 @@ pub fn step(
     let mut result = solution.2;
     result.predictor_fallback = fallback;
     Ok(result)
+}
+
+/// Joint step with C10 open. Failure leaves the entire chain unchanged.
+pub fn step(
+    state: &mut State,
+    p: TransistorParameters,
+    conversion: ConversionParameters,
+    headphone: HeadphoneParameters,
+    b: Boundary,
+    budget: SolverBudget,
+) -> Result<StepResult, StepError> {
+    step_internal(state, p, conversion, headphone, b, budget, None)
 }
 
 /// Provisional C5/C1 load for a future coupled ladder Newton. Every trial
@@ -450,5 +528,73 @@ pub fn solve_input_port(
         result,
         current_a,
         conductance_s,
+    })
+}
+
+/// Solve the three imposed ladder voltages simultaneously with C10 closed.
+/// Every outer Newton trial must reuse the same previous recovery and C10 state.
+pub fn solve_feedback_port(
+    previous: &State,
+    p: TransistorParameters,
+    conversion: ConversionParameters,
+    headphone: HeadphoneParameters,
+    b: Boundary,
+    emphasis: EmphasisBoundary,
+    budget: SolverBudget,
+) -> Result<FeedbackPort, StepError> {
+    let mut next_state = *previous;
+    let result = step_internal(
+        &mut next_state,
+        p,
+        conversion,
+        headphone,
+        b,
+        budget,
+        Some(emphasis),
+    )?;
+    let x = next_state.node_v;
+    let (_, jacobian) = evaluate_with_emphasis(
+        &x,
+        p,
+        b,
+        Some(previous.capacitor_v),
+        Some((result.vca_current_a, result.vca_conductance_s)),
+        Some(emphasis),
+    )?;
+    let dt = b.vca.second.output.output.dt_s;
+    let g = [C5_F / dt, C1_F / dt, emphasis_admittance(emphasis, dt)?];
+    let mut rhs = [[0.0; 3]; N];
+    rhs[0][0] = g[0];
+    rhs[1][1] = g[1];
+    rhs[6][2] = g[2];
+    let response = solve_linear_many(jacobian, rhs)?;
+    let return_current = g[2] * (x[6] - emphasis.q30_base_v - emphasis.previous_capacitor_v);
+    let current_a = [
+        g[0] * (b.ladder_left_v - x[0] + previous.capacitor_v[0]),
+        g[1] * (b.ladder_right_v - x[1] + previous.capacitor_v[1]),
+        -return_current,
+    ];
+    let conductance_s = std::array::from_fn(|row| {
+        std::array::from_fn(|col| {
+            if row < 2 {
+                g[row] * (f64::from(row == col) - response[row][col])
+            } else {
+                g[2] * (f64::from(col == 2) - response[6][col])
+            }
+        })
+    });
+    let c10_capacitor_v = x[6] - emphasis.q30_base_v - emphasis.series_ohm * return_current;
+    if current_a.iter().any(|v| !v.is_finite())
+        || conductance_s.iter().flatten().any(|v| !v.is_finite())
+        || !c10_capacitor_v.is_finite()
+    {
+        return Err(StepError::ExponentialDomain);
+    }
+    Ok(FeedbackPort {
+        next_state,
+        result,
+        current_a,
+        conductance_s,
+        c10_capacitor_v,
     })
 }

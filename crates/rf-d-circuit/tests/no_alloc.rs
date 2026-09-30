@@ -2,7 +2,8 @@ use std::alloc::{GlobalAlloc, Layout, System};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use rf_d_circuit::ladder_recovery_output::{
-    initial_state as initial_ladder_state, step as step_ladder, Boundary as LadderBoundary,
+    initial_state as initial_ladder_state, step as step_ladder,
+    step_with_emphasis as step_ladder_with_emphasis, Boundary as LadderBoundary,
     Parameters as LadderParameters,
 };
 use rf_d_circuit::output::{
@@ -460,6 +461,22 @@ fn dc_initialization_and_audio_steps_do_not_allocate() {
             SolverBudget::default(),
         )
         .expect("ladder through J7 step");
+    }
+    for i in 0..40 {
+        let bus_v = if i % 20 < 10 { 0.001 } else { -0.001 };
+        step_ladder_with_emphasis(
+            &mut ladder,
+            ladder_parameters,
+            conversion,
+            p,
+            LadderBoundary {
+                bus_v,
+                recovery: recovery_boundary,
+            },
+            if i % 20 < 10 { 0.0 } else { 25_000.0 },
+            SolverBudget::default(),
+        )
+        .expect("closed C10 ladder through J7 step");
     }
     let after = ALLOCATIONS.load(Ordering::Relaxed);
     assert_eq!(after - before, 0, "processing allocated heap memory");

@@ -2,7 +2,8 @@ use rf_d_circuit::output::OutputBoundary;
 use rf_d_circuit::output_conversion::{DiodeParameters, Parameters as ConversionParameters};
 use rf_d_circuit::output_conversion_c4::BoundaryC4;
 use rf_d_circuit::recovery_vca_output::{
-    initial_state, solve_input_port, step, Boundary, NODE_NAMES,
+    initial_state, solve_feedback_port, solve_input_port, step, Boundary, EmphasisBoundary,
+    NODE_NAMES,
 };
 use rf_d_circuit::vca1_output::Boundary as FirstBoundary;
 use rf_d_circuit::vca2_output::{Boundary as SecondBoundary, Parameters as TransistorParameters};
@@ -295,4 +296,99 @@ fn invalid_ladder_boundary_preserves_all_recovery_and_output_state() {
         StepError::InvalidInput
     );
     assert_eq!(state, previous);
+}
+
+#[test]
+fn c10_feedback_three_port_tangent_matches_voltage_perturbations() {
+    let fixture = fixture();
+    let case = &fixture["case"];
+    let (transistors, conversion, headphone) = parameters(case);
+    let b = boundary(case, &case["initial_boundary"], true);
+    let mut previous = initial_state(transistors, conversion, headphone, b).unwrap();
+    let q30_dc = 1.9607223099167141;
+    let mut previous_c10 = previous.node_v[6] - q30_dc;
+    let dt = n(&case["dt_s"]);
+    for index in 0..6 {
+        let mut trial_b = b;
+        trial_b.ladder_left_v += 0.02 * (index as f64 + 1.0);
+        trial_b.ladder_right_v -= 0.015 * (index as f64 + 1.0);
+        let feedback = EmphasisBoundary {
+            q30_base_v: q30_dc + 0.003 * index as f64,
+            previous_capacitor_v: previous_c10,
+            series_ohm: [0.0, 500.0, 25_500.0, 50_500.0][index % 4],
+        };
+        let port = solve_feedback_port(
+            &previous,
+            transistors,
+            conversion,
+            headphone,
+            trial_b,
+            feedback,
+            SolverBudget::default(),
+        )
+        .unwrap();
+        let tap_current = -port.current_a[2];
+        let cap_current = 10e-6 / dt * (port.c10_capacitor_v - feedback.previous_capacitor_v);
+        assert!((tap_current - cap_current).abs() < 1e-11);
+        assert!(
+            (port.c10_capacitor_v
+                - (port.next_state.node_v[6]
+                    - feedback.q30_base_v
+                    - feedback.series_ohm * tap_current))
+                .abs()
+                < 1e-12
+        );
+        if index == 3 {
+            for column in 0..3 {
+                let mut high_b = trial_b;
+                let mut low_b = trial_b;
+                let mut high_e = feedback;
+                let mut low_e = feedback;
+                match column {
+                    0 => {
+                        high_b.ladder_left_v += 1e-4;
+                        low_b.ladder_left_v -= 1e-4;
+                    }
+                    1 => {
+                        high_b.ladder_right_v += 1e-4;
+                        low_b.ladder_right_v -= 1e-4;
+                    }
+                    _ => {
+                        high_e.q30_base_v += 1e-4;
+                        low_e.q30_base_v -= 1e-4;
+                    }
+                }
+                let high = solve_feedback_port(
+                    &previous,
+                    transistors,
+                    conversion,
+                    headphone,
+                    high_b,
+                    high_e,
+                    SolverBudget::default(),
+                )
+                .unwrap();
+                let low = solve_feedback_port(
+                    &previous,
+                    transistors,
+                    conversion,
+                    headphone,
+                    low_b,
+                    low_e,
+                    SolverBudget::default(),
+                )
+                .unwrap();
+                for row in 0..3 {
+                    let fd = (high.current_a[row] - low.current_a[row]) / 2e-4;
+                    assert!(
+                        (port.conductance_s[row][column] - fd).abs() < 2e-7 + 1e-3 * fd.abs(),
+                        "feedback Y[{row},{column}]: {} vs {fd}",
+                        port.conductance_s[row][column]
+                    );
+                }
+            }
+        }
+        previous_c10 = port.c10_capacitor_v;
+        previous = port.next_state;
+    }
 }

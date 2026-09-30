@@ -1,0 +1,46 @@
+{
+  "schema": "rf-d/ladder-j7-native-profile/v1",
+  "date": "2026-09-30",
+  "host": "Windows, AMD Ryzen 5 5600X 6-Core Processor",
+  "build": "cargo run --release -p rf-d-circuit --example bench_ladder_recovery_output",
+  "scenario": {
+    "sample_rate_hz": 48000,
+    "block_samples": 64,
+    "warmup_samples": 8192,
+    "measured_samples": 8192,
+    "deadline_us": 1333.3333333333333,
+    "bus_sine_hz": 100,
+    "bus_peak_v": 0.1,
+    "r61_ohm": 200,
+    "r73_bottom_ohm": 500
+  },
+  "measurements": [
+    {
+      "emphasis_closed": false,
+      "r14_ohm": null,
+      "mean_block_us": 24205.4,
+      "p99_block_us": 28068.5,
+      "max_block_us": 28623.3,
+      "mean_recovery_port_evaluations_per_sample": 2.0,
+      "max_recovery_port_evaluations_per_sample": 3,
+      "predictor_fallbacks": 0,
+      "max_ladder_kcl_residual_a": 4.083e-12,
+      "failed_steps": 0,
+      "final_j7_v": -0.009632207
+    },
+    {
+      "emphasis_closed": true,
+      "r14_ohm": 25000,
+      "mean_block_us": 22584.4,
+      "p99_block_us": 25783.4,
+      "max_block_us": 25832.9,
+      "mean_recovery_port_evaluations_per_sample": 2.0,
+      "max_recovery_port_evaluations_per_sample": 3,
+      "predictor_fallbacks": 0,
+      "max_ladder_kcl_residual_a": 4.083e-12,
+      "failed_steps": 0,
+      "final_j7_v": -0.009578716
+    }
+  ],
+  "interpretation": "Separate local process launches; no controlled A/B claim. Both paths fail the 64-sample realtime deadline."
+}
