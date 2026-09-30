@@ -58,6 +58,8 @@ cargo run --release -p rf-d-circuit --example bench_ladder_recovery_output -- --
 
 ## Lecciones para RACE
 
+El [estrés largo a tres tasas y ambos R61](ESTRES_LARGO_GLOBAL_66.md) amplía la convergencia a 752384 muestras con switches, cargas y controles combinados. Cero fallos/reintentos; KCL auditada con historial anterior y C10 abierto conservado bit a bit. Incluye otras dos variantes de costo restituidas. No sustituye el oráculo independiente ni mide C7.
+
 La [evaluación compartida de exponenciales](EXPONENCIALES_GLOBAL_66.md) conserva precisión cerca de cero y conductancia inversa. Los gates admiten una reducción adicional del 9,306 %: media local 2,23336 ms/bloque, aún fuera de plazo.
 
 El [ensamblado directo en orden de eliminación](ENSAMBLADO_GLOBAL_ORDENADO.md) evita la copia de matriz de aquel ensayo. Se admite experimentalmente tras los gates: costo medio 2,59546→2,46534 ms (−5,013 %), con C7 aún abierto. Incluye un perfil offline y otras dos optimizaciones descartadas por aumentar el costo.

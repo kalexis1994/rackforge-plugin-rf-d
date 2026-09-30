@@ -1,0 +1,35 @@
+diff --git a/crates/rf-d-circuit/src/output_conversion.rs b/crates/rf-d-circuit/src/output_conversion.rs
+index 6476462..d997353 100644
+--- a/crates/rf-d-circuit/src/output_conversion.rs
++++ b/crates/rf-d-circuit/src/output_conversion.rs
+@@ -261,15 +261,23 @@ fn solve_linear_internal<const M: usize, const SKIP_ZERO: bool>(
+         rhs.swap(col, pivot);
+         scale.swap(col, pivot);
+         let diagonal = j[col][col];
+-        for row in (col + 1)..M {
+-            if SKIP_ZERO && j[row][col] == 0.0 {
++        // Prove pivot/update rows are disjoint once, outside the inner loop.
++        // This permits contiguous vectorized updates without unsafe code or
++        // copying the pivot row. Arithmetic and pivot selection stay the same.
++        let (finished, remaining) = j.split_at_mut(col + 1);
++        let pivot_row = &finished[col];
++        for (offset, row_values) in remaining.iter_mut().enumerate() {
++            let row = col + 1 + offset;
++            if SKIP_ZERO && row_values[col] == 0.0 {
+                 continue;
+             }
+-            let factor = j[row][col] / diagonal;
+-            j[row][col] = 0.0;
+-            #[allow(clippy::needless_range_loop)]
+-            for k in (col + 1)..M {
+-                j[row][k] -= factor * j[col][k];
++            let factor = row_values[col] / diagonal;
++            row_values[col] = 0.0;
++            for (value, pivot_value) in row_values[(col + 1)..]
++                .iter_mut()
++                .zip(&pivot_row[(col + 1)..])
++            {
++                *value -= factor * pivot_value;
+             }
+             rhs[row] -= factor * rhs[col];
+         }

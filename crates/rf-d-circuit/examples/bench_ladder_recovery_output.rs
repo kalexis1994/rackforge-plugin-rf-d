@@ -1,4 +1,4 @@
-//! Conditional ladder to J7 deadline probe, with C10 open.
+//! Conditional ladder to J7 deadline, waveform and long stress probes.
 //! `cargo run --release -p rf-d-circuit --example bench_ladder_recovery_output`.
 
 use std::hint::black_box;
@@ -149,6 +149,10 @@ fn main() {
         r61_ohm: ladder.r61_ohm,
         r30_ohm: ladder.r30_ohm,
     };
+    if std::env::args().any(|arg| arg == "--stress") {
+        stress_global(dynamic, conversion, headphone);
+        return;
+    }
     if std::env::args().any(|arg| arg == "--compare") {
         compare_waveforms(dynamic, conversion, headphone, closed);
         return;
@@ -332,6 +336,153 @@ fn main() {
         fallbacks, failures,
     );
     assert_eq!(failures, 0);
+}
+
+// Synthetic electrical boundaries, expressed in V/ohm/s. This exercises the
+// solver and capacitor history; it does not synthesize or identify a Model D.
+fn stress_boundary(sample: usize, rate: f64) -> cutoff_ladder_output::Boundary {
+    let t = sample as f64 / rate;
+    let sine = |hz: f64| (2.0 * std::f64::consts::PI * hz * t).sin();
+    let segment = (t / 0.25).floor() as usize;
+    let mut b = controlled_boundary(0, true);
+    b.bus_v = 0.08 * sine(100.0) + 0.015 * sine(1600.0) + 0.005 * sine(4163.0);
+    b.panel.cutoff_fraction_from_neg10 = 0.5 + 0.04 * sine(0.7);
+    b.panel.contour_pin16_v = 0.04 * sine(2.0);
+    b.panel.keyboard_1_3_on = segment % 2 == 1;
+    b.panel.keyboard_2_3_on = segment % 3 == 2;
+    b.panel.keyboard_cv_v = Some(0.25 * (1.0 + sine(0.9)));
+    b.panel.keyboard_source_ohm = 1200.0;
+    b.panel.filter_mod_on = segment % 2 == 1;
+    b.panel.modulation_source_v = Some(0.15 * sine(7.0));
+    b.panel.modulation_source_ohm = 2000.0;
+    b.panel.external_control_v = if segment % 3 == 2 {
+        Some(0.1 * sine(0.5))
+    } else {
+        None
+    };
+    b.panel.external_source_ohm = 10000.0;
+    b.range_fraction_from_ground = 0.1 + 0.02 * sine(0.3);
+    b.r14_ohm = match segment % 4 {
+        0 => Some(0.0),
+        1 => Some(25000.0),
+        2 => Some(50000.0),
+        _ => None,
+    };
+    b.recovery.vca.loudness_v = 1.0 + sine(0.8);
+    b.recovery.vca.second.q21_base_v = 1.0 + sine(0.6);
+    let o = &mut b.recovery.vca.second.output.output;
+    o.dt_s = 1.0 / rate;
+    o.r21_lower_ohm = 2000.0 + 1500.0 * sine(0.4);
+    o.sw18_on = segment % 3 != 1;
+    o.tip_load_ohm = if segment % 2 == 0 { Some(32.0) } else { None };
+    o.ring_load_ohm = if segment % 3 == 0 { Some(32.0) } else { None };
+    b
+}
+
+fn stress_global(
+    p: cutoff_ladder_output::Parameters,
+    c: ConversionParameters,
+    h: HeadphoneParameters,
+) {
+    use rf_d_circuit::circuit66;
+    use serde_json::json;
+    let mut records = Vec::new();
+    let mut passed = true;
+    for rate in [44100.0, 48000.0, 96000.0] {
+        for r61 in [200.0, 200000.0] {
+            let p = cutoff_ladder_output::Parameters { r61_ohm: r61, ..p };
+            let b = stress_boundary(0, rate);
+            let count = ((2.0 * rate) as usize / BLOCK) * BLOCK;
+            let mut record =
+                json!({"sample_rate_hz":rate, "r61_ohm":r61, "requested_samples":count});
+            let initial = circuit66::initial_state(p, c, h, b, SEED);
+            let mut state = match initial {
+                Ok(s) => s,
+                Err(e) => {
+                    record["failure"] = json!({"phase":"dc", "error":format!("{e:?}")});
+                    records.push(record);
+                    passed = false;
+                    continue;
+                }
+            };
+            let mut iterations = [0usize; 17];
+            let mut max_kcl = 0.0_f64;
+            let mut max_audited_kcl = 0.0_f64;
+            let mut audits = 0usize;
+            let mut max_j7 = 0.0_f64;
+            let mut min_tail = f64::INFINITY;
+            let mut max_tail = f64::NEG_INFINITY;
+            let mut max_evals = 0usize;
+            let mut fallback_count = 0usize;
+            let mut accepted = 0usize;
+            let mut c10_hold_checks = 0usize;
+            let mut failure = None;
+            for sample in 0..count {
+                let b = stress_boundary(sample, rate);
+                let previous = state;
+                match circuit66::step(&mut state, p, c, h, b, SolverBudget::default()) {
+                    Ok(result) => {
+                        accepted += 1;
+                        iterations[result.output.iterations] += 1;
+                        max_evals = max_evals.max(result.residual_evaluations);
+                        fallback_count += usize::from(result.output.predictor_fallback);
+                        max_kcl = max_kcl.max(result.output.max_ladder_kcl_residual_a);
+                        max_j7 = max_j7.max(result.output.j7_v.abs());
+                        min_tail = min_tail.min(result.output.tail_current_a);
+                        max_tail = max_tail.max(result.output.tail_current_a);
+                        if b.r14_ohm.is_none() {
+                            assert_eq!(
+                                state.c10_capacitor_v.to_bits(),
+                                previous.c10_capacitor_v.to_bits()
+                            );
+                            c10_hold_checks += 1;
+                        }
+                        // Audit KCL independently of the value reported by the
+                        // solver, always with the PREVIOUS capacitor history.
+                        if sample % BLOCK == 0 {
+                            let (r, _) = circuit66::linearize(&previous, p, c, h, b, &state.node_v)
+                                .expect("accepted state audit");
+                            max_audited_kcl =
+                                max_audited_kcl.max(r.iter().fold(0.0_f64, |a, v| a.max(v.abs())));
+                            audits += 1;
+                        }
+                    }
+                    Err(e) => {
+                        assert_eq!(state, previous, "failed step consumed history");
+                        failure = Some(
+                            json!({"phase":"transient", "sample":sample, "time_s":sample as f64/rate, "error":format!("{e:?}"), "state_preserved":true}),
+                        );
+                        passed = false;
+                        break;
+                    }
+                }
+            }
+            assert!(max_kcl < 1e-11 && max_audited_kcl < 1e-11);
+            record["accepted_samples"] = json!(accepted);
+            record["failure"] = json!(failure);
+            record["iterations_histogram"] = json!(iterations);
+            record["fallback_count"] = json!(fallback_count);
+            record["max_residual_evaluations"] = json!(max_evals);
+            record["max_kcl_a"] = json!(max_kcl);
+            record["audited_kcl_max_a"] = json!(max_audited_kcl);
+            record["kcl_audits"] = json!(audits);
+            record["c10_open_history_checks"] = json!(c10_hold_checks);
+            record["j7_peak_abs_v"] = json!(max_j7);
+            record["tail_current_min_a"] = json!(min_tail);
+            record["tail_current_max_a"] = json!(max_tail);
+            record["final_node_v"] = json!(state.node_v.to_vec());
+            records.push(record);
+        }
+    }
+    println!("{}", serde_json::to_string_pretty(&json!({
+        "schema":"rf-d/circuit66-long-stress/v1", "duration_requested_s":2.0,
+        "passed":passed, "audio_fidelity_claim":false,
+        "scene":"multitone BUS, slow controls, quarter-second switch/load changes; see stress_boundary",
+        "runs":records,
+    })).unwrap());
+    if !passed {
+        std::process::exit(1);
+    }
 }
 
 fn compare_waveforms(
