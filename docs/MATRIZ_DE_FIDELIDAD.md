@@ -14,6 +14,8 @@ Los estados `desconocido`, `hipótesis`, `modelado`, `contrastado` y `cerrado pa
 
 ## Afirmación pública actual
 
+El [barrido de extremos global](EXTREMOS_CONTROLES_GLOBAL_66.md) no pasa: seis casos soportados fallan, en cutoff máximo DC y Q21 a cero. R20/R21 exactos quedan fuera del dominio actual. Los 14336 pasos aceptados y rechazos atómicos delimitan el alcance sin cerrar esos extremos.
+
 El [banco de stack Win64](STACK_GLOBAL_66_WIN64.md) pasa 98304 muestras en workers de 2 MiB/1 MiB/512 KiB. Observa 288 KiB comprometidos, incluidas guardas. Valida inicialización, reintento y rechazo atómico para la escena; no mide el pico exacto ni admite el host.
 
 El [refinamiento global 48/96/192 kHz](REFINAMIENTO_TEMPORAL_GLOBAL_66.md) pasa 26880 pasos con descenso máximo/RMS de J7, C2 y R21. El cociente cercano a dos es consistente con Euler de primer orden en las escenas suaves. No fija error absoluto contra tiempo continuo ni admite oversampling del plugin.

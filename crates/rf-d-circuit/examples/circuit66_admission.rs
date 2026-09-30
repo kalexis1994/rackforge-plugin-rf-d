@@ -13,6 +13,8 @@ mod windows_stack;
 fn main() {
     let result = if std::env::args().any(|v| v == "--stack") {
         stack_grid()
+    } else if std::env::args().any(|v| v == "--controls") {
+        control_grid()
     } else {
         temporal_grid()
     };
@@ -28,6 +30,190 @@ fn main() {
             std::process::exit(1);
         }
     }
+}
+
+fn control_grid() -> Result<Value, String> {
+    use cutoff_ladder_output::{Boundary as B, Parameters as P};
+    type Change = fn(&mut P, &mut B);
+    let changes: Vec<(&str, Change)> = vec![
+        ("baseline", |_, _| {}),
+        ("cutoff_min", |_, b| {
+            b.panel.cutoff_fraction_from_neg10 = 0.0
+        }),
+        ("cutoff_max", |_, b| {
+            b.panel.cutoff_fraction_from_neg10 = 1.0
+        }),
+        ("range_min", |_, b| b.range_fraction_from_ground = 0.0),
+        ("range_max", |_, b| b.range_fraction_from_ground = 1.0),
+        ("scale_min", |_, b| b.panel.scale_active_ohm = 0.0),
+        ("scale_max", |_, b| b.panel.scale_active_ohm = 500.0),
+        ("r30_min", |p, _| p.r30_ohm = 330.0),
+        ("r30_max", |p, _| p.r30_ohm = 1330.0),
+        ("first_balance_min", |_, b| {
+            b.recovery.vca.first_balance_left_ohm = 0.0
+        }),
+        ("first_balance_max", |_, b| {
+            b.recovery.vca.first_balance_left_ohm = 25.0
+        }),
+        ("second_balance_min", |_, b| {
+            b.recovery.vca.second.second_balance_left_ohm = 0.0
+        }),
+        ("second_balance_max", |_, b| {
+            b.recovery.vca.second.second_balance_left_ohm = 100.0
+        }),
+        ("r14_min", |_, b| b.r14_ohm = Some(0.0)),
+        ("r14_max", |_, b| b.r14_ohm = Some(50000.0)),
+        ("r14_disconnected", |_, b| b.r14_ohm = None),
+        ("r20_min_unsupported", |_, b| {
+            b.recovery.vca.second.output.output.r20_lower_ohm = 0.0
+        }),
+        ("r20_max_unsupported", |_, b| {
+            b.recovery.vca.second.output.output.r20_lower_ohm = 5000.0
+        }),
+        ("r21_near_min", |_, b| {
+            b.recovery.vca.second.output.output.r21_lower_ohm = 0.001
+        }),
+        ("r21_near_max", |_, b| {
+            b.recovery.vca.second.output.output.r21_lower_ohm = 4999.999
+        }),
+        ("r21_min_unsupported", |_, b| {
+            b.recovery.vca.second.output.output.r21_lower_ohm = 0.0
+        }),
+        ("r21_max_unsupported", |_, b| {
+            b.recovery.vca.second.output.output.r21_lower_ohm = 5000.0
+        }),
+        ("first_loudness_zero", |_, b| {
+            b.recovery.vca.loudness_v = 0.0
+        }),
+        ("second_loudness_zero", |_, b| {
+            b.recovery.vca.second.q21_base_v = 0.0
+        }),
+        ("both_loudness_zero", |_, b| {
+            b.recovery.vca.loudness_v = 0.0;
+            b.recovery.vca.second.q21_base_v = 0.0;
+        }),
+        ("sw18_off", |_, b| {
+            b.recovery.vca.second.output.output.sw18_on = false
+        }),
+        ("j7_loads_open", |_, b| {
+            let o = &mut b.recovery.vca.second.output.output;
+            o.tip_load_ohm = None;
+            o.ring_load_ohm = None;
+        }),
+        ("external_negative", |_, b| {
+            b.panel.external_control_v = Some(-0.2);
+            b.panel.external_source_ohm = 10000.0;
+        }),
+        ("external_positive", |_, b| {
+            b.panel.external_control_v = Some(0.2);
+            b.panel.external_source_ohm = 10000.0;
+        }),
+        ("mod_negative", |_, b| {
+            b.panel.filter_mod_on = true;
+            b.panel.modulation_source_v = Some(-0.2);
+            b.panel.modulation_source_ohm = 2000.0;
+        }),
+        ("mod_positive", |_, b| {
+            b.panel.filter_mod_on = true;
+            b.panel.modulation_source_v = Some(0.2);
+            b.panel.modulation_source_ohm = 2000.0;
+        }),
+        ("keyboard_both_one_volt", |_, b| {
+            b.panel.keyboard_1_3_on = true;
+            b.panel.keyboard_2_3_on = true;
+            b.panel.keyboard_cv_v = Some(1.0);
+            b.panel.keyboard_source_ohm = 1200.0;
+        }),
+        ("contour_negative_probe", |_, b| {
+            b.panel.contour_pin16_v = -0.2
+        }),
+        ("contour_positive_probe", |_, b| {
+            b.panel.contour_pin16_v = 0.2
+        }),
+    ];
+    let (base, c, h) = lab::lab_parameters();
+    let mut cases = Vec::new();
+    let mut failures = 0;
+    let mut total = 0;
+    for r61 in [200.0, 200000.0] {
+        let base = P {
+            r61_ohm: r61,
+            ..base
+        };
+        let centre = lab::controlled_boundary(0, true);
+        let initial = circuit66::initial_state(base, c, h, centre, lab::SEED)
+            .map_err(|e| format!("Centre DC: {e:?}"))?;
+        for (name, change) in &changes {
+            let mut p = base;
+            let mut target = centre;
+            change(&mut p, &mut target);
+            let unsupported = name.ends_with("unsupported");
+            let dc = circuit66::initial_state(p, c, h, target, lab::SEED);
+            let dc_error = dc.as_ref().err().map(|e| format!("{e:?}"));
+            let mut state = initial;
+            if unsupported {
+                let old = state;
+                let error = circuit66::step(&mut state, p, c, h, target, SolverBudget::default())
+                    .unwrap_err();
+                assert_eq!(error, rf_d_circuit::StepError::InvalidInput);
+                assert_eq!(state, old);
+                assert_eq!(dc_error.as_deref(), Some("InvalidInput"));
+                cases.push(json!({"name":name,"r61_ohm":r61,"expected_domain_rejection":true,"state_preserved":true}));
+                continue;
+            }
+            let mut accepted = 0;
+            let mut failure = None;
+            let mut max_kcl = 0.0_f64;
+            let mut max_j7 = 0.0_f64;
+            let mut max_iterations = 0;
+            let mut fallbacks = 0;
+            for n in 0..256 {
+                let restoring = n >= 128;
+                let mut b = if restoring { centre } else { target };
+                let parameters = if restoring { base } else { p };
+                b.bus_v =
+                    0.02 * (2.0 * std::f64::consts::PI * 100.0 * (n + 1) as f64 / 48000.0).sin();
+                let old = state;
+                match circuit66::step(&mut state, parameters, c, h, b, SolverBudget::default()) {
+                    Ok(result) => {
+                        accepted += 1;
+                        max_kcl = max_kcl.max(result.output.max_ladder_kcl_residual_a);
+                        max_j7 = max_j7.max(result.output.j7_v.abs());
+                        max_iterations = max_iterations.max(result.output.iterations);
+                        fallbacks += usize::from(result.output.predictor_fallback);
+                        assert!(state
+                            .node_v
+                            .iter()
+                            .chain(state.capacitor_v.iter())
+                            .all(|v| v.is_finite()));
+                    }
+                    Err(e) => {
+                        assert_eq!(state, old);
+                        failure = Some(
+                            json!({"sample":n,"restoring":restoring,"error":format!("{e:?}"),"state_preserved":true}),
+                        );
+                        break;
+                    }
+                }
+            }
+            assert!(max_kcl < 1e-11);
+            total += accepted;
+            if dc_error.is_some() || failure.is_some() {
+                failures += 1;
+            }
+            cases.push(json!({"name":name,"r61_ohm":r61,"expected_domain_rejection":false,
+                "dc_error":dc_error,"transient_error":failure,"accepted_samples":accepted,
+                "max_kcl_a":max_kcl,"j7_peak_abs_v":max_j7,"max_iterations":max_iterations,"fallbacks":fallbacks,
+                "final_node_v":state.node_v.to_vec()}));
+        }
+    }
+    Ok(
+        json!({"schema":"rf-d/circuit66-control-survey/v1","passed":failures==0,"survey_completed":true,
+        "sample_rate_hz":48000,"requested_samples_per_supported_case":256,"accepted_samples":total,
+        "supported_case_failures":failures,"expected_endpoint_rejections":8,
+        "scope":"one control/trim/source at a time; abrupt centre-target-centre, nominal imposed devices",
+        "audio_fidelity_claim":false,"cases":cases}),
+    )
 }
 
 #[cfg(not(all(target_os = "windows", target_arch = "x86_64")))]

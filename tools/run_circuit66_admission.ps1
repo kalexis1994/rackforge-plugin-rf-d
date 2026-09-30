@@ -1,5 +1,5 @@
 param(
-    [ValidateSet('temporal','stack')][string]$Mode = 'temporal',
+    [ValidateSet('temporal','stack','controls')][string]$Mode = 'temporal',
     [Parameter(Mandatory)][string]$Output,
     [int]$StackKib = 2048
 )
