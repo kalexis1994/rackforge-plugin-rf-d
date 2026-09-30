@@ -584,19 +584,51 @@ fn solve(
             }
         };
         let error = max_abs(&r);
-        if error < 1e-11 {
+        let dc_requires_correction = old.is_none();
+        if error < 1e-11 && !dc_requires_correction {
             let control = std::array::from_fn::<_, 4, _>(|i| r[62 + i]);
             return Ok((x, iteration, error, i10, max_abs(&control)));
         }
         let ordered_direction = solve_linear_sparse(j, std::array::from_fn(|i| -r[ORDER[i]]))?;
         let direction: [f64; N] = std::array::from_fn(|i| ordered_direction[POSITION[i]]);
+        // At weak DC operating points, 10 pA alone can leave tens of uV in
+        // high-impedance nodes. Require a small *full* Newton correction too.
+        // No such extra factorization is added to the transient path.
+        if dc_requires_correction && error < 1e-11 && max_abs(&direction) < 1e-8 {
+            let control = std::array::from_fn::<_, 4, _>(|i| r[62 + i]);
+            return Ok((x, iteration, error, i10, max_abs(&control)));
+        }
         let mut accepted = None;
         for power in 0..budget.line_search_halvings {
             let f = 0.5_f64.powi(power as i32);
             let candidate = std::array::from_fn(|i| x[i] + f * direction[i]);
             *evaluations += 1;
             if let Ok(next) = evaluate(&candidate, p, conversion, headphone, b, prepared, old) {
-                if max_abs(&next.0) < error {
+                let next_error = max_abs(&next.0);
+                let next_dc_direction = if dc_requires_correction {
+                    // A trial with unusable J is rejected inside the bounded
+                    // line search, rather than becoming the next DC iterate.
+                    match solve_linear_sparse(next.1, std::array::from_fn(|i| -next.0[ORDER[i]])) {
+                        Ok(d) => Some(d),
+                        Err(_) => continue,
+                    }
+                } else {
+                    None
+                };
+                let decreases = if dc_requires_correction && error < 1e-11 {
+                    // Once KCL is admitted, reduce the voltage correction
+                    // merit. Strong rows can be at their rounding floor while
+                    // weak DC nodes still need motion. Every candidate must
+                    // keep the same KCL gate, never a relaxed current bound.
+                    if next_error < 1e-11 {
+                        next_dc_direction.is_some_and(|d| max_abs(&d) < max_abs(&direction))
+                    } else {
+                        false
+                    }
+                } else {
+                    next_error < error
+                };
+                if decreases {
                     accepted = Some((candidate, next));
                     break;
                 }
@@ -750,7 +782,7 @@ pub fn initial_state(
     ladder_seed: [f64; 16],
 ) -> Result<State, StepError> {
     let budget = SolverBudget::default();
-    let prepared = prepare(p, conversion, headphone, b, budget)?;
+    prepare(p, conversion, headphone, b, budget)?;
     let nested = cutoff_ladder_output::initial_state(p, conversion, headphone, b, ladder_seed)?;
     let mut x = [0.0; N];
     x[..16].copy_from_slice(&nested.chain.node_v);
@@ -764,9 +796,28 @@ pub fn initial_state(
     x[49] = c.output.panel.r21_wiper_v;
     x[50..62].copy_from_slice(&c.output.panel.amp.node_v);
     x[62..].copy_from_slice(&nested.cutoff.node_v);
+    initial_state_from_nodes(p, conversion, headphone, b, x)
+}
+
+/// Close DC directly from a full numerical seed, without a nested solve.
+/// Capacitors are open; every charge is rebuilt from the converged terminals.
+/// This starts a new DC state, not a continuation of capacitor history. The
+/// seed is not an audible parameter, and no partial state is published.
+pub fn initial_state_from_nodes(
+    p: Parameters,
+    conversion: ConversionParameters,
+    headphone: HeadphoneParameters,
+    b: Boundary,
+    seed: [f64; N],
+) -> Result<State, StepError> {
+    let budget = SolverBudget::default();
+    let prepared = prepare(p, conversion, headphone, b, budget)?;
+    if seed.iter().any(|v| !v.is_finite()) {
+        return Err(StepError::InvalidInput);
+    }
     let mut evaluations = 0;
     let solved = solve(
-        x,
+        seed,
         p,
         conversion,
         headphone,
@@ -782,6 +833,23 @@ pub fn initial_state(
         capacitor_v: charges(&solved.0, b),
         c10_capacitor_v: solved.0[22] - solved.0[7],
     })
+}
+
+/// Offline DC residual/Jacobian diagnostic, with all capacitors open.
+/// The returned rows/columns use documentary node order, as in `linearize`.
+pub fn linearize_dc(
+    p: Parameters,
+    conversion: ConversionParameters,
+    headphone: HeadphoneParameters,
+    b: Boundary,
+    candidate: &[f64; N],
+) -> Result<([f64; N], [[f64; N]; N]), StepError> {
+    let prepared = prepare(p, conversion, headphone, b, SolverBudget::default())?;
+    if candidate.iter().any(|v| !v.is_finite()) {
+        return Err(StepError::InvalidInput);
+    }
+    let (r, j, _) = evaluate(candidate, p, conversion, headphone, b, prepared, None)?;
+    Ok((r, natural_jacobian(&j)))
 }
 
 /// Experimental global Newton step. Fixed capacitor histories, bounded

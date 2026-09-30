@@ -14,6 +14,105 @@ fn n(v: &Value) -> f64 {
 }
 
 #[test]
+fn full_dc_seeds_match_independent_dc_and_rebuild_capacitor_histories() {
+    use rf_d_circuit::circuit66 as global;
+    let fixture: Value =
+        serde_json::from_str(include_str!("../../../evidence/circuit66_dc_vectors.json")).unwrap();
+    let (bjt, conversion, headphone, rb) = setup();
+    let mut max_node = 0.0_f64;
+    let mut count = 0;
+    for case in fixture["cases"].as_array().unwrap() {
+        let p = Parameters {
+            ladder_transistor: bjt,
+            cutoff: cutoff::Parameters { q26: bjt, q28: bjt },
+            r61_ohm: n(&case["r61_ohm"]),
+            r30_ohm: 830.0,
+        };
+        let b = Boundary {
+            bus_v: 0.125,
+            recovery: rb,
+            panel: panel(&case["controls"]["panel"]),
+            range_fraction_from_ground: n(&case["controls"]["range_fraction"]),
+            r14_ohm: None,
+        };
+        for perturb in [0.0] {
+            let seed = std::array::from_fn(|i| n(&case["numerical_seed_v"][i]) + perturb);
+            let state = global::initial_state_from_nodes(p, conversion, headphone, b, seed)
+                .unwrap_or_else(|e| {
+                    panic!(
+                        "{} R61 {} perturb {perturb}: {e:?}",
+                        case["name"], p.r61_ohm
+                    )
+                });
+            for i in 0..66 {
+                let error = (state.node_v[i] - n(&case["node_v"][i])).abs();
+                max_node = max_node.max(error);
+                assert!(
+                    error < 1e-6,
+                    "{} R61 {} perturb {perturb} node {i}: {error}",
+                    case["name"],
+                    p.r61_ohm
+                );
+            }
+            let x = state.node_v;
+            let expected = [
+                x[8] - x[12],
+                x[9] - x[13],
+                x[10] - x[14],
+                x[11] - x[15],
+                x[4],
+                x[6] - b.bus_v,
+                x[16] - x[11],
+                x[17] - x[15],
+                x[23],
+                x[24] - x[25],
+                x[26],
+                x[40] - 10.0,
+                x[46] - x[47],
+                x[49] - x[50],
+                x[57] - x[58],
+                x[60] - x[61],
+                x[62],
+            ];
+            assert_eq!(state.capacitor_v, expected);
+            assert_eq!(state.c10_capacitor_v, x[22] - x[7]);
+            assert_eq!(state.previous_node_v, state.node_v);
+            let (r, j) = global::linearize_dc(p, conversion, headphone, b, &x).unwrap();
+            assert!(r.iter().all(|v| v.abs() < 1e-11));
+            assert!(((x[5] - x[65]) / 680.0 - n(&case["tail_current_a"])).abs() < 1e-9);
+            // All 66 DC columns at cutoff maximum, separately from transient J.
+            if case["name"] == "cutoff_max" && perturb == 0.0 {
+                for column in 0..66 {
+                    let mut high = x;
+                    let mut low = x;
+                    high[column] += 1e-7;
+                    low[column] -= 1e-7;
+                    let (rh, _) = global::linearize_dc(p, conversion, headphone, b, &high).unwrap();
+                    let (rl, _) = global::linearize_dc(p, conversion, headphone, b, &low).unwrap();
+                    for row in 0..66 {
+                        let fd = (rh[row] - rl[row]) / 2e-7;
+                        assert!(
+                            (fd - j[row][column]).abs() < 1e-8 + 3e-6 * fd.abs(),
+                            "DC J {row}/{column}"
+                        );
+                    }
+                }
+            }
+            let mut invalid = seed;
+            invalid[0] = f64::NAN;
+            assert_eq!(
+                global::initial_state_from_nodes(p, conversion, headphone, b, invalid).unwrap_err(),
+                StepError::InvalidInput
+            );
+            assert!(global::linearize_dc(p, conversion, headphone, b, &invalid).is_err());
+            count += 1;
+        }
+    }
+    assert_eq!(count, 14);
+    println!("full DC FD: points={count} max_node_error_v={max_node:.9e}");
+}
+
+#[test]
 fn r20_exact_shorts_and_sw18_match_independent_full_circuit() {
     use rf_d_circuit::circuit66 as global;
     let fixture: Value =

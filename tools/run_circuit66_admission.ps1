@@ -1,5 +1,5 @@
 param(
-    [ValidateSet('temporal','stack','controls')][string]$Mode = 'temporal',
+    [ValidateSet('temporal','stack','controls','dc-seeds')][string]$Mode = 'temporal',
     [Parameter(Mandatory)][string]$Output,
     [int]$StackKib = 2048
 )
@@ -21,6 +21,8 @@ $taskReport | Add-Member -NotePropertyName metadata -NotePropertyValue ([ordered
     executable_sha256 = (Get-FileHash -LiteralPath $taskBench -Algorithm SHA256).Hash
     admission_source_sha256 = (Get-FileHash -LiteralPath (Join-Path $taskRepo 'crates/rf-d-circuit/examples/circuit66_admission.rs') -Algorithm SHA256).Hash
     lab_source_sha256 = (Get-FileHash -LiteralPath (Join-Path $taskRepo 'crates/rf-d-circuit/examples/bench_ladder_recovery_output.rs') -Algorithm SHA256).Hash
+    circuit_source_sha256 = (Get-FileHash -LiteralPath (Join-Path $taskRepo 'crates/rf-d-circuit/src/circuit66.rs') -Algorithm SHA256).Hash
+    output_source_sha256 = (Get-FileHash -LiteralPath (Join-Path $taskRepo 'crates/rf-d-circuit/src/output.rs') -Algorithm SHA256).Hash
     audio_deadline_claim = $false
 })
 if ($Mode -eq 'stack') {

@@ -15,6 +15,8 @@ fn main() {
         stack_grid()
     } else if std::env::args().any(|v| v == "--controls") {
         control_grid()
+    } else if std::env::args().any(|v| v == "--dc-seeds") {
+        dc_seed_grid()
     } else {
         temporal_grid()
     };
@@ -30,6 +32,73 @@ fn main() {
             std::process::exit(1);
         }
     }
+}
+
+fn dc_seed_grid() -> Result<Value, String> {
+    let fixture: Value =
+        serde_json::from_str(include_str!("../../../evidence/circuit66_dc_vectors.json"))
+            .map_err(|e| e.to_string())?;
+    let (base, c, h) = lab::lab_parameters();
+    let mut rows = Vec::new();
+    let mut reference_seed_failures = 0;
+    let mut perturbed_seed_failures = 0;
+    let mut max_node_error = 0.0_f64;
+    for case in fixture["cases"].as_array().unwrap() {
+        let p = cutoff_ladder_output::Parameters {
+            r61_ohm: case["r61_ohm"].as_f64().unwrap(),
+            ..base
+        };
+        let mut b = lab::controlled_boundary(0, true);
+        b.panel.cutoff_fraction_from_neg10 = case["controls"]["panel"]
+            ["cutoff_fraction_from_neg10"]
+            .as_f64()
+            .unwrap();
+        b.panel.scale_active_ohm = case["controls"]["panel"]["scale_active_ohm"]
+            .as_f64()
+            .unwrap();
+        b.range_fraction_from_ground = case["controls"]["range_fraction"].as_f64().unwrap();
+        for perturb in [0.0, 0.001, -0.001] {
+            let seed =
+                std::array::from_fn(|i| case["numerical_seed_v"][i].as_f64().unwrap() + perturb);
+            match circuit66::initial_state_from_nodes(p, c, h, b, seed) {
+                Ok(state) => {
+                    let error = (0..66)
+                        .map(|i| (state.node_v[i] - case["node_v"][i].as_f64().unwrap()).abs())
+                        .fold(0.0_f64, f64::max);
+                    let (r, _) = circuit66::linearize_dc(p, c, h, b, &state.node_v)
+                        .map_err(|e| format!("{e:?}"))?;
+                    let kcl = r.into_iter().map(f64::abs).fold(0.0_f64, f64::max);
+                    max_node_error = max_node_error.max(error);
+                    if error >= 1e-6 || kcl >= 1e-11 {
+                        return Err(format!(
+                            "DC {} perturb {perturb}: error={error} KCL={kcl}",
+                            case["name"]
+                        ));
+                    }
+                    rows.push(
+                        json!({"name":case["name"],"r61_ohm":p.r61_ohm,"seed_shift_v":perturb,
+                        "error":null,"max_node_error_v":error,"max_kcl_a":kcl}),
+                    );
+                }
+                Err(e) => {
+                    if perturb == 0.0 {
+                        reference_seed_failures += 1;
+                    } else {
+                        perturbed_seed_failures += 1;
+                    }
+                    rows.push(
+                        json!({"name":case["name"],"r61_ohm":p.r61_ohm,"seed_shift_v":perturb,
+                        "error":format!("{e:?}")}),
+                    );
+                }
+            }
+        }
+    }
+    Ok(json!({"schema":"rf-d/circuit66-dc-seed-survey/v1",
+        "passed":reference_seed_failures==0,"reference_seed_points":14,
+        "reference_seed_failures":reference_seed_failures,"perturbed_seed_failures":perturbed_seed_failures,
+        "max_node_error_v":max_node_error,"gate_scope":"14 declared reference seeds; shifted seeds exploratory, errors retained",
+        "rows":rows,"audio_fidelity_claim":false}))
 }
 
 fn control_grid() -> Result<Value, String> {
@@ -144,6 +213,7 @@ fn control_grid() -> Result<Value, String> {
     let (base, c, h) = lab::lab_parameters();
     let mut cases = Vec::new();
     let mut failures = 0;
+    let mut warm_failures = 0;
     let mut total = 0;
     for r61 in [200.0, 200000.0] {
         let base = P {
@@ -160,6 +230,11 @@ fn control_grid() -> Result<Value, String> {
             let unsupported = name.ends_with("unsupported");
             let dc = circuit66::initial_state(p, c, h, target, lab::SEED);
             let dc_error = dc.as_ref().err().map(|e| format!("{e:?}"));
+            let warm_dc = circuit66::initial_state_from_nodes(p, c, h, target, initial.node_v);
+            let warm_dc_error = warm_dc.as_ref().err().map(|e| format!("{e:?}"));
+            if !unsupported && warm_dc_error.is_some() {
+                warm_failures += 1;
+            }
             let mut state = initial;
             if unsupported {
                 let old = state;
@@ -168,6 +243,7 @@ fn control_grid() -> Result<Value, String> {
                 assert_eq!(error, rf_d_circuit::StepError::InvalidInput);
                 assert_eq!(state, old);
                 assert_eq!(dc_error.as_deref(), Some("InvalidInput"));
+                assert_eq!(warm_dc_error.as_deref(), Some("InvalidInput"));
                 cases.push(json!({"name":name,"r61_ohm":r61,"expected_domain_rejection":true,"state_preserved":true}));
                 continue;
             }
@@ -212,7 +288,9 @@ fn control_grid() -> Result<Value, String> {
                 failures += 1;
             }
             cases.push(json!({"name":name,"r61_ohm":r61,"expected_domain_rejection":false,
-                "dc_error":dc_error,"transient_error":failure,"accepted_samples":accepted,
+                "dc_error":dc_error,"warm_dc_error":warm_dc_error,
+                "warm_dc_node_v":warm_dc.ok().map(|s|s.node_v.to_vec()),
+                "transient_error":failure,"accepted_samples":accepted,
                 "max_kcl_a":max_kcl,"j7_peak_abs_v":max_j7,"max_iterations":max_iterations,"fallbacks":fallbacks,
                 "final_node_v":state.node_v.to_vec()}));
         }
@@ -220,7 +298,7 @@ fn control_grid() -> Result<Value, String> {
     Ok(
         json!({"schema":"rf-d/circuit66-control-survey/v1","passed":failures==0,"survey_completed":true,
         "sample_rate_hz":48000,"requested_samples_per_supported_case":256,"accepted_samples":total,
-        "supported_case_failures":failures,"expected_endpoint_rejections":4,
+        "supported_case_failures":failures,"warm_dc_failures":warm_failures,"expected_endpoint_rejections":4,
         "scope":"one control/trim/source at a time; abrupt centre-target-centre, nominal imposed devices",
         "audio_fidelity_claim":false,"cases":cases}),
     )

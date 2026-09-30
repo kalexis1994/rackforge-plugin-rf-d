@@ -38,7 +38,7 @@ La ruta global Q26/Q28→ladder→VCAs→J7 tiene Jacobiano analítico, optimiza
 
 ## Fase E — Uso en vivo
 
-El [barrido global de extremos](EXTREMOS_CONTROLES_GLOBAL_66.md) encontró dependencias de semilla DC con cutoff máximo, fallo al llevar Q21 a cero y extremos R20/R21 aún rechazados. Corregirlos con reducción eléctrica y semillas contrastadas antes de ampliar la admisión; conservar los informes fallidos.
+El [barrido global de extremos](EXTREMOS_CONTROLES_GLOBAL_66.md) encontró dependencias de semilla DC con cutoff máximo, fallo al llevar Q21 a cero y extremos R20/R21 rechazados. [R20 exacto](R20_EXTREMOS_EXACTOS.md) ya pasa; la [semilla DC completa](DC_GLOBAL_SEMILLA_COMPLETA.md) resuelve cutoff máximo y añade un criterio de voltaje para nodos débiles. Próximos cortes: apagado de Q21, R21 exacto, dependencia de semillas y recursos del host; conservar los informes fallidos.
 
 Probar Note On/Off, retrigger, legato, glide, ruedas, cambios de preset y recuperación de estado. Mantener la voz mono y describir las comodidades de RackForge como extensiones. Validar transiciones sin discontinuidades accidentales ni asignaciones en el hilo de audio.
 

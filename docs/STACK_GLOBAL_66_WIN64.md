@@ -16,6 +16,8 @@ En la muestra 4096 se corrompe intencionalmente una componente del predictor par
 
 ## Resultado local
 
+Los resultados de la tabla son de la compilación anterior al [criterio de corrección DC](DC_GLOBAL_SEMILLA_COMPLETA.md). La nueva corrida `evidence/circuit66_stack_full_dc_512.json` pasa los cuatro workers/32768 muestras a 512 KiB, pero observa 324 KiB comprometidos (300 normales +24 guardas), tanto con DC dentro como fuera; quedan 188 KiB sin commit. El pico exacto sigue sin medirse.
+
 Windows x86_64, Ryzen 5 5600X, Rust 1.97.0, release. Cada reserva pasa los cuatro workers: 32768 muestras por reserva, 98304 en total; un reintento forzado por worker, dos rechazos atómicos por worker, KCL <10 pA y diferencia final entre caminos de inicialización exactamente cero.
 
 | Reserva observada | Commit antes | Commit después DC/procesamiento | Guardas incluidas | Reserva sin commit restante |

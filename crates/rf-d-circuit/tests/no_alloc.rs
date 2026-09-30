@@ -542,6 +542,14 @@ fn dc_initialization_and_audio_steps_do_not_allocate() {
         ladder_seed,
     )
     .expect("global cutoff ladder and output DC state");
+    global = rf_d_circuit::circuit66::initial_state_from_nodes(
+        dynamic_parameters,
+        conversion,
+        p,
+        dynamic_boundary,
+        global.node_v,
+    )
+    .expect("full global DC seed");
     for i in 0..64 {
         let mut b = dynamic_boundary;
         b.bus_v = if i % 20 < 10 { 0.001 } else { -0.001 };
