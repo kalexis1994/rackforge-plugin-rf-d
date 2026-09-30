@@ -1,0 +1,20 @@
+{
+  "schema": "rf-d/native-multi-rhs-ab/v1",
+  "date": "2026-09-30",
+  "baseline_commit": "a96f7d7",
+  "candidate": "single scaled-pivot elimination for all C4 and VCA2 port tangent columns",
+  "host": "Windows, AMD Ryzen 5 5600X 6-Core Processor",
+  "compiler": "rustc 1.97.0 (2d8144b78 2026-07-07)",
+  "build": "cargo build --release -p rf-d-circuit --example bench_vca1_output",
+  "method": "Two separately compiled release executables, run in baseline/candidate/baseline/candidate order on the same host and unchanged 100 Hz stimulus. Each executable warms 48000 samples and measures another 48000 in 64-sample blocks at 48 kHz.",
+  "deadline_us": 1333.3333333333333,
+  "runs": [
+    {"variant": "baseline", "mean_us": 5259.5, "p99_us": 6057.6, "max_us": 6311.0, "mean_second_evaluations_per_sample": 2.0, "max_kcl_a": 2.398e-11, "failures": 0, "final_j7_v": 0.000538374},
+    {"variant": "candidate", "mean_us": 5007.2, "p99_us": 5759.8, "max_us": 6288.3, "mean_second_evaluations_per_sample": 2.0, "max_kcl_a": 2.398e-11, "failures": 0, "final_j7_v": 0.000538374},
+    {"variant": "baseline", "mean_us": 5277.2, "p99_us": 6271.2, "max_us": 7954.5, "mean_second_evaluations_per_sample": 2.0, "max_kcl_a": 2.398e-11, "failures": 0, "final_j7_v": 0.000538374},
+    {"variant": "candidate", "mean_us": 5018.8, "p99_us": 5813.5, "max_us": 6124.8, "mean_second_evaluations_per_sample": 2.0, "max_kcl_a": 2.398e-11, "failures": 0, "final_j7_v": 0.000538374}
+  ],
+  "mean_of_run_means_us": {"baseline": 5268.35, "candidate": 5013.0},
+  "mean_of_run_p99_us": {"baseline": 6164.4, "candidate": 5786.65},
+  "limitations": "Single Windows host and four short runs; p99 is a within-run percentile, not a worst-case deadline guarantee. The full route still misses the 1333.3 us deadline."
+}

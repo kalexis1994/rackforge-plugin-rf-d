@@ -6,7 +6,8 @@ use crate::output::{
     OutputStepResult,
 };
 use crate::output_conversion::{
-    evaluate as evaluate_six, max_abs, solve_dc, solve_linear, validate, Boundary, Parameters, N,
+    evaluate as evaluate_six, max_abs, solve_dc, solve_linear, solve_linear_many, validate,
+    Boundary, Parameters, N,
 };
 use crate::{Parameters as HeadphoneParameters, SolverBudget, StepError};
 
@@ -347,27 +348,21 @@ pub fn solve_input_port(
     let (q12_ib, q12_gf, q12_gr) = pnp_base_terms(x[3], x[5], b.q12_base_v, p);
     let (q17_ib, q17_gf, q17_gr) = pnp_base_terms(x[4], x[6], b.q17_base_v, p);
     let current_a = [(b.second_balance_wiper_v - x[0]) / R11_OHM, q12_ib, q17_ib];
+    let mut rhs = [[0.0; 3]; M];
+    rhs[0][0] = 1.0 / R11_OHM;
+    rhs[3][1] = (1.0 + 1.0 / p.beta_forward) * q12_gf - q12_gr;
+    rhs[5][1] = -q12_gf + (1.0 + 1.0 / p.beta_reverse) * q12_gr;
+    rhs[4][2] = (1.0 + 1.0 / p.beta_forward) * q17_gf - q17_gr;
+    rhs[6][2] = -q17_gf + (1.0 + 1.0 / p.beta_reverse) * q17_gr;
+    let response = solve_linear_many(jacobian, rhs)?;
     let mut conductance_s = [[0.0; 3]; 3];
     for column in 0..3 {
-        let mut rhs = [0.0; M];
-        match column {
-            0 => rhs[0] = 1.0 / R11_OHM,
-            1 => {
-                rhs[3] = (1.0 + 1.0 / p.beta_forward) * q12_gf - q12_gr;
-                rhs[5] = -q12_gf + (1.0 + 1.0 / p.beta_reverse) * q12_gr;
-            }
-            _ => {
-                rhs[4] = (1.0 + 1.0 / p.beta_forward) * q17_gf - q17_gr;
-                rhs[6] = -q17_gf + (1.0 + 1.0 / p.beta_reverse) * q17_gr;
-            }
-        }
-        let response = solve_linear(jacobian, rhs)?;
-        conductance_s[0][column] = (f64::from(column == 0) - response[0]) / R11_OHM;
-        conductance_s[1][column] = q12_gf / p.beta_forward * response[3]
-            + q12_gr / p.beta_reverse * response[5]
+        conductance_s[0][column] = (f64::from(column == 0) - response[0][column]) / R11_OHM;
+        conductance_s[1][column] = q12_gf / p.beta_forward * response[3][column]
+            + q12_gr / p.beta_reverse * response[5][column]
             - f64::from(column == 1) * (q12_gf / p.beta_forward + q12_gr / p.beta_reverse);
-        conductance_s[2][column] = q17_gf / p.beta_forward * response[4]
-            + q17_gr / p.beta_reverse * response[6]
+        conductance_s[2][column] = q17_gf / p.beta_forward * response[4][column]
+            + q17_gr / p.beta_reverse * response[6][column]
             - f64::from(column == 2) * (q17_gf / p.beta_forward + q17_gr / p.beta_reverse);
     }
     if current_a.iter().any(|v| !v.is_finite())

@@ -1,7 +1,9 @@
 //! Q14/Q13/Q21 and second balance coupled to Q1_BASE/C4/C2/J7.
 //! First VCA collector voltages and Q21 control remain imposed boundaries.
 
-use crate::output_conversion::{max_abs, solve_linear, Parameters as ConversionParameters};
+use crate::output_conversion::{
+    max_abs, solve_linear, solve_linear_many, Parameters as ConversionParameters,
+};
 use crate::output_conversion_c4::{
     initial_state as initial_downstream, solve_input_port as downstream_port, BoundaryC4,
     State as DownstreamState,
@@ -467,38 +469,30 @@ pub fn solve_input_port(
         ib21 + b.q21_base_v / 33000.0,            // R51 to ground
         (b.first_balance_wiper_v - x[5]) / 120.0, // R13
     ];
+    let mut rhs = [[0.0; 4]; N];
+    rhs[0][0] = (1.0 + 1.0 / p.beta_forward) * gf14 - gr14;
+    rhs[3][0] = -gf14 + (1.0 + 1.0 / p.beta_reverse) * gr14;
+    rhs[0][1] = (1.0 + 1.0 / p.beta_forward) * gf13 - gr13;
+    rhs[4][1] = -gf13 + (1.0 + 1.0 / p.beta_reverse) * gr13;
+    rhs[2][2] = (1.0 + 1.0 / p.beta_forward) * gf21 - gr21;
+    rhs[1][2] = -gf21 + (1.0 + 1.0 / p.beta_reverse) * gr21;
+    rhs[5][3] = 1.0 / 120.0;
+    let response = solve_linear_many(jacobian, rhs)?;
     let mut conductance_s = [[0.0; 4]; 4];
     for column in 0..4 {
-        let mut rhs = [0.0; N];
-        match column {
-            0 => {
-                rhs[0] = (1.0 + 1.0 / p.beta_forward) * gf14 - gr14;
-                rhs[3] = -gf14 + (1.0 + 1.0 / p.beta_reverse) * gr14;
-            }
-            1 => {
-                rhs[0] = (1.0 + 1.0 / p.beta_forward) * gf13 - gr13;
-                rhs[4] = -gf13 + (1.0 + 1.0 / p.beta_reverse) * gr13;
-            }
-            2 => {
-                rhs[2] = (1.0 + 1.0 / p.beta_forward) * gf21 - gr21;
-                rhs[1] = -gf21 + (1.0 + 1.0 / p.beta_reverse) * gr21;
-            }
-            _ => rhs[5] = 1.0 / 120.0,
-        }
-        let response = solve_linear(jacobian, rhs)?;
         conductance_s[0][column] = f64::from(column == 0)
             * (gf14 / p.beta_forward + gr14 / p.beta_reverse)
-            - gf14 / p.beta_forward * response[0]
-            - gr14 / p.beta_reverse * response[3];
+            - gf14 / p.beta_forward * response[0][column]
+            - gr14 / p.beta_reverse * response[3][column];
         conductance_s[1][column] = f64::from(column == 1)
             * (gf13 / p.beta_forward + gr13 / p.beta_reverse)
-            - gf13 / p.beta_forward * response[0]
-            - gr13 / p.beta_reverse * response[4];
+            - gf13 / p.beta_forward * response[0][column]
+            - gr13 / p.beta_reverse * response[4][column];
         conductance_s[2][column] = f64::from(column == 2)
             * (gf21 / p.beta_forward + gr21 / p.beta_reverse + 1.0 / 33000.0)
-            - gf21 / p.beta_forward * response[2]
-            - gr21 / p.beta_reverse * response[1];
-        conductance_s[3][column] = (f64::from(column == 3) - response[5]) / 120.0;
+            - gf21 / p.beta_forward * response[2][column]
+            - gr21 / p.beta_reverse * response[1][column];
+        conductance_s[3][column] = (f64::from(column == 3) - response[5][column]) / 120.0;
     }
     if current_a.iter().any(|v| !v.is_finite())
         || conductance_s.iter().flatten().any(|v| !v.is_finite())

@@ -266,6 +266,104 @@ pub(crate) fn solve_linear<const M: usize>(
     Ok(out)
 }
 
+/// Scaled-pivot elimination for several right-hand sides of one Jacobian.
+/// Rows are circuit nodes and columns are independent boundary perturbations.
+pub(crate) fn solve_linear_many<const M: usize, const R: usize>(
+    mut j: [[f64; M]; M],
+    mut rhs: [[f64; R]; M],
+) -> Result<[[f64; R]; M], StepError> {
+    let mut scale = [0.0; M];
+    for i in 0..M {
+        scale[i] = max_abs(&j[i]);
+        if scale[i] == 0.0 {
+            return Err(StepError::SingularJacobian);
+        }
+    }
+    for col in 0..M {
+        let mut pivot = col;
+        let mut best = 0.0;
+        for row in col..M {
+            let score = j[row][col].abs() / scale[row];
+            if score > best {
+                best = score;
+                pivot = row;
+            }
+        }
+        if best < 1e-12 {
+            return Err(StepError::SingularJacobian);
+        }
+        j.swap(col, pivot);
+        rhs.swap(col, pivot);
+        scale.swap(col, pivot);
+        let diagonal = j[col][col];
+        for row in (col + 1)..M {
+            let factor = j[row][col] / diagonal;
+            j[row][col] = 0.0;
+            for k in (col + 1)..M {
+                j[row][k] -= factor * j[col][k];
+            }
+            for k in 0..R {
+                rhs[row][k] -= factor * rhs[col][k];
+            }
+        }
+    }
+    let mut out = [[0.0; R]; M];
+    for row in (0..M).rev() {
+        for column in 0..R {
+            let mut value = rhs[row][column];
+            for k in (row + 1)..M {
+                value -= j[row][k] * out[k][column];
+            }
+            out[row][column] = value / j[row][row];
+        }
+    }
+    if out.iter().flatten().any(|v| !v.is_finite()) {
+        return Err(StepError::SingularJacobian);
+    }
+    Ok(out)
+}
+
+#[cfg(test)]
+mod multi_rhs_tests {
+    use super::*;
+
+    #[test]
+    fn pivoted_multiple_rhs_reproduces_independent_solutions() {
+        let j = [
+            [0.0, 2.0, 0.0, 1.0],
+            [3.0, 1.0, -1.0, 0.0],
+            [1.0, 0.0, 4.0, 2.0],
+            [0.0, 1.0, 2.0, 5.0],
+        ];
+        let expected = [
+            [1.0, 4.0, -2.0],
+            [2.0, -1.0, 0.0],
+            [3.0, 2.0, 1.0],
+            [4.0, 0.0, 3.0],
+        ];
+        let rhs: [[f64; 3]; 4] = std::array::from_fn(|row| {
+            std::array::from_fn(|column| (0..4).map(|k| j[row][k] * expected[k][column]).sum())
+        });
+        let solved = solve_linear_many(j, rhs).unwrap();
+        for column in 0..3 {
+            let single_rhs = std::array::from_fn(|row| rhs[row][column]);
+            let single = solve_linear(j, single_rhs).unwrap();
+            for row in 0..4 {
+                assert!((solved[row][column] - expected[row][column]).abs() < 1e-12);
+                assert!((solved[row][column] - single[row]).abs() < 1e-12);
+            }
+        }
+    }
+
+    #[test]
+    fn multiple_rhs_rejects_singular_jacobian() {
+        assert_eq!(
+            solve_linear_many([[1.0, 2.0], [2.0, 4.0]], [[1.0, 2.0], [3.0, 4.0]]).unwrap_err(),
+            StepError::SingularJacobian,
+        );
+    }
+}
+
 pub fn solve_dc(p: Parameters, b: Boundary) -> Result<DcResult, StepError> {
     validate(p, b)?;
     // Same approximate Newton seed as the independent Python reference.
