@@ -28,8 +28,9 @@ class LoudnessContour(unittest.TestCase):
         network = Network()
         state, _ = network.initial_state()
         old = copy.deepcopy(state)
-        state, _ = network.step(state, 10.0, .001)
-        self.assertEqual(old.capacitor_v["C7"], 7.90777438396214e-09)
+        snapshot_before_step = copy.deepcopy(state)
+        state, _ = network.step(old, 10.0, .001)
+        self.assertEqual(old, snapshot_before_step)
         x = [state.node_v[n] for n in network.nodes]
         _, jac = network.evaluate(x, 10.0, old, .001)
         for col in range(len(x)):

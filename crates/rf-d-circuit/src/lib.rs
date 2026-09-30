@@ -8,6 +8,7 @@ pub mod circuit66;
 pub mod cutoff;
 pub mod cutoff_ladder_output;
 pub mod ladder_recovery_output;
+pub mod loudness_follower;
 pub mod output;
 pub mod output_conversion;
 pub mod output_conversion_c4;

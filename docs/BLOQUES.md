@@ -13,4 +13,6 @@ Para cada placa y ruta: designadores/nodos, referencias de esquema, alimentació
 
 Este listado es un mapa de investigación. La topología exacta y sus componentes quedan sujetos a la revisión documental elegida y sus correcciones.
 
+Contornos: el [grafo de volumen y gatillo](CONTORNO_VOLUMEN_CIRCUITO.md) conserva los componentes y una ambigüedad de raíces del biestable. El [seguidor Q3/Q2 nativo](SEGUIDOR_VOLUMEN_NATIVO.md) cierra cinco nodos con CR6 y cargas impuestas, devolviendo corrientes/derivadas hacia C2, reset y futura base Q18. La conmutación y el contorno de filtro aún no están admitidos.
+
 El [mapa de hallazgos](HALLAZGOS.md) enlaza cada bloque a la descripción y al esquema original; [REVISIONES.md](REVISIONES.md) registra qué variantes y correcciones pueden cambiar su derivación. En particular, la ruta de audio continúa después del ladder por recuperación de ganancia y **dos VCA** documentados en SVC-204D (PDF p. 12), y los contornos requieren representar el switch de final decay.

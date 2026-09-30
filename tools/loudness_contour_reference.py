@@ -6,7 +6,7 @@ All Newton trials use the same capacitor history. No stage/timer ADSR logic.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 import json
 import math
 from pathlib import Path
@@ -271,7 +271,12 @@ class Network:
     def step(self, previous, keyboard_v, dt_s, *, use_fd=False, **budget):
         if any(not math.isfinite(v) for v in previous.node_v.values()):
             raise ValueError("finite previous node voltages required")
-        seed = [previous.node_v[name] for name in self.nodes]
+        try:
+            seed = [previous.node_v[name] if name in previous.node_v else
+                    previous.node_v["RESET_DRIVER"] if name == "FAST_DIODE_K" else
+                    self._missing_previous_node(name) for name in self.nodes]
+        except KeyError as exc:
+            raise ValueError("complete previous node voltages required") from exc
         # CR10's algebraic cathode can jump with the imposed ideal source. This
         # finite numerical seed does not touch C7 or subdivide physical time.
         k = self.index[self.alias["KEY_DIODE_K"]]
@@ -279,6 +284,10 @@ class Network:
             seed[k] = keyboard_v-.3
         return self.solve(seed, keyboard_v,
                           previous, dt_s, use_fd=use_fd, **budget)
+
+    @staticmethod
+    def _missing_previous_node(name):
+        raise ValueError(f"missing previous circuit node: {name}")
 
     def probe_step_roots(self, previous, keyboard_v, dt_s, *, use_fd=False):
         """Enumerate numerical roots; never select/publish a latch transition.
@@ -305,6 +314,7 @@ class Network:
         for active in (False, True):
             for trigger_on in (False, True):
                 values = dict(previous.node_v)
+                values.setdefault("FAST_DIODE_K", values["RESET_DRIVER"])
                 values.update(SET_BASE=.7 if active else .01,
                               RESET_BASE=.01 if active else .7,
                               RESET_COLLECTOR=.05 if active else 8.3,

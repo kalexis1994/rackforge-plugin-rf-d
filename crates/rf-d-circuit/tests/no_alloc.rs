@@ -620,6 +620,25 @@ fn dc_initialization_and_audio_steps_do_not_allocate() {
         )
         .expect("global circuit step");
     }
+    // Algebraic loudness port: cold preparation plus all three RHS tangents.
+    for c2_v in [0.0, 0.8469345758149237, 3.0, 6.0, 9.3] {
+        for load_conductance_s in [0.0, 1.0 / 68000.0] {
+            let b = rf_d_circuit::loudness_follower::Boundary {
+                c2_v,
+                reset_base_v: 0.7,
+                supply_v: 9.3,
+                load_conductance_s,
+                load_reference_v: 0.7,
+            };
+            rf_d_circuit::loudness_follower::solve_port(
+                rf_d_circuit::loudness_follower::initial_guess(b),
+                rf_d_circuit::loudness_follower::Parameters::default(),
+                b,
+                SolverBudget::default(),
+            )
+            .expect("loudness follower roots and tangents without allocation");
+        }
+    }
     let after = ALLOCATIONS.load(Ordering::Relaxed);
     assert_eq!(after - before, 0, "processing allocated heap memory");
 }

@@ -46,7 +46,7 @@ Probar Note On/Off, retrigger, legato, glide, ruedas, cambios de preset y recupe
 
 ## Contorno de volumen: avance y gate pendiente
 
-El [grafo eléctrico y oráculo de placa 2](CONTORNO_VOLUMEN_CIRCUITO.md) reconstruye diez BJTs, gatillo, tres memorias capacitivas, panel y decay final. El biestable presenta dos raíces diferentes para el mismo paso; quedan registradas sin selección. Primero cerrar seguidor/carga como puerto comprobable; estudiar estabilidad de conmutación y cargas compartidas antes de unir contorno/VCA o afirmar Note On/Off físico.
+El [grafo eléctrico y oráculo de placa 2](CONTORNO_VOLUMEN_CIRCUITO.md) reconstruye diez BJTs, gatillo, tres memorias capacitivas, panel y decay final. El biestable presenta dos raíces diferentes para el mismo paso; quedan registradas sin selección. El [puerto nativo Q3/Q2/CR6](SEGUIDOR_VOLUMEN_NATIVO.md) reproduce 60 casos y entrega tres corrientes/tangentes con heap cero. Siguiente cierre: R59/base Q18 real; después estabilidad de conmutación y cargas compartidas antes de unir contorno completo/VCA o afirmar Note On/Off físico. Los intervalos físicos nuevos no se recortan al `0..2 V` del laboratorio anterior.
 
 ## Primer corte de implementación
 

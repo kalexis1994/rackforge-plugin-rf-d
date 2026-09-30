@@ -58,4 +58,6 @@ El [solver global analítico experimental de 66 nodos](docs/SOLVER_GLOBAL_66_NOD
 
 ## Límites de recursos
 
+El [contorno de volumen de placa 2](docs/CONTORNO_VOLUMEN_CIRCUITO.md) ya tiene grafo y oráculo de transistores, gatillo y cargas capacitivas. Se detectaron dos raíces distintas para el mismo paso del biestable y se guardan sin elegir una. El [puerto nativo del seguidor Q3/Q2](docs/SEGUIDOR_VOLUMEN_NATIVO.md) pasa 60 casos independientes con error máximo de nodo 7,63 nV y entrega corrientes/tangentes para el acoplamiento posterior. No equivale todavía a una envolvente física validada ni a una voz completa.
+
 Manuales descargados, esquemas, fotos internas, mediciones y WAV de referencia pertenecen a `references-local/` o `captures/`, fuera de Git. El repo guarda identificadores, hashes, derivaciones, pruebas y resultados. Ningún paquete `.rfplugin` incluirá material original que no se pueda distribuir.
