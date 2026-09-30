@@ -1,7 +1,8 @@
 param(
-    [ValidateSet('temporal','stack','controls','dc-seeds','vca-release')][string]$Mode = 'temporal',
+    [ValidateSet('temporal','stack','controls','dc-seeds','vca-release','r21')][string]$Mode = 'temporal',
     [Parameter(Mandatory)][string]$Output,
-    [int]$StackKib = 2048
+    [int]$StackKib = 2048,
+    [switch]$R21Endpoints
 )
 # Build the release example first. Diagnostics run outside the audio thread.
 $ErrorActionPreference = 'Stop'
@@ -10,6 +11,10 @@ $taskBench = Join-Path $taskRepo 'target/release/examples/circuit66_admission.ex
 if (-not (Test-Path -LiteralPath $taskBench)) { throw 'Build the release example first.' }
 $taskArgs = @("--$Mode")
 if ($Mode -eq 'stack') { $taskArgs += "--stack-kib=$StackKib" }
+if ($R21Endpoints) {
+    if ($Mode -ne 'stack') { throw 'R21Endpoints applies only to stack mode.' }
+    $taskArgs += '--stack-r21'
+}
 $taskRaw = & $taskBench @taskArgs
 $taskExit = $LASTEXITCODE
 $taskReport = ($taskRaw -join "`n") | ConvertFrom-Json

@@ -62,6 +62,11 @@ pub struct State {
 pub struct Result66 {
     pub output: StepResult,
     pub residual_evaluations: usize,
+    /// Exact R21 endpoint equality error, V; zero for interior positions.
+    pub voltage_constraint_error_v: f64,
+    /// Endpoint short current, A: wiper -> ground at 0, pin22 -> wiper at 5000.
+    /// No additional unknown or state is needed; recovered from physical KCL.
+    pub r21_short_current_a: Option<f64>,
 }
 
 #[derive(Clone, Copy)]
@@ -309,8 +314,7 @@ fn prepare(
         || !sb.second_balance_left_ohm.is_finite()
         || !(0.0..=100.0).contains(&sb.second_balance_left_ohm)
         || !ob.r21_lower_ohm.is_finite()
-        || !(0.0..5000.0).contains(&ob.r21_lower_ohm)
-        || ob.r21_lower_ohm == 0.0
+        || !(0.0..=5000.0).contains(&ob.r21_lower_ohm)
         || ![headphone.diode_is_a, headphone.diode_ideality]
             .iter()
             .all(|v| v.is_finite() && *v > 0.0)
@@ -497,8 +501,12 @@ fn evaluate(
     let ob = sb.output.output;
     s.resistor(Node(47), Fixed(0.0), 1000.0 + prepared.1.equivalent_ohm);
     s.resistor(Node(47), Node(48), 1000.0);
-    s.resistor(Node(48), Node(49), 5000.0 - ob.r21_lower_ohm);
-    s.resistor(Node(49), Fixed(0.0), ob.r21_lower_ohm);
+    if ob.r21_lower_ohm < 5000.0 {
+        s.resistor(Node(48), Node(49), 5000.0 - ob.r21_lower_ohm);
+    }
+    if ob.r21_lower_ohm > 0.0 {
+        s.resistor(Node(49), Fixed(0.0), ob.r21_lower_ohm);
+    }
     // Board 3 circuit 11, Fig.9-8. Separate device parameters and ±20 V supply.
     for (node, fixed, ohm) in [
         (50, -10.0, 6200.0),
@@ -553,6 +561,23 @@ fn evaluate(
             s.branch(Node(22), Node(7), i10, y);
         }
     }
+    // Identify terminals AFTER all devices and capacitor currents are stamped.
+    // Keep documentary coordinates: row 49 becomes a voltage equality (V),
+    // not a physical KCL row (A). Its Jacobian is dimensionless, not 1 siemens.
+    if ob.r21_lower_ohm == 0.0 || ob.r21_lower_ohm == 5000.0 {
+        if ob.r21_lower_ohm == 5000.0 {
+            s.r[48] += s.r[49];
+            for k in 0..N {
+                s.j[POSITION[48]][k] += s.j[POSITION[49]][k];
+            }
+        }
+        s.r[49] = r21_constraint(x, ob.r21_lower_ohm);
+        s.j[POSITION[49]] = [0.0; N];
+        s.j[POSITION[49]][POSITION[49]] = 1.0;
+        if ob.r21_lower_ohm == 5000.0 {
+            s.j[POSITION[49]][POSITION[48]] = -1.0;
+        }
+    }
     if s.r
         .iter()
         .chain(s.j.iter().flatten())
@@ -561,6 +586,25 @@ fn evaluate(
         return Err(StepError::ExponentialDomain);
     }
     Ok((s.r, s.j, i10))
+}
+
+fn r21_constraint(x: &[f64; N], lower: f64) -> f64 {
+    if lower == 0.0 {
+        x[49]
+    } else if lower == 5000.0 {
+        x[49] - x[48]
+    } else {
+        0.0
+    }
+}
+
+fn physical_kcl_max(r: &[f64; N], b: Boundary) -> f64 {
+    let lower = b.recovery.vca.second.output.output.r21_lower_ohm;
+    r.iter()
+        .enumerate()
+        .filter(|(i, _)| *i != 49 || (lower > 0.0 && lower < 5000.0))
+        .map(|(_, v)| v.abs())
+        .fold(0.0, f64::max)
 }
 
 fn solve(
@@ -584,12 +628,20 @@ fn solve(
                 evaluate(&x, p, conversion, headphone, b, prepared, old)?
             }
         };
+        // Dimensionless merit: each KCL divided by 1 A; endpoint equality
+        // divided by 1 V. Thus 1e-11 gates mean 10 pA AND 10 pV respectively.
         let error = max_abs(&r);
         let requires_voltage_correction =
             old.is_none() || !cfg!(feature = "solver-kcl-only-transient");
         if error < 1e-11 && !requires_voltage_correction {
             let control = std::array::from_fn::<_, 4, _>(|i| r[62 + i]);
-            return Ok((x, iteration, error, i10, max_abs(&control)));
+            return Ok((
+                x,
+                iteration,
+                physical_kcl_max(&r, b),
+                i10,
+                max_abs(&control),
+            ));
         }
         let ordered_direction = match cached_direction.take() {
             Some(d) => d,
@@ -601,7 +653,13 @@ fn solve(
         // The reference feature retains only the historical transient gate.
         if requires_voltage_correction && error < 1e-11 && max_abs(&direction) < 1e-8 {
             let control = std::array::from_fn::<_, 4, _>(|i| r[62 + i]);
-            return Ok((x, iteration, error, i10, max_abs(&control)));
+            return Ok((
+                x,
+                iteration,
+                physical_kcl_max(&r, b),
+                i10,
+                max_abs(&control),
+            ));
         }
         let mut accepted = None;
         for power in 0..budget.line_search_halvings {
@@ -752,6 +810,9 @@ pub fn profile_kernels(
 
 /// Provisional KCL and analytic Jacobian for circuit diagnostics. All capacitor
 /// histories come from `previous`; this never publishes a candidate state.
+/// At R21 endpoints row 49 is a voltage equality (V, derivative V/V), all
+/// other rows remain KCL (A, derivative A/V). Row 48 joins pin22 and wiper
+/// KCL at the upper endpoint. Columns always denote node voltages.
 pub fn linearize(
     previous: &State,
     p: Parameters,
@@ -794,7 +855,21 @@ pub fn initial_state(
 ) -> Result<State, StepError> {
     let budget = SolverBudget::default();
     prepare(p, conversion, headphone, b, budget)?;
-    let nested = cutoff_ladder_output::initial_state(p, conversion, headphone, b, ladder_seed)?;
+    // The partitioned initializer only supports interior R21. Its midpoint
+    // supplies a numerical seed; the actual endpoint is solved globally below.
+    let mut seed_boundary = b;
+    let lower = b.recovery.vca.second.output.output.r21_lower_ohm;
+    if lower == 0.0 || lower == 5000.0 {
+        seed_boundary
+            .recovery
+            .vca
+            .second
+            .output
+            .output
+            .r21_lower_ohm = 2500.0;
+    }
+    let nested =
+        cutoff_ladder_output::initial_state(p, conversion, headphone, seed_boundary, ladder_seed)?;
     let mut x = [0.0; N];
     x[..16].copy_from_slice(&nested.chain.node_v);
     let r = &nested.chain.recovery;
@@ -848,6 +923,7 @@ pub fn initial_state_from_nodes(
 
 /// Offline DC residual/Jacobian diagnostic, with all capacitors open.
 /// The returned rows/columns use documentary node order, as in `linearize`.
+/// The same endpoint row-49 voltage units described by `linearize` apply.
 pub fn linearize_dc(
     p: Parameters,
     conversion: ConversionParameters,
@@ -864,7 +940,8 @@ pub fn linearize_dc(
 }
 
 /// Experimental global Newton step. Fixed capacitor histories, bounded
-/// predictor fallback and publication only after all 66 KCL rows converge.
+/// predictor fallback and publication only after KCL and any endpoint voltage
+/// equality converge, together with the full Newton voltage correction.
 pub fn step(
     state: &mut State,
     p: Parameters,
@@ -918,6 +995,15 @@ pub fn step(
     };
     let x = solution.0;
     let ob = b.recovery.vca.second.output.output;
+    let voltage_constraint_error_v = r21_constraint(&x, ob.r21_lower_ohm).abs();
+    let r21_short_current_a = if ob.r21_lower_ohm == 0.0 {
+        let c19_current = 2.5e-6 / ob.dt_s * (x[49] - x[50] - state.capacitor_v[13]);
+        Some(-((x[49] - x[48]) / 5000.0 + c19_current))
+    } else if ob.r21_lower_ohm == 5000.0 {
+        Some((x[47] - x[48]) / 1000.0)
+    } else {
+        None
+    };
     let series = b.r14_ohm.unwrap_or(0.0) + 1000.0 - (p.r30_ohm - 330.0);
     let c10_v = if b.r14_ohm.is_some() {
         x[22] - x[7] - series * solution.3
@@ -953,5 +1039,7 @@ pub fn step(
     Ok(Result66 {
         output: result,
         residual_evaluations: evaluations,
+        voltage_constraint_error_v,
+        r21_short_current_a,
     })
 }

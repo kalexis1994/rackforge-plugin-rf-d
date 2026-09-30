@@ -550,11 +550,28 @@ fn dc_initialization_and_audio_steps_do_not_allocate() {
         global.node_v,
     )
     .expect("full global DC seed");
+    for lower in [0.0, 5000.0] {
+        let mut endpoint = dynamic_boundary;
+        endpoint.recovery.vca.second.output.output.r21_lower_ohm = lower;
+        global = rf_d_circuit::circuit66::initial_state(
+            dynamic_parameters,
+            conversion,
+            p,
+            endpoint,
+            ladder_seed,
+        )
+        .expect("exact R21 DC without allocation");
+    }
     for i in 0..64 {
         let mut b = dynamic_boundary;
         b.bus_v = if i % 20 < 10 { 0.001 } else { -0.001 };
         b.panel.contour_pin16_v = if i < 32 { 0.0 } else { 0.04 };
         b.r14_ohm = if i < 16 { None } else { Some(25_000.0) };
+        b.recovery.vca.second.output.output.r21_lower_ohm = match i / 16 {
+            0 => 0.0,
+            1 => 5000.0,
+            _ => 2000.0,
+        };
         rf_d_circuit::circuit66::step(
             &mut global,
             dynamic_parameters,

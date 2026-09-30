@@ -58,7 +58,18 @@ def solve_dc(seed, evaluate):
     raise ValueError("full DC offline budget")
 
 
-def dc_evaluator(values, controls):
+def r21_constraints(r, x, lower):
+    """Terminal identification; row 49 is V, other rows A. No epsilon resistor."""
+    if lower == 0:
+        r[49] = x[49]
+    elif lower == 5000:
+        r[48] += r[49]
+        r[49] = x[49]-x[48]
+
+
+def dc_evaluator(values, controls, r21_lower_ohm=2000, impose_r21_constraints=True):
+    if not 0 <= r21_lower_ohm <= 5000:
+        raise ValueError("R21 outside 0..5000 ohm")
     ladder, recovery, output, hp, _, _, _ = values
     pv, pg = panel_equivalent(controls["panel"])
     r2 = vca_values()[0]
@@ -80,15 +91,18 @@ def dc_evaluator(values, controls):
         r20_cursor = 1/(1/2500+1/10000+1/(33000+1/(1/1000+1/100000)))
         r[47] -= x[47]/(1000+2500+r20_cursor)
         i77 = (x[47]-x[48])/1000
-        i21 = (x[48]-x[49])/3000
+        upper = 5000-r21_lower_ohm
+        i21 = (x[48]-x[49])/upper if upper else 0.0
         r[47] -= i77
-        r += [i21-i77, (x[49]-x[48])/3000+x[49]/2000]
+        r += [i21-i77, -i21+(x[49]/r21_lower_ohm if r21_lower_ohm else 0.0)]
         active, _ = evaluate_headphone_amp_dc(x[50:61], **hp)
         r += active+[x[61]*(1/390+1/32+1/32)]
         control, _ = cutoff_kcl(x[62:66], panel_v=pv, panel_g=pg,
                                 range_fraction=controls["range_fraction"], tail_v=x[5],
                                 q26=controls["q26"], q28=controls["q28"])
         r += control
+        if impose_r21_constraints:
+            r21_constraints(r,x,r21_lower_ohm)
         return r, {}
 
     return evaluate

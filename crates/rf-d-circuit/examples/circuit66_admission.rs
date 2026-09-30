@@ -19,6 +19,8 @@ fn main() {
         dc_seed_grid()
     } else if std::env::args().any(|v| v == "--vca-release") {
         vca_release_grid()
+    } else if std::env::args().any(|v| v == "--r21") {
+        r21_grid()
     } else {
         temporal_grid()
     };
@@ -34,6 +36,49 @@ fn main() {
             std::process::exit(1);
         }
     }
+}
+
+fn r21_grid() -> Result<Value, String> {
+    let (base, c, h) = lab::lab_parameters();
+    let mut cases = Vec::new();
+    for r61 in [200.0, 200000.0] {
+        let p = cutoff_ladder_output::Parameters {
+            r61_ohm: r61,
+            ..base
+        };
+        let centre = lab::controlled_boundary(0, true);
+        let initial = circuit66::initial_state(p, c, h, centre, lab::SEED)
+            .map_err(|e| format!("centre DC: {e:?}"))?;
+        for lower in [0.0, 5000.0] {
+            let mut endpoint = centre;
+            endpoint.recovery.vca.second.output.output.r21_lower_ohm = lower;
+            let cold = circuit66::initial_state(p, c, h, endpoint, lab::SEED)
+                .map_err(|e| format!("endpoint DC {lower}: {e:?}"))?;
+            let mut state = initial;
+            let mut rows = Vec::new();
+            for index in 0..32 {
+                let mut b = if index < 16 { endpoint } else { centre };
+                b.bus_v = 0.02
+                    * (2.0 * std::f64::consts::PI * 100.0 * (index + 1) as f64 / 48000.0).sin();
+                let result = circuit66::step(&mut state, p, c, h, b, SolverBudget::default())
+                    .map_err(|e| format!("R61 {r61}, endpoint {lower}, sample {index}: {e:?}"))?;
+                assert!(result.output.max_ladder_kcl_residual_a < 1e-11);
+                assert!(result.voltage_constraint_error_v < 1e-11);
+                rows.push(json!({"index":index,"bus_v":b.bus_v,
+                    "r21_lower_ohm":b.recovery.vca.second.output.output.r21_lower_ohm,
+                    "node_v":state.node_v.to_vec(),"capacitor_v":state.capacitor_v.to_vec(),"c10_v":state.c10_capacitor_v,
+                    "j7_v":result.output.j7_v,"j4_hi_v":result.output.j4_hi_v,"j5_lo_v":result.output.j5_lo_v,
+                    "tail_current_a":result.output.tail_current_a,"kcl_a":result.output.max_ladder_kcl_residual_a,
+                    "constraint_v":result.voltage_constraint_error_v,"short_current_a":result.r21_short_current_a,
+                    "iterations":result.output.iterations,"fallback":result.output.predictor_fallback}));
+            }
+            cases.push(json!({"r61_ohm":r61,"target_lower_ohm":lower,
+                "initial_node_v":initial.node_v.to_vec(),"cold_node_v":cold.node_v.to_vec(),"rows":rows}));
+        }
+    }
+    Ok(
+        json!({"schema":"rf-d/circuit66-r21-native/v1","passed":true,"cases":cases,"audio_fidelity_claim":false}),
+    )
 }
 
 fn vca_release_grid() -> Result<Value, String> {
@@ -253,11 +298,17 @@ fn control_grid() -> Result<Value, String> {
         ("r21_near_max", |_, b| {
             b.recovery.vca.second.output.output.r21_lower_ohm = 4999.999
         }),
-        ("r21_min_unsupported", |_, b| {
+        ("r21_min", |_, b| {
             b.recovery.vca.second.output.output.r21_lower_ohm = 0.0
         }),
-        ("r21_max_unsupported", |_, b| {
+        ("r21_max", |_, b| {
             b.recovery.vca.second.output.output.r21_lower_ohm = 5000.0
+        }),
+        ("r21_negative_unsupported", |_, b| {
+            b.recovery.vca.second.output.output.r21_lower_ohm = -1.0
+        }),
+        ("r21_above_total_unsupported", |_, b| {
+            b.recovery.vca.second.output.output.r21_lower_ohm = 5001.0
         }),
         ("first_loudness_zero", |_, b| {
             b.recovery.vca.loudness_v = 0.0
@@ -396,7 +447,8 @@ fn control_grid() -> Result<Value, String> {
     Ok(
         json!({"schema":"rf-d/circuit66-control-survey/v1","passed":failures==0,"survey_completed":true,
         "sample_rate_hz":48000,"requested_samples_per_supported_case":256,"accepted_samples":total,
-        "supported_case_failures":failures,"warm_dc_failures":warm_failures,"expected_endpoint_rejections":4,
+        "supported_case_failures":failures,"warm_dc_failures":warm_failures,"expected_endpoint_rejections":0,
+        "expected_outside_domain_rejections":4,
         "scope":"one control/trim/source at a time; abrupt centre-target-centre, nominal imposed devices",
         "audio_fidelity_claim":false,"cases":cases}),
     )
@@ -424,12 +476,17 @@ fn stack_grid() -> Result<Value, String> {
     fn worker(
         initial: Option<circuit66::State>,
         p: cutoff_ladder_output::Parameters,
+        r21_endpoints: bool,
     ) -> Result<Run, String> {
         let (_, c, h) = lab::lab_parameters();
         let before = snapshot()?;
+        let mut dc_boundary = lab::controlled_boundary(0, true);
+        if r21_endpoints {
+            dc_boundary.recovery.vca.second.output.output.r21_lower_ohm = 0.0;
+        }
         let mut state = match initial {
             Some(s) => s,
-            None => circuit66::initial_state(p, c, h, lab::controlled_boundary(0, true), lab::SEED)
+            None => circuit66::initial_state(p, c, h, dc_boundary, lab::SEED)
                 .map_err(|e| format!("Worker DC: {e:?}"))?,
         };
         let after_dc = snapshot()?;
@@ -440,18 +497,19 @@ fn stack_grid() -> Result<Value, String> {
                 state.previous_node_v[1] -= 1e6;
             }
             let old = state;
-            let result = circuit66::step(
-                &mut state,
-                p,
-                c,
-                h,
-                lab::controlled_boundary(sample, true),
-                SolverBudget::default(),
-            )
-            .map_err(|e| {
-                assert_eq!(state, old);
-                format!("Worker sample {sample}: {e:?}")
-            })?;
+            let mut b = lab::controlled_boundary(sample, true);
+            if r21_endpoints {
+                b.recovery.vca.second.output.output.r21_lower_ohm = match sample % 3072 / 1024 {
+                    1 => 0.0,
+                    2 => 5000.0,
+                    _ => 2000.0,
+                };
+            }
+            let result =
+                circuit66::step(&mut state, p, c, h, b, SolverBudget::default()).map_err(|e| {
+                    assert_eq!(state, old);
+                    format!("Worker sample {sample}: {e:?}")
+                })?;
             max_kcl = max_kcl.max(result.output.max_ladder_kcl_residual_a);
             fallbacks += usize::from(result.output.predictor_fallback);
         }
@@ -503,22 +561,26 @@ fn stack_grid() -> Result<Value, String> {
         return Err("Use a requested worker stack of 512..8192 KiB".into());
     }
     let (base, c, h) = lab::lab_parameters();
+    let r21_endpoints = std::env::args().any(|v| v == "--stack-r21");
     let mut rows = Vec::new();
     for r61 in [200.0, 200000.0] {
         let p = cutoff_ladder_output::Parameters {
             r61_ohm: r61,
             ..base
         };
-        let outside =
-            circuit66::initial_state(p, c, h, lab::controlled_boundary(0, true), lab::SEED)
-                .map_err(|e| format!("Outside-worker DC: {e:?}"))?;
+        let mut dc_boundary = lab::controlled_boundary(0, true);
+        if r21_endpoints {
+            dc_boundary.recovery.vca.second.output.output.r21_lower_ohm = 0.0;
+        }
+        let outside = circuit66::initial_state(p, c, h, dc_boundary, lab::SEED)
+            .map_err(|e| format!("Outside-worker DC: {e:?}"))?;
         let mut reference = None;
         for dc_in_worker in [true, false] {
             let initial = if dc_in_worker { None } else { Some(outside) };
             let run = std::thread::Builder::new()
                 .name("rf-d-stack-probe".into())
                 .stack_size(requested * 1024)
-                .spawn(move || worker(initial, p))
+                .spawn(move || worker(initial, p, r21_endpoints))
                 .map_err(|e| e.to_string())?
                 .join()
                 .map_err(|_| "Worker panicked".to_string())??;
@@ -545,6 +607,7 @@ fn stack_grid() -> Result<Value, String> {
     }
     Ok(
         json!({"schema":"rf-d/circuit66-stack-regions/v1","passed":true,"platform":"windows-x86_64",
+        "r21_endpoints_exercised":r21_endpoints,
         "method":"separate Rust workers; read-only GetCurrentThreadStackLimits/VirtualQuery at phase boundaries",
         "precise_stack_high_water_measured":false,"audio_deadline_claim":false,"runs":rows}),
     )

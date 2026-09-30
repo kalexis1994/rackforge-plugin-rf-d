@@ -10,7 +10,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from circuit66_dc_vectors import dc_evaluator, fd_direction, solve_dc as solve_kcl
+from circuit66_dc_vectors import dc_evaluator, fd_direction, r21_constraints, solve_dc as solve_kcl
 from cutoff_j7_vectors import setup
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -32,7 +32,8 @@ def transient_evaluator(values, initial, boundary):
     vp = values[2]["network_parameters"]
     vp["first_parameters"]["core_parameters"]["loudness_v"] = boundary["loudness_v"]
     vp["second_parameters"]["q21_base_v"] = boundary["q21_base_v"]
-    dc = dc_evaluator(values, values[4])
+    lower = boundary.get("r21_lower_ohm",2000)
+    dc = dc_evaluator(values, values[4],lower,impose_r21_constraints=False)
     dt = 1/48000
 
     def evaluate(x):
@@ -49,6 +50,7 @@ def transient_evaluator(values, initial, boundary):
         current = gc/(1+gc*25500)*(x[22]-x[7]-initial["c10_v"])
         r[22] -= current
         r[7] += current
+        r21_constraints(r,x,lower)
         return r, {}
 
     return evaluate

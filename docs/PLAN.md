@@ -38,9 +38,9 @@ La ruta global Q26/Q28→ladder→VCAs→J7 tiene Jacobiano analítico, optimiza
 
 ## Fase E — Uso en vivo
 
-El [apagado con rampas de laboratorio](APAGADO_VCA_GLOBAL_66.md) localizó 20/96 sondas >1 µV. El [criterio temporal de voltaje](CRITERIO_VOLTAJE_TRANSITORIO_GLOBAL.md) las corrige y pasa el estrés largo. La [reutilización de direcciones](DIRECCION_NEWTON_REUTILIZADA.md) reduce el costo posterior sin cambiar bits. Próximos cortes: semillas de apagado, R21 exacto, recursos/host y circuito real de contorno; los saltos abruptos siguen agotando Newton.
+El [apagado con rampas de laboratorio](APAGADO_VCA_GLOBAL_66.md) localizó 20/96 sondas >1 µV. El [criterio temporal de voltaje](CRITERIO_VOLTAJE_TRANSITORIO_GLOBAL.md) las corrige y pasa el estrés largo. La [reutilización de direcciones](DIRECCION_NEWTON_REUTILIZADA.md) reduce el costo posterior sin cambiar bits. [R21 exacto](R21_EXTREMOS_EXACTOS.md) pasa integración independiente y recursos con ambos topes. Próximos cortes: semillas de apagado, recursos/host y circuito real de contorno; los saltos abruptos siguen agotando Newton.
 
-El [barrido global de extremos](EXTREMOS_CONTROLES_GLOBAL_66.md) encontró dependencias de semilla DC con cutoff máximo, fallo al llevar Q21 a cero y extremos R20/R21 rechazados. [R20 exacto](R20_EXTREMOS_EXACTOS.md) ya pasa; la [semilla DC completa](DC_GLOBAL_SEMILLA_COMPLETA.md) resuelve cutoff máximo y añade un criterio de voltaje para nodos débiles. Próximos cortes: apagado de Q21, R21 exacto, dependencia de semillas y recursos del host; conservar los informes fallidos.
+El [barrido global de extremos](EXTREMOS_CONTROLES_GLOBAL_66.md) encontró dependencias de semilla DC con cutoff máximo, fallo al llevar Q21 a cero y extremos R20/R21 rechazados. [R20 exacto](R20_EXTREMOS_EXACTOS.md) y [R21 exacto global](R21_EXTREMOS_EXACTOS.md) ya pasan; la [semilla DC completa](DC_GLOBAL_SEMILLA_COMPLETA.md) resuelve cutoff máximo y añade un criterio de voltaje para nodos débiles. Próximos cortes: apagado de Q21, dependencia de semillas y recursos del host; conservar los informes fallidos.
 
 Probar Note On/Off, retrigger, legato, glide, ruedas, cambios de preset y recuperación de estado. Mantener la voz mono y describir las comodidades de RackForge como extensiones. Validar transiciones sin discontinuidades accidentales ni asignaciones en el hilo de audio.
 

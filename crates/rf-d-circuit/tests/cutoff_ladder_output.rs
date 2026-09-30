@@ -14,6 +14,150 @@ fn n(v: &Value) -> f64 {
 }
 
 #[test]
+fn r21_exact_terminal_identification_matches_independent_integration() {
+    use rf_d_circuit::circuit66 as global;
+    let fixture: Value =
+        serde_json::from_str(include_str!("../../../evidence/circuit66_r21_vectors.json")).unwrap();
+    let (bjt, conversion, headphone, rb) = setup();
+    let mut count = 0;
+    let mut max_node = 0.0_f64;
+    for case in fixture["cases"].as_array().unwrap() {
+        let p = Parameters {
+            ladder_transistor: bjt,
+            cutoff: cutoff::Parameters { q26: bjt, q28: bjt },
+            r61_ohm: n(&case["r61_ohm"]),
+            r30_ohm: 830.0,
+        };
+        let mut b = Boundary {
+            bus_v: 0.0,
+            recovery: rb,
+            panel: panel(&case["controls"]["panel"]),
+            range_fraction_from_ground: 0.1,
+            r14_ohm: Some(25000.0),
+        };
+        let initial: [f64; 66] = std::array::from_fn(|i| n(&case["initial_node_v"][i]));
+        let mut state = global::initial_state(
+            p,
+            conversion,
+            headphone,
+            b,
+            std::array::from_fn(|i| initial[i]),
+        )
+        .unwrap();
+        let mut endpoint = b;
+        endpoint.recovery.vca.second.output.output.r21_lower_ohm = n(&case["target_lower_ohm"]);
+        let cold = global::initial_state(
+            p,
+            conversion,
+            headphone,
+            endpoint,
+            std::array::from_fn(|i| initial[i]),
+        )
+        .unwrap();
+        for i in 0..66 {
+            assert!((cold.node_v[i] - n(&case["cold_node_v"][i])).abs() < 1e-6);
+        }
+        for row in case["rows"].as_array().unwrap() {
+            b.bus_v = n(&row["bus_v"]);
+            let lower = n(&row["r21_lower_ohm"]);
+            b.recovery.vca.second.output.output.r21_lower_ohm = lower;
+            let previous = state;
+            let result = global::step(
+                &mut state,
+                p,
+                conversion,
+                headphone,
+                b,
+                SolverBudget::default(),
+            )
+            .unwrap();
+            assert!(result.output.max_ladder_kcl_residual_a < 1e-11);
+            assert!(result.voltage_constraint_error_v < 1e-11);
+            for i in 0..66 {
+                let error = (state.node_v[i] - n(&row["node_v"][i])).abs();
+                max_node = max_node.max(error);
+                assert!(error < 1e-6, "node {i}: {error}");
+            }
+            for i in 0..17 {
+                assert!((state.capacitor_v[i] - n(&row["capacitor_v"][i])).abs() < 1e-6);
+            }
+            assert!((state.c10_capacitor_v - n(&row["c10_v"])).abs() < 1e-6);
+            for (actual, key) in [
+                (result.output.j7_v, "j7_v"),
+                (result.output.j4_hi_v, "j4_hi_v"),
+                (result.output.j5_lo_v, "j5_lo_v"),
+            ] {
+                assert!((actual - n(&row[key])).abs() < 1e-6);
+            }
+            assert!((result.output.tail_current_a - n(&row["tail_current_a"])).abs() < 1e-9);
+            if let Some(short) = result.r21_short_current_a {
+                assert!((short - n(&row["short_current_a"])).abs() < 1e-9);
+                let x = state.node_v;
+                let i19 = 2.5e-6 / b.recovery.vca.second.output.output.dt_s
+                    * (x[49] - x[50] - previous.capacitor_v[13]);
+                let i77 = (x[47] - x[48]) / 1000.0;
+                if lower == 0.0 {
+                    assert_eq!(x[49], 0.0);
+                    assert!(((x[48] - x[49]) / 5000.0 - i77).abs() < 1e-11);
+                    assert!(((x[49] - x[48]) / 5000.0 + i19 + short).abs() < 1e-11);
+                } else {
+                    assert_eq!(x[49], x[48]);
+                    assert!((short - i77).abs() < 1e-11);
+                    assert!((-short + x[49] / 5000.0 + i19).abs() < 1e-11);
+                }
+            } else {
+                assert_eq!(lower, 2000.0);
+            }
+            // Full FD columns at the first endpoint and first restoration.
+            if row["index"].as_u64().unwrap() % 16 == 0 {
+                let (_, j) =
+                    global::linearize(&previous, p, conversion, headphone, b, &state.node_v)
+                        .unwrap();
+                for col in 0..66 {
+                    let mut hi = state.node_v;
+                    hi[col] += 1e-7;
+                    let mut lo = state.node_v;
+                    lo[col] -= 1e-7;
+                    let (rh, _) =
+                        global::linearize(&previous, p, conversion, headphone, b, &hi).unwrap();
+                    let (rl, _) =
+                        global::linearize(&previous, p, conversion, headphone, b, &lo).unwrap();
+                    for i in 0..66 {
+                        let fd = (rh[i] - rl[i]) / 2e-7;
+                        assert!(
+                            (fd - j[i][col]).abs() < 1e-8 + 3e-6 * fd.abs(),
+                            "R21 {lower} row {i} col {col}"
+                        );
+                    }
+                }
+            }
+            count += 1;
+        }
+        // Rejection preserves ALL nodes and charges at an endpoint.
+        for invalid in [-1.0, 5001.0, f64::NAN] {
+            let old = state;
+            let mut bad = b;
+            bad.recovery.vca.second.output.output.r21_lower_ohm = invalid;
+            assert_eq!(
+                global::step(
+                    &mut state,
+                    p,
+                    conversion,
+                    headphone,
+                    bad,
+                    SolverBudget::default()
+                )
+                .unwrap_err(),
+                StepError::InvalidInput
+            );
+            assert_eq!(state, old);
+        }
+    }
+    assert_eq!(count, 128);
+    println!("R21 exact: steps={count} max_node_error_v={max_node:.9e}");
+}
+
+#[test]
 fn independently_refined_vca_release_roots_close_native_kcl_with_same_histories() {
     use rf_d_circuit::circuit66 as global;
     let fixture: Value = serde_json::from_str(include_str!(

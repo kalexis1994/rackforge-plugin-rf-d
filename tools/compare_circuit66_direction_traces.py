@@ -32,6 +32,8 @@ if __name__ == "__main__":
     parser.add_argument("--left",type=Path,required=True)
     parser.add_argument("--right",type=Path,required=True)
     parser.add_argument("--output",type=Path,required=True)
+    parser.add_argument("--baseline-features",default="solver-uncached-direction")
+    parser.add_argument("--candidate-features",default="")
     args = parser.parse_args()
     a = json.loads(args.left.read_text(encoding="utf-8-sig"))
     b = json.loads(args.right.read_text(encoding="utf-8-sig"))
@@ -43,7 +45,8 @@ if __name__ == "__main__":
                   left_path=str(args.left),right_path=str(args.right),
                   left_sha256=hashlib.sha256(args.left.read_bytes()).hexdigest(),
                   right_sha256=hashlib.sha256(args.right.read_bytes()).hexdigest(),
-                  baseline_features=["solver-uncached-direction"],candidate_features=[],
+                  baseline_features=[v for v in args.baseline_features.split(",") if v],
+                  candidate_features=[v for v in args.candidate_features.split(",") if v],
                   cases=len(a["cases"]),captured_probes=sum(len(c["probes"]) for c in a["cases"]),
                   known_abrupt_failures=a["failed_cases"],counts=counts,audio_fidelity_claim=False)
     args.output.write_text(json.dumps(report,indent=2)+"\n",encoding="utf-8")

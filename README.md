@@ -4,17 +4,19 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+Los [topes exactos de R21](docs/R21_EXTREMOS_EXACTOS.md) ya identifican cursor→masa y PIN22→cursor en el solver global. Pasan 128 pasos de integración Python independiente (máximo de nodo 0,22 nV), Jacobianos, corrientes de los cortos, heap cero y stack con cambios entre topes. El barrido acepta 17408 muestras y conserva los seis fallos previos.
+
 La [dirección Newton reutilizada](docs/DIRECCION_NEWTON_REUTILIZADA.md) conserva en bits los 23224 valores de las capturas de apagado y reduce 23,18 % el costo de la política precisa: **2,953 ms/bloque**. Mantiene heap cero y los gates de voltaje. Todavía excede el deadline de 1,333 ms.
 
 El [criterio temporal de voltaje](docs/CRITERIO_VOLTAJE_TRANSITORIO_GLOBAL.md) corrige las 96 sondas de apagado (máximo interno 0,150 nV frente a las raíces independientes). Pasa de nuevo el estrés de 752384 muestras y heap cero. Su primera implementación costó 3,939 ms/bloque, luego reducido reutilizando direcciones; aún no cumple tiempo real. Los saltos abruptos y el contorno real siguen pendientes.
 
 El [apagado sintético de VCAs](docs/APAGADO_VCA_GLOBAL_66.md) registró 20/96 sondas con error interno >1 µV en la política anterior, hasta 1,318 mV. El criterio de voltaje corrige esa brecha; los saltos de una muestra siguen fallando. Estos estímulos no modelan el contorno.
 
-La [inicialización DC global con semilla completa](docs/DC_GLOBAL_SEMILLA_COMPLETA.md) resuelve cutoff máximo y contrasta 14 puntos independientes con error máximo 2,25 nV. Añade criterio de corrección de voltaje para nodos débiles. Conserva dos rechazos exploratorios de semillas desplazadas; apagado de Q21 y R21 exacto siguen pendientes.
+La [inicialización DC global con semilla completa](docs/DC_GLOBAL_SEMILLA_COMPLETA.md) resuelve cutoff máximo y contrasta 14 puntos independientes con error máximo 2,25 nV. Añade criterio de corrección de voltaje para nodos débiles. Conserva dos rechazos exploratorios de semillas desplazadas; apagado de Q21 sigue pendiente.
 
-El [barrido de extremos global](docs/EXTREMOS_CONTROLES_GLOBAL_66.md) detectó fallos de arranque con cutoff máximo y de transición al apagar Q21. [R20 ya admite sus extremos exactos](docs/R20_EXTREMOS_EXACTOS.md), con 128 pasos independientes y SW18 ON/OFF. El nuevo barrido acepta 16384 muestras; mantiene seis casos fallidos y R21 exacto pendiente.
+El [barrido de extremos global](docs/EXTREMOS_CONTROLES_GLOBAL_66.md) detectó fallos de arranque con cutoff máximo y de transición al apagar Q21. [R20 admite sus extremos exactos](docs/R20_EXTREMOS_EXACTOS.md), con 128 pasos independientes y SW18 ON/OFF; R21 exacto está cerrado en el solver global. El barrido actualizado mantiene seis casos fallidos de arranque/apagado.
 
-El [banco de stack Win64](docs/STACK_GLOBAL_66_WIN64.md) pasa hilos de 512 KiB. La compilación con criterio DC observa 324 KiB comprometidos durante procesamiento/reintentos, frente a 288 KiB antes. La observación por páginas deja pendiente el pico exacto y la admisión en RackForge.
+El [banco de stack Win64](docs/STACK_GLOBAL_66_WIN64.md) pasa hilos de 512 KiB. La compilación DC observaba 324 KiB; con [topes R21](docs/R21_EXTREMOS_EXACTOS.md) se observan 328 KiB comprometidos durante procesamiento/reintentos. La observación por páginas deja pendiente el pico exacto y la admisión en RackForge.
 
 El [refinamiento temporal global](docs/REFINAMIENTO_TEMPORAL_GLOBAL_66.md) añade 26880 pasos a 48/96/192 kHz, con dos señales y ambos R61. Las diferencias entre pasos se reducen con cocientes de 1,98–1,99; las diferencias de discretización siguen siendo medibles a tasas de audio.
 

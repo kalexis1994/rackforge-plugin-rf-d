@@ -22,7 +22,7 @@ El [apagado de los VCAs con rampas impuestas](APAGADO_VCA_GLOBAL_66.md) registr�
 
 La [semilla DC completa y el criterio de corrección de voltaje](DC_GLOBAL_SEMILLA_COMPLETA.md) contrastan 14 puntos (2,25 nV máximo) y resuelven cutoff máximo desde el centro. Dos semillas desplazadas fallan en RANGE=0; no se garantiza cualquier semilla. La nueva observación de stack es 324 KiB y C7 sigue abierto.
 
-El [barrido de extremos global](EXTREMOS_CONTROLES_GLOBAL_66.md) no pasa: seis casos soportados fallan, en cutoff máximo DC y Q21 a cero. [R20 exacto](R20_EXTREMOS_EXACTOS.md) pasa ocho escenas ON/OFF y 128 pasos independientes (error interno máximo 0,279225 µV). El nuevo barrido acepta 16384 muestras; R21 exacto sigue fuera del dominio actual.
+El [barrido de extremos global](EXTREMOS_CONTROLES_GLOBAL_66.md) no pasa: conserva seis fallos de arranque/apagado. [R20 exacto](R20_EXTREMOS_EXACTOS.md) pasa ocho escenas ON/OFF y 128 pasos independientes (error interno máximo 0,279225 µV). [R21 exacto](R21_EXTREMOS_EXACTOS.md) pasa 128 pasos con integración independiente e historiales propios (0,219477 nV), ambos topes/R61, corrientes y Jacobianos. El barrido actualizado acepta 17408 muestras sin rechazar topes R21; la ruta por particiones aún exige R21 interior. No amplía la validación contra audio vintage.
 
 El [banco de stack Win64](STACK_GLOBAL_66_WIN64.md) pasó 98304 muestras en workers de 2 MiB/1 MiB/512 KiB en la compilación anterior (288 KiB comprometidos). Con el criterio DC se repiten 32768 muestras a 512 KiB y se observan 324 KiB, incluidas guardas. Valida inicialización, reintento y rechazo atómico para la escena; no mide el pico exacto ni admite el host.
 

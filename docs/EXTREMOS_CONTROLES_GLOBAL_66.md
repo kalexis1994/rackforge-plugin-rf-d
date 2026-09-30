@@ -1,5 +1,7 @@
 # Barrido de extremos del circuito global
 
+**Actualización:** [R21 exacto](R21_EXTREMOS_EXACTOS.md) ya pasa en el solver global, junto con R20. El [barrido actual](../evidence/circuit66_control_survey_r21.json) acepta 17408 muestras; conserva seis fallos previos y cuatro rechazos de valores R21 fuera de dominio. Las tablas siguientes describen el barrido histórico anterior a las correcciones.
+
 ## Alcance y criterio
 
 Banco offline `circuit66_admission --controls`: 34 escenarios por cada hipótesis de R61 (200 Ω y 200 kΩ), a 48 kHz. Se cambia un control, trim o fuente por vez desde el centro, se mantiene 128 muestras y se restaura otras 128. BUS es una senoide de 100 Hz y 20 mV. Semiconductores, temperatura, alimentaciones y cargas son los supuestos nominales del banco; no identifican una población vintage.
