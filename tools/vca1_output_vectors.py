@@ -7,6 +7,7 @@ nonlinear solve. Rust nested ports and their analytic derivatives are unused.
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
 
 from filter_panel_output_transient_reference import panel_load_reduction
@@ -21,7 +22,7 @@ from vca_cascaded_output_dc_reference import (
 NODES = ("C6_LEFT",) + CHAIN_NODES + ("C2_RIGHT", "R21_WIPER")
 
 
-def generate_vectors() -> dict:
+def generate_vectors(*, audio_trace: bool = False) -> dict:
     temperature = 298.15
     diode = diode_model_from_reference(
         ideality=1.5, forward_voltage_at_100ma_v=0.7,
@@ -76,12 +77,18 @@ def generate_vectors() -> dict:
                    max_dc_kcl_residual_a=full["max_kcl_residual_a"])
     x = x_dc + [0.0, 0.0]
     rows = []
-    for index in range(12):
+    for index in range(192 if audio_trace else 12):
         b = dict(controls)
-        b["recover_collector_v"] += 0.5 if index >= 2 else 0.0
-        b["loudness_v"] += 0.03 if index >= 4 else 0.0
-        b["q21_base_v"] += 0.02 if index >= 8 else 0.0
-        sw18 = index < 6 or index >= 10
+        if audio_trace:
+            b["recover_collector_v"] += 0.5 * math.sin(2*math.pi*1000*index/48000)
+            b["loudness_v"] += 0.03 if index >= 64 else 0.0
+            b["q21_base_v"] += 0.02 if index >= 128 else 0.0
+            sw18 = index < 80 or index >= 160
+        else:
+            b["recover_collector_v"] += 0.5 if index >= 2 else 0.0
+            b["loudness_v"] += 0.03 if index >= 4 else 0.0
+            b["q21_base_v"] += 0.02 if index >= 8 else 0.0
+            sw18 = index < 6 or index >= 10
         main = reduced["equivalent_main_load_ohm"] if sw18 else 2500.0
         previous_amp = old_amp
         previous_caps = old_c6, old_c15, old_c4, old_c2
@@ -124,7 +131,8 @@ def generate_vectors() -> dict:
         old_c4, old_c2 = x[16]-b["plus_v"], x[22]-x[23]
         old_amp = amp
     return dict(
-        schema="rf-d/vca1-output-vectors/v1",
+        schema=("rf-d/vca1-audio-trace/v1" if audio_trace
+                else "rf-d/vca1-output-vectors/v1"),
         sources=["SVC-9 Fig. 9-11 PDF p. 13",
                  "SVC-9 Table 7-8 PDF pp. 30-31",
                  "SVC-9 Fig. 9-8 PDF p. 10",
@@ -133,7 +141,8 @@ def generate_vectors() -> dict:
         method="25-variable finite-difference Newton; independent board-3 solve",
         units=dict(voltage="V", current="A", time="s", resistance="ohm",
                    capacitance="F", temperature="K"),
-        case=dict(id="nominal_loaded_switch", dt_s=dt,
+        case=dict(id=("four_cycles_1khz_switch" if audio_trace
+                      else "nominal_loaded_switch"), dt_s=dt,
                   r20_lower_ohm=2500.0, r21_lower_ohm=2000.0,
                   hi_load_ohm=10000.0, lo_load_ohm=100000.0,
                   tip_ring_load_ohm=32.0,
@@ -155,6 +164,9 @@ def generate_vectors() -> dict:
 
 
 if __name__ == "__main__":
-    destination = Path(__file__).resolve().parents[1] / "evidence" / "vca1_output_vectors.json"
-    destination.write_text(json.dumps(generate_vectors(), indent=2) + "\n",
-                           encoding="utf-8")
+    evidence = Path(__file__).resolve().parents[1] / "evidence"
+    for audio_trace, filename in ((False, "vca1_output_vectors.json"),
+                                  (True, "vca1_audio_trace.json")):
+        (evidence / filename).write_text(
+            json.dumps(generate_vectors(audio_trace=audio_trace), indent=2) + "\n",
+            encoding="utf-8")

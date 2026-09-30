@@ -260,3 +260,65 @@ fn invalid_first_balance_preserves_every_capacitor_and_downstream_state() {
     );
     assert_eq!(state, previous);
 }
+
+#[test]
+fn four_cycle_signal_and_control_trace_matches_independent_oracle() {
+    let fixture: Value =
+        serde_json::from_str(include_str!("../../../evidence/vca1_audio_trace.json")).unwrap();
+    assert_eq!(fixture["schema"], "rf-d/vca1-audio-trace/v1");
+    let case = &fixture["case"];
+    let (vca, conversion, headphone) = parameters(case);
+    let mut state = initial_state(
+        vca,
+        conversion,
+        headphone,
+        boundary(case, &case["initial_boundary"], true),
+    )
+    .unwrap();
+    let mut max_node_error = 0.0_f64;
+    let mut max_j7_error = 0.0_f64;
+    let mut squared_j7_error = 0.0_f64;
+    let mut squared_j7_signal = 0.0_f64;
+    let rows = case["steps"].as_array().unwrap();
+    assert_eq!(rows.len(), 192);
+    for (index, row) in rows.iter().enumerate() {
+        let b = boundary(case, &row["boundary"], row["sw18_on"].as_bool().unwrap());
+        let result = step(
+            &mut state,
+            vca,
+            conversion,
+            headphone,
+            b,
+            SolverBudget::default(),
+        )
+        .unwrap_or_else(|e| panic!("trace step {index}: {e:?}"));
+        for (i, actual) in state.node_v.iter().enumerate() {
+            max_node_error = max_node_error.max((actual - n(&row["node_v"][i])).abs());
+        }
+        for (i, actual) in state.second.node_v.iter().enumerate() {
+            max_node_error = max_node_error.max((actual - n(&row["node_v"][i + 10])).abs());
+        }
+        for (i, actual) in state.second.downstream.node_v.iter().enumerate() {
+            max_node_error = max_node_error.max((actual - n(&row["node_v"][i + 16])).abs());
+        }
+        let expected = n(&row["j7_v"]);
+        let error = result.j7_v - expected;
+        max_j7_error = max_j7_error.max(error.abs());
+        squared_j7_error += error * error;
+        squared_j7_signal += expected * expected;
+        assert!(result.max_kcl_residual_a < 1e-10);
+    }
+    let rms_error = (squared_j7_error / rows.len() as f64).sqrt();
+    let rms_signal = (squared_j7_signal / rows.len() as f64).sqrt();
+    let numerical_snr_db = 20.0 * (rms_signal / rms_error).log10();
+    eprintln!("192-sample numerical trace: max_node_v={max_node_error:.3e} max_j7_v={max_j7_error:.3e} j7_snr_db={numerical_snr_db:.1}");
+    assert!(
+        max_node_error < 1e-6,
+        "maximum 23-node error {max_node_error}"
+    );
+    assert!(max_j7_error < 1e-7, "maximum J7 error {max_j7_error}");
+    assert!(
+        numerical_snr_db > 90.0,
+        "numerical J7 SNR {numerical_snr_db} dB"
+    );
+}

@@ -14,6 +14,8 @@ El [oráculo Python](../tools/vca1_output_vectors.py) formula **25 ecuaciones** 
 
 La [corriente y admisión en R2](PUERTO_NATIVO_HACIA_FILTRO.md) quedan disponibles para el próximo cierre con el recuperador del filtro.
 
+Una [traza numérica de 192 muestras](TRAZA_AUDIO_NUMERICA_VCA1.md) contrasta cuatro ciclos de señal de `1 kHz`, cambios de control y SW18 con el oráculo independiente, además del fixture breve de pasos.
+
 El [sondeo de 48 000 muestras](../crates/rf-d-circuit/examples/bench_vca1_output.rs) en Ryzen 5 5600X, compilación `--release`, bloques de 64 y señal impuesta de 100 Hz dio `mean 6019,0 µs`, `p99 6847,9 µs`, máximo `7596,6 µs` frente al plazo de `1333,3 µs`. Hubo **0 fallos**, **0 retornos al predictor**, media **2,00** evaluaciones del puerto posterior por muestra y KCL máximo `2,398×10⁻¹¹ A`. La ruta conjunta **no pasa** el gate de tiempo real; estos resultados no son rendimiento de un plugin ni de una voz completa. El costo de resolver reiteradamente la cadena posterior será el siguiente objeto de optimización y se contrastará contra esta referencia antes de reemplazarla.
 
 ## Incertidumbre y alcance
