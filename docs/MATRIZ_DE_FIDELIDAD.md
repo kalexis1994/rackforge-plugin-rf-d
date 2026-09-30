@@ -14,6 +14,8 @@ Los estados `desconocido`, `hipótesis`, `modelado`, `contrastado` y `cerrado pa
 
 ## Afirmación pública actual
 
+El [puerto nativo Q26/Q28](CUTOFF_NATIVO_Q26_Q28.md) añade C18, ambas junturas y carga TAIL variable en 72 pasos aislados contra KCL Python independiente. Se contrastaron también la red pasiva de panel, la tangente del puerto y los fallos atómicos. El acoplamiento al ladder todavía está pendiente; las fuentes de control y los parámetros BJT siguen impuestos.
+
 La [malla temporal de 15 supuestos de semiconductores y temperatura](SENSIBILIDAD_TRANSITORIA_SEMICONDUCTORES_AURICULARES.md) amplía la evidencia numérica de la fila **Salida**. El [ladder nativo hasta J7](LADDER_SALIDA_NATIVA.md) amplía el cálculo condicionado con C10 abierto y los dos valores de R61. Sus amplitudes BUS→J7 no cambian el estado de audio externo ni validan la población vintage.
 
 El [solver denso NumPy opcional](SOLVER_DENSO_AURICULARES.md) acelera esos barridos offline y fue cotejado contra la ruta Python; no es aún una implementación DSP de tiempo real.

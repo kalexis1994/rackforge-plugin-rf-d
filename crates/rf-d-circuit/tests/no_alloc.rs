@@ -478,6 +478,26 @@ fn dc_initialization_and_audio_steps_do_not_allocate() {
         )
         .expect("closed C10 ladder through J7 step");
     }
+    let cutoff_parameters = rf_d_circuit::cutoff::Parameters {
+        q26: vca2,
+        q28: vca2,
+    };
+    let cutoff_boundary = rf_d_circuit::cutoff::Boundary {
+        panel: rf_d_circuit::cutoff::PanelBoundary::default(),
+        range_fraction_from_ground: 0.1,
+        tail_v: 2.0,
+        dt_s: 1.0 / 48000.0,
+    };
+    let mut cutoff = rf_d_circuit::cutoff::solve_dc_port(cutoff_parameters, cutoff_boundary)
+        .expect("cutoff DC state")
+        .next_state;
+    for i in 0..72 {
+        let mut b = cutoff_boundary;
+        b.panel.contour_pin16_v = if i % 24 < 12 { 0.0 } else { 0.08 };
+        b.tail_v = if i % 24 < 12 { 2.0 } else { 0.02 };
+        rf_d_circuit::cutoff::step(&mut cutoff, cutoff_parameters, b, SolverBudget::default())
+            .expect("cutoff port step");
+    }
     let after = ALLOCATIONS.load(Ordering::Relaxed);
     assert_eq!(after - before, 0, "processing allocated heap memory");
 }

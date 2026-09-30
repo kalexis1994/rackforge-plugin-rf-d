@@ -28,4 +28,6 @@ La ruta experimental BUS→J7 dispone de [vectores de admisión numérica](docs/
 
 ## Límites de recursos
 
+El [control Q26/Q28 nativo](docs/CUTOFF_NATIVO_Q26_Q28.md) incluye C18, ambas junturas BJT y las ramas de cutoff, contorno, teclado, modulación y jack. Su puerto TAIL y tangente se contrastaron en 72 pasos independientes. La integración con el ladder y su costo quedan pendientes.
+
 Manuales descargados, esquemas, fotos internas, mediciones y WAV de referencia pertenecen a `references-local/` o `captures/`, fuera de Git. El repo guarda identificadores, hashes, derivaciones, pruebas y resultados. Ningún paquete `.rfplugin` incluirá material original que no se pueda distribuir.
