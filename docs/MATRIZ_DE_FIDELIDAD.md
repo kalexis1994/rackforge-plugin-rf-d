@@ -14,6 +14,8 @@ Los estados `desconocido`, `hipótesis`, `modelado`, `contrastado` y `cerrado pa
 
 ## Afirmación pública actual
 
+La [evaluación compartida de exponenciales](EXPONENCIALES_GLOBAL_66.md) añade un gate específico de corriente/derivada y reduce otro 9,306 % la media global a 2,23336 ms/bloque. No altera las ecuaciones ni admite la ruta en el host; C6 y C7 siguen abiertos.
+
 El [ensamblado global ordenado](ENSAMBLADO_GLOBAL_ORDENADO.md) conserva las 66 KCL y los gates numéricos. Reduce 5,013 % la media local a 2,46534 ms/bloque; los 640 bloques medidos aún exceden el plazo. Se admite como optimización experimental; C6 y C7 siguen abiertos.
 
 El [solver global de 66 nodos](SOLVER_GLOBAL_66_NODOS.md) añade Jacobiano completamente analítico y eliminación de ceros exactos, con arrays fijos. Reproduce 128 pasos del oráculo Python (J7 0,248 nV) y pasa el contraste de 8192 muestras contra la partición, después de hacer más estricta la tolerancia del primer VCA. Cinco corridas alternadas reducen el costo medio 9,39 veces a 2,559 ms/bloque; 640 de 640 bloques globales aún exceden 1,333 ms. El estado de audio externo permanece abierto y C7 no pasa.

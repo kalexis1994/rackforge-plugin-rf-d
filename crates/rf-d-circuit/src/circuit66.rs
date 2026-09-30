@@ -70,6 +70,19 @@ enum Terminal {
     Fixed(f64),
 }
 use Terminal::{Fixed, Node};
+
+// Algebraically identical junction law. Near zero, retain expm1 to avoid
+// cancellation. Away from zero one exp suffices; its derivative is never
+// reconstructed from expm1 + 1 (which would erase weak reverse conductance).
+fn junction_exp(exponent: f64) -> (f64, f64) {
+    let exponential = exponent.exp();
+    let excess = if cfg!(feature = "solver-dual-exp") || exponent.abs() < 0.5 {
+        exponent.exp_m1()
+    } else {
+        exponential - 1.0
+    };
+    (excess, exponential)
+}
 impl Terminal {
     fn value(self, x: &[f64; N]) -> f64 {
         match self {
@@ -129,10 +142,12 @@ impl<'a> Stamp<'a> {
         if !be.is_finite() || !bc.is_finite() || be.max(bc) > 45.0 {
             return Err(StepError::ExponentialDomain);
         }
-        let f = p.transistor_is_a * be.exp_m1();
-        let rev = p.transistor_is_a * bc.exp_m1();
-        let gf = p.transistor_is_a * be.exp() / vt;
-        let gr = p.transistor_is_a * bc.exp() / vt;
+        let (f_excess, f_exp) = junction_exp(be);
+        let (r_excess, r_exp) = junction_exp(bc);
+        let f = p.transistor_is_a * f_excess;
+        let rev = p.transistor_is_a * r_excess;
+        let gf = p.transistor_is_a * f_exp / vt;
+        let gr = p.transistor_is_a * r_exp / vt;
         let ib = f / p.beta_forward + rev / p.beta_reverse;
         let ic = f - (1.0 + 1.0 / p.beta_reverse) * rev;
         let db = [
@@ -172,13 +187,46 @@ impl<'a> Stamp<'a> {
         if !exponent.is_finite() || exponent > 45.0 {
             return Err(StepError::ExponentialDomain);
         }
-        self.branch(
-            anode,
-            cathode,
-            is_a * exponent.exp_m1(),
-            is_a * exponent.exp() / nvt,
-        );
+        let (excess, exponential) = junction_exp(exponent);
+        self.branch(anode, cathode, is_a * excess, is_a * exponential / nvt);
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod junction_tests {
+    use super::junction_exp;
+
+    #[test]
+    fn junction_current_preserves_cancellation_accuracy_and_reverse_derivative() {
+        let check = |x: f64| {
+            let (current, derivative) = junction_exp(x);
+            let reference = x.exp_m1();
+            assert!(
+                (current - reference).abs() <= 4.0 * f64::EPSILON * reference.abs(),
+                "x={x}"
+            );
+            assert_eq!(derivative.to_bits(), x.exp().to_bits(), "x={x}");
+        };
+        // Full admitted positive domain and deep reverse bias, including
+        // underflow. Both sides and exact points of the numerical switch.
+        for i in 0..32769 {
+            check(-750.0 + 795.0 * i as f64 / 32768.0);
+        }
+        for x in [-0.5_f64, 0.5] {
+            check(x);
+            check(f64::from_bits(x.to_bits() - 1));
+            check(f64::from_bits(x.to_bits() + 1));
+        }
+        check(0.0);
+        check(-0.0);
+        for power in 1..=1074 {
+            let x = 2.0_f64.powi(-power);
+            check(x);
+            check(-x);
+        }
+        let (_, derivative) = junction_exp(-100.0);
+        assert!(derivative > 0.0); // expm1(-100)+1 would be exactly zero.
     }
 }
 

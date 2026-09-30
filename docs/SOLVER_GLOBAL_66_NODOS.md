@@ -58,6 +58,8 @@ cargo run --release -p rf-d-circuit --example bench_ladder_recovery_output -- --
 
 ## Lecciones para RACE
 
+La [evaluación compartida de exponenciales](EXPONENCIALES_GLOBAL_66.md) conserva precisión cerca de cero y conductancia inversa. Los gates admiten una reducción adicional del 9,306 %: media local 2,23336 ms/bloque, aún fuera de plazo.
+
 El [ensamblado directo en orden de eliminación](ENSAMBLADO_GLOBAL_ORDENADO.md) evita la copia de matriz de aquel ensayo. Se admite experimentalmente tras los gates: costo medio 2,59546→2,46534 ms (−5,013 %), con C7 aún abierto. Incluye un perfil offline y otras dos optimizaciones descartadas por aumentar el costo.
 
 El [ensayo posterior de ordenación por grado mínimo](ORDENACION_GLOBAL_RECHAZADA.md) conservó la señal pero aumentó el costo medio 3,416 %. Se rechazó y se restituyó el código anterior; el parche y las mediciones quedan registrados.
