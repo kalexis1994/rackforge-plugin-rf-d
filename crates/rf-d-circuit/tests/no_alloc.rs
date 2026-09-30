@@ -1,6 +1,10 @@
 use std::alloc::{GlobalAlloc, Layout, System};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
+use rf_d_circuit::ladder_recovery_output::{
+    initial_state as initial_ladder_state, step as step_ladder, Boundary as LadderBoundary,
+    Parameters as LadderParameters,
+};
 use rf_d_circuit::output::{
     initial_output_state, solve_output_boundary, solve_output_input_port, OutputBoundary,
 };
@@ -406,6 +410,56 @@ fn dc_initialization_and_audio_steps_do_not_allocate() {
             solve_recovery_input_port(&recovery, vca2, conversion, p, b, SolverBudget::default())
                 .expect("C5/C1 two-port toward ladder")
                 .next_state;
+    }
+    let ladder_parameters = LadderParameters {
+        transistor: vca2,
+        tail_current_a: 6.824_898_505_905_974e-6,
+        r61_ohm: 200.0,
+        r30_ohm: 830.0,
+    };
+    let ladder_seed = [
+        7.8431017460109675,
+        6.372499040594479,
+        4.9019061730679665,
+        3.43132324181033,
+        1.9607503461842566,
+        1.4561733893906676,
+        1.9607344627142946,
+        1.9607223099167141,
+        2.9270178181494293,
+        4.397856399069791,
+        5.868704916259031,
+        7.339563271338244,
+        2.927029970947009,
+        4.397868551867372,
+        5.868717069056611,
+        7.339575424135825,
+    ];
+    let mut ladder = initial_ladder_state(
+        ladder_parameters,
+        conversion,
+        p,
+        LadderBoundary {
+            bus_v: 0.0,
+            recovery: recovery_boundary,
+        },
+        ladder_seed,
+    )
+    .expect("ladder through J7 DC state");
+    for i in 0..40 {
+        let bus_v = if i % 20 < 10 { 0.001 } else { -0.001 };
+        step_ladder(
+            &mut ladder,
+            ladder_parameters,
+            conversion,
+            p,
+            LadderBoundary {
+                bus_v,
+                recovery: recovery_boundary,
+            },
+            SolverBudget::default(),
+        )
+        .expect("ladder through J7 step");
     }
     let after = ALLOCATIONS.load(Ordering::Relaxed);
     assert_eq!(after - before, 0, "processing allocated heap memory");

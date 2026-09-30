@@ -4,6 +4,7 @@
 //! imposed laboratory values, not measurements of a vintage unit.
 //! The processing path uses fixed stack arrays and has no I/O or allocation.
 
+pub mod ladder_recovery_output;
 pub mod output;
 pub mod output_conversion;
 pub mod output_conversion_c4;
