@@ -1,6 +1,8 @@
 use rf_d_circuit::output::OutputBoundary;
 use rf_d_circuit::output_conversion::{DiodeParameters, Parameters as ConversionParameters};
-use rf_d_circuit::output_conversion_c4::{initial_state, step, BoundaryC4, NODE_NAMES};
+use rf_d_circuit::output_conversion_c4::{
+    initial_state, solve_input_port, step, BoundaryC4, NODE_NAMES,
+};
 use rf_d_circuit::{Parameters as HeadphoneParameters, SolverBudget, StepError};
 use serde_json::Value;
 
@@ -87,11 +89,13 @@ fn c4_and_c2_joint_step_matches_nine_variable_python() {
         }
         assert!((state.c4_capacitor_v - n(&case["initial"]["c4_capacitor_v"])).abs() < 1e-8);
         for (index, row) in case["steps"].as_array().unwrap().iter().enumerate() {
+            let previous = state;
+            let b = boundary(case, row, &row["boundary"]);
             let result = step(
                 &mut state,
                 conversion,
                 headphone,
-                boundary(case, row, &row["boundary"]),
+                b,
                 SolverBudget::default(),
             )
             .unwrap_or_else(|e| panic!("{} step {index}: {e:?}", case["id"]));
@@ -137,6 +141,64 @@ fn c4_and_c2_joint_step_matches_nine_variable_python() {
             assert!(result.output.max_c2_right_kcl_residual_a < 1e-10);
             assert!(result.output.panel.diagnostics.max_panel_kcl_residual_a < 1e-10);
             assert!(result.output.panel.diagnostics.board3.max_kcl_residual_a < 1e-10);
+            let port =
+                solve_input_port(&previous, conversion, headphone, b, SolverBudget::default())
+                    .unwrap();
+            assert_eq!(port.next_state, state);
+            for output in 0..3 {
+                let expected = n(&row["upstream_port_current_a"][output]);
+                assert!(
+                    (port.current_a[output] - expected).abs() < 1e-9,
+                    "{} step {index} upstream current {output}: {} vs {expected}",
+                    case["id"],
+                    port.current_a[output]
+                );
+            }
+            if [0usize, 8].contains(&index) {
+                for column in 0..3 {
+                    let mut plus_b = b;
+                    let mut minus_b = b;
+                    let high_control = match column {
+                        0 => &mut plus_b.second_balance_wiper_v,
+                        1 => &mut plus_b.q12_base_v,
+                        _ => &mut plus_b.q17_base_v,
+                    };
+                    *high_control += 1e-4;
+                    let low_control = match column {
+                        0 => &mut minus_b.second_balance_wiper_v,
+                        1 => &mut minus_b.q12_base_v,
+                        _ => &mut minus_b.q17_base_v,
+                    };
+                    *low_control -= 1e-4;
+                    let high = solve_input_port(
+                        &previous,
+                        conversion,
+                        headphone,
+                        plus_b,
+                        SolverBudget::default(),
+                    )
+                    .unwrap();
+                    let low = solve_input_port(
+                        &previous,
+                        conversion,
+                        headphone,
+                        minus_b,
+                        SolverBudget::default(),
+                    )
+                    .unwrap();
+                    for output in 0..3 {
+                        let finite_difference =
+                            (high.current_a[output] - low.current_a[output]) / 2e-4;
+                        assert!(
+                            (port.conductance_s[output][column] - finite_difference).abs()
+                                < 2e-7 + 1e-4 * finite_difference.abs(),
+                            "{} step {index} Y[{output},{column}]: {} vs {finite_difference}",
+                            case["id"],
+                            port.conductance_s[output][column]
+                        );
+                    }
+                }
+            }
             count += 1;
         }
     }

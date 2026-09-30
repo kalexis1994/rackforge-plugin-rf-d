@@ -53,6 +53,19 @@ pub struct ResultC4 {
     pub output_port_evaluations: usize,
     pub predictor_fallback: bool,
     pub max_kcl_residual_a: f64,
+    /// Complete downstream d(I_C2)/d(V_Q17c) at the accepted state.
+    pub c2_input_conductance_s: f64,
+}
+
+/// Currents presented to the upstream second VCA. Order: second balance
+/// wiper into R11, Q12 base into Q14 collector, Q17 base into Q13 collector.
+#[derive(Clone, Copy, Debug)]
+pub struct InputPortC4 {
+    pub next_state: State,
+    pub result: ResultC4,
+    pub current_a: [f64; 3],
+    /// Row = port current, column = imposed upstream voltage in the same order.
+    pub conductance_s: [[f64; 3]; 3],
 }
 
 fn six_boundary(x: &[f64; M], b: BoundaryC4) -> Boundary {
@@ -220,6 +233,7 @@ fn solve_from_seed(
                 output_port_evaluations: *ports,
                 predictor_fallback: false,
                 max_kcl_residual_a: error,
+                c2_input_conductance_s: port.conductance_s,
             };
             return Ok((x, port, result));
         }
@@ -297,6 +311,76 @@ pub fn step(
     let mut result = solution.2;
     result.predictor_fallback = fallback;
     Ok(result)
+}
+
+fn pnp_base_terms(emitter_v: f64, collector_v: f64, base_v: f64, p: Parameters) -> (f64, f64, f64) {
+    let vt = K_B * p.temperature_k / Q_E;
+    let forward = (emitter_v - base_v) / vt;
+    let reverse = (collector_v - base_v) / vt;
+    let ib =
+        p.transistor_is_a * (forward.exp_m1() / p.beta_forward + reverse.exp_m1() / p.beta_reverse);
+    let gf = p.transistor_is_a * forward.exp() / vt;
+    let gr = p.transistor_is_a * reverse.exp() / vt;
+    (ib, gf, gr)
+}
+
+/// Return the provisional seven-node/C4/C2 output state and exact local
+/// three-port tangent. Every caller trial must pass the same previous state.
+pub fn solve_input_port(
+    previous: &State,
+    p: Parameters,
+    headphone: HeadphoneParameters,
+    b: BoundaryC4,
+    budget: SolverBudget,
+) -> Result<InputPortC4, StepError> {
+    let mut next_state = *previous;
+    let result = step(&mut next_state, p, headphone, b, budget)?;
+    let x = next_state.node_v;
+    let (_, jacobian) = evaluate(
+        &x,
+        p,
+        b,
+        previous.c4_capacitor_v,
+        b.output.dt_s,
+        Some((result.output.c2_current_a, result.c2_input_conductance_s)),
+    )?;
+    let (q12_ib, q12_gf, q12_gr) = pnp_base_terms(x[3], x[5], b.q12_base_v, p);
+    let (q17_ib, q17_gf, q17_gr) = pnp_base_terms(x[4], x[6], b.q17_base_v, p);
+    let current_a = [(b.second_balance_wiper_v - x[0]) / R11_OHM, q12_ib, q17_ib];
+    let mut conductance_s = [[0.0; 3]; 3];
+    for column in 0..3 {
+        let mut rhs = [0.0; M];
+        match column {
+            0 => rhs[0] = 1.0 / R11_OHM,
+            1 => {
+                rhs[3] = (1.0 + 1.0 / p.beta_forward) * q12_gf - q12_gr;
+                rhs[5] = -q12_gf + (1.0 + 1.0 / p.beta_reverse) * q12_gr;
+            }
+            _ => {
+                rhs[4] = (1.0 + 1.0 / p.beta_forward) * q17_gf - q17_gr;
+                rhs[6] = -q17_gf + (1.0 + 1.0 / p.beta_reverse) * q17_gr;
+            }
+        }
+        let response = solve_linear(jacobian, rhs)?;
+        conductance_s[0][column] = (f64::from(column == 0) - response[0]) / R11_OHM;
+        conductance_s[1][column] = q12_gf / p.beta_forward * response[3]
+            + q12_gr / p.beta_reverse * response[5]
+            - f64::from(column == 1) * (q12_gf / p.beta_forward + q12_gr / p.beta_reverse);
+        conductance_s[2][column] = q17_gf / p.beta_forward * response[4]
+            + q17_gr / p.beta_reverse * response[6]
+            - f64::from(column == 2) * (q17_gf / p.beta_forward + q17_gr / p.beta_reverse);
+    }
+    if current_a.iter().any(|v| !v.is_finite())
+        || conductance_s.iter().flatten().any(|v| !v.is_finite())
+    {
+        return Err(StepError::ExponentialDomain);
+    }
+    Ok(InputPortC4 {
+        next_state,
+        result,
+        current_a,
+        conductance_s,
+    })
 }
 
 #[cfg(test)]

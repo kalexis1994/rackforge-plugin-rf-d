@@ -135,6 +135,7 @@ def generate_vectors() -> dict:
                 return [q1b] + currents + [fx, fw], amp
 
             x, amp, error = _newton(x, transient, f"{name}/{index}")
+            _, transistors = stage(x, controls)
             pin21 = x[7] * main / (1000.0 + main)
             hi = pin21 * reduced["hi_to_pin21_ratio"] if sw18 else 0.0
             lo = hi * reduced["lo_to_hi_ratio"] if sw18 else 0.0
@@ -147,6 +148,11 @@ def generate_vectors() -> dict:
                 "c2_current_a": 10e-6 / dt * (x[6] - x[7] - old_c2),
                 "c4_current_a": 220e-6 / dt * (
                     x[0] - controls["plus_v"] - old_c4),
+                "upstream_port_current_a": [
+                    (controls["second_balance_wiper_v"] - x[0]) / 150.0,
+                    transistors["Q12"]["base_a"],
+                    transistors["Q17"]["base_a"],
+                ],
                 "max_kcl_residual_a": error,
                 "amp_node_v": list(amp["node_v"]),
                 "amp_capacitor_v": dict(amp["capacitor_v"])})
