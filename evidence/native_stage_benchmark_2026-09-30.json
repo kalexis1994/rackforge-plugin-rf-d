@@ -1,0 +1,22 @@
+{
+  "schema": "rf-d/native-stage-benchmark/v1",
+  "date": "2026-09-30",
+  "git_commit": "5637ba0",
+  "host": "Windows, AMD Ryzen 5 5600X 6-Core Processor",
+  "compiler": "rustc 1.97.0 (2d8144b78 2026-07-07)",
+  "build": "cargo run --release -p rf-d-circuit --example <name>",
+  "sample_rate_hz": 48000,
+  "block_samples": 64,
+  "measured_samples": 48000,
+  "deadline_us": 1333.3333333333333,
+  "method": "Sequential runs of existing examples; each uses a warm pass then a measured pass; scenarios differ by stage and timings are not additive.",
+  "runs": [
+    {"example": "bench_board3", "scenario": "loaded_32_32_0p5v", "mean_us": 311.1, "p99_us": 369.4, "max_us": 488.1, "failures": 0},
+    {"example": "bench_panel", "scenario": "panel_loaded_32_32_0p5v", "mean_us": 597.2, "p99_us": 632.9, "max_us": 903.8, "failures": 0},
+    {"example": "bench_output", "scenario": "output_loaded_32_32_0p5v", "mean_us": 607.1, "p99_us": 765.8, "max_us": 1069.1, "failures": 0},
+    {"example": "bench_output_conversion_coupled", "scenario": "conversion_c2_loaded_32_32", "mean_us": 1279.6, "p99_us": 1372.8, "max_us": 1764.6, "mean_ports_per_sample": 2.0, "failures": 0},
+    {"example": "bench_output_conversion_c4", "scenario": "conversion_c4_loaded_32_32", "mean_us": 1341.5, "p99_us": 1516.2, "max_us": 1667.4, "mean_ports_per_sample": 2.0, "failures": 0},
+    {"example": "bench_vca2_output", "scenario": "vca2_to_j7", "mean_us": 3093.4, "p99_us": 3374.8, "max_us": 3645.5, "mean_downstream_evaluations_per_sample": 2.0, "failures": 0},
+    {"example": "bench_vca1_output", "scenario": "vca1_to_j7", "mean_us": 5400.4, "p99_us": 6104.1, "max_us": 6384.9, "mean_second_evaluations_per_sample": 2.0, "failures": 0}
+  ]
+}

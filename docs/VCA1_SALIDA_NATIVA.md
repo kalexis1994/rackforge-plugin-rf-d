@@ -18,6 +18,8 @@ Una [traza numérica de 192 muestras](TRAZA_AUDIO_NUMERICA_VCA1.md) contrasta cu
 
 El [sondeo de 48 000 muestras](../crates/rf-d-circuit/examples/bench_vca1_output.rs) en Ryzen 5 5600X, compilación `--release`, bloques de 64 y señal impuesta de 100 Hz dio `mean 6019,0 µs`, `p99 6847,9 µs`, máximo `7596,6 µs` frente al plazo de `1333,3 µs`. Hubo **0 fallos**, **0 retornos al predictor**, media **2,00** evaluaciones del puerto posterior por muestra y KCL máximo `2,398×10⁻¹¹ A`. La ruta conjunta **no pasa** el gate de tiempo real; estos resultados no son rendimiento de un plugin ni de una voz completa. El costo de resolver reiteradamente la cadena posterior será el siguiente objeto de optimización y se contrastará contra esta referencia antes de reemplazarla.
 
+Un [perfil posterior de siete etapas](PERFIL_COSTO_CADENA_NATIVA.md) repitió la medición en la misma máquina y obtuvo p99 `6104,1 µs` para VCA1→J7. La variación entre corridas confirma que falta margen considerable para Windows y que las medidas son referencias de ingeniería, no garantías de deadline.
+
 ## Incertidumbre y alcance
 
 R2 y R34/R36 figuran con ±5 %, C6 con ±10 % y C15 con +50/−10 % en la tabla 7-8. `I_s=10⁻¹⁴ A`, `β_F=100`, `β_R=5`, `298,15 K`, los diodos y las cargas de prueba son **supuestos de laboratorio**; no se midió una placa Model D. El colector del recuperador se fija a `5 V` en DC y recibe una perturbación para probar el acoplamiento, sin atribuir ese valor al instrumento. La equivalencia Rust/Python verifica la implementación de este circuito condicionado; quedan parámetros reales, efectos parasitarios, variación entre unidades, filtro acoplado, osciladores, controles y contraste de audio externo antes de hablar de fidelidad sonora.
