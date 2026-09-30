@@ -5,7 +5,9 @@
 use crate::circuit66::{self, Boundary as ChainBoundary, Parameters as ChainParameters};
 use crate::loudness_follower::{self, Parameters as FollowerParameters};
 use crate::output::main_load;
-use crate::output_conversion::{max_abs, solve_linear_sparse, Parameters as ConversionParameters};
+use crate::output_conversion::{
+    max_abs, solve_linear_many, solve_linear_sparse, Parameters as ConversionParameters,
+};
 use crate::{Parameters as HeadphoneParameters, SolverBudget, StepError};
 
 const N: usize = 71;
@@ -51,6 +53,65 @@ pub struct Preparation {
     pub solves: usize,
     pub total_iterations: usize,
     pub max_physical_kcl_a: f64,
+}
+
+/// Joint current port seen at the two exposed board2 terminals. Indices are
+/// [C2, reset base]; all derivatives keep incoming capacitor histories fixed.
+#[derive(Clone, Copy, Debug)]
+pub struct PortResponse {
+    /// Provisional candidate only; the caller's incoming state is immutable.
+    pub next_state: State,
+    pub result: Result71,
+    pub current_a: [f64; 2],
+    /// d(current_i)/d(source_j), S. The active network is not reciprocal.
+    pub admittance_s: [[f64; 2]; 2],
+    /// Natural documentary node order, d(node_i)/d(source_j), V/V.
+    pub node_gradient_v_per_v: [[f64; 2]; N],
+}
+
+/// Solve the whole loaded network and its two source tangents without
+/// publishing history. `None` opens capacitors for DC; `Some` represents one
+/// implicit-Euler step at the immutable incoming eighteen capacitor voltages.
+/// No source continuation or branch selection is hidden in this port.
+pub fn solve_port(
+    seed: [f64; N],
+    previous: Option<&State>,
+    p: ChainParameters,
+    c: ConversionParameters,
+    h: HeadphoneParameters,
+    f: FollowerParameters,
+    b: Boundary,
+    budget: SolverBudget,
+) -> Result<PortResponse, StepError> {
+    let mut work = Work::default();
+    let root = solve(seed, previous, p, c, h, f, b, budget, &mut work)?;
+    let (_, j) = linearize(previous, p, c, h, f, b, &root.x)?;
+    work.evaluations += 1;
+    let nvt = f.diode_ideality * 1.380649e-23 * f.temperature_k / 1.602176634e-19;
+    let gd = f.germanium_is_a * ((root.x[70] - b.reset_base_v) / nvt).exp() / nvt;
+    let mut rhs = [[0.0; 2]; N];
+    rhs[66][0] = 1.0 / 10000.0;
+    rhs[70][1] = gd;
+    let dx = solve_linear_many(j, rhs)?;
+    let admittance = std::array::from_fn(|i| {
+        std::array::from_fn(|k| {
+            let indicator = if i == k { 1.0 } else { 0.0 };
+            if i == 0 {
+                (indicator - dx[66][k]) / 10000.0
+            } else {
+                -gd * (dx[70][k] - indicator)
+            }
+        })
+    });
+    let mut next = previous.copied().unwrap_or_else(|| dc_state(root.x, b));
+    let result = publish(&mut next, root, p, f, b, work, false)?;
+    Ok(PortResponse {
+        next_state: next,
+        result,
+        current_a: [result.timing_current_a, result.reset_current_a],
+        admittance_s: admittance,
+        node_gradient_v_per_v: dx,
+    })
 }
 
 fn nodes(s: &State) -> [f64; N] {

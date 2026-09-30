@@ -49,7 +49,7 @@ def evaluator(values, c2, reset, *, old=None, bus=0.0, lower=2000):
     return evaluate
 
 
-def solve(seed, evaluate):
+def solve(seed, evaluate, *, kcl_gate=1e-11, correction_gate=1e-8):
     x = list(seed)
     for iteration in range(48):
         r = evaluate(x)
@@ -64,7 +64,7 @@ def solve(seed, evaluate):
                      if np is not None else _solve_linear(j, [-v for v in r]))
         kcl = max(abs(v) for v in r)
         correction = max(abs(v) for v in direction)
-        if kcl < GATES["kcl_a"] and correction < GATES["correction_v"]:
+        if kcl < kcl_gate and correction < correction_gate:
             return x, dict(iterations=iteration, kcl_a=kcl, correction_v=correction)
         for power in range(32):
             trial = [v+2**-power*d for v, d in zip(x, direction)]
@@ -72,7 +72,7 @@ def solve(seed, evaluate):
                 rr = evaluate(trial)
                 # At the rounding floor, accept a full correction that keeps
                 # the current gate; the next iteration still verifies voltage.
-                if max(abs(v) for v in rr) < kcl or kcl < 1e-11 and max(abs(v) for v in rr) < 1e-11:
+                if max(abs(v) for v in rr) < kcl or kcl < kcl_gate and max(abs(v) for v in rr) < kcl_gate:
                     x = trial
                     break
             except (ValueError, OverflowError):

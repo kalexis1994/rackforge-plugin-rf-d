@@ -66,4 +66,4 @@ cargo build --release --example circuit71_admission
 
 ## Próximo cierre
 
-Obtener la admisión conjunta vista desde C2 y reset, con toda la carga R59/Q18, y reintegrarla en el contorno. La [ambigüedad de raíces del biestable](CONTORNO_VOLUMEN_CIRCUITO.md) sigue abierta; no se elegirá una rama por conveniencia sonora. RACE C5 se cierra únicamente para las fronteras y escenas anteriores; conmutación física, parámetros de una unidad, voz completa, audio externo y deadline siguen pendientes.
+El [puerto conjunto C2/reset](PUERTO_CONTORNO_CADENA_71.md) ya calcula las dos corrientes y sus cuatro derivadas con la carga R59/Q18. Falta reintegrarlo en el contorno. La [ambigüedad de raíces del biestable](CONTORNO_VOLUMEN_CIRCUITO.md) sigue abierta; no se elegirá una rama por conveniencia sonora. RACE C5 se cierra únicamente para las fronteras y escenas anteriores; conmutación física, parámetros de una unidad, voz completa, audio externo y deadline siguen pendientes.

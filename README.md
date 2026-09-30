@@ -4,6 +4,8 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+El [puerto conjunto C2/reset con carga de toda la cadena](docs/PUERTO_CONTORNO_CADENA_71.md) añade corrientes, matriz de admisión `2×2` y gradientes de los 71 nodos. Pasa 36 casos independientes DC/temporales con diferencia máxima de admisión **2,04 pS**, candidato temporal coherente y heap cero. En un escenario alto de C2, CR6 devuelve 0,495 mA a reset: esa carga deberá entrar en el biestable, cuya conmutación todavía requiere resolver la estabilidad.
+
 El [cierre simultáneo de seguidor, R59 y cadena de 71 nodos](docs/SEGUIDOR_VCA_CADENA_71.md) calcula la base Q18 y la carga devuelta a C2/reset. Pasa veinte destinos DC y 256 pasos independientes, con error máximo de nodo **2,50 nV**, conservación de dieciocho cargas y heap cero. Los saltos se recuperan explícitamente con historial fijo; el costo de 16,12–16,96 ms por bloque todavía excede el plazo. El biestable y las fuentes reales del contorno siguen pendientes.
 
 El [perfil de etapas VCA](docs/ETAPAS_VCA_Y_REPRODUCIBILIDAD.md) contrasta ocho etapas y reduce 38,46 % el costo de las escenas con saltos frente a 32: 9,708 ms de kernel acumulado por bloque, todavía fuera del plazo. Pasan 1152 pasos Rust con 8/16/32 etapas y heap cero. El banco con un estado temporal común reproduce exactamente los resultados entre workers y conserva aparte la variación del arranque DC.

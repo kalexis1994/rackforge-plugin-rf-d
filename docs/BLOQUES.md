@@ -13,6 +13,8 @@ Para cada placa y ruta: designadores/nodos, referencias de esquema, alimentació
 
 Este listado es un mapa de investigación. La topología exacta y sus componentes quedan sujetos a la revisión documental elegida y sus correcciones.
 
+El [puerto C2/reset cargado](PUERTO_CONTORNO_CADENA_71.md) cuantifica corrientes y tangentes con los 71 nodos del circuito. El candidato temporal conserva la memoria entrante hasta la aceptación externa. La KCL del contorno deberá incorporar ambas corrientes; el biestable todavía no usa este puerto ni tiene conmutación admitida.
+
 El [cierre conjunto de 71 nodos](SEGUIDOR_VCA_CADENA_71.md) incorpora la carga R59/base Q18 del primer VCA al seguidor de volumen. Devuelve corrientes a los puertos C2/reset y conserva los dieciocho capacitores de la cadena. C2 del contorno y la base reset todavía son fuentes impuestas; no hay conmutación física admitida.
 
 Contornos: el [grafo de volumen y gatillo](CONTORNO_VOLUMEN_CIRCUITO.md) conserva los componentes y una ambigüedad de raíces del biestable. El [seguidor Q3/Q2 nativo](SEGUIDOR_VOLUMEN_NATIVO.md) cierra cinco nodos con CR6 y cargas impuestas, devolviendo corrientes/derivadas hacia C2, reset y futura base Q18. La conmutación y el contorno de filtro aún no están admitidos.

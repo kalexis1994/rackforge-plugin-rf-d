@@ -38,6 +38,8 @@ La ruta global Q26/Q28→ladder→VCAs→J7 tiene Jacobiano analítico, optimiza
 
 ## Fase E — Uso en vivo
 
+El [puerto cargado C2/reset](PUERTO_CONTORNO_CADENA_71.md) añade admisión `2×2` y gradientes `71×2` desde raíces completas, veinte DC y dieciséis temporales. Mantiene la memoria entrante durante todos los ensayos y devuelve un candidato provisional. Próximo corte: estudiar estabilidad y dinámica del biestable incorporando su carga real, sin seleccionar una raíz por conveniencia.
+
 El [cierre de 71 nodos](SEGUIDOR_VCA_CADENA_71.md) une Q3/Q2 con R59/base Q18 y la cadena hasta J7: veinte destinos DC, 256 pasos independientes, corrientes de C2/reset, memoria atómica y heap cero. Preparación y continuación son explícitas; se conserva un rechazo de semilla DC apagada. El costo todavía excede el plazo. El próximo corte obtiene las tangentes conjuntas y resuelve la ambigüedad del biestable antes de reintegrar el capacitor C2.
 
 El [apagado con rampas de laboratorio](APAGADO_VCA_GLOBAL_66.md) localizó 20/96 sondas >1 µV. El [criterio temporal de voltaje](CRITERIO_VOLTAJE_TRANSITORIO_GLOBAL.md) las corrige y pasa el estrés largo. La [reutilización de direcciones](DIRECCION_NEWTON_REUTILIZADA.md) reduce el costo posterior sin cambiar bits. [R21 exacto](R21_EXTREMOS_EXACTOS.md) pasa integración independiente y recursos con ambos topes. La [continuación DC VCA](DC_VCA_CONTINUACION.md) resuelve 18 arranques de fuentes en cero mediante una API de preparación. Próximos cortes: resolver saltos conservando los historiales, recursos/host y circuito real de contorno; los saltos abruptos siguen agotando Newton.

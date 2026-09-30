@@ -690,6 +690,31 @@ fn dc_initialization_and_audio_steps_do_not_allocate() {
             .expect("71-node fixed-history continuation without heap");
         }
     }
+    let seed71 = std::array::from_fn(|i| {
+        if i < 66 {
+            joint.chain.node_v[i]
+        } else {
+            joint.follower_v[i - 66]
+        }
+    });
+    for previous in [None, Some(&joint)] {
+        let response = rf_d_circuit::circuit71::solve_port(
+            seed71,
+            previous,
+            dynamic_parameters,
+            conversion,
+            p,
+            f,
+            b71,
+            SolverBudget::default(),
+        )
+        .expect("joint two-source tangents without heap");
+        assert!(response
+            .admittance_s
+            .iter()
+            .flatten()
+            .all(|v| v.is_finite()));
+    }
     let after = ALLOCATIONS.load(Ordering::Relaxed);
     assert_eq!(after - before, 0, "processing allocated heap memory");
 }
