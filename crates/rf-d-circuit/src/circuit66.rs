@@ -732,7 +732,7 @@ fn solve(
     Err(StepError::IterationBudget)
 }
 
-fn charges(x: &[f64; N], b: Boundary) -> [f64; 17] {
+pub(crate) fn charges(x: &[f64; N], b: Boundary) -> [f64; 17] {
     capacitors(b).map(|(left, right, _)| left.value(x) - right.value(x))
 }
 
@@ -1178,7 +1178,7 @@ pub fn step_vca_continuation(
     })
 }
 
-fn publish_step(
+pub(crate) fn publish_step(
     state: &mut State,
     p: Parameters,
     b: Boundary,

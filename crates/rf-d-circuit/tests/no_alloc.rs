@@ -639,6 +639,57 @@ fn dc_initialization_and_audio_steps_do_not_allocate() {
             .expect("loudness follower roots and tangents without allocation");
         }
     }
+    let f = rf_d_circuit::loudness_follower::Parameters::default();
+    let mut b71 = rf_d_circuit::circuit71::Boundary {
+        chain: dynamic_boundary,
+        c2_v: 3.2,
+        reset_base_v: 0.7,
+        supply_v: 9.3,
+    };
+    let seed = rf_d_circuit::circuit66::initial_state(
+        dynamic_parameters,
+        conversion,
+        p,
+        dynamic_boundary,
+        ladder_seed,
+    )
+    .expect("71-node chain anchor");
+    let mut joint = rf_d_circuit::circuit71::initial_state(
+        seed.node_v,
+        dynamic_parameters,
+        conversion,
+        p,
+        f,
+        b71,
+    )
+    .expect("71-node preparation without heap")
+    .state;
+    for c2 in [6.0, 0.8469345758149237, 0.0, 3.2] {
+        b71.c2_v = c2;
+        if rf_d_circuit::circuit71::step(
+            &mut joint,
+            dynamic_parameters,
+            conversion,
+            p,
+            f,
+            b71,
+            SolverBudget::default(),
+        )
+        .is_err()
+        {
+            rf_d_circuit::circuit71::step_continued(
+                &mut joint,
+                dynamic_parameters,
+                conversion,
+                p,
+                f,
+                b71,
+                32,
+                SolverBudget::default(),
+            )
+            .expect("71-node fixed-history continuation without heap");
+        }
+    }
     let after = ALLOCATIONS.load(Ordering::Relaxed);
     assert_eq!(after - before, 0, "processing allocated heap memory");
 }

@@ -67,4 +67,6 @@ El wrapper guarda revisión, CPU, compilador y hashes de ejecutable, código y o
 
 ## Siguiente cierre
 
+El [cierre de 71 nodos](SEGUIDOR_VCA_CADENA_71.md) ya une el seguidor con R59 y base Q18 calculada, conservando toda la cadena hasta J7. El siguiente pendiente es la admisión conjunta desde C2/reset y el regreso al biestable; el bloque aislado anterior mantiene su alcance y evidencia propios.
+
 Unir R59/base Q18 y el seguidor simultáneamente para cuantificar la carga real de la salida. Después reintegrar la corriente de entrada en C2 y el feedback en Q15, resolviendo primero la [ambigüedad del biestable](CONTORNO_VOLUMEN_CIRCUITO.md). Los voltajes de este circuito no están restringidos al intervalo `0..2 V` usado en las continuaciones VCA de laboratorio: **no normalizar ni recortar la fuente física para entrar en ese API**. Ampliar y comprobar el solver correspondiente antes del acoplamiento.

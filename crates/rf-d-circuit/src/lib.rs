@@ -5,6 +5,7 @@
 //! The processing path uses fixed stack arrays and has no I/O or allocation.
 
 pub mod circuit66;
+pub mod circuit71;
 pub mod cutoff;
 pub mod cutoff_ladder_output;
 pub mod ladder_recovery_output;

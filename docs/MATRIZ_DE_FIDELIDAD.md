@@ -62,4 +62,6 @@ En el ladder, la [columna resistiva DC](COLUMNA_RESISTIVA_LADDER_DC.md), las [pi
 
 RF-D **pretende** recrear un Model D clásico. No hay aún una implementación sonora ni resultados de comparación que permitan afirmar fidelidad.
 
+El [seguidor/R59/Q18 y cadena de 71 nodos](SEGUIDOR_VCA_CADENA_71.md) cierra topología y cálculo condicionado en veinte destinos DC y 256 pasos: nodos 2,50 nV, dieciocho cargas y corrientes verificadas, cero heap. Conserva doce rechazos primarios recuperados por continuación con memoria fija y un rechazo de preparación desde una semilla apagada. C2/reset permanecen impuestos. El biestable, audio externo, voz completa y deadline no están admitidos.
+
 La ausencia de hardware propio es permanente para este plan. Cada bloque puede alcanzar `cerrado para alcance declarado` en **topología** y **cálculo**, mientras su audio externo permanezca abierto. Ese estado nunca se interpretará como identidad sonora con un ejemplar vintage.
