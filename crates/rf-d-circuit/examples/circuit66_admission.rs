@@ -6,8 +6,16 @@ mod lab;
 use rf_d_circuit::{circuit66, cutoff_ladder_output, SolverBudget};
 use serde_json::{json, Value};
 
+#[cfg(all(target_os = "windows", target_arch = "x86_64"))]
+#[path = "support/windows_stack.rs"]
+mod windows_stack;
+
 fn main() {
-    let result = temporal_grid();
+    let result = if std::env::args().any(|v| v == "--stack") {
+        stack_grid()
+    } else {
+        temporal_grid()
+    };
     match result {
         Ok(report) => {
             println!("{}", serde_json::to_string_pretty(&report).unwrap());
@@ -20,6 +28,154 @@ fn main() {
             std::process::exit(1);
         }
     }
+}
+
+#[cfg(not(all(target_os = "windows", target_arch = "x86_64")))]
+fn stack_grid() -> Result<Value, String> {
+    Err("Stack region probe requires Windows x86_64".into())
+}
+
+#[cfg(all(target_os = "windows", target_arch = "x86_64"))]
+fn stack_grid() -> Result<Value, String> {
+    use windows_stack::{snapshot, Snapshot};
+    struct Run {
+        before: Snapshot,
+        after_dc: Snapshot,
+        after_steps: Snapshot,
+        final_node: [f64; 66],
+        max_kcl: f64,
+        fallbacks: usize,
+    }
+    // A separate no-inline worker observes its own allocation. Serialization
+    // happens after joining, outside the measured worker.
+    #[inline(never)]
+    fn worker(
+        initial: Option<circuit66::State>,
+        p: cutoff_ladder_output::Parameters,
+    ) -> Result<Run, String> {
+        let (_, c, h) = lab::lab_parameters();
+        let before = snapshot()?;
+        let mut state = match initial {
+            Some(s) => s,
+            None => circuit66::initial_state(p, c, h, lab::controlled_boundary(0, true), lab::SEED)
+                .map_err(|e| format!("Worker DC: {e:?}"))?,
+        };
+        let after_dc = snapshot()?;
+        let mut max_kcl = 0.0_f64;
+        let mut fallbacks = 0;
+        for sample in 0..8192 {
+            if sample == 4096 {
+                state.previous_node_v[1] -= 1e6;
+            }
+            let old = state;
+            let result = circuit66::step(
+                &mut state,
+                p,
+                c,
+                h,
+                lab::controlled_boundary(sample, true),
+                SolverBudget::default(),
+            )
+            .map_err(|e| {
+                assert_eq!(state, old);
+                format!("Worker sample {sample}: {e:?}")
+            })?;
+            max_kcl = max_kcl.max(result.output.max_ladder_kcl_residual_a);
+            fallbacks += usize::from(result.output.predictor_fallback);
+        }
+        // Include invalid-input and exhausted-budget paths in the observation.
+        let old = state;
+        let mut b = lab::controlled_boundary(8192, true);
+        b.range_fraction_from_ground = f64::NAN;
+        if circuit66::step(&mut state, p, c, h, b, SolverBudget::default()).is_ok() {
+            return Err("Invalid input accepted".into());
+        }
+        assert_eq!(state, old);
+        b = lab::controlled_boundary(8192, true);
+        b.bus_v = 0.2;
+        if circuit66::step(
+            &mut state,
+            p,
+            c,
+            h,
+            b,
+            SolverBudget {
+                iterations: 1,
+                line_search_halvings: 16,
+            },
+        )
+        .is_ok()
+        {
+            return Err("One-iteration failure probe unexpectedly converged".into());
+        }
+        assert_eq!(state, old);
+        let after_steps = snapshot()?;
+        if max_kcl >= 1e-11 || fallbacks != 1 {
+            return Err("Worker KCL or forced predictor fallback gate failed".into());
+        }
+        Ok(Run {
+            before,
+            after_dc,
+            after_steps,
+            final_node: state.node_v,
+            max_kcl,
+            fallbacks,
+        })
+    }
+    let requested = std::env::args()
+        .find_map(|s| s.strip_prefix("--stack-kib=").map(str::to_owned))
+        .unwrap_or_else(|| "2048".into())
+        .parse::<usize>()
+        .map_err(|e| e.to_string())?;
+    if !(512..=8192).contains(&requested) {
+        return Err("Use a requested worker stack of 512..8192 KiB".into());
+    }
+    let (base, c, h) = lab::lab_parameters();
+    let mut rows = Vec::new();
+    for r61 in [200.0, 200000.0] {
+        let p = cutoff_ladder_output::Parameters {
+            r61_ohm: r61,
+            ..base
+        };
+        let outside =
+            circuit66::initial_state(p, c, h, lab::controlled_boundary(0, true), lab::SEED)
+                .map_err(|e| format!("Outside-worker DC: {e:?}"))?;
+        let mut reference = None;
+        for dc_in_worker in [true, false] {
+            let initial = if dc_in_worker { None } else { Some(outside) };
+            let run = std::thread::Builder::new()
+                .name("rf-d-stack-probe".into())
+                .stack_size(requested * 1024)
+                .spawn(move || worker(initial, p))
+                .map_err(|e| e.to_string())?
+                .join()
+                .map_err(|_| "Worker panicked".to_string())??;
+            let difference = if let Some(previous) = reference {
+                run.final_node
+                    .iter()
+                    .zip(previous)
+                    .map(|(a, b): (&f64, f64)| (a - b).abs())
+                    .fold(0.0_f64, f64::max)
+            } else {
+                reference = Some(run.final_node);
+                0.0
+            };
+            if difference > 1e-12 {
+                return Err("Worker initialization paths differ numerically".into());
+            }
+            rows.push(json!({"r61_ohm":r61,"dc_in_worker":dc_in_worker,"requested_stack_bytes":requested*1024,
+                "before":windows_stack::json(run.before),"after_dc":windows_stack::json(run.after_dc),
+                "after_steps_and_failure_paths":windows_stack::json(run.after_steps),
+                "samples":8192,"forced_predictor_fallbacks":run.fallbacks,"atomic_rejections":2,
+                "max_kcl_a":run.max_kcl,"final_node_v":run.final_node.to_vec(),
+                "initialization_path_max_difference_v":difference}));
+        }
+    }
+    Ok(
+        json!({"schema":"rf-d/circuit66-stack-regions/v1","passed":true,"platform":"windows-x86_64",
+        "method":"separate Rust workers; read-only GetCurrentThreadStackLimits/VirtualQuery at phase boundaries",
+        "precise_stack_high_water_measured":false,"audio_deadline_claim":false,"runs":rows}),
+    )
 }
 
 fn smooth_boundary(t: f64, rate: usize, multitone: bool) -> cutoff_ladder_output::Boundary {

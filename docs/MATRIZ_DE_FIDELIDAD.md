@@ -14,6 +14,8 @@ Los estados `desconocido`, `hipótesis`, `modelado`, `contrastado` y `cerrado pa
 
 ## Afirmación pública actual
 
+El [banco de stack Win64](STACK_GLOBAL_66_WIN64.md) pasa 98304 muestras en workers de 2 MiB/1 MiB/512 KiB. Observa 288 KiB comprometidos, incluidas guardas. Valida inicialización, reintento y rechazo atómico para la escena; no mide el pico exacto ni admite el host.
+
 El [refinamiento global 48/96/192 kHz](REFINAMIENTO_TEMPORAL_GLOBAL_66.md) pasa 26880 pasos con descenso máximo/RMS de J7, C2 y R21. El cociente cercano a dos es consistente con Euler de primer orden en las escenas suaves. No fija error absoluto contra tiempo continuo ni admite oversampling del plugin.
 
 Las [ventanas de estrés con oráculo independiente](VENTANAS_INDEPENDIENTES_ESTRES_GLOBAL.md) contrastan 192 pasos a tres tasas y ambos R61, con historiales nativos declarados. Error máximo interno 0,204625 µV y J7 0,397665 nV. El alcance son cuatro pasos por ventana; C6 y C7 siguen abiertos.

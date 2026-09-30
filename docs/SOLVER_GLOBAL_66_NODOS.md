@@ -58,6 +58,8 @@ cargo run --release -p rf-d-circuit --example bench_ladder_recovery_output -- --
 
 ## Lecciones para RACE
 
+La [observación de stack Win64](STACK_GLOBAL_66_WIN64.md) pasa workers de 512 KiB y observa 288 KiB comprometidos, incluidas 24 KiB de guardas, en esta compilación. Esa observación por páginas no es un pico exacto ni una admisión en el host.
+
 El [estrés largo a tres tasas y ambos R61](ESTRES_LARGO_GLOBAL_66.md) amplía la convergencia a 752384 muestras con switches, cargas y controles combinados. Cero fallos/reintentos; KCL auditada con historial anterior y C10 abierto conservado bit a bit. Incluye otras dos variantes de costo restituidas. No sustituye el oráculo independiente ni mide C7.
 
 La [evaluación compartida de exponenciales](EXPONENCIALES_GLOBAL_66.md) conserva precisión cerca de cero y conductancia inversa. Los gates admiten una reducción adicional del 9,306 %: media local 2,23336 ms/bloque, aún fuera de plazo.
