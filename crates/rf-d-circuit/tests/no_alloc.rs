@@ -14,6 +14,10 @@ use rf_d_circuit::output_conversion_c4::{
     BoundaryC4,
 };
 use rf_d_circuit::panel::{initial_panel_state, solve_panel_boundary, PanelBoundary};
+use rf_d_circuit::vca2_output::{
+    initial_state as initial_vca2_output_state, step as step_vca2_output, Boundary as Vca2Boundary,
+    Parameters as Vca2Parameters,
+};
 use rf_d_circuit::{initial_state, solve_input_port, step, Parameters, SolverBudget};
 
 struct CountingAllocator;
@@ -274,6 +278,54 @@ fn dc_initialization_and_audio_steps_do_not_allocate() {
         )
         .expect("second VCA three-port")
         .next_state;
+    }
+    let vca2 = Vca2Parameters {
+        transistor_is_a: 1e-14,
+        beta_forward: 100.0,
+        beta_reverse: 5.0,
+        temperature_k: 298.15,
+    };
+    let vca2_base = Vca2Boundary {
+        q14_base_v: 6.049_215_054_864_024,
+        q13_base_v: 6.048_795_653_323_937,
+        q21_base_v: 2.0,
+        first_balance_wiper_v: 6.061_605_244_408_402,
+        second_balance_left_ohm: 50.0,
+        minus_v: -10.0,
+        output: BoundaryC4 {
+            second_balance_wiper_v: 0.0,
+            q12_base_v: 0.0,
+            q17_base_v: 0.0,
+            plus_v: 10.0,
+            output: OutputBoundary {
+                q17_collector_v: 0.0,
+                r20_lower_ohm: 2500.0,
+                hi_load_ohm: 10000.0,
+                lo_load_ohm: 100000.0,
+                sw18_on: true,
+                r21_lower_ohm: 2000.0,
+                tip_load_ohm: Some(32.0),
+                ring_load_ohm: Some(32.0),
+                dt_s: 1.0 / 48000.0,
+            },
+        },
+    };
+    let mut vca2_output =
+        initial_vca2_output_state(vca2, conversion, p, vca2_base).expect("VCA2 to J7 DC state");
+    for i in 0..100 {
+        let mut b = vca2_base;
+        b.q14_base_v += if i % 20 < 10 { 0.005 } else { -0.005 };
+        b.q13_base_v -= if i % 20 < 10 { 0.005 } else { -0.005 };
+        b.output.output.sw18_on = i % 40 < 20;
+        step_vca2_output(
+            &mut vca2_output,
+            vca2,
+            conversion,
+            p,
+            b,
+            SolverBudget::default(),
+        )
+        .expect("VCA2 to J7 step");
     }
     let after = ALLOCATIONS.load(Ordering::Relaxed);
     assert_eq!(after - before, 0, "processing allocated heap memory");

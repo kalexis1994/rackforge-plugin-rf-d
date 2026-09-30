@@ -8,6 +8,7 @@ pub mod output;
 pub mod output_conversion;
 pub mod output_conversion_c4;
 pub mod panel;
+pub mod vca2_output;
 
 const N: usize = 12;
 const J7: usize = 11;
