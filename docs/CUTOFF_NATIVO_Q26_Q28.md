@@ -26,4 +26,4 @@ Is, β directo/inverso y temperatura son hipótesis explícitas. Los escenarios 
 
 `tools/cutoff_ebers_moll_reference.py` calcula KCL independiente con Jacobiano por diferencias finitas. `tools/cutoff_native_vectors.py` congela 72 pasos a 48 kHz en tres escenarios, incluyendo C18, RANGE, contorno, teclado, modulación, jack y TAIL bajo. `tests/test_cutoff_native_vectors.py` regenera la evidencia y contrasta el límite activo con la referencia previa. `crates/rf-d-circuit/tests/cutoff_vectors.rs` compara los cuatro nodos (<1 µV), corriente (<1 nA), red pasiva y tangente, además de fallos atómicos. Se comprueba asignación cero en el test global de procesamiento.
 
-El puerto aislado queda contrastado en cálculo condicionado. Aún falta medir el costo del circuito integrado y contrastar audio externo; estas pruebas no prueban fidelidad sonora ni cumplimiento de tiempo real.
+El puerto aislado queda contrastado en cálculo condicionado. Su [integración con el ladder hasta J7](CUTOFF_LADDER_J7_NATIVO.md) añade un oráculo de 66 nodos y medidas de costo; el plazo sigue excedido. Estas pruebas no prueban fidelidad sonora.

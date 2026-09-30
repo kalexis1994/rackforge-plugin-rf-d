@@ -1,4 +1,4 @@
-"""Offline 62-node nonlinear transient from filter BUS through R21 to J7."""
+"""Offline 62-node transient, optionally 66 nodes with Q26/Q28/C18."""
 
 from __future__ import annotations
 
@@ -87,12 +87,22 @@ def nonlinear_coupled_headphone_step(*, ladder_dc: dict,
                                      c10_farads: float | None = None,
                                      jacobian_method: str = "hybrid",
                                      linear_solver: str = "python",
+                                     cutoff_inputs: dict | None = None,
                                      newton_max_iterations: int = 80,
                                      line_search_max_halvings: int = 32) -> dict:
     """One simultaneous implicit step; no imposed R21 wiper resistance."""
     old_v = previous_state["node_v"]
     old_amp_cap = previous_state["amp_capacitor_v"]
-    if (len(old_v) != NODE_COUNT
+    node_count = NODE_COUNT + (4 if cutoff_inputs is not None else 0)
+    scales = SCALES + ([1e-5]*4 if cutoff_inputs is not None else [])
+    if cutoff_inputs is not None:
+        from cutoff_ebers_moll_reference import evaluate as cutoff_kcl, panel_equivalent
+        panel_v, panel_g = panel_equivalent(cutoff_inputs["panel"])
+        if jacobian_method != "finite_difference":
+            raise ValueError("66-node cutoff oracle requires full finite differences")
+        if not math.isfinite(previous_state["c18_v"]):
+            raise ValueError("finite C18 history required")
+    if (len(old_v) != node_count
             or not all(math.isfinite(v) for v in old_v)
             or not all(math.isfinite(v) for v in old_amp_cap.values())
             or set(old_amp_cap) != {"C19", "C15", "C21"}
@@ -107,7 +117,7 @@ def nonlinear_coupled_headphone_step(*, ladder_dc: dict,
             or not 1 <= newton_max_iterations <= 80
             or type(line_search_max_halvings) is not int
             or not 1 <= line_search_max_halvings <= 32):
-        raise ValueError("finite complete 62-node state and valid step required")
+        raise ValueError("finite complete circuit state and valid step required")
     c10_nominal, r14_total, r73_total, r76 = regeneration_values()
     c10 = c10_nominal if c10_farads is None else c10_farads
     if (not math.isfinite(c10) or not 0.9*c10_nominal <= c10 <= 1.5*c10_nominal
@@ -160,6 +170,16 @@ def nonlinear_coupled_headphone_step(*, ladder_dc: dict,
                 and not 0 <= x[46] <= vp["plus_v"]):
             raise ValueError("diode-open output domain exceeded")
         ladder, _ = evaluate_nodal_kcl(x[:16], **lp)
+        if cutoff_inputs is not None:
+            # Upstream residual is incoming-minus-outgoing. Cutoff's independent
+            # four rows use outgoing-minus-incoming, consistently for their FD J.
+            tail_current = (x[5]-x[65])/680.0
+            ladder[5] += lp["tail_current"]-tail_current
+            control, _ = cutoff_kcl(
+                x[62:66], panel_v=panel_v, panel_g=panel_g,
+                range_fraction=cutoff_inputs["range_fraction"], tail_v=x[5],
+                q26=cutoff_inputs["q26"], q28=cutoff_inputs["q28"],
+                previous_base_v=previous_state["c18_v"], dt_s=dt_s)
         recovery, _ = recovery_kcl(x[16:24], **rp)
         local, devices = output_kcl([x[i] for i in LOCAL_TO_SYSTEM], **vp)
         f = ladder+recovery+[0.0]*24
@@ -201,6 +221,8 @@ def nonlinear_coupled_headphone_step(*, ladder_dc: dict,
             cap_currents[name] = current
             residual[left] += current
             residual[right] -= current
+        if cutoff_inputs is not None:
+            residual += control
         return residual, {"i10": i10, "charge": charge,
                           "r77_current": r77_current,
                           "r21_upper_current": r21_upper_current,
@@ -212,14 +234,14 @@ def nonlinear_coupled_headphone_step(*, ladder_dc: dict,
     max_halvings_used = 0
     for iteration in range(newton_max_iterations):
         residual, parts = evaluate(x)
-        error = max(abs(v/scale) for v, scale in zip(residual, SCALES))
+        error = max(abs(v/scale) for v, scale in zip(residual, scales))
         if max(abs(v) for v in residual) < 1e-10 and error < 1e-3:
             break
-        jacobian = [[0.0]*NODE_COUNT for _ in range(NODE_COUNT)]
+        jacobian = [[0.0]*node_count for _ in range(node_count)]
         # The full finite-difference path is retained as an independent
         # regression oracle for the twelve exact board-3 columns.
         numeric_columns = (AMP_FIRST if jacobian_method == "hybrid"
-                           else NODE_COUNT)
+                           else node_count)
         for col in range(numeric_columns):
             trial = x.copy()
             trial[col] += 1e-5
@@ -236,7 +258,7 @@ def nonlinear_coupled_headphone_step(*, ladder_dc: dict,
             else:
                 high, _ = evaluate(trial)
             for row in range(len(high)):
-                jacobian[row][col] = (high[row]-residual[row])/1e-5/SCALES[row]
+                jacobian[row][col] = (high[row]-residual[row])/1e-5/scales[row]
         if jacobian_method == "hybrid":
             jacobian[AMP_FIRST][R21_WIPER] = (
                 -amp_cap["C19"]/dt_s/SCALES[AMP_FIRST])
@@ -258,7 +280,7 @@ def nonlinear_coupled_headphone_step(*, ladder_dc: dict,
             stamp_cap(AMP_FIRST+10, J7, amp_cap["C21"])
             jacobian[J7][J7] += load_g/SCALES[J7]
         direction = solve_headphone_linear(
-            jacobian, [-v/scale for v, scale in zip(residual, SCALES)],
+            jacobian, [-v/scale for v, scale in zip(residual, scales)],
             method=linear_solver)
         for power in range(line_search_max_halvings):
             trial = [v+0.5**power*dv for v, dv in zip(x, direction)]
@@ -266,7 +288,7 @@ def nonlinear_coupled_headphone_step(*, ladder_dc: dict,
                 next_residual, _ = evaluate(trial)
             except ValueError:
                 continue
-            if max(abs(v/scale) for v, scale in zip(next_residual, SCALES)) < error:
+            if max(abs(v/scale) for v, scale in zip(next_residual, scales)) < error:
                 x = trial
                 max_halvings_used = max(max_halvings_used, power)
                 break
@@ -282,7 +304,7 @@ def nonlinear_coupled_headphone_step(*, ladder_dc: dict,
     pin21 = x[47]*main_load/(out_r["R75"]+main_load)
     hi = pin21*reduced["hi_to_pin21_ratio"] if sw18_on else 0.0
     lo = hi*reduced["lo_to_hi_ratio"] if sw18_on else 0.0
-    return {"node_v": tuple(x),
+    result = {"node_v": tuple(x),
             "c10_capacitor_v": x[22]-x[7]-rtop*parts["i10"],
             "amp_capacitor_v": {
                 "C19": x[R21_WIPER]-x[AMP_FIRST],
@@ -305,3 +327,6 @@ def nonlinear_coupled_headphone_step(*, ladder_dc: dict,
             "jacobian_method": jacobian_method,
             "linear_solver": linear_solver,
             "offline_reference_only": True}
+    if cutoff_inputs is not None:
+        result.update(c18_v=x[62], tail_current_a=(x[5]-x[65])/680.0)
+    return result

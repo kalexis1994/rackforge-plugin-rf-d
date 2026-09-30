@@ -498,6 +498,42 @@ fn dc_initialization_and_audio_steps_do_not_allocate() {
         rf_d_circuit::cutoff::step(&mut cutoff, cutoff_parameters, b, SolverBudget::default())
             .expect("cutoff port step");
     }
+    let dynamic_parameters = rf_d_circuit::cutoff_ladder_output::Parameters {
+        ladder_transistor: vca2,
+        cutoff: cutoff_parameters,
+        r61_ohm: 200.0,
+        r30_ohm: 830.0,
+    };
+    let dynamic_boundary = rf_d_circuit::cutoff_ladder_output::Boundary {
+        bus_v: 0.0,
+        recovery: recovery_boundary,
+        panel: cutoff_boundary.panel,
+        range_fraction_from_ground: 0.1,
+        r14_ohm: Some(0.0),
+    };
+    let mut dynamic = rf_d_circuit::cutoff_ladder_output::initial_state(
+        dynamic_parameters,
+        conversion,
+        p,
+        dynamic_boundary,
+        ladder_seed,
+    )
+    .expect("Q26/Q28 ladder to J7 DC state");
+    for i in 0..64 {
+        let mut b = dynamic_boundary;
+        b.bus_v = if i % 20 < 10 { 0.001 } else { -0.001 };
+        b.panel.contour_pin16_v = if i < 32 { 0.0 } else { 0.04 };
+        b.r14_ohm = if i < 16 { None } else { Some(25_000.0) };
+        rf_d_circuit::cutoff_ladder_output::step(
+            &mut dynamic,
+            dynamic_parameters,
+            conversion,
+            p,
+            b,
+            SolverBudget::default(),
+        )
+        .expect("dynamic cutoff ladder through J7 step");
+    }
     let after = ALLOCATIONS.load(Ordering::Relaxed);
     assert_eq!(after - before, 0, "processing allocated heap memory");
 }

@@ -1,6 +1,8 @@
 //! Conditional board-4 ladder through Q5-Q8, both VCAs and J7.
-//! Optional C10/EMPHASIS return; Q28 is a fixed tail-current boundary.
+//! Optional C10/EMPHASIS return. The public laboratory API imposes tail current;
+//! `cutoff_ladder_output` closes Q26/Q28 through the internal tail port.
 
+use crate::cutoff;
 use crate::output_conversion::{max_abs, solve_linear, Parameters as ConversionParameters};
 use crate::recovery_vca_output::{
     self, Boundary as RecoveryBoundary, EmphasisBoundary, State as RecoveryState,
@@ -90,6 +92,46 @@ pub struct StepResult {
     /// Positive from recovery R7/R3 tap toward Q30 base, zero when open.
     pub c10_return_current_a: f64,
     pub c10_capacitor_v: f64,
+    pub tail_current_a: f64,
+    /// Zero for the fixed-current laboratory boundary.
+    pub max_cutoff_kcl_residual_a: f64,
+}
+
+#[derive(Clone, Copy)]
+pub(crate) struct CutoffContext {
+    pub previous: cutoff::State,
+    pub parameters: cutoff::Parameters,
+    pub boundary: cutoff::Boundary,
+}
+
+fn tail_port(
+    context: Option<CutoffContext>,
+    tail_v: f64,
+    dt: f64,
+    budget: SolverBudget,
+    dc: bool,
+) -> Result<Option<cutoff::Port>, StepError> {
+    context
+        .map(|c| {
+            let b = cutoff::Boundary {
+                tail_v,
+                dt_s: dt,
+                ..c.boundary
+            };
+            if dc {
+                cutoff::solve_dc_port(c.parameters, b)
+            } else {
+                cutoff::solve_input_port(&c.previous, c.parameters, b, budget)
+            }
+        })
+        .transpose()
+}
+
+fn stamp_tail(r: &mut [f64; N], j: &mut [[f64; N]; N], p: Parameters, port: Option<cutoff::Port>) {
+    if let Some(port) = port {
+        r[5] += port.current_a - p.tail_current_a;
+        j[5][5] += port.conductance_s;
+    }
 }
 
 fn validate(p: Parameters, b: Boundary, budget: SolverBudget) -> Result<f64, StepError> {
@@ -119,7 +161,7 @@ fn validate(p: Parameters, b: Boundary, budget: SolverBudget) -> Result<f64, Ste
     Ok(dt)
 }
 
-fn return_series_ohm(p: Parameters, r14_ohm: f64) -> Result<f64, StepError> {
+pub(crate) fn return_series_ohm(p: Parameters, r14_ohm: f64) -> Result<f64, StepError> {
     if !r14_ohm.is_finite() || !(0.0..=50_000.0).contains(&r14_ohm) {
         return Err(StepError::InvalidInput);
     }
@@ -291,13 +333,32 @@ pub fn initial_state(
     b: Boundary,
     seed: [f64; N],
 ) -> Result<State, StepError> {
+    initial_state_internal(p, conversion, headphone, b, seed, None).map(|v| v.0)
+}
+
+pub(crate) fn initial_state_internal(
+    p: Parameters,
+    conversion: ConversionParameters,
+    headphone: HeadphoneParameters,
+    b: Boundary,
+    seed: [f64; N],
+    cutoff: Option<CutoffContext>,
+) -> Result<(State, Option<cutoff::State>), StepError> {
     validate(p, b, SolverBudget::default())?;
     if seed.iter().any(|v| !v.is_finite()) {
         return Err(StepError::InvalidInput);
     }
     let mut x = seed;
     for _ in 0..32 {
-        let (r, j) = evaluate(&x, p, b.bus_v, None, [0.0; 6], None)?;
+        let port = tail_port(
+            cutoff,
+            x[5],
+            b.recovery.vca.second.output.output.dt_s,
+            SolverBudget::default(),
+            true,
+        )?;
+        let (mut r, mut j) = evaluate(&x, p, b.bus_v, None, [0.0; 6], None)?;
+        stamp_tail(&mut r, &mut j, p, port);
         let error = max_abs(&r);
         if error < 1e-11 {
             let mut rb = b.recovery;
@@ -305,24 +366,38 @@ pub fn initial_state(
             rb.ladder_right_v = x[15];
             let recovery =
                 recovery_vca_output::initial_state(p.transistor, conversion, headphone, rb)?;
-            return Ok(State {
-                node_v: x,
-                previous_node_v: x,
-                capacitor_v: charges(&x, b.bus_v),
-                c10_capacitor_v: recovery.node_v[6] - x[7],
-                recovery,
-            });
+            return Ok((
+                State {
+                    node_v: x,
+                    previous_node_v: x,
+                    capacitor_v: charges(&x, b.bus_v),
+                    c10_capacitor_v: recovery.node_v[6] - x[7],
+                    recovery,
+                },
+                port.map(|v| v.next_state),
+            ));
         }
         let delta = solve_linear(j, r.map(|v| -v))?;
         let mut accepted = false;
         for power in 0..16 {
             let s = 0.5_f64.powi(power);
             let candidate = std::array::from_fn(|i| x[i] + s * delta[i]);
-            if let Ok((next, _)) = evaluate(&candidate, p, b.bus_v, None, [0.0; 6], None) {
-                if max_abs(&next) < error {
-                    x = candidate;
-                    accepted = true;
-                    break;
+            if let Ok(port) = tail_port(
+                cutoff,
+                candidate[5],
+                b.recovery.vca.second.output.output.dt_s,
+                SolverBudget::default(),
+                true,
+            ) {
+                if let Ok((mut next, mut next_j)) =
+                    evaluate(&candidate, p, b.bus_v, None, [0.0; 6], None)
+                {
+                    stamp_tail(&mut next, &mut next_j, p, port);
+                    if max_abs(&next) < error {
+                        x = candidate;
+                        accepted = true;
+                        break;
+                    }
                 }
             }
         }
@@ -333,7 +408,13 @@ pub fn initial_state(
     Err(StepError::IterationBudget)
 }
 
-type Trial = ([f64; N], [[f64; N]; N], RecoveryState, StepResult);
+type Trial = (
+    [f64; N],
+    [[f64; N]; N],
+    RecoveryState,
+    StepResult,
+    Option<cutoff::State>,
+);
 
 fn trial(
     previous: State,
@@ -345,6 +426,7 @@ fn trial(
     dt: f64,
     budget: SolverBudget,
     return_series: Option<f64>,
+    cutoff: Option<CutoffContext>,
 ) -> Result<Trial, StepError> {
     let mut rb = b.recovery;
     rb.ladder_left_v = x[11];
@@ -397,7 +479,8 @@ fn trial(
                 0.0,
             )
         };
-    let (r, j) = evaluate(
+    let port = tail_port(cutoff, x[5], dt, budget, false)?;
+    let (mut r, mut j) = evaluate(
         x,
         p,
         b.bus_v,
@@ -405,6 +488,7 @@ fn trial(
         previous.capacitor_v,
         Some((currents, tangent)),
     )?;
+    stamp_tail(&mut r, &mut j, p, port);
     let result = StepResult {
         j7_v: port_result.j7_v,
         j4_hi_v: port_result.j4_hi_v,
@@ -417,8 +501,10 @@ fn trial(
         c5_c1_current_a: [currents[0], currents[1]],
         c10_return_current_a: return_current,
         c10_capacitor_v: c10_v,
+        tail_current_a: port.map_or(p.tail_current_a, |v| v.current_a),
+        max_cutoff_kcl_residual_a: port.map_or(0.0, |v| v.max_kcl_residual_a),
     };
-    Ok((r, j, next_recovery, result))
+    Ok((r, j, next_recovery, result, port.map(|v| v.next_state)))
 }
 
 fn solve_from_seed(
@@ -432,10 +518,11 @@ fn solve_from_seed(
     budget: SolverBudget,
     evaluations: &mut usize,
     return_series: Option<f64>,
-) -> Result<([f64; N], RecoveryState, StepResult), StepError> {
+    cutoff: Option<CutoffContext>,
+) -> Result<([f64; N], RecoveryState, StepResult, Option<cutoff::State>), StepError> {
     let mut cached = None;
     for iteration in 0..budget.iterations {
-        let (r, j, recovery, mut result) = match cached.take() {
+        let (r, j, recovery, mut result, next_cutoff) = match cached.take() {
             Some(value) => value,
             None => {
                 *evaluations += 1;
@@ -449,6 +536,7 @@ fn solve_from_seed(
                     dt,
                     budget,
                     return_series,
+                    cutoff,
                 )?
             }
         };
@@ -457,7 +545,7 @@ fn solve_from_seed(
             result.iterations = iteration;
             result.recovery_port_evaluations = *evaluations;
             result.max_ladder_kcl_residual_a = error;
-            return Ok((x, recovery, result));
+            return Ok((x, recovery, result, next_cutoff));
         }
         let direction = solve_linear(j, r.map(|v| -v))?;
         let mut accepted = None;
@@ -475,6 +563,7 @@ fn solve_from_seed(
                 dt,
                 budget,
                 return_series,
+                cutoff,
             ) {
                 if max_abs(&next.0) < error {
                     accepted = Some((candidate, next));
@@ -492,7 +581,7 @@ fn solve_from_seed(
     Err(StepError::IterationBudget)
 }
 
-fn step_internal(
+pub(crate) fn step_internal(
     state: &mut State,
     p: Parameters,
     conversion: ConversionParameters,
@@ -500,7 +589,8 @@ fn step_internal(
     b: Boundary,
     budget: SolverBudget,
     return_series: Option<f64>,
-) -> Result<StepResult, StepError> {
+    cutoff: Option<CutoffContext>,
+) -> Result<(StepResult, Option<cutoff::State>), StepError> {
     let dt = validate(p, b, budget)?;
     if state
         .node_v
@@ -529,6 +619,7 @@ fn step_internal(
         budget,
         &mut evaluations,
         return_series,
+        cutoff,
     ) {
         Ok(value) => (value, false),
         Err(_) => (
@@ -543,6 +634,7 @@ fn step_internal(
                 budget,
                 &mut evaluations,
                 return_series,
+                cutoff,
             )?,
             true,
         ),
@@ -554,7 +646,7 @@ fn step_internal(
     state.recovery = solution.1;
     let mut result = solution.2;
     result.predictor_fallback = fallback;
-    Ok(result)
+    Ok((result, solution.3))
 }
 
 /// Advance the complete open-EMPHASIS laboratory chain. Failure is atomic.
@@ -566,7 +658,7 @@ pub fn step(
     b: Boundary,
     budget: SolverBudget,
 ) -> Result<StepResult, StepError> {
-    step_internal(state, p, conversion, headphone, b, budget, None)
+    step_internal(state, p, conversion, headphone, b, budget, None, None).map(|v| v.0)
 }
 
 /// Close C10/R14/R73 between the recovery tap and Q30 base. `r14_ohm` is
@@ -582,7 +674,17 @@ pub fn step_with_emphasis(
 ) -> Result<StepResult, StepError> {
     validate(p, b, budget)?;
     let series = return_series_ohm(p, r14_ohm)?;
-    step_internal(state, p, conversion, headphone, b, budget, Some(series))
+    step_internal(
+        state,
+        p,
+        conversion,
+        headphone,
+        b,
+        budget,
+        Some(series),
+        None,
+    )
+    .map(|v| v.0)
 }
 
 #[cfg(test)]
