@@ -2,6 +2,8 @@
 
 Este corte introdujo el criterio primero para DC. Posteriormente se [extendió a los pasos temporales](CRITERIO_VOLTAJE_TRANSITORIO_GLOBAL.md) y se [reutilizaron direcciones aceptadas](DIRECCION_NEWTON_REUTILIZADA.md). Las comparaciones y costos de esta ficha son del corte DC original.
 
+La [continuación DC VCA](DC_VCA_CONTINUACION.md) añade ahora un constructor explícito para llegar a las fuentes de volumen en cero. El camino directo descrito aquí conserva sus fallos de presupuesto; la nueva ruta no se usa durante audio.
+
 ## Problema observado
 
 El [barrido de controles](EXTREMOS_CONTROLES_GLOBAL_66.md) encontró arranque en frío fallido con cutoff máximo. `initial_state` requería primero resolver la cadena anidada; ese solve podía agotar su presupuesto antes de intentar las 66 ecuaciones simultáneas.

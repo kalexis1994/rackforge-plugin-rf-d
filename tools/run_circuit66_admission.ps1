@@ -1,8 +1,9 @@
 param(
-    [ValidateSet('temporal','stack','controls','dc-seeds','vca-release','r21')][string]$Mode = 'temporal',
+    [ValidateSet('temporal','stack','controls','dc-seeds','vca-release','r21','vca-dc')][string]$Mode = 'temporal',
     [Parameter(Mandatory)][string]$Output,
     [int]$StackKib = 2048,
-    [switch]$R21Endpoints
+    [switch]$R21Endpoints,
+    [switch]$VcaDcContinuation
 )
 # Build the release example first. Diagnostics run outside the audio thread.
 $ErrorActionPreference = 'Stop'
@@ -14,6 +15,10 @@ if ($Mode -eq 'stack') { $taskArgs += "--stack-kib=$StackKib" }
 if ($R21Endpoints) {
     if ($Mode -ne 'stack') { throw 'R21Endpoints applies only to stack mode.' }
     $taskArgs += '--stack-r21'
+}
+if ($VcaDcContinuation) {
+    if ($Mode -ne 'stack') { throw 'VcaDcContinuation applies only to stack mode.' }
+    $taskArgs += '--stack-vca-dc'
 }
 $taskRaw = & $taskBench @taskArgs
 $taskExit = $LASTEXITCODE

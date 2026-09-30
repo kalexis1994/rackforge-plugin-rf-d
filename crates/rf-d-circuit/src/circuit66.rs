@@ -69,6 +69,16 @@ pub struct Result66 {
     pub r21_short_current_a: Option<f64>,
 }
 
+#[derive(Clone, Copy, Debug)]
+pub struct DcContinuation {
+    pub state: State,
+    /// Includes the initial 2 V / 2 V DC solve.
+    pub dc_solves: usize,
+    pub total_iterations: usize,
+    pub residual_evaluations: usize,
+    pub max_physical_kcl_a: f64,
+}
+
 #[derive(Clone, Copy)]
 enum Terminal {
     Node(usize),
@@ -918,6 +928,74 @@ pub fn initial_state_from_nodes(
         previous_node_v: solved.0,
         capacitor_v: charges(&solved.0, b),
         c10_capacitor_v: solved.0[22] - solved.0[7],
+    })
+}
+
+/// Numerical DC initialization for imposed VCA sources within 0..=2 V.
+/// First close both at 2 V, then continue to the requested sources in 32
+/// bounded DC solves, each with the ordinary 16/16 budget and strict gates.
+/// All capacitors stay open throughout. No temporal history is integrated,
+/// and no intermediate state is published. The final charges are rebuilt
+/// only from the requested DC boundary. This is not an envelope or an audio
+/// fallback; callers must run initialization outside their audio deadline.
+/// Other boundaries/devices stay fixed; an unsuitable seed can still fail.
+pub fn initial_state_vca_continuation(
+    p: Parameters,
+    conversion: ConversionParameters,
+    headphone: HeadphoneParameters,
+    b: Boundary,
+    seed: [f64; N],
+) -> Result<DcContinuation, StepError> {
+    let budget = SolverBudget::default();
+    let prepared = prepare(p, conversion, headphone, b, budget)?;
+    let first = b.recovery.vca.loudness_v;
+    let second = b.recovery.vca.second.q21_base_v;
+    if !(0.0..=2.0).contains(&first)
+        || !(0.0..=2.0).contains(&second)
+        || seed.iter().any(|v| !v.is_finite())
+    {
+        return Err(StepError::InvalidInput);
+    }
+    let mut x = seed;
+    let mut evaluations = 0;
+    let mut iterations = 0;
+    let mut max_kcl = 0.0_f64;
+    let stages = if first == 2.0 && second == 2.0 { 0 } else { 32 };
+    for stage in 0..=stages {
+        let mut boundary = b;
+        if stage < 32 {
+            let fraction = stage as f64 / 32.0;
+            boundary.recovery.vca.loudness_v = 2.0 + (first - 2.0) * fraction;
+            boundary.recovery.vca.second.q21_base_v = 2.0 + (second - 2.0) * fraction;
+        }
+        // The final stage uses the requested f64 values exactly, even when
+        // subtraction from 2 V would erase a tiny positive target voltage.
+        let solved = solve(
+            x,
+            p,
+            conversion,
+            headphone,
+            boundary,
+            prepared,
+            None,
+            budget,
+            &mut evaluations,
+        )?;
+        x = solved.0;
+        iterations += solved.1;
+        max_kcl = max_kcl.max(solved.2);
+    }
+    Ok(DcContinuation {
+        state: State {
+            node_v: x,
+            previous_node_v: x,
+            capacitor_v: charges(&x, b),
+            c10_capacitor_v: x[22] - x[7],
+        },
+        dc_solves: stages + 1,
+        total_iterations: iterations,
+        residual_evaluations: evaluations,
+        max_physical_kcl_a: max_kcl,
     })
 }
 

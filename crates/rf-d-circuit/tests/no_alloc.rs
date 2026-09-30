@@ -550,6 +550,18 @@ fn dc_initialization_and_audio_steps_do_not_allocate() {
         global.node_v,
     )
     .expect("full global DC seed");
+    let mut zero = dynamic_boundary;
+    zero.recovery.vca.loudness_v = 0.0;
+    zero.recovery.vca.second.q21_base_v = 0.0;
+    let continued = rf_d_circuit::circuit66::initial_state_vca_continuation(
+        dynamic_parameters,
+        conversion,
+        p,
+        zero,
+        global.node_v,
+    )
+    .expect("VCA zero DC continuation without allocation");
+    assert_eq!(continued.dc_solves, 33);
     for lower in [0.0, 5000.0] {
         let mut endpoint = dynamic_boundary;
         endpoint.recovery.vca.second.output.output.r21_lower_ohm = lower;

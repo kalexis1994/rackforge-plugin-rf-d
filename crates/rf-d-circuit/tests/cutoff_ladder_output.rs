@@ -14,6 +14,110 @@ fn n(v: &Value) -> f64 {
 }
 
 #[test]
+fn vca_dc_continuation_matches_independent_roots_and_rebuilds_all_charges() {
+    use rf_d_circuit::circuit66 as global;
+    let fixture: Value = serde_json::from_str(include_str!(
+        "../../../evidence/circuit66_vca_dc_vectors.json"
+    ))
+    .unwrap();
+    let (bjt, c, h, rb) = setup();
+    let mut max_error = 0.0_f64;
+    for case in fixture["cases"].as_array().unwrap() {
+        let p = Parameters {
+            ladder_transistor: bjt,
+            cutoff: cutoff::Parameters { q26: bjt, q28: bjt },
+            r61_ohm: n(&case["r61_ohm"]),
+            r30_ohm: 830.0,
+        };
+        let mut b = Boundary {
+            bus_v: 0.0,
+            recovery: rb,
+            panel: panel(&case["controls"]["panel"]),
+            range_fraction_from_ground: 0.1,
+            r14_ohm: Some(25000.0),
+        };
+        b.recovery.vca.loudness_v = n(&case["loudness_v"]);
+        b.recovery.vca.second.q21_base_v = n(&case["q21_base_v"]);
+        for shift in [0.0, 0.001, -0.001] {
+            let seed = std::array::from_fn(|i| n(&case["centre_node_v"][i]) + shift);
+            let result = global::initial_state_vca_continuation(p, c, h, b, seed).unwrap();
+            assert_eq!(result.dc_solves, 33);
+            assert!(result.max_physical_kcl_a < 1e-11);
+            let state = result.state;
+            for i in 0..66 {
+                let error = (state.node_v[i] - n(&case["node_v"][i])).abs();
+                max_error = max_error.max(error);
+                assert!(
+                    error < 1e-6,
+                    "{} R61 {} node {i}: {error}",
+                    case["name"],
+                    p.r61_ohm
+                );
+            }
+            assert_eq!(state.previous_node_v, state.node_v);
+            let x = state.node_v;
+            let expected = [
+                x[8] - x[12],
+                x[9] - x[13],
+                x[10] - x[14],
+                x[11] - x[15],
+                x[4],
+                x[6] - b.bus_v,
+                x[16] - x[11],
+                x[17] - x[15],
+                x[23],
+                x[24] - x[25],
+                x[26],
+                x[40] - 10.0,
+                x[46] - x[47],
+                x[49] - x[50],
+                x[57] - x[58],
+                x[60] - x[61],
+                x[62],
+            ];
+            assert_eq!(state.capacitor_v, expected);
+            assert_eq!(state.c10_capacitor_v, x[22] - x[7]);
+            let (r, _) = global::linearize_dc(p, c, h, b, &x).unwrap();
+            assert!(r.iter().all(|v| v.abs() < 1e-11));
+        }
+        let seed = std::array::from_fn(|i| n(&case["centre_node_v"][i]));
+        for invalid in [-0.1, 2.1, f64::NAN] {
+            let mut bad = b;
+            bad.recovery.vca.loudness_v = invalid;
+            assert_eq!(
+                global::initial_state_vca_continuation(p, c, h, bad, seed).unwrap_err(),
+                StepError::InvalidInput
+            );
+        }
+        // Fractional targets, nonzero BUS and open C10 still rebuild charges
+        // at the requested DC boundary, with no history of the numerical path.
+        b.recovery.vca.loudness_v = 0.1;
+        b.recovery.vca.second.q21_base_v = 0.7;
+        b.bus_v = 0.125;
+        b.r14_ohm = None;
+        let fractional = global::initial_state_vca_continuation(p, c, h, b, seed)
+            .unwrap()
+            .state;
+        assert_eq!(fractional.capacitor_v[5], fractional.node_v[6] - 0.125);
+        assert_eq!(
+            fractional.c10_capacitor_v,
+            fractional.node_v[22] - fractional.node_v[7]
+        );
+        let (r, _) = global::linearize_dc(p, c, h, b, &fractional.node_v).unwrap();
+        assert!(r.iter().all(|v| v.abs() < 1e-11));
+        b.recovery.vca.loudness_v = 2.0;
+        b.recovery.vca.second.q21_base_v = 2.0;
+        assert_eq!(
+            global::initial_state_vca_continuation(p, c, h, b, seed)
+                .unwrap()
+                .dc_solves,
+            1
+        );
+    }
+    println!("VCA zero DC continuation: 18 seeds max_node_error_v={max_error:.9e}");
+}
+
+#[test]
 fn r21_exact_terminal_identification_matches_independent_integration() {
     use rf_d_circuit::circuit66 as global;
     let fixture: Value =
