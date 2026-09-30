@@ -656,6 +656,7 @@ fn stack_grid() -> Result<Value, String> {
         dc_continuation: Option<(usize, usize, f64)>,
         transient_continuations: usize,
         initial_node: [f64; 66],
+        dc_probe_initial_node: [f64; 66],
     }
     // A separate no-inline worker observes its own allocation. Serialization
     // happens after joining, outside the measured worker.
@@ -666,6 +667,7 @@ fn stack_grid() -> Result<Value, String> {
         r21_endpoints: bool,
         vca_continuation: bool,
         vca_jump: bool,
+        common_temporal_state: Option<circuit66::State>,
     ) -> Result<Run, String> {
         let (_, c, h) = lab::lab_parameters();
         let before = snapshot()?;
@@ -695,6 +697,12 @@ fn stack_grid() -> Result<Value, String> {
         // The measured audio scene retains its nominal initial state. The
         // discarded DC probe above measures initialization resources only.
         let after_dc = snapshot()?;
+        let dc_probe_initial_node = state.node_v;
+        // DC resource/sensitivity probe is independent of this fixed-input
+        // temporal identity experiment. Retain the actual DC result above.
+        if let Some(common) = common_temporal_state {
+            state = common;
+        }
         let initial_node = state.node_v;
         let mut max_kcl = 0.0_f64;
         let mut fallbacks = 0;
@@ -783,6 +791,7 @@ fn stack_grid() -> Result<Value, String> {
             dc_continuation,
             transient_continuations,
             initial_node,
+            dc_probe_initial_node,
         })
     }
     let requested = std::env::args()
@@ -797,6 +806,7 @@ fn stack_grid() -> Result<Value, String> {
     let r21_endpoints = std::env::args().any(|v| v == "--stack-r21");
     let vca_continuation = std::env::args().any(|v| v == "--stack-vca-dc");
     let vca_jump = std::env::args().any(|v| v == "--stack-vca-jump");
+    let common_seed = std::env::args().any(|v| v == "--stack-common-state");
     let mut rows = Vec::new();
     let mut path_mismatches = 0;
     for r61 in [200.0, 200000.0] {
@@ -813,10 +823,20 @@ fn stack_grid() -> Result<Value, String> {
         let mut reference = None;
         for dc_in_worker in [true, false] {
             let initial = if dc_in_worker { None } else { Some(outside) };
+            let common_temporal_state = if common_seed { Some(outside) } else { None };
             let run = std::thread::Builder::new()
                 .name("rf-d-stack-probe".into())
                 .stack_size(requested * 1024)
-                .spawn(move || worker(initial, p, r21_endpoints, vca_continuation, vca_jump))
+                .spawn(move || {
+                    worker(
+                        initial,
+                        p,
+                        r21_endpoints,
+                        vca_continuation,
+                        vca_jump,
+                        common_temporal_state,
+                    )
+                })
                 .map_err(|e| e.to_string())?
                 .join()
                 .map_err(|_| "Worker panicked".to_string())??;
@@ -840,6 +860,7 @@ fn stack_grid() -> Result<Value, String> {
                 "zero_dc_continuation_solves_iterations_kcl":run.dc_continuation,
                 "transient_continuations":run.transient_continuations,
                 "initial_node_v":run.initial_node.to_vec(),
+                "dc_probe_initial_node_v":run.dc_probe_initial_node.to_vec(),
                 "max_kcl_a":run.max_kcl,"final_node_v":run.final_node.to_vec(),
                 "initialization_path_max_difference_v":difference}));
         }
@@ -850,6 +871,7 @@ fn stack_grid() -> Result<Value, String> {
         "r21_endpoints_exercised":r21_endpoints,
         "zero_dc_continuation_exercised":vca_continuation,
         "abrupt_vca_sources_exercised":vca_jump,
+        "common_temporal_state":common_seed,
         "method":"separate Rust workers; read-only GetCurrentThreadStackLimits/VirtualQuery at phase boundaries",
         "precise_stack_high_water_measured":false,"audio_deadline_claim":false,"runs":rows}),
     )

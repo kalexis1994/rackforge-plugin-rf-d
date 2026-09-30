@@ -24,108 +24,128 @@ fn abrupt_vca_sources_preserve_histories_and_match_independent_integration() {
     let mut total = 0;
     let mut rescued = 0;
     let mut max_error = 0.0_f64;
-    for case in fixture["cases"].as_array().unwrap() {
-        let p = Parameters {
-            ladder_transistor: q,
-            cutoff: cutoff::Parameters { q26: q, q28: q },
-            r61_ohm: n(&case["r61_ohm"]),
-            r30_ohm: 830.0,
-        };
-        let mut b = Boundary {
-            bus_v: 0.0,
-            recovery: rb,
-            panel: panel(&case["controls"]["panel"]),
-            range_fraction_from_ground: 0.1,
-            r14_ohm: Some(25000.0),
-        };
-        let seed = std::array::from_fn(|i| n(&case["initial_node_v"][i]));
-        let mut state = global::initial_state_from_nodes(p, c, h, b, seed).unwrap();
-        let mut sources = [2.0, 2.0];
-        for row in case["rows"].as_array().unwrap() {
-            b.bus_v = n(&row["boundary"]["bus_v"]);
-            b.recovery.vca.loudness_v = n(&row["boundary"]["loudness_v"]);
-            b.recovery.vca.second.q21_base_v = n(&row["boundary"]["q21_base_v"]);
-            let old = state;
-            let result = match global::step(&mut state, p, c, h, b, SolverBudget::default()) {
-                Ok(r) => r,
-                Err(_) => {
-                    assert_eq!(state, old);
-                    rescued += 1;
-                    // A deliberately insufficient continuation must fail
-                    // after doing work without publishing any partial charge.
-                    let mut insufficient = old;
-                    assert!(global::step_vca_continuation(
-                        &mut insufficient,
-                        p,
-                        c,
-                        h,
-                        b,
-                        sources,
-                        1,
-                        SolverBudget::default()
-                    )
-                    .is_err());
-                    assert_eq!(insufficient, old);
-                    let result = global::step_vca_continuation(
+    for stage_count in [8, 16, 32] {
+        for case in fixture["cases"].as_array().unwrap() {
+            let p = Parameters {
+                ladder_transistor: q,
+                cutoff: cutoff::Parameters { q26: q, q28: q },
+                r61_ohm: n(&case["r61_ohm"]),
+                r30_ohm: 830.0,
+            };
+            let mut b = Boundary {
+                bus_v: 0.0,
+                recovery: rb,
+                panel: panel(&case["controls"]["panel"]),
+                range_fraction_from_ground: 0.1,
+                r14_ohm: Some(25000.0),
+            };
+            let seed = std::array::from_fn(|i| n(&case["initial_node_v"][i]));
+            let mut state = global::initial_state_from_nodes(p, c, h, b, seed).unwrap();
+            let mut sources = [2.0, 2.0];
+            for row in case["rows"].as_array().unwrap() {
+                b.bus_v = n(&row["boundary"]["bus_v"]);
+                b.recovery.vca.loudness_v = n(&row["boundary"]["loudness_v"]);
+                b.recovery.vca.second.q21_base_v = n(&row["boundary"]["q21_base_v"]);
+                let old = state;
+                let result = match global::step(&mut state, p, c, h, b, SolverBudget::default()) {
+                    Ok(r) => r,
+                    Err(_) => {
+                        assert_eq!(state, old);
+                        rescued += 1;
+                        // A deliberately insufficient continuation must fail
+                        // after doing work without publishing any partial charge.
+                        let mut insufficient = old;
+                        assert!(global::step_vca_continuation(
+                            &mut insufficient,
+                            p,
+                            c,
+                            h,
+                            b,
+                            sources,
+                            1,
+                            SolverBudget::default()
+                        )
+                        .is_err());
+                        assert_eq!(insufficient, old);
+                        let result = global::step_vca_continuation(
+                            &mut state,
+                            p,
+                            c,
+                            h,
+                            b,
+                            sources,
+                            stage_count,
+                            SolverBudget::default(),
+                        )
+                        .unwrap();
+                        assert_eq!(result.solves, stage_count + 1);
+                        assert!(result.max_stage_kcl_a < 1e-11);
+                        result.result
+                    }
+                };
+                sources = [b.recovery.vca.loudness_v, b.recovery.vca.second.q21_base_v];
+                assert_eq!(state.previous_node_v, old.node_v);
+                for i in 0..66 {
+                    let error = (state.node_v[i] - n(&row["node_v"][i])).abs();
+                    max_error = max_error.max(error);
+                    assert!(
+                        error < 1e-6,
+                        "{} R61 {} sample {} node {i}: {error}",
+                        case["mode"],
+                        p.r61_ohm,
+                        row["sample"]
+                    );
+                }
+                for i in 0..17 {
+                    assert!((state.capacitor_v[i] - n(&row["capacitor_v"][i])).abs() < 1e-6);
+                }
+                assert!((state.c10_capacitor_v - n(&row["c10_v"])).abs() < 1e-6);
+                for (v, key) in [
+                    (result.output.j7_v, "j7_v"),
+                    (result.output.j4_hi_v, "j4_hi_v"),
+                    (result.output.j5_lo_v, "j5_lo_v"),
+                ] {
+                    assert!((v - n(&row[key])).abs() < 1e-6);
+                }
+                assert!((result.output.tail_current_a - n(&row["tail_current_a"])).abs() < 1e-9);
+                let (r, j) = global::linearize(&old, p, c, h, b, &state.node_v).unwrap();
+                assert!(r.iter().all(|v| v.abs() < 1e-11));
+                if stage_count == 32
+                    && [8, 24, 40, 56].contains(&(row["sample"].as_u64().unwrap() as usize))
+                {
+                    for col in 0..66 {
+                        let mut hi = state.node_v;
+                        hi[col] += 1e-7;
+                        let mut lo = state.node_v;
+                        lo[col] -= 1e-7;
+                        let (rh, _) = global::linearize(&old, p, c, h, b, &hi).unwrap();
+                        let (rl, _) = global::linearize(&old, p, c, h, b, &lo).unwrap();
+                        for row in 0..66 {
+                            let fd = (rh[row] - rl[row]) / 2e-7;
+                            assert!((fd - j[row][col]).abs() < 1e-8 + 3e-6 * fd.abs());
+                        }
+                    }
+                }
+                total += 1;
+            }
+            for stages in [0, 33] {
+                let old = state;
+                assert_eq!(
+                    global::step_vca_continuation(
                         &mut state,
                         p,
                         c,
                         h,
                         b,
                         sources,
-                        32,
-                        SolverBudget::default(),
+                        stages,
+                        SolverBudget::default()
                     )
-                    .unwrap();
-                    assert_eq!(result.solves, 33);
-                    assert!(result.max_stage_kcl_a < 1e-11);
-                    result.result
-                }
-            };
-            sources = [b.recovery.vca.loudness_v, b.recovery.vca.second.q21_base_v];
-            assert_eq!(state.previous_node_v, old.node_v);
-            for i in 0..66 {
-                let error = (state.node_v[i] - n(&row["node_v"][i])).abs();
-                max_error = max_error.max(error);
-                assert!(
-                    error < 1e-6,
-                    "{} R61 {} sample {} node {i}: {error}",
-                    case["mode"],
-                    p.r61_ohm,
-                    row["sample"]
+                    .unwrap_err(),
+                    StepError::InvalidInput
                 );
+                assert_eq!(state, old);
             }
-            for i in 0..17 {
-                assert!((state.capacitor_v[i] - n(&row["capacitor_v"][i])).abs() < 1e-6);
-            }
-            assert!((state.c10_capacitor_v - n(&row["c10_v"])).abs() < 1e-6);
-            for (v, key) in [
-                (result.output.j7_v, "j7_v"),
-                (result.output.j4_hi_v, "j4_hi_v"),
-                (result.output.j5_lo_v, "j5_lo_v"),
-            ] {
-                assert!((v - n(&row[key])).abs() < 1e-6);
-            }
-            assert!((result.output.tail_current_a - n(&row["tail_current_a"])).abs() < 1e-9);
-            let (r, j) = global::linearize(&old, p, c, h, b, &state.node_v).unwrap();
-            assert!(r.iter().all(|v| v.abs() < 1e-11));
-            if [8, 24, 40, 56].contains(&(row["sample"].as_u64().unwrap() as usize)) {
-                for col in 0..66 {
-                    let mut hi = state.node_v;
-                    hi[col] += 1e-7;
-                    let mut lo = state.node_v;
-                    lo[col] -= 1e-7;
-                    let (rh, _) = global::linearize(&old, p, c, h, b, &hi).unwrap();
-                    let (rl, _) = global::linearize(&old, p, c, h, b, &lo).unwrap();
-                    for row in 0..66 {
-                        let fd = (rh[row] - rl[row]) / 2e-7;
-                        assert!((fd - j[row][col]).abs() < 1e-8 + 3e-6 * fd.abs());
-                    }
-                }
-            }
-            total += 1;
-        }
-        for stages in [0, 33] {
             let old = state;
             assert_eq!(
                 global::step_vca_continuation(
@@ -134,8 +154,8 @@ fn abrupt_vca_sources_preserve_histories_and_match_independent_integration() {
                     c,
                     h,
                     b,
-                    sources,
-                    stages,
+                    [f64::NAN, 2.0],
+                    32,
                     SolverBudget::default()
                 )
                 .unwrap_err(),
@@ -143,25 +163,9 @@ fn abrupt_vca_sources_preserve_histories_and_match_independent_integration() {
             );
             assert_eq!(state, old);
         }
-        let old = state;
-        assert_eq!(
-            global::step_vca_continuation(
-                &mut state,
-                p,
-                c,
-                h,
-                b,
-                [f64::NAN, 2.0],
-                32,
-                SolverBudget::default()
-            )
-            .unwrap_err(),
-            StepError::InvalidInput
-        );
-        assert_eq!(state, old);
     }
-    assert_eq!(total, 384);
-    assert_eq!(rescued, 16);
+    assert_eq!(total, 1152);
+    assert_eq!(rescued, 48);
     println!("VCA abrupt: steps={total} rescued={rescued} max_node_error_v={max_error:.9e}");
 }
 

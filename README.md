@@ -4,6 +4,8 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+El [perfil de etapas VCA](docs/ETAPAS_VCA_Y_REPRODUCIBILIDAD.md) contrasta ocho etapas y reduce 38,46 % el costo de las escenas con saltos frente a 32: 9,708 ms de kernel acumulado por bloque, todavía fuera del plazo. Pasan 1152 pasos Rust con 8/16/32 etapas y heap cero. El banco con un estado temporal común reproduce exactamente los resultados entre workers y conserva aparte la variación del arranque DC.
+
 Los [saltos VCA con historial fijo](docs/SALTOS_VCA_HISTORIAL_FIJO.md) pasan 384 muestras independientes, incluyendo apagado y restauración: error interno máximo 7,15 nV. La API rescata 16 rechazos sin subpasos físicos ni borrar cargas. Es una ruta experimental explícita, todavía demasiado costosa; el banco de stack conserva una diferencia de 1,30 pV frente a su gate de identidad de 1 pV.
 
 La [inicialización DC por continuación VCA](docs/DC_VCA_CONTINUACION.md) añade una ruta explícita de preparación para uno o ambos controles en cero. Pasa 18 semillas frente a raíces independientes (1,57 nV), reconstruye las 18 cargas y acepta 1152 pasos posteriores de reposo. Conserva los gates por etapa y heap cero. El salto abrupto durante audio sigue pendiente.

@@ -20,6 +20,8 @@ La [continuación DC de fuentes VCA](DC_VCA_CONTINUACION.md) admite 18 semillas 
 
 Los [saltos temporales VCA con cargas fijas](SALTOS_VCA_HISTORIAL_FIJO.md) pasan 384 muestras con integración independiente (7,150162 nV), 24 Jacobianos y rescate de 16 rechazos. No se integra el tiempo entre etapas y sólo se publica el estado final. El costo y un gate de identidad de stack de 1 pV siguen fallidos; no se selecciona automáticamente ni identifica el contorno.
 
+El [perfil 8/16/32 y estado temporal común](ETAPAS_VCA_Y_REPRODUCIBILIDAD.md) amplía a 1152 pasos y reduce 38,46 % el costo de esas escenas con ocho etapas; 30/30 bloques siguen fuera de plazo. Con entradas completas iguales, los workers coinciden exactamente tras 32768 pasos y observan 328 KiB de stack comprometido. El fallo de identidad desde semillas DC distintas se conserva; no amplía C6/C7 ni identifica la causa de la variación de arranque.
+
 El [criterio temporal KCL + corrección de voltaje](CRITERIO_VOLTAJE_TRANSITORIO_GLOBAL.md) corrige las 96 sondas de apagado (0,150 nV máximo), pasa heap cero y 752384 muestras de estrés. Su costo aumenta 69,3 % a 3,939 ms/bloque; C7 sigue fallido. No resuelve los saltos abruptos ni el contorno físico.
 
 El [apagado de los VCAs con rampas impuestas](APAGADO_VCA_GLOBAL_66.md) registró 20/96 sondas >1 µV interno con la política anterior, hasta 1,318 mV. El criterio de voltaje corrige esa brecha. Las cuatro escenas de salto directo siguen fallando de forma atómica.

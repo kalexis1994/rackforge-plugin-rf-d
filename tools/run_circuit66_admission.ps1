@@ -5,6 +5,7 @@ param(
     [switch]$R21Endpoints,
     [switch]$VcaDcContinuation,
     [switch]$VcaJump,
+    [switch]$CommonTemporalState,
     [ValidateRange(1,32)][int]$VcaStages = 32
 )
 # Build the release example first. Diagnostics run outside the audio thread.
@@ -26,6 +27,10 @@ if ($VcaDcContinuation) {
 if ($VcaJump) {
     if ($Mode -ne 'stack') { throw 'VcaJump applies only to stack mode.' }
     $taskArgs += '--stack-vca-jump'
+}
+if ($CommonTemporalState) {
+    if ($Mode -ne 'stack') { throw 'CommonTemporalState applies only to stack mode.' }
+    $taskArgs += '--stack-common-state'
 }
 $taskRaw = & $taskBench @taskArgs
 $taskExit = $LASTEXITCODE

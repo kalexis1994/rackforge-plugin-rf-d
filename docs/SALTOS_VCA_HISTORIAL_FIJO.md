@@ -1,5 +1,7 @@
 # Saltos VCA con continuación numérica e historial fijo
 
+El [corte posterior de cantidad de etapas y reproducibilidad](ETAPAS_VCA_Y_REPRODUCIBILIDAD.md) contrasta 8/16/32, mide −38,46 % con ocho y añade el banco de estado temporal idéntico. Los informes y la política de 32 descritos aquí se conservan.
+
 ## Ecuación de una muestra
 
 El [arranque DC por continuación](DC_VCA_CONTINUACION.md) abre capacitores y reconstruye sus cargas. No puede usarse para resolver Note Off. Aquí se conserva la ecuación temporal global de SVC-9 Fig. 9-11 (PDF p. 13), Fig. 9-17 (p. 19) y Fig. 9-8 (p. 10), con las hipótesis nominales y ambos R61.
