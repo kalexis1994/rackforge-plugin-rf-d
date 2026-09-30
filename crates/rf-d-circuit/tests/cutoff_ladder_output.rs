@@ -14,6 +14,53 @@ fn n(v: &Value) -> f64 {
 }
 
 #[test]
+fn independently_refined_vca_release_roots_close_native_kcl_with_same_histories() {
+    use rf_d_circuit::circuit66 as global;
+    let fixture: Value = serde_json::from_str(include_str!(
+        "../../../evidence/circuit66_vca_release_probe_vectors.json"
+    ))
+    .unwrap();
+    let (bjt, conversion, headphone, rb) = setup();
+    let controls: Value =
+        serde_json::from_str(include_str!("../../../evidence/cutoff_j7_vectors.json")).unwrap();
+    let mut count = 0;
+    let mut max_kcl = 0.0_f64;
+    for probe in fixture["probes"].as_array().unwrap() {
+        let p = Parameters {
+            ladder_transistor: bjt,
+            cutoff: cutoff::Parameters { q26: bjt, q28: bjt },
+            r61_ohm: n(&probe["r61_ohm"]),
+            r30_ohm: 830.0,
+        };
+        let mut b = Boundary {
+            bus_v: n(&probe["boundary"]["bus_v"]),
+            recovery: rb,
+            panel: panel(&controls["cases"][0]["controls"]["panel"]),
+            range_fraction_from_ground: 0.1,
+            r14_ohm: Some(25000.0),
+        };
+        b.recovery.vca.loudness_v = n(&probe["boundary"]["loudness_v"]);
+        b.recovery.vca.second.q21_base_v = n(&probe["boundary"]["q21_base_v"]);
+        let old = &probe["initial"];
+        let previous = global::State {
+            node_v: std::array::from_fn(|i| n(&old["node_v"][i])),
+            previous_node_v: std::array::from_fn(|i| n(&old["previous_node_v"][i])),
+            capacitor_v: std::array::from_fn(|i| n(&old["capacitor_v"][i])),
+            c10_capacitor_v: n(&old["c10_v"]),
+        };
+        let candidate = std::array::from_fn(|i| n(&probe["node_v"][i]));
+        let (r, _) = global::linearize(&previous, p, conversion, headphone, b, &candidate).unwrap();
+        for v in r {
+            max_kcl = max_kcl.max(v.abs());
+            assert!(v.abs() < 1e-11);
+        }
+        count += 1;
+    }
+    assert_eq!(count, 96);
+    println!("refined release roots: points={count} max_native_kcl_a={max_kcl:.9e}");
+}
+
+#[test]
 fn full_dc_seeds_match_independent_dc_and_rebuild_capacitor_histories() {
     use rf_d_circuit::circuit66 as global;
     let fixture: Value =

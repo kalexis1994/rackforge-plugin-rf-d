@@ -14,6 +14,8 @@ Los estados `desconocido`, `hipótesis`, `modelado`, `contrastado` y `cerrado pa
 
 ## Afirmación pública actual
 
+El [apagado de los VCAs con rampas impuestas](APAGADO_VCA_GLOBAL_66.md) converge en 7104 muestras, pero 20/96 sondas exceden 1 µV interno, máximo 1,318 mV en los emisores del segundo par. El error de salida es pequeño; el gate interno sigue fallido. Las cuatro escenas de salto directo fallan de forma atómica.
+
 La [semilla DC completa y el criterio de corrección de voltaje](DC_GLOBAL_SEMILLA_COMPLETA.md) contrastan 14 puntos (2,25 nV máximo) y resuelven cutoff máximo desde el centro. Dos semillas desplazadas fallan en RANGE=0; no se garantiza cualquier semilla. La nueva observación de stack es 324 KiB y C7 sigue abierto.
 
 El [barrido de extremos global](EXTREMOS_CONTROLES_GLOBAL_66.md) no pasa: seis casos soportados fallan, en cutoff máximo DC y Q21 a cero. [R20 exacto](R20_EXTREMOS_EXACTOS.md) pasa ocho escenas ON/OFF y 128 pasos independientes (error interno máximo 0,279225 µV). El nuevo barrido acepta 16384 muestras; R21 exacto sigue fuera del dominio actual.

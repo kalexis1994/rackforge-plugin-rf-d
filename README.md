@@ -4,6 +4,8 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+El [apagado sintético de VCAs](docs/APAGADO_VCA_GLOBAL_66.md) acepta 7104 muestras en rampas de 8–256 pasos, pero detecta 20/96 sondas con error interno >1 µV cerca de apagado, hasta 1,318 mV. Los saltos de una muestra siguen fallando. El criterio temporal necesita incorporar precisión de voltaje; estos estímulos no modelan el contorno.
+
 La [inicialización DC global con semilla completa](docs/DC_GLOBAL_SEMILLA_COMPLETA.md) resuelve cutoff máximo y contrasta 14 puntos independientes con error máximo 2,25 nV. Añade criterio de corrección de voltaje para nodos débiles. Conserva dos rechazos exploratorios de semillas desplazadas; apagado de Q21 y R21 exacto siguen pendientes.
 
 El [barrido de extremos global](docs/EXTREMOS_CONTROLES_GLOBAL_66.md) detectó fallos de arranque con cutoff máximo y de transición al apagar Q21. [R20 ya admite sus extremos exactos](docs/R20_EXTREMOS_EXACTOS.md), con 128 pasos independientes y SW18 ON/OFF. El nuevo barrido acepta 16384 muestras; mantiene seis casos fallidos y R21 exacto pendiente.

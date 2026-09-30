@@ -17,6 +17,8 @@ fn main() {
         control_grid()
     } else if std::env::args().any(|v| v == "--dc-seeds") {
         dc_seed_grid()
+    } else if std::env::args().any(|v| v == "--vca-release") {
+        vca_release_grid()
     } else {
         temporal_grid()
     };
@@ -32,6 +34,102 @@ fn main() {
             std::process::exit(1);
         }
     }
+}
+
+fn vca_release_grid() -> Result<Value, String> {
+    let (base, c, h) = lab::lab_parameters();
+    let mut cases = Vec::new();
+    let mut failures = 0;
+    let mut accepted_total = 0;
+    for r61 in [200.0, 200000.0] {
+        let p = cutoff_ladder_output::Parameters {
+            r61_ohm: r61,
+            ..base
+        };
+        let centre = lab::controlled_boundary(0, true);
+        let initial = circuit66::initial_state(p, c, h, centre, lab::SEED)
+            .map_err(|e| format!("DC: {e:?}"))?;
+        for both in [false, true] {
+            for ramp in [1_usize, 8, 16, 32, 64, 128, 256] {
+                let mut state = initial;
+                let mut accepted = 0;
+                let mut failure = None;
+                let mut max_kcl = 0.0_f64;
+                let mut max_iterations = 0;
+                let mut fallbacks = 0;
+                let mut probe_rows = Vec::new();
+                let mut previous_bus = 0.0;
+                for n in 0..2 * ramp + 128 {
+                    let fraction = if n < ramp {
+                        1.0 - (n + 1) as f64 / ramp as f64
+                    } else if n < ramp + 64 {
+                        0.0
+                    } else if n < 2 * ramp + 64 {
+                        (n + 1 - ramp - 64) as f64 / ramp as f64
+                    } else {
+                        1.0
+                    };
+                    let mut b = centre;
+                    b.recovery.vca.second.q21_base_v = 2.0 * fraction;
+                    if both {
+                        b.recovery.vca.loudness_v = 2.0 * fraction;
+                    }
+                    b.bus_v = 0.02
+                        * (2.0 * std::f64::consts::PI * 100.0 * (n + 1) as f64 / 48000.0).sin();
+                    let old = state;
+                    match circuit66::step(&mut state, p, c, h, b, SolverBudget::default()) {
+                        Ok(result) => {
+                            accepted += 1;
+                            max_kcl = max_kcl.max(result.output.max_ladder_kcl_residual_a);
+                            max_iterations = max_iterations.max(result.output.iterations);
+                            fallbacks += usize::from(result.output.predictor_fallback);
+                            // Independent isolated windows are conditional on
+                            // this same incoming native history, not the whole
+                            // preceding native integration.
+                            if n == ramp - 1
+                                || n == ramp + 63
+                                || n == ramp + 64
+                                || n == 2 * ramp + 63
+                            {
+                                probe_rows.push(json!({"sample":n,"previous_bus_v":previous_bus,
+                                    "initial":{"node_v":old.node_v.to_vec(),"previous_node_v":old.previous_node_v.to_vec(),
+                                        "capacitor_v":old.capacitor_v.to_vec(),"c10_v":old.c10_capacitor_v},
+                                    "boundary":{"bus_v":b.bus_v,"loudness_v":b.recovery.vca.loudness_v,
+                                        "q21_base_v":b.recovery.vca.second.q21_base_v},
+                                    "native":{"node_v":state.node_v.to_vec(),"capacitor_v":state.capacitor_v.to_vec(),
+                                        "c10_v":state.c10_capacitor_v,"j7_v":result.output.j7_v,
+                                        "j4_hi_v":result.output.j4_hi_v,"j5_lo_v":result.output.j5_lo_v}}));
+                            }
+                            previous_bus = b.bus_v;
+                        }
+                        Err(e) => {
+                            assert_eq!(state, old);
+                            failure = Some(json!({"sample":n,"source_fraction":fraction,
+                                "error":format!("{e:?}"),"state_preserved":true}));
+                            break;
+                        }
+                    }
+                }
+                assert!(max_kcl < 1e-11);
+                if failure.is_some() {
+                    failures += 1;
+                }
+                accepted_total += accepted;
+                cases.push(
+                    json!({"r61_ohm":r61,"both_controls":both,"ramp_samples":ramp,
+                    "ramp_time_ms":1000.0*ramp as f64/48000.0,"requested_samples":2*ramp+128,
+                    "accepted_samples":accepted,"failure":failure,"max_kcl_a":max_kcl,
+                    "max_iterations":max_iterations,"fallbacks":fallbacks,"probes":probe_rows}),
+                );
+            }
+        }
+    }
+    Ok(
+        json!({"schema":"rf-d/circuit66-vca-release-survey/v1","passed":failures==0,
+        "failed_cases":failures,"accepted_samples":accepted_total,"sample_rate_hz":48000,
+        "scope":"imposed linear 2->0->2 V source ramps with 64 samples at zero and after restore; nominal devices",
+        "generator_is_modeled":false,"audio_fidelity_claim":false,"cases":cases}),
+    )
 }
 
 fn dc_seed_grid() -> Result<Value, String> {
