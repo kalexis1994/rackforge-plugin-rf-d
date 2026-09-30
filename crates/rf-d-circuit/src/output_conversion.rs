@@ -75,6 +75,8 @@ pub struct CoupledBoundary {
 pub struct CoupledResult {
     pub output: OutputStepResult,
     pub iterations: usize,
+    /// Number of nonlinear C2/panel/board-3 port solves, including line trials.
+    pub output_port_evaluations: usize,
     pub max_conversion_kcl_residual_a: f64,
 }
 
@@ -338,10 +340,14 @@ pub fn solve_coupled_step(
     let previous = *state;
     let mut x = state.conversion.node_v;
     let mut cached: Option<([f64; N], [[f64; N]; N], OutputInputPort)> = None;
+    let mut output_port_evaluations = 0;
     for iteration in 0..budget.iterations {
         let (residual, jacobian, port) = match cached.take() {
             Some(value) => value,
-            None => coupled_trial(previous, &x, p, headphone, b, budget)?,
+            None => {
+                output_port_evaluations += 1;
+                coupled_trial(previous, &x, p, headphone, b, budget)?
+            }
         };
         let error = max_abs(&residual);
         if error < 1e-10 {
@@ -353,6 +359,7 @@ pub fn solve_coupled_step(
             return Ok(CoupledResult {
                 output: port.output,
                 iterations: iteration,
+                output_port_evaluations,
                 max_conversion_kcl_residual_a: error,
             });
         }
@@ -361,6 +368,7 @@ pub fn solve_coupled_step(
         for power in 0..budget.line_search_halvings {
             let factor = 0.5_f64.powi(power as i32);
             let candidate = std::array::from_fn(|i| x[i] + factor * direction[i]);
+            output_port_evaluations += 1;
             if let Ok(trial) = coupled_trial(previous, &candidate, p, headphone, b, budget) {
                 if max_abs(&trial.0) < error {
                     accepted = Some((candidate, trial));

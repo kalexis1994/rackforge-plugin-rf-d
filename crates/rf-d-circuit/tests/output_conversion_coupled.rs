@@ -126,6 +126,7 @@ fn joint_board4_c2_panel_board3_matches_eight_variable_python() {
                 );
             }
             assert!(result.max_conversion_kcl_residual_a < 1e-10);
+            assert!(result.output_port_evaluations >= result.iterations + 1);
             assert!(result.output.max_c2_right_kcl_residual_a < 1e-10);
             assert!(result.output.panel.diagnostics.max_panel_kcl_residual_a < 1e-10);
             assert!(result.output.panel.diagnostics.board3.max_kcl_residual_a < 1e-10);
