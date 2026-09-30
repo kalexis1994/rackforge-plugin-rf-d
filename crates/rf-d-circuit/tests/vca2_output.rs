@@ -2,7 +2,7 @@ use rf_d_circuit::output::OutputBoundary;
 use rf_d_circuit::output_conversion::{DiodeParameters, Parameters as ConversionParameters};
 use rf_d_circuit::output_conversion_c4::BoundaryC4;
 use rf_d_circuit::vca2_output::{
-    initial_state, step, Boundary, Parameters as VcaParameters, NODE_NAMES,
+    initial_state, solve_input_port, step, Boundary, Parameters as VcaParameters, NODE_NAMES,
 };
 use rf_d_circuit::{Parameters as HeadphoneParameters, SolverBudget, StepError};
 use serde_json::Value;
@@ -102,6 +102,7 @@ fn joint_vca2_c4_c2_j7_matches_fifteen_variable_python() {
     }
     assert!((state.downstream.c4_capacitor_v - n(&case["initial"]["c4_capacitor_v"])).abs() < 1e-6);
     for (index, row) in case["steps"].as_array().unwrap().iter().enumerate() {
+        let previous = state;
         let b = boundary(case, &row["boundary"], row["sw18_on"].as_bool().unwrap());
         let result = step(
             &mut state,
@@ -146,6 +147,74 @@ fn joint_vca2_c4_c2_j7_matches_fifteen_variable_python() {
             assert!((actual - n(&row["amp_node_v"][i])).abs() < 1e-6);
         }
         assert!(result.max_kcl_residual_a < 1e-10);
+        let port = solve_input_port(
+            &previous,
+            vca,
+            conversion,
+            headphone,
+            b,
+            SolverBudget::default(),
+        )
+        .unwrap();
+        assert_eq!(port.next_state, state);
+        for output in 0..4 {
+            let expected = n(&row["upstream_port_current_a"][output]);
+            assert!(
+                (port.current_a[output] - expected).abs() < 1e-9,
+                "step {index} upstream current {output}: {} vs {expected}",
+                port.current_a[output]
+            );
+        }
+        if [0usize, 8].contains(&index) {
+            for column in 0..4 {
+                let mut plus = b;
+                let mut minus = b;
+                match column {
+                    0 => {
+                        plus.q14_base_v += 1e-4;
+                        minus.q14_base_v -= 1e-4;
+                    }
+                    1 => {
+                        plus.q13_base_v += 1e-4;
+                        minus.q13_base_v -= 1e-4;
+                    }
+                    2 => {
+                        plus.q21_base_v += 1e-4;
+                        minus.q21_base_v -= 1e-4;
+                    }
+                    _ => {
+                        plus.first_balance_wiper_v += 1e-4;
+                        minus.first_balance_wiper_v -= 1e-4;
+                    }
+                }
+                let high = solve_input_port(
+                    &previous,
+                    vca,
+                    conversion,
+                    headphone,
+                    plus,
+                    SolverBudget::default(),
+                )
+                .unwrap();
+                let low = solve_input_port(
+                    &previous,
+                    vca,
+                    conversion,
+                    headphone,
+                    minus,
+                    SolverBudget::default(),
+                )
+                .unwrap();
+                for output in 0..4 {
+                    let fd = (high.current_a[output] - low.current_a[output]) / 2e-4;
+                    assert!(
+                        (port.conductance_s[output][column] - fd).abs() < 2e-7 + 1e-4 * fd.abs(),
+                        "step {index} Y[{output},{column}]: {} vs {fd}",
+                        port.conductance_s[output][column]
+                    );
+                }
+            }
+        }
     }
 }
 

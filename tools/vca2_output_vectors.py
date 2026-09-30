@@ -120,6 +120,12 @@ def generate_vectors() -> dict:
             return r + [fx, fw], amp
 
         x, amp, error = _newton(x, transient, f"vca2-output/{index}")
+        vca_params = dict(second)
+        vca_params.update(q14_base_v=b["q14_base_v"],
+                          q13_base_v=b["q13_base_v"],
+                          q21_base_v=b["q21_base_v"],
+                          wiper_v=x[5], minus_v=b["minus_v"])
+        _, vca_devices = vca_evaluate(x[:5], **vca_params)
         pin21 = x[13] * main / (1000.0 + main)
         hi = pin21 * reduced["hi_to_pin21_ratio"] if sw18 else 0.0
         lo = hi * reduced["lo_to_hi_ratio"] if sw18 else 0.0
@@ -130,6 +136,12 @@ def generate_vectors() -> dict:
             "r21_wiper_v": x[14], "j7_v": amp["j7_tip_v"],
             "j4_hi_v": hi, "j5_lo_v": lo,
             "max_kcl_residual_a": error,
+            "upstream_port_current_a": [
+                vca_devices["Q14"]["base_a"],
+                vca_devices["Q13"]["base_a"],
+                vca_devices["Q21"]["base_a"] + b["q21_base_v"]/33000.0,
+                (b["first_balance_wiper_v"]-x[5])/120.0,
+            ],
             "amp_node_v": list(amp["node_v"]),
             "amp_capacitor_v": dict(amp["capacitor_v"]),
         })

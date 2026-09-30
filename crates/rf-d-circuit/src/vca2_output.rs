@@ -56,6 +56,20 @@ pub struct StepResult {
     pub downstream_evaluations: usize,
     pub predictor_fallback: bool,
     pub max_kcl_residual_a: f64,
+    /// Accepted Q12/Q17/R11 input currents and their local 3x3 tangent.
+    pub downstream_current_a: [f64; 3],
+    pub downstream_conductance_s: [[f64; 3]; 3],
+}
+
+/// Load presented to Q16/Q15 collectors, Q21 control and first balance.
+/// Order: Q14 base, Q13 base, Q21 base including R51, R13 input.
+#[derive(Clone, Copy, Debug)]
+pub struct InputPort {
+    pub next_state: State,
+    pub result: StepResult,
+    pub current_a: [f64; 4],
+    /// Row = port current, column = imposed upstream voltage in the same order.
+    pub conductance_s: [[f64; 4]; 4],
 }
 
 fn finite_positive(x: f64) -> bool {
@@ -301,6 +315,8 @@ fn transient_trial(
         downstream_evaluations: 0,
         predictor_fallback: false,
         max_kcl_residual_a: max_abs(&r),
+        downstream_current_a: port.current_a,
+        downstream_conductance_s: port.conductance_s,
     };
     Ok((r, j, port.next_state, result))
 }
@@ -410,4 +426,89 @@ pub fn step(
     let mut result = solution.2;
     result.predictor_fallback = fallback;
     Ok(result)
+}
+
+fn npn_base_terms(base: f64, collector: f64, emitter: f64, p: Parameters) -> (f64, f64, f64) {
+    let vt = K_B * p.temperature_k / Q_E;
+    let f = (base - emitter) / vt;
+    let rev = (base - collector) / vt;
+    let ib = p.transistor_is_a * (f.exp_m1() / p.beta_forward + rev.exp_m1() / p.beta_reverse);
+    let gf = p.transistor_is_a * f.exp() / vt;
+    let gr = p.transistor_is_a * rev.exp() / vt;
+    (ib, gf, gr)
+}
+
+/// Provisional four-port solve for the future first-VCA Newton. Every trial
+/// must retain the same previous state; commit only the accepted next_state.
+pub fn solve_input_port(
+    previous: &State,
+    p: Parameters,
+    out_p: ConversionParameters,
+    headphone: HeadphoneParameters,
+    b: Boundary,
+    budget: SolverBudget,
+) -> Result<InputPort, StepError> {
+    let mut next_state = *previous;
+    let result = step(&mut next_state, p, out_p, headphone, b, budget)?;
+    let x = next_state.node_v;
+    let (_, jacobian) = evaluate(
+        &x,
+        p,
+        b,
+        result.downstream_current_a,
+        Some(result.downstream_conductance_s),
+    )?;
+    let (ib14, gf14, gr14) = npn_base_terms(b.q14_base_v, x[3], x[0], p);
+    let (ib13, gf13, gr13) = npn_base_terms(b.q13_base_v, x[4], x[0], p);
+    let (ib21, gf21, gr21) = npn_base_terms(b.q21_base_v, x[1], x[2], p);
+    let current_a = [
+        ib14,
+        ib13,
+        ib21 + b.q21_base_v / 33000.0,            // R51 to ground
+        (b.first_balance_wiper_v - x[5]) / 120.0, // R13
+    ];
+    let mut conductance_s = [[0.0; 4]; 4];
+    for column in 0..4 {
+        let mut rhs = [0.0; N];
+        match column {
+            0 => {
+                rhs[0] = (1.0 + 1.0 / p.beta_forward) * gf14 - gr14;
+                rhs[3] = -gf14 + (1.0 + 1.0 / p.beta_reverse) * gr14;
+            }
+            1 => {
+                rhs[0] = (1.0 + 1.0 / p.beta_forward) * gf13 - gr13;
+                rhs[4] = -gf13 + (1.0 + 1.0 / p.beta_reverse) * gr13;
+            }
+            2 => {
+                rhs[2] = (1.0 + 1.0 / p.beta_forward) * gf21 - gr21;
+                rhs[1] = -gf21 + (1.0 + 1.0 / p.beta_reverse) * gr21;
+            }
+            _ => rhs[5] = 1.0 / 120.0,
+        }
+        let response = solve_linear(jacobian, rhs)?;
+        conductance_s[0][column] = f64::from(column == 0)
+            * (gf14 / p.beta_forward + gr14 / p.beta_reverse)
+            - gf14 / p.beta_forward * response[0]
+            - gr14 / p.beta_reverse * response[3];
+        conductance_s[1][column] = f64::from(column == 1)
+            * (gf13 / p.beta_forward + gr13 / p.beta_reverse)
+            - gf13 / p.beta_forward * response[0]
+            - gr13 / p.beta_reverse * response[4];
+        conductance_s[2][column] = f64::from(column == 2)
+            * (gf21 / p.beta_forward + gr21 / p.beta_reverse + 1.0 / 33000.0)
+            - gf21 / p.beta_forward * response[2]
+            - gr21 / p.beta_reverse * response[1];
+        conductance_s[3][column] = (f64::from(column == 3) - response[5]) / 120.0;
+    }
+    if current_a.iter().any(|v| !v.is_finite())
+        || conductance_s.iter().flatten().any(|v| !v.is_finite())
+    {
+        return Err(StepError::ExponentialDomain);
+    }
+    Ok(InputPort {
+        next_state,
+        result,
+        current_a,
+        conductance_s,
+    })
 }

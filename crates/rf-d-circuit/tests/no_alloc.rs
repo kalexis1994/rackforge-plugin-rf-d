@@ -15,8 +15,8 @@ use rf_d_circuit::output_conversion_c4::{
 };
 use rf_d_circuit::panel::{initial_panel_state, solve_panel_boundary, PanelBoundary};
 use rf_d_circuit::vca2_output::{
-    initial_state as initial_vca2_output_state, step as step_vca2_output, Boundary as Vca2Boundary,
-    Parameters as Vca2Parameters,
+    initial_state as initial_vca2_output_state, solve_input_port as solve_vca2_output_input_port,
+    step as step_vca2_output, Boundary as Vca2Boundary, Parameters as Vca2Parameters,
 };
 use rf_d_circuit::{initial_state, solve_input_port, step, Parameters, SolverBudget};
 
@@ -326,6 +326,20 @@ fn dc_initialization_and_audio_steps_do_not_allocate() {
             SolverBudget::default(),
         )
         .expect("VCA2 to J7 step");
+    }
+    for i in 0..20 {
+        let mut b = vca2_base;
+        b.q14_base_v += if i % 10 < 5 { 0.003 } else { -0.003 };
+        vca2_output = solve_vca2_output_input_port(
+            &vca2_output,
+            vca2,
+            conversion,
+            p,
+            b,
+            SolverBudget::default(),
+        )
+        .expect("four-port toward first VCA")
+        .next_state;
     }
     let after = ALLOCATIONS.load(Ordering::Relaxed);
     assert_eq!(after - before, 0, "processing allocated heap memory");
