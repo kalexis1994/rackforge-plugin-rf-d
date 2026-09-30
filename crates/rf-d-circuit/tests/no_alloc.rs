@@ -5,7 +5,8 @@ use rf_d_circuit::output::{
     initial_output_state, solve_output_boundary, solve_output_input_port, OutputBoundary,
 };
 use rf_d_circuit::output_conversion::{
-    solve_dc as solve_conversion_dc, Boundary as ConversionBoundary,
+    initial_coupled_state, solve_coupled_step, solve_dc as solve_conversion_dc,
+    Boundary as ConversionBoundary, CoupledBoundary, DiodeParameters,
     Parameters as ConversionParameters,
 };
 use rf_d_circuit::panel::{initial_panel_state, solve_panel_boundary, PanelBoundary};
@@ -152,6 +153,48 @@ fn dc_initialization_and_audio_steps_do_not_allocate() {
         )
         .expect("Q17 C2 dynamic port")
         .next_state;
+    }
+    let conversion = ConversionParameters {
+        transistor_is_a: 1e-14,
+        beta_forward: 100.0,
+        beta_reverse: 5.0,
+        temperature_k: 300.0,
+        diode: Some(DiodeParameters {
+            is_a: p.diode_is_a,
+            ideality: p.diode_ideality,
+        }),
+    };
+    let base = ConversionBoundary {
+        q1_base_v: 8.3,
+        q12_base_v: 7.75,
+        q17_base_v: 7.75,
+        plus_v: 10.0,
+    };
+    let mut coupled = initial_coupled_state(conversion, base, p).expect("joint DC state");
+    for i in 0..100 {
+        let mut imposed = base;
+        imposed.q17_base_v += if i % 20 < 10 { 0.018 } else { -0.018 };
+        solve_coupled_step(
+            &mut coupled,
+            conversion,
+            p,
+            CoupledBoundary {
+                conversion: imposed,
+                output: OutputBoundary {
+                    q17_collector_v: 0.0,
+                    r20_lower_ohm: 2500.0,
+                    hi_load_ohm: 10000.0,
+                    lo_load_ohm: 100000.0,
+                    sw18_on: i % 40 < 20,
+                    r21_lower_ohm: 2000.0,
+                    tip_load_ohm: Some(32.0),
+                    ring_load_ohm: Some(32.0),
+                    dt_s: 1.0 / 48000.0,
+                },
+            },
+            SolverBudget::default(),
+        )
+        .expect("atomic board4/C2/panel/board3 step");
     }
     let after = ALLOCATIONS.load(Ordering::Relaxed);
     assert_eq!(after - before, 0, "processing allocated heap memory");

@@ -1,7 +1,11 @@
-//! Isolated six-node board-4 Q1/Q12/Q17 DC conversion stage.
-//! Bases and +10 V rail are imposed; C2 and C4 are open at DC.
+//! Six-node board-4 Q1/Q12/Q17 conversion, DC and coupled C2 transient.
+//! Bases and +10 V rail are imposed; C4 remains outside this block.
 
-use crate::StepError;
+use crate::output::{
+    initial_output_state, solve_output_input_port, OutputBoundary, OutputInputPort, OutputState,
+    OutputStepResult,
+};
+use crate::{Parameters as HeadphoneParameters, SolverBudget, StepError};
 
 const N: usize = 6;
 const K_B: f64 = 1.380_649e-23;
@@ -50,6 +54,38 @@ pub struct DcResult {
     pub state: DcState,
     pub iterations: usize,
     pub max_kcl_residual_a: f64,
+}
+
+/// One atomic state for board 4, C2, panel, and board 3.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct CoupledState {
+    pub conversion: DcState,
+    pub output: OutputState,
+}
+
+/// The collector field of `output` is replaced by the solved Q17 collector
+/// voltage at every Newton trial. All other fields remain imposed controls.
+#[derive(Clone, Copy, Debug)]
+pub struct CoupledBoundary {
+    pub conversion: Boundary,
+    pub output: OutputBoundary,
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct CoupledResult {
+    pub output: OutputStepResult,
+    pub iterations: usize,
+    pub max_conversion_kcl_residual_a: f64,
+}
+
+pub fn initial_coupled_state(
+    p: Parameters,
+    b: Boundary,
+    headphone: HeadphoneParameters,
+) -> Result<CoupledState, StepError> {
+    let conversion = solve_dc(p, b)?.state;
+    let output = initial_output_state(headphone, conversion.node_v[5])?;
+    Ok(CoupledState { conversion, output })
 }
 
 fn positive(v: f64) -> bool {
@@ -256,6 +292,86 @@ pub fn solve_dc(p: Parameters, b: Boundary) -> Result<DcResult, StepError> {
             }
         }
         if !accepted {
+            return Err(StepError::NoDecrease);
+        }
+    }
+    Err(StepError::IterationBudget)
+}
+
+fn coupled_trial(
+    previous: CoupledState,
+    x: &[f64; N],
+    p: Parameters,
+    headphone: HeadphoneParameters,
+    b: CoupledBoundary,
+    budget: SolverBudget,
+) -> Result<([f64; N], [[f64; N]; N], OutputInputPort), StepError> {
+    let mut output_boundary = b.output;
+    output_boundary.q17_collector_v = x[5];
+    let port = solve_output_input_port(&previous.output, headphone, output_boundary, budget)?;
+    let (mut residual, mut jacobian) = evaluate(x, p, b.conversion)?;
+    residual[5] += port.current_a;
+    jacobian[5][5] += port.conductance_s;
+    if !residual[5].is_finite() || !jacobian[5][5].is_finite() {
+        return Err(StepError::ExponentialDomain);
+    }
+    Ok((residual, jacobian, port))
+}
+
+/// Solve Q1/Q12/Q17 and the complete C2-to-J7 output in one implicit step.
+/// The three bases and rails remain imposed. Every trial starts with the
+/// immutable previous capacitor states; failure leaves `state` untouched.
+pub fn solve_coupled_step(
+    state: &mut CoupledState,
+    p: Parameters,
+    headphone: HeadphoneParameters,
+    b: CoupledBoundary,
+    budget: SolverBudget,
+) -> Result<CoupledResult, StepError> {
+    validate(p, b.conversion)?;
+    if state.conversion.node_v.iter().any(|v| !v.is_finite())
+        || !(1..=16).contains(&budget.iterations)
+        || !(1..=16).contains(&budget.line_search_halvings)
+    {
+        return Err(StepError::InvalidInput);
+    }
+    let previous = *state;
+    let mut x = state.conversion.node_v;
+    let mut cached: Option<([f64; N], [[f64; N]; N], OutputInputPort)> = None;
+    for iteration in 0..budget.iterations {
+        let (residual, jacobian, port) = match cached.take() {
+            Some(value) => value,
+            None => coupled_trial(previous, &x, p, headphone, b, budget)?,
+        };
+        let error = max_abs(&residual);
+        if error < 1e-10 {
+            if p.diode.is_none() && !(0.0..=b.conversion.plus_v).contains(&x[5]) {
+                return Err(StepError::ExponentialDomain);
+            }
+            state.conversion.node_v = x;
+            state.output = port.next_state;
+            return Ok(CoupledResult {
+                output: port.output,
+                iterations: iteration,
+                max_conversion_kcl_residual_a: error,
+            });
+        }
+        let direction = solve_linear(jacobian, residual.map(|v| -v))?;
+        let mut accepted = None;
+        for power in 0..budget.line_search_halvings {
+            let factor = 0.5_f64.powi(power as i32);
+            let candidate = std::array::from_fn(|i| x[i] + factor * direction[i]);
+            if let Ok(trial) = coupled_trial(previous, &candidate, p, headphone, b, budget) {
+                if max_abs(&trial.0) < error {
+                    accepted = Some((candidate, trial));
+                    break;
+                }
+            }
+        }
+        if let Some((candidate, trial)) = accepted {
+            x = candidate;
+            cached = Some(trial);
+        } else {
             return Err(StepError::NoDecrease);
         }
     }
