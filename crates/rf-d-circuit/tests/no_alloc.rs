@@ -14,6 +14,10 @@ use rf_d_circuit::output_conversion_c4::{
     BoundaryC4,
 };
 use rf_d_circuit::panel::{initial_panel_state, solve_panel_boundary, PanelBoundary};
+use rf_d_circuit::recovery_vca_output::{
+    initial_state as initial_recovery_vca_state, step as step_recovery_vca,
+    Boundary as RecoveryBoundary,
+};
 use rf_d_circuit::vca1_output::{
     initial_state as initial_vca1_output_state, solve_input_port as solve_vca1_input_port,
     step as step_vca1_output, Boundary as Vca1Boundary,
@@ -371,6 +375,28 @@ fn dc_initialization_and_audio_steps_do_not_allocate() {
         vca1 = solve_vca1_input_port(&vca1, vca2, conversion, p, b, SolverBudget::default())
             .expect("R2/C6 port toward filter recovery")
             .next_state;
+    }
+    let recovery_boundary = RecoveryBoundary {
+        ladder_left_v: 0.0,
+        ladder_right_v: 0.0,
+        vca: vca1_boundary,
+    };
+    let mut recovery = initial_recovery_vca_state(vca2, conversion, p, recovery_boundary)
+        .expect("recovery through J7 DC state");
+    for i in 0..100 {
+        let mut b = recovery_boundary;
+        b.ladder_left_v = if i % 20 < 10 { 0.02 } else { -0.02 };
+        b.ladder_right_v = -b.ladder_left_v;
+        b.vca.second.output.output.sw18_on = i % 40 < 20;
+        step_recovery_vca(
+            &mut recovery,
+            vca2,
+            conversion,
+            p,
+            b,
+            SolverBudget::default(),
+        )
+        .expect("recovery through J7 step");
     }
     let after = ALLOCATIONS.load(Ordering::Relaxed);
     assert_eq!(after - before, 0, "processing allocated heap memory");
