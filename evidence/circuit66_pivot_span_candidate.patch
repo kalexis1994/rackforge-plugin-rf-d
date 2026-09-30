@@ -1,0 +1,30 @@
+diff --git a/crates/rf-d-circuit/src/output_conversion.rs b/crates/rf-d-circuit/src/output_conversion.rs
+index 6476462..4455bb8 100644
+--- a/crates/rf-d-circuit/src/output_conversion.rs
++++ b/crates/rf-d-circuit/src/output_conversion.rs
+@@ -261,6 +261,16 @@ fn solve_linear_internal<const M: usize, const SKIP_ZERO: bool>(
+         rhs.swap(col, pivot);
+         scale.swap(col, pivot);
+         let diagonal = j[col][col];
++        // Keep contiguous updates, but exclude the pivot row's trailing exact
++        // zeros. Recompute after every pivot: fill-in is never discarded.
++        let end = if SKIP_ZERO {
++            j[col][(col + 1)..]
++                .iter()
++                .rposition(|v| *v != 0.0)
++                .map_or(col + 1, |offset| col + 2 + offset)
++        } else {
++            M
++        };
+         for row in (col + 1)..M {
+             if SKIP_ZERO && j[row][col] == 0.0 {
+                 continue;
+@@ -268,7 +278,7 @@ fn solve_linear_internal<const M: usize, const SKIP_ZERO: bool>(
+             let factor = j[row][col] / diagonal;
+             j[row][col] = 0.0;
+             #[allow(clippy::needless_range_loop)]
+-            for k in (col + 1)..M {
++            for k in (col + 1)..end {
+                 j[row][k] -= factor * j[col][k];
+             }
+             rhs[row] -= factor * rhs[col];

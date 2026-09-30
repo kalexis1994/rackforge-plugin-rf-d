@@ -5,5 +5,11 @@ edition = "2021"
 description = "Conditional circuit models for RF-D"
 publish = false
 
+[features]
+# Offline timing diagnostics only; no timing calls in the audio step.
+solver-profiling = []
+# Reference factorization in documentary node order, for numerical/cost gates.
+solver-natural-order = []
+
 [dev-dependencies]
 serde_json = "1"

@@ -14,6 +14,39 @@ const N: usize = 66;
 const K_B: f64 = 1.380_649e-23;
 const Q_E: f64 = 1.602_176_634e-19;
 
+// Numerical row/column numbering only, from the nominal symmetric graph at
+// sample 1023 of the deadline probe. C10's edge is included even when open.
+// Every future coefficient is stamped; this is not a sparsity/drop mask.
+#[cfg(not(feature = "solver-natural-order"))]
+const ORDER: [usize; N] = [
+    23, 36, 35, 61, 17, 19, 22, 24, 29, 32, 28, 41, 40, 45, 43, 47, 48, 49, 50, 52, 53, 55, 54, 56,
+    58, 57, 59, 60, 51, 46, 44, 62, 64, 63, 65, 0, 4, 16, 18, 20, 42, 39, 5, 6, 7, 8, 11, 12, 3, 9,
+    13, 2, 1, 10, 14, 15, 21, 25, 27, 26, 30, 31, 33, 34, 37, 38,
+];
+#[cfg(feature = "solver-natural-order")]
+const ORDER: [usize; N] = {
+    let mut result = [0; N];
+    let mut i = 0;
+    while i < N {
+        result[i] = i;
+        i += 1;
+    }
+    result
+};
+const POSITION: [usize; N] = {
+    let mut result = [0; N];
+    let mut i = 0;
+    while i < N {
+        result[ORDER[i]] = i;
+        i += 1;
+    }
+    result
+};
+
+fn natural_jacobian(j: &[[f64; N]; N]) -> [[f64; N]; N] {
+    std::array::from_fn(|i| std::array::from_fn(|k| j[POSITION[i]][POSITION[k]]))
+}
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct State {
     /// Same order as the independent Python 66-node oracle.
@@ -58,7 +91,7 @@ impl<'a> Stamp<'a> {
                 self.r[i] += sign * current;
                 for (other, slope) in [(left, g), (right, -g)] {
                     if let Node(k) = other {
-                        self.j[i][k] += sign * slope;
+                        self.j[POSITION[i]][POSITION[k]] += sign * slope;
                     }
                 }
             }
@@ -119,7 +152,7 @@ impl<'a> Stamp<'a> {
                 self.r[i] += polarity * [ib, ic, -ib - ic][row];
                 for col in 0..3 {
                     if let Node(k) = terminals[col] {
-                        self.j[i][k] += slopes[row][col];
+                        self.j[POSITION[i]][POSITION[k]] += slopes[row][col];
                     }
                 }
             }
@@ -507,7 +540,8 @@ fn solve(
             let control = std::array::from_fn::<_, 4, _>(|i| r[62 + i]);
             return Ok((x, iteration, error, i10, max_abs(&control)));
         }
-        let direction = solve_linear_sparse(j, r.map(|v| -v))?;
+        let ordered_direction = solve_linear_sparse(j, std::array::from_fn(|i| -r[ORDER[i]]))?;
+        let direction: [f64; N] = std::array::from_fn(|i| ordered_direction[POSITION[i]]);
         let mut accepted = None;
         for power in 0..budget.line_search_halvings {
             let f = 0.5_f64.powi(power as i32);
@@ -532,6 +566,97 @@ fn solve(
 
 fn charges(x: &[f64; N], b: Boundary) -> [f64; 17] {
     capacitors(b).map(|(left, right, _)| left.value(x) - right.value(x))
+}
+
+/// Offline microbenchmark at one accepted operating point, not an audio deadline
+/// claim. The feature keeps clocks and timing loops out of ordinary builds.
+#[cfg(feature = "solver-profiling")]
+pub fn profile_kernels(
+    previous: &State,
+    p: Parameters,
+    conversion: ConversionParameters,
+    headphone: HeadphoneParameters,
+    b: Boundary,
+) -> Result<(f64, f64, f64, [usize; N]), StepError> {
+    use std::hint::black_box;
+    use std::time::Instant;
+    const REPEATS: usize = 8192;
+    let prepared = prepare(p, conversion, headphone, b, SolverBudget::default())?;
+    let (r, ordered_j, _) = evaluate(
+        &previous.node_v,
+        p,
+        conversion,
+        headphone,
+        b,
+        prepared,
+        Some(previous),
+    )?;
+    let j = natural_jacobian(&ordered_j);
+    // Both loops are warmed; copying the input matrix is included in solve cost.
+    for _ in 0..256 {
+        black_box(evaluate(
+            black_box(&previous.node_v),
+            p,
+            conversion,
+            headphone,
+            b,
+            prepared,
+            Some(previous),
+        )?);
+        black_box(solve_linear_sparse(black_box(j), black_box(r))?);
+    }
+    let start = Instant::now();
+    for _ in 0..REPEATS {
+        black_box(evaluate(
+            black_box(&previous.node_v),
+            p,
+            conversion,
+            headphone,
+            b,
+            prepared,
+            Some(previous),
+        )?);
+    }
+    let stamp_us = start.elapsed().as_secs_f64() * 1e6 / REPEATS as f64;
+    let start = Instant::now();
+    for _ in 0..REPEATS {
+        black_box(solve_linear_sparse(black_box(j), black_box(r))?);
+    }
+    let factor_us = start.elapsed().as_secs_f64() * 1e6 / REPEATS as f64;
+    let mut graph = std::array::from_fn::<_, N, _>(|i| {
+        std::array::from_fn::<_, N, _>(|k| i != k && (j[i][k] != 0.0 || j[k][i] != 0.0))
+    });
+    graph[7][22] = true;
+    graph[22][7] = true;
+    let mut removed = [false; N];
+    let mut order = [0; N];
+    for selected in &mut order {
+        let node = (0..N)
+            .filter(|i| !removed[*i])
+            .min_by_key(|i| (0..N).filter(|k| !removed[*k] && graph[*i][*k]).count())
+            .unwrap();
+        *selected = node;
+        for i in 0..N {
+            if !removed[i] && graph[node][i] {
+                for k in 0..N {
+                    if !removed[k] && graph[node][k] && i != k {
+                        graph[i][k] = true;
+                    }
+                }
+            }
+        }
+        removed[node] = true;
+    }
+    // Permutation is outside the timed loop: measure the factorization alone.
+    let matrix: [[f64; N]; N] =
+        std::array::from_fn(|i| std::array::from_fn(|k| j[order[i]][order[k]]));
+    let rhs = std::array::from_fn(|i| r[order[i]]);
+    let start = Instant::now();
+    for _ in 0..REPEATS {
+        black_box(solve_linear_sparse(black_box(matrix), black_box(rhs))?);
+    }
+    let ordered_factor_us = start.elapsed().as_secs_f64() * 1e6 / REPEATS as f64;
+    Ok((stamp_us, factor_us, ordered_factor_us, order))
 }
 
 /// Provisional KCL and analytic Jacobian for circuit diagnostics. All capacitor
@@ -564,7 +689,7 @@ pub fn linearize(
         prepared,
         Some(previous),
     )?;
-    Ok((r, j))
+    Ok((r, natural_jacobian(&j)))
 }
 
 /// Uses the validated nested DC initializer as a seed, then closes every node

@@ -153,6 +153,41 @@ fn main() {
         compare_waveforms(dynamic, conversion, headphone, closed);
         return;
     }
+    #[cfg(feature = "solver-profiling")]
+    if std::env::args().any(|arg| arg == "--profile") {
+        let mut state = rf_d_circuit::circuit66::initial_state(
+            dynamic,
+            conversion,
+            headphone,
+            controlled_boundary(0, closed),
+            SEED,
+        )
+        .expect("profiling DC");
+        for sample in 0..1024 {
+            rf_d_circuit::circuit66::step(
+                &mut state,
+                dynamic,
+                conversion,
+                headphone,
+                controlled_boundary(sample, closed),
+                SolverBudget::default(),
+            )
+            .expect("profiling warmup");
+        }
+        let (stamp, factor, ordered_factor, order) = rf_d_circuit::circuit66::profile_kernels(
+            &state,
+            dynamic,
+            conversion,
+            headphone,
+            controlled_boundary(1023, closed),
+        )
+        .expect("kernel profile");
+        println!(
+            "kernel_profile: repeats=8192 sample=1023 stamp_us={stamp:.3} factor_us={factor:.3} ordered_factor_us={ordered_factor:.3}"
+        );
+        println!("elimination_order={order:?}");
+        return;
+    }
     let mut durations_us = Vec::with_capacity(MEASURED_SAMPLES / BLOCK);
     let mut evaluations = 0usize;
     let mut global_evaluations = 0usize;

@@ -1,0 +1,51 @@
+diff --git a/crates/rf-d-circuit/src/output_conversion.rs b/crates/rf-d-circuit/src/output_conversion.rs
+index 6476462..6413d44 100644
+--- a/crates/rf-d-circuit/src/output_conversion.rs
++++ b/crates/rf-d-circuit/src/output_conversion.rs
+@@ -261,15 +261,33 @@ fn solve_linear_internal<const M: usize, const SKIP_ZERO: bool>(
+         rhs.swap(col, pivot);
+         scale.swap(col, pivot);
+         let diagonal = j[col][col];
++        // Discover the pivot row's exact support once, after swapping. Fill-in
++        // is retained: this list is rebuilt from the current matrix each column.
++        let mut active = [0; M];
++        let mut active_len = 0;
++        if SKIP_ZERO {
++            for k in (col + 1)..M {
++                if j[col][k] != 0.0 {
++                    active[active_len] = k;
++                    active_len += 1;
++                }
++            }
++        }
+         for row in (col + 1)..M {
+             if SKIP_ZERO && j[row][col] == 0.0 {
+                 continue;
+             }
+             let factor = j[row][col] / diagonal;
+             j[row][col] = 0.0;
+-            #[allow(clippy::needless_range_loop)]
+-            for k in (col + 1)..M {
+-                j[row][k] -= factor * j[col][k];
++            if SKIP_ZERO {
++                for &k in &active[..active_len] {
++                    j[row][k] -= factor * j[col][k];
++                }
++            } else {
++                #[allow(clippy::needless_range_loop)]
++                for k in (col + 1)..M {
++                    j[row][k] -= factor * j[col][k];
++                }
+             }
+             rhs[row] -= factor * rhs[col];
+         }
+@@ -278,6 +296,9 @@ fn solve_linear_internal<const M: usize, const SKIP_ZERO: bool>(
+     for row in (0..M).rev() {
+         let mut value = rhs[row];
+         for k in (row + 1)..M {
++            if SKIP_ZERO && j[row][k] == 0.0 {
++                continue;
++            }
+             value -= j[row][k] * out[k];
+         }
+         out[row] = value / j[row][row];

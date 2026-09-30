@@ -14,6 +14,8 @@ Los estados `desconocido`, `hipótesis`, `modelado`, `contrastado` y `cerrado pa
 
 ## Afirmación pública actual
 
+El [ensamblado global ordenado](ENSAMBLADO_GLOBAL_ORDENADO.md) conserva las 66 KCL y los gates numéricos. Reduce 5,013 % la media local a 2,46534 ms/bloque; los 640 bloques medidos aún exceden el plazo. Se admite como optimización experimental; C6 y C7 siguen abiertos.
+
 El [solver global de 66 nodos](SOLVER_GLOBAL_66_NODOS.md) añade Jacobiano completamente analítico y eliminación de ceros exactos, con arrays fijos. Reproduce 128 pasos del oráculo Python (J7 0,248 nV) y pasa el contraste de 8192 muestras contra la partición, después de hacer más estricta la tolerancia del primer VCA. Cinco corridas alternadas reducen el costo medio 9,39 veces a 2,559 ms/bloque; 640 de 640 bloques globales aún exceden 1,333 ms. El estado de audio externo permanece abierto y C7 no pasa.
 
 El [puerto nativo Q26/Q28](CUTOFF_NATIVO_Q26_Q28.md) añade C18, ambas junturas y carga TAIL variable en 72 pasos aislados. La [integración hasta J7](CUTOFF_LADDER_J7_NATIVO.md) reemplaza la corriente de cola impuesta y coincide en 128 pasos con un oráculo de 66 nodos: error J7 22,4 nV e interno 1,374 µV. Red pasiva, tangentes e historial de C18 están contrastados; las fuentes de control y los parámetros BJT siguen impuestos. El nuevo escenario tarda ~25,7 ms por bloque y no pasa C7.
