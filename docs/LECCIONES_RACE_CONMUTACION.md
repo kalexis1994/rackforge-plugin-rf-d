@@ -1,5 +1,7 @@
 # Lecciones RF-D para RACE: conmutación y memoria de carga
 
+La [consulta temporal conservativa](BIESTABLE_PREFIJO_Y_CONSULTA_TEMPORAL.md) propone auditar la interpolación usada para comparar mallas: una separación de 3,75 mV se reduce a 39,4 µV al resolver el mismo instante, mientras un pico distinto permanece en 0,563 V. Conservar los historiales entrantes, marcar las consultas como provisionales y repetir FD permite diagnosticar el error de observación sin reescribir la evidencia fallida. Un punto consultado no valida el resto de la trayectoria.
+
 El [barrido BDF2](BIESTABLE_BARRIDO_BDF2.md) propone distinguir error final y máximo de trayectoria: 0,141 mV al final no compensa 0,563 V durante la transición. Una mejor coincidencia entre políticas del segundo integrador tampoco identifica cuál se acerca a la solución exacta; mantener el contraste entre métodos y el alcance del solver compartido.
 
 El [corte BDF2](BIESTABLE_BDF2_CARGA.md) propone validar un integrador multistep sobre carga antes de repetir la voz completa: derivar coeficientes con interpolación, conservar ambos estados ante rechazo, distinguir memoria virtual de carga física y verificar publicación directamente desde los historiales reales. Compartir un solver espacial con otro integrador no crea un oráculo espacial independiente.

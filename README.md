@@ -4,6 +4,8 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+La [auditoría de prefijo y consulta temporal](docs/BIESTABLE_PREFIJO_Y_CONSULTA_TEMPORAL.md) distingue error de comparación entre muestras de discrepancia del integrador: el punto de trigger baja de 3,75 mV interpolados a 39,4 µV consultados, pero el pico de la transición sigue en 0,563 V al resolver ambos candidatos al mismo instante. El refinamiento continúa pendiente.
+
 El [barrido BDF2](docs/BIESTABLE_BARRIDO_BDF2.md) completa 3 ms con ambas políticas y verifica 3236 intervalos. Su discrepancia entre políticas baja a 0,563 V y a 0,141 mV al final; el máximo todavía supera el gate de 1 mV. Euler y sus fallos quedan conservados.
 
 El [integrador BDF2 sobre carga](docs/BIESTABLE_BDF2_CARGA.md) conserva dos estados anteriores y pasa el contraste de siete intervalos con Jacobiano FD y carga publicada. Un RC sintético muestra el refinamiento esperado de segundo orden. Falta el barrido completo de la transición; el solver espacial y las hipótesis físicas siguen compartidos.
