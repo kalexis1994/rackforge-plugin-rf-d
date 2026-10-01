@@ -56,6 +56,8 @@ El [grafo eléctrico y oráculo de placa 2](CONTORNO_VOLUMEN_CIRCUITO.md) recons
 
 ## Primer corte de implementación
 
+El [segundo integrador BDF2](BIESTABLE_BDF2_CARGA.md) ya verifica coeficientes, dos memorias aceptadas y conservación en C10/junturas. Próximo gate: barrido A3/B3 0..3 ms, diferencias al mismo tiempo y observación de tiempos, conservando los fallos de Euler.
+
 Los [tiempos observados](BIESTABLE_TIEMPOS_DE_TRANSICION.md) separan la subida ATTACK_OUT de la caída final de Q25. Siguiente gate: error acumulado antes de ambas regiones con refinamiento adicional y otra integración, sin retimar las trazas para aprobar el contraste original.
 
 El [corte de incrementos compensados](BIESTABLE_INCREMENTOS_COMPENSADOS.md) ya cierra el intervalo rechazado con ambos Jacobianos y conserva sus 21 memorias durante 32 pasos posteriores. El [barrido A2/B2](BIESTABLE_BARRIDO_COMPENSADO.md) completa 0..3 ms y verifica 4152 medios intervalos; falla el gate temporal de 1 mV con 5,147 V máximos. Próximo bloque: medir por separado ATTACK_OUT/Q25, sensibilidad acumulada y otra integración. Se conserva el barrido v1 fallido.
