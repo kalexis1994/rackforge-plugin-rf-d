@@ -4,6 +4,8 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+Las [ventanas de crecimiento con memoria E4 común](docs/BIESTABLE_VENTANAS_DE_CRECIMIENTO.md) añaden 335 intervalos y contrastan umbrales 0,25/0,125. En la cola reducen intentos de 122 a 103, con más pasos aceptados; seis regresiones pasan y el primer fallo del resumen queda conservado. Es evidencia condicionada, con el gate global desde DC aún abierto.
+
 El [barrido BDF2 de doble paso D4/E4](docs/BIESTABLE_BARRIDO_DOBLE_PASO.md) completa 3 ms con **9446 intervalos publicados**, 18884 medios provisionales aceptados y 866/866 consultas conservativas. El máximo consultado es **7,81 mV** en ATTACK_GATE_LOWER: todavía falla 1 mV. El prefijo muestreado pasa con 4,615 µV, sin cota continua. Se conservan los informes anteriores y la gráfica distingue interpolación y consultas.
 
 El [prototipo del estimador BDF2 por doble paso](docs/BIESTABLE_ESTIMADOR_BDF2_DOBLE_PASO.md) verifica 12 sondas con tres rutas de carga, memoria intermedia y FD. Compara el paso completo con dos medios BDF2 y conserva el completo como candidato; su alcance local se amplía con el nuevo barrido desde DC, cuyo gate global permanece abierto.

@@ -48,3 +48,44 @@ conservan el gzip, productor original y hashes en `...windows_attempt1...`
 y `...growth_attempts.json`. La corrección declara `startup=false` para
 estas continuaciones. Se repite el productor y se contrastan los datos
 numéricos con el intento conservado, sin cambiar gates o controles.
+
+## Resultado y alcance
+
+Las ocho continuaciones completan sus destinos. Se integran **335
+intervalos publicados** y **670 medios provisionales aceptados**:
+
+| Región | Aceptados/rechazos con 0,25 | Aceptados/rechazos con 0,125 | Máximo interpolado condicional | Consulta de ese pico |
+| --- | --- | --- | --- | --- |
+| Prefijo | 13 / 0 | 13 / 0 | 0 V | No solicitada: máximo en el anclaje idéntico |
+| Ataque | 4 / 0 | 6 / 0 | 733,856071 µV | 2,993161274×10⁻¹³ V |
+| Reset | 53 / 1 | 53 / 0 | 0 V | No solicitada: máximo en el anclaje idéntico |
+| Cola | 90 / 32 | 103 / 0 | 10,159139 µV | 0,587542 µV |
+
+Prefijo y reset conservan los mismos estados completos aceptados, incluidos
+sus pares compensados. El rechazo de reset cambia el costo de intentos,
+sin cambiar la trayectoria aceptada. Hay cuatro consultas válidas en total,
+dos por pico no nulo. Una consulta del máximo interpolado no localiza el
+máximo continuo ni sustituye una rejilla completa de observación.
+
+En la cola los intentos bajan de **122 a 103**, con trece intervalos
+aceptados más; en las cuatro ventanas suman 193 frente a 175. Esto mide
+cantidad de intentos, sin medir latencia ni deadline de audio. No determina
+que 0,125 sea un controlador universal ni que pase el barrido global.
+
+Cada publicación y medio aceptado se contrasta contra los historiales reales.
+Máximo KCL guardado entre esos intervalos: **1,574734 pA**, con el gate
+original de 10 pA. La mínima media etapa es **81,787112 ps**; todas siguen
+en el dominio de 1 ps. Hay cero arranques BE o reinicios de memoria.
+
+**6/6 regresiones pasan** en 13,903 s, el 2026-10-01. Reconstruyen cada
+propuesta/halving y las dos reglas de crecimiento, comprueban anclajes E4,
+publicación de carga, consultas, hashes y reproducción del intento original.
+La comparación de ambos intentos es exacta tras añadir exclusivamente
+`startup=false`; el fallo del primer resumen queda conservado.
+
+`python -m unittest discover -s tests -p test_loudness_latch_bdf_growth_windows.py -v`
+
+Siguiente gate: estudiar el controlador en la trayectoria desde DC y la
+acumulación del defecto temporal, conservando los 7,81 mV fallidos y el
+gate original. Las ventanas son experimentos condicionados a memoria E4;
+no admiten refinamiento global, física, audio ni un cambio al motor Rust.

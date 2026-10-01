@@ -1,5 +1,7 @@
 # Lecciones RF-D para RACE: conmutación y memoria de carga
 
+Las [ventanas con la misma memoria E4](BIESTABLE_VENTANAS_DE_CRECIMIENTO.md) separan dos heurísticas de crecimiento con tolerancias/circuito idénticos. En reset cambian los rechazos y conservan todos los estados aceptados; en cola se reducen los intentos de 122 a 103 con más pasos aceptados. Registrar intentos y solve/carga por separado evita llamarlo mejora de latencia sin medirla. Una ventana condicionada no reemplaza el gate desde DC ni recomienda un umbral universal.
+
 El [barrido de doble paso desde DC](BIESTABLE_BARRIDO_DOBLE_PASO.md) completa 9446 intervalos y 866 consultas, pero conserva 7,81 mV de máximo. Cambiar el estimador requiere repetir cobertura, publicación y máximo con políticas declaradas. El mínimo pertenece a cada intervalo real de las rutas provisionales. La heurística de crecimiento también necesita hipótesis explícitas: un cúbico con memoria realmente publicada pasa de razón 0,2 a 1,725 al duplicar h. Preservar el intento fallido del adaptador tupla/lista y contrastar JSON canónico permite corregir la validación sin cambiar datos o gates.
 
 El [doble paso BDF2](BIESTABLE_ESTIMADOR_BDF2_DOBLE_PASO.md) propone derivar el estimador sobre el historial realmente compartido. Un cúbico exacto da `Efine/(Efull−Efine)=13/19` con h/k=1, no 1/3; ese valor tampoco calibra el DAE no lineal. Declarar qué candidato se publica y cómo limita el siguiente crecimiento evita aceptar un macro cuya comparación provisional esté fuera del dominio del integrador.

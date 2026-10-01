@@ -56,6 +56,8 @@ El [grafo eléctrico y oráculo de placa 2](CONTORNO_VOLUMEN_CIRCUITO.md) recons
 
 ## Primer corte de implementación
 
+Las [cuatro ventanas de crecimiento](BIESTABLE_VENTANAS_DE_CRECIMIENTO.md) completan ocho continuaciones desde memoria E4 común y verifican 335 intervalos. El umbral 0,125 evita rechazos en estas ventanas y reduce los intentos de cola, con más intervalos aceptados. Próximo bloque: estudio desde DC del controlador y acumulación temporal; los resultados condicionados no sustituyen los 7,81 mV fallidos del barrido global.
+
 El [barrido de doble paso desde DC](BIESTABLE_BARRIDO_DOBLE_PASO.md) completa D4/E4 con 9446 intervalos y 866 consultas válidas. El máximo consultado de 7,81 mV sigue fallando el gate de 1 mV; el prefijo muestreado pasa con 4,615 µV. Próximo bloque: acumulación temporal y crecimiento con memoria publicada, apoyados por el contraejemplo exacto del umbral 0,25. Cada controlador nuevo tendrá política e informe propios; no promover aún el contorno al motor nativo.
 
 El [prototipo de doble paso BDF2 v4](BIESTABLE_ESTIMADOR_BDF2_DOBLE_PASO.md) pasa doce sondas y el cúbico exacto, con FD, historial conservado y publicación del candidato completo. Su protocolo ya se ejecutó en D4/E4. No usar un divisor Richardson 1/3: los historiales compartidos cambian ese patrón local.
