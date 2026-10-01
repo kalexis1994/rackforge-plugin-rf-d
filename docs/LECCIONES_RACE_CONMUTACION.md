@@ -15,3 +15,5 @@ Registro transferible al estándar, basado en el contorno cargado de 94 nodos. N
 | Publicar alcance, condiciones y desconocidos junto al resultado | Informes con fuentes/hash, ambiente, dt, selected=null y audio_admitted=false | Evidencia reproducible antes de promover a nativo o anunciar fidelidad |
 
 Estas reglas son candidatas documentadas para el repositorio RACE. Su implementación matemática se verifica en RF-D; los parámetros físicos pendientes y el rendimiento del motor siguen teniendo gates propios.
+
+La [comparación de fabricantes 2N3392](FABRICACION_3392_Y_DATOS_DINAMICOS.md) añade una regla documental: conservar la columna típico/mínimo/máximo, el encapsulado, la revisión y las ambigüedades impresas. GE87 y Central/Fairchild sitúan 2 pF en columnas distintas. Una remisión a una familia de proceso posterior no identifica el lote de un sintetizador histórico.

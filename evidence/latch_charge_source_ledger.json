@@ -1,0 +1,91 @@
+{
+  "schema": "rf-d/latch-charge-source-ledger/v1",
+  "review_date": "2026-09-30",
+  "physical_lot_identified": false,
+  "physical_parameters_promoted": false,
+  "sources": [
+    {
+      "id": "DS-3392-GE87",
+      "manufacturer": "GE/RCA",
+      "document_year": 1987,
+      "url": "https://www.bitsavers.org/components/ge/1987_GE_RCA_Signal_Transistors_and_Rectifiers.pdf",
+      "local_ignored_path": "references-local/datasheets/ge_rca_signal_1987.pdf",
+      "sha256": "0eeeb22c5c512b69b05b91d88fe6afedfa67053d6a7fee35da994ce6d07bdf5a",
+      "pdf_pages": 142,
+      "device_pdf_pages": [16, 17, 18, 19],
+      "device_printed_pages": [15, 16, 17, 18],
+      "visual_review_pdf_pages": [16, 17, 18],
+      "package": "TO-98",
+      "cob": {
+        "pdf_page": 16,
+        "printed_page": 15,
+        "minimum_f": null,
+        "typical_f": 2e-12,
+        "maximum_f": 1e-11,
+        "conditions": {"vcb_v": 10.0, "emitter_current_a": 0.0, "frequency_hz": 1000000.0, "ambient_temperature_k": 298.15}
+      },
+      "hfe": {
+        "pdf_page": 16,
+        "device": "2N3392",
+        "minimum": 150,
+        "maximum": 300,
+        "conditions": {"collector_current_a": 0.002, "vce_v": 4.5, "ambient_temperature_k": 298.15}
+      },
+      "curves": [
+        {"pdf_page": 17, "figure": 2, "quantity": "hFE versus IC", "device": "2N3392/3/4", "vce_v": 5.0, "ambient_temperature_k": 298.15},
+        {"pdf_page": 17, "figure": 5, "quantity": "VCE saturation versus IC", "forced_ic_over_ib": 20.0, "ambient_temperature_k": 298.15},
+        {"pdf_page": 17, "figure": 6, "quantity": "VBE saturation versus IC", "forced_ic_over_ib": 20.0, "ambient_temperature_k": 298.15},
+        {"pdf_page": 18, "figure": 8, "quantity": "VBE versus IC", "header_bias_label_as_printed": "VBE=5V", "header_bias_unresolved": true},
+        {"pdf_page": 18, "figure": 12, "quantity": "Cibo/Cobo versus reverse voltage", "frequency_hz": 1000000.0, "ambient_temperature_k": 298.15, "terminal_label_consistency_review_required": true}
+      ],
+      "charge_parameters_identified": []
+    },
+    {
+      "id": "DS-3392-C",
+      "manufacturer": "Central Semiconductor",
+      "document_year": 2014,
+      "sha256": "1445324d21afd0e058d9fbfbabeb20246065c5bcb3fd386e11829e9a32c5d206",
+      "cob": {"pdf_page": 1, "minimum_f": 2e-12, "typical_f": null, "maximum_f": 1e-11, "conditions": {"vcb_v": 10.0, "frequency_hz": 1000000.0, "ambient_temperature_k": 298.15}},
+      "charge_parameters_identified": []
+    },
+    {
+      "id": "DS-3392-F",
+      "manufacturer": "Fairchild",
+      "document_year": 1997,
+      "sha256": "e390f2aa8e7a97e5212d17e35da8a1d4a6131bad3ef809c3776df03926b35b1c",
+      "package": "TO-92",
+      "process_label": "Process 10",
+      "characteristics_pointer": "See PN100A for characteristics",
+      "pointer_pdf_page": 1,
+      "cob": {"pdf_page": 2, "minimum_f": 2e-12, "typical_f": null, "maximum_f": 1e-11, "conditions": {"vcb_v": 10.0, "frequency_hz": 1000000.0, "ambient_temperature_k": 298.15}},
+      "charge_parameters_identified": []
+    },
+    {
+      "id": "DS-PN100A-F08",
+      "manufacturer": "Fairchild, hosted by onsemi",
+      "document_year": 2008,
+      "revision": "C1, October 2008",
+      "url": "https://www.onsemi.com/pub/Collateral/PN100A-D.PDF",
+      "local_ignored_path": "references-local/datasheets/fairchild_pn100a_2008.pdf",
+      "sha256": "833ca3ce9a9e4807e6eb8bb7f90a275d11f7df9f74141f235f3babe08e1b5df6",
+      "pdf_pages": 9,
+      "visual_review_pdf_pages": [3, 4, 5],
+      "printed_page_offset": -1,
+      "process_label": "Process 10",
+      "same_process_is_vintage_identity": false,
+      "cob": {"pdf_page": 3, "printed_page": 2, "minimum_f": null, "typical_f": null, "maximum_f": 4.5e-12, "conditions": {"vcb_v": 5.0, "frequency_hz": 1000000.0, "case_temperature_k": 298.15}},
+      "ft": {"pdf_page": 3, "printed_page": 2, "minimum_hz": 250000000.0, "conditions": {"collector_current_a": 0.02, "vce_v": 20.0, "case_temperature_k": 298.15}, "transit_time_derived": false},
+      "switching_curve": {"pdf_page": 5, "printed_page": 4, "figure": 7, "typical_only": true, "collector_current_domain_a": [0.01, 0.3], "vcc_v": 10.0, "ib1_magnitude_over_ic": 0.1, "ib2_magnitude_over_ic": 0.1, "storage_time_is_transit_parameter": false},
+      "charge_parameters_identified": []
+    }
+  ],
+  "issues": [
+    {"id": "COB-COLUMN", "scope": ["DS-3392-GE87", "DS-3392-C", "DS-3392-F"], "description": "2pF is typical in GE87 and minimum in Central/Fairchild; preserve maker/revision and column semantics, no merged distribution"},
+    {"id": "PACKAGE", "scope": ["DS-3392-GE87", "DS-3392-F"], "description": "TO-98 and TO-92 are distinct sources; named B/C/E topology must not infer physical pin numbering from another package"},
+    {"id": "GE-CURVE-LABEL", "scope": ["DS-3392-GE87"], "description": "Fig8 header says VBE=5V while plotting VBE; Fig12 terminal labels require cross-check before digitization; no silent repairs"},
+    {"id": "PROCESS-TRANSFER", "scope": ["DS-3392-F", "DS-PN100A-F08"], "description": "Manufacturer's Process10 reference supports a conditional family comparison, not identification of the populated historical Moog lot"},
+    {"id": "DYNAMIC-DOMAIN", "scope": ["DS-PN100A-F08"], "description": "fT and switching measurements have specified IC/VCE/drive; storage time ts is not TF/TR and a single fT does not identify all charge parameters"}
+  ],
+  "selected_parameter_set": null,
+  "audio_admitted": false
+}

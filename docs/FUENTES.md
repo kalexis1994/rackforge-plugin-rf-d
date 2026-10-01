@@ -39,6 +39,15 @@ La [auditoría del biestable](BIESTABLE_TRES_RAICES_Y_CARGA_RAPIDA.md) conserva 
 
 Derivación propia, dominios y límites en [cargas de juntura](CARGAS_JUNTURA_Y_DOMINIO_BIESTABLE.md). El helper implementa baja inyección, sin la corrección 7.3 ni la recuperación con estado de p. 139.
 
+## Fabricación y dinámica de la familia 2N3392
+
+| ID | Documento y enlace | Archivo local ignorado | SHA-256 | Alcance |
+| --- | --- | --- | --- | --- |
+| DS-3392-GE87 | [GE/RCA 1987, Signal Transistors and Rectifiers, archivo Bitsavers](https://www.bitsavers.org/components/ge/1987_GE_RCA_Signal_Transistors_and_Rectifiers.pdf) | `datasheets/ge_rca_signal_1987.pdf` | `0eeeb22c5c512b69b05b91d88fe6afedfa67053d6a7fee35da994ce6d07bdf5a` | 142 páginas; 2N3390–94 en PDF pp. 16–19 / impresas 15–18; pp. 16–18 revisadas visualmente. Cob=2 pF **típico**, 10 pF máximo; TO-98. No fusionar columnas con Central/Fairchild. |
+| DS-PN100A-F08 | [Fairchild PN100/PN100A/MMBT100/A, rev. C1 octubre 2008, archivo onsemi](https://www.onsemi.com/pub/Collateral/PN100A-D.PDF) | `datasheets/fairchild_pn100a_2008.pdf` | `833ca3ce9a9e4807e6eb8bb7f90a275d11f7df9f74141f235f3babe08e1b5df6` | Nueve páginas con portada/anexo onsemi; tabla PDF p. 3 / impresa 2, curvas pp. 4–5 / impresas 3–4, revisadas visualmente pese a sustitución de fuentes de Poppler. Referencia Process 10 posterior; no identifica lote vintage. |
+
+La adquisición GE87 resuelve la pista antes rechazada por HTTP 403 en el host sin `www`. La ruta onsemi `download/data-sheet/pdf` respondió 403 localmente; `pub/Collateral` entregó el PDF verificado. [Registro por fabricante y dominio](FABRICACION_3392_Y_DATOS_DINAMICOS.md), sin parámetros promovidos.
+
 ## Copias complementarias y pistas de modificación
 
 | Archivo local | Procedencia y hash SHA-256 | Uso |
