@@ -65,4 +65,4 @@ python tools/bjt_loaded_transient_probes.py --ngspice references-local/ngspice46
 python -m unittest discover -s tests -p test_bjt_loaded_transient.py -v
 ```
 
-Siguiente cierre: añadir estas memorias condicionadas a una sonda explícita del biestable, preparar cargas desde su circuito, seguir una trayectoria por continuidad y contrastar cada refinamiento. Debe declararse qué junturas siguen sin dinámica y qué efectos de transporte faltan. No se elige una de las tres raíces antiguas por Newton. El circuito cargado de un solo BJT no admite la conmutación del contorno ni la voz RF-D.
+La [sonda no lineal del biestable](BIESTABLE_CARGA_NO_LINEAL.md) ya añade Q25/Q15 al circuito de 94 nodos y verifica su masa y un paso ambiguo con memoria fija. Sigue pendiente preparar desde el arranque, seguir una trayectoria por continuidad y contrastar cada refinamiento. Debe declararse qué junturas siguen sin dinámica y qué efectos de transporte faltan. No se elige una de las tres raíces antiguas por Newton. El circuito cargado de un solo BJT no admite la conmutación del contorno ni la voz RF-D.
