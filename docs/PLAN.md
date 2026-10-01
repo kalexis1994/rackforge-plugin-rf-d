@@ -56,6 +56,8 @@ El [grafo eléctrico y oráculo de placa 2](CONTORNO_VOLUMEN_CIRCUITO.md) recons
 
 ## Primer corte de implementación
 
+El [estimador de doble paso BDF2 v4](BIESTABLE_ESTIMADOR_BDF2_DOBLE_PASO.md) pasa doce sondas y el cúbico exacto, con FD, historial conservado y publicación del candidato completo. Próximo bloque: declarar dos políticas, integrar el arranque explícito y repetir desde DC con gate máximo de 1 mV. No usar un divisor Richardson 1/3: los historiales compartidos cambian ese patrón local.
+
 Los [máximos consultados con memoria común](BIESTABLE_MAXIMOS_CON_HISTORIAL_COMUN.md) confirman 26,79 mV tras revisar los 94 máximos por nodo y la rejilla retenida. El siguiente gate mantiene el control del máximo completo y exige otro estimador temporal, sin usar el punto de 2,12 mV como si fuese el peor de la región.
 
 El [historial común B3/C3](BIESTABLE_HISTORIAL_COMUN.md) conserva 1992 intervalos nuevos y 4019 C3 heredados. El contraste condicional de 28,95 mV también falla. Próximo corte: consultas de todos los máximos por nodo y de la rejilla retenida, seguidas de un estimador BDF2/BDF2 con verificación de memoria y dominio antes de otro barrido desde DC.

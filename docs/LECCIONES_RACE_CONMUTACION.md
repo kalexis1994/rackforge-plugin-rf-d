@@ -1,5 +1,7 @@
 # Lecciones RF-D para RACE: conmutación y memoria de carga
 
+El [doble paso BDF2](BIESTABLE_ESTIMADOR_BDF2_DOBLE_PASO.md) propone derivar el estimador sobre el historial realmente compartido. Un cúbico exacto da `Efine/(Efull−Efine)=13/19` con h/k=1, no 1/3; ese valor tampoco calibra el DAE no lineal. Declarar qué candidato se publica y cómo limita el siguiente crecimiento evita aceptar un macro cuya comparación provisional esté fuera del dominio del integrador.
+
 La [auditoría de máximos por nodo](BIESTABLE_MAXIMOS_CON_HISTORIAL_COMUN.md) propone conservar una rejilla fija y ampliar la consulta a todos los máximos, en vez de concluir desde el máximo interpolado global. Ese punto baja a 2,12 mV, pero otro nodo/instante sigue en 26,79 mV. Ambos son diagnósticos finitos; ninguno localiza por sí solo el máximo continuo.
 
 El [historial común](BIESTABLE_HISTORIAL_COMUN.md) propone separar un contraste desde DC de otro condicionado a la misma memoria doble, intervalo previo y primera propuesta. Heredar un tramo verificado requiere volver a comprobar linaje/carga y distinguirlo de integración nueva. Los máximos de esas diferencias no se suman linealmente y la condición común no valida retroactivamente el prefijo ni el circuito físico.
