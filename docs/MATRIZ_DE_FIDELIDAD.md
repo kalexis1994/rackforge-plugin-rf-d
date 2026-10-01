@@ -1,5 +1,7 @@
 # Matriz de fidelidad
 
+La [política C3](BIESTABLE_TERCERA_MALLA_BDF2.md) divide por cuatro las tolerancias B3 y completa 3 ms con 4364 intervalos adicionales. El contraste máximo B3/C3 es 0,126368 V; al final 39,8792 µV. Persiste el fallo del gate global de 1 mV, sin admisión física ni audio.
+
 La [auditoría de consultas](BIESTABLE_PREFIJO_Y_CONSULTA_TEMPORAL.md) reduce a 39,4 µV la separación de un punto de trigger inicialmente interpolado como 3,75 mV. En el máximo de transición, un solve al mismo tiempo conserva 0,563358 V. Son consultas provisionales con carga intacta/FD, sin modificar el gate temporal fallido ni admitir física/audio.
 
 El [barrido BDF2](BIESTABLE_BARRIDO_BDF2.md) conserva 3236 intervalos y ambas políticas completan 3 ms. La diferencia final es 0,141 mV; la máxima de 0,563 V en ATTACK_GATE_LOWER impide admitir refinamiento de la trayectoria. El contraste con Euler y la fidelidad física permanecen abiertos.

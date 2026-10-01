@@ -56,6 +56,8 @@ El [grafo eléctrico y oráculo de placa 2](CONTORNO_VOLUMEN_CIRCUITO.md) recons
 
 ## Primer corte de implementación
 
+La [tercera malla C3](BIESTABLE_TERCERA_MALLA_BDF2.md) añade 4364 intervalos y reduce el máximo B3/C3 a 0,126368 V, todavía por encima de 1 mV. Próximo corte: observaciones conservativas en rejilla fija y puntos medios, y control del error acumulado antes de la regeneración. Cobertura y diferencia final no admiten la trayectoria completa.
+
 La [consulta temporal conservativa](BIESTABLE_PREFIJO_Y_CONSULTA_TEMPORAL.md) localiza una contribución de interpolación en el trigger y confirma que el pico de 0,563 V persiste en solves al mismo instante. Próximo bloque: BDF2 más estricto y observación entre muestras, sin relajar KCL ni convertir consultas provisionales en una trayectoria admitida.
 
 El [segundo integrador BDF2](BIESTABLE_BDF2_CARGA.md) verifica coeficientes, dos memorias aceptadas y conservación en C10/junturas. Su [barrido A3/B3](BIESTABLE_BARRIDO_BDF2.md) completa 0..3 ms con 3236 intervalos; el máximo de 0,563 V todavía falla el gate de 1 mV. Próximo corte: prefijo de trigger/C2, diferencias de interpolación y refinamiento adicional, conservando los fallos de Euler.
