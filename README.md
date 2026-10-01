@@ -4,6 +4,8 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+El [barrido BDF2](docs/BIESTABLE_BARRIDO_BDF2.md) completa 3 ms con ambas políticas y verifica 3236 intervalos. Su discrepancia entre políticas baja a 0,563 V y a 0,141 mV al final; el máximo todavía supera el gate de 1 mV. Euler y sus fallos quedan conservados.
+
 El [integrador BDF2 sobre carga](docs/BIESTABLE_BDF2_CARGA.md) conserva dos estados anteriores y pasa el contraste de siete intervalos con Jacobiano FD y carga publicada. Un RC sintético muestra el refinamiento esperado de segundo orden. Falta el barrido completo de la transición; el solver espacial y las hipótesis físicas siguen compartidos.
 
 Los [tiempos de transición](docs/BIESTABLE_TIEMPOS_DE_TRANSICION.md) muestran un adelanto de B2 de ~2,32 µs en ATTACK_OUT y ~2,59 µs en la caída final de Q25. Quedan diferencias de forma aun al alinear eventos como diagnóstico; las trazas conservan sus tiempos originales y el refinamiento sigue pendiente.

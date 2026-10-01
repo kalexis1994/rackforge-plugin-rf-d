@@ -24,7 +24,7 @@ La corriente es:
 
 `dQ/dt ≈ [a0·(Qnew−Qold) − a2·(Qold−Qolder)] / h`.
 
-Q se mide en C, h/k en s, los coeficientes son adimensionales y la corriente
+Q se mide en C, h y k en s, r y los coeficientes son adimensionales y la corriente
 en A. La forma de diferencias evita depender del cero convencional de Q.
 Una regresión deriva los coeficientes resolviendo las condiciones de momentos
 del polinomio y verifica la invariancia de origen con racionales exactos

@@ -1,5 +1,7 @@
 # Matriz de fidelidad
 
+El [barrido BDF2](BIESTABLE_BARRIDO_BDF2.md) conserva 3236 intervalos y ambas políticas completan 3 ms. La diferencia final es 0,141 mV; la máxima de 0,563 V en ATTACK_GATE_LOWER impide admitir refinamiento de la trayectoria. El contraste con Euler y la fidelidad física permanecen abiertos.
+
 El [corte BDF2](BIESTABLE_BDF2_CARGA.md) añade un segundo integrador temporal con conservación directa de carga, memoria doble, FD y RC analítico. Comparte el modelo espacial; no es una verificación independiente del circuito completo ni una admisión de transición/audio.
 
 Los [cruces interpolados](BIESTABLE_TIEMPOS_DE_TRANSICION.md) sitúan adelantos B2 de 2,32 µs en ATTACK_OUT y 2,59 µs en la caída final de Q25. Las ventanas alineadas sólo son diagnósticas; todavía difieren hasta 61,5/126,2 mV y no cambian el gate temporal fallido al mismo reloj.
