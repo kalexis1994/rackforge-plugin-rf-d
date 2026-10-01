@@ -1,0 +1,43 @@
+# Ventanas con memoria E4 común y dos heurísticas de crecimiento
+
+El [barrido D4/E4](BIESTABLE_BARRIDO_DOBLE_PASO.md) conserva 7,81 mV
+de máximo consultado y un contraejemplo exacto al umbral de crecimiento
+0,25. Este experimento nuevo compara umbrales **0,25 y 0,125** en cuatro
+ventanas cortas, manteniendo la política E4 y el estimador v4. Ambos
+umbrales son heurísticas; el cúbico no calibra el DAE.
+
+Antes de medir se fijan estos límites de anclaje y duraciones:
+
+| Región | Límite de anclaje E4 | Duración desde el anclaje |
+| --- | --- | --- |
+| Prefijo | 2,3 ms | 10 µs |
+| Ataque | 2,42 ms | 0,25 µs |
+| Reset | 2,44205 ms | 20 ns |
+| Cola | 2,5 ms | 20 µs |
+
+Se restaura el último estado E4 aceptado no posterior a cada límite,
+incluyendo ambos historiales, sus fuentes y el intervalo anterior. Ambas
+rutas empiezan con la misma propuesta: el siguiente macro aceptado E4.
+El destino es el tiempo real del anclaje más la duración declarada.
+Se permiten 600 intentos por ruta; los fallos permanecen registrados.
+No hay arranque BE ni reinicio DC en las ventanas.
+
+El circuito, tolerancias absolutas/relativas de 10 nV/10⁻⁸, incremento
+12,5 mV, producto modal 0,025, máximo 100 µs y mínimo real 1 ps siguen
+iguales. Se publica el BDF2 completo y se conservan los medios
+provisionales, con gates originales de KCL/ramas y razón ≤2.
+Sólo cambia el umbral de error para proponer duplicar h. Los límites
+de incremento y producto modal para crecimiento siguen en la mitad.
+
+Se comparan cobertura, número de intentos/rechazos, memorias publicadas y
+máximo condicional de los 94 nodos. Se consulta conservativamente el
+instante de ese máximo interpolado, si tiene cobertura por ambas rutas.
+Las consultas y el contraste de ventanas son diagnósticos finitos;
+no reemplazan el gate fallido desde DC ni identifican el error exacto.
+
+`python tools/loudness_latch_bdf_growth_windows.py`
+
+Datos propios: `evidence/loudness_latch_bdf_growth_windows.json.gz` y
+`evidence/loudness_latch_bdf_growth_windows_summary.json`. Se fijan los
+hashes de E4 y las fuentes antes/después, y se comprueba almacenamiento
+canónico sin pérdida. Los informes anteriores quedan intactos.
