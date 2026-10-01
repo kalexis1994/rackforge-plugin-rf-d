@@ -1,5 +1,7 @@
 # Matriz de fidelidad
 
+El [barrido compensado A2/B2](BIESTABLE_BARRIDO_COMPENSADO.md) cierra cobertura 0..3 ms y conservación publicada de 4152 medios intervalos. El contraste al mismo tiempo falla su gate de 1 mV: 5,147 V máximos y 6,45 mV finales. No se admite refinamiento, conmutación física ni audio.
+
 El [corte de incrementos compensados](BIESTABLE_INCREMENTOS_COMPENSADOS.md) resuelve un límite numérico de C2 y comprueba memoria serializada y 32 intervalos posteriores con aritmética Decimal. Conserva el fallo adaptativo original. No añade identificación física, refinamiento de la trayectoria completa ni admisión de audio.
 
 Los estados `desconocido`, `hipótesis`, `modelado`, `contrastado` y `cerrado para alcance declarado` se aplican **por columna**. Una fuente que documenta un control no prueba el audio. El estado inicial de todos los bloques es `desconocido` o `hipótesis`. La columna de audio identifica evidencia **externa**, no mediciones propias: RF-D se desarrolla [sin acceso físico](VALIDACION_SIN_HARDWARE.md).
@@ -80,4 +82,4 @@ La [sonda del biestable no lineal](BIESTABLE_CARGA_NO_LINEAL.md) añade cuatro c
 
 El [primer barrido adaptativo desde DC](BIESTABLE_TRAYECTORIA_ADAPTATIVA.md) añade 2982 intervalos publicados y 72 rechazos conservados. La política A llega a 3 ms; B se detiene a 2,444485 ms ante el paso mínimo. La discrepancia observada de 5,00592 V en ATTACK_OUT impide admitir refinamiento. Sus gates locales pasan en los pasos guardados, pero no sustituyen un oráculo independiente ni resuelven la incertidumbre física del contorno.
 
-El [diagnóstico del último rechazo](BIESTABLE_RECHAZO_Y_ORIGEN_CARGA.md) sitúa un límite de representación en C2: el residuo de 11 pA queda fuera del gate y los vecinos `float64` también. FD reproduce el fallo. Dos sombras de origen de carga cambian el criterio relativo sin alterar los incrementos terminales; no se publican ni corrigen la trayectoria. Pendientes: incrementos/compensación, métrica de error con referencia explícita y nuevo refinamiento.
+El [diagnóstico del último rechazo](BIESTABLE_RECHAZO_Y_ORIGEN_CARGA.md) sitúa un límite de representación en C2: el residuo de 11 pA queda fuera del gate y los vecinos `float64` también. FD reproduce el fallo. Dos sombras de origen de carga cambian el criterio relativo sin alterar los incrementos terminales; no se publican ni corrigen la trayectoria. El [corte de incrementos](BIESTABLE_INCREMENTOS_COMPENSADOS.md) cierra ese intervalo con memoria compensada y define la métrica v2; el refinamiento completo sigue siendo un gate separado.

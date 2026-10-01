@@ -4,6 +4,8 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+El [barrido con memoria compensada](docs/BIESTABLE_BARRIDO_COMPENSADO.md) completa 3 ms con ambas políticas y verifica 4152 medios intervalos. El refinamiento aún falla: diferencia máxima de 5,147 V en ATTACK_OUT y 6,45 mV al final. La cobertura completa y la conservación de carga ya se verifican; queda resolver la sensibilidad temporal de la transición.
+
 El [laboratorio de contorno y cadena de 94 nodos](docs/CONTORNO_CADENA_94_Y_ESTABILIDAD.md) calcula C2/reset dentro del circuito con 21 cargas. El refinamiento temporal conserva el rechazo cerca de 12,4 ms. Una [búsqueda de 102 semillas encuentra tres raíces](docs/BIESTABLE_TRES_RAICES_Y_CARGA_RAPIDA.md); cargas de juntura de diagnóstico revelan un modo creciente en la intermedia que el modelo instantáneo omitía. No se selecciona una rama ni se admite la conmutación física.
 
 El [dominio de las junturas y sus cargas](docs/CARGAS_JUNTURA_Y_DOMINIO_BIESTABLE.md) registra doce puntos Q25/Q15 y verifica 300 sondas sintéticas de depleción/difusión con cuadratura independiente. Ninguno de esos puntos reproduce el sesgo de la medida Cob de las hojas adquiridas. Las primitivas conservan carga e historial; sus parámetros físicos y la partición BJT siguen abiertos. Las [lecciones para RACE](docs/LECCIONES_RACE_CONMUTACION.md) resumen los gates transferibles.
@@ -18,7 +20,7 @@ La [sonda del biestable con carga no lineal](docs/BIESTABLE_CARGA_NO_LINEAL.md) 
 
 La [trayectoria adaptativa desde DC](docs/BIESTABLE_TRAYECTORIA_ADAPTATIVA.md) publica 2982 medios intervalos con cargas continuas. Una política completa 3 ms; la más estricta se detiene a 2,444 ms por el paso mínimo. La comparación alcanza 5,006 V en ATTACK_OUT: conserva el rechazo y **no admite todavía el refinamiento de la transición**.
 
-El [diagnóstico del rechazo y del cero de carga](docs/BIESTABLE_RECHAZO_Y_ORIGEN_CARGA.md) reproduce el segundo medio paso fallido con Jacobiano híbrido/FD. C2 queda entre voltajes representables respecto del gate de KCL; además, la escala relativa de Q cambia por un desplazamiento convencional que no altera la corriente. Define los siguientes experimentos de incrementos y control de error, conservando el fallo original.
+El [diagnóstico del rechazo y del cero de carga](docs/BIESTABLE_RECHAZO_Y_ORIGEN_CARGA.md) reproduce el segundo medio paso fallido con Jacobiano híbrido/FD. C2 queda entre voltajes representables respecto del gate de KCL; además, la escala relativa de Q cambia por un desplazamiento convencional que no altera la corriente. La [versión de incrementos compensados](docs/BIESTABLE_INCREMENTOS_COMPENSADOS.md) corrige ese intervalo, conserva el fallo original y prepara el nuevo barrido.
 
 El [puerto conjunto C2/reset con carga de toda la cadena](docs/PUERTO_CONTORNO_CADENA_71.md) añade corrientes, matriz de admisión `2×2` y gradientes de los 71 nodos. Pasa 36 casos independientes DC/temporales con diferencia máxima de admisión **2,04 pS**, candidato temporal coherente y heap cero. En un escenario alto de C2, CR6 devuelve 0,495 mA a reset: esa carga deberá entrar en el biestable, cuya conmutación todavía requiere resolver la estabilidad.
 
@@ -62,7 +64,7 @@ El [objetivo técnico](docs/OBJETIVO.md) define qué queda dentro de la emulaci�
 
 ## Cómo empezar
 
-La [representación por incrementos y memorias compensadas](docs/BIESTABLE_INCREMENTOS_COMPENSADOS.md) cierra el intervalo de C2 antes rechazado, con los mismos gates, y verifica 32 pasos posteriores. El criterio adaptativo v2 usa voltajes de nodos y junturas independientes del origen de Q; falta repetir la trayectoria completa y su refinamiento.
+La [representación por incrementos y memorias compensadas](docs/BIESTABLE_INCREMENTOS_COMPENSADOS.md) cierra el intervalo de C2 antes rechazado, con los mismos gates, y verifica 32 pasos posteriores. El criterio adaptativo v2 usa voltajes de nodos y junturas independientes del origen de Q; el [barrido completo](docs/BIESTABLE_BARRIDO_COMPENSADO.md) conserva el fallo de refinamiento entre políticas.
 
 1. Revisar el [mapa de revisiones](docs/REVISIONES.md), el [plan de investigación](docs/PLAN.md) y el [protocolo sin hardware](docs/VALIDACION_SIN_HARDWARE.md); fijar la revisión documental antes de derivar constantes DSP.
 2. Usar el [registro de fuentes](docs/FUENTES.md) para localizar la página exacta y los [hallazgos técnicos](docs/HALLAZGOS.md) para definir cada contraste.

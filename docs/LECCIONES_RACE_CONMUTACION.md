@@ -1,5 +1,7 @@
 # Lecciones RF-D para RACE: conmutación y memoria de carga
 
+El [barrido compensado](BIESTABLE_BARRIDO_COMPENSADO.md) completa ambas trazas y conserva 4152 intervalos, pero aún difiere 5,147 V. Resolver un límite de representación no demuestra convergencia de la dinámica. Registrar por separado cobertura, conservación publicada y discrepancia temporal evita promover un solve local como garantía de la transición completa.
+
 La [corrección por incrementos](BIESTABLE_INCREMENTOS_COMPENSADOS.md) propone un gate de publicación: cuando el solve exige variaciones menores que un ULP, verificar que sobreviven en las memorias serializadas y satisfacen las ecuaciones de rama en el paso siguiente. Un residuo provisional pequeño no basta. La aritmética de mayor precisión debe contrastar la carga guardada, incluyendo ramas con resistencia en serie.
 
 Registro transferible al estándar, basado en el contorno cargado de 94 nodos. No convierte las hipótesis RF-D en parámetros reutilizables de otros sintetizadores.
