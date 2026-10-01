@@ -56,6 +56,8 @@ El [grafo eléctrico y oráculo de placa 2](CONTORNO_VOLUMEN_CIRCUITO.md) recons
 
 ## Primer corte de implementación
 
+La [observación entre muestras](BIESTABLE_OBSERVACION_ENTRE_MUESTRAS.md) confirma el pico B3/C3 y localiza 139 consultas fuera del mínimo temporal de 1 ps. Próximo corte: conservar el instante pedido mediante anclaje anterior y dos intervalos provisionales dentro del dominio; verificar memoria intermedia y cobertura sin reemplazar el informe fallido.
+
 La [tercera malla C3](BIESTABLE_TERCERA_MALLA_BDF2.md) añade 4364 intervalos y reduce el máximo B3/C3 a 0,126368 V, todavía por encima de 1 mV. Próximo corte: observaciones conservativas en rejilla fija y puntos medios, y control del error acumulado antes de la regeneración. Cobertura y diferencia final no admiten la trayectoria completa.
 
 La [consulta temporal conservativa](BIESTABLE_PREFIJO_Y_CONSULTA_TEMPORAL.md) localiza una contribución de interpolación en el trigger y confirma que el pico de 0,563 V persiste en solves al mismo instante. Próximo bloque: BDF2 más estricto y observación entre muestras, sin relajar KCL ni convertir consultas provisionales en una trayectoria admitida.

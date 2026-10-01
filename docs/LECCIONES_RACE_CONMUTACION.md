@@ -1,5 +1,7 @@
 # Lecciones RF-D para RACE: conmutación y memoria de carga
 
+La [rejilla de consultas](BIESTABLE_OBSERVACION_ENTRE_MUESTRAS.md) propone aplicar el dominio temporal también a la observación: dos tiempos casi coincidentes en binario pueden pedir un paso mucho menor que el permitido al integrador. Conservar cada fallo y la memoria entrante; no reemplazarlo por interpolación ni redondear el reloj sin cuantificarlo. El siguiente observador debe usar otro anclaje y conservar sus estados provisionales.
+
 La [tercera malla BDF2](BIESTABLE_TERCERA_MALLA_BDF2.md) propone conservar una secuencia de políticas declaradas y el gate original: 4364 intervalos nuevos reducen la discrepancia máxima a 0,126 V, pero no pasan 1 mV. Un cociente entre dos discrepancias no demuestra orden global ni error absoluto. Los hashes de fuente también requieren fijar la convención de bytes del checkout; Python LF debe sobrevivir a `core.autocrlf=true` sin alterar fuentes históricas identificadas con otra convención.
 
 La [consulta temporal conservativa](BIESTABLE_PREFIJO_Y_CONSULTA_TEMPORAL.md) propone auditar la interpolación usada para comparar mallas: una separación de 3,75 mV se reduce a 39,4 µV al resolver el mismo instante, mientras un pico distinto permanece en 0,563 V. Conservar los historiales entrantes, marcar las consultas como provisionales y repetir FD permite diagnosticar el error de observación sin reescribir la evidencia fallida. Un punto consultado no valida el resto de la trayectoria.

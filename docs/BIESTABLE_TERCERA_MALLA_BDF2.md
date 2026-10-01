@@ -88,6 +88,6 @@ un error global; el solver espacial compartido no aporta una solución
 exacta independiente. No se admiten identificación de carga vintage,
 conmutación física, audio ni tiempo real por estrechar la malla.
 
-Siguiente corte: consultas conservativas entre muestras
-en una rejilla fija, puntos medios y los máximos originales. Son diagnósticos
+La [auditoría entre muestras](BIESTABLE_OBSERVACION_ENTRE_MUESTRAS.md)
+usa una rejilla fija, puntos medios y los máximos originales. Son diagnósticos
 provisionales; no promueven la trayectoria fallida.

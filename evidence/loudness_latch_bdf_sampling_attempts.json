@@ -1,0 +1,20 @@
+{
+  "schema": "rf-d/bdf-sampling-attempts/v1",
+  "attempts": [
+    {
+      "attempt": 1,
+      "source_before_fix_sha256": "ae820e2c1b03ff76050fd304f489191157650d12870223499690d242f7277387",
+      "exit_code": 1,
+      "phase": "canonical-json-storage",
+      "error": "TypeError: Object of type bool is not JSON serializable",
+      "cause": "numpy.bool from comparison against a numpy.float64 midpoint; json accepts only native bool",
+      "last_printed_observations": 350,
+      "declared_observation_times": 386,
+      "generation_returned": true,
+      "output_written": false,
+      "previous_trajectories_modified": false,
+      "admitted": false,
+      "fix": "normalize query times to native float and query validity to native bool before serialization"
+    }
+  ]
+}
