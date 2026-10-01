@@ -41,6 +41,7 @@ def run_window(network,initial,first_h,end,threshold):
         except (ValueError,np.linalg.LinAlgError,OverflowError) as exc:
             result=None;d=dict(reason="solve-rejected",error=str(exc))
         if state_hash(old)!=snapshot:raise ValueError("window trial modified incoming histories")
+        d=dict(d,startup=False)
         if result is None:
             rejected.append(dict(time_s=old.time_s,dt_s=h,previous_history_sha256=snapshot,diagnostics=d))
             h/=2

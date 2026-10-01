@@ -41,3 +41,10 @@ Datos propios: `evidence/loudness_latch_bdf_growth_windows.json.gz` y
 `evidence/loudness_latch_bdf_growth_windows_summary.json`. Se fijan los
 hashes de E4 y las fuentes antes/después, y se comprueba almacenamiento
 canónico sin pérdida. Los informes anteriores quedan intactos.
+
+El primer intento completó las cuatro ventanas y guardó el informe íntegro,
+pero el adaptador de resumen esperaba un campo `startup` ausente. Se
+conservan el gzip, productor original y hashes en `...windows_attempt1...`
+y `...growth_attempts.json`. La corrección declara `startup=false` para
+estas continuaciones. Se repite el productor y se contrastan los datos
+numéricos con el intento conservado, sin cambiar gates o controles.
