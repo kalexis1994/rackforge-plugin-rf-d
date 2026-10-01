@@ -56,6 +56,8 @@ El [grafo eléctrico y oráculo de placa 2](CONTORNO_VOLUMEN_CIRCUITO.md) recons
 
 ## Primer corte de implementación
 
+Los [máximos consultados con memoria común](BIESTABLE_MAXIMOS_CON_HISTORIAL_COMUN.md) confirman 26,79 mV tras revisar los 94 máximos por nodo y la rejilla retenida. El siguiente gate mantiene el control del máximo completo y exige otro estimador temporal, sin usar el punto de 2,12 mV como si fuese el peor de la región.
+
 El [historial común B3/C3](BIESTABLE_HISTORIAL_COMUN.md) conserva 1992 intervalos nuevos y 4019 C3 heredados. El contraste condicional de 28,95 mV también falla. Próximo corte: consultas de todos los máximos por nodo y de la rejilla retenida, seguidas de un estimador BDF2/BDF2 con verificación de memoria y dominio antes de otro barrido desde DC.
 
 El [observador dentro del dominio](BIESTABLE_DOMINIO_DE_OBSERVACION.md) completa las 772 consultas con 284 intervalos provisionales nuevos. El prefijo muestreado pasa 1 mV (59,0 µV máximos), sin cota continua, y el pico completo falla. Próximo bloque: continuaciones diagnósticas desde un historial doble común antes de la regeneración, para separar diferencias del prefijo y de la región rápida conservando el contraste original desde DC.

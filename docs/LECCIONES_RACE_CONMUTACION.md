@@ -1,5 +1,7 @@
 # Lecciones RF-D para RACE: conmutación y memoria de carga
 
+La [auditoría de máximos por nodo](BIESTABLE_MAXIMOS_CON_HISTORIAL_COMUN.md) propone conservar una rejilla fija y ampliar la consulta a todos los máximos, en vez de concluir desde el máximo interpolado global. Ese punto baja a 2,12 mV, pero otro nodo/instante sigue en 26,79 mV. Ambos son diagnósticos finitos; ninguno localiza por sí solo el máximo continuo.
+
 El [historial común](BIESTABLE_HISTORIAL_COMUN.md) propone separar un contraste desde DC de otro condicionado a la misma memoria doble, intervalo previo y primera propuesta. Heredar un tramo verificado requiere volver a comprobar linaje/carga y distinguirlo de integración nueva. Los máximos de esas diferencias no se suman linealmente y la condición común no valida retroactivamente el prefijo ni el circuito físico.
 
 El [observador dentro del dominio](BIESTABLE_DOMINIO_DE_OBSERVACION.md) propone conservar el destino temporal cuando el resto respecto del último estado es impropio: usar un anclaje anterior y guardar los dos intervalos provisionales, con KCL y memoria intermedia verificadas. Completa 772 consultas sin mover el reloj y pasa sólo el gate del prefijo muestreado; el máximo global permanece fallido. Corregir la observación no demuestra convergencia de la trayectoria.

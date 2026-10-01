@@ -4,6 +4,8 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+La [auditoría de los máximos con historial común](docs/BIESTABLE_MAXIMOS_CON_HISTORIAL_COMUN.md) completa 664 consultas, incluidos los máximos interpolados de los 94 nodos. El mayor punto consultado es 26,79 mV en ATTACK_GATE_LOWER; el gate condicional de 1 mV permanece fallido y el contraste original desde DC no cambia.
+
 El [experimento con historial doble común](docs/BIESTABLE_HISTORIAL_COMUN.md) añade 1992 intervalos B3 desde dos estados C3 idénticos. El máximo interpolado condicional baja a 28,95 mV frente a 126,37 mV desde DC, pero sigue fallando 1 mV. La consulta de ese máximo da 2,12 mV; se revisan también los máximos de todos los nodos para no confundir ese punto con el máximo de la trayectoria.
 
 El [observador con dominio temporal explícito](docs/BIESTABLE_DOMINIO_DE_OBSERVACION.md) completa 772/772 consultas manteniendo los 386 instantes pedidos. El prefijo pasa el gate diagnóstico muestreado con 59,0 µV máximos; el pico completo persiste en 0,126368 V. El refinamiento global sigue pendiente; la nueva observación conserva los fallos anteriores.

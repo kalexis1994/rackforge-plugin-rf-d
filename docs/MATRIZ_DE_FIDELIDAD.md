@@ -1,5 +1,7 @@
 # Matriz de fidelidad
 
+Los [94 máximos por nodo consultados](BIESTABLE_MAXIMOS_CON_HISTORIAL_COMUN.md) y la rejilla retenida completan 664 solves y FD en ambos picos. El máximo consultado condicional de 26,79 mV falla 1 mV; no valida la trayectoria original de 126,37 mV desde DC, el circuito físico ni audio.
+
 El [contraste condicionado a los mismos dos historiales](BIESTABLE_HISTORIAL_COMUN.md) reduce el máximo interpolado a 28,95 mV, pero no pasa 1 mV ni valida el prefijo desde DC. Verifica 1992 intervalos B3 nuevos y 4019 C3 heredados, sin reinicio ni selección de raíz. El máximo original de 126,37 mV conserva su fallo.
 
 El [dominio de observación v2](BIESTABLE_DOMINIO_DE_OBSERVACION.md) completa 772/772 consultas sin retimar. El prefijo muestreado tiene 59,0 µV de diferencia máxima y pasa su gate diagnóstico; no demuestra error continuo. El máximo de 0,126368 V conserva el fallo global de refinamiento. No modifica las columnas de física o audio.
