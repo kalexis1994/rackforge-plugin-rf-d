@@ -107,6 +107,11 @@ un evento conveniente.
 
 ## Alcance pendiente
 
+La [ruta posterior con dominio explícito](BIESTABLE_DOMINIO_DE_OBSERVACION.md)
+completa los mismos 386 instantes y conserva este informe fallido sin cambios.
+Utiliza un anclaje aceptado anterior y dos pasos provisionales cuando el
+resto sería menor que 1 ps; no redondea el destino pedido.
+
 Una rejilla finita y consultas sin publicación no dan una cota entre
 observaciones. Los instantes de cruce siguen interpolados y su incertidumbre
 temporal no está acotada. No hay solución exacta independiente del DAE,

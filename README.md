@@ -4,6 +4,8 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+El [observador con dominio temporal explícito](docs/BIESTABLE_DOMINIO_DE_OBSERVACION.md) completa 772/772 consultas manteniendo los 386 instantes pedidos. El prefijo pasa el gate diagnóstico muestreado con 59,0 µV máximos; el pico completo persiste en 0,126368 V. El refinamiento global sigue pendiente; la nueva observación conserva los fallos anteriores.
+
 Las [consultas entre muestras B3/C3](docs/BIESTABLE_OBSERVACION_ENTRE_MUESTRAS.md) conservan 386 instantes: el pico consultado sigue en 0,126368 V. Detectan 139 consultas subpicosegundo fallidas por tiempos casi coincidentes con extremos guardados; quedan registradas y se prepara una ruta de observación dentro del dominio temporal. El prefijo no se admite con cobertura incompleta.
 
 La [tercera malla BDF2 C3](docs/BIESTABLE_TERCERA_MALLA_BDF2.md) completa 3 ms y verifica 4364 intervalos adicionales. El máximo B3/C3 baja a 0,126368 V y la diferencia final a 39,9 µV. El gate global de 1 mV sigue fallando; se conservan los informes anteriores y continúa la observación entre muestras.

@@ -56,6 +56,8 @@ El [grafo eléctrico y oráculo de placa 2](CONTORNO_VOLUMEN_CIRCUITO.md) recons
 
 ## Primer corte de implementación
 
+El [observador dentro del dominio](BIESTABLE_DOMINIO_DE_OBSERVACION.md) completa las 772 consultas con 284 intervalos provisionales nuevos. El prefijo muestreado pasa 1 mV (59,0 µV máximos), sin cota continua, y el pico completo falla. Próximo bloque: continuaciones diagnósticas desde un historial doble común antes de la regeneración, para separar diferencias del prefijo y de la región rápida conservando el contraste original desde DC.
+
 La [observación entre muestras](BIESTABLE_OBSERVACION_ENTRE_MUESTRAS.md) confirma el pico B3/C3 y localiza 139 consultas fuera del mínimo temporal de 1 ps. Próximo corte: conservar el instante pedido mediante anclaje anterior y dos intervalos provisionales dentro del dominio; verificar memoria intermedia y cobertura sin reemplazar el informe fallido.
 
 La [tercera malla C3](BIESTABLE_TERCERA_MALLA_BDF2.md) añade 4364 intervalos y reduce el máximo B3/C3 a 0,126368 V, todavía por encima de 1 mV. Próximo corte: observaciones conservativas en rejilla fija y puntos medios, y control del error acumulado antes de la regeneración. Cobertura y diferencia final no admiten la trayectoria completa.
