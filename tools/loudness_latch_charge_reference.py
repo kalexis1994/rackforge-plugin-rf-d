@@ -103,6 +103,17 @@ class ChargedNetwork:
         if not isinstance(accepted_joint,JointState):raise ValueError("accepted joint state required")
         return State(accepted_joint,self.latch.prepare(accepted_joint.node_v))
 
+    def initial_state(self):
+        joint,diagnostics=self.joint.initial_state()
+        return self.prepare(joint),diagnostics
+
+    def step(self,previous,key,dt_s,**budget):
+        seed=list(previous.joint.node_v)
+        k=66+self.joint.contour.index[self.joint.contour.alias["KEY_DIODE_K"]]
+        # A Newton seed for the algebraic source diode, never a history edit.
+        if key-seed[k]>1.0:seed[k]=key-.3
+        return self.solve(seed,key,previous,dt_s,**budget)
+
     def evaluator(self,key,previous,dt_s,bus_v=0.0):
         if not isinstance(previous,State):raise ValueError("complete charged joint state required")
         base=self.joint.evaluator(key,previous.joint,dt_s,bus_v)
