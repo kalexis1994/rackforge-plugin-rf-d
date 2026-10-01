@@ -23,8 +23,15 @@ sin oráculo independiente ni cota del error entre muestras.
 
 ## Resultado
 
-Informe: `evidence/loudness_latch_increment_survey.json`, esquema v2;
+Informe: `evidence/loudness_latch_increment_survey.json.gz`, esquema v2;
 el informe adaptativo v1 fallido permanece intacto.
+
+La representación gzip conserva exactamente el objeto científico completo.
+`evidence/loudness_latch_increment_storage.json` guarda hashes del JSON
+canónico y del archivo comprimido, tamaño, resumen y hash de la herramienta.
+Reduce el archivo de trabajo de ~85 MB a **15,2 MB**; no elimina intervalos,
+rechazos, colas ni diagnósticos. La compresión posterior no cambia los hashes
+de las fuentes con que se ejecutó el barrido.
 
 | Dato | A2 | B2 |
 | --- | ---: | ---: |
@@ -58,7 +65,7 @@ el contraste al mismo tiempo.
 
 ## Regresión y continuación
 
-Cinco pruebas reconstruyen cada medio intervalo, publican de nuevo sus
+Seis pruebas reconstruyen cada medio intervalo, publican de nuevo sus
 21 memorias, verifican las cuatro cargas Q(V), reproducen decisiones de
 duplicación de paso/modos en puntos iniciales, centrales, mínimos y finales,
 y contrastan los hashes de fuentes y rechazos. La cobertura y el gate de
@@ -66,9 +73,16 @@ refinamiento se comprueban como resultados separados.
 
 `python tools/loudness_latch_increment_survey.py`
 
+`python tools/compress_latch_survey.py`
+
 `python -m unittest discover -s tests -p test_loudness_latch_increment_survey.py -v`
 
 Siguiente bloque: tiempos de subida de ATTACK_OUT y caída de Q25,
 sensibilidad acumulada antes de esos eventos, refinamiento adicional y
 contraste con otra integración. Parámetros vintage, cargas omitidas,
 admisión de audio y recursos del motor permanecen abiertos.
+
+Los [tiempos observados](BIESTABLE_TIEMPOS_DE_TRANSICION.md) ya separan esos
+dos eventos. B2 los adelanta ~2,32/~2,59 µs respectivamente; incluso una
+alineación diagnóstica conserva diferencias de forma. El siguiente gate
+estudia el error acumulado antes de la transición y otra integración.

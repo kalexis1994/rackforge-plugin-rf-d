@@ -1,4 +1,5 @@
 import hashlib
+import gzip
 import json
 from pathlib import Path
 import sys
@@ -22,7 +23,7 @@ def record(state):
 class CompensatedSurvey(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.report=json.loads((ROOT/"evidence/loudness_latch_increment_survey.json").read_text())
+        cls.report=json.loads(gzip.decompress((ROOT/"evidence/loudness_latch_increment_survey.json.gz").read_bytes()))
         cls.network=IncrementNetwork(200,model_parameters(1,"finite_transit"))
 
     def test_every_half_interval_preserves_all_histories_and_publication_kcl(self):
@@ -93,6 +94,17 @@ class CompensatedSurvey(unittest.TestCase):
                      "physical_charge_identified","physical_switching_admitted","audio_admitted"):
             self.assertFalse(self.report[flag])
         self.assertIsNone(self.report["selected"])
+
+    def test_compressed_storage_is_lossless_and_matches_manifest(self):
+        m=json.loads((ROOT/"evidence/loudness_latch_increment_storage.json").read_text())
+        encoded=(ROOT/m["path"]).read_bytes();canonical=gzip.decompress(encoded)
+        self.assertEqual(hashlib.sha256(encoded).hexdigest(),m["compressed_sha256"])
+        self.assertEqual(hashlib.sha256(canonical).hexdigest(),m["canonical_json_sha256"])
+        self.assertEqual(hashlib.sha256((ROOT/"tools/compress_latch_survey.py").read_bytes()).hexdigest(),m["compression_tool_sha256"])
+        self.assertEqual(len(encoded),m["compressed_bytes"])
+        self.assertEqual(json.loads(canonical),self.report)
+        self.assertEqual(m["summary"]["refinement"],self.report["refinement"])
+        self.assertTrue(m["scientific_object_unchanged"])
 
 
 if __name__=="__main__":unittest.main()

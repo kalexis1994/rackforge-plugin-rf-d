@@ -1,5 +1,7 @@
 # Matriz de fidelidad
 
+Los [cruces interpolados](BIESTABLE_TIEMPOS_DE_TRANSICION.md) sitúan adelantos B2 de 2,32 µs en ATTACK_OUT y 2,59 µs en la caída final de Q25. Las ventanas alineadas sólo son diagnósticas; todavía difieren hasta 61,5/126,2 mV y no cambian el gate temporal fallido al mismo reloj.
+
 El [barrido compensado A2/B2](BIESTABLE_BARRIDO_COMPENSADO.md) cierra cobertura 0..3 ms y conservación publicada de 4152 medios intervalos. El contraste al mismo tiempo falla su gate de 1 mV: 5,147 V máximos y 6,45 mV finales. No se admite refinamiento, conmutación física ni audio.
 
 El [corte de incrementos compensados](BIESTABLE_INCREMENTOS_COMPENSADOS.md) resuelve un límite numérico de C2 y comprueba memoria serializada y 32 intervalos posteriores con aritmética Decimal. Conserva el fallo adaptativo original. No añade identificación física, refinamiento de la trayectoria completa ni admisión de audio.

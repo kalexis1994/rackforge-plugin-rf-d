@@ -4,6 +4,8 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+Los [tiempos de transición](docs/BIESTABLE_TIEMPOS_DE_TRANSICION.md) muestran un adelanto de B2 de ~2,32 µs en ATTACK_OUT y ~2,59 µs en la caída final de Q25. Quedan diferencias de forma aun al alinear eventos como diagnóstico; las trazas conservan sus tiempos originales y el refinamiento sigue pendiente.
+
 El [barrido con memoria compensada](docs/BIESTABLE_BARRIDO_COMPENSADO.md) completa 3 ms con ambas políticas y verifica 4152 medios intervalos. El refinamiento aún falla: diferencia máxima de 5,147 V en ATTACK_OUT y 6,45 mV al final. La cobertura completa y la conservación de carga ya se verifican; queda resolver la sensibilidad temporal de la transición.
 
 El [laboratorio de contorno y cadena de 94 nodos](docs/CONTORNO_CADENA_94_Y_ESTABILIDAD.md) calcula C2/reset dentro del circuito con 21 cargas. El refinamiento temporal conserva el rechazo cerca de 12,4 ms. Una [búsqueda de 102 semillas encuentra tres raíces](docs/BIESTABLE_TRES_RAICES_Y_CARGA_RAPIDA.md); cargas de juntura de diagnóstico revelan un modo creciente en la intermedia que el modelo instantáneo omitía. No se selecciona una rama ni se admite la conmutación física.
