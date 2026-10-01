@@ -54,6 +54,8 @@ La ruta habitual `step` **no elige una raíz alternativa**. `probe_step_roots` s
 
 ## Regresión y próximos cierres
 
+Actualización: el [cierre cargado de 94 nodos](CONTORNO_CADENA_94_Y_ESTABILIDAD.md) ya incorpora R59/Q18 y todas las cargas de audio. Una [búsqueda más amplia](BIESTABLE_TRES_RAICES_Y_CARGA_RAPIDA.md) encuentra **tres** raíces del mismo paso; las dos anteriores eran las observadas con sus semillas iniciales. La dinámica de juntura omitida puede ocultar un modo creciente en la intermedia. La conmutación física sigue sin admitir.
+
 ```powershell
 python tools/loudness_contour_probes.py
 python -m unittest discover -s tests -p test_loudness_contour_reference.py -v

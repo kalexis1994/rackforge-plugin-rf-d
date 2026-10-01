@@ -13,6 +13,8 @@ Para cada placa y ruta: designadores/nodos, referencias de esquema, alimentació
 
 Este listado es un mapa de investigación. La topología exacta y sus componentes quedan sujetos a la revisión documental elegida y sus correcciones.
 
+El [contorno cargado hasta J7](CONTORNO_CADENA_94_Y_ESTABILIDAD.md) reúne 94 nodos y 21 cargas. C2/reset son incógnitas. La [sonda ampliada del biestable](BIESTABLE_TRES_RAICES_Y_CARGA_RAPIDA.md) registra tres raíces y una inestabilidad rápida omitida; las cargas de diagnóstico no se incorporan a la voz ni eligen una rama.
+
 El [puerto C2/reset cargado](PUERTO_CONTORNO_CADENA_71.md) cuantifica corrientes y tangentes con los 71 nodos del circuito. El candidato temporal conserva la memoria entrante hasta la aceptación externa. La KCL del contorno deberá incorporar ambas corrientes; el biestable todavía no usa este puerto ni tiene conmutación admitida.
 
 El [cierre conjunto de 71 nodos](SEGUIDOR_VCA_CADENA_71.md) incorpora la carga R59/base Q18 del primer VCA al seguidor de volumen. Devuelve corrientes a los puertos C2/reset y conserva los dieciocho capacitores de la cadena. C2 del contorno y la base reset todavía son fuentes impuestas; no hay conmutación física admitida.

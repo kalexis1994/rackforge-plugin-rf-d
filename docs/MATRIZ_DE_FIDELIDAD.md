@@ -62,6 +62,8 @@ En el ladder, la [columna resistiva DC](COLUMNA_RESISTIVA_LADDER_DC.md), las [pi
 
 RF-D **pretende** recrear un Model D clásico. No hay aún una implementación sonora ni resultados de comparación que permitan afirmar fidelidad.
 
+El [cierre de contorno/cadena de 94 nodos](CONTORNO_CADENA_94_Y_ESTABILIDAD.md) calcula C2 y reset con 21 historiales. Se reproducen tres raíces con FD independiente, se conservan 370 pasos y ocho rechazos del refinamiento temporal. La [auditoría de cargas rápidas](BIESTABLE_TRES_RAICES_Y_CARGA_RAPIDA.md) encuentra un modo creciente en la raíz intermedia bajo 54 escenarios de cargas hipotéticas. Es diagnóstico: ninguna carga física identificada, rama seleccionada, estabilidad global, conmutación ni audio admitidos.
+
 El [puerto cargado de C2/reset](PUERTO_CONTORNO_CADENA_71.md) contrasta cuatro derivadas de corriente y gradientes de todos los nodos en 36 escenarios DC/temporales; diferencia máxima de admisión 2,04 pS, refinamiento FD y candidato temporal comprobados, heap cero. Es cálculo condicionado con fuentes impuestas. No cierra la estabilidad del biestable, el contorno físico, audio externo ni recursos de la voz.
 
 El [seguidor/R59/Q18 y cadena de 71 nodos](SEGUIDOR_VCA_CADENA_71.md) cierra topología y cálculo condicionado en veinte destinos DC y 256 pasos: nodos 2,50 nV, dieciocho cargas y corrientes verificadas, cero heap. Conserva doce rechazos primarios recuperados por continuación con memoria fija y un rechazo de preparación desde una semilla apagada. C2/reset permanecen impuestos. El biestable, audio externo, voz completa y deadline no están admitidos.

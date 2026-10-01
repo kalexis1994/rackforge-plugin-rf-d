@@ -68,6 +68,8 @@ Los términos cruzados diferentes expresan la actividad de la red. Esa corriente
 
 ## Recursos y reproducción
 
+La carga de este puerto ya se reintegró en el [oráculo cargado de 94 nodos](CONTORNO_CADENA_94_Y_ESTABILIDAD.md). Sigue siendo laboratorio: la [tercera raíz y dinámica rápida](BIESTABLE_TRES_RAICES_Y_CARGA_RAPIDA.md) impiden admitir una selección física del biestable.
+
 Ryzen 5 5600X/Win64/Rust 1.97: después de una preparación por caso se miden ocho repeticiones desde la misma semilla perturbada y el mismo historial, **288 llamadas**. El kernel de raíz más dos tangentes cuesta **147,59 µs de media y 268,7 µs máximo por llamada**, observados en esta ejecución sin aislamiento del sistema operativo. JSON, comparación y los solves de contraste con `step` quedan fuera del clock. Es costo de este puerto condicionado, no de una muestra de voz: un Newton externo lo evaluaría varias veces. El deadline global y stack específico siguen sin admitir; no se extrapola una voz en tiempo real a partir de este perfil.
 
 ```powershell

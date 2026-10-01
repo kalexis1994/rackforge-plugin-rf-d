@@ -8,6 +8,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import math
 from pathlib import Path
 
 from circuit66_dc_vectors import dc_evaluator, fd_direction, r21_constraints, solve_dc as solve_kcl
@@ -34,7 +35,9 @@ def transient_evaluator(values, initial, boundary):
     vp["second_parameters"]["q21_base_v"] = boundary["q21_base_v"]
     lower = boundary.get("r21_lower_ohm",2000)
     dc = dc_evaluator(values, values[4],lower,impose_r21_constraints=False)
-    dt = 1/48000
+    dt = boundary.get("dt_s",1/48000)
+    if not math.isfinite(dt) or dt <= 0:
+        raise ValueError("positive finite transient interval required")
 
     def evaluate(x):
         r, _ = dc(x)

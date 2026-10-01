@@ -22,6 +22,15 @@ Investigación iniciada el 28-09-2026. Los originales descargados quedan en `ref
 
 El manual Folkman está duplicado dentro de OP-EARLY. El PDF SVC-9 solapa la sección 9 de SVC-204D, pero puede ofrecer otro contraste visual de los esquemas. Se comprobó que cada descarga listada abre como PDF o JPEG real; respuestas HTML bloqueadas no se registran como fuentes.
 
+## Hojas del biestable adquiridas y verificadas
+
+| ID | Documento y enlace | Archivo local ignorado | SHA-256 | Alcance |
+| --- | --- | --- | --- | --- |
+| DS-3392-C | [Central Semiconductor, 2N3391A/2N3392/2N3393, R0 29-01-2014](https://my.centralsemi.com/datasheets/2N3391A-3393.PDF) | `datasheets/central_2n3392_2014.pdf` | `1445324d21afd0e058d9fbfbabeb20246065c5bcb3fd386e11829e9a32c5d206` | Cinco páginas en el archivo actual; tabla eléctrica p. 1 y encapsulado p. 2. Cob mínimo/máximo bajo polarización inversa; no ley de carga ni pieza vintage identificada. |
+| DS-3392-F | [Fairchild, 2N3390…2N3393, rev. B ©1997, archivo DigiKey](https://mm.digikey.com/Volume0/opasdata/d220001/medias/docus/927/2N3390-2N3393.pdf) | `datasheets/fairchild_2n3392_1997.pdf` | `e390f2aa8e7a97e5212d17e35da8a1d4a6131bad3ef809c3776df03926b35b1c` | Siete páginas, tablas pp. 1–2 revisadas visualmente. Process 10 y referencia a PN100A en p. 1. No transferir fabricación posterior al lote histórico. |
+
+La [auditoría del biestable](BIESTABLE_TRES_RAICES_Y_CARGA_RAPIDA.md) conserva condiciones de medida y límites. La URL Mouser inicialmente consultada devolvió HTML en la descarga local y fue descartada; el catálogo GE/RCA 1987 respondió HTTP 403 y permanece una pista, sin hash de archivo adquirido.
+
 ## Copias complementarias y pistas de modificación
 
 | Archivo local | Procedencia y hash SHA-256 | Uso |
