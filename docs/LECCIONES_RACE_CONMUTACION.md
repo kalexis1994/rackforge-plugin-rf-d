@@ -1,5 +1,7 @@
 # Lecciones RF-D para RACE: conmutación y memoria de carga
 
+El [barrido de doble paso desde DC](BIESTABLE_BARRIDO_DOBLE_PASO.md) completa 9446 intervalos y 866 consultas, pero conserva 7,81 mV de máximo. Cambiar el estimador requiere repetir cobertura, publicación y máximo con políticas declaradas. El mínimo pertenece a cada intervalo real de las rutas provisionales. La heurística de crecimiento también necesita hipótesis explícitas: un cúbico con memoria realmente publicada pasa de razón 0,2 a 1,725 al duplicar h. Preservar el intento fallido del adaptador tupla/lista y contrastar JSON canónico permite corregir la validación sin cambiar datos o gates.
+
 El [doble paso BDF2](BIESTABLE_ESTIMADOR_BDF2_DOBLE_PASO.md) propone derivar el estimador sobre el historial realmente compartido. Un cúbico exacto da `Efine/(Efull−Efine)=13/19` con h/k=1, no 1/3; ese valor tampoco calibra el DAE no lineal. Declarar qué candidato se publica y cómo limita el siguiente crecimiento evita aceptar un macro cuya comparación provisional esté fuera del dominio del integrador.
 
 La [auditoría de máximos por nodo](BIESTABLE_MAXIMOS_CON_HISTORIAL_COMUN.md) propone conservar una rejilla fija y ampliar la consulta a todos los máximos, en vez de concluir desde el máximo interpolado global. Ese punto baja a 2,12 mV, pero otro nodo/instante sigue en 26,79 mV. Ambos son diagnósticos finitos; ninguno localiza por sí solo el máximo continuo.

@@ -80,3 +80,7 @@ con arranque explícito, rechazos conservados y gate máximo de 1 mV.
 Conservar los barridos BE/BDF2 y el experimento condicional. No se admiten
 refinamiento global, error continuo, conmutación física ni audio con estas
 sondas. Los parámetros sintéticos y las cargas omitidas siguen abiertos.
+
+El corte posterior [D4/E4 desde DC](BIESTABLE_BARRIDO_DOBLE_PASO.md)
+ejecuta ese protocolo y conserva su resultado global y consultas propios.
+Los datos de este prototipo permanecen intactos.

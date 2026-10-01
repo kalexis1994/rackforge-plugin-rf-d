@@ -4,7 +4,9 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
-El [estimador BDF2 por doble paso](docs/BIESTABLE_ESTIMADOR_BDF2_DOBLE_PASO.md) verifica 12 sondas con tres rutas de carga, memoria intermedia y FD. Compara el paso completo con dos medios BDF2 y conserva el completo como candidato; todavía no genera un barrido adaptativo desde DC ni admite refinamiento global.
+El [barrido BDF2 de doble paso D4/E4](docs/BIESTABLE_BARRIDO_DOBLE_PASO.md) completa 3 ms con **9446 intervalos publicados**, 18884 medios provisionales aceptados y 866/866 consultas conservativas. El máximo consultado es **7,81 mV** en ATTACK_GATE_LOWER: todavía falla 1 mV. El prefijo muestreado pasa con 4,615 µV, sin cota continua. Se conservan los informes anteriores y la gráfica distingue interpolación y consultas.
+
+El [prototipo del estimador BDF2 por doble paso](docs/BIESTABLE_ESTIMADOR_BDF2_DOBLE_PASO.md) verifica 12 sondas con tres rutas de carga, memoria intermedia y FD. Compara el paso completo con dos medios BDF2 y conserva el completo como candidato; su alcance local se amplía con el nuevo barrido desde DC, cuyo gate global permanece abierto.
 
 La [auditoría de los máximos con historial común](docs/BIESTABLE_MAXIMOS_CON_HISTORIAL_COMUN.md) completa 664 consultas, incluidos los máximos interpolados de los 94 nodos. El mayor punto consultado es 26,79 mV en ATTACK_GATE_LOWER; el gate condicional de 1 mV permanece fallido y el contraste original desde DC no cambia.
 
