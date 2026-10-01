@@ -71,3 +71,5 @@ El [seguidor/R59/Q18 y cadena de 71 nodos](SEGUIDOR_VCA_CADENA_71.md) cierra top
 La ausencia de hardware propio es permanente para este plan. Cada bloque puede alcanzar `cerrado para alcance declarado` en **topología** y **cálculo**, mientras su audio externo permanezca abierto. Ese estado nunca se interpretará como identidad sonora con un ejemplar vintage.
 
 Las [cargas de juntura](CARGAS_JUNTURA_Y_DOMINIO_BIESTABLE.md) tienen verificación matemática de dos terminales (300 sondas sintéticas y siete pruebas), con doce sesgos del biestable auditados. Cero sesgos coinciden con la medida Cob a 10 V; tiempos de tránsito, carga en saturación, partición BJT y dispersión siguen desconocidos. No se integran al modelo de 94 nodos ni cambian la admisión física/audio.
+
+El [BJT intrínseco conservativo](BJT_INTRINSECO_CARGA_CONSERVATIVA.md) pasa 72 puntos contra ngspice46 y matrices AC completas. Cierra implementación matemática en el subconjunto declarado (qb=1, TF/TR constantes y sin resistencias internas); parámetros físicos, transporte más completo, transitorios cargados y conmutación siguen pendientes. No cambia la admisión del motor/audio.

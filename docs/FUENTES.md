@@ -48,6 +48,13 @@ Derivación propia, dominios y límites en [cargas de juntura](CARGAS_JUNTURA_Y_
 
 La adquisición GE87 resuelve la pista antes rechazada por HTTP 403 en el host sin `www`. La ruta onsemi `download/data-sheet/pdf` respondió 403 localmente; `pub/Collateral` entregó el PDF verificado. [Registro por fabricante y dominio](FABRICACION_3392_Y_DATOS_DINAMICOS.md), sin parámetros promovidos.
 
+## Oráculo ejecutable de carga intrínseca
+
+- **NG46-CODE:** tag oficial `ngspice-46`, commit `ebdaf58ec76a06ffaac7e0f138360dd1cf5ee4b6`, verificado en `https://git.code.sf.net/p/ngspice/ngspice`. [Copia de bjtload.c fijada al commit](https://github.com/imr/ngspice/blob/ebdaf58ec76a06ffaac7e0f138360dd1cf5ee4b6/src/spicelib/devices/bjt/bjtload.c), lectura local ignorada: líneas 429–468 (transporte/cola inversa), 563–590 (qb), 630–708 (cargas) y 800–809 (corrientes de memoria). SHA256 `1b557959b6bc5a7123673106f41c4cacb2170b7b53df3ec8448d7f27fed70be9`. `bjt.c` identifica exports, SHA256 `f1520e11a01d37c010de9f79920fd9c4f72f661cb1cb3a978d67528c765148d7`; `const.h` fija constantes térmicas heredadas, SHA256 `000d6dda4b539e748c8aeabcea866c866dd7f5145aa745dcb575eb2a83947551`.
+- **NG46-WIN64:** [distribución oficial 46, archivo ngspice-46_64.7z](https://sourceforge.net/projects/ngspice/files/ng-spice-rework/old-releases/46/). Adquirido del espejo público netix, firma 7z y extracción 7-Zip comprobadas; SHA256 archivo `7ed713cd8d401db724ffe99087c3122bf05a9cfa99de02c6eeed44ee44785a33`. Consola `ngspice_con.exe`, SHA256 `86c9ea5f645ca919e305639fa7bdb522355364c424d14e197f1ade617feb3453`, informa ngspice-46, build 29-03-2026 15:02:07. Todo queda en `references-local/ngspice46/`, fuera de Git y del plugin. La primera respuesta de downloads.sourceforge fue HTML y se rechazó por firma.
+
+Alcance condicionado, escala térmica explícita, derivación y gates en [BJT intrínseco conservativo](BJT_INTRINSECO_CARGA_CONSERVATIVA.md). No contiene un modelo de fabricante de la pieza poblada.
+
 ## Copias complementarias y pistas de modificación
 
 | Archivo local | Procedencia y hash SHA-256 | Uso |
