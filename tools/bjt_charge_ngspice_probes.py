@@ -41,18 +41,24 @@ def bias_cases():
     return rows
 
 
-def deck(parameters,voltages,outputs):
+def model_card(parameters):
     p = parameters
-    b,c,e = voltages
     be,bc = p.depletion_be,p.depletion_bc
-    if any(any(ch.isspace() or ch in '\";$' for ch in path.as_posix()) for path in outputs.values()):
-        raise ValueError("ngspice wrdata harness requires paths without spaces or control characters")
-    model = (f".model m {'npn' if p.polarity==1 else 'pnp'} (is={p.saturation_a:.17g} bf={p.beta_forward} br={p.beta_reverse} "
+    if be.forward_fraction!=bc.forward_fraction or max(be.grading,bc.grading)>=1:
+        raise ValueError("NG46 harness requires shared FC and grading below 1")
+    return (f".model m {'npn' if p.polarity==1 else 'pnp'} (is={p.saturation_a:.17g} bf={p.beta_forward} br={p.beta_reverse} "
         f"nf={p.emission_be_v/NG_VT:.17g} nr={p.emission_bc_v/NG_VT:.17g} "
         f"cje={be.cj0_f:.17g} vje={be.potential_v} mje={be.grading} "
         f"cjc={bc.cj0_f:.17g} vjc={bc.potential_v} mjc={bc.grading} fc={be.forward_fraction} "
         f"tf={p.transit_forward_s:.17g} tr={p.transit_reverse_s:.17g} "
         "rb=0 rc=0 re=0 cjs=0 xcjc=1 xtf=0 ptf=0 ise=0 isc=0 tnom=25)")
+
+
+def deck(parameters,voltages,outputs):
+    b,c,e = voltages
+    if any(any(ch.isspace() or ch in '\";$' for ch in path.as_posix()) for path in outputs.values()):
+        raise ValueError("ngspice wrdata harness requires paths without spaces or control characters")
+    model = model_card(parameters)
     lines = ["RF-D synthetic intrinsic BJT independent probe",f"vb b 0 {b:.17g} ac 1",
              f"vc c 0 {c:.17g}",f"ve e 0 {e:.17g}","q1 c b e m",model,
              ".options temp=25 tnom=25 gmin=0 reltol=1e-10 abstol=1e-16 vntol=1e-12",

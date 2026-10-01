@@ -56,7 +56,7 @@ El [grafo eléctrico y oráculo de placa 2](CONTORNO_VOLUMEN_CIRCUITO.md) recons
 
 ## Primer corte de implementación
 
-El trabajo de conmutación actual tiene un [inventario de doce sesgos y primitivas de carga verificadas](CARGAS_JUNTURA_Y_DOMINIO_BIESTABLE.md) y un [BJT intrínseco conservativo contrastado contra ngspice](BJT_INTRINSECO_CARGA_CONSERVATIVA.md). Siguiente bloque: transitorios de un circuito cargado con historial propio y refinamiento; luego dinámica del contorno bajo hipótesis explícitas. La carga condicionada no identifica una pieza vintage ni admite una transición Note On/Off. Las [lecciones para RACE](LECCIONES_RACE_CONMUTACION.md) mantienen ese orden de gates.
+El trabajo de conmutación actual tiene un [inventario de doce sesgos y primitivas de carga verificadas](CARGAS_JUNTURA_Y_DOMINIO_BIESTABLE.md), un [BJT intrínseco conservativo contrastado contra ngspice](BJT_INTRINSECO_CARGA_CONSERVATIVA.md) y [transitorios cargados con historial y refinamiento](BJT_CARGADO_TRANSITORIOS.md). Siguiente bloque: memorias de juntura en una sonda explícita del biestable, preparación desde su circuito y seguimiento temporal con contraste independiente. La carga condicionada no identifica una pieza vintage ni admite una transición Note On/Off. Las [lecciones para RACE](LECCIONES_RACE_CONMUTACION.md) mantienen ese orden de gates.
 
 Empezar por **VCO 1 aislado → mezclador → filtro abierto → VCA/salida**, con un grafo de circuito y un solver simple que admita barridos de notas y niveles. Luego filtro autooscilante y contornos. Cada etapa debe poder avanzar sin una captura privada.
 

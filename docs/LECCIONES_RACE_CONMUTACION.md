@@ -17,3 +17,5 @@ Registro transferible al estándar, basado en el contorno cargado de 94 nodos. N
 Estas reglas son candidatas documentadas para el repositorio RACE. Su implementación matemática se verifica en RF-D; los parámetros físicos pendientes y el rendimiento del motor siguen teniendo gates propios.
 
 La [comparación de fabricantes 2N3392](FABRICACION_3392_Y_DATOS_DINAMICOS.md) añade una regla documental: conservar la columna típico/mínimo/máximo, el encapsulado, la revisión y las ambigüedades impresas. GE87 y Central/Fairchild sitúan 2 pF en columnas distintas. Una remisión a una familia de proceso posterior no identifica el lote de un sintetizador histórico.
+
+El [BJT cargado](BJT_CARGADO_TRANSITORIOS.md) añade dos gates operativos: comprobar que un oráculo cubre todo el intervalo solicitado aunque devuelva exit code cero, y validar el significado de sus columnas iniciales antes de convertirlas en memoria física. Las cargas t=0 no calculadas por un export permanecen marcadas; no se sustituyen silenciosamente. Se refinan ambos integradores conservando los límites de error originales.

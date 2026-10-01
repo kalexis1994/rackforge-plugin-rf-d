@@ -67,4 +67,4 @@ El harness verifica versión y SHA del ejecutable, usa procesos sin ventana, con
 
 ## Pendiente
 
-Contrastar transitorios de un circuito cargado con memoria propia; después estudiar conmutación del contorno bajo hipótesis explícitas, incluyendo qué efectos omitidos son necesarios. Parámetros físicos, partición más completa, alta inyección, recuperación, resistencia de base y dispersión siguen abiertos. Ninguna carga nueva incorporada a la voz nativa, ningún deadline ni audio admitido.
+El contraste temporal de un circuito cargado con memoria propia se completa en [BJT cargado: transitorios](BJT_CARGADO_TRANSITORIOS.md). Sigue pendiente estudiar conmutación del contorno bajo hipótesis explícitas, incluyendo qué efectos omitidos son necesarios. Parámetros físicos, partición más completa, alta inyección, recuperación física, resistencia de base y dispersión siguen abiertos. Ninguna carga nueva incorporada a la voz nativa, ningún deadline ni audio admitido.

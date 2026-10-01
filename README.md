@@ -12,6 +12,8 @@ El [registro de fabricación 2N3392 y datos dinámicos](docs/FABRICACION_3392_Y_
 
 El [BJT intrínseco con carga conservativa](docs/BJT_INTRINSECO_CARGA_CONSERVATIVA.md) tiene corrientes/cargas terminales, Jacobiano y memoria ligada a parámetros. Pasa 72 casos independientes contra ngspice 46, incluyendo matrices AC 3×3 a dos frecuencias. Es una hipótesis explícita de baja inyección con parámetros sintéticos; no se incorpora al motor ni admite todavía la conmutación del contorno.
 
+El [BJT cargado en transitorios](docs/BJT_CARGADO_TRANSITORIOS.md) resuelve tres nodos y sus cargas en 252.000 pasos sin reset. Pasa refinamiento frente a ngspice: error propio máximo 1,35 mV, refinamiento independiente 127 µV. Conserva un aborto del oráculo y dos barridos que superaron los gates. La conmutación del biestable Model D sigue pendiente.
+
 El [puerto conjunto C2/reset con carga de toda la cadena](docs/PUERTO_CONTORNO_CADENA_71.md) añade corrientes, matriz de admisión `2×2` y gradientes de los 71 nodos. Pasa 36 casos independientes DC/temporales con diferencia máxima de admisión **2,04 pS**, candidato temporal coherente y heap cero. En un escenario alto de C2, CR6 devuelve 0,495 mA a reset: esa carga deberá entrar en el biestable, cuya conmutación todavía requiere resolver la estabilidad.
 
 El [cierre simultáneo de seguidor, R59 y cadena de 71 nodos](docs/SEGUIDOR_VCA_CADENA_71.md) calcula la base Q18 y la carga devuelta a C2/reset. Pasa veinte destinos DC y 256 pasos independientes, con error máximo de nodo **2,50 nV**, conservación de dieciocho cargas y heap cero. Los saltos se recuperan explícitamente con historial fijo; el costo de 16,12–16,96 ms por bloque todavía excede el plazo. El biestable y las fuentes reales del contorno siguen pendientes.
