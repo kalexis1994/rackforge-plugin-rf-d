@@ -62,6 +62,8 @@ El [objetivo técnico](docs/OBJETIVO.md) define qué queda dentro de la emulaci�
 
 ## Cómo empezar
 
+La [representación por incrementos y memorias compensadas](docs/BIESTABLE_INCREMENTOS_COMPENSADOS.md) cierra el intervalo de C2 antes rechazado, con los mismos gates, y verifica 32 pasos posteriores. El criterio adaptativo v2 usa voltajes de nodos y junturas independientes del origen de Q; falta repetir la trayectoria completa y su refinamiento.
+
 1. Revisar el [mapa de revisiones](docs/REVISIONES.md), el [plan de investigación](docs/PLAN.md) y el [protocolo sin hardware](docs/VALIDACION_SIN_HARDWARE.md); fijar la revisión documental antes de derivar constantes DSP.
 2. Usar el [registro de fuentes](docs/FUENTES.md) para localizar la página exacta y los [hallazgos técnicos](docs/HALLAZGOS.md) para definir cada contraste.
 3. Derivar cada [bloque de circuito](docs/BLOQUES.md) en unidades eléctricas y registrar incertidumbres en la [matriz de fidelidad](docs/MATRIZ_DE_FIDELIDAD.md).

@@ -1,5 +1,7 @@
 # Lecciones RF-D para RACE: conmutación y memoria de carga
 
+La [corrección por incrementos](BIESTABLE_INCREMENTOS_COMPENSADOS.md) propone un gate de publicación: cuando el solve exige variaciones menores que un ULP, verificar que sobreviven en las memorias serializadas y satisfacen las ecuaciones de rama en el paso siguiente. Un residuo provisional pequeño no basta. La aritmética de mayor precisión debe contrastar la carga guardada, incluyendo ramas con resistencia en serie.
+
 Registro transferible al estándar, basado en el contorno cargado de 94 nodos. No convierte las hipótesis RF-D en parámetros reutilizables de otros sintetizadores.
 
 | Regla propuesta | Evidencia concreta RF-D | Gate para el próximo circuito |

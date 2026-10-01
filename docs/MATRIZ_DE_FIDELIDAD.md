@@ -1,5 +1,7 @@
 # Matriz de fidelidad
 
+El [corte de incrementos compensados](BIESTABLE_INCREMENTOS_COMPENSADOS.md) resuelve un límite numérico de C2 y comprueba memoria serializada y 32 intervalos posteriores con aritmética Decimal. Conserva el fallo adaptativo original. No añade identificación física, refinamiento de la trayectoria completa ni admisión de audio.
+
 Los estados `desconocido`, `hipótesis`, `modelado`, `contrastado` y `cerrado para alcance declarado` se aplican **por columna**. Una fuente que documenta un control no prueba el audio. El estado inicial de todos los bloques es `desconocido` o `hipótesis`. La columna de audio identifica evidencia **externa**, no mediciones propias: RF-D se desarrolla [sin acceso físico](VALIDACION_SIN_HARDWARE.md).
 
 | Bloque | Controles/datos | Topología/tiempo | Transferencia/cálculo | Audio externo | Riesgo audible | Próximo gate |
