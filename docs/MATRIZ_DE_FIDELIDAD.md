@@ -1,5 +1,7 @@
 # Matriz de fidelidad
 
+El [contraste condicionado a los mismos dos historiales](BIESTABLE_HISTORIAL_COMUN.md) reduce el máximo interpolado a 28,95 mV, pero no pasa 1 mV ni valida el prefijo desde DC. Verifica 1992 intervalos B3 nuevos y 4019 C3 heredados, sin reinicio ni selección de raíz. El máximo original de 126,37 mV conserva su fallo.
+
 El [dominio de observación v2](BIESTABLE_DOMINIO_DE_OBSERVACION.md) completa 772/772 consultas sin retimar. El prefijo muestreado tiene 59,0 µV de diferencia máxima y pasa su gate diagnóstico; no demuestra error continuo. El máximo de 0,126368 V conserva el fallo global de refinamiento. No modifica las columnas de física o audio.
 
 La [rejilla de observación B3/C3](BIESTABLE_OBSERVACION_ENTRE_MUESTRAS.md) guarda 772 consultas: 633 válidas y 139 fallidas, todas con pasos por debajo de 1 ps. Los máximos consultados/FD distinguen interpolación del pico persistente de 0,126368 V. Cobertura incompleta impide admitir el prefijo; permanecen abiertos los gates de trayectoria, física y audio.

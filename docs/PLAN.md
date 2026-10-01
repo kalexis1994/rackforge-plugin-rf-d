@@ -56,6 +56,8 @@ El [grafo eléctrico y oráculo de placa 2](CONTORNO_VOLUMEN_CIRCUITO.md) recons
 
 ## Primer corte de implementación
 
+El [historial común B3/C3](BIESTABLE_HISTORIAL_COMUN.md) conserva 1992 intervalos nuevos y 4019 C3 heredados. El contraste condicional de 28,95 mV también falla. Próximo corte: consultas de todos los máximos por nodo y de la rejilla retenida, seguidas de un estimador BDF2/BDF2 con verificación de memoria y dominio antes de otro barrido desde DC.
+
 El [observador dentro del dominio](BIESTABLE_DOMINIO_DE_OBSERVACION.md) completa las 772 consultas con 284 intervalos provisionales nuevos. El prefijo muestreado pasa 1 mV (59,0 µV máximos), sin cota continua, y el pico completo falla. Próximo bloque: continuaciones diagnósticas desde un historial doble común antes de la regeneración, para separar diferencias del prefijo y de la región rápida conservando el contraste original desde DC.
 
 La [observación entre muestras](BIESTABLE_OBSERVACION_ENTRE_MUESTRAS.md) confirma el pico B3/C3 y localiza 139 consultas fuera del mínimo temporal de 1 ps. Próximo corte: conservar el instante pedido mediante anclaje anterior y dos intervalos provisionales dentro del dominio; verificar memoria intermedia y cobertura sin reemplazar el informe fallido.

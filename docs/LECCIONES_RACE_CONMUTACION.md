@@ -1,5 +1,7 @@
 # Lecciones RF-D para RACE: conmutación y memoria de carga
 
+El [historial común](BIESTABLE_HISTORIAL_COMUN.md) propone separar un contraste desde DC de otro condicionado a la misma memoria doble, intervalo previo y primera propuesta. Heredar un tramo verificado requiere volver a comprobar linaje/carga y distinguirlo de integración nueva. Los máximos de esas diferencias no se suman linealmente y la condición común no valida retroactivamente el prefijo ni el circuito físico.
+
 El [observador dentro del dominio](BIESTABLE_DOMINIO_DE_OBSERVACION.md) propone conservar el destino temporal cuando el resto respecto del último estado es impropio: usar un anclaje anterior y guardar los dos intervalos provisionales, con KCL y memoria intermedia verificadas. Completa 772 consultas sin mover el reloj y pasa sólo el gate del prefijo muestreado; el máximo global permanece fallido. Corregir la observación no demuestra convergencia de la trayectoria.
 
 La [rejilla de consultas](BIESTABLE_OBSERVACION_ENTRE_MUESTRAS.md) propone aplicar el dominio temporal también a la observación: dos tiempos casi coincidentes en binario pueden pedir un paso mucho menor que el permitido al integrador. Conservar cada fallo y la memoria entrante; no reemplazarlo por interpolación ni redondear el reloj sin cuantificarlo. El siguiente observador debe usar otro anclaje y conservar sus estados provisionales.
