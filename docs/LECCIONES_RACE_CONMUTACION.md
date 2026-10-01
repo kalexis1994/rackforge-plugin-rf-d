@@ -1,5 +1,7 @@
 # Lecciones RF-D para RACE: conmutación y memoria de carga
 
+El [contraste completo E4G8](BIESTABLE_CRECIMIENTO_DESDE_DC.md) separa sensibilidad al controlador de refinamiento: 6486 intervalos y 1724 consultas conservan 8,234 mV frente a D4, mientras E4/E4G8 pasa sólo su selección consultada con 0,426 mV. Evitar 620 rechazos añade 564 ensayos aceptados y sólo reduce 56 intentos. Cada aceptado normal calcula tres tasas modales nuevas; el rechazo por error omite esa etapa. Registrar fases ejecutadas además del total evita inferir costo uniforme o menor latencia. El nuevo umbral no se promueve.
+
 Los [contraejemplos exactos con memoria numérica](BIESTABLE_DEFECTO_Y_MEMORIA.md) derivan `D=Dexact+K(r)(e₀−e₋₁)` para el cúbico escalar. Un desplazamiento común queda invisible y otro historial puede dar D=0 con error no nulo. Una trayectoria uniforme conserva D acotado mientras acumula error. Cinco regresiones con fracciones e interpolación de Lagrange verifican estas identidades. La regla transferible es declarar las hipótesis sobre el error entrante; estas fórmulas no calibran el DAE RF-D.
 
 Las [ventanas con la misma memoria E4](BIESTABLE_VENTANAS_DE_CRECIMIENTO.md) separan dos heurísticas de crecimiento con tolerancias/circuito idénticos. En reset cambian los rechazos y conservan todos los estados aceptados; en cola se reducen los intentos de 122 a 103 con más pasos aceptados. Registrar intentos y solve/carga por separado evita llamarlo mejora de latencia sin medirla. Una ventana condicionada no reemplaza el gate desde DC ni recomienda un umbral universal.

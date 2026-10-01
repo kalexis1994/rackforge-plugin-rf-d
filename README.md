@@ -4,7 +4,9 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
-Los [contraejemplos exactos de memoria BDF2](docs/BIESTABLE_DEFECTO_Y_MEMORIA.md) pasan cinco regresiones: la diferencia completo/medios puede ocultar error previo común o cancelarse con errores distintos. La ruta [E4G8 desde DC](docs/BIESTABLE_CRECIMIENTO_DESDE_DC.md) tiene protocolo declarado para contrastar el crecimiento 0,125 a tolerancias E4 fijas; su resultado se publicará tras la observación conservativa.
+La ruta [E4G8 desde DC](docs/BIESTABLE_CRECIMIENTO_DESDE_DC.md) completa 3 ms con 6486 intervalos y 1724 consultas válidas. Crecimiento 0,125 reduce los intentos sólo de 6590 a 6534 y conserva **8,234 mV** frente a D4: falla 1 mV. La sensibilidad E4/E4G8 pasa únicamente su selección consultada con 0,426 mV, sin admitir refinamiento global ni un controlador nuevo.
+
+Los [contraejemplos exactos de memoria BDF2](docs/BIESTABLE_DEFECTO_Y_MEMORIA.md) pasan cinco regresiones: la diferencia completo/medios puede ocultar error previo común o cancelarse con errores distintos. Las identidades escalares explicitan el límite de la inferencia, sin calibrar el circuito.
 
 Las [ventanas de crecimiento con memoria E4 común](docs/BIESTABLE_VENTANAS_DE_CRECIMIENTO.md) añaden 335 intervalos y contrastan umbrales 0,25/0,125. En la cola reducen intentos de 122 a 103, con más pasos aceptados; seis regresiones pasan y el primer fallo del resumen queda conservado. Es evidencia condicionada, con el gate global desde DC aún abierto.
 

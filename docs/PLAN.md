@@ -56,7 +56,9 @@ El [grafo eléctrico y oráculo de placa 2](CONTORNO_VOLUMEN_CIRCUITO.md) recons
 
 ## Primer corte de implementación
 
-Las [cuatro ventanas de crecimiento](BIESTABLE_VENTANAS_DE_CRECIMIENTO.md) completan ocho continuaciones desde memoria E4 común y verifican 335 intervalos. El umbral 0,125 evita rechazos en estas ventanas y reduce los intentos de cola, con más intervalos aceptados. Próximo bloque: estudio desde DC del controlador y acumulación temporal; los resultados condicionados no sustituyen los 7,81 mV fallidos del barrido global.
+El [contraste E4G8 desde DC](BIESTABLE_CRECIMIENTO_DESDE_DC.md) ya completa 6486 intervalos y 1724 consultas. Evita 620 rechazos pero suma 564 ensayos aceptados: 56 intentos menos, con más evaluaciones modales aceptadas. Frente a D4 conserva 8,234 mV; no se promueve el umbral 0,125 ni se cierra refinamiento global. Próximo bloque: propagación de memoria y defecto temporal, apoyado por los [contraejemplos exactos](BIESTABLE_DEFECTO_Y_MEMORIA.md), antes de otra política de refinamiento o promoción nativa.
+
+Las [cuatro ventanas de crecimiento](BIESTABLE_VENTANAS_DE_CRECIMIENTO.md) completan ocho continuaciones desde memoria E4 común y verifican 335 intervalos. El umbral 0,125 evita rechazos en estas ventanas y reduce los intentos de cola, con más intervalos aceptados. Su estudio desde DC está en el corte E4G8; estos resultados condicionados no sustituyen los 7,81 mV fallidos del barrido global.
 
 El [barrido de doble paso desde DC](BIESTABLE_BARRIDO_DOBLE_PASO.md) completa D4/E4 con 9446 intervalos y 866 consultas válidas. El máximo consultado de 7,81 mV sigue fallando el gate de 1 mV; el prefijo muestreado pasa con 4,615 µV. Próximo bloque: acumulación temporal y crecimiento con memoria publicada, apoyados por el contraejemplo exacto del umbral 0,25. Cada controlador nuevo tendrá política e informe propios; no promover aún el contorno al motor nativo.
 

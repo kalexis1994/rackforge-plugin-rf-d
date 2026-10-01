@@ -1,5 +1,7 @@
 # Matriz de fidelidad
 
+El [contraste E4G8 desde DC](BIESTABLE_CRECIMIENTO_DESDE_DC.md) añade 6486 intervalos y 1724 consultas válidas a tolerancias E4 fijas. Conserva 8,234 mV frente a D4; E4/E4G8 pasa sólo la selección muestreada con 0,426 mV. Menos rechazos no implica menor error o deadline: se añaden 564 ensayos aceptados y sólo se evitan 56 intentos totales. Las [identidades escalares de memoria](BIESTABLE_DEFECTO_Y_MEMORIA.md) no identifican una cota del DAE, cargas físicas ni sonido vintage.
+
 El [barrido BDF2 de doble paso D4/E4](BIESTABLE_BARRIDO_DOBLE_PASO.md) añade 9446 intervalos publicados y 18884 medios provisionales aceptados, con gates de carga verificados. Las 866 consultas válidas conservan el máximo de 7,81 mV: falla el refinamiento global de 1 mV. El prefijo muestreado pasa con 4,615 µV; no cierra la transición, identificación física, error continuo ni audio. El solve FD del pico coincide, compartiendo el modelo espacial.
 
 El [prototipo BDF2 de doble paso](BIESTABLE_ESTIMADOR_BDF2_DOBLE_PASO.md) verifica memoria y conservación de tres rutas en doce sondas; la diferencia cruda máxima es 0,684 µV. Es una sonda local, sin trayectoria adaptativa nueva ni cota global, y no modifica el fallo de 26,79 mV del contraste condicionado ni el de 126,37 mV desde DC.
