@@ -31,6 +31,14 @@ El manual Folkman está duplicado dentro de OP-EARLY. El PDF SVC-9 solapa la sec
 
 La [auditoría del biestable](BIESTABLE_TRES_RAICES_Y_CARGA_RAPIDA.md) conserva condiciones de medida y límites. La URL Mouser inicialmente consultada devolvió HTML en la descarga local y fue descartada; el catálogo GE/RCA 1987 respondió HTTP 403 y permanece una pista, sin hash de archivo adquirido.
 
+## Formulación de carga, sin parámetros vintage
+
+| ID | Documento y enlace | Archivo local ignorado | SHA-256 | Alcance |
+| --- | --- | --- | --- | --- |
+| NG-46 | [ngspice 46, manual oficial](https://ngspice.sourceforge.io/docs/ngspice-46-manual.pdf) | `datasheets/ngspice-46-manual.pdf` | `b5bc7c4f3aac00e670b01b1d1ab64ec87055a491014af1de828764bf98faf766` | PDF de 755 páginas. P. PDF/impresa 138: difusión y depleción, ecuaciones 7.3/7.4; pp. 143–145: alcance Gummel–Poon y parámetros. Pp. 138/145 renderizadas con Poppler y revisadas visualmente. Fuente de formulación matemática, sin adoptar defaults/ejemplos como componentes Moog. |
+
+Derivación propia, dominios y límites en [cargas de juntura](CARGAS_JUNTURA_Y_DOMINIO_BIESTABLE.md). El helper implementa baja inyección, sin la corrección 7.3 ni la recuperación con estado de p. 139.
+
 ## Copias complementarias y pistas de modificación
 
 | Archivo local | Procedencia y hash SHA-256 | Uso |
