@@ -4,6 +4,14 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+La [reconstrucción interior](docs/BIESTABLE_CARGA_INTERIOR_RESULTADOS.md)
+consulta 1.488 puntos y certifica las 21 restricciones capacitivas en los
+496 intervalos del polinomio. KCL pasa 315 consultas y conserva 1.173
+incumplimientos. Se acota un cruce del knee en el historial antiguo,
+fuera del último intervalo consultado. El [corpus](docs/BIESTABLE_CARGA_INTERIOR_ENTRADAS.md)
+reconstruye 230 entradas. Estos certificados pertenecen al interpolante;
+el error temporal global de 1 mV, física, audio y deadline siguen abiertos.
+
 El [contraste con las ecuaciones continuas](docs/BIESTABLE_CARGA_CONTINUA_RESULTADOS.md)
 conserva 496 puntos: todos pasan KCL con su BDF fino, mientras la
 reconstrucción cúbica queda bajo 10 pA en 106 y conserva 390 incumplimientos.

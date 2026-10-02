@@ -114,6 +114,14 @@ El [grafo eléctrico y oráculo de placa 2](CONTORNO_VOLUMEN_CIRCUITO.md) recons
 
 ## Primer corte de implementación
 
+La [reconstrucción interior de cargas](BIESTABLE_CARGA_INTERIOR_RESULTADOS.md)
+certifica restricciones lineales sobre los 496 intervalos reconstruidos y
+consulta 1.488 puntos. KCL conserva 1.173 incumplimientos. La cubierta del
+knee localiza un cruce en el soporte antiguo, fuera del intervalo actual.
+Próximo corte: reconstrucción constitutiva por piezas y residual integrado,
+con tratamiento declarado del soporte mixto, antes de acumulación desde DC.
+Los certificados del polinomio no se promueven a cotas de la trayectoria física.
+
 El [contraste continuo de cargas](BIESTABLE_CARGA_CONTINUA_RESULTADOS.md)
 completa 496 diagnósticos sin solves nuevos. Los residuales BDF finos pasan
 10 pA; los cúbicos continuos conservan 390 incumplimientos. El interpolante
