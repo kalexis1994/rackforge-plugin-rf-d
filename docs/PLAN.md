@@ -114,6 +114,14 @@ El [grafo eléctrico y oráculo de placa 2](CONTORNO_VOLUMEN_CIRCUITO.md) recons
 
 ## Primer corte de implementación
 
+El [contraste continuo de cargas](BIESTABLE_CARGA_CONTINUA_RESULTADOS.md)
+completa 496 diagnósticos sin solves nuevos. Los residuales BDF finos pasan
+10 pA; los cúbicos continuos conservan 390 incumplimientos. El interpolante
+cuadrático reproduce esencialmente BDF2 y no es un contraste independiente.
+El soporte de reset que cruza el knee se conserva. Próximo corte: residual
+entre muestras, restricciones de carga y tratamiento declarado de cambios
+de pieza; después error inicial y propagación antes de otra política global.
+
 El [contraste E4G8 desde DC](BIESTABLE_CRECIMIENTO_DESDE_DC.md) ya completa 6486 intervalos y 1724 consultas. Evita 620 rechazos pero suma 564 ensayos aceptados: 56 intentos menos, con más evaluaciones modales aceptadas. Frente a D4 conserva 8,234 mV; no se promueve el umbral 0,125 ni se cierra refinamiento global. La [curvatura de circuito](BIESTABLE_CURVATURA_RESULTADOS.md) y el [forzamiento relativo a ventanas refinadas](BIESTABLE_FORZAMIENTO_RESULTADOS.md) ya propagan memorias propias, residual y publicación. El segundo se extrae de referencias conocidas y no es un estimador independiente. Próximo bloque: derivar el error de diferenciación de cargas sobre historiales reales y contrastarlo en soluciones conocidas, apoyado por los [contraejemplos exactos](BIESTABLE_DEFECTO_Y_MEMORIA.md), antes de otra política de refinamiento o promoción nativa.
 
 Las [cuatro ventanas de crecimiento](BIESTABLE_VENTANAS_DE_CRECIMIENTO.md) completan ocho continuaciones desde memoria E4 común y verifican 335 intervalos. El umbral 0,125 evita rechazos en estas ventanas y reduce los intentos de cola, con más intervalos aceptados. Su estudio desde DC está en el corte E4G8; estos resultados condicionados no sustituyen los 7,81 mV fallidos del barrido global.

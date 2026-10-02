@@ -1,0 +1,71 @@
+"""Expanded memory audit including prior window receipts and identified test versions."""
+import json
+from pathlib import Path
+from loudness_latch_bdf_static_precision_charge_inputs import REPORTS as OLD_REPORTS,read,identities,validation_versions
+from loudness_latch_bdf_checkout_audit import sha,git_bytes,recover_historical_input,EXPECTED_EXCEPTIONS
+from loudness_latch_bdf_doubling_survey import store
+from loudness_lab_metadata import environment
+
+ROOT=Path(__file__).resolve().parents[1]
+REPORTS=(*OLD_REPORTS,*(ROOT/"evidence"/name for name in (
+    "loudness_latch_bdf_static_precision_continuous_charge.json.gz",
+    "loudness_latch_bdf_static_precision_continuous_charge_validation.json")))
+OUTPUT=ROOT/"evidence/loudness_latch_bdf_static_precision_continuous_inputs.json.gz"
+SUMMARY=ROOT/"evidence/loudness_latch_bdf_static_precision_continuous_inputs_summary.json"
+
+
+def generate():
+    env=environment();ref=env["git_head"];sources={};membership={};versions=[]
+    report_hashes={p.relative_to(ROOT).as_posix():sha(p.read_bytes()) for p in REPORTS}
+    for p in REPORTS:
+        data=read(p)
+        versions.extend(v|dict(receipt=p.relative_to(ROOT).as_posix()) for v in validation_versions(data))
+        for group in identities(data):
+            for name,expected in group.items():
+                if name in sources and sources[name]!=expected:raise ValueError("expanded input identity conflict: "+name)
+                sources[name]=expected;members=membership.setdefault(name,[])
+                if p.relative_to(ROOT).as_posix() not in members:members.append(p.relative_to(ROOT).as_posix())
+    entries=[];archives=[]
+    for name,expected in sorted(sources.items()):
+        raw=(ROOT/name).read_bytes();blob=git_bytes(ref,name)
+        if sha(raw)!=expected:raise ValueError("expanded frozen input mismatch: "+name)
+        row=dict(path=name,working_copy_sha256=expected,git_blob_sha256=sha(blob),
+            identical_bytes=raw==blob,frozen_reports=membership[name])
+        if raw!=blob:
+            if name not in EXPECTED_EXCEPTIONS:raise ValueError("undeclared materialization difference: "+name)
+            archive=row|dict(working_copy_source_utf8=raw.decode("utf-8"),working_copy_bytes=len(raw),
+                git_blob_bytes=len(blob),declared_transform="LF-to-CRLF-only",canonical_json_identical=True)
+            if recover_historical_input(blob,archive)!=raw:raise ValueError("failed historical reconstruction")
+            archives.append(archive)
+        entries.append(row)
+    if tuple(v["path"] for v in archives)!=EXPECTED_EXCEPTIONS:raise ValueError("historical exception set changed")
+    for name,expected in sources.items():
+        if sha((ROOT/name).read_bytes())!=expected:raise ValueError("expanded input changed during archival")
+    if {p.relative_to(ROOT).as_posix():sha(p.read_bytes()) for p in REPORTS}!=report_hashes:
+        raise ValueError("expanded reports changed during archival")
+    own_paths=(Path(__file__).resolve(),ROOT/"tools/loudness_latch_bdf_static_precision_charge_inputs.py",ROOT/"tools/loudness_latch_bdf_static_precision_forced_inputs.py",ROOT/"tools/loudness_latch_bdf_static_precision_memory_quadratic_inputs.py",ROOT/"tools/loudness_latch_bdf_static_precision_memory_response_inputs.py",
+        ROOT/"tools/loudness_latch_bdf_static_precision_memory_inputs.py",
+        ROOT/"tools/loudness_latch_bdf_static_precision_path_inputs.py",
+        ROOT/"tools/loudness_latch_bdf_static_precision_window_inputs.py",
+        ROOT/"tools/loudness_latch_bdf_checkout_audit.py")
+    return dict(schema="rf-d/bdf-static-continuous-inputs/v1",environment=env,reference_git_head=ref,
+        entries=entries,archived_inputs=archives,archived_validation_test_versions=versions,
+        source_sha256=report_hashes|{p.relative_to(ROOT).as_posix():sha(p.read_bytes()) for p in own_paths},
+        original_direct_blob_comparison_passed=False,all_differences_declared_crlf_expansion=True,
+        prior_reports_modified=False,input_files_modified=False,numerical_experiment_repeated=False,
+        numerical_gates_changed=False,audio_admitted=False)
+
+
+def save(report):
+    storage=store(report,OUTPUT)
+    summary={k:v for k,v in report.items() if k not in ("archived_inputs","archived_validation_test_versions")}|dict(storage=storage,
+        archived_inputs=[{k:v for k,v in r.items() if k!="working_copy_source_utf8"} for r in report["archived_inputs"]],
+        archived_validation_test_versions=[{k:v for k,v in r.items() if k!="source_utf8"}
+            for r in report["archived_validation_test_versions"]])
+    SUMMARY.write_text(json.dumps(summary,indent=2,allow_nan=False)+"\n",encoding="utf-8",newline="\n")
+    return summary
+
+
+if __name__=="__main__":
+    result=save(generate());print(json.dumps(dict(inputs=len(result["entries"]),archives=len(result["archived_inputs"]),
+        test_versions=len(result["archived_validation_test_versions"]),storage=result["storage"])))

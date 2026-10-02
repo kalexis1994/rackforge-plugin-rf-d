@@ -4,6 +4,15 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+El [contraste con las ecuaciones continuas](docs/BIESTABLE_CARGA_CONTINUA_RESULTADOS.md)
+conserva 496 puntos: todos pasan KCL con su BDF fino, mientras la
+reconstrucción cúbica queda bajo 10 pA en 106 y conserva 390 incumplimientos.
+Se verifican KCL, C10 serie y regla de la cadena de QBE/QBC, incluido un
+soporte que cruza el knee. El [corpus ampliado](docs/BIESTABLE_CARGA_CONTINUA_ENTRADAS.md)
+reconstruye 222 entradas y conserva cuatro versiones de pruebas fallidas.
+Siguiente gate: reconstrucción dentro de intervalos y cambios de pieza
+antes de promover un estimador. El criterio global de 1 mV sigue abierto.
+
 Los [testigos del defecto de carga](docs/BIESTABLE_DEFECTO_CARGA_RESULTADOS.md)
 verifican 72 identidades BDF2, 18 BE y 512 pasos RC con error forzado
 exacto, incluyendo el término de memoria publicada de C10 serie.
