@@ -25,8 +25,8 @@ En reset N4, **2,66647906 nA → 6,41897764 pA**. En N2,
 los estados y el sonido del motor permanecen iguales.
 La diferencia de tasas queda acotada en reset N2/N4 por 1,95717072 pA
 y 0,0115661958 pA. No interpretar estos límites como valores observados.
-El máximo de ataque no mejora porque pertenece a un nodo ajeno a las cuatro
-cargas tratadas y conserva su certificado anterior.
+El máximo de ataque está en el nodo 92, ajeno a los nodos activos
+66, 82, 83 y 87 y conserva su certificado anterior.
 
 [Datos](../evidence/loudness_latch_bdf_static_precision_correlated_enclosure.json.gz): **5,699,240 bytes**; SHA comprimido
 `724b5377526665c56ba80398ef5736db1820fba0f43e520b2adf1d7d1f471fb0`; SHA canónico
@@ -98,8 +98,8 @@ En reset N4, **2,66647906 nA → 6,41897764 pA**. En N2,
 los estados y el sonido del motor permanecen iguales.
 La diferencia de tasas queda acotada en reset N2/N4 por 1,95717072 pA
 y 0,0115661958 pA. No interpretar estos límites como valores observados.
-El máximo de ataque no mejora porque pertenece a un nodo ajeno a las cuatro
-cargas tratadas y conserva su certificado anterior.
+El máximo de ataque está en el nodo 92, ajeno a los nodos activos
+66, 82, 83 y 87 y conserva su certificado anterior.
 
 [Datos](../evidence/loudness_latch_bdf_static_precision_correlated_enclosure.json.gz): **5,699,240 bytes**; SHA comprimido
 `724b5377526665c56ba80398ef5736db1820fba0f43e520b2adf1d7d1f471fb0`; SHA canónico

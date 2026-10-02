@@ -12,6 +12,15 @@ No habrá acceso a una unidad física. El [protocolo sin hardware](VALIDACION_SI
 
 ## Fase B — Solver y banco de pruebas
 
+La [variante de tasas correlacionadas](BIESTABLE_TASAS_CORRELACIONADAS_RESULTADOS.md)
+conserva cancelaciones entre C(v)*v′ y Qpol′: los intervalos completos
+certificados bajo 10 pA pasan de 31 a 105. En reset N4, el límite puntual
+baja de 2,666 nA a 6,419 pA sin cambiar estados ni sonido. Los 391 casos
+con media sobre el umbral permanecen. El [corpus](BIESTABLE_TASAS_CORRELACIONADAS_ENTRADAS.md)
+verifica 272 entradas; nueve regresiones nuevas pasan al primer intento.
+Siguiente corte: propagación con memoria, restricciones, estabilidad,
+anclaje y cobertura. El criterio global de 1 mV sigue abierto.
+
 Los [recintos de Q(v) y magnitud del residual](BIESTABLE_MAGNITUD_RESIDUAL_RESULTADOS.md)
 acotan balance constitutivo y magnitud acumulada en 496 intervalos y un
 soporte mixto. La media cumple 10 pA en 105; el límite puntual certifica
