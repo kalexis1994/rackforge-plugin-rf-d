@@ -197,3 +197,9 @@ sus resultados, sin escoger un paso por el resultado favorable. Después,
 contrastar más direcciones de memoria y ventanas más largas antes de usar
 los mapas para estimar error acumulado. Los gates global de 1 mV, físico,
 audio y deadline permanecen abiertos.
+
+La [sensibilidad FD posterior](BIESTABLE_RESULTADOS_SENSIBILIDAD_FD.md)
+completa ese primer diagnóstico con 40 matrices y conserva reset fallido.
+La [auditoría de entradas históricas](REPRODUCIBILIDAD_DE_ENTRADAS_HISTORICAS.md)
+archiva los tres JSON CRLF usados en Windows y prueba reconstrucción de
+sus SHA desde los blobs Git, sin reescribir este experimento.

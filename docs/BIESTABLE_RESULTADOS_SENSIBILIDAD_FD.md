@@ -77,3 +77,8 @@ corrientes/derivadas y direcciones no lineales propias, declarando amplitudes
 y precisión alcanzable antes de ejecutar. Después ampliar las ventanas.
 La matriz completa de reset, el refinamiento global de 1 mV, los parámetros
 físicos, audio y deadline permanecen abiertos.
+
+La [auditoría de bytes históricos](REPRODUCIBILIDAD_DE_ENTRADAS_HISTORICAS.md)
+completa la trazabilidad entre blobs Git LF y las tres entradas CRLF usadas
+en Windows. Archiva las fuentes originales y verifica reconstrucción de
+49 SHA sin modificar estos resultados.

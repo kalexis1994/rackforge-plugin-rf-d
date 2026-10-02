@@ -85,3 +85,9 @@ reset y la reducción de paso no es monótona. Registrar la perturbación
 representable en nodos absolutos y en incrementos, así como la parte de la
 derivada que cada ruta comparte. Preservar todos los pasos; un mapa que pasa
 con una escala no convierte esa escala en óptima ni exacta para otro estado.
+
+La [reconstrucción de bytes históricos](REPRODUCIBILIDAD_DE_ENTRADAS_HISTORICAS.md)
+identifica tres JSON LF en Git/CRLF en Windows y archiva las fuentes exactas.
+Un SHA de entrada puede identificar bytes materializados distintos del blob.
+Fijar ambas identidades y una reconstrucción que rechace cambios de datos;
+no modificar evidencia pasada para aparentar un checkout idéntico.
