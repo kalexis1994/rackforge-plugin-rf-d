@@ -41,7 +41,7 @@ def generate():
         source_sha256_before=before,source_sha256_after=after,inputs_unchanged=unchanged,
         suites=results,passed=unchanged and all(r["passed"] for r in results))
     report=json.loads(OUTPUT.read_text(encoding="utf-8")) if OUTPUT.exists() else dict(
-        schema="rf-d/bdf-static-balance-inputs-validation/v1",attempts=[])
+        schema="rf-d/bdf-static-enclosure-inputs-validation/v1",attempts=[])
     report["attempts"].append(attempt)
     OUTPUT.write_text(json.dumps(report,indent=2,allow_nan=False)+"\n",encoding="utf-8",newline="\n")
     return attempt

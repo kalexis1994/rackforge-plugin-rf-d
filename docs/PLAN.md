@@ -12,6 +12,16 @@ No habrá acceso a una unidad física. El [protocolo sin hardware](VALIDACION_SI
 
 ## Fase B — Solver y banco de pruebas
 
+El [recinto racional de la integral](BIESTABLE_INTEGRAL_ACOTADA_RESULTADOS.md)
+acota resto y redondeo sobre 496 intervalos y un soporte mixto; todos pasan
+el contraste acotado de Gauss16. Confirma 105 medias polinómicas bajo 10 pA
+y 391 por encima, sin inconclusas. Son cotas del interpolante, con cota
+inferior de magnitud del residual; aún falta una cota superior y propagación.
+El [corpus](BIESTABLE_INTEGRAL_ACOTADA_ENTRADAS.md) reconstruye 254 entradas
+con cinco versiones fallidas anteriores. Siete regresiones nuevas pasan
+al primer intento. Próximo corte: recinto de Q(v), magnitud superior y
+estabilidad con cobertura completa. El criterio global de 1 mV sigue abierto.
+
 Los [testigos de defecto de carga](BIESTABLE_DEFECTO_CARGA_RESULTADOS.md)
 ya derivan kernels BDF2/BE y el término RC de publicación. El
 [diagnóstico muestreado](BIESTABLE_DEFECTO_MUESTREADO_RESULTADOS.md)

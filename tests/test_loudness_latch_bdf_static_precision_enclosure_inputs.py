@@ -19,9 +19,19 @@ class StaticInputs(unittest.TestCase):
         cls.report = json.loads(gzip.decompress(cls.raw))
 
     def test_all_frozen_inputs_recover_from_committed_blobs_without_modification(self):
+        # The frozen numerical receipt inherited a Gauss envelope label. Its typed
+        # experiment identity is fixed by exact path, suite, command and data schema.
+        receipt=read(ROOT/'evidence/loudness_latch_bdf_static_precision_charge_enclosure_validation.json')
+        self.assertEqual(receipt['schema'],'rf-d/bdf-static-charge-gauss-validation/v1')
+        self.assertEqual(len(receipt['attempts']),1)
+        suite=receipt['attempts'][0]['suites'][0]
+        self.assertEqual(suite['command'][-2:],["test_loudness_latch_bdf_static_precision_charge_enclosure.py","-v"])
+        self.assertEqual(suite['reported_tests'],5);self.assertTrue(suite['passed'])
+        self.assertEqual(read(ROOT/'evidence/loudness_latch_bdf_static_precision_charge_enclosure.json.gz')['schema'],
+                         'rf-d/bdf-static-charge-enclosure/v1')
         report = self.report; archives = {r["path"]:r for r in report["archived_inputs"]}
         self.assertEqual(tuple(archives), EXPECTED_EXCEPTIONS)
-        self.assertEqual(len(report["entries"]), 253)
+        self.assertEqual(len(report["entries"]), 254)
         self.assertEqual(len(REPORTS), 38)
         recovered = {}
         for entry in report["entries"]:

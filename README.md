@@ -4,6 +4,16 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+El [recinto racional de la integral](docs/BIESTABLE_INTEGRAL_ACOTADA_RESULTADOS.md)
+acota resto y redondeo sobre 496 intervalos y un soporte mixto; todos pasan
+el contraste acotado de Gauss16. Confirma 105 medias polinómicas bajo 10 pA
+y 391 por encima, sin inconclusas. Son cotas del interpolante, con cota
+inferior de magnitud del residual; aún falta una cota superior y propagación.
+El [corpus](docs/BIESTABLE_INTEGRAL_ACOTADA_ENTRADAS.md) reconstruye 254 entradas
+con cinco versiones fallidas anteriores. Siete regresiones nuevas pasan
+al primer intento. Próximo corte: recinto de Q(v), magnitud superior y
+estabilidad con cobertura completa. El criterio global de 1 mV sigue abierto.
+
 El [balance de carga integrado](docs/BIESTABLE_BALANCE_GAUSS_RESULTADOS.md)
 compara carga interpolada y Q(v) constitutiva, con puentes en el soporte
 mixto del knee. Gauss 8/16 pasa en los 496 intervalos y ese soporte;

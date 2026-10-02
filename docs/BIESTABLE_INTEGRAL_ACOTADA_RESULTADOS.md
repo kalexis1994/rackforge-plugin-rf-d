@@ -83,6 +83,12 @@ y ley estática no necesitan cambiar de fórmula al cruzar el knee constitutivo.
 La [suite](../tests/test_loudness_latch_bdf_static_precision_charge_enclosure.py)
 pasa **5/5 pruebas al primer intento**, 16.1271199 s, con
 [SHA antes/después idénticos](../evidence/loudness_latch_bdf_static_precision_charge_enclosure_validation.json).
+El recibo congelado heredó la etiqueta de envoltura `bdf-static-charge-gauss-validation/v1`
+del adaptador Gauss. Se conserva intacto: la identidad de este ensayo queda
+fijada por ruta, suite, comando, SHA y el esquema de datos
+`bdf-static-charge-enclosure/v1`. El corpus verifica ese vínculo explícitamente;
+el recibo nuevo del corpus declara su propio esquema.
+
 Incluye series racionales independientes, extremos ±4096, exponencial afín cerrada,
 expansión cúbica sin centrar, signos NPN/PNP, terminal fijo, conservación exacta,
 todos los recintos y ocho replays completos seleccionados. Cero solves nuevos.
