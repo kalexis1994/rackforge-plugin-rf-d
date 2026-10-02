@@ -71,7 +71,7 @@ otro contraste temporal. No ajustar tolerancias o raíces a estos máximos.
 SHA256 JSON canónico
 `a5345be7dc28bf67938cf451c69f9341e453e8a2dee328ec85bc13f7dd639096`.
 [Resumen](../evidence/loudness_latch_bdf_static_precision_adaptive_summary.json):
-136 entradas, HEAD contextual `6ef7a0f`, matrices de alcance, máximos y
+136 entradas, HEAD contextual `6ef7a0f`, política, máximos y
 conteos. Fuentes/datos permanecen iguales antes/después de la ejecución.
 
 El [recibo](../evidence/loudness_latch_bdf_static_precision_adaptive_validation.json)
