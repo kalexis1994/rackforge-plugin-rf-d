@@ -91,7 +91,7 @@ class ContinuousDescriptor(unittest.TestCase):
                 for i in range(94):
                     a=F(i==left)-F(i==right)
                     self.assertEqual(h[94+k][i],-D(a.numerator)/D(a.denominator))
-                    self.assertEqual(h[i][94+k],D.from_float(cap)*int(a))
+                    self.assertEqual(F(h[i][94+k]),F(cap)*a)
             forcing=case['forcing_inputs']
             expected=[str(max(map(abs,dense.poly.bernstein(p)))) for p in prepared['equations']]+['0']*4
             self.assertEqual(forcing['constraint_point_v'],expected)
