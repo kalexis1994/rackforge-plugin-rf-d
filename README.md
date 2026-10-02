@@ -4,6 +4,12 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+La [auditoría de sensibilidad FD](docs/BIESTABLE_RESULTADOS_SENSIBILIDAD_FD.md)
+resuelve 40 matrices con precisión racional y pasa tres regresiones nuevas.
+Reset falla en los cinco pasos probados y ambas rutas estática/dinámica;
+se conserva el gate de 10⁻⁸ y no se selecciona un paso nuevo. El siguiente
+corte debe auditar la precisión del residuo estático de la cadena de audio.
+
 La [propagación de las 25 memorias](docs/BIESTABLE_PROPAGACION_DE_MEMORIA.md)
 completa 1024 intervalos hipotéticos y pasa 32 contrastes no lineales en
 cuatro ventanas, con diez regresiones nuevas. La eliminación racional

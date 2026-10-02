@@ -12,6 +12,12 @@ No habrá acceso a una unidad física. El [protocolo sin hardware](VALIDACION_SI
 
 ## Fase B — Solver y banco de pruebas
 
+La [sensibilidad FD](BIESTABLE_RESULTADOS_SENSIBILIDAD_FD.md) completa 40
+matrices y tres regresiones. Ninguno de los cinco pasos ni de las dos rutas
+cierra reset; no hay convergencia monótona ni cambio de paso seleccionado.
+Próximo corte: auditoría independiente del residuo estático de la cadena de
+audio y de las columnas de memoria señaladas antes de propagar más tiempo.
+
 La [propagación de memoria](BIESTABLE_PROPAGACION_DE_MEMORIA.md) añade mapas
 94×25 y 25×25, 1024 intervalos hipotéticos y 32 contrastes centrales, todos
 completos. Diez regresiones conservan publicaciones, solve refinado y

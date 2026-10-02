@@ -78,3 +78,10 @@ el residuo con otra aritmética antes de cambiar gates o coeficientes. RF-D
 archiva el fallo sin equilibrar, los tres FD refinados fallidos y un suplemento
 racional sobre los mismos J/B. La sensibilidad a FD requiere otro protocolo
 previo y otro informe; los resultados anteriores permanecen intactos.
+
+La [sensibilidad FD posterior](BIESTABLE_RESULTADOS_SENSIBILIDAD_FD.md)
+conserva los 40 solves y compara cinco pasos y dos rutas. Ningún paso cierra
+reset y la reducción de paso no es monótona. Registrar la perturbación
+representable en nodos absolutos y en incrementos, así como la parte de la
+derivada que cada ruta comparte. Preservar todos los pasos; un mapa que pasa
+con una escala no convierte esa escala en óptima ni exacta para otro estado.

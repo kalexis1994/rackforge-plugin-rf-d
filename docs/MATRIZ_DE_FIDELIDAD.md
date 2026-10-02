@@ -1,5 +1,11 @@
 # Matriz de fidelidad
 
+La [sensibilidad FD](BIESTABLE_RESULTADOS_SENSIBILIDAD_FD.md) conserva
+40 matrices: todas pasan álgebra, seis comparaciones de mapa pasan
+(tres ventanas repetidas en dos rutas), y las diez de reset fallan.
+Tres regresiones verifican replay y alcance. No identifica una derivada
+exacta, el paso óptimo o una cota de error; no cambia física ni audio.
+
 La [propagación local de memoria](BIESTABLE_PROPAGACION_DE_MEMORIA.md) pasa
 32 contrastes centrales y 64 continuaciones hipotéticas (1024 intervalos).
 Los 64 mapas mixtos pasan sus gates algebraicos. Las cuatro matrices FD
