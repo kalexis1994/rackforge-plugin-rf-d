@@ -97,3 +97,25 @@ o una memoria de referencia, ni se recortan coeficientes pequeños.
 La sonda del primer mapa necesita una corrección y da ≈4,15×10⁻¹³ en
 ambas medidas. Eso habilita repetir el experimento completo; no sustituye
 sus contrastes no lineales ni el diagnóstico completamente FD.
+
+## Suplemento FD declarado después del barrido de ventanas
+
+La segunda revisión completa las 1024 etapas y pasa sus 32 contrastes
+centrales. Sus 64 mapas con el evaluador mixto pasan el solve equilibrado.
+El mapa completamente FD de la cola pasa; los tres primeros conservan
+fallos algebraicos después de ocho correcciones. Sus informes permanecen
+intactos, con ese gate abierto.
+
+Se declara otro contraste antes de ejecutarlo: levantar cada entrada
+binary64 de **los mismos Jfd/B** a una fracción exacta y resolver por
+eliminación racional con pivoteo. Se verifica `Jfd·X=B` exactamente antes
+de redondear X a binary64. Luego se repiten ambos gates de error hacia
+atrás 10⁻¹⁰ y el gate escalado mixto/FD 10⁻⁸. Una matriz exactamente
+singular se registra como fallo; no se cambia el paso FD, J, B o el gate.
+
+El suplemento prueba los primeros intervalos de las cuatro ventanas, no
+reintegra ni reescribe las 1024 etapas. Su precisión es algebraica sobre
+coeficientes ya redondeados; no convierte FD en derivación exacta del
+circuito ni amplía la cobertura de direcciones/tiempo.
+
+`python tools/loudness_latch_bdf_fd_transfer_audit.py`
