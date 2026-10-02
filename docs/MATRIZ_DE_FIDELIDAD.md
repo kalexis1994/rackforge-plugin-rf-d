@@ -1,5 +1,12 @@
 # Matriz de fidelidad
 
+Los [sellos analíticos binary64](BIESTABLE_SELLOS_BINARIOS_RESULTADOS.md)
+pasan ocho contrastes de corriente/derivada y ocho solves algebraicos.
+Los mapas compensados pasan 4/4; el ordinario falla reset. Los 48 contrastes
+reutilizan 24 respuestas centrales anteriores y no añaden solves no lineales.
+Cuatro regresiones pasan. La cobertura de un intervalo no modifica todavía
+el integrador ni los gates de trayectoria, física, audio y tiempo real.
+
 La [transcripción estática Decimal](BIESTABLE_PRECISION_ESTATICA_RESULTADOS.md)
 verifica el bloque de audio de 66 nodos: cuatro contrastes de corriente,
 28 solves y 12/20 contrastes FD de derivada/mapa. Los mapas anteriores

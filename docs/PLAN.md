@@ -12,6 +12,12 @@ No habrá acceso a una unidad física. El [protocolo sin hardware](VALIDACION_SI
 
 ## Fase B — Solver y banco de pruebas
 
+Los [sellos binarios](BIESTABLE_SELLOS_BINARIOS_RESULTADOS.md) compensados
+pasan 4/4 mapas de un intervalo frente a Decimal; el ordinario falla en
+reset. Próximo corte: ventanas más largas y variante explícita del integrador
+con residuo/historial/gates originales, conservando discrepancias y fallos.
+Después repetir el contraste temporal completo, sin admisión de audio aún.
+
 La [precisión estática](BIESTABLE_PRECISION_ESTATICA_RESULTADOS.md) localiza
 sensibilidad de los mapas FD de audio: corrientes coinciden, pero ataque/reset
 fallan frente a la nueva referencia analítica Decimal. Pasan cinco regresiones

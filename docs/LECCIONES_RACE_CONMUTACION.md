@@ -99,3 +99,10 @@ del tangente. Conservar el balance de ramas pasivas y componentes muy débiles;
 un residuo de corrientes casi idéntico no prueba un Jacobiano preciso.
 La cobertura independiente se limita al bloque transcrito, aunque su mapa
 se resuelva dentro de un sistema mayor que comparte otras derivadas.
+
+Los [sellos binary64 ordinarios y compensados](BIESTABLE_SELLOS_BINARIOS_RESULTADOS.md)
+pasan sus gates locales de derivada, pero el mapa ordinario falla reset.
+El redondeo del recíproco resistivo y su acumulación requiere comprobación
+de mapa además de componente. Compensar en preparación es una candidata
+numérica contrastada; cuatro puntos no admiten integrar toda una trayectoria
+ni omitir el deadline. Contar por separado datos reutilizados y solves nuevos.

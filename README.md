@@ -4,6 +4,12 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+Los [sellos analíticos binary64](docs/BIESTABLE_SELLOS_BINARIOS_RESULTADOS.md)
+con recíprocos compensados pasan los cuatro mapas frente a Decimal; el
+ordinario conserva reset fallido. Cuatro regresiones nuevas verifican los
+ocho solves y la reutilización de datos. Es una candidata de laboratorio;
+el próximo gate es su contraste durante integración, con el solver intacto.
+
 La [transcripción estática independiente](docs/BIESTABLE_PRECISION_ESTATICA_RESULTADOS.md)
 pasa cuatro comparaciones de corrientes, 28 solves matriciales y cinco
 regresiones nuevas. Los mapas anteriores difieren de la referencia Decimal
