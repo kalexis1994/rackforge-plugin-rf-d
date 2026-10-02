@@ -12,6 +12,14 @@ No habrá acceso a una unidad física. El [protocolo sin hardware](VALIDACION_SI
 
 ## Fase B — Solver y banco de pruebas
 
+Los [testigos de defecto de carga](BIESTABLE_DEFECTO_CARGA_RESULTADOS.md)
+ya derivan kernels BDF2/BE y el término RC de publicación. El
+[diagnóstico muestreado](BIESTABLE_DEFECTO_MUESTREADO_RESULTADOS.md)
+separa 496 aproximaciones de diferenciación, reloj y coeficientes.
+No conoce la tasa exacta de carga ni cierra 1 mV desde DC. Próximo bloque:
+contrastar Q' reconstruido frente a ecuaciones continuas, separando error
+de interpolación y de los estados finos antes de cambiar el controlador.
+
 El [controlador E4G8 con Newton compensado](BIESTABLE_CONTROLADOR_COMPENSADO_RESULTADOS.md)
 reproduce decisiones y reloj: 6.486 publicados, 12.968 provisionales y 49
 rechazos conservados. Sus estados publicados son idénticos al ensayo de

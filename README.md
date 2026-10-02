@@ -4,6 +4,17 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+Los [testigos del defecto de carga](docs/BIESTABLE_DEFECTO_CARGA_RESULTADOS.md)
+verifican 72 identidades BDF2, 18 BE y 512 pasos RC con error forzado
+exacto, incluyendo el término de memoria publicada de C10 serie.
+El [diagnóstico sobre trazas propias](docs/BIESTABLE_DEFECTO_MUESTREADO_RESULTADOS.md)
+conserva 496 puntos y separa diferenciación, reloj y coeficientes.
+El [corpus](docs/BIESTABLE_DEFECTO_CARGA_ENTRADAS.md) reconstruye 215
+entradas; doce pruebas nuevas pasan. No añade solves no lineales ni
+conoce todavía el defecto exacto del circuito. Siguiente gate: tasa de
+carga frente a ecuaciones continuas antes de usar un estimador temporal.
+El gate global de 1 mV, física, audio y deadline siguen abiertos.
+
 El [forzamiento relativo a ventanas refinadas](docs/BIESTABLE_FORZAMIENTO_RESULTADOS.md)
 separa residual de ecuaciones y desajuste de memoria publicada. Completa
 1.536 intervalos finos propios y 512 pasos de propagación; los predictores

@@ -36,6 +36,10 @@ tienen razón de timestamps apenas >2. El interpolante matemático sigue
 definido; no se lo presenta como un solve que admite esa razón. Los
 intervalos comandados conservan el dominio <=2.
 
+La mayor componente de esta selección es la carga de **C2**, índice
+grueso 21 con dos subpasos, en **0,002422375488281306 s**. Identificar
+ese máximo no atribuye a C2 por sí sola la brecha global de trayectoria.
+
 El mapeo de la aproximación a KCL usa incidencias y beta; la publicación
 RC serie añade z=R*beta*tau. Su máximo aquí es **5,54896e-21 V**.
 No se compara con el forzamiento relativo del bloque anterior como si
