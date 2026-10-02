@@ -12,6 +12,15 @@ No habrá acceso a una unidad física. El [protocolo sin hardware](VALIDACION_SI
 
 ## Fase B — Solver y banco de pruebas
 
+Los [recintos de Q(v) y magnitud del residual](BIESTABLE_MAGNITUD_RESIDUAL_RESULTADOS.md)
+acotan balance constitutivo y magnitud acumulada en 496 intervalos y un
+soporte mixto. La media cumple 10 pA en 105; el límite puntual certifica
+31 intervalos completos. Reset conserva una cota amplia por pérdida de
+correlación de tasas: próximo corte, estrecharla antes de propagar.
+El [corpus](BIESTABLE_MAGNITUD_RESIDUAL_ENTRADAS.md) reconstruye 262 entradas
+y seis versiones fallidas. Siete regresiones nuevas pasan, con el primer
+intento numérico preservado. 1 mV global, física, audio y deadline siguen abiertos.
+
 El [recinto racional de la integral](BIESTABLE_INTEGRAL_ACOTADA_RESULTADOS.md)
 acota resto y redondeo sobre 496 intervalos y un soporte mixto; todos pasan
 el contraste acotado de Gauss16. Confirma 105 medias polinómicas bajo 10 pA

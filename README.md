@@ -4,6 +4,15 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+Los [recintos de Q(v) y magnitud del residual](docs/BIESTABLE_MAGNITUD_RESIDUAL_RESULTADOS.md)
+acotan balance constitutivo y magnitud acumulada en 496 intervalos y un
+soporte mixto. La media cumple 10 pA en 105; el límite puntual certifica
+31 intervalos completos. Reset conserva una cota amplia por pérdida de
+correlación de tasas: próximo corte, estrecharla antes de propagar.
+El [corpus](docs/BIESTABLE_MAGNITUD_RESIDUAL_ENTRADAS.md) reconstruye 262 entradas
+y seis versiones fallidas. Siete regresiones nuevas pasan, con el primer
+intento numérico preservado. 1 mV global, física, audio y deadline siguen abiertos.
+
 El [recinto racional de la integral](docs/BIESTABLE_INTEGRAL_ACOTADA_RESULTADOS.md)
 acota resto y redondeo sobre 496 intervalos y un soporte mixto; todos pasan
 el contraste acotado de Gauss16. Confirma 105 medias polinómicas bajo 10 pA
