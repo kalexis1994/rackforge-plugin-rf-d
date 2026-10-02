@@ -4,6 +4,12 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+La [trayectoria completa con reloj guardado](docs/BIESTABLE_RELOJ_COMPLETO_COMPENSADO_RESULTADOS.md)
+completa 6.486 intervalos desde un DC fresco idéntico: máximo nodal 6,21 pV
+y memoria 8,77 pV, ambos bajo 10 nV. Cuatro regresiones nuevas pasan.
+Siguiente gate: controlador adaptativo propio con sus rechazos y sombras;
+el contraste temporal global de 1 mV sigue abierto.
+
 La [variante del integrador con residual original](docs/BIESTABLE_INTEGRADOR_COMPENSADO_RESULTADOS.md)
 completa 64/64 intervalos con memoria propia: máximo nodal 2,34×10⁻¹⁵ V,
 320 residuales y 64 Jacobianos idénticos a sus contrastes. Cuatro regresiones

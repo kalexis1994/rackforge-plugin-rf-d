@@ -139,3 +139,5 @@ El [diagnóstico del último rechazo](BIESTABLE_RECHAZO_Y_ORIGEN_CARGA.md) sitú
 La [auditoría estática sobre cuatro ventanas](BIESTABLE_VENTANAS_ESTATICAS_RESULTADOS.md) pasa 64/64 mapas compensados frente a Decimal y 256 solves algebraicos. Las rutas ordinaria/mixta conservan 10/40 discrepancias, respectivamente. Cuatro regresiones pasan; aún no admite integrar desde DC, conmutación física ni audio.
 
 La [variante explícita J66 compensado](BIESTABLE_INTEGRADOR_COMPENSADO_RESULTADOS.md) conserva el residual original y completa 64 intervalos con memoria propia. Nodos/memorias pasan 10 nV; corrientes, correcciones y publicación conservan sus gates. Cuatro regresiones pasan tras corregir un adaptador de presupuesto con fallo archivado. No es trayectoria desde DC, refinamiento global ni admisión de audio/deadline.
+
+El [reloj completo compensado](BIESTABLE_RELOJ_COMPLETO_COMPENSADO_RESULTADOS.md) conserva 6.486 intervalos propios, DC fresco y publicación; máximo nodal 6,21 pV y memoria 8,77 pV bajo 10 nV. Cuatro pruebas pasan. El reloj impuesto no valida el controlador, refinamiento global, física ni audio/deadline.
