@@ -4,6 +4,13 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+La [propagación de las 25 memorias](docs/BIESTABLE_PROPAGACION_DE_MEMORIA.md)
+completa 1024 intervalos hipotéticos y pasa 32 contrastes no lineales en
+cuatro ventanas, con diez regresiones nuevas. La eliminación racional
+cierra los cuatro solves FD; el contraste de mapas pasa 3/4 y conserva
+**reset fallido (1,35×10⁻⁶ frente a 10⁻⁸)**. Son verificaciones locales
+condicionadas al reloj E4G8; el refinamiento global, física y audio siguen pendientes.
+
 La ruta [E4G8 desde DC](docs/BIESTABLE_CRECIMIENTO_DESDE_DC.md) completa 3 ms con 6486 intervalos y 1724 consultas válidas. Crecimiento 0,125 reduce los intentos sólo de 6590 a 6534 y conserva **8,234 mV** frente a D4: falla 1 mV. La sensibilidad E4/E4G8 pasa únicamente su selección consultada con 0,426 mV, sin admitir refinamiento global ni un controlador nuevo.
 
 Los [contraejemplos exactos de memoria BDF2](docs/BIESTABLE_DEFECTO_Y_MEMORIA.md) pasan cinco regresiones: la diferencia completo/medios puede ocultar error previo común o cancelarse con errores distintos. Las identidades escalares explicitan el límite de la inferencia, sin calibrar el circuito.

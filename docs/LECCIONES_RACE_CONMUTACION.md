@@ -57,3 +57,24 @@ La [sonda no lineal Q25/Q15](BIESTABLE_CARGA_NO_LINEAL.md) mantiene las tres ra�
 El [barrido adaptativo desde DC](BIESTABLE_TRAYECTORIA_ADAPTATIVA.md) separa aceptación local, cobertura final y refinamiento: 2982 intervalos pasan sus solves, pero la política estricta se detiene y el intervalo común difiere 5,006 V. Registrar el estado previo de cada rechazo y comprobar los pasos guardados permite conservar ese fallo. Un estimador propio por duplicación de paso y un descriptor congelado no son un oráculo independiente ni una prueba de estabilidad de toda la trayectoria.
 
 El [diagnóstico de C2 y del origen de Q](BIESTABLE_RECHAZO_Y_ORIGEN_CARGA.md) añade dos verificaciones: contrastar el residuo con los vecinos representables cuando C/dt crece, y probar que el control de error conserva su significado al cambiar referencias convencionales del estado. Una corrección menor que un ULP no equivale a cerrar KCL. Una métrica nueva debe declarar por qué reemplaza la anterior; la traza rechazada permanece como evidencia y no se convierte retroactivamente en un éxito.
+
+## Propagación de memoria: tres contrastes distintos
+
+El [experimento de 25 memorias](BIESTABLE_PROPAGACION_DE_MEMORIA.md)
+separa error hacia atrás de JX=B, coincidencia del mapa mixto/FD y respuesta
+no lineal a direcciones finitas. Un solve algebraicamente exacto sobre
+coeficientes binary64 no vuelve exacta la derivada FD. Cuatro direcciones
+que pasan 32 contrastes no admiten las 25 columnas de un mapa completo:
+reset conserva el fallo mixto/FD de 1,35×10⁻⁶.
+
+Derivar la transferencia del integrador real y conservar ambas memorias,
+intervalos y fuentes. Declarar unidades y escalas: dividir cargas por 1 pF
+es una coordenada, no identificar una capacitancia física. C10 con resistencia
+serie tiene contribución directa de su memoria; omitirla altera el mapa.
+Las memorias inyectadas son hipotéticas, nunca estados pasados aceptados.
+
+Si un solve matricial falla por cancelación, preservar el intento y verificar
+el residuo con otra aritmética antes de cambiar gates o coeficientes. RF-D
+archiva el fallo sin equilibrar, los tres FD refinados fallidos y un suplemento
+racional sobre los mismos J/B. La sensibilidad a FD requiere otro protocolo
+previo y otro informe; los resultados anteriores permanecen intactos.

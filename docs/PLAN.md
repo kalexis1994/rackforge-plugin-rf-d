@@ -12,6 +12,14 @@ No habrá acceso a una unidad física. El [protocolo sin hardware](VALIDACION_SI
 
 ## Fase B — Solver y banco de pruebas
 
+La [propagación de memoria](BIESTABLE_PROPAGACION_DE_MEMORIA.md) añade mapas
+94×25 y 25×25, 1024 intervalos hipotéticos y 32 contrastes centrales, todos
+completos. Diez regresiones conservan publicaciones, solve refinado y
+fallos originales. El suplemento racional resuelve cuatro matrices FD,
+pero reset falla el gate de mapa (1,35×10⁻⁶ >10⁻⁸). Próximo bloque:
+sensibilidad FD estática/dinámica declarada antes de ejecutar; luego más
+direcciones y longitud temporal. No hay cota acumulada admitida.
+
 El [contorno cargado de 94 nodos](CONTORNO_CADENA_94_Y_ESTABILIDAD.md) conserva 21 cargas y deja C2/reset como incógnitas reales. El barrido temporal acepta 370 pasos antes de rechazos cercanos a la conmutación. La [búsqueda ampliada](BIESTABLE_TRES_RAICES_Y_CARGA_RAPIDA.md) encuentra tres raíces, y la auditoría de cargas rápidas muestra una inestabilidad omitida en la intermedia. Próximo corte: leyes de carga de juntura y dominio de los puntos de operación; no hay selección física de raíz admitida.
 
 1. Crear un solver fuera de tiempo real para VCO, mixer, filtro, contornos, VCA y salida; derivar frecuencia, transferencia, puntos DC y transitorios.

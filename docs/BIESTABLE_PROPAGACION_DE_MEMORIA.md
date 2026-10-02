@@ -119,3 +119,81 @@ coeficientes ya redondeados; no convierte FD en derivación exacta del
 circuito ni amplía la cobertura de direcciones/tiempo.
 
 `python tools/loudness_latch_bdf_fd_transfer_audit.py`
+
+## Resultado de las cuatro ventanas
+
+Las 64 continuaciones hipotéticas completan **1024 intervalos nuevos**, más
+64 de replay de referencia, sin alterar el reloj ni las memorias entrantes.
+Los **32/32 contrastes centrales** pasan el gate declarado. El mayor error
+normalizado es 0,00019610 (reset, C2 diferencial, amplitud 1; límite 1).
+Los 64 mapas mixtos pasan ambos gates algebraicos; su máximo es
+7,97201×10⁻¹¹ en ataque, bajo el límite 10⁻¹⁰.
+
+| Ventana | Máxima KCL publicada (A) | Respuesta C2 actual (µV) | C2 común (µV) | C2 diferencial (µV) | Memoria fino−completo (nV) |
+| --- | --- | --- | --- | --- | --- |
+| Prefijo | 1,64609×10⁻¹² | 1,49999 | 0,999999 | 1,99998 | 3,39891 |
+| Ataque | 1,32962×10⁻¹³ | 1,58052 | 1,13723 | 2,02382 | 15,6358 |
+| Reset | 3,67139×10⁻¹⁵ | 1,50000 | 1,00000 | 2,00000 | 4,35447 |
+| Cola | 6,83719×10⁻¹⁴ | 1,49997 | 0,999999 | 1,99995 | 11,0384 |
+
+Son máximos centrales entre los 94 nodos y 16 intervalos, a amplitud 1.
+La última columna usa la diferencia de memorias del anclaje guardado;
+no representa un error exacto ni explica por sí sola el máximo desde DC.
+Las respuestas a amplitud 0,5 se contrastan por separado.
+
+## Resultado del suplemento racional
+
+Las cuatro matrices Jfd/B tienen residuo racional exactamente cero antes
+de redondear X. Después del redondeo, los errores hacia atrás binarios y
+Decimal80 quedan por debajo de 1,329×10⁻¹⁶ y 9,741×10⁻¹⁷ respectivamente.
+Eso cierra el contraste algebraico del suplemento, con los coeficientes
+originales intactos. El contraste de mapas pasa **3/4**:
+
+| Ventana | Diferencia escalada mixta/FD | Gate 10⁻⁸ |
+| --- | --- | --- |
+| Prefijo | 8,66717×10⁻¹⁰ | Pasa |
+| Ataque | 1,74284×10⁻⁹ | Pasa |
+| Reset | **1,34857×10⁻⁶** | **Falla** |
+| Cola | 1,06786×10⁻⁹ | Pasa |
+
+En reset, el máximo corresponde a fila nodal 27, columna de memoria 10:
+X mixto=0,9951210990927287 frente a Xfd=0,99511840853223. Esta localización
+es una inspección posterior de las matrices archivadas, sin nueva admisión.
+Las cuatro direcciones no lineales verificadas no cubren las 25 columnas
+independientes: su éxito no cierra el gate de la matriz completa.
+
+Se preservan los tres fallos algebraicos originales del solve FD iterativo,
+el primer intento sin equilibrar y el fallo de mapa en reset. El suplemento
+no reescribe ninguno ni cambia el paso FD de ±1 µV.
+
+## Evidencia y regresiones
+
+- [Ventanas completas](../evidence/loudness_latch_bdf_memory_windows.json.gz):
+  7.719.625 bytes, SHA256 comprimido
+  `ca71f1e36ad995719e31155b478cee5ad1824deef248005a04bee137359d359c`.
+- [Resumen de ventanas](../evidence/loudness_latch_bdf_memory_windows_summary.json).
+- [Suplemento FD](../evidence/loudness_latch_bdf_memory_fd_audit.json.gz):
+  111.879 bytes, SHA256 comprimido
+  `12a88c2146e6bb7f2b658a96b67f59e975463457d2e8beb6f1dfd37cbb7e0d94`.
+- [Resumen FD](../evidence/loudness_latch_bdf_memory_fd_audit_summary.json).
+- [Recibo de validación](../evidence/loudness_latch_bdf_memory_windows_validation.json):
+  **3+7=10 pruebas**, un intento exitoso, comandos/exit codes/salida y
+  hashes de entradas sin cambios. Comprueba el fallo original, los sellos,
+  todas las publicaciones, 32 contrastes, replay de 64 intervalos no lineales
+  seleccionados y las cuatro eliminaciones racionales.
+
+`python tools/validate_bdf_memory_windows.py`
+
+El HEAD contextual de las ventanas es `910c6e2`; el del suplemento y de las
+regresiones es `a22d2f1`. Los SHA identifican los bytes reales de entrada;
+el commit que archiva sus resultados puede ser posterior.
+
+## Siguiente gate
+
+Auditar la sensibilidad del contraste FD de reset a su paso y al cálculo
+separado de las contribuciones estáticas/dinámicas, conservando el fallo
+original de ±1 µV. Declarar esa auditoría antes de ejecutar y retener todos
+sus resultados, sin escoger un paso por el resultado favorable. Después,
+contrastar más direcciones de memoria y ventanas más largas antes de usar
+los mapas para estimar error acumulado. Los gates global de 1 mV, físico,
+audio y deadline permanecen abiertos.
