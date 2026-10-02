@@ -4,6 +4,16 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+La [curvatura derivada del circuito y su publicación](docs/BIESTABLE_CURVATURA_RESULTADOS.md)
+propaga 1.536 segundas variaciones con ambos historiales y cero ajuste a
+respuestas. El [contraste reservado](docs/BIESTABLE_RESPUESTA_CUADRATICA_RESULTADOS.md)
+completa 9.216 solves nuevos: predictor cuadrático 72/72 individual y
+72/72 par, frente a 54/72 individual lineal, con sus 18 fallos conservados.
+El [corpus ampliado](docs/BIESTABLE_CURVATURA_ENTRADAS.md) reconstruye 186
+entradas y tres pruebas fallidas; este bloque suma once pruebas nuevas.
+Siguiente gate: derivar el forzamiento temporal sobre los historiales reales.
+El gate de 1 mV desde DC, identificación física, audio y deadline siguen abiertos.
+
 El [controlador E4G8 con Newton compensado](docs/BIESTABLE_CONTROLADOR_COMPENSADO_RESULTADOS.md)
 reproduce decisiones y reloj: 6.486 publicados, 12.968 provisionales y 49
 rechazos conservados. Sus estados publicados son idénticos al ensayo de
