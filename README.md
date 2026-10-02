@@ -4,6 +4,12 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+El [controlador E4G8 con Newton compensado](docs/BIESTABLE_CONTROLADOR_COMPENSADO_RESULTADOS.md)
+reproduce decisiones y reloj: 6.486 publicados, 12.968 provisionales y 49
+rechazos conservados. Sus estados publicados son idénticos al ensayo de
+reloj fijo. Cinco regresiones nuevas pasan; D4/E4 siguen fallando 1 mV.
+Próximo gate: sensibilidad y memoria acumulada con sellos auditados.
+
 La [trayectoria completa con reloj guardado](docs/BIESTABLE_RELOJ_COMPLETO_COMPENSADO_RESULTADOS.md)
 completa 6.486 intervalos desde un DC fresco idéntico: máximo nodal 6,21 pV
 y memoria 8,77 pV, ambos bajo 10 nV. Cuatro regresiones nuevas pasan.

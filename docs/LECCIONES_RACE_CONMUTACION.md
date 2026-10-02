@@ -120,3 +120,12 @@ En este contraste la escala de cargas 10⁻¹² C/V es una coordenada numérica,
 no un capacitor añadido al circuito. Los gates de voltaje, memoria, matriz,
 solve y publicación requieren recibos separados. Conservar fallos de cada
 ruta y del controlador global desde DC antes de declarar otra promoción.
+
+El [reloj completo](BIESTABLE_RELOJ_COMPLETO_COMPENSADO_RESULTADOS.md) y el
+[controlador propio](BIESTABLE_CONTROLADOR_COMPENSADO_RESULTADOS.md) son gates
+separados. DC, decisiones, reloj, estados y publicación requieren sus
+contrastes; las sombras no deben modificar la memoria aceptada. Una copia
+explícita del driver necesita AST con cambio único, identidad de funciones,
+política y fuentes. Distinguir J de Newton de la derivada del guard modal.
+La equivalencia del controlador no corrige el estimador global: conservar
+los fallos D4/E4 aunque nodos y memorias pasen a reloj común.
