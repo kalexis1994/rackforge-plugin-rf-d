@@ -4,6 +4,12 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+La [variante del integrador con residual original](docs/BIESTABLE_INTEGRADOR_COMPENSADO_RESULTADOS.md)
+completa 64/64 intervalos con memoria propia: máximo nodal 2,34×10⁻¹⁵ V,
+320 residuales y 64 Jacobianos idénticos a sus contrastes. Cuatro regresiones
+pasan en el segundo intento; el fallo del adaptador queda conservado.
+Próximo gate: trayectoria completa con reloj guardado, luego refinamiento.
+
 La [auditoría de 64 intervalos guardados](docs/BIESTABLE_VENTANAS_ESTATICAS_RESULTADOS.md)
 pasa 64/64 mapas compensados; el ordinario pasa 54/64 y el mixto histórico
 24/64. Los 256 solves pasan sus gates algebraicos y cuatro regresiones nuevas
