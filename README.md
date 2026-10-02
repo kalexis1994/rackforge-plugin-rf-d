@@ -4,6 +4,12 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+La [transcripción estática independiente](docs/BIESTABLE_PRECISION_ESTATICA_RESULTADOS.md)
+pasa cuatro comparaciones de corrientes, 28 solves matriciales y cinco
+regresiones nuevas. Los mapas anteriores difieren de la referencia Decimal
+en ataque y reset. FD Decimal pasa en los tres pasos más finos; 48 inyecciones
+completan sus solves. El siguiente corte contrasta sellos analíticos binary64.
+
 La [auditoría de sensibilidad FD](docs/BIESTABLE_RESULTADOS_SENSIBILIDAD_FD.md)
 resuelve 40 matrices con precisión racional y pasa tres regresiones nuevas.
 Reset falla en los cinco pasos probados y ambas rutas estática/dinámica;

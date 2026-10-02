@@ -1,5 +1,13 @@
 # Matriz de fidelidad
 
+La [transcripción estática Decimal](BIESTABLE_PRECISION_ESTATICA_RESULTADOS.md)
+verifica el bloque de audio de 66 nodos: cuatro contrastes de corriente,
+28 solves y 12/20 contrastes FD de derivada/mapa. Los mapas anteriores
+pasan sólo prefijo/cola frente a la nueva referencia; ataque/reset fallan.
+48 inyecciones y cinco regresiones pasan bajo sus gates propios. El resto
+del modelo espacial y las cargas dinámicas siguen compartidos; no admite
+refinamiento global, hardware ni audio.
+
 La [sensibilidad FD](BIESTABLE_RESULTADOS_SENSIBILIDAD_FD.md) conserva
 40 matrices: todas pasan álgebra, seis comparaciones de mapa pasan
 (tres ventanas repetidas en dos rutas), y las diez de reset fallan.

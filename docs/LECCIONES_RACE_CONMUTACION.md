@@ -91,3 +91,11 @@ identifica tres JSON LF en Git/CRLF en Windows y archiva las fuentes exactas.
 Un SHA de entrada puede identificar bytes materializados distintos del blob.
 Fijar ambas identidades y una reconstrucción que rechace cambios de datos;
 no modificar evidencia pasada para aparentar un checkout idéntico.
+
+La [transcripción estática independiente](BIESTABLE_PRECISION_ESTATICA_RESULTADOS.md)
+contrasta corrientes, derivadas, precisión Decimal80/100 y mapas por separado.
+Dos FD que comparten aritmética pueden coincidir sin detectar sensibilidad
+del tangente. Conservar el balance de ramas pasivas y componentes muy débiles;
+un residuo de corrientes casi idéntico no prueba un Jacobiano preciso.
+La cobertura independiente se limita al bloque transcrito, aunque su mapa
+se resuelva dentro de un sistema mayor que comparte otras derivadas.

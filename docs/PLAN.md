@@ -12,6 +12,12 @@ No habrá acceso a una unidad física. El [protocolo sin hardware](VALIDACION_SI
 
 ## Fase B — Solver y banco de pruebas
 
+La [precisión estática](BIESTABLE_PRECISION_ESTATICA_RESULTADOS.md) localiza
+sensibilidad de los mapas FD de audio: corrientes coinciden, pero ataque/reset
+fallan frente a la nueva referencia analítica Decimal. Pasan cinco regresiones
+y 48 inyecciones. Siguiente bloque: contraste previo de sellos binary64,
+seguido de ventanas de integración; no se cambia todavía el integrador.
+
 La [sensibilidad FD](BIESTABLE_RESULTADOS_SENSIBILIDAD_FD.md) completa 40
 matrices y tres regresiones. Ninguno de los cinco pasos ni de las dos rutas
 cierra reset; no hay convergencia monótona ni cambio de paso seleccionado.
