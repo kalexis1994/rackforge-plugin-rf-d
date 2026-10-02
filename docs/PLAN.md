@@ -12,6 +12,12 @@ No habrá acceso a una unidad física. El [protocolo sin hardware](VALIDACION_SI
 
 ## Fase B — Solver y banco de pruebas
 
+La [auditoría de 64 intervalos guardados](BIESTABLE_VENTANAS_ESTATICAS_RESULTADOS.md)
+pasa 64/64 mapas compensados; el ordinario pasa 54/64 y el mixto histórico
+24/64. Los 256 solves pasan sus gates algebraicos y cuatro regresiones nuevas
+preservan todos los fallos. Siguiente contraste: variante explícita del
+integrador con el mismo residual, reloj e historial, sin admisión global.
+
 Los [sellos binarios](BIESTABLE_SELLOS_BINARIOS_RESULTADOS.md) compensados
 pasan 4/4 mapas de un intervalo frente a Decimal; el ordinario falla en
 reset. Próximo corte: ventanas más largas y variante explícita del integrador

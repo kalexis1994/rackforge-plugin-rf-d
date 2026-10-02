@@ -106,3 +106,17 @@ El redondeo del recíproco resistivo y su acumulación requiere comprobación
 de mapa además de componente. Compensar en preparación es una candidata
 numérica contrastada; cuatro puntos no admiten integrar toda una trayectoria
 ni omitir el deadline. Contar por separado datos reutilizados y solves nuevos.
+
+Los protocolos de [64 candidatos guardados](BIESTABLE_VENTANAS_ESTATICAS_PROTOCOLO.md)
+y [variante explícita del integrador](BIESTABLE_INTEGRADOR_COMPENSADO_PROTOCOLO.md)
+separan dos nuevos alcances: precisión del tangente durante una ventana y
+acumulación de una implementación que cambia sólo J. Antes de avanzar,
+comparar bits del residual en candidatos y desplazamientos, verificar las
+matrices y heredar solve/publicación. Continuar con las memorias propias;
+no sustituirlas a cada paso por la referencia. Una diferencia de trayectoria
+puede fallar aunque cada solve conserve KCL, cargas y reloj.
+
+En este contraste la escala de cargas 10⁻¹² C/V es una coordenada numérica,
+no un capacitor añadido al circuito. Los gates de voltaje, memoria, matriz,
+solve y publicación requieren recibos separados. Conservar fallos de cada
+ruta y del controlador global desde DC antes de declarar otra promoción.

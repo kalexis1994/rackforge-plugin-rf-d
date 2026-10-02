@@ -4,6 +4,12 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+La [auditoría de 64 intervalos guardados](docs/BIESTABLE_VENTANAS_ESTATICAS_RESULTADOS.md)
+pasa 64/64 mapas compensados; el ordinario pasa 54/64 y el mixto histórico
+24/64. Los 256 solves pasan sus gates algebraicos y cuatro regresiones nuevas
+preservan todos los fallos. Siguiente contraste: variante explícita del
+integrador con el mismo residual, reloj e historial, sin admisión global.
+
 Los [sellos analíticos binary64](docs/BIESTABLE_SELLOS_BINARIOS_RESULTADOS.md)
 con recíprocos compensados pasan los cuatro mapas frente a Decimal; el
 ordinario conserva reset fallido. Cuatro regresiones nuevas verifican los
