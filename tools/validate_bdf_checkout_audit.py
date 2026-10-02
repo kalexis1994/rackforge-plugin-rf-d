@@ -20,7 +20,7 @@ SUITES=(("test_loudness_latch_bdf_checkout_audit.py",2),)
 def generate():
     tests=[ROOT/"tests"/name for name,_ in SUITES]
     paths=tuple(dict.fromkeys((*PATHS,DATA,DATA_SUMMARY,*tests,
-                             Path(__file__).resolve(),ROOT/".gitattributes")))
+                             Path(__file__).resolve(),ROOT/".gitattributes",ROOT/"evidence/.gitattributes")))
     def snapshots():
         return {p.relative_to(ROOT).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in paths}
     before=snapshots();env=environment();results=[]

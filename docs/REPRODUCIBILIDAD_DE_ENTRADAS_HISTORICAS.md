@@ -50,13 +50,21 @@ ni portabilidad de BLAS, Python o de un compilador.
 `python tools/validate_bdf_checkout_audit.py`
 
 El [recibo](../evidence/loudness_latch_bdf_checkout_audit_validation.json)
-registra **2/2 pruebas** en un intento exitoso, comandos/salida/exit codes y
+registra **2/2 pruebas** por intento, comandos/salida/exit codes y
 entradas sin cambios. Reconstruye las 49 entradas desde los blobs fijados,
 verifica todos sus SHA originales y rechaza cambios de datos o identidades.
 Los productores previos y sus tres informes permanecen intactos; no se
 repite el experimento ni se modifica un gate numérico.
 
-El HEAD contextual es `02fb815`. El archivo del auditor se identifica además
+El HEAD contextual del productor y primer intento es `02fb815`; el segundo
+intento de validación parte de `3ba7b82`. El archivo del auditor se identifica además
 por sus bytes SHA y queda archivado en el commit posterior. Este complemento
 cierra la reconstrucción de estas entradas históricas; conserva abiertos
 los mismos gates de mapa, refinamiento temporal, física y audio.
+
+Los nuevos resúmenes/recibos de esta auditoría usan una regla `-text` local
+en `evidence/.gitattributes`, conservando sus bytes LF también en futuros
+checkouts Windows. La regla afecta únicamente esos nuevos JSON y deja
+intactas las políticas históricas y el `.gitattributes` raíz congelado como
+entrada del barrido FD. Tras fijarla se repite la validación; ambos intentos
+exitosos se conservan, con la política local incluida en el segundo recibo.
