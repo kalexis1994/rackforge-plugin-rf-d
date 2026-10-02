@@ -4,6 +4,18 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+El [forzamiento relativo a ventanas refinadas](docs/BIESTABLE_FORZAMIENTO_RESULTADOS.md)
+separa residual de ecuaciones y desajuste de memoria publicada. Completa
+1.536 intervalos finos propios y 512 pasos de propagación; los predictores
+lineal y cuadrático pasan sus gates. El
+[intento inicial](docs/BIESTABLE_FORZAMIENTO_INTENTO_INICIAL.md) conserva
+dos bloqueos de reloj y un error de formato del RHS. El
+[corpus](docs/BIESTABLE_FORZAMIENTO_ENTRADAS.md) reconstruye 201 entradas
+y cuatro pruebas fallidas; once pruebas nuevas verifican este bloque.
+Este forzamiento se extrae de una referencia ya calculada y no es un
+estimador independiente. Siguiente gate: error de diferenciación de cargas
+sobre historiales reales. El gate temporal global de 1 mV permanece abierto.
+
 La [curvatura derivada del circuito y su publicación](docs/BIESTABLE_CURVATURA_RESULTADOS.md)
 propaga 1.536 segundas variaciones con ambos historiales y cero ajuste a
 respuestas. El [contraste reservado](docs/BIESTABLE_RESPUESTA_CUADRATICA_RESULTADOS.md)
