@@ -4,6 +4,7 @@ import math
 import numpy as np
 from loudness_latch_increment_reference import pair
 from loudness_latch_bdf_reference import coefficients
+from loudness_latch_bdf_transfer_solve import solve
 
 CHARGE_SCALE_C_PER_V=1e-12  # Coordinate scale only, not a physical capacitance.
 
@@ -74,12 +75,11 @@ def transfer(network,old,new,diag,use_fd=False):
     evaluate=network.network.increment_evaluator(new.key_v,virtual,dt)
     _,j=evaluate(np.array(diag["increment_v"]),use_fd=use_fd)
     b,p,direct=stamps(network,new,dt)
-    x=np.linalg.solve(j,b);t=p@x+direct
+    x,audit=solve(j,b);t=p@x+direct
     if not np.isfinite(x).all() or not np.isfinite(t).all():raise ValueError("finite transfer matrices required")
-    denominator=np.abs(j)@np.abs(x)+np.abs(b)
-    residual=np.abs(j@x-b)
-    backward=np.divide(residual,denominator,out=np.zeros_like(residual),where=denominator>0)
-    return dict(coefficients=c,node_map=x,memory_map=t,max_componentwise_backward_error=float(np.max(backward)))
+    return dict(coefficients=c,node_map=x,memory_map=t,linear_solve=audit,
+        max_componentwise_backward_error=max(audit["binary_componentwise_backward_error"],
+                                             audit["decimal80_componentwise_backward_error"]))
 
 
 def propagate(operator,current,previous):

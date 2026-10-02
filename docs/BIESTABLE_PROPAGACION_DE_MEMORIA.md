@@ -78,3 +78,22 @@ Fuentes y E4G8 se identifican por SHA antes/después. El archivo canónico
 gzip y su resumen conservan todos los estados, matrices y rechazos propios;
 los informes anteriores permanecen intactos. No hay promoción de un
 controlador, refinamiento global, error exacto, hardware ni audio.
+
+## Primer intento y solve equilibrado
+
+El productor declarado en `4f958b1` falla en el primer mapa de prefijo:
+error componente a componente **0,99999547**, frente a gate 10⁻¹⁰.
+El número de condición de J es ≈1,983×10¹⁶; el componente que dispara
+el rechazo tiene denominador ≈9,985×10⁻²⁸. El intento conserva su matriz,
+estado inicial, paso de referencia, fuentes originales completas, SHA y
+fallo en `evidence/loudness_latch_bdf_memory_windows_attempt1.json.gz`.
+
+La segunda revisión usa escalado de filas/columnas y hasta **ocho**
+correcciones de refinamiento, con el residuo de los mismos J/B evaluado
+en Decimal80. Se exige el **mismo 10⁻¹⁰** tanto al residuo binario anterior
+como al residuo Decimal80. No se cambia J, B, topología, gate de Newton
+o una memoria de referencia, ni se recortan coeficientes pequeños.
+
+La sonda del primer mapa necesita una corrección y da ≈4,15×10⁻¹³ en
+ambas medidas. Eso habilita repetir el experimento completo; no sustituye
+sus contrastes no lineales ni el diagnóstico completamente FD.

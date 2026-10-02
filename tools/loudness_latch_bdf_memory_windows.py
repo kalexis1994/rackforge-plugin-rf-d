@@ -26,7 +26,9 @@ RELATIVE_GATE=1e-3
 BACKWARD_GATE=1e-10
 JACOBIAN_GATE=1e-8
 PATHS=tuple(dict.fromkeys((*SOURCE_PATHS,SOURCE,Path(__file__).resolve(),
-                         ROOT/"tools/loudness_latch_bdf_memory_transfer.py")))
+                         ROOT/"tools/loudness_latch_bdf_memory_transfer.py",
+                         ROOT/"tools/loudness_latch_bdf_transfer_solve.py",
+                         ROOT/"evidence/loudness_latch_bdf_memory_windows_attempt1.json.gz")))
 
 
 def checked_step(network,old,h):
