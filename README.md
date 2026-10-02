@@ -4,6 +4,17 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+El [descriptor continuo](docs/BIESTABLE_DESCRIPTOR_CONTINUO_RESULTADOS.md)
+separa 94 voltajes y 25 tasas de memoria. Ocho inversas de matrices levantadas
+119×119 quedan certificadas; los mapas binary64 mantienen sus gates fallidos.
+Se preserva y corrige un error de norma integrada del forzamiento con un
+contraejemplo temporal. Las cotas válidas pertenecen sólo a operadores
+congelados: las cotas sin pesos son enormes fuera de reset.
+El [corpus](docs/BIESTABLE_DESCRIPTOR_CONTINUO_ENTRADAS.md) reconstruye 295
+entradas y siete versiones fallidas; once regresiones nuevas pasan.
+Siguiente corte: pesos declarados, coeficientes ideales y variación temporal,
+restos no lineales, anclaje y cobertura. **1 mV global sigue abierto**.
+
 La [variante de tasas correlacionadas](docs/BIESTABLE_TASAS_CORRELACIONADAS_RESULTADOS.md)
 conserva cancelaciones entre C(v)*v′ y Qpol′: los intervalos completos
 certificados bajo 10 pA pasan de 31 a 105. En reset N4, el límite puntual
