@@ -97,3 +97,7 @@ Decimal, antes de incorporarlos a un integrador. El experimento debe conservar
 las leyes, residuos y memorias, declarar sus gates y retener fallos sin
 alterar la referencia. Después repetir ventanas de integración y contraste
 temporal completo. Los parámetros físicos, audio y deadline siguen abiertos.
+
+La [auditoría de entradas](BIESTABLE_PRECISION_ESTATICA_ENTRADAS.md)
+reconstruye los 124 SHA del corpus ampliado desde Git y tres archivos
+históricos exactos, sin modificar estos resultados numéricos.

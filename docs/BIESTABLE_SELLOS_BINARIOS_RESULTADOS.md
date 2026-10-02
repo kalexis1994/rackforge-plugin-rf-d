@@ -79,3 +79,7 @@ conveniencia. Después repetir el refinamiento temporal desde DC.
 El solver original permanece intacto. No se admite una trayectoria nueva,
 error acumulado, conmutación física, audio ni deadline; el fallo del mapa
 FD original y el gate global de 1 mV permanecen archivados y abiertos.
+
+La [auditoría de entradas](BIESTABLE_PRECISION_ESTATICA_ENTRADAS.md)
+reconstruye los 124 SHA del corpus ampliado desde Git y tres archivos
+históricos exactos, sin modificar estos resultados numéricos.
