@@ -4,6 +4,16 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+El [balance de carga integrado](docs/BIESTABLE_BALANCE_GAUSS_RESULTADOS.md)
+compara carga interpolada y Q(v) constitutiva, con puentes en el soporte
+mixto del knee. Gauss 8/16 pasa en los 496 intervalos y ese soporte;
+el [primer contraste Simpson](docs/BIESTABLE_BALANCE_CARGA_RESULTADOS.md)
+conserva sus 371 fallos. El residual medio cumple 10 pA en 105 intervalos
+y conserva 391 incumplimientos. El [corpus](docs/BIESTABLE_BALANCE_CARGA_ENTRADAS.md)
+reconstruye 246 entradas y cinco versiones de pruebas fallidas.
+Siguiente corte: cota de cuadratura y magnitud/propagación del residual.
+El criterio global de 1 mV, física, audio y deadline siguen abiertos.
+
 La [reconstrucción interior](docs/BIESTABLE_CARGA_INTERIOR_RESULTADOS.md)
 consulta 1.488 puntos y certifica las 21 restricciones capacitivas en los
 496 intervalos del polinomio. KCL pasa 315 consultas y conserva 1.173

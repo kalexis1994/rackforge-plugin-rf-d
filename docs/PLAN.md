@@ -114,6 +114,13 @@ El [grafo eléctrico y oráculo de placa 2](CONTORNO_VOLUMEN_CIRCUITO.md) recons
 
 ## Primer corte de implementación
 
+El [balance integrado con variante Gauss](BIESTABLE_BALANCE_GAUSS_RESULTADOS.md)
+completa 496 intervalos y el soporte mixto, conservando los fallos Simpson.
+Componer Q(v) no elimina el residual: 391 medias quedan sobre 10 pA.
+Próximo corte: cota del resto de cuadratura y magnitud/propagación del
+residual antes de convertir el balance firmado en error global desde DC.
+Los intervalos seleccionados no son contiguos; no se suman como trayectoria.
+
 La [reconstrucción interior de cargas](BIESTABLE_CARGA_INTERIOR_RESULTADOS.md)
 certifica restricciones lineales sobre los 496 intervalos reconstruidos y
 consulta 1.488 puntos. KCL conserva 1.173 incumplimientos. La cubierta del
