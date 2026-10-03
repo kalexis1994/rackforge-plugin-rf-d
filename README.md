@@ -4,6 +4,16 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+La [comparación dirigida de bloques](docs/BIESTABLE_COMPARACION_BLOQUES_RESULTADOS.md)
+propaga seis grupos físicos con **64 núcleos de extremo y 64 de pico**.
+Las ocho cotas bajan: prefijo N4 da término forzado ~33,72 µV y reset N4
+~0,487 µV con anclaje cero hipotético. Ataque/cola siguen enormes.
+El [corpus](docs/BIESTABLE_COMPARACION_BLOQUES_ENTRADAS.md) verifica **324 entradas**
+de 55 informes y conserva ocho versiones fallidas anteriores de tests.
+Ocho regresiones nuevas pasan al primer intento.
+El anclaje y los restos no lineales siguen pendientes. **1 mV global sigue abierto**.
+Próximo corte: cancelaciones internas del grupo de junturas y cobertura completa.
+
 La [propagación por celdas](docs/BIESTABLE_PROPAGACION_CELDAS_RESULTADOS.md)
 reconstruye **64 inversas estructuradas** y distribuye el residual en cada
 celda. Las ocho cotas tangentes bajan; reset N4 da término forzado
