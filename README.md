@@ -4,6 +4,17 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+La [variante RMS de junturas](docs/BIESTABLE_JUNTURAS_RMS_RESULTADOS.md)
+conserva signos en la parte simétrica y convierte todos los acoplamientos,
+forzamientos y mapas nodales. Ataque/cola mejoran, prefijo empeora y reset
+queda prácticamente igual; se conserva la comparación completa. Cola N4
+da término forzado hipotético ~1,31 mV, con anclaje todavía desconocido.
+El [corpus](docs/BIESTABLE_JUNTURAS_RMS_ENTRADAS.md) verifica **335 entradas**
+de 57 informes y preserva ocho versiones fallidas anteriores de tests.
+Siete regresiones nuevas pasan al primer intento.
+**1 mV global sigue abierto.** Próximo corte: certificado espectral racional
+de la parte simétrica para distinguir la pérdida de Gershgorin.
+
 La [comparación dirigida de bloques](docs/BIESTABLE_COMPARACION_BLOQUES_RESULTADOS.md)
 propaga seis grupos físicos con **64 núcleos de extremo y 64 de pico**.
 Las ocho cotas bajan: prefijo N4 da término forzado ~33,72 µV y reset N4
