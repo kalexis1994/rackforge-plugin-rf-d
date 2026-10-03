@@ -100,12 +100,18 @@ class WeightedDescriptor(unittest.TestCase):
                     ctx.prec=160
                     x=[dense.law.decimal_fraction(dense.poly.evaluate(p,u)) for p in prepared['x']]
                 h,_=descriptor(network,g,x,120);hf=[[F(v) for v in row] for row in h]
+                # Decimal120 is a numerical witness, not an exact rational H.
+                # A separate comparison budget protects exact structural zeros.
+                # This margin is not used by the interval proof or circuit gates.
+                coefficient_comparison_budget=F(1,10**100)*(1+max(abs(v) for row in hf for v in row))
                 columns=[[(k,hf[k][j]) for k in range(119) if hf[k][j]] for j in range(119)]
                 intervals=c['ideal_temporal_cover'][cell]['preconditioned_defect_intervals']
                 for i in range(119):
                     for j in range(119):
                         e=(F(i==j)-sum((inverse[i][k]*v for k,v in columns[j]),F(0)))*scales[i]/scales[j]
-                        a,b=map(F,intervals[i][j]);self.assertLessEqual(a,e,(c['window'],u,i,j));self.assertLessEqual(e,b,(c['window'],u,i,j))
+                        a,b=map(F,intervals[i][j])
+                        margin=coefficient_comparison_budget*scales[i]/scales[j]*sum(map(abs,inverse[i]),F(0))
+                        self.assertLessEqual(a-margin,e,(c['window'],u,i,j));self.assertLessEqual(e,b+margin,(c['window'],u,i,j))
 
     def test_cover_contractions_budget_replays_and_selected_full_replays(self):
         network=dense.CompensatedBdfNetwork(200,dense.model_parameters(1,'finite_transit'));g=dense.curvature.graph(network,10.)
