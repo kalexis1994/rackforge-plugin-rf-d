@@ -14,7 +14,9 @@ SUMMARY=ROOT/'evidence/loudness_latch_bdf_static_precision_weighted_descriptor_s
 PROTOCOL=ROOT/'docs/BIESTABLE_DESCRIPTOR_PONDERADO_PROTOCOLO.md'
 PATHS=tuple(dict.fromkeys((*prior.PATHS,prior.OUTPUT,prior.SUMMARY,
     ROOT/'evidence/loudness_latch_bdf_static_precision_descriptor_forcing_norm_validation.json',
-    Path(__file__).resolve(),Path(law.__file__).resolve(),PROTOCOL)))
+    Path(__file__).resolve(),Path(law.__file__).resolve(),PROTOCOL,
+    ROOT/'evidence/loudness_latch_bdf_static_precision_weighted_descriptor_parse_attempt.json',
+    ROOT/'evidence/loudness_latch_bdf_static_precision_weighted_descriptor_helper_parse_attempt.json')))
 
 
 def generate():

@@ -76,7 +76,7 @@ def compile_terms(network,g,prepared,inverse,scales):
     for q in g['bjts']:
         b,c,e=q['base'],q['collector'],q['emitter'];bf=F(q['beta_forward']);br=F(q['beta_reverse']);vt=F(q['vt'])
         for suffix,other,stamps in (('BE',e,((b,1/bf),(c,F(1)),(e,-1-1/bf))),
-                                    ('BC',c,((b,1/br),(c,-1-1/br),(e,F(1)))):
+                                    ('BC',c,((b,1/br),(c,-1-1/br),(e,F(1))))):
             rows={}
             for node,v in stamps:
                 if isinstance(node,int):rows[node]=rows.get(node,F(0))+v
