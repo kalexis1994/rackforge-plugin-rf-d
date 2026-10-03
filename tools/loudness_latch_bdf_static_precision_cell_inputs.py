@@ -11,7 +11,7 @@ REPORTS=(*OLD_REPORTS,*(ROOT/"evidence"/name for name in (
     "loudness_latch_bdf_static_precision_cell_propagation.json.gz",
     "loudness_latch_bdf_static_precision_cell_propagation_validation.json")))
 OUTPUT=ROOT/"evidence/loudness_latch_bdf_static_precision_cell_inputs.json.gz"
-SUMMARY=ROOT/"evidence/loudness_latch_bdf_static_precision_weighted_inputs_summary.json"
+SUMMARY=ROOT/"evidence/loudness_latch_bdf_static_precision_cell_inputs_summary.json"
 
 
 def generate():
@@ -43,7 +43,7 @@ def generate():
         if sha((ROOT/name).read_bytes())!=expected:raise ValueError("expanded input changed during archival")
     if {p.relative_to(ROOT).as_posix():sha(p.read_bytes()) for p in REPORTS}!=report_hashes:
         raise ValueError("expanded reports changed during archival")
-    own_paths=(Path(__file__).resolve(),ROOT/"tools/loudness_latch_bdf_static_precision_weighted_inputs.py",ROOT/"tools/loudness_latch_bdf_static_precision_descriptor_inputs.py",ROOT/"tools/loudness_latch_bdf_static_precision_correlated_inputs.py",ROOT/"tools/loudness_latch_bdf_static_precision_constitutive_inputs.py",ROOT/"tools/loudness_latch_bdf_static_precision_enclosure_inputs.py",ROOT/"tools/loudness_latch_bdf_static_precision_balance_inputs.py",ROOT/"tools/loudness_latch_bdf_static_precision_dense_inputs.py",ROOT/"tools/loudness_latch_bdf_static_precision_continuous_inputs.py",ROOT/"tools/loudness_latch_bdf_static_precision_charge_inputs.py",ROOT/"tools/loudness_latch_bdf_static_precision_forced_inputs.py",ROOT/"tools/loudness_latch_bdf_static_precision_memory_quadratic_inputs.py",ROOT/"tools/loudness_latch_bdf_static_precision_memory_response_inputs.py",
+    own_paths=(Path(__file__).resolve(),ROOT/"evidence/loudness_latch_bdf_static_precision_cell_inputs_destination_attempt.json",ROOT/"evidence/loudness_latch_bdf_static_precision_cell_inputs_first_attempt.json.gz",ROOT/"evidence/loudness_latch_bdf_static_precision_cell_inputs_first_attempt_summary.json",ROOT/"tools/loudness_latch_bdf_static_precision_weighted_inputs.py",ROOT/"tools/loudness_latch_bdf_static_precision_descriptor_inputs.py",ROOT/"tools/loudness_latch_bdf_static_precision_correlated_inputs.py",ROOT/"tools/loudness_latch_bdf_static_precision_constitutive_inputs.py",ROOT/"tools/loudness_latch_bdf_static_precision_enclosure_inputs.py",ROOT/"tools/loudness_latch_bdf_static_precision_balance_inputs.py",ROOT/"tools/loudness_latch_bdf_static_precision_dense_inputs.py",ROOT/"tools/loudness_latch_bdf_static_precision_continuous_inputs.py",ROOT/"tools/loudness_latch_bdf_static_precision_charge_inputs.py",ROOT/"tools/loudness_latch_bdf_static_precision_forced_inputs.py",ROOT/"tools/loudness_latch_bdf_static_precision_memory_quadratic_inputs.py",ROOT/"tools/loudness_latch_bdf_static_precision_memory_response_inputs.py",
         ROOT/"tools/loudness_latch_bdf_static_precision_memory_inputs.py",
         ROOT/"tools/loudness_latch_bdf_static_precision_path_inputs.py",
         ROOT/"tools/loudness_latch_bdf_static_precision_window_inputs.py",

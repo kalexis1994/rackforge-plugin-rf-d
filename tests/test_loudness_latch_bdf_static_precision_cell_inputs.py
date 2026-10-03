@@ -53,6 +53,15 @@ class StaticInputs(unittest.TestCase):
         self.assertFalse(cells['actual_dae_error_bound'])
         self.assertEqual(read(ROOT/"evidence/loudness_latch_bdf_static_precision_cell_propagation_validation.json")['schema'],
                          'rf-d/bdf-static-cell-propagation-validation/v1')
+        attempt=read(ROOT/"evidence/loudness_latch_bdf_static_precision_cell_inputs_destination_attempt.json")
+        self.assertTrue(attempt['rejected']);self.assertTrue(attempt['prior_bytes_restored_exactly'])
+        self.assertEqual(sha(attempt['source_utf8'].encode()),attempt['source_sha256'])
+        self.assertEqual(sha(git_bytes(attempt['git_head'],attempt['helper_path'])),attempt['source_sha256'])
+        self.assertNotEqual(sha((ROOT/attempt['helper_path']).read_bytes()),attempt['source_sha256'])
+        self.assertEqual(sha((ROOT/attempt['overwritten_path']).read_bytes()),attempt['restored_original_sha256'])
+        self.assertEqual(sha((ROOT/attempt['first_data_path']).read_bytes()),attempt['first_data_sha256'])
+        self.assertEqual(sha((ROOT/attempt['first_summary_path']).read_bytes()),attempt['first_summary_sha256'])
+        self.assertFalse(attempt['numerical_data_modified']);self.assertFalse(attempt['numerical_measurement_repeated'])
         report = self.report; archives = {r["path"]:r for r in report["archived_inputs"]}
         self.assertEqual(tuple(archives), EXPECTED_EXCEPTIONS)
         self.assertEqual(len(report["entries"]), 313)
