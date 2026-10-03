@@ -4,6 +4,17 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+El [certificado espectral racional](docs/BIESTABLE_JUNTURAS_ESPECTRO_RESULTADOS.md)
+estrecha las **64 cotas** de junturas RMS, incluyendo incertidumbre del
+recinto completo y **2.112 consultas LDLᵀ**. Certifica disipación interna
+en las 16 celdas de prefijo; ataque/reset/cola conservan mu2 positiva.
+Las ocho cotas nodales bajan: cola N4 da término forzado hipotético ~9,92 µV.
+El [corpus](docs/BIESTABLE_JUNTURAS_ESPECTRO_ENTRADAS.md) verifica **346 entradas**
+de 59 informes, con ocho versiones fallidas anteriores preservadas.
+Siete regresiones nuevas pasan al primer intento.
+**1 mV global sigue abierto.** Próximo corte: generador firmado y
+comportamiento modal frente a crecimiento de norma, conservando anclaje y restos.
+
 La [variante RMS de junturas](docs/BIESTABLE_JUNTURAS_RMS_RESULTADOS.md)
 conserva signos en la parte simétrica y convierte todos los acoplamientos,
 forzamientos y mapas nodales. Ataque/cola mejoran, prefijo empeora y reset
