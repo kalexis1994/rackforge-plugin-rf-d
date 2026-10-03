@@ -12,6 +12,17 @@ No habrá acceso a una unidad física. El [protocolo sin hardware](VALIDACION_SI
 
 ## Fase B — Solver y banco de pruebas
 
+La [propagación por celdas](BIESTABLE_PROPAGACION_CELDAS_RESULTADOS.md)
+reconstruye **64 inversas estructuradas** y distribuye el residual en cada
+celda. Las ocho cotas tangentes bajan; reset N4 da término forzado
+~0,529 µV con anclaje cero hipotético, mientras ataque/cola siguen enormes.
+Se conserva el anclaje desconocido y se distinguen extremo y pico interior.
+El [corpus](BIESTABLE_PROPAGACION_CELDAS_ENTRADAS.md) verifica **313 entradas**
+de 53 informes y ocho versiones fallidas de tests; nueve regresiones nuevas pasan.
+**1 mV global sigue abierto**.
+Próximo corte: estructura de bloques para la estabilidad de ataque/cola,
+restos no lineales, anclaje y recorrido completo.
+
 El [descriptor ponderado ideal](BIESTABLE_DESCRIPTOR_PONDERADO_RESULTADOS.md)
 cubre la variación de coeficientes en **64 celdas de ocho intervalos**:
 todas certifican la inversa ideal, conservando los rechazos binary64.
