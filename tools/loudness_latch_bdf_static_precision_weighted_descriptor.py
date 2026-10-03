@@ -63,9 +63,7 @@ def save(report):
         {k:r[k] for k in ('window','subdivisions','index','duration_s','weights','ideal_temporal_inverse_certified','weighted_frozen_budget')}|
         dict(temporal_cell_contractions=[c['contraction_upper'] for c in r['ideal_temporal_cover']],
             weighted_temporal_budget=r.get('weighted_temporal_budget'),temporal_budget_blocked=r.get('temporal_budget_blocked')) for r in report['cases']])
-    SUMMARY.write_text(json.dumps(summary,indent=2,allow_nan=False)+'
-',encoding='utf-8',newline='
-');return summary
+    SUMMARY.write_text(json.dumps(summary,indent=2,allow_nan=False)+'\n',encoding='utf-8',newline='\n');return summary
 
 
 if __name__=='__main__':save(generate())
