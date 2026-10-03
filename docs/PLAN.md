@@ -12,6 +12,18 @@ No habrá acceso a una unidad física. El [protocolo sin hardware](VALIDACION_SI
 
 ## Fase B — Solver y banco de pruebas
 
+El [generador firmado de junturas](BIESTABLE_JUNTURAS_MODAL_RESULTADOS.md)
+certifica modos congelados de las **64 celdas**: 48 son Hurwitz y las
+16 de reset tienen una raíz real positiva del bloque interno aislado.
+Ataque y cola combinan modos estables con crecimiento instantáneo de norma:
+32 celdas identifican amplificación no normal potencial. No se modifica
+ninguna propagación ni se infiere estabilidad del circuito variable completo.
+El [corpus](BIESTABLE_JUNTURAS_MODAL_ENTRADAS.md) verifica **357 entradas**
+de 61 informes y conserva ocho versiones fallidas anteriores.
+Ocho regresiones nuevas pasan al primer intento.
+**1 mV global sigue abierto.** Próximo corte: métrica cuadrática común
+certificada para ataque/cola, con conversiones, acoplamientos y anclaje.
+
 El [certificado espectral racional](BIESTABLE_JUNTURAS_ESPECTRO_RESULTADOS.md)
 estrecha las **64 cotas** de junturas RMS, incluyendo incertidumbre del
 recinto completo y **2.112 consultas LDLᵀ**. Certifica disipación interna
