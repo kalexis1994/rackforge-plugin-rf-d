@@ -4,6 +4,18 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+La [métrica cuadrática fija de junturas](docs/BIESTABLE_JUNTURAS_METRICA_RESULTADOS.md)
+acepta seis candidatos y rechaza los dos de reset. **32 celdas de prefijo
+y cola** certifican contracción interna variable; ataque no obtiene esa prueba.
+Las conversiones completas producen una comparación mixta: sólo cola N2
+baja ligeramente; prefijo y ataque empeoran. Se preservan las ocho filas,
+el mismo anclaje y los candidatos rechazados, sin promover la variante.
+El [corpus](docs/BIESTABLE_JUNTURAS_METRICA_ENTRADAS.md) reconstruye **368 entradas**
+de 63 informes y conserva ocho versiones fallidas históricas.
+Nueve regresiones nuevas pasan al primer intento.
+**1 mV global sigue abierto.** Próximo corte: perturbación dirigida del
+certificado de tasa, conservando P, conversiones y acoplamientos.
+
 El [generador firmado de junturas](docs/BIESTABLE_JUNTURAS_MODAL_RESULTADOS.md)
 certifica modos congelados de las **64 celdas**: 48 son Hurwitz y las
 16 de reset tienen una raíz real positiva del bloque interno aislado.
