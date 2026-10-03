@@ -4,6 +4,16 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+El [descriptor ponderado ideal](docs/BIESTABLE_DESCRIPTOR_PONDERADO_RESULTADOS.md)
+cubre la variación de coeficientes en **64 celdas de ocho intervalos**:
+todas certifican la inversa ideal, conservando los rechazos binary64.
+Los pesos fijados mejoran prefijo/cola y empeoran ataque; se archiva toda
+la comparación. Las cotas tangentes variables mantienen pendientes restos
+no lineales, anclaje y recorrido completo. **1 mV global sigue abierto**.
+El [corpus](docs/BIESTABLE_DESCRIPTOR_PONDERADO_ENTRADAS.md) verifica 305
+entradas y ocho versiones fallidas de tests; nueve regresiones nuevas pasan.
+Próximo corte: conservar más estructura del operador y su propagación temporal.
+
 El [descriptor continuo](docs/BIESTABLE_DESCRIPTOR_CONTINUO_RESULTADOS.md)
 separa 94 voltajes y 25 tasas de memoria. Ocho inversas de matrices levantadas
 119×119 quedan certificadas; los mapas binary64 mantienen sus gates fallidos.
