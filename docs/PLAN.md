@@ -12,6 +12,17 @@ No habrá acceso a una unidad física. El [protocolo sin hardware](VALIDACION_SI
 
 ## Fase B — Solver y banco de pruebas
 
+El [inventario de cobertura y métricas](BIESTABLE_COBERTURA_METRICAS_RESULTADOS.md)
+verifica **6.486 intervalos desde DC y 1.536 refinados**, pero el soporte
+certificado seleccionado cubre sólo **~0,342 µs de 3 ms (~0,0114 %)**.
+La unión N2/N4 tiene cuatro tramos y cinco huecos; el error real aún no
+está certificado. Se calculan **36 conversiones de norma y 990 consultas**;
+no propagan regiones faltantes ni identifican errores de historias distintas.
+El [corpus](BIESTABLE_COBERTURA_METRICAS_ENTRADAS.md) reconstruye **412 entradas**
+de 71 informes; ocho regresiones nuevas pasan al primer intento.
+**1 mV global sigue abierto.** El [plan desde DC](BIESTABLE_COBERTURA_DESDE_DC_PLAN.md)
+prioriza consistencia KEY 0→10 V, anclaje, prefijo contiguo, resto y reset.
+
 El [presupuesto condicional del anclaje](BIESTABLE_PRESUPUESTO_ANCLAJE_RESULTADOS.md)
 reconstruye **4.512 pares de celda/nodo** y 18 objetivos para el gate de 1 mV.
 Ataque N2 permite ~0,185 µV de anclaje ponderado sin reserva, o ~0,092 µV
