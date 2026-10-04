@@ -12,6 +12,17 @@ No habrá acceso a una unidad física. El [protocolo sin hardware](VALIDACION_SI
 
 ## Fase B — Solver y banco de pruebas
 
+El [prefijo con acciones dirigidas](BIESTABLE_PREFIJO_DIRIGIDO_RESULTADOS.md)
+certifica **seis intervalos contiguos hasta aproximadamente 6,25 µs**,
+con **error nodal ≤0,754 µV**. Añade 48 inversas, 4752 consultas de tasa
+y 384 acciones en P retenida, sin solves de trayectoria. El siguiente
+soporte no cierra en radio 1 µV: forcing de C7 domina ≈1,2904 µV.
+La repetición separada recupera dos presupuestos enormes de 10 µV,
+que rechazan, preservando sus fallos de registro originales. Dieciséis
+pruebas nuevas aceptadas; corpus de 535 entradas y 94 informes. Próximo bloque:
+[forcing de memoria y registro](BIESTABLE_FORCING_MEMORIA_PLAN.md).
+**1 mV global sigue abierto.**
+
 La [acción dirigida del residual](BIESTABLE_ACCION_RESIDUAL_RESULTADOS.md)
 certifica **cuatro intervalos contiguos hasta aproximadamente 1,5625 µs**,
 con error nodal **≤0,754 µV**. Basta mejorar el término algebraico directo

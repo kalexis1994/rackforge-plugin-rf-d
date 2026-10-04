@@ -1,5 +1,13 @@
 # Matriz de fidelidad
 
+El [prefijo dirigido renovado](BIESTABLE_PREFIJO_DIRIGIDO_RESULTADOS.md)
+certifica seis soportes nominales hasta ≈6,25 µs, error nodal ≤0,754 µV.
+Transporta 22 memorias y renueva recintos, tasas y acciones en P fija.
+El séptimo soporte queda sin certificar; el forcing de C7 domina su
+cota condicional. Dos ramas de 10 µV recuperan sus presupuestos exactos y rechazan,
+con sus fallos originales de registro conservados. Hardware, sonido, voz completa,
+meta global de 1 mV y deadline mantienen sus gates independientes.
+
 La [acción de inversa sobre el RHS firmado](BIESTABLE_ACCION_RESIDUAL_RESULTADOS.md)
 certifica el cuarto soporte y extiende el prefijo nominal hasta ≈1,5625 µs,
 con error nodal ≤0,754 µV heredado del pico anterior. Cambia presupuestos
