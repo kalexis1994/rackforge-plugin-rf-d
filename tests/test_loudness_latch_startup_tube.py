@@ -56,7 +56,25 @@ class StartupTube(unittest.TestCase):
             for precision,name in ((80,'decimal80'),(100,'decimal100')):
                 actual=law.query(self.network,self.g,p,u,precision);self.assertEqual(actual,q[name])
                 self.assertLess(abs(D(actual['dynamic_conservation_error_a'])),D('1e-70'))
-                for value,bound in zip(actual['kcl_a'],bounds['constitutive_pointwise_upper_a']):self.assertLessEqual(abs(F(value)),F(bound))
+                for i,(value,bound) in enumerate(zip(actual['kcl_a'],bounds['constitutive_pointwise_upper_a'])):
+                    if i!=61:
+                        self.assertLessEqual(abs(F(value)),F(bound));continue
+                    # J7-load is a single linear shunt. Its enclosure is exact;
+                    # a rounded Decimal product is a diagnostic, not an exact real.
+                    shunts=[v for v in self.g['conductances'] if v['left']==61]
+                    self.assertEqual(len(shunts),1);self.assertEqual(shunts[0]['right'],'GND')
+                    self.assertFalse(any(61 in v['a'] for v in law.event.ports(self.network)))
+                    self.assertFalse(any(61 in v.values() for name in ('resistors','bjts','diodes') for v in self.g[name]))
+                    exact_v=law.poly.evaluate(p['x'][61],u);conductance=F(shunts[0]['siemens'])
+                    exact_current=conductance*exact_v
+                    self.assertLessEqual(abs(exact_current),F(bound))
+                    with localcontext() as ctx:
+                        ctx.prec=precision;rounded_v=law.event.decimal(exact_v)
+                        rounded_product=D.from_float(shunts[0]['siemens'])*rounded_v
+                    self.assertEqual(D(value),rounded_product)
+                    rounding=abs(F(rounded_v)-exact_v)*conductance+abs(F(rounded_product)-conductance*F(rounded_v))
+                    self.assertLessEqual(abs(F(value)-exact_current),rounding)
+                    self.assertLessEqual(abs(F(value)),F(bound)+rounding)
                 for i,value in enumerate(actual['constraint_v'][:21]):
                     upper=F(r['base_cells'][cell]['forcing_inputs']['constraint_point_v'][i]);self.assertLessEqual(abs(F(value)),upper)
             with localcontext() as ctx:
