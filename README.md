@@ -4,6 +4,16 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+El [intento de continuación contigua](docs/BIESTABLE_PREFIJO_CERTIFICADO_RESULTADOS.md)
+valida transporte de memoria y puentes exactos de norma, pero el segundo
+intervalo **195,3125→390,625 ns** rechaza: presupuesto ≈7,35 µV en
+el tubo de 1 µV, dominado por el anclaje propagado. El primer intervalo
+sigue certificado, con evidencia intacta y sin reiniciar DC.
+Diez regresiones nuevas pasan al primer intento; el [corpus](docs/BIESTABLE_PREFIJO_CERTIFICADO_ENTRADAS.md)
+recupera 484 entradas de 84 informes. Próximo corte:
+[refinar memoria por coordenada](docs/BIESTABLE_MEMORIA_POR_COORDENADA_PLAN.md).
+**1 mV global sigue abierto.**
+
 La [comparación dirigida con métrica común de junturas](docs/BIESTABLE_TUBO_BLOQUES_RESULTADOS.md)
 certifica el **primer intervalo continuo de 195,3125 ns**, con error
 nodal **≤0,586 µV** dentro de un tubo de 1 µV. El banco conserva

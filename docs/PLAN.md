@@ -12,6 +12,16 @@ No habrá acceso a una unidad física. El [protocolo sin hardware](VALIDACION_SI
 
 ## Fase B — Solver y banco de pruebas
 
+El [intento de continuación contigua](BIESTABLE_PREFIJO_CERTIFICADO_RESULTADOS.md)
+valida transporte de memoria y puentes exactos de norma, pero el segundo
+intervalo **195,3125→390,625 ns** rechaza: presupuesto ≈7,35 µV en
+el tubo de 1 µV, dominado por el anclaje propagado. El primer intervalo
+sigue certificado, con evidencia intacta y sin reiniciar DC.
+Diez regresiones nuevas pasan al primer intento; el [corpus](BIESTABLE_PREFIJO_CERTIFICADO_ENTRADAS.md)
+recupera 484 entradas de 84 informes. Próximo corte:
+[refinar memoria por coordenada](BIESTABLE_MEMORIA_POR_COORDENADA_PLAN.md).
+**1 mV global sigue abierto.**
+
 La [comparación dirigida con métrica común de junturas](BIESTABLE_TUBO_BLOQUES_RESULTADOS.md)
 certifica el **primer intervalo continuo de 195,3125 ns**, con error
 nodal **≤0,586 µV** dentro de un tubo de 1 µV. El banco conserva

@@ -1,5 +1,11 @@
 # Matriz de fidelidad
 
+La [continuación con memoria saliente](BIESTABLE_PREFIJO_CERTIFICADO_RESULTADOS.md)
+verifica interfaces y puentes de norma, pero rechaza el segundo intervalo
+por presupuesto nodal ≈7,35 µV > radio 1 µV. Duración real certificada
+permanece en 195,3125 ns; la parada conserva el certificado anterior.
+Las cotas rechazadas no miden error físico. Global 1 mV sigue abierto.
+
 La [comparación dirigida no lineal](BIESTABLE_TUBO_BLOQUES_RESULTADOS.md)
 certifica t=0+ hasta 195,3125 ns para el modelo nominal: error nodal
 ≤0,586 µV con tubo de 1 µV. No hay solves nuevos ni cambios físicos.
