@@ -12,13 +12,25 @@ No habrá acceso a una unidad física. El [protocolo sin hardware](VALIDACION_SI
 
 ## Fase B — Solver y banco de pruebas
 
+La [publicación tipada del evento y el arranque propio](BIESTABLE_POST_KEY_ARRANQUE_RESULTADOS.md)
+conservan las 25 cargas y certifican el anclaje high+low a **~37,51 nV por nodo**.
+Los **512 intervalos hasta ~2,332 ms** pasan KCL, ramas y restauración,
+con BE inicial y BDF2 después; diferencia frente al arranque histórico
+**~3,59 pV nodales** en los mismos endpoints. Es un resultado del integrador
+offline, sin cambios en el motor nativo ni prueba de error temporal continuo.
+El [corpus](BIESTABLE_POST_KEY_ARRANQUE_ENTRADAS.md) reconstruye
+**450 entradas de 78 informes**, conservando diez versiones fallidas.
+Diez regresiones nuevas pasan al primer intento.
+**1 mV global sigue abierto.** Próximo corte: [primer soporte continuo,
+anclaje convertido y resto no lineal](BIESTABLE_PRIMER_SOPORTE_CONTINUO_PLAN.md).
+
 El [estado consistente post-KEY](BIESTABLE_POST_KEY_RESULTADOS.md)
 resuelve 119 ecuaciones sin avanzar el reloj, conservando las 25 cargas.
 Dos semillas convergen; un recinto parametrizado por la incertidumbre DC
 acota el error local a **~37,51 nV nodales**, con V77_post≈9,646 V.
 Se conservan el rechazo de la primera escala y el gate backward binary64.
-La publicación racional de laboratorio pasa KCL y restricciones; resta
-publicarla en el integrador. El [corpus](BIESTABLE_POST_KEY_ENTRADAS.md)
+La publicación racional de ese corte pasaba KCL y restricciones; su
+publicación en el integrador quedaba pendiente. El [corpus](BIESTABLE_POST_KEY_ENTRADAS.md)
 reconstruye **439 entradas de 76 informes** y diez versiones fallidas.
 Diez regresiones nuevas pasan, preservando ambos intentos primarios.
 **1 mV global sigue abierto.** Próximo corte: [estado high+low, arranque

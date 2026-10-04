@@ -1,10 +1,17 @@
 # Matriz de fidelidad
 
+La [publicación high+low y trayectoria propia](BIESTABLE_POST_KEY_ARRANQUE_RESULTADOS.md)
+acotan el anclaje nodal inicial del integrador offline a ~37,51 nV, con
+memorias conservadas. 512 pasos pasan publicación y KCL hasta ~2,332 ms;
+coinciden con el histórico dentro de ~3,59 pV nodales en endpoints iguales.
+Duración de error continuo realmente certificado: cero. El motor nativo,
+resto temporal, hardware, voz audible y deadline mantienen gates separados.
+
 El [evento post-KEY](BIESTABLE_POST_KEY_RESULTADOS.md) tiene raíz local
 consistente para toda la caja de cargas DC, con error <=37,51 nV por nodo
 y <=37,51 V/s por tasa de coordenada en la publicación racional. El reloj
-sigue en cero; no se ha publicado el evento en el integrador ni certificado
-una trayectoria nueva. Es una prueba del modelo nominal sintético. El gate
+seguía en cero en ese corte; quedaban publicación en el integrador y
+certificación de trayectoria pendientes. Es una prueba del modelo nominal sintético. El gate
 backward binary64 sigue rechazado; física, audio, deadline y 1 mV global
 mantienen sus gates separados.
 
