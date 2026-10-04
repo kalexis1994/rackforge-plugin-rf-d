@@ -1,5 +1,11 @@
 # Matriz de fidelidad
 
+La [partición fina con anclajes conocidos](BIESTABLE_MEMORIA_COORDENADA_RESULTADOS.md)
+prolonga la cobertura real hasta 390,625 ns, con dos intervalos contiguos
+y error nodal ≤0,588 µV. Mejora 16 cotas lineales sin cambiar circuito
+o reconstrucción. El cierre depende de los recintos medios y norma
+certificados; no identifica hardware ni admite audio. Global 1 mV sigue abierto.
+
 La [continuación con memoria saliente](BIESTABLE_PREFIJO_CERTIFICADO_RESULTADOS.md)
 verifica interfaces y puentes de norma, pero rechaza el segundo intervalo
 por presupuesto nodal ≈7,35 µV > radio 1 µV. Duración real certificada
