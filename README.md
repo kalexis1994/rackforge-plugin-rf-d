@@ -4,6 +4,18 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+El [certificado de tasa dirigida](docs/BIESTABLE_JUNTURAS_DIRIGIDA_RESULTADOS.md)
+conserva P, norma, conversiones y anclaje, y estrecha **40/48 tasas**.
+Ataque N4 baja a término forzado hipotético **~5,22 µV**; ataque N2
+sigue enorme (~9,16e9 V). Las seis cotas calculadas no empeoran frente a
+la variante cuadrática anterior; reset conserva sus dos candidatos rechazados.
+Sólo cambia M_JJ, con 1.584 consultas racionales y sin nuevas inversas del circuito.
+El [corpus](docs/BIESTABLE_JUNTURAS_DIRIGIDA_ENTRADAS.md) reconstruye **379 entradas**
+de 65 informes y conserva ocho versiones fallidas históricas.
+Ocho regresiones nuevas pasan al primer intento.
+**1 mV global sigue abierto.** Próximo corte: balancear el radio en la base
+D con regla fija, manteniendo P, conversiones y rechazos explícitos.
+
 La [métrica cuadrática fija de junturas](docs/BIESTABLE_JUNTURAS_METRICA_RESULTADOS.md)
 acepta seis candidatos y rechaza los dos de reset. **32 celdas de prefijo
 y cola** certifican contracción interna variable; ataque no obtiene esa prueba.
