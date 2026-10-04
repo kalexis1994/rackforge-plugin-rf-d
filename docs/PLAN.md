@@ -12,6 +12,17 @@ No habrá acceso a una unidad física. El [protocolo sin hardware](VALIDACION_SI
 
 ## Fase B — Solver y banco de pruebas
 
+El [DC nominal certificado y la auditoría del evento KEY](BIESTABLE_DC_EVENTO_RESULTADOS.md)
+acotan la raíz local KEY=0 a **~74 pV nodales** y la memoria inicial a
+**~148 pV ponderados**, con cuatro cajas contractivas y 25 cargas verificadas.
+CR10 exige un salto algebraico de al menos **~8,27 V** para permanecer
+en el dominio al pasar KEY a 10 V. El estado post-KEY aún no está resuelto.
+El [corpus](BIESTABLE_DC_EVENTO_ENTRADAS.md) reconstruye **423 entradas**
+de 73 informes y conserva nueve versiones fallidas históricas de tests.
+Ocho regresiones nuevas pasan; la suite primaria conserva sus dos intentos.
+**1 mV global sigue abierto.** Próximo corte: [consistencia post-KEY](BIESTABLE_ESTADO_POST_KEY_PLAN.md),
+recinto de cargas, publicación del evento y primer tramo contiguo.
+
 El [inventario de cobertura y métricas](BIESTABLE_COBERTURA_METRICAS_RESULTADOS.md)
 verifica **6.486 intervalos desde DC y 1.536 refinados**, pero el soporte
 certificado seleccionado cubre sólo **~0,342 µs de 3 ms (~0,0114 %)**.

@@ -1,5 +1,12 @@
 # Matriz de fidelidad
 
+El [recinto del DC KEY=0](BIESTABLE_DC_EVENTO_RESULTADOS.md) certifica
+existencia y unicidad local del modelo nominal, con ~74 pV de error nodal
+y ~148 pV de memoria ponderada. Es precisión numérica de parámetros
+sintéticos, sin identificación física vintage. La auditoría de CR10 refuta
+conservar todos los voltajes al pasar KEY a 10 V dentro del dominio vigente.
+El estado consistente post-evento y el error temporal global siguen abiertos.
+
 Los [sellos analíticos binary64](BIESTABLE_SELLOS_BINARIOS_RESULTADOS.md)
 pasan ocho contrastes de corriente/derivada y ocho solves algebraicos.
 Los mapas compensados pasan 4/4; el ordinario falla reset. Los 48 contrastes
