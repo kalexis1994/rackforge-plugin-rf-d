@@ -12,6 +12,16 @@ No habrá acceso a una unidad física. El [protocolo sin hardware](VALIDACION_SI
 
 ## Fase B — Solver y banco de pruebas
 
+La [primera reconstrucción y prueba de tubo no lineal](BIESTABLE_PRIMER_TUBO_RESULTADOS.md)
+cubre un soporte de **195,3125 ns** con dos estados reales y memoria Q(v).
+Los **24 recintos medios del descriptor** son invertibles, pero los
+**tres cierres rechazan**: el presupuesto escalar excede sus radios.
+La duración de error continuo certificado sigue en cero. Se conserva
+el experimento para estudiar [comparación dirigida por bloques](BIESTABLE_PRIMER_TUBO_BLOQUES_PLAN.md).
+El [corpus ampliado](BIESTABLE_PRIMER_TUBO_ENTRADAS.md) incluye 80 informes
+y trece versiones fallidas de pruebas. Los gates globales de 1 mV,
+física, audio y deadline siguen abiertos.
+
 La [publicación tipada del evento y el arranque propio](BIESTABLE_POST_KEY_ARRANQUE_RESULTADOS.md)
 conservan las 25 cargas y certifican el anclaje high+low a **~37,51 nV por nodo**.
 Los **512 intervalos hasta ~2,332 ms** pasan KCL, ramas y restauración,

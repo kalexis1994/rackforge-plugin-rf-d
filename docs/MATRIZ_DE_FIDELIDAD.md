@@ -1,5 +1,11 @@
 # Matriz de fidelidad
 
+El [primer tubo no lineal](BIESTABLE_PRIMER_TUBO_RESULTADOS.md) prueba
+24 inversas del descriptor medio sobre 195,3125 ns, pero rechaza los tres
+radios por falta de inclusión estricta de sus presupuestos nodales.
+Ese resultado no certifica error continuo: la cobertura real permanece
+en cero. Las cotas excesivas no son medidas de inestabilidad física.
+
 La [publicación high+low y trayectoria propia](BIESTABLE_POST_KEY_ARRANQUE_RESULTADOS.md)
 acotan el anclaje nodal inicial del integrador offline a ~37,51 nV, con
 memorias conservadas. 512 pasos pasan publicación y KCL hasta ~2,332 ms;
