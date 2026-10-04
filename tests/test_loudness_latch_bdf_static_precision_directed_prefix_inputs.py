@@ -301,11 +301,15 @@ class StaticInputs(unittest.TestCase):
         own_receipt=read(ROOT/'evidence/loudness_latch_bdf_static_precision_directed_prefix_inputs_validation.json')
         first=own_receipt['attempts'][0]
         self.assertFalse(first['passed']);self.assertTrue(first['inputs_unchanged'])
-        versions_own=validation_versions(own_receipt);self.assertEqual(len(versions_own),1)
-        v=versions_own[0]
-        self.assertEqual(sha(v['source_utf8'].encode('utf-8')),v['source_sha256'])
-        self.assertEqual(sha(git_bytes(first['environment']['git_head'],v['path'])),v['source_sha256'])
-        self.assertNotEqual(sha((ROOT/v['path']).read_bytes()),v['source_sha256'])
+        failures=[a for a in own_receipt['attempts'] if not a['passed']]
+        self.assertEqual(len(failures),2)
+        for attempt in failures:
+            suite=attempt['suites'][0];name='tests/'+suite['command'][suite['command'].index('-p')+1]
+            source=suite['failed_test_source_utf8'];expected=suite['test_sha256']
+            self.assertTrue(attempt['inputs_unchanged']);self.assertEqual(sha(source.encode('utf-8')),expected)
+            self.assertEqual(attempt['source_sha256_before'][name],expected)
+            self.assertEqual(sha(git_bytes(attempt['environment']['git_head'],name)),expected)
+            self.assertNotEqual(sha((ROOT/name).read_bytes()),expected)
         self.assertIn('loudness_latch_bdf_static_precision_residual_action_inputs_summary.json',first['suites'][0]['stderr'])
         self.assertEqual(self.report["integer_text_limit_during"],0)
         report = self.report; archives = {r["path"]:r for r in report["archived_inputs"]}
