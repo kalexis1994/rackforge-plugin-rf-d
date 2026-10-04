@@ -4,6 +4,17 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+La [acción dirigida del residual](docs/BIESTABLE_ACCION_RESIDUAL_RESULTADOS.md)
+certifica **cuatro intervalos contiguos hasta aproximadamente 1,5625 µs**,
+con error nodal **≤0,754 µV**. Basta mejorar el término algebraico directo
+para cerrar el cuarto soporte, sin cambiar trayectoria o circuito.
+Se reutilizan 16 inversas y tasas; 128 acciones incluyen defecto y cola,
+sin solves, precondicionadores o métricas nuevos. Diez pruebas nuevas
+pasan al primer intento; el [corpus](docs/BIESTABLE_ACCION_RESIDUAL_ENTRADAS.md)
+recupera 518 entradas de 90 informes. Próximo bloque:
+[prefijo con forcing dirigido](docs/BIESTABLE_PREFIJO_ACCION_PLAN.md).
+**1 mV global sigue abierto.**
+
 El [prefijo con 22 cotas transportadas](docs/BIESTABLE_PREFIJO_22_RESULTADOS.md)
 certifica **tres intervalos contiguos hasta aproximadamente 781,25 ns**,
 con error nodal **≤0,754 µV**. El cuarto tramo rechaza con ≈1,0044 µV

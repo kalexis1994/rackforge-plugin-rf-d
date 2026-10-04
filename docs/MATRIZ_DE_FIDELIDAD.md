@@ -1,5 +1,11 @@
 # Matriz de fidelidad
 
+La [acción de inversa sobre el RHS firmado](BIESTABLE_ACCION_RESIDUAL_RESULTADOS.md)
+certifica el cuarto soporte y extiende el prefijo nominal hasta ≈1,5625 µs,
+con error nodal ≤0,754 µV heredado del pico anterior. Cambia presupuestos
+con defecto y cola probados; conserva restos independientes, circuito,
+trayectoria y normas. No admite hardware, audio, 1 mV global o deadline.
+
 El [prefijo con memoria individual y P retenida](BIESTABLE_PREFIJO_22_RESULTADOS.md)
 certifica tres intervalos nominales hasta aproximadamente 781,25 ns, con
 error nodal ≤0,754 µV. El cuarto rechaza por ≈4,3743 nV de exceso en
