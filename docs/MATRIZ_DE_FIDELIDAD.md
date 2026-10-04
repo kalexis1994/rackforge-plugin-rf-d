@@ -1,5 +1,12 @@
 # Matriz de fidelidad
 
+La [coordenada auxiliar de C7](BIESTABLE_FORCING_C7_RESULTADOS.md) conserva
+el signo temporal y certifica el séptimo soporte nominal: hasta ≈12,5 µs,
+error nodal ≤0,793 µV. Paga incertidumbre y Bp en todas las ecuaciones,
+además del desplazamiento nodal y memoria final restituida. No modifica
+trayectoria, cargas o parámetros físicos. El octavo soporte, trayectoria
+completa, 1 mV global, hardware, audio y deadline mantienen sus gates.
+
 El [prefijo dirigido renovado](BIESTABLE_PREFIJO_DIRIGIDO_RESULTADOS.md)
 certifica seis soportes nominales hasta ≈6,25 µs, error nodal ≤0,754 µV.
 Transporta 22 memorias y renueva recintos, tasas y acciones en P fija.

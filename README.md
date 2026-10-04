@@ -4,6 +4,16 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+El [forcing temporal firmado de C7](docs/BIESTABLE_FORCING_C7_RESULTADOS.md)
+certifica **siete intervalos contiguos hasta aproximadamente 12,5 µs**,
+con **error nodal ≤0,793 µV**. Un cambio auxiliar de coordenadas conserva
+el signo temporal y paga defecto, restos y todos los acoplamientos Bp;
+restaura las 22 memorias reales antes de transportarlas. Ocho regresiones
+primarias y dos del corpus pasan al primero, sin solves o tasas nuevos.
+Corpus de 564 entradas y 97 informes. Próximo bloque:
+[referencia curva con endpoints conservados](docs/BIESTABLE_REFERENCIA_CURVA_PLAN.md).
+**1 mV global sigue abierto.**
+
 El [prefijo con acciones dirigidas](docs/BIESTABLE_PREFIJO_DIRIGIDO_RESULTADOS.md)
 certifica **seis intervalos contiguos hasta aproximadamente 6,25 µs**,
 con **error nodal ≤0,754 µV**. Añade 48 inversas, 4752 consultas de tasa
