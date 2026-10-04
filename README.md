@@ -4,6 +4,18 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+El [prefijo con 22 cotas transportadas](docs/BIESTABLE_PREFIJO_22_RESULTADOS.md)
+certifica **tres intervalos contiguos hasta aproximadamente 781,25 ns**,
+con error nodal **≤0,754 µV**. El cuarto tramo rechaza con ≈1,0044 µV
+en radio 1 µV; se conserva el último endpoint probado y la memoria conocida.
+Hay 16 nuevos precondicionadores, 32 recintos y 3168 consultas LDL,
+sin solves de trayectoria ni métricas nuevas. El fallo de salida de
+un primer lanzamiento queda archivado. Diez pruebas nuevas pasan al
+primer intento; el [corpus](docs/BIESTABLE_PREFIJO_22_ENTRADAS.md)
+recupera 507 entradas de 88 informes. Próximo bloque:
+[acción algebraica del residual](docs/BIESTABLE_ACCION_RESIDUAL_PLAN.md).
+**1 mV global sigue abierto.**
+
 La [comparación de 22 grupos y memoria por coordenada](docs/BIESTABLE_MEMORIA_COORDENADA_RESULTADOS.md)
 certifica **dos intervalos contiguos hasta 390,625 ns**, con error nodal
 **≤0,588 µV** en la variante seleccionada. Ambos anclajes cierran el tubo

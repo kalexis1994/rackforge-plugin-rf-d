@@ -1,5 +1,12 @@
 # Matriz de fidelidad
 
+El [prefijo con memoria individual y P retenida](BIESTABLE_PREFIJO_22_RESULTADOS.md)
+certifica tres intervalos nominales hasta aproximadamente 781,25 ns, con
+error nodal ≤0,754 µV. El cuarto rechaza por ≈4,3743 nV de exceso en
+radio 1 µV; la invertibilidad y tasa interna negativa no admiten ese
+tramo. Se transporta sólo memoria probada, sin reset. Hardware, audio,
+trayectoria completa, 1 mV global y deadline siguen abiertos.
+
 La [partición fina con anclajes conocidos](BIESTABLE_MEMORIA_COORDENADA_RESULTADOS.md)
 prolonga la cobertura real hasta 390,625 ns, con dos intervalos contiguos
 y error nodal ≤0,588 µV. Mejora 16 cotas lineales sin cambiar circuito
