@@ -139,7 +139,7 @@ def certify(compiled,radius,charge_uncertainty=None):
         low=iv.junction_bounds(p['dep'],p['transit'],p['sat'],p['emission'],lo)[1][0]
         high=iv.junction_bounds(p['dep'],p['transit'],p['sat'],p['emission'],hi)[1][1]
         if low<=0:raise ValueError('positive whole event junction capacitance required')
-        domains.append(dict(ref='charge/'+str(p['index']),range=list(map(str,(lo/F(p['emission']),hi/F(p['emission'])))))
+        domains.append(dict(ref='charge/'+str(p['index']),range=list(map(str,(lo/F(p['emission']),hi/F(p['emission']))))))
         for i,j,c in term['coefficients']:a[i][j]=iv.add(a[i][j],iv.scale((low,high),c))
     eta=list(compiled['preconditioned_residual']);uncertainty=[(F(0),F(0))]*NM if charge_uncertainty is None else [tuple(map(F,v)) for v in charge_uncertainty]
     if len(uncertainty)!=NM or any(lo>hi for lo,hi in uncertainty):raise ValueError('25 ordered charge-coordinate deviations required')
