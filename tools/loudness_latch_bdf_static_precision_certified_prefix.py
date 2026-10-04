@@ -22,6 +22,7 @@ PATHS=tuple(dict.fromkeys((*prior.PATHS,prior.OUTPUT,prior.SUMMARY,
     ROOT/'evidence/loudness_latch_bdf_static_precision_startup_blocks_inputs.json.gz',
     ROOT/'evidence/loudness_latch_bdf_static_precision_startup_blocks_inputs_summary.json',
     ROOT/'evidence/loudness_latch_bdf_static_precision_startup_blocks_inputs_validation.json',
+    ROOT/'evidence/loudness_latch_bdf_static_precision_certified_prefix_launch_attempt.json',
     Path(__file__).resolve(),Path(law.__file__).resolve(),PROTOCOL)))
 read=prior.read
 
@@ -33,9 +34,9 @@ def serial(value):
 
 def generate():
     before=hashes(PATHS);env=environment();source=read(prior.OUTPUT);first=read(prior.prior.OUTPUT);startup=read(prior.prior.prior.OUTPUT)
-    constructor=prior.prior.prior.prior.prior
+    constructor=prior.prior.prior.prior.prior.prior
     network=constructor.CompensatedBdfNetwork(200,constructor.model_parameters(1,'finite_transit'))
-    g=read(prior.prior.prior.prior.OUTPUT)['graph']
+    g=read(prior.prior.prior.prior.prior.OUTPUT)['graph']
     chosen=source['primary_trial_mode']
     if chosen is None:raise ValueError('certified first interval required')
     oldtrial=source['trials'][chosen[0]];oldmode=oldtrial['modes'][chosen[1]];previous=oldmode['result'];metric=oldtrial['metric']
