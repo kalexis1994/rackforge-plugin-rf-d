@@ -1,0 +1,251 @@
+import gzip
+import hashlib
+import json
+from pathlib import Path
+import sys
+import unittest
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "tools"))
+from loudness_latch_bdf_static_precision_startup_blocks_inputs import OUTPUT,SUMMARY,REPORTS,sha,read,identities,validation_versions
+from loudness_latch_bdf_checkout_audit import EXPECTED_EXCEPTIONS,recover_historical_input,git_bytes
+from loudness_latch_bdf_doubling_survey import canonical
+
+
+class StaticInputs(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.raw = OUTPUT.read_bytes()
+        cls.report = json.loads(gzip.decompress(cls.raw))
+
+    def test_all_frozen_inputs_recover_from_committed_blobs_without_modification(self):
+        # The frozen numerical receipt inherited a Gauss envelope label. Its typed
+        # experiment identity is fixed by exact path, suite, command and data schema.
+        receipt=read(ROOT/'evidence/loudness_latch_bdf_static_precision_charge_enclosure_validation.json')
+        self.assertEqual(receipt['schema'],'rf-d/bdf-static-charge-gauss-validation/v1')
+        self.assertEqual(len(receipt['attempts']),1)
+        suite=receipt['attempts'][0]['suites'][0]
+        self.assertEqual(suite['command'][-2:],["test_loudness_latch_bdf_static_precision_charge_enclosure.py","-v"])
+        self.assertEqual(suite['reported_tests'],5);self.assertTrue(suite['passed'])
+        self.assertEqual(read(ROOT/'evidence/loudness_latch_bdf_static_precision_charge_enclosure.json.gz')['schema'],
+                         'rf-d/bdf-static-charge-enclosure/v1')
+        self.assertEqual(read(ROOT/"evidence/loudness_latch_bdf_static_precision_constitutive_enclosure_validation.json")["schema"],
+                         "rf-d/bdf-static-constitutive-enclosure-validation/v1")
+        self.assertEqual(read(ROOT/"evidence/loudness_latch_bdf_static_precision_correlated_enclosure_validation.json")["schema"],
+                         "rf-d/bdf-static-correlated-enclosure-validation/v1")
+        corrected=read(ROOT/"evidence/loudness_latch_bdf_static_precision_descriptor_forcing_norm.json.gz")
+        self.assertEqual(corrected['schema'],'rf-d/bdf-static-descriptor-forcing-norm/v1')
+        self.assertFalse(corrected['prior_uniform_budgets_valid'])
+        self.assertFalse(corrected['rounded_inverse_numerically_admitted'])
+        self.assertEqual(read(ROOT/"evidence/loudness_latch_bdf_static_precision_descriptor_forcing_norm_validation.json")['schema'],
+                         'rf-d/bdf-static-descriptor-forcing-norm-validation/v1')
+        weighted=read(ROOT/"evidence/loudness_latch_bdf_static_precision_weighted_descriptor.json.gz")
+        self.assertEqual(weighted['schema'],'rf-d/bdf-static-weighted-descriptor/v1')
+        self.assertEqual(sum(len(c['ideal_temporal_cover']) for c in weighted['cases']),64)
+        self.assertTrue(all(c['ideal_temporal_inverse_certified'] for c in weighted['cases']))
+        self.assertFalse(weighted['actual_dae_error_bound'])
+        self.assertEqual(read(ROOT/"evidence/loudness_latch_bdf_static_precision_weighted_descriptor_validation.json")['schema'],
+                         'rf-d/bdf-static-weighted-descriptor-validation/v1')
+        cells=read(ROOT/"evidence/loudness_latch_bdf_static_precision_cell_propagation.json.gz")
+        self.assertEqual(cells['schema'],'rf-d/bdf-static-cell-propagation/v1')
+        self.assertEqual(sum(len(c['cells']) for c in cells['cases']),64)
+        self.assertTrue(all(c['recombined_l1_nonincreasing'] for c in cells['cases']))
+        self.assertFalse(cells['actual_dae_error_bound'])
+        self.assertEqual(read(ROOT/"evidence/loudness_latch_bdf_static_precision_cell_propagation_validation.json")['schema'],
+                         'rf-d/bdf-static-cell-propagation-validation/v1')
+        attempt=read(ROOT/"evidence/loudness_latch_bdf_static_precision_cell_inputs_destination_attempt.json")
+        self.assertTrue(attempt['rejected']);self.assertTrue(attempt['prior_bytes_restored_exactly'])
+        self.assertEqual(sha(attempt['source_utf8'].encode()),attempt['source_sha256'])
+        self.assertEqual(sha(git_bytes(attempt['git_head'],attempt['helper_path'])),attempt['source_sha256'])
+        self.assertNotEqual(sha((ROOT/attempt['helper_path']).read_bytes()),attempt['source_sha256'])
+        self.assertEqual(sha((ROOT/attempt['overwritten_path']).read_bytes()),attempt['restored_original_sha256'])
+        self.assertEqual(sha((ROOT/attempt['first_data_path']).read_bytes()),attempt['first_data_sha256'])
+        self.assertEqual(sha((ROOT/attempt['first_summary_path']).read_bytes()),attempt['first_summary_sha256'])
+        self.assertFalse(attempt['numerical_data_modified']);self.assertFalse(attempt['numerical_measurement_repeated'])
+        blocks=read(ROOT/"evidence/loudness_latch_bdf_static_precision_block_comparison.json.gz")
+        self.assertEqual(blocks['schema'],'rf-d/bdf-static-block-comparison/v1')
+        self.assertEqual(sum(len(c['cells']) for c in blocks['cases']),64)
+        self.assertEqual(len(blocks['blocks']),6);self.assertFalse(blocks['block_partition_fitted'])
+        self.assertFalse(blocks['actual_dae_error_bound'])
+        self.assertEqual(read(ROOT/"evidence/loudness_latch_bdf_static_precision_block_comparison_validation.json")['schema'],
+                         'rf-d/bdf-static-block-comparison-validation/v1')
+        self.assertNotEqual(OUTPUT,SUMMARY);self.assertNotIn(OUTPUT,REPORTS);self.assertNotIn(SUMMARY,REPORTS)
+        self.assertEqual(SUMMARY.name,'loudness_latch_bdf_static_precision_startup_blocks_inputs_summary.json')
+        rms=read(ROOT/"evidence/loudness_latch_bdf_static_precision_junction_rms.json.gz")
+        self.assertEqual(rms['schema'],'rf-d/bdf-static-junction-rms/v1')
+        self.assertEqual(sum(len(c['cells']) for c in rms['cases']),64)
+        self.assertTrue(rms['junction_norm_changed']);self.assertFalse(rms['block_partition_changed'])
+        self.assertEqual(rms['initial_anchor_reference'],'common weighted infinity')
+        self.assertFalse(rms['actual_dae_error_bound'])
+        self.assertEqual(read(ROOT/"evidence/loudness_latch_bdf_static_precision_junction_rms_validation.json")['schema'],
+                         'rf-d/bdf-static-junction-rms-validation/v1')
+        spectral=read(ROOT/"evidence/loudness_latch_bdf_static_precision_junction_spectral.json.gz")
+        self.assertEqual(spectral['schema'],'rf-d/bdf-static-junction-spectral/v1')
+        self.assertEqual(sum(len(c['cells']) for c in spectral['cases']),64)
+        self.assertEqual(spectral['exact_ldlt_probes'],2112)
+        self.assertTrue(spectral['only_junction_diagonal_changed']);self.assertFalse(spectral['norm_changed'])
+        self.assertEqual(spectral['initial_anchor_reference'],'common weighted infinity')
+        self.assertFalse(spectral['actual_dae_error_bound'])
+        self.assertEqual(read(ROOT/"evidence/loudness_latch_bdf_static_precision_junction_spectral_validation.json")['schema'],
+                         'rf-d/bdf-static-junction-spectral-validation/v1')
+        modal=read(ROOT/"evidence/loudness_latch_bdf_static_precision_junction_modal.json.gz")
+        self.assertEqual(modal['schema'],'rf-d/bdf-static-junction-modal/v1')
+        self.assertEqual(sum(len(c['cells']) for c in modal['cases']),64)
+        self.assertTrue(modal['isolated_frozen_generator_only']);self.assertFalse(modal['time_varying_stability_certified'])
+        self.assertFalse(modal['actual_dae_error_bound']);self.assertFalse(modal['prior_propagation_modified'])
+        self.assertEqual(read(ROOT/"evidence/loudness_latch_bdf_static_precision_junction_modal_validation.json")['schema'],
+                         'rf-d/bdf-static-junction-modal-validation/v1')
+        metric=read(ROOT/"evidence/loudness_latch_bdf_static_precision_junction_metric.json.gz")
+        self.assertEqual(metric['schema'],'rf-d/bdf-static-junction-metric/v1')
+        self.assertEqual(len(metric['cases']),8);self.assertEqual(metric['metric_systems_attempted'],8)
+        self.assertTrue(metric['metric_constant_within_each_interval']);self.assertFalse(metric['metric_common_across_all_intervals'])
+        self.assertFalse(metric['actual_dae_error_bound']);self.assertTrue(metric['norm_changed'])
+        self.assertEqual(read(ROOT/"evidence/loudness_latch_bdf_static_precision_junction_metric_validation.json")['schema'],
+                         'rf-d/bdf-static-junction-metric-validation/v1')
+        directed=read(ROOT/"evidence/loudness_latch_bdf_static_precision_junction_directed.json.gz")
+        self.assertEqual(directed['schema'],'rf-d/bdf-static-junction-directed/v1')
+        self.assertEqual(len(directed['cases']),8);self.assertEqual(directed['exact_rate_ldlt_queries'],1584)
+        self.assertTrue(directed['only_junction_diagonal_changed']);self.assertFalse(directed['metric_changed'])
+        self.assertFalse(directed['actual_dae_error_bound']);self.assertFalse(directed['norm_changed'])
+        self.assertEqual(read(ROOT/"evidence/loudness_latch_bdf_static_precision_junction_directed_validation.json")['schema'],
+                         'rf-d/bdf-static-junction-directed-validation/v1')
+        balanced=read(ROOT/"evidence/loudness_latch_bdf_static_precision_junction_balanced.json.gz")
+        self.assertEqual(balanced['schema'],'rf-d/bdf-static-junction-balanced/v1')
+        self.assertEqual(len(balanced['cases']),8);self.assertEqual(balanced['exact_rate_ldlt_queries'],1584)
+        self.assertTrue(balanced['proof_weights_constant_within_each_interval']);self.assertFalse(balanced['proof_weights_fitted_to_results'])
+        for flag in ('metric_changed','norm_changed','anchor_changed','actual_dae_error_bound'):self.assertFalse(balanced[flag])
+        self.assertEqual(read(ROOT/"evidence/loudness_latch_bdf_static_precision_junction_balanced_validation.json")['schema'],
+                         'rf-d/bdf-static-junction-balanced-validation/v1')
+        anchor=read(ROOT/"evidence/loudness_latch_bdf_static_precision_anchor_budget.json.gz")
+        self.assertEqual(anchor['schema'],'rf-d/bdf-static-anchor-budget/v1')
+        self.assertEqual(len(anchor['cases']),8);self.assertEqual(anchor['affine_constraint_count'],4512)
+        self.assertTrue(anchor['conditional_sufficient_target_only']);self.assertTrue(anchor['exact_for_archived_affine_majorants'])
+        self.assertEqual(anchor['nodal_gate_v'],'1/1000');self.assertFalse(anchor['nonlinear_reserve_proven'])
+        for flag in ('metric_changed','norm_changed','anchor_changed','actual_dae_error_bound','initial_error_known'):self.assertFalse(anchor[flag])
+        self.assertEqual(read(ROOT/"evidence/loudness_latch_bdf_static_precision_anchor_budget_validation.json")['schema'],
+                         'rf-d/bdf-static-anchor-budget-validation/v1')
+        coverage=read(ROOT/"evidence/loudness_latch_bdf_static_precision_coverage_bridge.json.gz")
+        self.assertEqual(coverage['schema'],'rf-d/bdf-static-coverage-bridge/v1')
+        self.assertEqual(coverage['dc_lineage']['interval_count'],6486)
+        self.assertEqual(sum(v['lineage']['interval_count'] for v in coverage['refined_lineages']),1536)
+        self.assertEqual(len(coverage['cases']),8);self.assertEqual(len(coverage['bridges']),36);self.assertEqual(coverage['exact_bridge_ldlt_queries'],990)
+        self.assertTrue(coverage['numerical_dc_lineage_verified']);self.assertEqual(coverage['continuous_actual_error_certified_duration_s'],'0')
+        self.assertFalse(coverage['combined_ideal_inverse_selected']['complete']);self.assertFalse(coverage['full_path_coverage'])
+        self.assertEqual(read(ROOT/"evidence/loudness_latch_bdf_static_precision_coverage_bridge_validation.json")['schema'],
+                         'rf-d/bdf-static-coverage-bridge-validation/v1')
+        dc=read(ROOT/"evidence/loudness_latch_bdf_static_precision_dc_anchor.json.gz")
+        self.assertEqual(dc['schema'],'rf-d/bdf-static-dc-anchor/v1');self.assertTrue(dc['dc_root_enclosure_proven'])
+        self.assertTrue(dc['dc_memory_error_bound_proven']);self.assertEqual(len(dc['certificates']),4);self.assertEqual(len(dc['memory_enclosure']['rows']),25)
+        self.assertTrue(dc['event_audit']['frozen_voltage_hypothesis_refuted']);self.assertFalse(dc['post_key_initial_error_known'])
+        receipt=read(ROOT/"evidence/loudness_latch_bdf_static_precision_dc_anchor_validation.json")
+        self.assertEqual(receipt['schema'],'rf-d/bdf-static-dc-anchor-validation/v1');self.assertEqual(len(receipt['attempts']),2)
+        self.assertFalse(receipt['attempts'][0]['passed']);self.assertTrue(receipt['attempts'][1]['passed'])
+        self.assertTrue(all(a['inputs_unchanged'] for a in receipt['attempts']));self.assertEqual(len(validation_versions(receipt)),1)
+        event=read(ROOT/'evidence/loudness_latch_bdf_static_precision_key_projection.json.gz')
+        self.assertEqual(event['schema'],'rf-d/bdf-static-key-projection/v1')
+        self.assertTrue(all(c['converged'] for c in event['candidates']))
+        self.assertFalse(event['binary_algebra']['accepted']);self.assertFalse(event['post_key_initial_error_known'])
+        scaled=read(ROOT/'evidence/loudness_latch_bdf_static_precision_key_scaled.json.gz')
+        self.assertEqual(scaled['schema'],'rf-d/bdf-static-key-scaled/v1');self.assertEqual(len(scaled['certificates']),12)
+        self.assertTrue(scaled['laboratory_post_key_initial_error_known']);self.assertFalse(scaled['binary_integrator_initial_error_known'])
+        receipt=read(ROOT/'evidence/loudness_latch_bdf_static_precision_key_projection_validation.json')
+        self.assertEqual(receipt['schema'],'rf-d/bdf-static-key-projection-validation/v1');self.assertEqual(len(receipt['attempts']),2)
+        self.assertFalse(receipt['attempts'][0]['passed']);self.assertTrue(receipt['attempts'][1]['passed'])
+        self.assertTrue(all(a['inputs_unchanged'] for a in receipt['attempts']));self.assertEqual(len(validation_versions(receipt)),1)
+        startup=read(ROOT/'evidence/loudness_latch_bdf_static_precision_post_key_startup.json.gz')
+        self.assertEqual(startup['schema'],'rf-d/bdf-static-post-key-startup/v1')
+        self.assertTrue(startup['post_key_published_initial_error_known']);self.assertTrue(startup['complete'])
+        self.assertEqual(startup['accepted_intervals'],512);self.assertFalse(startup['history_fabricated'])
+        self.assertEqual(startup['continuous_actual_error_certified_duration_s'],'0')
+        self.assertFalse(startup['actual_dae_error_bound']);self.assertFalse(startup['original_integrator_modified'])
+        receipt=read(ROOT/'evidence/loudness_latch_bdf_static_precision_post_key_startup_validation.json')
+        self.assertEqual(receipt['schema'],'rf-d/bdf-static-post-key-startup-validation/v1')
+        self.assertEqual(len(receipt['attempts']),1);self.assertTrue(receipt['attempts'][0]['passed'])
+        self.assertTrue(receipt['attempts'][0]['inputs_unchanged']);self.assertEqual(validation_versions(receipt),[])
+        tube=read(ROOT/'evidence/loudness_latch_bdf_static_precision_startup_tube.json.gz')
+        self.assertEqual(tube['schema'],'rf-d/bdf-static-startup-tube/v1')
+        self.assertEqual(len(tube['trials']),3)
+        self.assertEqual(sum(len(t['cells']) for t in tube['trials']),24)
+        self.assertTrue(all(c['inverse_certified'] for t in tube['trials'] for c in t['cells']))
+        self.assertTrue(all(not t['result']['accepted'] for t in tube['trials']))
+        self.assertEqual(tube['continuous_actual_error_certified_duration_s'],'0')
+        self.assertFalse(tube['first_interval_nonlinear_error_proven']);self.assertFalse(tube['global_1mv_gate_closed'])
+        receipt=read(ROOT/'evidence/loudness_latch_bdf_static_precision_startup_tube_validation.json')
+        self.assertEqual(receipt['schema'],'rf-d/bdf-static-startup-tube-validation/v1')
+        self.assertEqual(len(receipt['attempts']),4)
+        self.assertTrue(all(not a['passed'] for a in receipt['attempts'][:3]));self.assertTrue(receipt['attempts'][3]['passed'])
+        self.assertTrue(all(a['inputs_unchanged'] for a in receipt['attempts']))
+        self.assertEqual(len(validation_versions(receipt)),3)
+        directed=read(ROOT/'evidence/loudness_latch_bdf_static_precision_startup_blocks.json.gz')
+        self.assertEqual(directed['schema'],'rf-d/bdf-static-startup-blocks/v1')
+        self.assertEqual(directed['primary_trial_mode'],[1,2]);self.assertTrue(directed['first_interval_nonlinear_error_proven'])
+        self.assertEqual(directed['continuous_actual_error_certified_duration_s'],directed['duration_s'])
+        self.assertEqual(len(directed['trials']),3)
+        self.assertEqual(sum(len(t['modes']) for t in directed['trials']),9)
+        self.assertEqual(sum(m['result']['accepted'] for t in directed['trials'] for m in t['modes']),1)
+        self.assertFalse(directed['global_1mv_gate_closed']);self.assertFalse(directed['full_path_coverage'])
+        self.assertEqual(directed['new_nonlinear_solves'],0);self.assertEqual(directed['new_preconditioners'],0)
+        receipt=read(ROOT/'evidence/loudness_latch_bdf_static_precision_startup_blocks_validation.json')
+        self.assertEqual(receipt['schema'],'rf-d/bdf-static-startup-blocks-validation/v1')
+        self.assertEqual(len(receipt['attempts']),1);self.assertTrue(receipt['attempts'][0]['passed'])
+        self.assertTrue(receipt['attempts'][0]['inputs_unchanged']);self.assertEqual(validation_versions(receipt),[])
+        report = self.report; archives = {r["path"]:r for r in report["archived_inputs"]}
+        self.assertEqual(tuple(archives), EXPECTED_EXCEPTIONS)
+        self.assertEqual(len(report["entries"]), len({entry["path"] for entry in report["entries"]}))
+        self.assertEqual(len(REPORTS), 82)
+        recovered = {}; declared_sources=set()
+        for entry in report["entries"]:
+            name = entry["path"]; blob = git_bytes(report["reference_git_head"], name)
+            self.assertEqual(sha(blob), entry["git_blob_sha256"])
+            raw = recover_historical_input(blob, archives[name]) if name in archives else blob
+            self.assertEqual(sha(raw), entry["working_copy_sha256"])
+            self.assertEqual(entry["identical_bytes"], name not in archives)
+            recovered[name] = raw
+        for path in REPORTS:
+            data = read(path)
+            for group in identities(data):
+                for name, expected in group.items():
+                    self.assertEqual(sha(recovered[name]), expected);declared_sources.add(name)
+        self.assertEqual(set(recovered),declared_sources)
+        versions=report["archived_validation_test_versions"]
+        self.assertEqual(len(versions),13)
+        for v in versions:
+            self.assertEqual(sha(v["source_utf8"].encode("utf-8")),v["source_sha256"])
+            receipt=read(ROOT/v["receipt"])
+            archived=validation_versions(receipt)
+            self.assertIn({k:value for k,value in v.items() if k!="receipt"},archived)
+            self.assertEqual(receipt["attempts"][v["attempt_index"]]["source_sha256_before"][v["path"]],v["source_sha256"])
+            self.assertNotEqual(sha(recovered[v["path"]]),v["source_sha256"])
+        summary = json.loads(SUMMARY.read_text(encoding="utf-8")); storage = summary["storage"]
+        self.assertEqual(len(self.raw), storage["bytes"])
+        self.assertEqual(sha(self.raw), storage["compressed_sha256"])
+        self.assertEqual(sha(canonical(report)), storage["canonical_json_sha256"])
+        self.assertEqual(gzip.decompress(self.raw), canonical(report))
+        for name, expected in report["source_sha256"].items():
+            self.assertEqual(hashlib.sha256((ROOT/name).read_bytes()).hexdigest(), expected)
+        self.assertFalse(report["original_direct_blob_comparison_passed"])
+        self.assertTrue(report["all_differences_declared_crlf_expansion"])
+        for key in ("prior_reports_modified", "input_files_modified", "numerical_experiment_repeated",
+                    "numerical_gates_changed", "audio_admitted"):
+            self.assertFalse(report[key])
+
+    def test_reconstruction_rejects_unidentified_or_changed_data(self):
+        archived = self.report["archived_inputs"][0]
+        blob = git_bytes(self.report["reference_git_head"], archived["path"])
+        with self.assertRaisesRegex(ValueError, "Git blob identity"):
+            recover_historical_input(blob+b" ", archived)
+        with self.assertRaisesRegex(ValueError, "working bytes"):
+            recover_historical_input(blob, archived|dict(working_copy_source_utf8="{}\r\n"))
+        modified = b"{}\r\n"
+        with self.assertRaisesRegex(ValueError, "LF to CRLF"):
+            recover_historical_input(blob, archived|dict(working_copy_source_utf8=modified.decode(),working_copy_sha256=sha(modified)))
+        v=self.report["archived_validation_test_versions"][0]
+        receipt=read(ROOT/v["receipt"])
+        for suite in receipt["attempts"][v["attempt_index"]]["suites"]:
+            if "failed_test_source_utf8" in suite:suite["failed_test_source_utf8"]+="\n"
+        with self.assertRaisesRegex(ValueError,"failed test source identity"):
+            validation_versions(receipt)
+
+
+if __name__ == "__main__":
+    unittest.main()
