@@ -1,9 +1,15 @@
 # Matriz de fidelidad
 
+La [comparación dirigida no lineal](BIESTABLE_TUBO_BLOQUES_RESULTADOS.md)
+certifica t=0+ hasta 195,3125 ns para el modelo nominal: error nodal
+≤0,586 µV con tubo de 1 µV. No hay solves nuevos ni cambios físicos.
+La memoria final queda acotada en sus normas explícitas. El recorrido
+completo, gate global de 1 mV, hardware, audio y deadline siguen abiertos.
+
 El [primer tubo no lineal](BIESTABLE_PRIMER_TUBO_RESULTADOS.md) prueba
 24 inversas del descriptor medio sobre 195,3125 ns, pero rechaza los tres
 radios por falta de inclusión estricta de sus presupuestos nodales.
-Ese resultado no certifica error continuo: la cobertura real permanece
+En aquel corte no se certificaba error continuo: su cobertura real quedó
 en cero. Las cotas excesivas no son medidas de inestabilidad física.
 
 La [publicación high+low y trayectoria propia](BIESTABLE_POST_KEY_ARRANQUE_RESULTADOS.md)

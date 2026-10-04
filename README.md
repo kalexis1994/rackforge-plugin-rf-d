@@ -4,11 +4,20 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+La [comparación dirigida con métrica común de junturas](docs/BIESTABLE_TUBO_BLOQUES_RESULTADOS.md)
+certifica el **primer intervalo continuo de 195,3125 ns**, con error
+nodal **≤0,586 µV** dentro de un tubo de 1 µV. El banco conserva
+las otras ocho variantes rechazadas; no cambia estados, circuito o residual.
+Diez regresiones nuevas pasan al primer intento; el [corpus ampliado](docs/BIESTABLE_TUBO_BLOQUES_ENTRADAS.md)
+recupera 472 entradas de 82 informes. La memoria final
+queda disponible para [continuar sin reiniciarla](docs/BIESTABLE_CONTINUACION_CERTIFICADA_PLAN.md).
+El gate global de **1 mV sigue abierto**, junto a física, voz y deadline.
+
 La [primera reconstrucción y prueba de tubo no lineal](docs/BIESTABLE_PRIMER_TUBO_RESULTADOS.md)
 cubre un soporte de **195,3125 ns** con dos estados reales y memoria Q(v).
 Los **24 recintos medios del descriptor** son invertibles, pero los
 **tres cierres rechazan**: el presupuesto escalar excede sus radios.
-La duración de error continuo certificado sigue en cero. Se conserva
+En ese corte, la duración de error continuo certificado quedó en cero. Se conserva
 el experimento para estudiar [comparación dirigida por bloques](docs/BIESTABLE_PRIMER_TUBO_BLOQUES_PLAN.md).
 El [corpus ampliado](docs/BIESTABLE_PRIMER_TUBO_ENTRADAS.md) incluye 80 informes
 y trece versiones fallidas de pruebas. Los gates globales de 1 mV,
