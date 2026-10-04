@@ -25,9 +25,16 @@ PATHS=tuple(dict.fromkeys((*prior.PATHS,prior.OUTPUT,prior.SUMMARY,
     ROOT/'evidence/loudness_latch_bdf_static_precision_coordinate_memory_inputs.json.gz',
     ROOT/'evidence/loudness_latch_bdf_static_precision_coordinate_memory_inputs_summary.json',
     ROOT/'evidence/loudness_latch_bdf_static_precision_coordinate_memory_inputs_validation.json',
+    ROOT/'evidence/loudness_latch_bdf_static_precision_fine_prefix_measurement_attempt.json',
     Path(__file__).resolve(),Path(law.__file__).resolve(),PROTOCOL)))
 read=prior.read
 serial=prior.prior.serial
+
+
+def diagnostic_bound(result):
+    if 'peak_node_error_upper_v' not in result:return None
+    try:return float(F(result['peak_node_error_upper_v']))
+    except OverflowError:return 'outside binary64 display range; exact rational retained'
 
 
 def generate():
@@ -78,7 +85,7 @@ def generate():
                     result=law.blocks.close(cells,incoming,radius,origin)
             trials.append(dict(radius_v=str(radius),covers=covers,cells=cells,result=result))
             print(json.dumps(dict(interval=interval_index,start_s=float(F(initial.time_s)),end_s=float(F(endpoint.time_s)),radius_v=float(radius),
-                inverse_cells=len(inverses),accepted=result['accepted'],node_bound_v=float(F(result['peak_node_error_upper_v'])) if 'peak_node_error_upper_v' in result else None,reason=result['reason'])),flush=True)
+                inverse_cells=len(inverses),accepted=result['accepted'],node_bound_v=diagnostic_bound(result),reason=result['reason'])),flush=True)
         selection=law.select(trials)
         record=dict(interval_index=interval_index,start_s=str(F(initial.time_s)),end_s=str(F(endpoint.time_s)),prepared=serial(prepared),interface=join,
             incoming_certified_result_sha256=law.digest(previous),incoming_metric_sha256=law.digest(metric),incoming_node_error_upper_v=str(origin),
