@@ -81,7 +81,10 @@ class StartupTube(unittest.TestCase):
                         expected=static+dynamic
                     self.assertEqual(D(value),expected)
                 for i,value in enumerate(actual['constraint_v'][:21]):
-                    upper=F(r['base_cells'][cell]['forcing_inputs']['constraint_point_v'][i]);self.assertLessEqual(abs(F(value)),upper)
+                    upper=F(r['base_cells'][cell]['forcing_inputs']['constraint_point_v'][i])
+                    exact=law.poly.evaluate(p['equations'][i],u);self.assertLessEqual(abs(exact),upper)
+                    with localcontext() as ctx:
+                        ctx.prec=precision;self.assertEqual(D(value),law.event.decimal(exact))
             with localcontext() as ctx:
                 ctx.prec=100;params=self.network.network.latch.device.parameters
                 for j,(voltage,dep,t,em) in enumerate(p['junctions']):
