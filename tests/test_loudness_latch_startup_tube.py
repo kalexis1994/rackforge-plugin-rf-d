@@ -63,18 +63,23 @@ class StartupTube(unittest.TestCase):
                     # a rounded Decimal product is a diagnostic, not an exact real.
                     shunts=[v for v in self.g['conductances'] if v['left']==61]
                     self.assertEqual(len(shunts),1);self.assertEqual(shunts[0]['right'],'GND')
-                    self.assertFalse(any(61 in v['a'] for v in law.event.ports(self.network)))
                     self.assertFalse(any(61 in v.values() for name in ('resistors','bjts','diodes') for v in self.g[name]))
                     exact_v=law.poly.evaluate(p['x'][61],u);conductance=F(shunts[0]['siemens'])
-                    exact_current=conductance*exact_v
+                    contributions=[]
+                    for port,qp in zip(law.event.ports(self.network)[:21],p['q'][:21]):
+                        if 61 in port['a']:
+                            contributions.append((port['a'][61],law.poly.evaluate(law.poly.differentiate(qp),u)/p['h']))
+                    self.assertFalse(any(61 in port['a'] for port in law.event.ports(self.network)[21:]))
+                    exact_current=conductance*exact_v+sum((a*rate for a,rate in contributions),F(0))
                     self.assertLessEqual(abs(exact_current),F(bound))
                     with localcontext() as ctx:
                         ctx.prec=precision;rounded_v=law.event.decimal(exact_v)
-                        rounded_product=D.from_float(shunts[0]['siemens'])*rounded_v
-                    self.assertEqual(D(value),rounded_product)
-                    rounding=abs(F(rounded_v)-exact_v)*conductance+abs(F(rounded_product)-conductance*F(rounded_v))
-                    self.assertLessEqual(abs(F(value)-exact_current),rounding)
-                    self.assertLessEqual(abs(F(value)),F(bound)+rounding)
+                        static=D.from_float(shunts[0]['siemens'])*rounded_v;dynamic=D(0)
+                        # Independently replay this purely linear row; cancellation
+                        # of larger currents need not round toward its exact bound.
+                        for a,rate in contributions:dynamic+=law.event.decimal(a)*law.event.decimal(rate)
+                        expected=static+dynamic
+                    self.assertEqual(D(value),expected)
                 for i,value in enumerate(actual['constraint_v'][:21]):
                     upper=F(r['base_cells'][cell]['forcing_inputs']['constraint_point_v'][i]);self.assertLessEqual(abs(F(value)),upper)
             with localcontext() as ctx:
