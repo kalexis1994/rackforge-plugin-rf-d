@@ -13,6 +13,29 @@ def sha(v):return hashlib.sha256(v).hexdigest()
 def decimal(v):v=F(v);return D(v.numerator)/D(v.denominator)
 def empty_graph(n):return dict(node_count=n,fixed=dict(GND=0.),resistors=[],conductances=[],bjts=[],diodes=[])
 
+def independent_point_jacobian(g,x):
+    # Outgoing-current gradients assembled before matrix multiplication. All
+    # linear coefficients are exact; finite-precision Decimal values are not
+    # exact witnesses for a degenerate rational interval.
+    x=list(map(F,x));n=len(x);j=[[(F(0),F(0)) for _ in x] for _ in x];iv=law.iv
+    def voltage(k):return x[k] if isinstance(k,int) else F(g['fixed'][k])
+    def add(row,entries):
+        if isinstance(row,int):
+            for col,v in entries:
+                if isinstance(col,int):j[row][col]=iv.add(j[row][col],v)
+    def branch(a,b,v):add(a,((a,v),(b,iv.neg(v))));add(b,((a,iv.neg(v)),(b,v)))
+    for r in g['resistors']+g['conductances']:
+        v=1/F(r['ohm']) if 'ohm' in r else F(r['siemens']);branch(r['left'],r['right'],(v,v))
+    for q in g['bjts']:
+        b,c,e=q['base'],q['collector'],q['emitter'];s=F(q['polarity']);vt=F(q['vt']);sat=F(q['is_a']);bf=F(q['beta_forward']);br=F(q['beta_reverse'])
+        gf=iv.scale(iv.base.exp_bounds(s*(voltage(b)-voltage(e))/vt),sat/vt);gr=iv.scale(iv.base.exp_bounds(s*(voltage(b)-voltage(c))/vt),sat/vt)
+        add(b,((b,iv.add(iv.scale(gf,1/bf),iv.scale(gr,1/br))),(e,iv.scale(gf,-1/bf)),(c,iv.scale(gr,-1/br))))
+        add(c,((b,iv.sub(gf,iv.scale(gr,1+1/br))),(e,iv.neg(gf)),(c,iv.scale(gr,1+1/br))))
+        add(e,((b,iv.add(iv.scale(gf,-1-1/bf),gr)),(e,iv.scale(gf,1+1/bf)),(c,iv.neg(gr))))
+    for d in g['diodes']:
+        a,b=d['anode'],d['cathode'];vt=F(d['ideality'])*F(d['vt']);v=iv.scale(iv.base.exp_bounds((voltage(a)-voltage(b))/vt),F(d['is_a'])/vt);branch(a,b,v)
+    return j
+
 class DcAnchor(unittest.TestCase):
     @classmethod
     def setUpClass(cls):cls.report=read(producer.OUTPUT)
@@ -31,8 +54,8 @@ class DcAnchor(unittest.TestCase):
             with self.assertRaises(ValueError):law.prove(defect,residual,radius)
 
     def test_rank_one_preconditioning_current_conservation_and_compiled_cancellation(self):
-        g=empty_graph(3);g['bjts']=[dict(ref='Q',base=0,collector=1,emitter=2,polarity=1,is_a=F(1,100),vt=F(1,10),beta_forward=2,beta_reverse=3)]
-        inverse=[[F(1),F(1),F(1)],[F(2),F(-1),F(3)],[F(0),F(1),F(-1)]];compiled=law.compile_graph(g,[0,0,0],inverse)
+        g=empty_graph(3);g['bjts']=[dict(ref='Q',base=0,collector=1,emitter=2,polarity=1,is_a='1/100',vt='1/10',beta_forward=2,beta_reverse=3)]
+        inverse=[[1,1,1],[2,-1,3],[0,1,-1]];compiled=law.compile_graph(g,[0,0,0],inverse)
         # The first preconditioner row sums all KCLs. Every nonlinear coefficient cancels exactly.
         self.assertFalse(any(i==0 for t in compiled['terms'] for i,j,c in t['coefficients']))
         gf=F(1,10);j=[[gf*(F(1,2)+F(1,3)),-gf/3,-gf/2],[-gf/3,gf*(1+F(1,3)),-gf],[-gf/2,-gf,gf*(1+F(1,2))]]
@@ -68,11 +91,14 @@ class DcAnchor(unittest.TestCase):
                 for i,row in enumerate(r['inverse_binary']):
                     value=sum((D.from_float(v)*rd[k] for k,v in enumerate(row)),D(0));lo,hi=compiled['preconditioned_residual'][i]
                     self.assertLessEqual(lo,F(value));self.assertGreaterEqual(hi,F(value))
-                cert=r['certificates'][0]
-                for i in range(94):
-                    for j in range(94):
-                        value=D(i==j)-sum((D.from_float(r['inverse_binary'][i][k])*jd[k][j] for k in range(94)),D(0))
-                        lo,hi=map(F,cert['defect_intervals'][i][j]);self.assertLessEqual(lo,F(value));self.assertGreaterEqual(hi,F(value))
+        jacobian=independent_point_jacobian(r['graph'],center);cert=r['certificates'][0]
+        columns=[[(k,jacobian[k][j]) for k in range(94) if jacobian[k][j]!=(F(0),F(0))] for j in range(94)]
+        for i in range(94):
+            for j in range(94):
+                value=(F(i==j),F(i==j))
+                for k,v in columns[j]:value=law.iv.sub(value,law.iv.scale(v,F(r['inverse_binary'][i][k])))
+                lo,hi=map(F,cert['defect_intervals'][i][j])
+                self.assertLessEqual(lo,value[1]);self.assertGreaterEqual(hi,value[0]) # Independent valid intervals must intersect.
 
     def test_all_25_memory_bounds_scales_and_initial_norm(self):
         r=self.report;frozen=read(producer.prior.FIXED);network=producer.CompensatedBdfNetwork(200,producer.model_parameters(1,'finite_transit'));state=producer.unpack(network,frozen['initial']).current
