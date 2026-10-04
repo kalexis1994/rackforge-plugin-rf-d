@@ -12,6 +12,16 @@ No habrá acceso a una unidad física. El [protocolo sin hardware](VALIDACION_SI
 
 ## Fase B — Solver y banco de pruebas
 
+El [presupuesto condicional del anclaje](BIESTABLE_PRESUPUESTO_ANCLAJE_RESULTADOS.md)
+reconstruye **4.512 pares de celda/nodo** y 18 objetivos para el gate de 1 mV.
+Ataque N2 permite ~0,185 µV de anclaje ponderado sin reserva, o ~0,092 µV
+con 0,5 mV reservados hipotéticamente. No se ha acotado el error entrante
+ni el resto no lineal. Reset conserva sus dos rechazos y no recibe presupuesto.
+El [corpus](BIESTABLE_PRESUPUESTO_ANCLAJE_ENTRADAS.md) reconstruye **401 entradas**
+de 69 informes; siete regresiones nuevas pasan al primer intento.
+**1 mV global sigue abierto.** Próximo corte: inventario desde DC, anclajes
+entre ventanas, conversiones de norma y estrategia de cobertura para reset.
+
 El [radio balanceado en la misma métrica](BIESTABLE_JUNTURAS_BALANCEADA_RESULTADOS.md)
 estrecha **14/48 tasas** con pesos de prueba fijados antes de medir.
 Ataque N2 baja de ~9,16e9 V a **~6,72 µV** de término forzado hipotético;
