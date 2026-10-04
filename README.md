@@ -4,11 +4,23 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+El [estado consistente post-KEY](docs/BIESTABLE_POST_KEY_RESULTADOS.md)
+resuelve 119 ecuaciones sin avanzar el reloj, conservando las 25 cargas.
+Dos semillas convergen; un recinto parametrizado por la incertidumbre DC
+acota el error local a **~37,51 nV nodales**, con V77_post≈9,646 V.
+Se conservan el rechazo de la primera escala y el gate backward binary64.
+La publicación racional de laboratorio pasa KCL y restricciones; resta
+publicarla en el integrador. El [corpus](docs/BIESTABLE_POST_KEY_ENTRADAS.md)
+reconstruye **439 entradas de 76 informes** y diez versiones fallidas.
+Diez regresiones nuevas pasan, preservando ambos intentos primarios.
+**1 mV global sigue abierto.** Próximo corte: [estado high+low, arranque
+sin historia y primer tramo contiguo](docs/BIESTABLE_POST_KEY_PUBLICACION_PLAN.md).
+
 El [DC nominal certificado y la auditoría del evento KEY](docs/BIESTABLE_DC_EVENTO_RESULTADOS.md)
 acotan la raíz local KEY=0 a **~74 pV nodales** y la memoria inicial a
 **~148 pV ponderados**, con cuatro cajas contractivas y 25 cargas verificadas.
 CR10 exige un salto algebraico de al menos **~8,27 V** para permanecer
-en el dominio al pasar KEY a 10 V. El estado post-KEY aún no está resuelto.
+en el dominio al pasar KEY a 10 V. En ese corte, el estado post-KEY aún no estaba resuelto.
 El [corpus](docs/BIESTABLE_DC_EVENTO_ENTRADAS.md) reconstruye **423 entradas**
 de 73 informes y conserva nueve versiones fallidas históricas de tests.
 Ocho regresiones nuevas pasan; la suite primaria conserva sus dos intentos.

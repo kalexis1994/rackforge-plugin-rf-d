@@ -1,11 +1,19 @@
 # Matriz de fidelidad
 
+El [evento post-KEY](BIESTABLE_POST_KEY_RESULTADOS.md) tiene raíz local
+consistente para toda la caja de cargas DC, con error <=37,51 nV por nodo
+y <=37,51 V/s por tasa de coordenada en la publicación racional. El reloj
+sigue en cero; no se ha publicado el evento en el integrador ni certificado
+una trayectoria nueva. Es una prueba del modelo nominal sintético. El gate
+backward binary64 sigue rechazado; física, audio, deadline y 1 mV global
+mantienen sus gates separados.
+
 El [recinto del DC KEY=0](BIESTABLE_DC_EVENTO_RESULTADOS.md) certifica
 existencia y unicidad local del modelo nominal, con ~74 pV de error nodal
 y ~148 pV de memoria ponderada. Es precisión numérica de parámetros
 sintéticos, sin identificación física vintage. La auditoría de CR10 refuta
 conservar todos los voltajes al pasar KEY a 10 V dentro del dominio vigente.
-El estado consistente post-evento y el error temporal global siguen abiertos.
+Ese corte dejaba abiertos el estado post-evento y el error temporal global.
 
 Los [sellos analíticos binary64](BIESTABLE_SELLOS_BINARIOS_RESULTADOS.md)
 pasan ocho contrastes de corriente/derivada y ocho solves algebraicos.
