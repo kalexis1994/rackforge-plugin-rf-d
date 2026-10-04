@@ -74,7 +74,7 @@ class StaticInputs(unittest.TestCase):
         self.assertEqual(read(ROOT/"evidence/loudness_latch_bdf_static_precision_block_comparison_validation.json")['schema'],
                          'rf-d/bdf-static-block-comparison-validation/v1')
         self.assertNotEqual(OUTPUT,SUMMARY);self.assertNotIn(OUTPUT,REPORTS);self.assertNotIn(SUMMARY,REPORTS)
-        self.assertEqual(SUMMARY.name,'loudness_latch_bdf_static_precision_residual_action_inputs_summary.json')
+        self.assertEqual(SUMMARY.name,'loudness_latch_bdf_static_precision_directed_prefix_inputs_summary.json')
         rms=read(ROOT/"evidence/loudness_latch_bdf_static_precision_junction_rms.json.gz")
         self.assertEqual(rms['schema'],'rf-d/bdf-static-junction-rms/v1')
         self.assertEqual(sum(len(c['cells']) for c in rms['cases']),64)
@@ -298,6 +298,15 @@ class StaticInputs(unittest.TestCase):
         self.assertEqual(len(receipt['attempts']),1);self.assertTrue(receipt['attempts'][0]['passed'])
         self.assertEqual(receipt['attempts'][0]['suites'][0]['reported_tests'],4)
         self.assertTrue(receipt['attempts'][0]['inputs_unchanged']);self.assertEqual(validation_versions(receipt),[])
+        own_receipt=read(ROOT/'evidence/loudness_latch_bdf_static_precision_directed_prefix_inputs_validation.json')
+        first=own_receipt['attempts'][0]
+        self.assertFalse(first['passed']);self.assertTrue(first['inputs_unchanged'])
+        versions_own=validation_versions(own_receipt);self.assertEqual(len(versions_own),1)
+        v=versions_own[0]
+        self.assertEqual(sha(v['source_utf8'].encode('utf-8')),v['source_sha256'])
+        self.assertEqual(sha(git_bytes(first['environment']['git_head'],v['path'])),v['source_sha256'])
+        self.assertNotEqual(sha((ROOT/v['path']).read_bytes()),v['source_sha256'])
+        self.assertIn('loudness_latch_bdf_static_precision_residual_action_inputs_summary.json',first['suites'][0]['stderr'])
         self.assertEqual(self.report["integer_text_limit_during"],0)
         report = self.report; archives = {r["path"]:r for r in report["archived_inputs"]}
         self.assertEqual(tuple(archives), EXPECTED_EXCEPTIONS)
