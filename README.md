@@ -4,6 +4,17 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+El [radio balanceado en la misma métrica](docs/BIESTABLE_JUNTURAS_BALANCEADA_RESULTADOS.md)
+estrecha **14/48 tasas** con pesos de prueba fijados antes de medir.
+Ataque N2 baja de ~9,16e9 V a **~6,72 µV** de término forzado hipotético;
+las seis ventanas aceptadas quedan por debajo de 10 µV y no empeoran.
+P, norma, conversiones y anclaje se conservan; reset mantiene sus dos rechazos.
+La contracción interna sigue certificada en 32 celdas de prefijo y cola.
+El [corpus](docs/BIESTABLE_JUNTURAS_BALANCEADA_ENTRADAS.md) reconstruye **390 entradas**
+de 67 informes; ocho regresiones nuevas pasan al primer intento.
+**1 mV global sigue abierto.** Próximo corte: presupuesto admisible de anclaje,
+resto no lineal y cobertura continua desde DC, manteniendo todos los rechazos.
+
 El [certificado de tasa dirigida](docs/BIESTABLE_JUNTURAS_DIRIGIDA_RESULTADOS.md)
 conserva P, norma, conversiones y anclaje, y estrecha **40/48 tasas**.
 Ataque N4 baja a término forzado hipotético **~5,22 µV**; ataque N2
