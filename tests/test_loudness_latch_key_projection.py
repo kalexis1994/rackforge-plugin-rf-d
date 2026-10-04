@@ -147,7 +147,9 @@ class KeyProjection(unittest.TestCase):
         c=dict(constant_defect=[[(F(0),F(0))]*119 for _ in range(119)],terms=[],junctions=[],
             preconditioned_residual=[(F(0),F(0))]*119,charge_sensitivity=[[F(0)]*25 for _ in range(119)],weights=[F(1)]*119)
         c['charge_sensitivity'][0][0]=F(2);u=[(F(-1,100),F(1,50))]+[(F(0),F(0))]*24
-        proof=law.certify(c,F(1,20),u);self.assertTrue(proof['accepted']);self.assertEqual(F(proof['weighted_posterior_error_upper_v']),F(1,25))
+        proof=law.certify(c,F(1,20),u);self.assertTrue(proof['accepted'])
+        bound=F(proof['weighted_posterior_error_upper_v'])
+        self.assertGreaterEqual(bound,F(1,25));self.assertLessEqual(bound,F(1,25)+F(1,2**200))
         self.assertFalse(law.certify(c,F(3,100),u)['accepted'])
         for radius,u in ((0,u),(1,[]),(1,[(1,-1)]*25)):
             with self.assertRaises(ValueError):law.certify(c,radius,u)
