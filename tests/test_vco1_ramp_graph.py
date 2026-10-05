@@ -162,7 +162,7 @@ class RampGraphTests(unittest.TestCase):
         graph = json.loads((ROOT / "evidence" / "vco1_ramp_graph.json").read_text(encoding="utf-8"))
         parts = {part["ref"]: part for part in graph["parts"]}
         self.assertEqual(parts["Q2"]["terminals"], {
-            "base": "SCHMITT_DRIVE", "collector": "Q2_COLLECTOR", "emitter": "Q2_EMITTER"
+            "base": "RESET_BIAS", "collector": "Q2_COLLECTOR", "emitter": "Q2_EMITTER"
         })
         self.assertEqual(parts["Q1"]["terminals"], {
             "base": "Q2_COLLECTOR", "collector": "POS10_V", "emitter": "Q1_EMITTER"
