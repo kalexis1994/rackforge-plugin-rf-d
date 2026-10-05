@@ -4,6 +4,19 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+El [refinamiento de memoria](docs/BIESTABLE_MEMORIA_JUNTURAS_RESULTADOS.md)
+cierra el soporte 33 con dieciséis macroceldas, manteniendo curva, radio,
+reloj y 22 memorias reales en P fija. **34 soportes hasta ≈350 µs**,
+local nuevo **≤0,644 µV**, acumulado **≤0,793 µV**. El control de ocho celdas
+rechaza y se conserva; 32/64 quedan no medidas por primera admisión.
+Una inversa y tres tasas reutilizadas por identidad; 24 budgets y 192
+subcertificados nuevos idénticos a los del control original en todos sus bytes.
+Diez pruebas pasan al primero. Corpus de 763 entradas, 214 informes y 259
+hashes propios, con 20 fuentes históricas y las tres excepciones CRLF.
+No hay solves, candidatos o sistemas P nuevos ni reinicio del anclaje.
+Próximo: [continuación refinada 34–39](docs/BIESTABLE_CONTINUACION_REFINADA_PLAN.md).
+**1 mV global sigue abierto.**
+
 El [segundo banco preparado](docs/BIESTABLE_CONTINUACION_PREPARADA_SEGUNDA_RESULTADOS.md)
 certifica **33 soportes contiguos hasta ≈337,5 µs**, acumulado **≤0,793 µV**.
 Los cuatro anchos admiten el soporte 32 y rechazan el 33: mejor cota rechazada ≈1,164 µV
