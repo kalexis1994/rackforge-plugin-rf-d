@@ -64,7 +64,7 @@ datos y validator primario a `0cf6e0c`, fuentes del corpus a `4162fa4`,
 corpus a `07bafc9`, y atributos Git a `08bd258`. Sólo el fixture primario
 cambia en `50eb9a9`. Los tests recuperan todas las entradas desde sus blobs
 con las tres excepciones explícitas y verifican los 139 hashes propios.
-Los 2011 enlaces locales de RF-D resuelven y no quedan cachés Python.
+Los 2015 enlaces locales de RF-D resuelven y no quedan cachés Python.
 
 La recuperación de bytes no prueba otro SO/BLAS, trayectoria completa,
 identificación física o audio. Se admite sólo el prefijo nominal de ocho
