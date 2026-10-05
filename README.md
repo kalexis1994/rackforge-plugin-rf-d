@@ -4,6 +4,16 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+El [recinto compartido](docs/BIESTABLE_RECINTOS_COMPARTIDOS_RESULTADOS.md)
+vuelve a certificar los mismos 16 soportes hasta ≈125 µs, error acumulado
+≤0,793 µV. Una inversa uniforme sustituye 64 recintos y requiere 99 consultas
+de tasa frente a 6336; se recalculan las 512 acciones con defecto y cola.
+Ocho pruebas nuevas pasan al primero; corpus de 613 entradas y 115 informes.
+P, curvas, RHS y transporte real se conservan. Este bloque reduce costes
+de certificación offline; no amplía la cobertura temporal ni admite audio.
+Próximo: [continuación con dominios nuevos](docs/BIESTABLE_CONTINUACION_COMPARTIDA_PLAN.md).
+**1 mV global sigue abierto.**
+
 El [prefijo con referencias curvas](docs/BIESTABLE_PREFIJO_CURVO_RESULTADOS.md)
 certifica **dieciséis intervalos contiguos hasta aproximadamente 125 µs**,
 con **error nodal acumulado ≤0,793 µV**. Añade ocho soportes con picos
