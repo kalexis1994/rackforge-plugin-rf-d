@@ -75,7 +75,9 @@ def validate(report):
             raise ValueError("fine refinement/method gate failed")
     if not report["cases"]["keyboard-low"]["measurements"]["frequency_hz"] < report["cases"]["c4-10-gear125"]["measurements"]["frequency_hz"] < report["cases"]["keyboard-high"]["measurements"]["frequency_hz"]:
         raise ValueError("keyboard direction is wrong")
-    duties = [report["cases"][f"pulse-{i}"]["measurements"]["pulse_negative_duty"] for i in (10, 11, 12)]
+    # The source range describes HIGH-state width. Output 20B switches from
+    # near ground to negative: the measured negative duration is its complement.
+    duties = [1-report["cases"][f"pulse-{i}"]["measurements"]["pulse_negative_duty"] for i in (10, 11, 12)]
     if not 0 < duties[2] < duties[1] < duties[0] < 1:
         raise ValueError("pulse selector direction/domain gate failed")
 

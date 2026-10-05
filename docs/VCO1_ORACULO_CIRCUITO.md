@@ -102,3 +102,25 @@ de frecuencia. Se conservan las observaciones completas de cada método.
 python -B tools/vco1_circuit_probes.py --bank convergence-v1
 python -B -m unittest discover -s tests -p 'test_vco1*.py' -v
 ```
+
+## Corrección de lectura del duty y escucha
+
+El primer banco conserva un rechazo de su validador: interpretó la
+fracción del estado negativo como ancho HIGH. En 20B el estado bajo es
+negativo; el ancho alto es **1 - duty_negativo**. Se corrige sólo esa
+interpretación, preservando trazas, circuitos, tolerancias y fallo original.
+La validación siguiente recompone métricas desde los 14 exports privados
+completos y registra que hubo cero nuevos solves.
+
+El adaptador de escucha usa el último ciclo estacionario medido, integra
+exactamente su interpolación lineal no uniforme para obtener coeficientes
+Fourier y conserva sólo armónicos debajo de 0.45 Fs a 48 kHz. Quita DC,
+aplica **8 V por full scale** fijo y fades de 10 ms; no normaliza por pico.
+Estos procesos pertenecen al monitor, no al circuito. El WAV repite el
+ciclo estacionario reconstruido; no es una simulación SPICE de toda su
+duración ni la voz completa con mixer/filtro/VCA. Sus archivos son locales.
+
+```powershell
+python -B tools/validate_vco1_circuit_bank.py
+python -B tools/render_vco1_circuit.py
+```
