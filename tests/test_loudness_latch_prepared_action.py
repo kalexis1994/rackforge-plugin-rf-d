@@ -55,7 +55,7 @@ class PreparedAction(unittest.TestCase):
             'contraction_upper':'1/8','strict_contraction':True,'radius_v':'1/1000000'}
         state=p.prepare(x,d,cover);polys=[['1','-2','1'],['1','-2','1']]
         compiled=ref.compile_polynomials(x,d,polys)
-        self.assertEqual(p._compile(state,polys),compiled);self.assertEqual(compiled[0],(F(0),))
+        self.assertEqual(p._compile(state,polys),compiled);self.assertEqual(compiled[0],(F(0),F(0),F(0)))
         actual=p.enclose(state,x,d,cover,compiled,['1/100','1/50'],F(1,8),F(7,8))
         expected=ref.enclose(x,d,cover,compiled,['1/100','1/50'],F(1,8),F(7,8))
         self.assertEqual(canonical(actual),canonical(expected))
