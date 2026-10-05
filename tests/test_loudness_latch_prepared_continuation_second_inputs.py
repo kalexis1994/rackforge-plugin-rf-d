@@ -74,7 +74,7 @@ class StaticInputs(unittest.TestCase):
         self.assertEqual(read(ROOT/"evidence/loudness_latch_bdf_static_precision_block_comparison_validation.json")['schema'],
                          'rf-d/bdf-static-block-comparison-validation/v1')
         self.assertNotEqual(OUTPUT,SUMMARY);self.assertNotIn(OUTPUT,REPORTS);self.assertNotIn(SUMMARY,REPORTS)
-        self.assertEqual(SUMMARY.name,'loudness_latch_bdf_static_precision_prepared_continuation_inputs_summary.json')
+        self.assertEqual(SUMMARY.name,'loudness_latch_bdf_static_precision_prepared_continuation_second_inputs_summary.json')
         rms=read(ROOT/"evidence/loudness_latch_bdf_static_precision_junction_rms.json.gz")
         self.assertEqual(rms['schema'],'rf-d/bdf-static-junction-rms/v1')
         self.assertEqual(sum(len(c['cells']) for c in rms['cases']),64)
