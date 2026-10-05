@@ -1,0 +1,1747 @@
+{
+  "branches": [
+    {
+      "ref": "C1",
+      "terminals": [
+        "GND",
+        "RAMP_C1"
+      ],
+      "value": 1e-08,
+      "kind": "C"
+    },
+    {
+      "ref": "C2",
+      "terminals": [
+        "QA_BASE",
+        "QB_BASE"
+      ],
+      "value": 1e-10,
+      "kind": "C"
+    },
+    {
+      "ref": "C3",
+      "terminals": [
+        "FET_C3_LEFT",
+        "SCHMITT_DRIVE"
+      ],
+      "value": 1e-10,
+      "kind": "C"
+    },
+    {
+      "ref": "C4",
+      "terminals": [
+        "FET_C4_LEFT",
+        "SCHMITT_DRIVE"
+      ],
+      "value": 1e-11,
+      "kind": "C"
+    },
+    {
+      "ref": "C14",
+      "terminals": [
+        "NEG4_REF",
+        "GND"
+      ],
+      "value": 1.2e-07,
+      "kind": "C"
+    },
+    {
+      "ref": "IC1",
+      "terminals": {
+        "noninverting": "IC1_PLUS",
+        "inverting": "IC1_SUM",
+        "output": "IC1_OUT",
+        "positive_supply": "GND",
+        "negative_supply": "NEG10_V"
+      },
+      "model": "TI-LM741-MODEL"
+    },
+    {
+      "ref": "IC2.Qa",
+      "terminals": [
+        "RAMP_C1",
+        "QA_BASE",
+        "PAIR_EMITTER"
+      ],
+      "model": "LAB_NPN"
+    },
+    {
+      "ref": "IC2.Qb",
+      "terminals": [
+        "QB_COLLECTOR",
+        "QB_BASE",
+        "PAIR_EMITTER"
+      ],
+      "model": "LAB_NPN"
+    },
+    {
+      "ref": "IC2.Qc",
+      "terminals": [
+        "PAIR_EMITTER",
+        "QC_BASE",
+        "QC_EMITTER"
+      ],
+      "model": "LAB_NPN"
+    },
+    {
+      "ref": "IC3",
+      "terminals": {
+        "noninverting": "QB_COLLECTOR",
+        "inverting": "NEG4_REF",
+        "output": "IC3_OUT",
+        "positive_supply": "POS10_V",
+        "negative_supply": "NEG10_V"
+      },
+      "model": "TI-LM741-MODEL"
+    },
+    {
+      "ref": "Q1",
+      "terminals": [
+        "POS10_V",
+        "Q2_COLLECTOR",
+        "Q1_EMITTER"
+      ],
+      "model": "LAB_NPN"
+    },
+    {
+      "ref": "Q2",
+      "terminals": [
+        "Q2_COLLECTOR",
+        "SCHMITT_DRIVE",
+        "Q2_EMITTER"
+      ],
+      "model": "LAB_NPN"
+    },
+    {
+      "ref": "Q3",
+      "terminals": [
+        "SCHMITT_DRIVE",
+        "Q3_BASE",
+        "NEG10_V"
+      ],
+      "model": "LAB_NPN"
+    },
+    {
+      "ref": "Q4",
+      "terminals": [
+        "Q4_COLLECTOR",
+        "Q4_BASE",
+        "Q4_EMITTER"
+      ],
+      "model": "LAB_NPN"
+    },
+    {
+      "ref": "Q5",
+      "terminals": [
+        "SCHMITT_Q5_COLLECTOR",
+        "SCHMITT_SENSE",
+        "GND"
+      ],
+      "model": "LAB_PNP"
+    },
+    {
+      "ref": "Q6",
+      "terminals": [
+        "SCHMITT_Q6_COLLECTOR",
+        "SCHMITT_Q5_COLLECTOR",
+        "GND"
+      ],
+      "model": "LAB_PNP"
+    },
+    {
+      "ref": "Q7_left",
+      "terminals": [
+        "FET_LEFT_DRAIN",
+        "RAMP_C1",
+        "FET_COMMON_SOURCE"
+      ],
+      "model": "LAB_E402"
+    },
+    {
+      "ref": "Q7_right",
+      "terminals": [
+        "FET_RIGHT_DRAIN",
+        "FET_C4_LEFT",
+        "FET_COMMON_SOURCE"
+      ],
+      "model": "LAB_E402"
+    },
+    {
+      "ref": "Q8",
+      "terminals": [
+        "Q3_BASE",
+        "FET_RIGHT_DRAIN",
+        "FET_C3_LEFT"
+      ],
+      "model": "LAB_PNP"
+    },
+    {
+      "ref": "Q9",
+      "terminals": [
+        "NEG10_V",
+        "FET_LEFT_DRAIN",
+        "FET_C3_LEFT"
+      ],
+      "model": "LAB_PNP"
+    },
+    {
+      "ref": "Q10",
+      "terminals": [
+        "RAMP_C1",
+        "Q10_BASE",
+        "GND"
+      ],
+      "model": "LAB_PNP"
+    },
+    {
+      "ref": "Q11",
+      "terminals": [
+        "Q11_COLLECTOR",
+        "Q11_BASE",
+        "GND"
+      ],
+      "model": "LAB_PNP"
+    },
+    {
+      "ref": "Q12",
+      "terminals": [
+        "Q12_COLLECTOR",
+        "Q12_BASE",
+        "NEG10_V"
+      ],
+      "model": "LAB_NPN"
+    },
+    {
+      "ref": "R1",
+      "terminals": [
+        "PULSE_WIDTH_22B",
+        "Q11_BASE"
+      ],
+      "value": 43000,
+      "kind": "R"
+    },
+    {
+      "ref": "R2",
+      "terminals": [
+        "Q11_BASE",
+        "Q12_COLLECTOR"
+      ],
+      "value": 910000,
+      "kind": "R"
+    },
+    {
+      "ref": "R3",
+      "terminals": [
+        "POS10_V",
+        "Q2_COLLECTOR"
+      ],
+      "value": 10700,
+      "kind": "R"
+    },
+    {
+      "ref": "R4",
+      "terminals": [
+        "POS10_V",
+        "FET_C4_LEFT"
+      ],
+      "value": 33200,
+      "kind": "R"
+    },
+    {
+      "ref": "R5",
+      "terminals": [
+        "POS10_V",
+        "FET_RIGHT_DRAIN"
+      ],
+      "value": 5600,
+      "kind": "R"
+    },
+    {
+      "ref": "R6",
+      "terminals": [
+        "SCHMITT_Q6_COLLECTOR",
+        "RESET_BIAS"
+      ],
+      "value": 56,
+      "kind": "R"
+    },
+    {
+      "ref": "R7",
+      "terminals": [
+        "QA_BASE",
+        "NEG5_V"
+      ],
+      "value": 100,
+      "kind": "R"
+    },
+    {
+      "ref": "R8_high",
+      "terminals": [
+        "R8_TOP",
+        "QB_BASE"
+      ],
+      "value": 73.86595347393839,
+      "kind": "R"
+    },
+    {
+      "ref": "R8_low",
+      "terminals": [
+        "QB_BASE",
+        "R8_BOTTOM"
+      ],
+      "value": 26.13404652606161,
+      "kind": "R"
+    },
+    {
+      "ref": "R9",
+      "terminals": [
+        "IC1_OUT",
+        "R8_TOP"
+      ],
+      "value": 33,
+      "kind": "R"
+    },
+    {
+      "ref": "R10",
+      "terminals": [
+        "IC1_PLUS",
+        "NEG5_V"
+      ],
+      "value": 1000,
+      "kind": "R"
+    },
+    {
+      "ref": "R11_active",
+      "terminals": [
+        "IC1_SUM",
+        "R37_TOP"
+      ],
+      "value": 521.3126579373712,
+      "kind": "R"
+    },
+    {
+      "ref": "R13",
+      "terminals": [
+        "RECT_OUTPUT_20B",
+        "Q12_COLLECTOR"
+      ],
+      "value": 6200,
+      "kind": "R"
+    },
+    {
+      "ref": "R14",
+      "terminals": [
+        "Q2_COLLECTOR",
+        "NEG10_V"
+      ],
+      "value": 150000,
+      "kind": "R"
+    },
+    {
+      "ref": "R15",
+      "terminals": [
+        "POS10_V",
+        "SCHMITT_DRIVE"
+      ],
+      "value": 2200,
+      "kind": "R"
+    },
+    {
+      "ref": "R16",
+      "terminals": [
+        "POS10_V",
+        "SCHMITT_SENSE"
+      ],
+      "value": 33200,
+      "kind": "R"
+    },
+    {
+      "ref": "R17",
+      "terminals": [
+        "SCHMITT_SENSE",
+        "RESET_BIAS"
+      ],
+      "value": 10000,
+      "kind": "R"
+    },
+    {
+      "ref": "R19",
+      "terminals": [
+        "R8_BOTTOM",
+        "NEG5_V"
+      ],
+      "value": 1000,
+      "kind": "R"
+    },
+    {
+      "ref": "R20",
+      "terminals": [
+        "IC1_OUT",
+        "IC1_SUM"
+      ],
+      "value": 1000,
+      "kind": "R"
+    },
+    {
+      "ref": "R22",
+      "terminals": [
+        "GND",
+        "RECT_OUTPUT_20B"
+      ],
+      "value": 4700,
+      "kind": "R"
+    },
+    {
+      "ref": "R23",
+      "terminals": [
+        "TRI_OUTPUT_21B",
+        "NEG10_V"
+      ],
+      "value": 8200,
+      "kind": "R"
+    },
+    {
+      "ref": "R24",
+      "terminals": [
+        "FET_C4_LEFT",
+        "SCHMITT_DRIVE"
+      ],
+      "value": 10700,
+      "kind": "R"
+    },
+    {
+      "ref": "R25",
+      "terminals": [
+        "FET_C4_LEFT",
+        "NEG10_V"
+      ],
+      "value": 15000,
+      "kind": "R"
+    },
+    {
+      "ref": "R26",
+      "terminals": [
+        "RESET_BIAS",
+        "NEG10_V"
+      ],
+      "value": 1000,
+      "kind": "R"
+    },
+    {
+      "ref": "R28",
+      "terminals": [
+        "Q1_EMITTER",
+        "TRI_OUTPUT_21B"
+      ],
+      "value": 750,
+      "kind": "R"
+    },
+    {
+      "ref": "R29",
+      "terminals": [
+        "Q2_EMITTER",
+        "NEG10_V"
+      ],
+      "value": 10000,
+      "kind": "R"
+    },
+    {
+      "ref": "R30",
+      "terminals": [
+        "SCHMITT_DRIVE",
+        "SCHMITT_SENSE"
+      ],
+      "value": 10700,
+      "kind": "R"
+    },
+    {
+      "ref": "R31",
+      "terminals": [
+        "SCHMITT_Q5_COLLECTOR",
+        "NEG10_V"
+      ],
+      "value": 10000,
+      "kind": "R"
+    },
+    {
+      "ref": "R33",
+      "terminals": [
+        "GND",
+        "SAW_OUTPUT_9B"
+      ],
+      "value": 4700,
+      "kind": "R"
+    },
+    {
+      "ref": "R34",
+      "terminals": [
+        "SCHMITT_DRIVE",
+        "SAW_OUTPUT_9B"
+      ],
+      "value": 4300,
+      "kind": "R"
+    },
+    {
+      "ref": "R35",
+      "terminals": [
+        "Q12_BASE",
+        "NEG10_V"
+      ],
+      "value": 100000,
+      "kind": "R"
+    },
+    {
+      "ref": "R36",
+      "terminals": [
+        "Q3_BASE",
+        "NEG10_V"
+      ],
+      "value": 2700,
+      "kind": "R"
+    },
+    {
+      "ref": "R37",
+      "terminals": [
+        "R37_TOP",
+        "NEG10_V"
+      ],
+      "value": 11800,
+      "kind": "R"
+    },
+    {
+      "ref": "R39",
+      "terminals": [
+        "Q11_COLLECTOR",
+        "Q12_BASE"
+      ],
+      "value": 100000,
+      "kind": "R"
+    },
+    {
+      "ref": "R40",
+      "terminals": [
+        "SCHMITT_DRIVE",
+        "Q11_BASE"
+      ],
+      "value": 43000,
+      "kind": "R"
+    },
+    {
+      "ref": "R41",
+      "terminals": [
+        "SCHMITT_Q6_COLLECTOR",
+        "Q10_BASE"
+      ],
+      "value": 910,
+      "kind": "R"
+    },
+    {
+      "ref": "R50",
+      "terminals": [
+        "GND",
+        "QB_COLLECTOR"
+      ],
+      "value": 39000,
+      "kind": "R"
+    },
+    {
+      "ref": "R69",
+      "terminals": [
+        "IC3_OUT",
+        "QC_BASE"
+      ],
+      "value": 15000,
+      "kind": "R"
+    },
+    {
+      "ref": "R78_dc",
+      "terminals": [
+        "QC_BASE",
+        "NEG10_V"
+      ],
+      "value": 2000,
+      "kind": "R"
+    },
+    {
+      "ref": "R78_series",
+      "terminals": [
+        "QC_BASE",
+        "R78_RC_MID"
+      ],
+      "value": 220,
+      "kind": "R"
+    },
+    {
+      "ref": "R78_cap",
+      "terminals": [
+        "R78_RC_MID",
+        "NEG10_V"
+      ],
+      "value": 1e-08,
+      "kind": "C"
+    },
+    {
+      "ref": "R79",
+      "terminals": [
+        "QC_EMITTER",
+        "NEG10_V"
+      ],
+      "value": 1000,
+      "kind": "R"
+    },
+    {
+      "ref": "R42",
+      "terminals": [
+        "IC1_SUM",
+        "QC_EMITTER"
+      ],
+      "value": 160000,
+      "kind": "R"
+    },
+    {
+      "ref": "R44",
+      "terminals": [
+        "Q11_BASE",
+        "NEG10_V"
+      ],
+      "value": 390000,
+      "kind": "R"
+    },
+    {
+      "ref": "R45",
+      "terminals": [
+        "POS10_V",
+        "FET_C3_LEFT"
+      ],
+      "value": 1200,
+      "kind": "R"
+    },
+    {
+      "ref": "R46",
+      "terminals": [
+        "POS10_V",
+        "FET_LEFT_DRAIN"
+      ],
+      "value": 5600,
+      "kind": "R"
+    },
+    {
+      "ref": "R47",
+      "terminals": [
+        "FET_COMMON_SOURCE",
+        "Q4_COLLECTOR"
+      ],
+      "value": 100,
+      "kind": "R"
+    },
+    {
+      "ref": "R48",
+      "terminals": [
+        "Q4_EMITTER",
+        "NEG10_V"
+      ],
+      "value": 12000,
+      "kind": "R"
+    },
+    {
+      "ref": "R49",
+      "terminals": [
+        "NEG4_REF",
+        "Q4_BASE"
+      ],
+      "value": 1000,
+      "kind": "R"
+    },
+    {
+      "ref": "R166",
+      "terminals": [
+        "NEG10_V",
+        "NEG4_REF"
+      ],
+      "value": 6200,
+      "kind": "R"
+    },
+    {
+      "ref": "R174",
+      "terminals": [
+        "NEG4_REF",
+        "GND"
+      ],
+      "value": 3900,
+      "kind": "R"
+    },
+    {
+      "ref": "R12",
+      "terminals": [
+        "BEND",
+        "IC1_SUM"
+      ],
+      "value": 150000,
+      "kind": "R"
+    },
+    {
+      "ref": "R21",
+      "terminals": [
+        "TUNE",
+        "IC1_SUM"
+      ],
+      "value": 560000,
+      "kind": "R"
+    },
+    {
+      "ref": "R27",
+      "terminals": [
+        "KEYBOARD",
+        "IC1_SUM"
+      ],
+      "value": 51100,
+      "kind": "R"
+    },
+    {
+      "ref": "R32",
+      "terminals": [
+        "MOD",
+        "IC1_SUM"
+      ],
+      "value": 51100,
+      "kind": "R"
+    },
+    {
+      "ref": "R38",
+      "terminals": [
+        "EXT",
+        "IC1_SUM"
+      ],
+      "value": 51100,
+      "kind": "R"
+    },
+    {
+      "ref": "R43",
+      "terminals": [
+        "OSC1_RANGE",
+        "IC1_SUM"
+      ],
+      "value": 15000,
+      "kind": "R"
+    },
+    {
+      "ref": "R34_PANEL",
+      "terminals": [
+        "GND",
+        "SW6_11"
+      ],
+      "value": 1500,
+      "kind": "R"
+    },
+    {
+      "ref": "R33_PANEL",
+      "terminals": [
+        "SW6_11",
+        "SW6_12"
+      ],
+      "value": 1000,
+      "kind": "R"
+    },
+    {
+      "ref": "R32_PANEL",
+      "terminals": [
+        "SW6_12",
+        "NEG10_V"
+      ],
+      "value": 7500,
+      "kind": "R"
+    },
+    {
+      "ref": "R30_PANEL",
+      "terminals": [
+        "SAW_OUTPUT_9B",
+        "SAW_TRI_TAP"
+      ],
+      "value": 47000,
+      "kind": "R"
+    },
+    {
+      "ref": "R31_PANEL",
+      "terminals": [
+        "SAW_TRI_TAP",
+        "TRI_OUTPUT_21B"
+      ],
+      "value": 10000,
+      "kind": "R"
+    },
+    {
+      "ref": "SW6_width",
+      "terminals": [
+        "PULSE_WIDTH_22B",
+        "GND"
+      ],
+      "value": 0,
+      "kind": "contact"
+    },
+    {
+      "ref": "R6_panel_high",
+      "terminals": [
+        "SAW_OUTPUT_9B",
+        "R6_WIPER"
+      ],
+      "value": 12500.0,
+      "kind": "R"
+    },
+    {
+      "ref": "R6_panel_low",
+      "terminals": [
+        "R6_WIPER",
+        "GND"
+      ],
+      "value": 12500.0,
+      "kind": "R"
+    },
+    {
+      "ref": "R45_PANEL",
+      "terminals": [
+        "R6_WIPER",
+        "MIX_BUS_BOARD4_PIN4"
+      ],
+      "value": 33000,
+      "kind": "R"
+    }
+  ],
+  "scenario": {
+    "oscillator": {
+      "keyboard_v": -2.1,
+      "other_control_v": -2.1,
+      "r8_fraction": 0.2613404652606161,
+      "r11_active_ohm": 521.3126579373712,
+      "c4_f": 1e-11,
+      "upper_contact": 3,
+      "lower_contact": 10,
+      "level_fraction": 0.5,
+      "imposed_mixer_v": 0.0,
+      "external_neg4_load_a": 0.0,
+      "duration_s": 0.04,
+      "max_step_s": 5e-07,
+      "method": "gear",
+      "order": 2
+    },
+    "cutoff_fraction": 0.5,
+    "range_fraction": 0.5,
+    "scale_ohm": 250,
+    "emphasis_ohm": 50000,
+    "regen_bottom_ohm": 500,
+    "r61_ohm": 200,
+    "first_loudness_v": 2,
+    "second_loudness_base_v": 2,
+    "contour_amount_v": 0,
+    "first_balance_ohm": 12.5,
+    "second_balance_ohm": 50,
+    "main_load_ohm": 100000,
+    "headphone_input_ohm": 100000
+  },
+  "source_sha256": {
+    "evidence/vco1_ramp_graph.json": "bec931c06ac012fd14ee2b7ddf8f86f06c2d3c0ab2a78306dd6f33c88bead361",
+    "evidence/vco1_ca3046_parts.json": "2724e065969f8b0edc4f1191a787ae38c755aa4850fcfa6b9262828207689ad9",
+    "evidence/vco1_panel_pulse_width.json": "6da8d7eb376649cbda482c32f8da8ec55da5e2f7344756bac626a6e9d81b69c9",
+    "evidence/vco1_laboratory_devices.json": "50b4f163e29d2c4a9a19a186d871a0a83ff1d19c7d4c539e8e42add2dcd254f1",
+    "tools/vco1_circuit_reference.py": "c2e44b4e528744359300f7257a601c7e870a929e9f5c624f7ba741b07bff193b",
+    "references-local/datasheets/ti_lm741_lm741.lib": "f58370983c8bd22bf6a59ddd05a1dd492f1a0ea60f673ffd460a356da5e693dc",
+    "evidence/voice_board4_graph.json": "dae24df4d2ea7635cc1935e556a9d989ec34f48950ec884069532cc5d3ba49f9",
+    "tools/voice_circuit_reference.py": "712f8918f66546a681108a0e71955d668ad4038a1b8fa98e50935741d6869933"
+  },
+  "schema": "rf-d/voice-circuit-netlist/v1",
+  "board4_branches": [
+    {
+      "ref": "R4",
+      "terminals": [
+        "POS10_V",
+        "TAP_Q2_Q3"
+      ],
+      "value": 220,
+      "kind": "R"
+    },
+    {
+      "ref": "R16",
+      "terminals": [
+        "TAP_Q2_Q3",
+        "TAP_Q10_Q11"
+      ],
+      "value": 150,
+      "kind": "R"
+    },
+    {
+      "ref": "R32",
+      "terminals": [
+        "TAP_Q10_Q11",
+        "TAP_Q19_Q20"
+      ],
+      "value": 150,
+      "kind": "R"
+    },
+    {
+      "ref": "R41",
+      "terminals": [
+        "TAP_Q19_Q20",
+        "TAP_Q23_Q24"
+      ],
+      "value": 150,
+      "kind": "R"
+    },
+    {
+      "ref": "R52",
+      "terminals": [
+        "TAP_Q23_Q24",
+        "BOTTOM"
+      ],
+      "value": 150,
+      "kind": "R"
+    },
+    {
+      "ref": "R54",
+      "terminals": [
+        "BOTTOM",
+        "BASE_Q29"
+      ],
+      "value": 470,
+      "kind": "R"
+    },
+    {
+      "ref": "R76",
+      "terminals": [
+        "BOTTOM",
+        "REGEN_BOTTOM"
+      ],
+      "value": 330,
+      "kind": "R"
+    },
+    {
+      "ref": "R60",
+      "terminals": [
+        "TAIL",
+        "Q28_COLLECTOR"
+      ],
+      "value": 680,
+      "kind": "R"
+    },
+    {
+      "ref": "R46",
+      "terminals": [
+        "RANGE_WIPER",
+        "CUTOFF_SHARED"
+      ],
+      "value": 68000,
+      "kind": "R"
+    },
+    {
+      "ref": "R45",
+      "terminals": [
+        "Q26_COLLECTOR",
+        "NEG10_V"
+      ],
+      "value": 330,
+      "kind": "R"
+    },
+    {
+      "ref": "R74",
+      "terminals": [
+        "CONTOUR_AMOUNT",
+        "CONTROL_BASE"
+      ],
+      "value": 47000,
+      "kind": "R"
+    },
+    {
+      "ref": "R70",
+      "terminals": [
+        "SCALE_LOW",
+        "0"
+      ],
+      "value": 1800,
+      "kind": "R"
+    },
+    {
+      "ref": "R31",
+      "terminals": [
+        "Q8_BASE",
+        "0"
+      ],
+      "value": 47000,
+      "kind": "R"
+    },
+    {
+      "ref": "R38",
+      "terminals": [
+        "Q6_BASE",
+        "0"
+      ],
+      "value": 47000,
+      "kind": "R"
+    },
+    {
+      "ref": "R24",
+      "terminals": [
+        "Q8_EMITTER_Q7_BASE",
+        "NEG10_V"
+      ],
+      "value": 220000,
+      "kind": "R"
+    },
+    {
+      "ref": "R20",
+      "terminals": [
+        "Q6_EMITTER_Q5_BASE",
+        "NEG10_V"
+      ],
+      "value": 100000,
+      "kind": "R"
+    },
+    {
+      "ref": "R26",
+      "terminals": [
+        "RECOVER_TAIL",
+        "NEG10_V"
+      ],
+      "value": 1000,
+      "kind": "R"
+    },
+    {
+      "ref": "R3",
+      "terminals": [
+        "RECOVER_COLLECTOR",
+        "RECOVER_R7_R3"
+      ],
+      "value": 1000,
+      "kind": "R"
+    },
+    {
+      "ref": "R7",
+      "terminals": [
+        "RECOVER_R7_R3",
+        "RECOVER_R6_R7"
+      ],
+      "value": 180,
+      "kind": "R"
+    },
+    {
+      "ref": "R6",
+      "terminals": [
+        "RECOVER_R6_R7",
+        "POS10_V"
+      ],
+      "value": 47,
+      "kind": "R"
+    },
+    {
+      "ref": "R2",
+      "terminals": [
+        "RECOVER_COLLECTOR",
+        "C6_LEFT"
+      ],
+      "value": 82000,
+      "kind": "R"
+    },
+    {
+      "ref": "R34",
+      "terminals": [
+        "Q16_BASE",
+        "Q15_BASE"
+      ],
+      "value": 820,
+      "kind": "R"
+    },
+    {
+      "ref": "R36",
+      "terminals": [
+        "Q15_BASE",
+        "0"
+      ],
+      "value": 510,
+      "kind": "R"
+    },
+    {
+      "ref": "R22",
+      "terminals": [
+        "FIRST_BAL_WIPER",
+        "Q15_BASE"
+      ],
+      "value": 120,
+      "kind": "R"
+    },
+    {
+      "ref": "R13",
+      "terminals": [
+        "FIRST_BAL_WIPER",
+        "SECOND_BAL_WIPER"
+      ],
+      "value": 120,
+      "kind": "R"
+    },
+    {
+      "ref": "R35",
+      "terminals": [
+        "PAIR_EMITTER",
+        "Q18_COLLECTOR"
+      ],
+      "value": 1000,
+      "kind": "R"
+    },
+    {
+      "ref": "R37",
+      "terminals": [
+        "Q18_EMITTER",
+        "0"
+      ],
+      "value": 6800,
+      "kind": "R"
+    },
+    {
+      "ref": "R43",
+      "terminals": [
+        "Q18_EMITTER",
+        "NEG10_V"
+      ],
+      "value": 270000,
+      "kind": "R"
+    },
+    {
+      "ref": "R59",
+      "terminals": [
+        "LOUDNESS_CONTOUR",
+        "Q18_BASE"
+      ],
+      "value": 68000,
+      "kind": "R"
+    },
+    {
+      "ref": "R33",
+      "terminals": [
+        "PAIR2_EMITTER",
+        "Q21_COLLECTOR"
+      ],
+      "value": 470,
+      "kind": "R"
+    },
+    {
+      "ref": "R42",
+      "terminals": [
+        "Q21_EMITTER",
+        "0"
+      ],
+      "value": 3300,
+      "kind": "R"
+    },
+    {
+      "ref": "R44",
+      "terminals": [
+        "Q21_EMITTER",
+        "NEG10_V"
+      ],
+      "value": 150000,
+      "kind": "R"
+    },
+    {
+      "ref": "R51",
+      "terminals": [
+        "Q21_BASE",
+        "0"
+      ],
+      "value": 33000,
+      "kind": "R"
+    },
+    {
+      "ref": "R11",
+      "terminals": [
+        "SECOND_BAL_WIPER",
+        "Q1_BASE"
+      ],
+      "value": 150,
+      "kind": "R"
+    },
+    {
+      "ref": "R10",
+      "terminals": [
+        "Q1_BASE",
+        "POS10_V"
+      ],
+      "value": 120,
+      "kind": "R"
+    },
+    {
+      "ref": "R9",
+      "terminals": [
+        "Q1_EMITTER",
+        "POS10_V"
+      ],
+      "value": 62,
+      "kind": "R"
+    },
+    {
+      "ref": "R8",
+      "terminals": [
+        "Q1_COLLECTOR",
+        "Q12_EMITTER"
+      ],
+      "value": 8.2,
+      "kind": "R"
+    },
+    {
+      "ref": "R28",
+      "terminals": [
+        "Q1_COLLECTOR",
+        "Q17_EMITTER"
+      ],
+      "value": 8.2,
+      "kind": "R"
+    },
+    {
+      "ref": "R30",
+      "terminals": [
+        "Q12_COLLECTOR",
+        "0"
+      ],
+      "value": 680,
+      "kind": "R"
+    },
+    {
+      "ref": "R29",
+      "terminals": [
+        "Q17_COLLECTOR",
+        "0"
+      ],
+      "value": 680,
+      "kind": "R"
+    },
+    {
+      "ref": "R75",
+      "terminals": [
+        "C2_RIGHT",
+        "MAIN_OUTPUT"
+      ],
+      "value": 1000,
+      "kind": "R"
+    },
+    {
+      "ref": "R77",
+      "terminals": [
+        "C2_RIGHT",
+        "HEADPHONE_INPUT"
+      ],
+      "value": 1000,
+      "kind": "R"
+    },
+    {
+      "ref": "C27",
+      "terminals": [
+        "MIX_BUS_BOARD4_PIN4",
+        "BASE_Q29"
+      ],
+      "value": 1e-05,
+      "kind": "C"
+    },
+    {
+      "ref": "C24",
+      "terminals": [
+        "BOTTOM",
+        "0"
+      ],
+      "value": 0.00022,
+      "kind": "C"
+    },
+    {
+      "ref": "C16",
+      "terminals": [
+        "L_Q29C_Q23E",
+        "R_Q30C_Q24E"
+      ],
+      "value": 6.8e-08,
+      "kind": "C"
+    },
+    {
+      "ref": "C11",
+      "terminals": [
+        "L_Q23C_Q19E",
+        "R_Q24C_Q20E"
+      ],
+      "value": 6.8e-08,
+      "kind": "C"
+    },
+    {
+      "ref": "C7",
+      "terminals": [
+        "L_Q19C_Q10E",
+        "R_Q20C_Q11E"
+      ],
+      "value": 6.8e-08,
+      "kind": "C"
+    },
+    {
+      "ref": "C3",
+      "terminals": [
+        "L_Q10C_Q2E",
+        "R_Q11C_Q3E"
+      ],
+      "value": 6.8e-08,
+      "kind": "C"
+    },
+    {
+      "ref": "C5",
+      "terminals": [
+        "L_Q10C_Q2E",
+        "Q8_BASE"
+      ],
+      "value": 2.2e-07,
+      "kind": "C"
+    },
+    {
+      "ref": "C1",
+      "terminals": [
+        "R_Q11C_Q3E",
+        "Q6_BASE"
+      ],
+      "value": 2.2e-07,
+      "kind": "C"
+    },
+    {
+      "ref": "C9",
+      "terminals": [
+        "RECOVER_R6_R7",
+        "0"
+      ],
+      "value": 0.0001,
+      "kind": "C"
+    },
+    {
+      "ref": "C10",
+      "terminals": [
+        "RECOVER_R7_R3",
+        "EMPHASIS_PIN7"
+      ],
+      "value": 1e-05,
+      "kind": "C"
+    },
+    {
+      "ref": "C18",
+      "terminals": [
+        "CONTROL_BASE",
+        "0"
+      ],
+      "value": 1e-10,
+      "kind": "C"
+    },
+    {
+      "ref": "C6",
+      "terminals": [
+        "C6_LEFT",
+        "Q16_BASE"
+      ],
+      "value": 3.3e-07,
+      "kind": "C"
+    },
+    {
+      "ref": "C15",
+      "terminals": [
+        "Q15_BASE",
+        "0"
+      ],
+      "value": 0.00022,
+      "kind": "C"
+    },
+    {
+      "ref": "C4",
+      "terminals": [
+        "Q1_BASE",
+        "POS10_V"
+      ],
+      "value": 0.00022,
+      "kind": "C"
+    },
+    {
+      "ref": "C2",
+      "terminals": [
+        "Q17_COLLECTOR",
+        "C2_RIGHT"
+      ],
+      "value": 1e-05,
+      "kind": "C"
+    },
+    {
+      "ref": "Q29",
+      "base": "BASE_Q29",
+      "collector": "L_Q29C_Q23E",
+      "emitter": "TAIL",
+      "polarity": "NPN"
+    },
+    {
+      "ref": "Q30",
+      "base": "BASE_Q30",
+      "collector": "R_Q30C_Q24E",
+      "emitter": "TAIL",
+      "polarity": "NPN"
+    },
+    {
+      "ref": "Q23",
+      "base": "TAP_Q23_Q24",
+      "collector": "L_Q23C_Q19E",
+      "emitter": "L_Q29C_Q23E",
+      "polarity": "NPN"
+    },
+    {
+      "ref": "Q24",
+      "base": "TAP_Q23_Q24",
+      "collector": "R_Q24C_Q20E",
+      "emitter": "R_Q30C_Q24E",
+      "polarity": "NPN"
+    },
+    {
+      "ref": "Q19",
+      "base": "TAP_Q19_Q20",
+      "collector": "L_Q19C_Q10E",
+      "emitter": "L_Q23C_Q19E",
+      "polarity": "NPN"
+    },
+    {
+      "ref": "Q20",
+      "base": "TAP_Q19_Q20",
+      "collector": "R_Q20C_Q11E",
+      "emitter": "R_Q24C_Q20E",
+      "polarity": "NPN"
+    },
+    {
+      "ref": "Q10",
+      "base": "TAP_Q10_Q11",
+      "collector": "L_Q10C_Q2E",
+      "emitter": "L_Q19C_Q10E",
+      "polarity": "NPN"
+    },
+    {
+      "ref": "Q11",
+      "base": "TAP_Q10_Q11",
+      "collector": "R_Q11C_Q3E",
+      "emitter": "R_Q20C_Q11E",
+      "polarity": "NPN"
+    },
+    {
+      "ref": "Q2",
+      "base": "TAP_Q2_Q3",
+      "collector": "POS10_V",
+      "emitter": "L_Q10C_Q2E",
+      "polarity": "NPN"
+    },
+    {
+      "ref": "Q3",
+      "base": "TAP_Q2_Q3",
+      "collector": "POS10_V",
+      "emitter": "R_Q11C_Q3E",
+      "polarity": "NPN"
+    },
+    {
+      "ref": "Q28",
+      "base": "CUTOFF_SHARED",
+      "collector": "Q28_COLLECTOR",
+      "emitter": "0",
+      "polarity": "NPN"
+    },
+    {
+      "ref": "Q8",
+      "base": "Q8_BASE",
+      "collector": "RECOVER_COLLECTOR",
+      "emitter": "Q8_EMITTER_Q7_BASE",
+      "polarity": "NPN"
+    },
+    {
+      "ref": "Q6",
+      "base": "Q6_BASE",
+      "collector": "POS10_V",
+      "emitter": "Q6_EMITTER_Q5_BASE",
+      "polarity": "NPN"
+    },
+    {
+      "ref": "Q7",
+      "base": "Q8_EMITTER_Q7_BASE",
+      "collector": "RECOVER_COLLECTOR",
+      "emitter": "RECOVER_TAIL",
+      "polarity": "NPN"
+    },
+    {
+      "ref": "Q5",
+      "base": "Q6_EMITTER_Q5_BASE",
+      "collector": "POS10_V",
+      "emitter": "RECOVER_TAIL",
+      "polarity": "NPN"
+    },
+    {
+      "ref": "Q16",
+      "base": "Q16_BASE",
+      "collector": "Q16_COLLECTOR",
+      "emitter": "PAIR_EMITTER",
+      "polarity": "NPN"
+    },
+    {
+      "ref": "Q15",
+      "base": "Q15_BASE",
+      "collector": "Q15_COLLECTOR",
+      "emitter": "PAIR_EMITTER",
+      "polarity": "NPN"
+    },
+    {
+      "ref": "Q18",
+      "base": "Q18_BASE",
+      "collector": "Q18_COLLECTOR",
+      "emitter": "Q18_EMITTER",
+      "polarity": "NPN"
+    },
+    {
+      "ref": "Q14",
+      "base": "Q16_COLLECTOR",
+      "collector": "Q14_COLLECTOR",
+      "emitter": "PAIR2_EMITTER",
+      "polarity": "NPN"
+    },
+    {
+      "ref": "Q13",
+      "base": "Q15_COLLECTOR",
+      "collector": "Q13_COLLECTOR",
+      "emitter": "PAIR2_EMITTER",
+      "polarity": "NPN"
+    },
+    {
+      "ref": "Q21",
+      "base": "Q21_BASE",
+      "collector": "Q21_COLLECTOR",
+      "emitter": "Q21_EMITTER",
+      "polarity": "NPN"
+    },
+    {
+      "ref": "Q26",
+      "base": "CONTROL_BASE",
+      "collector": "Q26_COLLECTOR",
+      "emitter": "CUTOFF_SHARED",
+      "polarity": "PNP"
+    },
+    {
+      "ref": "Q1",
+      "base": "Q1_BASE",
+      "collector": "Q1_COLLECTOR",
+      "emitter": "Q1_EMITTER",
+      "polarity": "PNP"
+    },
+    {
+      "ref": "Q12",
+      "base": "Q14_COLLECTOR",
+      "collector": "Q12_COLLECTOR",
+      "emitter": "Q12_EMITTER",
+      "polarity": "PNP"
+    },
+    {
+      "ref": "Q17",
+      "base": "Q13_COLLECTOR",
+      "collector": "Q17_COLLECTOR",
+      "emitter": "Q17_EMITTER",
+      "polarity": "PNP"
+    },
+    {
+      "ref": "R61",
+      "terminals": [
+        "BOTTOM",
+        "0"
+      ],
+      "value": 200,
+      "kind": "R"
+    },
+    {
+      "ref": "R73_bottom",
+      "terminals": [
+        "REGEN_BOTTOM",
+        "BASE_Q30"
+      ],
+      "value": 500,
+      "kind": "R"
+    },
+    {
+      "ref": "R73_top",
+      "terminals": [
+        "BASE_Q30",
+        "EMPHASIS_PIN6"
+      ],
+      "value": 500,
+      "kind": "R"
+    },
+    {
+      "ref": "R14_PANEL",
+      "terminals": [
+        "EMPHASIS_PIN7",
+        "EMPHASIS_PIN6"
+      ],
+      "value": 50000,
+      "kind": "R"
+    },
+    {
+      "ref": "R39_low",
+      "terminals": [
+        "0",
+        "RANGE_WIPER"
+      ],
+      "value": 5000.0,
+      "kind": "R"
+    },
+    {
+      "ref": "R39_high",
+      "terminals": [
+        "RANGE_WIPER",
+        "POS10_V"
+      ],
+      "value": 5000.0,
+      "kind": "R"
+    },
+    {
+      "ref": "R49",
+      "terminals": [
+        "CONTROL_BASE",
+        "SCALE_LOW"
+      ],
+      "value": 250,
+      "kind": "R"
+    },
+    {
+      "ref": "R11_PANEL_low",
+      "terminals": [
+        "NEG10_V",
+        "CUTOFF_WIPER"
+      ],
+      "value": 2500.0,
+      "kind": "R"
+    },
+    {
+      "ref": "R11_PANEL_high",
+      "terminals": [
+        "CUTOFF_WIPER",
+        "POS10_V"
+      ],
+      "value": 2500.0,
+      "kind": "R"
+    },
+    {
+      "ref": "R55_PANEL",
+      "terminals": [
+        "CUTOFF_WIPER",
+        "CONTROL_BASE"
+      ],
+      "value": 200000,
+      "kind": "R"
+    },
+    {
+      "ref": "R51_PANEL",
+      "terminals": [
+        "0",
+        "CONTROL_BASE"
+      ],
+      "value": 100000,
+      "kind": "R"
+    },
+    {
+      "ref": "R52_PANEL",
+      "terminals": [
+        "0",
+        "CONTROL_BASE"
+      ],
+      "value": 33000,
+      "kind": "R"
+    },
+    {
+      "ref": "R19_R14",
+      "terminals": [
+        "FIRST_BAL_WIPER",
+        "Q16_COLLECTOR"
+      ],
+      "value": 112.5,
+      "kind": "R"
+    },
+    {
+      "ref": "R23_R14",
+      "terminals": [
+        "FIRST_BAL_WIPER",
+        "Q15_COLLECTOR"
+      ],
+      "value": 112.5,
+      "kind": "R"
+    },
+    {
+      "ref": "R18_R12",
+      "terminals": [
+        "SECOND_BAL_WIPER",
+        "Q14_COLLECTOR"
+      ],
+      "value": 380,
+      "kind": "R"
+    },
+    {
+      "ref": "R21_R12",
+      "terminals": [
+        "SECOND_BAL_WIPER",
+        "Q13_COLLECTOR"
+      ],
+      "value": 380,
+      "kind": "R"
+    },
+    {
+      "ref": "MAIN_LOAD",
+      "terminals": [
+        "MAIN_OUTPUT",
+        "0"
+      ],
+      "value": 100000,
+      "kind": "R"
+    },
+    {
+      "ref": "HEADPHONE_LOAD",
+      "terminals": [
+        "HEADPHONE_INPUT",
+        "0"
+      ],
+      "value": 100000,
+      "kind": "R"
+    }
+  ],
+  "boundary_scope": [
+    "one VCO1 and SW9 ON; other mixer routes unpopulated",
+    "imposed loudness contour pin9 and Q21 base; no envelope/jack circuit",
+    "imposed contour amount pin16; keyboard/filter modulation OFF; J2 ground normal",
+    "ideal rails and external output loads",
+    "R61 unresolved profiles; common synthetic BJT cards, conditional diode card",
+    "A440/preamp/overload/headphone amplifier not populated"
+  ],
+  "diode_card": {
+    "n": 2,
+    "saturation_a": 2.4741471366716827e-09,
+    "reference_v": 0.9,
+    "reference_a": 0.1
+  },
+  "label": "nominal500-bypass-off",
+  "deck_sha256": "3526a80a4f2bec0ecd7a319c4d0fe54db8faa2ce01344884318f4c1087216195",
+  "trajectory_complete": false,
+  "physical_fidelity": false,
+  "real_time": false,
+  "command": [
+    "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\ngspice46\\runtime\\Spice64\\bin\\ngspice_con.exe",
+    "-n",
+    "-b",
+    "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-circuit\\bank03\\nominal500-bypass-off.cir"
+  ],
+  "executable_sha256": "86c9ea5f645ca919e305639fa7bdb522355364c424d14e197f1ade617feb3453",
+  "git_commit": "8486d2f840da0a3dba4feb0218fb951f0158549f",
+  "git_status": "",
+  "exit_code": 0,
+  "error_type": "ValueError",
+  "error": "SPICE reported failure; preserved run log",
+  "partial_export_sha256": "c544d78c559b141d8bff65197db89f8abbc5fe58cc814e33607b108f36bf1f75",
+  "wall_s": 0.4715144000001601,
+  "log_sha256": "c4207c5680826fc89e5686d6bb1fc7123cdef172a393ecf039a2a83ca01aaebb",
+  "source_sha256_after": {
+    "evidence/vco1_ramp_graph.json": "bec931c06ac012fd14ee2b7ddf8f86f06c2d3c0ab2a78306dd6f33c88bead361",
+    "evidence/vco1_ca3046_parts.json": "2724e065969f8b0edc4f1191a787ae38c755aa4850fcfa6b9262828207689ad9",
+    "evidence/vco1_panel_pulse_width.json": "6da8d7eb376649cbda482c32f8da8ec55da5e2f7344756bac626a6e9d81b69c9",
+    "evidence/vco1_laboratory_devices.json": "50b4f163e29d2c4a9a19a186d871a0a83ff1d19c7d4c539e8e42add2dcd254f1",
+    "tools/vco1_circuit_reference.py": "c2e44b4e528744359300f7257a601c7e870a929e9f5c624f7ba741b07bff193b",
+    "references-local/datasheets/ti_lm741_lm741.lib": "f58370983c8bd22bf6a59ddd05a1dd492f1a0ea60f673ffd460a356da5e693dc",
+    "evidence/voice_board4_graph.json": "dae24df4d2ea7635cc1935e556a9d989ec34f48950ec884069532cc5d3ba49f9",
+    "tools/voice_circuit_reference.py": "712f8918f66546a681108a0e71955d668ad4038a1b8fa98e50935741d6869933"
+  }
+}

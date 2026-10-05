@@ -127,7 +127,7 @@ def netlist(s, export):
     return text, metadata
 
 
-def run(s, label, work, executable, timeout=90):
+def run(s, label, work, executable, timeout=90, *, netlist_factory=None, vectors=None):
     if not label or any(c not in 'abcdefghijklmnopqrstuvwxyz0123456789_-' for c in label):
         raise ValueError('safe unique label required')
     if vco.sha(executable) != vco.EXPECTED_EXE_SHA:
@@ -136,7 +136,8 @@ def run(s, label, work, executable, timeout=90):
     deck, export, log, receipt = [work/f'{label}.{ext}' for ext in ('cir','txt','log','json')]
     if any(p.exists() for p in (deck,export,log,receipt,export.with_suffix('.txt.gz'))):
         raise ValueError('preserve previous attempt')
-    text, record = netlist(s,export)
+    text, record = (netlist if netlist_factory is None else netlist_factory)(s,export)
+    expected_vectors = VECTORS if vectors is None else vectors
     deck.write_text(text,encoding='utf-8',newline='\n')
     record.update(label=label, deck_sha256=vco.sha(deck), trajectory_complete=False,
         physical_fidelity=False, real_time=False,
@@ -152,7 +153,7 @@ def run(s, label, work, executable, timeout=90):
         if p.returncode or any(w in output.lower() for w in ('error','aborted','timestep too small')):
             raise ValueError('SPICE reported failure; preserved run log')
         raw=np.loadtxt(export,skiprows=1,ndmin=2)
-        if raw.shape[1]!=len(VECTORS)+1 or not np.isfinite(raw).all():
+        if raw.shape[1]!=len(expected_vectors)+1 or not np.isfinite(raw).all():
             raise ValueError('invalid export')
         dt=np.diff(raw[:,0])
         if raw[0,0]!=0 or np.any(dt<=0) or abs(raw[-1,0]-s.oscillator.duration_s)>1e-14:
