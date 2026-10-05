@@ -58,7 +58,7 @@ def netlist(s, export):
            f'tran {s.oscillator.max_step_s:.17g} {s.oscillator.duration_s:.17g} 0 {s.oscillator.max_step_s:.17g}',
            f"wrdata {export.as_posix()} {' '.join(VECTORS)}",'quit','.endc','.end','']
     # Inputs are the graph, device hypotheses and the two generating helpers.
-    actual=[voice.GRAPH,vco.DEVICES,Path(voice.__file__),Path(__file__)]
+    actual=[voice.GRAPH,vco.DEVICES,Path(vco.__file__),Path(voice.__file__),Path(__file__)]
     meta.update(schema='rf-d/filter-vca-circuit-netlist/v1',scenario=asdict(s),
         source_sha256={p.relative_to(ROOT).as_posix():vco.sha(p) for p in actual},
         input_port='laboratory sine, finite source resistance; VCO/mixer coupling not closed',

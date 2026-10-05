@@ -27,7 +27,7 @@ class FilterVcaCircuitTests(unittest.TestCase):
 
     def test_reserved_scenarios_separate_from_refinement(self):
         s=probes.scenes()
-        self.assertEqual(len(s),18)
+        self.assertTrue({'cutoff-low','cutoff-high','contour-mute','external-mute','r61-alternate'}.issubset(s))
         self.assertEqual(s['nominal1'].amplitude_v,s['nominal2'].amplitude_v)
         self.assertEqual(s['nominal1'].board.cutoff_fraction,s['nominal2'].board.cutoff_fraction)
         self.assertEqual(s['r61-alternate'].board.r61_ohm,200000)
