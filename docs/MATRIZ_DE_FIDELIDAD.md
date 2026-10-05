@@ -1,5 +1,18 @@
 # Matriz de fidelidad
 
+El [segundo banco preparado](BIESTABLE_CONTINUACION_PREPARADA_SEGUNDA_RESULTADOS.md)
+certifica **33 soportes contiguos hasta ≈337,5 µs**, acumulado **≤0,793 µV**.
+Los cuatro anchos admiten el soporte 32 y rechazan el 33: mejor cota rechazada ≈1,164 µV
+para radio 1 µV. Se conserva el primer hueco y seis plantillas no alcanzadas.
+Cinco inversas/preparaciones, 495 tasas, 64 budgets y 512 subcertificados
+se reproducen contra el control completo. El grupo de cuatro junturas domina
+el forcing acotado del nodo 66 en el interior; su término directo es pequeño.
+Once pruebas aceptadas: nueve primarias al primero y dos archivísticas al
+segundo. Corpus de 723 entradas, 184 informes y 228 hashes propios; 19
+fuentes históricas más el fallo propio del fixture archivado con fuente exacta.
+Próximo: [refinar memoria en el hueco](BIESTABLE_HUECO_MEMORIA_JUNTURAS_PLAN.md).
+**1 mV global sigue abierto.**
+
 La [continuación con preparación explícita](BIESTABLE_CONTINUACION_PREPARADA_RESULTADOS.md)
 certifica **32 soportes contiguos hasta ≈325 µs**, acumulado **≤0,793 µV**.
 Renueva nueve candidatos, una inversa uniforme y 99 consultas de tasa;
