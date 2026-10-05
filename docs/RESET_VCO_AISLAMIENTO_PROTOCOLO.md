@@ -45,3 +45,18 @@ NG-46 pp. 319 y 377 documenta BE y la alternativa de truncamiento.
 El código fijado de dctran y CAPload se conserva localmente con hashes:
 references-local/voice-reset/source-manifest.json. El manual y el código
 permiten interpretar el aborto, pero aún no prueban su causa en esta red.
+
+
+## Backend lineal alternativo
+
+El segundo banco rechaza BE y newtrunc. El caso desacoplado completa
+10 ms al retirar C9, C24 o C4 por separado, pero sigue fallando sin C15.
+Esto no identifica un capacitor incorrecto: distintas retiradas alteran
+el problema numérico. Se preservan todas las intervenciones.
+
+NG-46 p. 316 documenta KLU como backend alternativo a Sparse 1.3; la
+edición Win64 incluye esa opción (p. 738). Se declaran VCO aislado,
+desacoplado y unión completa a 10 ms, Gear2/500 ns, KLU, mismas tarjetas,
+todas las capacitancias y las mismas tolerancias. El log debe confirmar
+KLU. Si completa, todavía requiere refinamiento y contrastes de control
+antes de admitir la voz nominal. No se heredan gates del banco separado.
