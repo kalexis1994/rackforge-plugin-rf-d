@@ -1,0 +1,101 @@
+{
+  "schema": "rf-d/vco1-circuit-validation/v1",
+  "source_sha256": {
+    "evidence/vco1_circuit_convergence_v1.json.gz": "3456d9a1113c7f7bb0cd7d8393e9ed7a099379ce9833e486d814cf840d031c35",
+    "evidence/vco1_circuit_convergence_storage.json": "2f3d9f38b9d4f7006c04c5003d69b3d457c7fa10988a78189b1227be09d563b9",
+    "tools/validate_vco1_circuit_bank.py": "30994a542341d95785edd7cfbf27f5b507a10f611d2092bd03cd361d88ad387e",
+    "tools/vco1_circuit_probes.py": "1d77466761f5a94847c9697477ea02ea6954a2b1364a5f8f26d0bae7cb1d0200",
+    "tools/vco1_circuit_reference.py": "c2e44b4e528744359300f7257a601c7e870a929e9f5c624f7ba741b07bff193b",
+    "docs/VCO1_ORACULO_CIRCUITO.md": "abd1c0710761d3b06129fd2cece44db72023b97ffe380037212b8fa82f6119ab"
+  },
+  "git_commit": "c4ea900bc693f6e603b3dca6af64145973492ecc",
+  "command": [
+    "C:\\Users\\kalex\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+    "-B",
+    "tools/validate_vco1_circuit_bank.py"
+  ],
+  "passed": true,
+  "result": {
+    "scenes": 14,
+    "gates": {
+      "frequency_refinement_cents": 1.0,
+      "output_extrema_refinement_v": 0.005,
+      "period_spread_relative": 1e-05,
+      "cycle_charge_relative": 0.002
+    },
+    "comparisons": {
+      "c4-10-refinement": {
+        "frequency_error_cents": 3.9679794705705676e-06,
+        "output_extrema_error_v": {
+          "v(saw_output_9b)": 3.906332013414726e-08,
+          "v(tri_output_21b)": 5.842162382752036e-07,
+          "v(rect_output_20b)": 4.252668876769672e-11
+        },
+        "phase_aligned_peak_v": 0.00020345546125244418,
+        "phase_alignment": "Each trace uses its last actual ramp reset-to-reset cycle. Peak difference is diagnostic, not a same-clock error gate."
+      },
+      "c4-10-method": {
+        "frequency_error_cents": 5.989745758738271e-05,
+        "output_extrema_error_v": {
+          "v(saw_output_9b)": 3.557287133748588e-07,
+          "v(tri_output_21b)": 1.0685040956470715e-06,
+          "v(rect_output_20b)": 1.534962178195709e-09
+        },
+        "phase_aligned_peak_v": 0.0020243047612305,
+        "phase_alignment": "Each trace uses its last actual ramp reset-to-reset cycle. Peak difference is diagnostic, not a same-clock error gate."
+      },
+      "c4-100-refinement": {
+        "frequency_error_cents": 3.94399528814464e-06,
+        "output_extrema_error_v": {
+          "v(saw_output_9b)": 2.398230281031033e-09,
+          "v(tri_output_21b)": 5.2152143936723405e-08,
+          "v(rect_output_20b)": 1.1777382107752699e-10
+        },
+        "phase_aligned_peak_v": 0.00016539988088548618,
+        "phase_alignment": "Each trace uses its last actual ramp reset-to-reset cycle. Peak difference is diagnostic, not a same-clock error gate."
+      },
+      "c4-100-method": {
+        "frequency_error_cents": 6.150561325801443e-05,
+        "output_extrema_error_v": {
+          "v(saw_output_9b)": 2.20063407274651e-07,
+          "v(tri_output_21b)": 4.1232053304973704e-07,
+          "v(rect_output_20b)": 1.3845638680703987e-09
+        },
+        "phase_aligned_peak_v": 0.001319545464303351,
+        "phase_alignment": "Each trace uses its last actual ramp reset-to-reset cycle. Peak difference is diagnostic, not a same-clock error gate."
+      }
+    },
+    "pulse_duties": {
+      "10": {
+        "negative": 0.5141693017416027,
+        "high": 0.4858306982583973
+      },
+      "11": {
+        "negative": 0.695832991728381,
+        "high": 0.304167008271619
+      },
+      "12": {
+        "negative": 0.8126381986780701,
+        "high": 0.18736180132192992
+      }
+    },
+    "same_traces": true,
+    "new_solver_runs": 0,
+    "raw_trace_replay": true,
+    "original_validator_passed": false,
+    "original_error": "pulse selector direction/domain gate failed",
+    "correction": "HIGH width = 1 - measured negative-state width; original failure preserved, circuit and numerical gates unchanged",
+    "physical_fidelity": false,
+    "native_voice": false,
+    "realtime": false
+  },
+  "source_sha256_after": {
+    "evidence/vco1_circuit_convergence_v1.json.gz": "3456d9a1113c7f7bb0cd7d8393e9ed7a099379ce9833e486d814cf840d031c35",
+    "evidence/vco1_circuit_convergence_storage.json": "2f3d9f38b9d4f7006c04c5003d69b3d457c7fa10988a78189b1227be09d563b9",
+    "tools/validate_vco1_circuit_bank.py": "30994a542341d95785edd7cfbf27f5b507a10f611d2092bd03cd361d88ad387e",
+    "tools/vco1_circuit_probes.py": "1d77466761f5a94847c9697477ea02ea6954a2b1364a5f8f26d0bae7cb1d0200",
+    "tools/vco1_circuit_reference.py": "c2e44b4e528744359300f7257a601c7e870a929e9f5c624f7ba741b07bff193b",
+    "docs/VCO1_ORACULO_CIRCUITO.md": "abd1c0710761d3b06129fd2cece44db72023b97ffe380037212b8fa82f6119ab"
+  },
+  "wall_s": 21.712687699997332
+}
