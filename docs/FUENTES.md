@@ -154,3 +154,13 @@ La [columna resistiva DC del ladder](COLUMNA_RESISTIVA_LADDER_DC.md) transcribe 
 ## Regla de admisión
 
 Cada constante DSP requiere documento/página o nodo medido, derivación, unidades, dominio de validez, incertidumbre y prueba que pueda refutarla. La especificación de fábrica, el esquema nominal, la unidad ajustada y la preferencia musical son niveles de evidencia distintos. Un valor de datasheet o reedición no se traslada automáticamente a la voz clásica.
+
+## Fuentes adquiridas para cerrar VCO1 (2026-10-05)
+
+| ID | Fuente primaria | Archivo local ignorado y SHA-256 | Alcance |
+| --- | --- | --- | --- |
+| DS-E402-S77 | [Siliconix FET Data Book, 1977](https://www.bitsavers.org/components/siliconix/_dataBooks/1977_Siliconix_FET_Data_Book.pdf) | `datasheets/siliconix_fet_1977.pdf`, `7f989de7c303bc3280ec06f31246a321cc7ab1e8956333dcd7c1880416812d70` | PDF p. 114 / impresa 3-81, revisada visualmente; dual N-JFET E402, intervalos y condiciones, sin tarjeta SPICE identificada. |
+| TI-LM741-DS | [TI LM741, SNOSC25D](https://www.ti.com/lit/ds/symlink/lm741.pdf) | `datasheets/ti_lm741.pdf`, `6f3bf3cbce352c73a8f3e7506023ab1f5d12549834840e0227d6bb37de6c48db` | PDF pp. 5–6; p. 5 revisada visualmente. Datos posteriores de familia, no población vintage. |
+| TI-LM741-MODEL | [TI, LM741 PSpice Model Rev. B, SNOM211B](https://www.ti.com/lit/zip/snom211b) | ZIP `ti_lm741_snom211b.zip`, `cdf5544ccf12a2957750a4c57c15b684528315e61488a85e99b96f1771f6d136`; `ti_lm741_lm741.lib`, `f58370983c8bd22bf6a59ddd05a1dd492f1a0ea60f673ffd460a356da5e693dc` | Macromodelo National/TI de cinco terminales, original privado. Orden de entradas/rieles cotejado con cabecera. |
+
+Uso, ecuaciones y límites: [oráculo acoplado de VCO1](VCO1_ORACULO_CIRCUITO.md).

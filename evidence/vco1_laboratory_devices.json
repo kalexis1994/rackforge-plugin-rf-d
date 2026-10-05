@@ -1,0 +1,89 @@
+{
+  "schema": "rf-d/vco1-laboratory-devices/v1",
+  "scope": "Conditional circuit oracle, not identified vintage semiconductor models",
+  "temperature_c": 25,
+  "bjt": {
+    "IS": 1e-14,
+    "BF": 100,
+    "BR": 5,
+    "VAF": 0,
+    "IKF": 0,
+    "CJE": 7e-12,
+    "VJE": 0.75,
+    "MJE": 0.5,
+    "CJC": 3e-12,
+    "VJC": 0.7,
+    "MJC": 0.33,
+    "FC": 0.4,
+    "TF": 1e-09,
+    "TR": 3e-09,
+    "TNOM": 25
+  },
+  "bjt_provenance": {
+    "law": "NG-46 PDF pp. 138-145; Gummel-Poon subset with explicit charge",
+    "parameters": "Laboratory hypotheses; shared NPN/PNP values, not a fit to CA3046/2N3392/2N4058/2N4402/2N3906",
+    "q5_q6_part_conflict": "Unresolved; common conditional PNP card does not distinguish manufacturers or candidate part numbers"
+  },
+  "jfet": {
+    "LEVEL": 1,
+    "VTO": -2.5,
+    "BETA": 0.0003018867924528302,
+    "LAMBDA": 0.003,
+    "CGS": 3.3e-12,
+    "CGD": 5.4990908339470075e-12,
+    "PB": 1,
+    "IS": 1e-14,
+    "B": 1,
+    "FC": 0.5,
+    "RD": 0,
+    "RS": 0,
+    "TNOM": 25
+  },
+  "jfet_provenance": {
+    "law": "NG-46 PDF pp. 152-154, eq. 7.25, B=1",
+    "source": "DS-E402-S77 PDF p. 114 / printed 3-81",
+    "selected_test_point": {
+      "vds_v": 20,
+      "vgs_v": 0,
+      "idss_a": 0.002,
+      "gm_s": 0.0016,
+      "ciss_f": 4.5e-12,
+      "crss_f": 1.2e-12
+    },
+    "derivation": "BETA=IDSS/(VTO^2*(1+LAMBDA*20)); CGD=Crss*sqrt(1+20/PB); CGS=Ciss-Crss. Not a manufacturer SPICE fit.",
+    "uncertainty": "VTO -2.5 V, LAMBDA .003/V, PB 1 V, IS and junction laws are hypotheses. Ciss/Crss are typical source values; actual operating bias differs. Equal halves assume zero mismatch."
+  },
+  "opamp": {
+    "source": "TI-LM741-MODEL Rev. B / SNOM211B",
+    "path": "references-local/datasheets/ti_lm741_lm741.lib",
+    "sha256": "f58370983c8bd22bf6a59ddd05a1dd492f1a0ea60f673ffd460a356da5e693dc",
+    "subckt": "LM741",
+    "pin_order": [
+      "noninverting",
+      "inverting",
+      "positive_supply",
+      "negative_supply",
+      "output"
+    ],
+    "uncertainty": "Official National/TI macromodel, not identified 741 population in a vintage Minimoog. Original file stays private."
+  },
+  "source_files": {
+    "DS-E402-S77": {
+      "path": "references-local/datasheets/siliconix_fet_1977.pdf",
+      "sha256": "7f989de7c303bc3280ec06f31246a321cc7ab1e8956333dcd7c1880416812d70",
+      "url": "https://www.bitsavers.org/components/siliconix/_dataBooks/1977_Siliconix_FET_Data_Book.pdf",
+      "pages": [
+        114
+      ]
+    },
+    "TI-LM741-DS": {
+      "path": "references-local/datasheets/ti_lm741.pdf",
+      "sha256": "6f3bf3cbce352c73a8f3e7506023ab1f5d12549834840e0227d6bb37de6c48db",
+      "url": "https://www.ti.com/lit/ds/symlink/lm741.pdf",
+      "pages": [
+        5,
+        6
+      ]
+    }
+  }
+}
