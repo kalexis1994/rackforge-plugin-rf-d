@@ -1,34 +1,34 @@
-# VCO1, ladder y dos VCA: protocolo de integración
+# VCO1, ladder y dos VCA: protocolo de integraciÃ³n
 
 Fecha: 2026-10-05. Referencia previa del VCO: `f6429bf`.
 Fuentes: SVC-9 Fig. 9-11 p. PDF 13 / SVC-204D p. 69, tabla 7-8
-pp. PDF 30–31; panel Fig. 9-17 p. 19. La hoja 9-11 se revisó visualmente
-de nuevo para esta integración. [Transcripción](../evidence/voice_board4_graph.json).
+pp. PDF 30â€“31; panel Fig. 9-17 p. 19. La hoja 9-11 se revisÃ³ visualmente
+de nuevo para esta integraciÃ³n. [TranscripciÃ³n](../evidence/voice_board4_graph.json).
 
 ## Circuito y fronteras
 
-Se elimina la fuente ideal del mixer del oráculo anterior. R45 panel,
+Se elimina la fuente ideal del mixer del orÃ¡culo anterior. R45 panel,
 C27, Q29/Q30 y sus cargas resuelven juntos el BUS. La red de 25 BJT de
 placa 4 incluye Q26/Q28, las cuatro etapas ladder con capacitores 68 nF,
-recuperación Q5–Q8, C10/R14/R73, Q16/Q15/Q18, Q14/Q13/Q21,
+recuperaciÃ³n Q5â€“Q8, C10/R14/R73, Q16/Q15/Q18, Q14/Q13/Q21,
 Q1/Q12/Q17, CR1/CR2, C2 y dos terminaciones impuestas.
-R39, R49, R73 y los balances se representan eléctricamente; contactos
+R39, R49, R73 y los balances se representan elÃ©ctricamente; contactos
 de resistencia cero son restricciones exactas. No se agrega un buffer
 entre bloques ni se impone corriente de cola.
 
-La tarjeta BJT es la misma hipótesis común del VCO, con carga finita;
-no identifica TIS97/2N4058 vintage ni dispersión o selección de pares.
+La tarjeta BJT es la misma hipÃ³tesis comÃºn del VCO, con carga finita;
+no identifica TIS97/2N4058 vintage ni dispersiÃ³n o selecciÃ³n de pares.
 CR1/CR2 usan una familia exploratoria ya documentada en
 [DS-458](DIODOS_SALIDA_1N458A.md): n=2, 0.9 V a 100 mA, 25 grados C;
-Is se deriva de Shockley. Se omiten carga, recuperación y resistencia
-serie del diodo, sin afirmar identificación física.
+Is se deriva de Shockley. Se omiten carga, recuperaciÃ³n y resistencia
+serie del diodo, sin afirmar identificaciÃ³n fÃ­sica.
 
 R61 conserva candidatos 200/200000 ohm. El perfil funcional principal
 usa **200 ohm del esquema**; el alternativo permanece separado. No se
 resuelve la discrepancia del inventario por elegir una salida agradable.
 
 Controles iniciales: cinco CV del VCO -2.1 V, teclado -2.1 V; R11/R8
-calibrados en el laboratorio previo. SW9 ON, sierra, nivel eléctrico
+calibrados en el laboratorio previo. SW9 ON, sierra, nivel elÃ©ctrico
 0.5; los otros osciladores, ruido y preamp sin poblar. Filtro: R39=0.5,
 R49=250 ohm, R73 inferior=500 ohm, EMPHASIS=50000 ohm; J2 a masa,
 SW15 OFF, SW16/17 OFF. Contorno de loudness pin9=2 V, base Q21=2 V,
@@ -38,24 +38,28 @@ Rieles ideales. No se incluye el amplificador de auriculares.
 
 ## Banco declarado antes de medir
 
-- Arranque de 40 ms, observación después de 20 ms; pasos máximos
+- Arranque de 40 ms, observaciÃ³n despuÃ©s de 20 ms; pasos mÃ¡ximos
   500/250 ns Gear2 y 250 ns Trapezoidal2, opciones del VCO conservadas.
-- Refinamiento y método: frecuencia dentro de 1 cent; extremos de BUS,
-  recuperación y salida principal dentro de 5 mV; RMS AC dentro de
-  1% más 10 microvolt. Balance integrado C2 frente a R75/R77 dentro
+- Refinamiento y mÃ©todo: frecuencia dentro de 1 cent; extremos de BUS,
+  recuperaciÃ³n y salida principal dentro de 5 mV; RMS AC dentro de
+  1% mÃ¡s 10 microvolt. Balance integrado C2 frente a R75/R77 dentro
   de 0.1 nC. Estas son tolerancias de laboratorio, no especificaciones Moog.
-- Controles reservados: cutoff eléctrico 0.2/0.8; contorno loudness
+- Controles reservados: cutoff elÃ©ctrico 0.2/0.8; contorno loudness
   0/1/4 V con base Q21 fija; base Q21 0 V con contorno fijo; emphasis
   5000/0 ohm; carga principal 10000 ohm; perfil R61=200000 ohm.
 - Registrar finitud, periodo, amplitud, DC y corrientes de cola. La
-  dirección cutoff se observa en corriente Q28 y energía de armónicos,
-  sin convertir la fracción de perilla en Hz por una fórmula inventada.
-  Comparar mute con escena nominal; no exigir monotonía de amplitud
-  al cambiar resonancia. Autooscilación requiere un ensayo independiente.
-- Conservación de netlist/log/export completos y hashes de fuentes
-  antes/después, incluso ante rechazo. Una interpretación corregida
-  reusa trazas; cualquier cambio eléctrico requiere un banco nuevo.
+  direcciÃ³n cutoff se observa en corriente Q28 y energÃ­a de armÃ³nicos,
+  sin convertir la fracciÃ³n de perilla en Hz por una fÃ³rmula inventada.
+  Comparar mute con escena nominal; no exigir monotonÃ­a de amplitud
+  al cambiar resonancia. AutooscilaciÃ³n requiere un ensayo independiente.
+- ConservaciÃ³n de netlist/log/export completos y hashes de fuentes
+  antes/despuÃ©s, incluso ante rechazo. Una interpretaciÃ³n corregida
+  reusa trazas; cualquier cambio elÃ©ctrico requiere un banco nuevo.
 
-Una primera escucha de ciclos estacionarios es un adaptador explícito.
-No demuestra Note On/Off ni una voz de duración completa. La integración
-portable, envolventes y fidelidad física mantienen sus gates abiertos.
+Una primera escucha de ciclos estacionarios es un adaptador explÃ­cito.
+No demuestra Note On/Off ni una voz de duraciÃ³n completa. La integraciÃ³n
+portable, envolventes y fidelidad fÃ­sica mantienen sus gates abiertos.
+
+Primera corrida (56a222c): aborto en 2.277 ms en E402 durante reset,
+con deck/log/export parcial conservados. El siguiente intento aumenta
+sólo itl4 a 100 iteraciones de Newton; ecuaciones y tolerancias intactas.

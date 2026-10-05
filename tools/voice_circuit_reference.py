@@ -115,7 +115,7 @@ def netlist(s, export):
         lines.append(f'VF4_{ref} {node(n)} 0 {v:.17g}')
     # The original VCO mixer source must disappear, including at zero volts.
     text = '\n'.join(l for l in text.splitlines() if not l.startswith('Vmixer '))+'\n'
-    text = text.replace('.options ', '\n'.join(lines)+'\n.options ', 1)
+    text = text.replace('.options ', '\n'.join(lines)+'\n.options itl4=100 ', 1)
     text = text.replace('.save '+' '.join(vco.VECTORS), '.save '+' '.join(VECTORS))
     text = text.replace(' '.join(vco.VECTORS)+'\nquit', ' '.join(VECTORS)+'\nquit')
     text = text.replace('RF-D conditional VCO1 CA3046 complete circuit', 'RF-D coupled conditional VCO1 ladder VCAs board outputs', 1)
