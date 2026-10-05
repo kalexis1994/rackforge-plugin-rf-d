@@ -4,6 +4,17 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+La [continuación compartida](docs/BIESTABLE_CONTINUACION_COMPARTIDA_RESULTADOS.md)
+certifica **24 soportes contiguos hasta ≈225 µs**, acumulado **≤0,793 µV**.
+Ocho referencias nuevas transportan 22 memorias reales; pico local nuevo
+≤0,418 µV. Se renuevan nueve candidatos, una inversa uniforme, 99 consultas
+de tasa y 512 acciones, sin solves de trayectoria o sistemas nuevos de P.
+Diecisiete artefactos completos y su manifiesto fijan todas las identidades.
+Nueve pruebas nuevas pasan al primero; corpus de 643 entradas y 135 informes.
+La parada es por límite declarado. Próximo:
+[preparar acciones con equivalencia exacta](docs/BIESTABLE_ACCIONES_PREPARADAS_PLAN.md).
+**1 mV global sigue abierto.**
+
 El [recinto compartido](docs/BIESTABLE_RECINTOS_COMPARTIDOS_RESULTADOS.md)
 vuelve a certificar los mismos 16 soportes hasta ≈125 µs, error acumulado
 ≤0,793 µV. Una inversa uniforme sustituye 64 recintos y requiere 99 consultas
