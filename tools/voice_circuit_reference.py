@@ -64,8 +64,10 @@ class Scenario:
             raise ValueError('positive output loads required')
 
 
-def netlist(s, export):
+def netlist(s, export, *, linear_solver=None):
     s.validate()
+    if linear_solver not in (None, 'sparse', 'klu'):
+        raise ValueError('documented linear backend required')
     text, metadata = vco.netlist(s.oscillator, export)
     graph = vco.read(GRAPH)
     lines, manifest = [], []
@@ -119,9 +121,12 @@ def netlist(s, export):
     text = text.replace('.save '+' '.join(vco.VECTORS), '.save '+' '.join(VECTORS))
     text = text.replace(' '.join(vco.VECTORS)+'\nquit', ' '.join(VECTORS)+'\nquit')
     text = text.replace('RF-D conditional VCO1 CA3046 complete circuit', 'RF-D coupled conditional VCO1 ladder VCAs board outputs', 1)
+    if linear_solver is not None:
+        text = text.replace('.options ', '.options '+linear_solver+' ', 1)
     metadata.update(schema='rf-d/voice-circuit-netlist/v1', scenario=asdict(s),
                     board4_branches=manifest, boundary_scope=graph['boundaries'],
-                    diode_card=dict(n=2, saturation_a=diode_is, reference_v=.9, reference_a=.1))
+                    diode_card=dict(n=2, saturation_a=diode_is, reference_v=.9, reference_a=.1),
+                    linear_solver='sparse' if linear_solver is None else linear_solver)
     for p in (GRAPH,Path(__file__)):
         metadata['source_sha256'][p.relative_to(ROOT).as_posix()] = vco.sha(p)
     return text, metadata
