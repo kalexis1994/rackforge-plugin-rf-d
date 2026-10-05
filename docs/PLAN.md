@@ -1,10 +1,12 @@
 # Prioridad vigente
 
-El [VCO1 acoplado](VCO1_RESULTADOS_CIRCUITO.md) genera señal y pasa
-convergencia y calibración nominal por dos trims. El [plan](PRIORIDAD_VCO1.md)
-continúa con su ruta portable, el mixer real y una voz observable.
-La continuación formal del biestable queda conservada y aplazada por
-la decisión del usuario del 2026-10-05. Las secciones siguientes son historial.
+El [VCO1 aislado](VCO1_RESULTADOS_CIRCUITO.md) pasa convergencia y calibración.
+El [filtro y ambos VCA](FILTRO_VCA_RESULTADOS_CIRCUITO.md) pasan 19 escenas
+con entrada eléctrica y tienen escucha con sierra medida. La unión completa
+se detiene en el reset E402; sus fallos quedan preservados. Prioridad: aislar
+esa causa, completar el motor portable y conectar controles de contorno.
+La continuación formal del biestable sigue aplazada. Las secciones siguientes
+son historial y no el orden actual de implementación.
 
 # Plan de investigación RACE para RF-D
 

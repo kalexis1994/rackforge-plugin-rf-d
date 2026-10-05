@@ -1,11 +1,12 @@
 # RF-D
 
-**Prioridad activa:** el [VCO1 CA3046 ya funciona en el oráculo de circuito](docs/VCO1_RESULTADOS_CIRCUITO.md):
-convertidor, rampa, reset y tres formas acopladas; 14 escenas de convergencia
-revalidadas y calibración por dos trims con notas intermedias reservadas.
-Hay una escucha local del ciclo estacionario. Próximo paso: implementación
-portable y carga real del mixer. Parámetros físicos/fidelidad y tiempo real
-siguen abiertos.
+**Prioridad activa:** [VCO1 funcional y calibrado](docs/VCO1_RESULTADOS_CIRCUITO.md)
+y [ladder/dos VCA/salida con entrada eléctrica](docs/FILTRO_VCA_RESULTADOS_CIRCUITO.md).
+El filtro/VCA pasa 19 escenas y tiene escucha con sierra medida del VCO a
+través del panel. La unión simultánea se detiene en el reset y conserva sus
+cinco intentos; la escucha usa una frontera explícita. Próximo: resolver
+esa unión, controles de contorno y ruta portable. Fidelidad física y
+plazo de audio siguen abiertos.
 
 
 Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su sonido se investigará mediante **RACE — RackForge Architecture for Circuit Emulation**: circuito documentado, leyes de control, calibración de servicio, comparación de audio y presupuesto de tiempo real. Este repositorio es independiente del host y de otros plugins RF.
