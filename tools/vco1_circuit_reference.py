@@ -65,8 +65,8 @@ class Scenario:
             raise ValueError("R11 active resistance outside documented track")
         if self.c4_f not in (10e-12, 100e-12):
             raise ValueError("C4 must retain one of the two documentary profiles")
-        if self.upper_contact not in range(1, 7) or self.lower_contact not in (7, 10, 11, 12):
-            raise ValueError("unsupported/open electrical selector contact")
+        if self.upper_contact not in range(1, 7) or self.lower_contact not in range(7, 13):
+            raise ValueError("unsupported electrical selector contact")
         if self.duration_s <= 0 or not 0 < self.max_step_s <= self.duration_s:
             raise ValueError("positive duration and maximum step required")
         if self.method not in ("gear", "trap") or self.order not in (1, 2):
@@ -158,7 +158,8 @@ def netlist(s: Scenario, export: Path) -> tuple[str, dict]:
         branch(ref, *p["terminals"], p["value_ohm"])
     selected = panel["links"]["sw6_upper_contacts"][str(s.upper_contact)]
     width = panel["sw6_lower_contacts"][str(s.lower_contact)]
-    branch("SW6_width", "PULSE_WIDTH_22B", width, 0)
+    if width != "open":
+        branch("SW6_width", "PULSE_WIDTH_22B", width, 0)
     total = pp["R6_PANEL"]["value_ohm"]
     branch("R6_panel_high", selected, "R6_WIPER", total * (1 - s.level_fraction))
     branch("R6_panel_low", "R6_WIPER", "GND", total * s.level_fraction)
@@ -259,10 +260,21 @@ def measure(raw: np.ndarray, settle_s: float = 0.005) -> dict:
     phase = np.linspace(0, 1, 1025)
     cycle_t = edges[-2] + phase * (edges[-1] - edges[-2])
     cycle = np.column_stack([np.interp(cycle_t, t, raw[:, i]) for i in range(1, 6)])
+    pulse = window[:, 5]
+    # Duty of the negative-going rectangular state. Offset is measured, not removed.
+    level = (float(pulse.min()) + float(pulse.max())) / 2
+    pulse_down = crossings(t, raw[:, 5], level, False)
+    pulse_up = crossings(t, raw[:, 5], level, True)
+    active_s = 0.0
+    for down in pulse_down:
+        following = pulse_up[pulse_up > down]
+        if len(following):
+            active_s += max(0.0, min(following[0], edges[-1]) - max(down, edges[-3]))
     return dict(frequency_hz=float(1 / np.mean(periods)),
         period_spread_relative=float(np.ptp(periods) / np.mean(periods)),
         reset_crossings_s=edges.tolist(), windows_v=waves,
         phase_grid=phase.tolist(), cycle_v=cycle.tolist(),
+        pulse_negative_duty=active_s / (edges[-1] - edges[-3]),
         qa_mean_a=float(np.trapezoid(window[:, 15], window[:, 0]) / np.ptp(window[:, 0])),
         reset_collector_mean_a=float(np.trapezoid(window[:, 16], window[:, 0]) / np.ptp(window[:, 0])))
 

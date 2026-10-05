@@ -75,3 +75,30 @@ python -B tools/vco1_circuit_reference.py --label initial-gear500
 La comparación portable, antialias, mezcla real, tres osciladores,
 calibración física y deadline siguen abiertos. Una oscilación obtenida
 aquí se denomina oráculo condicionado; no voz RF-D terminada.
+
+## Banco congelado de convergencia
+
+Se extiende la duración de la escena a **30 ms** y se observa periodicidad
+tras **15 ms**, para incluir al menos dos ciclos también con teclado -1 V.
+[Auditoría de retornos](VCO1_AUDITORIA_RETORNOS.md) establece la topología
+vigente; las dos corridas anteriores permanecen rechazadas.
+
+El banco contiene 14 escenas: ambos C4 en Gear2 a 500/250/125 ns y
+Trapezoidal2 a 125 ns; teclado -3.1/-1.1 V; pulso superior 4 con contactos
+inferiores 10/11/12; triángulo superior 1 con entrada de ancho abierta 8.
+No asignar estas combinaciones a leyendas mecánicas sin corroboración.
+
+Criterios adicionales fijados antes de medir: dispersión relativa de
+periodos <=1e-5, dirección creciente de frecuencia por CV y ancho de
+pulso decreciente por contactos 10→11→12, todos dentro de (0,1). Balance
+integrado de corrientes Qa/Q10 sobre dos ciclos frente a delta de carga
+C1, discrepancia <=0.002 de la carga de Qa transportada; excluye corriente
+mínima/carga de puerta de Q7 y error de cuadratura. Es una observación
+finita de conservación, no un certificado entre muestras. El pico por
+fase se informa como diagnóstico y no tiene gate que pueda ocultar deriva
+de frecuencia. Se conservan las observaciones completas de cada método.
+
+```powershell
+python -B tools/vco1_circuit_probes.py --bank convergence-v1
+python -B -m unittest discover -s tests -p 'test_vco1*.py' -v
+```
