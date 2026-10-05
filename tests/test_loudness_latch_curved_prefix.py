@@ -151,7 +151,7 @@ class CurvedPrefix(unittest.TestCase):
         self.assertEqual(len(law.transfer(previous)),22)
 
     def test_storage_identity_rejects_changes_and_scope(self):
-        r=self.report;raw=producer.OUTPUT.read_bytes();storage=producer.read(producer.SUMMARY)['storage']
+        r=self.report;raw=producer.OUTPUT.read_bytes();storage=json.loads(producer.SUMMARY.read_text(encoding='utf-8'))['storage']
         self.assertEqual(gzip.decompress(raw),producer.canonical(r));self.assertEqual(sha(raw),storage['compressed_sha256']);self.assertEqual(sha(producer.canonical(r)),storage['canonical_json_sha256']);self.assertEqual(len(raw),storage['bytes'])
         for name,h in r['source_sha256'].items():self.assertEqual(sha((ROOT/name).read_bytes()),h,name)
         row=r['records'][0];producer.load_record(row)
