@@ -12,6 +12,17 @@ No habrá acceso a una unidad física. El [protocolo sin hardware](VALIDACION_SI
 
 ## Fase B — Solver y banco de pruebas
 
+La [referencia cuadrática de C7](BIESTABLE_REFERENCIA_CURVA_RESULTADOS.md)
+certifica **ocho intervalos contiguos hasta aproximadamente 25 µs**,
+con **error nodal acumulado ≤0,793 µV**. El nuevo soporte conserva sus
+endpoints y alcanza una cota local ≤0,327 µV; la afín comparable rechaza
+por ≈4,185 µV. Se renuevan 32 recintos de inversa, 3168 consultas de tasa
+y 256 acciones completas en P fija, sin solves nuevos. El integrador y
+los estados publicados permanecen intactos. Ocho pruebas nuevas aceptadas;
+corpus de 578 entradas y 101 informes, con fallos conservados. Próximo bloque:
+[continuación curva](BIESTABLE_PREFIJO_CURVO_PLAN.md).
+**1 mV global sigue abierto.**
+
 El [forcing temporal firmado de C7](BIESTABLE_FORCING_C7_RESULTADOS.md)
 certifica **siete intervalos contiguos hasta aproximadamente 12,5 µs**,
 con **error nodal ≤0,793 µV**. Un cambio auxiliar de coordenadas conserva

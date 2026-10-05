@@ -1,5 +1,13 @@
 # Matriz de fidelidad
 
+La [referencia curva con extremos conservados](BIESTABLE_REFERENCIA_CURVA_RESULTADOS.md)
+certifica el octavo soporte nominal: hasta ≈25 µs, pico local ≤0,327 µV
+y acumulado ≤0,793 µV. Recalcula residual completo, cargas, RC y leyes
+por piezas, y renueva inversas, tasas y acciones alrededor de la curva.
+La cota se mide respecto a esa referencia; los endpoints e integrador
+se conservan. Soportes siguientes, trayectoria completa, 1 mV global,
+hardware, sonido, voz, audio nativo y deadline mantienen sus gates.
+
 La [coordenada auxiliar de C7](BIESTABLE_FORCING_C7_RESULTADOS.md) conserva
 el signo temporal y certifica el séptimo soporte nominal: hasta ≈12,5 µs,
 error nodal ≤0,793 µV. Paga incertidumbre y Bp en todas las ecuaciones,
