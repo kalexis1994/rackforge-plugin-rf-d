@@ -10,7 +10,7 @@ siguen abiertos.
 
 Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su sonido se investigará mediante **RACE — RackForge Architecture for Circuit Emulation**: circuito documentado, leyes de control, calibración de servicio, comparación de audio y presupuesto de tiempo real. Este repositorio es independiente del host y de otros plugins RF.
 
-## Estado
+## Historial de investigación numérica
 
 El [refinamiento de memoria](docs/BIESTABLE_MEMORIA_JUNTURAS_RESULTADOS.md)
 cierra el soporte 33 con dieciséis macroceldas, manteniendo curva, radio,
