@@ -140,39 +140,39 @@ class RampGraphTests(unittest.TestCase):
             "base": "Q4_BASE", "collector": "Q4_COLLECTOR", "emitter": "Q4_EMITTER"
         })
 
-    def test_saw_9b_includes_triangle_and_pulse_stage_loads(self) -> None:
+    def test_saw_and_negative_return_remain_separate(self) -> None:
         graph = json.loads((ROOT / "evidence" / "vco1_ramp_graph.json").read_text(encoding="utf-8"))
         parts = {part["ref"]: part for part in graph["parts"]}
         expected = {
             "R33": (4700, {"GND", "SAW_OUTPUT_9B"}),
             "R34": (4300, {"SCHMITT_DRIVE", "SAW_OUTPUT_9B"}),
-            "R23": (8200, {"TRI_OUTPUT_21B", "SAW_OUTPUT_9B"}),
-            "R14": (150000, {"Q2_COLLECTOR", "SAW_OUTPUT_9B"}),
-            "R29": (10000, {"Q2_EMITTER", "SAW_OUTPUT_9B"}),
-            "R44": (390000, {"Q11_BASE", "SAW_OUTPUT_9B"}),
-            "R35": (100000, {"Q12_BASE", "SAW_OUTPUT_9B"}),
+            "R23": (8200, {"TRI_OUTPUT_21B", "NEG10_V"}),
+            "R14": (150000, {"Q2_COLLECTOR", "NEG10_V"}),
+            "R29": (10000, {"Q2_EMITTER", "NEG10_V"}),
+            "R44": (390000, {"Q11_BASE", "NEG10_V"}),
+            "R35": (100000, {"Q12_BASE", "NEG10_V"}),
         }
         for ref, (value, nodes) in expected.items():
             self.assertEqual(parts[ref]["value"], value)
             self.assertEqual(set(parts[ref]["terminals"].values()), nodes)
-        self.assertEqual(parts["Q12"]["terminals"]["emitter"], "SAW_OUTPUT_9B")
+        self.assertEqual(parts["Q12"]["terminals"]["emitter"], "NEG10_V")
         self.assertEqual(parts["Q12"]["kind"], "NPN_2N3392_schematic")
 
     def test_triangle_former_and_buffer_connect_internal_saw_to_21b(self) -> None:
         graph = json.loads((ROOT / "evidence" / "vco1_ramp_graph.json").read_text(encoding="utf-8"))
         parts = {part["ref"]: part for part in graph["parts"]}
         self.assertEqual(parts["Q2"]["terminals"], {
-            "base": "RESET_BIAS", "collector": "Q2_COLLECTOR", "emitter": "Q2_EMITTER"
+            "base": "SCHMITT_DRIVE", "collector": "Q2_COLLECTOR", "emitter": "Q2_EMITTER"
         })
         self.assertEqual(parts["Q1"]["terminals"], {
             "base": "Q2_COLLECTOR", "collector": "POS10_V", "emitter": "Q1_EMITTER"
         })
         expected = {
             "R3": (10700, {"POS10_V", "Q2_COLLECTOR"}),
-            "R14": (150000, {"Q2_COLLECTOR", "SAW_OUTPUT_9B"}),
+            "R14": (150000, {"Q2_COLLECTOR", "NEG10_V"}),
             "R28": (750, {"Q1_EMITTER", "TRI_OUTPUT_21B"}),
-            "R29": (10000, {"Q2_EMITTER", "SAW_OUTPUT_9B"}),
-            "R23": (8200, {"TRI_OUTPUT_21B", "SAW_OUTPUT_9B"}),
+            "R29": (10000, {"Q2_EMITTER", "NEG10_V"}),
+            "R23": (8200, {"TRI_OUTPUT_21B", "NEG10_V"}),
         }
         for ref, (value, nodes) in expected.items():
             self.assertEqual(parts[ref]["value"], value)
@@ -185,15 +185,15 @@ class RampGraphTests(unittest.TestCase):
             "base": "Q11_BASE", "collector": "Q11_COLLECTOR", "emitter": "GND"
         })
         self.assertEqual(parts["Q12"]["terminals"], {
-            "base": "Q12_BASE", "collector": "Q12_COLLECTOR", "emitter": "SAW_OUTPUT_9B"
+            "base": "Q12_BASE", "collector": "Q12_COLLECTOR", "emitter": "NEG10_V"
         })
         expected = {
             "R1": (43000, {"PULSE_WIDTH_22B", "Q11_BASE"}),
             "R40": (43000, {"SCHMITT_DRIVE", "Q11_BASE"}),
-            "R44": (390000, {"SAW_OUTPUT_9B", "Q11_BASE"}),
+            "R44": (390000, {"NEG10_V", "Q11_BASE"}),
             "R2": (910000, {"Q12_COLLECTOR", "Q11_BASE"}),
             "R39": (100000, {"Q11_COLLECTOR", "Q12_BASE"}),
-            "R35": (100000, {"Q12_BASE", "SAW_OUTPUT_9B"}),
+            "R35": (100000, {"Q12_BASE", "NEG10_V"}),
             "R13": (6200, {"Q12_COLLECTOR", "RECT_OUTPUT_20B"}),
             "R22": (4700, {"GND", "RECT_OUTPUT_20B"}),
         }

@@ -23,7 +23,10 @@ La [referencia ejecutable](../tools/vco1_panel_pulse_reference.py) coteja la red
 
 ## Puente de sierra y triángulo
 
-El puente externo R30+R31 de **57 kΩ** queda en paralelo con **R23 de placa, 8,2 kΩ**, que también une 9B y 21B. Con el cursor de R6 abierto y SW6 en pulso, la resistencia pasiva combinada entre ambos terminales es `57 kΩ || 8,2 kΩ ≈ 7,169 kΩ`. No es la resistencia de salida de ninguna de las dos formas: ambas reciben otras ramas activas y pasivas en la placa.
+El puente externo R30+R31 de **57 kΩ** une 9B y 21B. R23 de placa,
+8.2 kΩ, va de 21B a -10 V; no está en paralelo con ese puente. La cifra
+anterior de 7.169 kΩ como puente combinado se retira; ver
+[auditoría de retornos](VCO1_AUDITORIA_RETORNOS.md). No es la resistencia de salida de ninguna de las dos formas: ambas reciben otras ramas activas y pasivas en la placa.
 
 Para voltajes de 9B y 21B **impuestos**, la [referencia de dos puertos](../tools/vco1_panel_waveform_reference.py) calcula las corrientes hacia el panel. En contacto 3, R6 añade **25 kΩ de 9B a masa**; en contacto 1 los añade de **21B a masa**. En contactos 4/5/6 R6 carga 20B, y el puente de 57 kΩ persiste entre 9B y 21B. En contacto 2, R6 carga la toma intermedia: con `g30=1/R30`, `g31=1/R31`, `g6=1/R6` y `G=g30+g31+g6`, su voltaje es `V_toma=(g30·V_9B+g31·V_21B)/G`; las corrientes de puerto son `(V_9B−V_toma)/R30` y `(V_21B−V_toma)/R31`. Esta red no equivale a un simple puente de 57 kΩ cuando el contacto 2 está cerrado.
 

@@ -55,8 +55,8 @@ def panel_waveform_reference() -> dict[str, object]:
     if (panel["links"]["board_saw_output"], panel["links"]["board_triangle_output"]) != ("9B", "21B"):
         raise ValueError("board connections differ from Fig. 9-17")
     r23 = board_parts["R23"]
-    if r23["value"] != 8200 or set(r23["terminals"].values()) != set(PORTS):
-        raise ValueError("board R23 must bridge 9B and 21B")
+    if r23["value"] != 8200 or set(r23["terminals"].values()) != {"TRI_OUTPUT_21B", "NEG10_V"}:
+        raise ValueError("board R23 must return 21B to -10 V")
     r30, r31, r6 = (parts[ref]["value_ohm"] for ref in ("R30_PANEL", "R31_PANEL", "R6_PANEL"))
     cases = {}
     for contact in range(1, 7):
@@ -64,7 +64,7 @@ def panel_waveform_reference() -> dict[str, object]:
         saw_2, tri_2 = _port_currents(0.0, 1.0, r30, r31, r6, contact)
         panel_y = [[saw_1, saw_2], [tri_1, tri_2]]
         bridge_g = 1 / r23["value"]
-        board_r23_y = [[bridge_g, -bridge_g], [-bridge_g, bridge_g]]
+        board_r23_y = [[0.0, 0.0], [0.0, bridge_g]]
         cases[str(contact)] = {
             "panel_admittance_siemens": panel_y,
             "panel_plus_board_r23_admittance_siemens": [
@@ -74,7 +74,9 @@ def panel_waveform_reference() -> dict[str, object]:
     return {
         "ports": PORTS,
         "panel_permanent_series_bridge_ohm": r30 + r31,
-        "panel_plus_board_r23_parallel_bridge_ohm": 1 / (1 / (r30 + r31) + 1 / r23["value"]),
+        "board_r23_shunt_ohm": r23["value"],
+        "board_r23_reference_v": -10.0,
+        "board_r23_affine_current_a": [0.0, 10.0 / r23["value"]],
         "selected_contact_cases": cases,
         "excluded": panel["limits"],
     }

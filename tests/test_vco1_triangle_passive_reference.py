@@ -15,8 +15,8 @@ class TrianglePassiveTests(unittest.TestCase):
         weights = result["boundary_voltage_coefficients"]
         self.assertAlmostEqual(sum(weights.values()), 1.0)
         self.assertAlmostEqual(result["passive_thevenin_resistance_ohm"], 1 / (1 / 750 + 1 / 8200))
-        q1_emitter_v, saw_v = 1.5, -1.0
-        triangle_v = weights["Q1_EMITTER"] * q1_emitter_v + weights["SAW_OUTPUT_9B"] * saw_v
+        q1_emitter_v, saw_v = 1.5, -10.0
+        triangle_v = weights["Q1_EMITTER"] * q1_emitter_v + weights["NEG10_V"] * saw_v
         self.assertAlmostEqual((triangle_v - q1_emitter_v) / 750 + (triangle_v - saw_v) / 8200, 0.0)
 
 

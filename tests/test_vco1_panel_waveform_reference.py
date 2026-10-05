@@ -13,7 +13,15 @@ class PanelWaveformTests(unittest.TestCase):
     def test_bridge_exists_in_every_switch_contact(self) -> None:
         result = panel_waveform_reference()
         self.assertEqual(result["panel_permanent_series_bridge_ohm"], 57000)
-        self.assertAlmostEqual(result["panel_plus_board_r23_parallel_bridge_ohm"], 1 / (1 / 57000 + 1 / 8200))
+        self.assertEqual(result["board_r23_shunt_ohm"], 8200)
+        self.assertEqual(result["board_r23_reference_v"], -10)
+        self.assertEqual(result["board_r23_affine_current_a"], [0, 10 / 8200])
+        for case in result["selected_contact_cases"].values():
+            panel = case["panel_admittance_siemens"]
+            combined = case["panel_plus_board_r23_admittance_siemens"]
+            self.assertEqual(combined[0], panel[0])
+            self.assertEqual(combined[1][0], panel[1][0])
+            self.assertAlmostEqual(combined[1][1] - panel[1][1], 1 / 8200)
         for case in result["selected_contact_cases"].values():
             matrix = case["panel_admittance_siemens"]
             self.assertAlmostEqual(matrix[0][1], matrix[1][0])

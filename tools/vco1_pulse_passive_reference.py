@@ -16,7 +16,7 @@ GRAPH_PATH = Path(__file__).resolve().parents[1] / "evidence" / "vco1_ramp_graph
 Q11_INPUTS = {
     "R1": (43000, "PULSE_WIDTH_22B"),
     "R40": (43000, "SCHMITT_DRIVE"),
-    "R44": (390000, "SAW_OUTPUT_9B"),
+    "R44": (390000, "NEG10_V"),
     "R2": (910000, "Q12_COLLECTOR"),
 }
 
