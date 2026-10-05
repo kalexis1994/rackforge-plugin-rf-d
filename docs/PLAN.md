@@ -1,9 +1,10 @@
 # Prioridad vigente
 
-Completar el [VCO 1 CA3046](PRIORIDAD_VCO1.md) con rigor eléctrico,
-convergencia y señal observable. La continuación formal del biestable
-queda conservada y aplazada por decisión del usuario del 2026-10-05.
-Las secciones siguientes conservan el historial y sus criterios.
+El [VCO1 acoplado](VCO1_RESULTADOS_CIRCUITO.md) genera señal y pasa
+convergencia y calibración nominal por dos trims. El [plan](PRIORIDAD_VCO1.md)
+continúa con su ruta portable, el mixer real y una voz observable.
+La continuación formal del biestable queda conservada y aplazada por
+la decisión del usuario del 2026-10-05. Las secciones siguientes son historial.
 
 # Plan de investigación RACE para RF-D
 

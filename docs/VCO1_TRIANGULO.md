@@ -20,7 +20,7 @@ Q2 lee la sierra interna de Q3 en su base. La corrección intermedia a
 RESET_BIAS fue incorrecta; el trazado completo de ambas barras confirma
 SCHMITT_DRIVE. R29 devuelve el emisor a **-10 V**; R14 y R23 también
 vuelven a esa barra, separada de 9B. Ver [auditoría](VCO1_AUDITORIA_RETORNOS.md).
- Q1 toma el colector de Q2 y alimenta 21B a través de R28. R14, R29 y R23 son tres retornos distintos a -10 V. Al seguir el emisor de Q2 apareció **R29**, que faltaba en el [primer inventario pasivo de 9B](VCO1_SALIDA_SIERRA.md); los coeficientes de ese inventario se recalcularon. La salida 21B figura en el esquema con una excursión anotada aproximadamente de +1,7 a −1,7 V; esta transcripción no la deduce de modelos BJT.
+ Q1 toma el colector de Q2 y alimenta 21B a través de R28. La antigua interpretación de R29 como carga de 9B se retiró tras seguir la barra -10 V. La salida 21B figura en el esquema con una excursión anotada aproximadamente de +1,7 a −1,7 V; esta transcripción no la deduce de modelos BJT.
 
 ## Límite pasivo en 21B
 
@@ -36,3 +36,6 @@ python -m unittest discover -s tests -q
 ```
 
 Los tests comprueban la conectividad y la ley de nodos, no una forma triangular ni parecido audible. El próximo paso eléctrico es resolver Q2/Q1 junto con las cargas de 21B y las curvas del 2N3392 antes de calcular amplitud, distorsión o transición entre ramas.
+
+El [oráculo acoplado](VCO1_RESULTADOS_CIRCUITO.md) ya calcula esta forma
+con BJT condicionados y carga de panel; su identificación física sigue abierta.
