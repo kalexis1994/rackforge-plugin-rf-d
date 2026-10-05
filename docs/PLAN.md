@@ -1,3 +1,10 @@
+# Prioridad vigente
+
+Completar el [VCO 1 CA3046](PRIORIDAD_VCO1.md) con rigor eléctrico,
+convergencia y señal observable. La continuación formal del biestable
+queda conservada y aplazada por decisión del usuario del 2026-10-05.
+Las secciones siguientes conservan el historial y sus criterios.
+
 # Plan de investigación RACE para RF-D
 
 No habrá acceso a una unidad física. El [protocolo sin hardware](VALIDACION_SIN_HARDWARE.md) define qué podemos comprobar y qué afirmaciones quedan fuera de alcance.

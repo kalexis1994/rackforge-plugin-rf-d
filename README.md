@@ -1,5 +1,9 @@
 # RF-D
 
+**Prioridad activa:** [completar el oscilador CA3046](docs/PRIORIDAD_VCO1.md)
+con circuito trazable, pruebas de convergencia y señal reproducible.
+
+
 Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su sonido se investigará mediante **RACE — RackForge Architecture for Circuit Emulation**: circuito documentado, leyes de control, calibración de servicio, comparación de audio y presupuesto de tiempo real. Este repositorio es independiente del host y de otros plugins RF.
 
 ## Estado
