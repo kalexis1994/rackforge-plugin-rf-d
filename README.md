@@ -4,6 +4,19 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+La [preparación exacta de acciones](docs/BIESTABLE_ACCIONES_PREPARADAS_RESULTADOS.md)
+reproduce **64 presupuestos y 512 subcertificados idénticos en bytes** frente
+al control y archivo original. Una pasada balanceada AB/BA reduce el wall
+**24,39 %**, de 286,72 s a 216,79 s con preparación e identidades incluidas.
+Son tiempos del laboratorio offline en este equipo. Se conservan **24 soportes
+hasta ≈225 µs**, acumulado **≤0,793 µV**. Corpus: 657 entradas, 138 informes,
+180 hashes propios y 18 fuentes históricas conservadas. Las siete pruebas
+primarias pasan al segundo, tras corregir una expectativa de representación
+sin cambiar helper, banco o tiempos. Las dos del corpus pasan al segundo;
+ambos fallos de fixtures quedan archivados. Próximo:
+[continuación con preparación explícita](docs/BIESTABLE_CONTINUACION_PREPARADA_PLAN.md).
+**1 mV global sigue abierto.**
+
 La [continuación compartida](docs/BIESTABLE_CONTINUACION_COMPARTIDA_RESULTADOS.md)
 certifica **24 soportes contiguos hasta ≈225 µs**, acumulado **≤0,793 µV**.
 Ocho referencias nuevas transportan 22 memorias reales; pico local nuevo
