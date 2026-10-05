@@ -28,9 +28,9 @@ class CurvedReference(unittest.TestCase):
     def test_exact_quadratic_solution_physical_time_sign_and_rc_counterexample(self):
         source=self.affine|dict(x=[(F(0),F(0))]*94,y_linear=[(F(0),F(0))]*21,h=F(2))
         source=curve.rebuild(self.network,source,source['x'],source['y_linear'])
-        inverse=[[F(i==j) for j in range(119)] for i in range(119)]
+        inverse=[[int(i==j) for j in range(119)] for i in range(119)]
         inverse[78][114]=-1;inverse[22][114]=3
-        rhs=[(F(0),)]*119;rhs[114]=(-F(1),F(2))
+        rhs=[['0']]*119;rhs[114]=['-1','2']
         result,b=curve.candidate(self.network,source,inverse,rhs)
         self.assertEqual(b['amplitude_v_s'],'1');self.assertEqual(b['bubble_v'],['0','2','-2'])
         for u in (F(0),F(1,4),F(1,2),F(3,4),F(1)):
