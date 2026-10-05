@@ -1,5 +1,17 @@
 # Matriz de fidelidad
 
+La [continuación con preparación explícita](BIESTABLE_CONTINUACION_PREPARADA_RESULTADOS.md)
+certifica **32 soportes contiguos hasta ≈325 µs**, acumulado **≤0,793 µV**.
+Renueva nueve candidatos, una inversa uniforme y 99 consultas de tasa;
+una preparación identifica el dominio nuevo en 64 budgets y 512 subcertificados.
+Transporta las 22 memorias reales en P fija. Pico local nuevo ≤0,524 µV,
+nodo 66 dentro del soporte 31; C7 termina con ≤461,567 nV.
+Diez pruebas nuevas pasan al primero, con comparación completa contra control;
+corpus de 688 entradas, 159 informes, 202 hashes propios y 19 fuentes históricas.
+Parada por límite declarado. Próximo:
+[segundo banco preparado, soportes 32–39](BIESTABLE_CONTINUACION_PREPARADA_SEGUNDA_PLAN.md).
+Este banco no mide rendimiento nuevo. **1 mV global sigue abierto.**
+
 La [preparación exacta de acciones](BIESTABLE_ACCIONES_PREPARADAS_RESULTADOS.md)
 reproduce **64 presupuestos y 512 subcertificados idénticos en bytes** frente
 al control y archivo original. Una pasada balanceada AB/BA reduce el wall
