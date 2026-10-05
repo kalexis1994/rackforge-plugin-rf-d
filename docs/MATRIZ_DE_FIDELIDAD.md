@@ -1,5 +1,14 @@
 # Matriz de fidelidad
 
+El [prefijo curvo por soportes](BIESTABLE_PREFIJO_CURVO_RESULTADOS.md)
+certifica dieciséis intervalos nominales hasta ≈125 µs, pico local nuevo
+≤0,372 µV y acumulado ≤0,793 µV. Renueva recintos, inversas, tasas y
+acciones en cada referencia, con reloj real y transporte de 22 memorias.
+El manifiesto completo alcanza el límite declarado de ocho soportes nuevos;
+no se encontró hueco ni se certifican soportes posteriores por extrapolación.
+Circuito e integrador se conservan. Trayectoria completa, 1 mV global,
+hardware, sonido, voz, audio nativo y deadline mantienen sus gates.
+
 La [referencia curva con extremos conservados](BIESTABLE_REFERENCIA_CURVA_RESULTADOS.md)
 certifica el octavo soporte nominal: hasta ≈25 µs, pico local ≤0,327 µV
 y acumulado ≤0,793 µV. Recalcula residual completo, cargas, RC y leyes

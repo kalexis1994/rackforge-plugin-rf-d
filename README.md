@@ -4,6 +4,19 @@ Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su son
 
 ## Estado
 
+El [prefijo con referencias curvas](docs/BIESTABLE_PREFIJO_CURVO_RESULTADOS.md)
+certifica **dieciséis intervalos contiguos hasta aproximadamente 125 µs**,
+con **error nodal acumulado ≤0,793 µV**. Añade ocho soportes con picos
+locales ≤0,372 µV, transportando 22 memorias reales sin reset. Renueva
+64 recintos de inversa, 6336 consultas de tasa y 512 acciones completas;
+cero solves nuevos. Los archivos por soporte y su manifiesto conservan
+el banco íntegro y todas sus identidades. La parada es por límite declarado,
+sin hueco encontrado en este banco. Ocho pruebas nuevas aceptadas;
+corpus de 600 entradas y 112 informes, con versiones anteriores conservadas.
+Próximo bloque:
+[recintos compartidos](docs/BIESTABLE_RECINTOS_COMPARTIDOS_PLAN.md).
+**1 mV global sigue abierto.**
+
 La [referencia cuadrática de C7](docs/BIESTABLE_REFERENCIA_CURVA_RESULTADOS.md)
 certifica **ocho intervalos contiguos hasta aproximadamente 25 µs**,
 con **error nodal acumulado ≤0,793 µV**. El nuevo soporte conserva sus
