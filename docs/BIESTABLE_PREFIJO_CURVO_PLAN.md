@@ -7,7 +7,7 @@ curva interior no modifica los estados publicados; conservar su identidad.
 
 ## Experimento que debe congelarse antes de ejecutar
 
-1. Intentar primero índice 8, ≈25→50 µs, y declarar límite contiguo,
+1. Intentar primero índice 8, ≈25→37,5 µs, y declarar límite contiguo,
    variantes, radios, orden y parada en el primer hueco. No transportar
    la afín rechazada del octavo soporte ni una cota no soportada de 10 µV.
 2. Conservar la receta de la burbuja: X candidata del punto medio de cada
@@ -28,3 +28,7 @@ curva interior no modifica los estados publicados; conservar su identidad.
    cada intento. Probar soportes variables, curva/signo, interfaces,
    transporte y recertificación completa. Los gates globales permanecen
    independientes de cualquier prefijo nominal más largo.
+
+La lectura tipada de las historias corrige la estimación inicial del reloj:
+los pasos reales desde índice 8 son ≈12,5 µs, sin seguir duplicándose.
+El banco de continuación se fija en su [protocolo](BIESTABLE_PREFIJO_CURVO_PROTOCOLO.md).
