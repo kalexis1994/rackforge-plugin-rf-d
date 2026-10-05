@@ -1,12 +1,12 @@
 # Prioridad vigente
 
-El [VCO1 aislado](VCO1_RESULTADOS_CIRCUITO.md) pasa convergencia y calibración.
-El [filtro y ambos VCA](FILTRO_VCA_RESULTADOS_CIRCUITO.md) pasan 19 escenas
-con entrada eléctrica y tienen escucha con sierra medida. La unión completa
-se detiene en el reset E402; sus fallos quedan preservados. Prioridad: aislar
-esa causa, completar el motor portable y conectar controles de contorno.
-La continuación formal del biestable sigue aplazada. Las secciones siguientes
-son historial y no el orden actual de implementación.
+La [voz nominal acoplada](VOZ_ACOPLADA_RESULTADOS.md) resuelve VCO1,
+mixer, filtro, ambos VCA y salida con KLU, sin cambiar componentes.
+Ocho escenas completan; tres contrastes nominales y tres escuchas pasan.
+Cutoff bajo y ambos mute rechazan: el banco completo permanece abierto.
+Prioridad: resolver esas escenas, conectar las redes de contorno y medir
+la implementación portable. La continuación formal del biestable sigue
+aplazada. Las secciones siguientes son historial y no el orden actual.
 
 # Plan de investigación RACE para RF-D
 

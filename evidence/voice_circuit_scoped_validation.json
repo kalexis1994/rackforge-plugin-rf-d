@@ -1,0 +1,62 @@
+{
+  "schema": "rf-d/voice-scoped-validation/v1",
+  "nominal_scope_passed": true,
+  "full_bank_passed": false,
+  "archive_sha256": "f470177bb7390bc2eb53e5ae4e78c360336b73d97e4d18c3eff39dc9502b5ab6",
+  "canonical_payload_sha256": "74ec2b5ca00445959004178fb22bf5e61a1d1699ce09985eb5f9bb63405acdab",
+  "nominal_contrasts": {
+    "nominal500--nominal250": {
+      "frequency_cents": 3.3205464644882126e-06,
+      "max_extrema_difference_v": 7.35923087358259e-07,
+      "output_rms_difference_v": 6.365394217278109e-08,
+      "rms_limit_v": 0.0007679785384107247
+    },
+    "nominal250--nominal125": {
+      "frequency_cents": 4.1916750642017745e-06,
+      "max_extrema_difference_v": 2.017315252622609e-07,
+      "output_rms_difference_v": 1.8207532898051326e-08,
+      "rms_limit_v": 0.0007679783563353958
+    },
+    "nominal125--nominal-trap125": {
+      "frequency_cents": 6.081335063666563e-05,
+      "max_extrema_difference_v": 3.777341861521677e-08,
+      "output_rms_difference_v": 1.0186279875146198e-09,
+      "rms_limit_v": 0.0007679783461491159
+    }
+  },
+  "completed_trace_replay": [
+    "nominal500",
+    "nominal250",
+    "nominal125",
+    "nominal-trap125",
+    "cutoff-high",
+    "triangle",
+    "pulse-narrow",
+    "load10000"
+  ],
+  "rejected_trace_replay": [
+    {
+      "label": "cutoff-low",
+      "last_clock_s": 0.03188061958894215,
+      "error": "SPICE reported failure; preserved run log"
+    },
+    {
+      "label": "contour-mute",
+      "last_clock_s": 0.011386112760133389,
+      "error": "SPICE reported failure; preserved run log"
+    },
+    {
+      "label": "external-mute",
+      "last_clock_s": 1.754008516446892e-09,
+      "error": "SPICE reported failure; preserved run log"
+    }
+  ],
+  "new_solves": 0,
+  "numerical_series_resistance_added": false,
+  "physical_fidelity": false,
+  "real_time": false,
+  "wall_s": 44.6808702000053,
+  "source_sha256": {
+    "tools/validate_voice_circuit_bank.py": "9a50b51ea42957260200c6e44ddd5cea0c7f477cf3254eaa51c4351fd99bacb1"
+  }
+}

@@ -88,7 +88,13 @@ usa 48 kHz PCM16 mono, escala fija 8 V/full scale y fades 10 ms.
 No normaliza cada apertura ni simula el circuito durante todo el WAV.
 Archivos locales: `artifacts/filter-vca-circuit/`; montaje cerrado→medio→abierto.
 
-## Unión con VCO pendiente y fallos preservados
+## Unión con VCO: primer banco rechazado (historial)
+
+Actualización: la [voz nominal acoplada con KLU](VOZ_ACOPLADA_RESULTADOS.md)
+posterior completa ocho escenas y tiene escucha real bajo carga. El banco
+completo sigue rechazado por cutoff bajo y ambos mute. Los cinco intentos
+siguientes conservan su rechazo y representan la etapa anterior.
+
 
 La netlist que resuelve VCO1/mixer/placa 4 juntos se detiene durante su
 primer reset E402. Cinco intentos conservan deck/log/export parcial:

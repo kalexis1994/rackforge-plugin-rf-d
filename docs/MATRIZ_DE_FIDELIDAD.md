@@ -1,10 +1,11 @@
 # Matriz de fidelidad
 
-Estado actual: [VCO1 aislado](VCO1_RESULTADOS_CIRCUITO.md) y
-[filtro/dos VCA/salida independientes](FILTRO_VCA_RESULTADOS_CIRCUITO.md)
-funcionan en oráculos condicionados. El segundo pasa 19 escenas con
-controles fijos; su escucha usa una sierra medida como frontera. La unión
-simultánea falla en el reset y la ruta portable mantiene su gate abierto.
+Estado actual: [voz nominal acoplada](VOZ_ACOPLADA_RESULTADOS.md) con
+VCO1/mixer/ladder/dos VCA/salida. KLU completa ocho escenas con los
+componentes originales; pasan tres contrastes nominales y tres escuchas.
+El banco completo permanece rechazado por cutoff bajo y ambos mute.
+Contornos impuestos, dispositivos condicionados y ruta portable sin admitir;
+la convergencia nominal no identifica una unidad física ni prueba tiempo real.
 Las reseñas numéricas anteriores se conservan como historial.
 
 El [refinamiento de memoria](BIESTABLE_MEMORIA_JUNTURAS_RESULTADOS.md)
