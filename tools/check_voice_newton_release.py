@@ -22,7 +22,8 @@ def main():
     # The historical audit also includes documentation; only active summaries are updated.
     for name in sorted(originals):
         source_identity(name,vco.sha(ROOT/name),subprocess.check_output(['git','show',BASE+':'+name],cwd=ROOT))
-    inputs=set(DOCS)|originals|{'evidence/voice_newton_observation01.json'}
+    inputs=set(DOCS)|originals|{'evidence/voice_newton_observation01.json','evidence/voice_newton_build_rejections01.json',
+                             'evidence/voice_newton_preflight_rejection01.json'}
     inputs.update(p.relative_to(ROOT).as_posix() for p in (ROOT/'tools').glob('*voice_newton*.py'))
     inputs.update(p.relative_to(ROOT).as_posix() for p in (ROOT/'tools').glob('voice_newton*.py'))
     inputs.update(p.relative_to(ROOT).as_posix() for pattern in PATTERNS for p in (ROOT/'tests').glob(pattern))
