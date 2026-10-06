@@ -1,12 +1,12 @@
 # Prioridad vigente
 
-El [banco largo](VOZ_NOTA_LARGA_RESULTADOS.md) conserva sus rechazos.
-La [observación Newton](VOZ_NOTA_LARGA_MATRIZ_RESULTADOS.md) reproduce
-exactamente el prefijo y muestra error lineal después de tres correcciones.
-El [ensayo de seis sobre copia](VOZ_NOTA_LARGA_SEIS_CORRECCIONES_RESULTADOS.md)
-pasa los gates de dos matrices manteniendo la publicación original.
-Prioridad: [candidato activo separado](VOZ_NOTA_LARGA_SEIS_ACTIVO_PROTOCOLO.md),
-controles propios y nuevo banco de trayectorias antes de escucha.
+El [candidato activo de seis correcciones](VOZ_SEIS_ACTIVO_RESULTADOS.md)
+pasa identidad desactivada, control nominal y cuatro escenas de 40 ms.
+Los tres contrastes y ambos balances pasan con los gates originales.
+El preflight de cuatro notas largas rechaza por espacio; quedan no medidas.
+Prioridad: [control de export binario](VOZ_NOTA_LARGA_EXPORT_BINARIO_PROTOCOLO.md)
+con identidad completa antes de repetir la extensión de 350 ms.
+No hay audio nuevo ni admisión de fidelidad física o tiempo real.
 
 La [voz monolítica refinada](VOZ_REFINAMIENTO_UNION_RESULTADOS.md)
 completa el control nominal y cuatro escenas conjuntas de 40 ms. Pasan

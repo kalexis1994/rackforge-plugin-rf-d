@@ -1,12 +1,13 @@
 # RF-D
 
-**Prioridad activa:** [candidato activo separado de seis correcciones](docs/VOZ_NOTA_LARGA_SEIS_ACTIVO_PROTOCOLO.md).
-El [banco largo](docs/VOZ_NOTA_LARGA_RESULTADOS.md) conserva sus rechazos.
-Las [matrices observadas](docs/VOZ_NOTA_LARGA_MATRIZ_RESULTADOS.md) muestran
-un límite de las tres correcciones: ~9,851 µV frente a las raíces independientes.
-El [ensayo de seis sobre copia](docs/VOZ_NOTA_LARGA_SEIS_CORRECCIONES_RESULTADOS.md)
-pasa en dos matrices con 0,537 nV máximos y conserva exactamente la
-trayectoria original. El banco corto sigue admitido; no se genera audio nuevo.
+El [candidato activo de seis correcciones](docs/VOZ_SEIS_ACTIVO_RESULTADOS.md)
+pasa identidad desactivada, control nominal y cuatro escenas de 40 ms.
+Los tres contrastes y ambos balances pasan con los gates originales.
+El preflight de cuatro notas largas rechaza por espacio; quedan no medidas.
+Prioridad: [control de export binario](docs/VOZ_NOTA_LARGA_EXPORT_BINARIO_PROTOCOLO.md)
+con identidad completa antes de repetir la extensión de 350 ms.
+No hay audio nuevo ni admisión de fidelidad física o tiempo real.
+
 La [unión VCO/contorno cargado](docs/VOZ_REFINAMIENTO_UNION_RESULTADOS.md)
 completa cuatro escenas de 40 ms con filtro, ambos VCA y salida; pasa sus
 tres contrastes y balances. Los rechazos monolíticos anteriores y el

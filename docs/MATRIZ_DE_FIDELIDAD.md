@@ -1,12 +1,12 @@
 # Matriz de fidelidad
 
-El [banco largo de voz](VOZ_NOTA_LARGA_RESULTADOS.md) conserva rechazos.
-La [matriz efectiva](VOZ_NOTA_LARGA_MATRIZ_RESULTADOS.md) reproduce el fallo:
-tres correcciones aún superan el gate de solución. El [ensayo de seis
-sobre copia](VOZ_NOTA_LARGA_SEIS_CORRECCIONES_RESULTADOS.md) pasa en dos
-matrices, pero no publica esos valores ni mide una variante activa.
-El [próximo protocolo](VOZ_NOTA_LARGA_SEIS_ACTIVO_PROTOCOLO.md) exige controles
-y nuevas trayectorias. No hay nueva escucha o afirmación de fidelidad.
+El [candidato activo de seis correcciones](VOZ_SEIS_ACTIVO_RESULTADOS.md)
+pasa identidad desactivada, control nominal y cuatro escenas de 40 ms.
+Los tres contrastes y ambos balances pasan con los gates originales.
+El preflight de cuatro notas largas rechaza por espacio; quedan no medidas.
+Prioridad: [control de export binario](VOZ_NOTA_LARGA_EXPORT_BINARIO_PROTOCOLO.md)
+con identidad completa antes de repetir la extensión de 350 ms.
+No hay audio nuevo ni admisión de fidelidad física o tiempo real.
 
 Estado actual: [contorno cargado por filtro/dos VCA/salida](CONTORNO_PLACA4_RESULTADOS.md)
 con diez escenas de 350 ms, tres contrastes y escucha de notas completas.
