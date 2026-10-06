@@ -2,7 +2,7 @@
 
 Fecha: 2026-10-06. [Protocolo previo](CONTORNO_PLACA4_PROTOCOLO.md),
 [banco de diez escenas](../evidence/loudness_board4_bank02.json.gz),
-[replay independiente de las mediciones](../evidence/loudness_board4_validation.json),
+[reproducción de las mediciones](../evidence/loudness_board4_validation.json),
 [escucha](../evidence/loudness_board4_listening.json) y
 [verificación final](../evidence/loudness_board4_tests.json).
 
