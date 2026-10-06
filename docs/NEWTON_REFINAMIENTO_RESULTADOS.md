@@ -82,7 +82,7 @@ cuya trayectoria difiere; el runner de producción conserva su gate de EXE.
 No se admite aún la voz VCO/filtro/VCA/contorno, cierre de R45 con la red
 completa, fidelidad física o RT. El retorno PWL sigue siendo una frontera
 impuesta de un laboratorio anterior. No hay audio nuevo; el WAV previo
-permanece intacto. Pasan [70 regresiones](../evidence/voice_refine_tests01.json),
+permanece intacto. Pasan [70 regresiones](../evidence/voice_refine_tests02.json),
 sin nuevos solves SPICE o compilaciones en QA.
 
 Próximo: [voz monolítica con refinamiento](VOZ_REFINAMIENTO_UNION_PROTOCOLO.md),
