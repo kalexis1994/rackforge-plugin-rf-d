@@ -11,8 +11,12 @@ exactamente el fallo y añade once estados internos. La
 [sonda Newton local](docs/NEWTON_RESET_RESULTADOS.md) conserva exactamente
 el baseline, con el control de 40 ms completo. Observa rechazo de ambos
 JFET sin limitadores y correcciones grandes en el polo L2 del 741.
-El build local no reproduce exactamente el ejecutable oficial. Próximo:
-historia/flujo de ese polo, residual completo y contraste entre builds.
+La [sonda de historia/flujo](docs/POLO_741_RESET_RESULTADOS.md) conserva
+las cuatro trayectorias y refuta un RHS variable: cero cambios en 811 grupos
+con historia fija. Observa amplificación de un ulp de corriente a 2.81 µV
+en la fila de L2; no admite la reformulación condicional. El build local
+no reproduce exactamente el oficial. Próximo: KCL y acoplamientos 16/17,
+escala de incógnitas y contraste entre builds.
 El [contorno con entrada senoidal](docs/CONTORNO_PLACA4_RESULTADOS.md) mantiene
 diez escenas completas y escucha; la [voz con contorno fijo](docs/VOZ_ACOPLADA_RESULTADOS.md)
 sigue nominal, con cutoff bajo y ambos mute rechazados. Fidelidad física,

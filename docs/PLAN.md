@@ -11,8 +11,12 @@ bancos de equivalencia terminal pasan; el control VCO y ambas series de
 regularización rechazan. La [sonda Newton local](NEWTON_RESET_RESULTADOS.md)
 conserva exactamente el baseline y observa ambos JFET rechazados sin
 limitadores, con grandes correcciones en el polo L2 interno del 741.
-El reloj local difiere del oficial. Próximo: historia/flujo de L2, residual
-completo y contraste entre builds; luego volver al cierre de puerto.
+La [historia de L2](POLO_741_RESET_RESULTADOS.md) conserva exactamente
+cuatro trayectorias y refuta la hipótesis del RHS variable en 811 grupos.
+La reformulación condicional queda no medida. Próximo: KCL de 16/17 y
+acoplamientos G4/EOS, escala de incógnitas y protocolo de representación
+si la medición lo justifica. El reloj local difiere del oficial: contrastar
+builds antes de atribuirle la causa y volver al cierre de puerto.
 El [contorno cargado](CONTORNO_PLACA4_RESULTADOS.md) mantiene diez escenas
 y tres contrastes con entrada senoidal; la [voz con contorno fijo](VOZ_ACOPLADA_RESULTADOS.md)
 mantiene alcance nominal y rechazos de cutoff bajo/mute. Contorno de filtro,

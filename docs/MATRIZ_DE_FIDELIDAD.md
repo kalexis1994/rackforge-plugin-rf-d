@@ -15,7 +15,12 @@ exactamente el prefijo y su reloj. La [sonda Newton](NEWTON_RESET_RESULTADOS.md)
 observa las iteraciones rechazadas en un build local, conservando exactamente
 su baseline. Ambos JFET fallan sin limitadores y el polo L2 del 741 tiene
 grandes correcciones. La trayectoria local no es idéntica a la oficial;
-el residual eléctrico completo y la causa siguen abiertos.
+el residual eléctrico completo y la causa siguen abiertos. La
+[observación de L2](POLO_741_RESET_RESULTADOS.md) conserva las cuatro
+trayectorias y encuentra RHS fijo en los 811 grupos BUS variable.
+Un ulp de corriente equivale a 2.81 µV en su fila al final; el contraste
+Decimal es constitutivo y no identifica la causa de toda la matriz.
+La reformulación condicional no se mide. Pasan 31 regresiones enfocadas.
 No se promueve ninguna tarjeta o conductancia física.
 Convergencia finita no identifica una unidad vintage ni admite tiempo real.
 Las reseñas numéricas anteriores se conservan como historial.
