@@ -1,5 +1,5 @@
 """Observe the preserved failing VCO without changing any circuit branch."""
-import gzip,json
+import gzip,json,re
 from pathlib import Path
 import numpy as np
 import voice_vco_rshunt as source
@@ -7,26 +7,30 @@ import voice_circuit_reference as voice
 import vco1_circuit_reference as vco
 
 ROOT=vco.ROOT
-EXTRA=['v(xic3.3)','v(xic3.4)','v(xic3.10)','v(xic3.11)','v(xic3.12)',
+EXTRA=['v(xic3.3)','v(xic3.4)','v(xic3.10)','v(xic3.5)','v(xic3.6)',
        'v(xic3.20)','v(xic3.21)','v(xic3.22)','v(fet_left_drain)',
        'v(fet_common_source)','v(q10_base)']
 VECTORS=source.port.VCO_VECTORS+EXTRA
 
 
 def factory(s,export):
-    frozen,_=source.factory('returned',source.REFINED[0]);deck,meta=frozen(s,export)
+    frozen,original=source.factory('returned',source.REFINED[0]);deck,meta=frozen(s,export)
+    logpath=ROOT/'references-local/voice-circuit/port-behavioral01'/(original['label']+'.log')
+    if vco.sha(logpath)!=original['log_sha256']:raise ValueError('original OP observation identity')
+    names=set(re.findall(r'^(\S+)\s+[-+\d.eE]+\s*$',logpath.read_text(encoding='utf-8'),re.M))
+    if any(name[2:-1] not in names for name in EXTRA):raise ValueError('observed node absent from frozen OP log')
     deck=deck.replace(f'rshunt={source.REFINED[0]:.17g} ','',1)
     old=' '.join(source.port.VCO_VECTORS);new=' '.join(VECTORS)
     deck=deck.replace('.save '+old,'.save '+new)
     deck=deck.replace(old+'\nquit',new+'\nquit')
     meta.update(rshunt_ohm=None,per_node_extra_conductance_s=0,exact_original_equations=True,
-                observation_only=True,exported_vectors=VECTORS)
+                observation_only=True,exported_vectors=VECTORS,observation_node_log_sha256=vco.sha(logpath))
     meta['source_sha256'][Path(__file__).relative_to(ROOT).as_posix()]=vco.sha(Path(__file__))
     return deck,meta
 
 
 def main():
-    work=ROOT/'references-local/voice-circuit/reset-state-probe01';output=ROOT/'evidence/voice_reset_state_probe01.json'
+    work=ROOT/'references-local/voice-circuit/reset-state-probe02';output=ROOT/'evidence/voice_reset_state_probe02.json'
     if work.exists() or output.exists():raise ValueError('preserve prior observation')
     exe=ROOT/'references-local/ngspice46/runtime/Spice64/bin/ngspice_con.exe';s=source.coupled.Scenario()
     label='returned-bus-state'

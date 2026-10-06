@@ -9,6 +9,7 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools'))
 import voice_jfet_decomposed as model
 import voice_jfet_decomposed_probes as probes
 import voice_vco_rshunt as shunt
+import voice_reset_state_probe as state
 
 
 class ResetScreenTests(unittest.TestCase):
@@ -73,6 +74,14 @@ class ResetScreenTests(unittest.TestCase):
         wave[:,1]=-4+4*np.mod(t*440,1)
         invalid=wave.copy();invalid[:,3]=np.nan
         with self.assertRaises(ValueError):probes.contrast(invalid,wave)
+
+    def test_observation_requires_existing_internal_nodes(self):
+        path=model.ROOT/'references-local/voice-circuit/port-behavioral01/fixed-contour-control-03-vco.log'
+        if not path.exists():self.skipTest('private OP log unavailable')
+        s=probes.coupled.Scenario();deck,meta=state.factory(s,model.ROOT/'artifacts/test.txt')
+        self.assertNotIn('rshunt=',deck);self.assertTrue(meta['exact_original_equations'])
+        with patch.object(state,'EXTRA',['v(xic3.11)']):
+            with self.assertRaises(ValueError):state.factory(s,model.ROOT/'artifacts/test.txt')
 
 
 if __name__=='__main__':unittest.main()
