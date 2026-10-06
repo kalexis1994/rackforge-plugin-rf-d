@@ -24,7 +24,10 @@ La reformulación condicional no se mide. La [KCL de 16/17](KCL_741_RESET_RESULT
 conserva cuatro trayectorias admitidas y confirma EOS, pero la reducción
 con controles fijados tiene una brecha máxima de 246.525 µV. No es un error
 de solución de toda la red ni una causa física identificada. Se conservan
-rechazos de observación y timeout; pasan 41 regresiones enfocadas.
+rechazos de observación y timeout. La [fila equivalente](741_FILA_REDUCIDA_RESULTADOS.md)
+es exacta al baseline en modo desactivado, pero activa falla el control
+completo antes del primer reset. Su álgebra y memoria no admiten la variante;
+BUS variable activo queda no medido. Pasan 50 regresiones enfocadas.
 No se promueve ninguna tarjeta o conductancia física.
 Convergencia finita no identifica una unidad vintage ni admite tiempo real.
 Las reseñas numéricas anteriores se conservan como historial.

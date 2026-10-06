@@ -17,9 +17,13 @@ La reformulación condicional queda no medida. La [KCL de 16/17](KCL_741_RESET_R
 conserva cuatro trayectorias admitidas tras preservar los rechazos de sonda
 y tiempo de ejecución. EOS transmite las correcciones de v16; la reducción
 exacta con controles fijados amplifica el desajuste de corriente hasta
-246.460 µV. Próximo: protocolo de representación equivalente del subbloque
-con historia/DC y gates completos. El reloj local difiere del oficial:
-contrastar builds antes de atribuirle la causa y volver al cierre de puerto.
+246.460 µV. La [fila equivalente](741_FILA_REDUCIDA_RESULTADOS.md) conserva
+álgebra, DC e implementación de memoria, pero falla el control completo
+al activarse. Su modo desactivado es exacto; BUS variable activo no se mide.
+Próximo: [capturar la matriz Newton completa](NEWTON_MATRIZ_COMPLETA_PROTOCOLO.md)
+y resolver el A/RHS observado con mayor precisión, separando solve lineal
+y evaluación no lineal antes de otro cambio. Contrastar después el oficial
+y volver al cierre de puerto.
 El [contorno cargado](CONTORNO_PLACA4_RESULTADOS.md) mantiene diez escenas
 y tres contrastes con entrada senoidal; la [voz con contorno fijo](VOZ_ACOPLADA_RESULTADOS.md)
 mantiene alcance nominal y rechazos de cutoff bajo/mute. Contorno de filtro,

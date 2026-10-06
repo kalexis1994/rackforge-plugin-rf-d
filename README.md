@@ -19,8 +19,11 @@ no reproduce exactamente el oficial. La [KCL de 16/17](docs/KCL_741_RESET_RESULT
 conserva cuatro trayectorias admitidas: las dos KCL y EOS tienen residuales
 pequeños, pero la reducción con controles fijados muestra una brecha de
 246.525 µV dominada por el desajuste de corriente amplificado. Se preservan
-los rechazos de observación y el timeout. Próximo: representación equivalente
-del subbloque con historia/DC y gates completos, luego contraste entre builds.
+los rechazos de observación y el timeout. La [fila equivalente](docs/741_FILA_REDUCIDA_RESULTADOS.md)
+pasa álgebra/historia y reproduce el baseline al desactivarla, pero activa
+falla el control de 40 ms en el primer reset. BUS variable activo queda
+sin medir. Próximo: [matriz Newton completa](docs/NEWTON_MATRIZ_COMPLETA_PROTOCOLO.md)
+y solve de mayor precisión antes de otra intervención.
 El [contorno con entrada senoidal](docs/CONTORNO_PLACA4_RESULTADOS.md) mantiene
 diez escenas completas y escucha; la [voz con contorno fijo](docs/VOZ_ACOPLADA_RESULTADOS.md)
 sigue nominal, con cutoff bajo y ambos mute rechazados. Fidelidad física,
