@@ -1,0 +1,87 @@
+"""Copy the admitted L2 observer; add read-only R13/G4 stamps and EOS nodes."""
+import json,shutil,urllib.request
+from pathlib import Path
+import voice_inductor_instrument as previous
+import voice_newton_instrument as original
+import vco1_circuit_reference as vco
+
+ROOT=vco.ROOT
+WORK=ROOT/'references-local/voice-circuit/newton-build03'
+TREE=WORK/'ngspice-46'
+NI='src/maths/ni/niiter.c'
+RES='src/spicelib/devices/res/resload.c'
+VCCS='src/spicelib/devices/vccs/vccsload.c'
+
+
+def main():
+    if WORK.exists():raise ValueError('preserve previous build')
+    audit=vco.read(ROOT/'evidence/voice_inductor_observation01.json')
+    if not audit['passed'] or audit['conditional_history_reformulation_allowed']:raise ValueError('prior observation scope')
+    WORK.mkdir();shutil.copytree(previous.TREE,TREE)
+    shutil.copytree(previous.WORK/'baseline02',WORK/'baseline02')
+    moved={}
+    for p in (WORK/'baseline02').rglob('*'):
+        if p.is_file() and p.name in ('Makefile','config.status','libtool','makedefs','GNUmakefile'):
+            b=p.read_bytes();a=b.replace(b'newton-build02',b'newton-build03')
+            if a!=b:
+                before=vco.sha(p);p.write_bytes(a)
+                moved[p.relative_to(WORK).as_posix()]=dict(before_sha256=before,after_sha256=vco.sha(p))
+    (WORK/'bin').mkdir();shutil.copy2(previous.WORK/'bin/observer.exe',WORK/'bin/prior.exe')
+    module=WORK/'baseline02/src/xspice/icm/spice2poly/spice2poly.cm'
+    if vco.sha(module)!=vco.sha(previous.WORK/'baseline02/src/xspice/icm/spice2poly/spice2poly.cm'):raise ValueError('module identity')
+    (WORK/'init02').mkdir()
+    (WORK/'init02/spinit').write_text('codemodel '+module.as_posix()+'\n',encoding='utf-8',newline='\n')
+    sources={}
+    for name in (RES,VCCS,'src/xspice/icm/spice2poly/icm_spice2poly/ifspec.ifs',
+                 'src/xspice/icm/spice2poly/icm_spice2poly/cfunc.mod'):
+        url='https://raw.githubusercontent.com/imr/ngspice/'+previous.REV+'/'+name
+        if urllib.request.urlopen(url,timeout=30).read()!=(TREE/name).read_bytes():raise ValueError('primary source identity: '+name)
+        sources[name]=dict(url=url,sha256=vco.sha(TREE/name))
+    patches={}
+    for name,field,marker in ((RES,'RESconduct','            *(here->RESnegPosPtr) -= here->RESconduct;\n'),
+                              (VCCS,'VCCScoeff','            *(here->VCCSnegContNegPtr) += here->VCCScoeff ;\n')):
+        p=TREE/name;before=vco.sha(p);s=p.read_text(encoding='utf-8')
+        target='r.xic3.r13' if name==RES else 'g.xic3.g4'
+        device='RESname' if name==RES else 'VCCSname'
+        kind='res' if name==RES else 'gm'
+        addition='''
+            /* RF-D read-only actual stamp coefficient. */
+            if ('''+original.GUARD+''' && !strcmp(here->'''+device+''',"'''+target+'''"))
+                fprintf(stderr,"RFKTRACE,'''+kind+''',%.17g,%.17g,%s,%.17g\\n",
+                    ckt->CKTtime,ckt->CKTdelta,here->'''+device+''',here->'''+field+''');
+'''
+        if s.count(marker)!=(2 if name==RES else 1):raise ValueError('stamp insertion anchor')
+        p.write_text(s.replace(marker,marker+addition,1),encoding='utf-8',newline='\n')
+        patches[name]=dict(before_sha256=before,after_sha256=vco.sha(p))
+    p=TREE/NI;before=vco.sha(p);s=p.read_text(encoding='utf-8')
+    marker='                            ckt->CKTrhs[rf_pos],ckt->CKTrhs[rf_neg]);\n'
+    addition='''
+                    {
+                        int rf_ids[5]={-1,-1,-1,-1,-1}, rf_j;
+                        const char *rf_names[5]={"xic3.16","xic3.3","xic3.49","xic3.7","xic3.1"};
+                        for (rf_node=ckt->CKTnodes->next;rf_node;rf_node=rf_node->next)
+                            for (rf_j=0;rf_j<5;rf_j++)
+                                if (!strcmp(CKTnodName(ckt,rf_node->number),rf_names[rf_j])) rf_ids[rf_j]=rf_node->number;
+                        if (rf_br<0 || rf_pos<0 || rf_neg<0 || rf_ids[0]<0 || rf_ids[1]<0 || rf_ids[2]<0 || rf_ids[3]<0 || rf_ids[4]<0)
+                            fprintf(stderr,"RFKTRACE,invalid,%.17g,%.17g\\n",ckt->CKTtime,ckt->CKTdelta);
+                        else {
+                            fprintf(stderr,"RFKTRACE,solve,%.17g,%.17g,%d,%d,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g",
+                                ckt->CKTtime,ckt->CKTdelta,iterno,rf_br,
+                                ckt->CKTrhsOld[rf_br],ckt->CKTrhs[rf_br],
+                                ckt->CKTrhsOld[rf_pos],ckt->CKTrhs[rf_pos],
+                                ckt->CKTrhsOld[rf_neg],ckt->CKTrhs[rf_neg]);
+                            for (rf_j=0;rf_j<5;rf_j++) fprintf(stderr,",%.17g,%.17g",ckt->CKTrhsOld[rf_ids[rf_j]],ckt->CKTrhs[rf_ids[rf_j]]);
+                            fprintf(stderr,"\\n");
+                        }
+                    }
+'''
+    p.write_text(original.insert(s,marker,addition),encoding='utf-8',newline='\n')
+    patches[NI]=dict(before_sha256=before,after_sha256=vco.sha(p))
+    report=dict(schema='rf-d/kcl-observer-build/v1',previous_audit_sha256=vco.sha(ROOT/'evidence/voice_inductor_observation01.json'),
+                primary_sources=sources,patches=patches,relocated_generated_files=moved,
+                circuit_equations_changed=False,patcher_sha256=vco.sha(Path(__file__)))
+    (WORK/'patch.json').write_text(json.dumps(report,indent=2)+'\n',encoding='utf-8',newline='\n')
+    print('separate KCL observer build; prior source and binary preserved',flush=True)
+
+
+if __name__=='__main__':main()
