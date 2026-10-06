@@ -1,12 +1,14 @@
 # RF-D
 
-**Prioridad activa:** [contorno de volumen cargado por filtro y ambos VCA](docs/CONTORNO_PLACA4_RESULTADOS.md).
-Diez escenas de 350 ms y tres contrastes pasan, con escucha de notas completas.
-La [voz con VCO bajo carga](docs/VOZ_ACOPLADA_RESULTADOS.md) sigue nominal;
-cutoff bajo y ambos mute conservan su rechazo. Próximo: unir el contorno a
-esa voz y cerrar contorno de filtro, alimentación y control de Q21.
-La escucha nueva usa entrada senoidal explícita. Fidelidad física y tiempo
-real permanecen abiertos.
+**Prioridad activa:** [unión VCO/contorno cargado](docs/CONTORNO_VCO_UNION_RESULTADOS.md).
+Cuatro escenas monolíticas rechazan en reset. El cálculo dividido en R45
+conserva la reacción eléctrica, pero aún falla su control previo: diecisiete
+recibos auditados y cuatro defectos de puerto reproducidos. Próximo: resolver
+el VCO aislado con BUS variable antes de ampliar el banco.
+El [contorno con entrada senoidal](docs/CONTORNO_PLACA4_RESULTADOS.md) mantiene
+diez escenas completas y escucha; la [voz con contorno fijo](docs/VOZ_ACOPLADA_RESULTADOS.md)
+sigue nominal, con cutoff bajo y ambos mute rechazados. Fidelidad física,
+contorno de filtro, alimentación común, Q21 y tiempo real permanecen abiertos.
 
 Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su sonido se investigará mediante **RACE — RackForge Architecture for Circuit Emulation**: circuito documentado, leyes de control, calibración de servicio, comparación de audio y presupuesto de tiempo real. Este repositorio es independiente del host y de otros plugins RF.
 

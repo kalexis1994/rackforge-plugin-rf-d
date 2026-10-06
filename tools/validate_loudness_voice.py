@@ -14,7 +14,7 @@ def canonical(value):return json.dumps(value,sort_keys=True,separators=(',',':')
 
 
 def main():
-    output=ROOT/'evidence/loudness_voice_validation.json'
+    output=ROOT/'evidence/loudness_voice_validation02.json'
     if output.exists():raise ValueError('preserve prior audit')
     start=time.perf_counter();checked={};source_modes={};summaries={};records=[]
     def audit_receipt(r,work,vectors):
@@ -67,8 +67,9 @@ def main():
     summaries[archive.name]=dict(archive_sha256=vco.sha(archive),payload_sha256=hashlib.sha256(payload).hexdigest(),passed=False)
 
     pairs=[]
-    for number in (1,2,3):
-        archive=ROOT/f'evidence/voice_port_relaxation{number:02d}.json.gz'
+    archives=[ROOT/f'evidence/voice_port_relaxation{number:02d}.json.gz' for number in (1,2,3)]
+    archives.append(ROOT/'evidence/voice_port_behavioral01.json.gz')
+    for number,archive in enumerate(archives,start=1):
         payload=gzip.decompress(archive.read_bytes());bank=json.loads(payload)
         if bank['gates']!=port.GATES or bank['passed'] or set(bank['cases'])!={'fixed-contour-control'}:
             raise ValueError('bounded rejected control scope')
@@ -84,7 +85,7 @@ def main():
                 replay=port.closure(raw['vco'],raw['board'],port.BOARD_VECTORS)
                 if canonical(replay)!=canonical(k['closure']) or replay['passed']:raise ValueError('port defect replay')
                 pairs.append(dict(bank=bank['bank'],iteration=k['iteration'],closure=replay))
-        if number==3:
+        if number>=3:
             first=case['iterations'][0]['vco_receipt']
             blob=subprocess.check_output(['git','show',first['git_commit']+':tools/voice_port_probes.py'],cwd=ROOT)
             if hashlib.sha256(blob).hexdigest()!=bank['runner_sha256']:raise ValueError('frozen runner identity')

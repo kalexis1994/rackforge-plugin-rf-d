@@ -1,12 +1,14 @@
 # Prioridad vigente
 
-El [contorno de volumen cargado](CONTORNO_PLACA4_RESULTADOS.md) pasa
-las diez escenas y tres contrastes con 35 BJT y memoria de dispositivo.
-Hay escucha de notas completas bajo entrada eléctrica explícita.
-La [voz con VCO](VOZ_ACOPLADA_RESULTADOS.md) mantiene el alcance nominal
-y los rechazos de cutoff bajo/mute. Prioridad: integrar el contorno con
-VCO bajo carga, resolver esos rechazos y cerrar contorno de filtro,
-alimentación común y Q21. Ruta portable y deadlines pendientes.
+La [unión VCO/contorno](CONTORNO_VCO_UNION_RESULTADOS.md) rechaza las cuatro
+escenas monolíticas. El ensayo por R45 falla el control previo aun con
+dos parejas completas: el puerto no cierra y el VCO siguiente rechaza.
+Prioridad: reproducir y resolver el VCO aislado con BUS variable, conservando
+tarjeta, R45 y gates; luego cerrar la unión y extender la nota completa.
+El [contorno cargado](CONTORNO_PLACA4_RESULTADOS.md) mantiene diez escenas
+y tres contrastes con entrada senoidal; la [voz con contorno fijo](VOZ_ACOPLADA_RESULTADOS.md)
+mantiene alcance nominal y rechazos de cutoff bajo/mute. Contorno de filtro,
+alimentación común, Q21, ruta portable y deadlines pendientes.
 La continuación formal del biestable sigue aplazada. Las secciones
 siguientes son historial y no el orden actual.
 

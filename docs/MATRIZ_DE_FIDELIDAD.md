@@ -5,7 +5,10 @@ con diez escenas de 350 ms, tres contrastes y escucha de notas completas.
 La entrada senoidal, alimentación de contorno y base Q21 siguen impuestas;
 los semiconductores son tarjetas condicionadas. La [voz con VCO bajo carga](VOZ_ACOPLADA_RESULTADOS.md)
 sigue nominal: cutoff bajo y ambos mute rechazan. Integración del contorno
-con VCO, contorno de filtro, parámetros físicos y ruta portable abiertos.
+con VCO [ensayada y rechazada](CONTORNO_VCO_UNION_RESULTADOS.md): cuatro
+escenas monolíticas y control de puerto R45 fallido. Diecisiete recibos
+auditados; completar cada parte no cierra su interfaz. Contorno de filtro,
+parámetros físicos y ruta portable abiertos.
 Convergencia finita no identifica una unidad vintage ni admite tiempo real.
 Las reseñas numéricas anteriores se conservan como historial.
 
