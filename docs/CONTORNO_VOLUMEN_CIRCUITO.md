@@ -12,7 +12,7 @@ Los escaneos se revisaron completos y mediante ampliaciones de pines, polaridade
 | --- | --- |
 | Gatillo de teclado | Pin 20 → CR10 → R60 → C7 a masa → R55 → base Q20; emisor Q20 a masa. Q20 colector tiene R23 hacia alimentación y gobierna Q12 por el resistor de base conflictivo. |
 | S-trigger | Pin 19 → R49 → colector Q20. Contacto externo cerrado pone su extremo a masa; abierto elimina esa rama. No equivale al V-trigger positivo del teclado. |
-| Reset común | Q12 emisor a masa; colector por R25 a alimentación. Colector Q12 → R28/C4 → base Q25 y, por R36/CR8, a base Q15. CR9 lleva el reset a la referencia de sustain. |
+| Reset común | Q12 emisor a masa; colector por R25 a alimentación. Colector Q12 → R28/C4 → base Q25 y, R36/CR8 parte del colector Q20 hacia base Q15 (revisión independiente 2026-10-06). CR9 lleva el reset a la referencia de sustain. |
 | Biestable | Q25/Q15 emisores a masa. R38: colector Q15 → base Q25; R39: alimentación → colector Q15; R56: colector Q25 → base Q15. CR6 realimenta desde el divisor R24/R27 de salida hacia Q15. |
 | Ataque | Alimentación → emisor PNP Q16; R41/R40 fijan su base desde colector Q25. Colector Q16 → R42 de placa → R13 de panel → C2 a masa. |
 | Decay | Colector Q25 → base Q17; Q17 colector a alimentación, emisor por R43 a −10 V y por R44 a **base** Q18. Q18 colector → R16 de panel → C2; Q18 emisor a referencia de sustain. |
