@@ -42,3 +42,13 @@ No se extiende duración ni se renderiza audio de una pareja sin admisión.
 El método es un laboratorio fuera de tiempo real. Un cierre muestreado no
 prueba unicidad o estabilidad global de la relajación; los extremos, el
 contorno de filtro, otros osciladores y hardware identificado siguen abiertos.
+
+## Adaptador de reloj, después del primer rechazo
+
+Los dos primeros subproblemas completaron 40 ms. El export de placa terminó
+en 0.039999999999999994 s y el de VCO en 0.04 s; una igualdad exacta del
+adaptador rechazó el par. Se conserva el ensayo 01. El ensayo 02 mantiene
+todos los gates físicos y numéricos; usa el gate previo de completitud
+1e-14 s para ese redondeo final, registra la diferencia, evalúa los puertos
+en el dominio común sin extrapolar y prolonga únicamente ese redondeo
+en una nueva fuente PWL. Una trayectoria parcial continúa rechazada.

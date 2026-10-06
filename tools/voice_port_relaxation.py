@@ -70,7 +70,15 @@ def board_vectors(with_contour):
 
 def factory(s,side,t,x,with_contour):
     s.validate();t,x,approx=simplify(t,x)
-    if t[-1]!=s.oscillator.duration_s:raise ValueError('complete port horizon required')
+    duration=s.oscillator.duration_s
+    if abs(t[-1]-duration)>1e-14:raise ValueError('complete port horizon required')
+    # ngspice's final export can round a complete horizon by one ULP.
+    # Preserve that interval explicitly in metadata; no partial trace promotion.
+    terminal_rounding_s=float(duration-t[-1])
+    if terminal_rounding_s>0:t=np.r_[t,duration];x=np.r_[x,x[-1]]
+    elif terminal_rounding_s<0:
+        end=float(np.interp(duration,t,x));mask=t<duration
+        t=np.r_[t[mask],duration];x=np.r_[x[mask],end]
     vectors=VCO_VECTORS if side=='vco' else board_vectors(with_contour)
     if side not in ('vco','board'):raise ValueError('known side required')
     def generate(_scenario,export):
@@ -96,7 +104,8 @@ def factory(s,side,t,x,with_contour):
         text=text.replace(' '.join(old)+'\nquit',' '.join(vectors)+'\nquit')
         meta.update(schema='rf-d/voice-port-netlist/v1',scenario=asdict(s),side=side,
             contour_circuit=with_contour,port_resistance_ohm=resistance(),port_approximation=approx,
-            iteration_boundary=True,port_closed=False,physical_fidelity=False,real_time=False)
+            iteration_boundary=True,port_closed=False,physical_fidelity=False,real_time=False,
+            terminal_rounding_s=terminal_rounding_s)
         for path in (vco.PANEL,Path(__file__),Path(coupled.__file__)):
             meta['source_sha256'][path.relative_to(ROOT).as_posix()]=vco.sha(path)
         return text,meta
@@ -106,9 +115,9 @@ def factory(s,side,t,x,with_contour):
 def closure(vraw,braw,bvectors):
     vt=vraw[:,0];bt=braw[:,0]
     waveform(vt,vraw[:,1]);waveform(bt,braw[:,1])
-    if vt[-1]!=bt[-1] or not np.isfinite(vraw).all() or not np.isfinite(braw).all():
+    if abs(vt[-1]-bt[-1])>1e-14 or not np.isfinite(vraw).all() or not np.isfinite(braw).all():
         raise ValueError('common complete finite port horizon')
-    t=np.union1d(vt,bt)
+    t=np.union1d(vt,bt);t=t[t<=min(vt[-1],bt[-1])]
     v=lambda n:np.interp(t,vt,vraw[:,VCO_VECTORS.index(n)+1])
     b=lambda n:np.interp(t,bt,braw[:,bvectors.index(n)+1])
     # Both histories keep R45. The source current is opposite at its ends.

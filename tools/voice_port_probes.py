@@ -24,8 +24,9 @@ def reference_contrast(vraw,braw):
     path=ROOT/'references-local/voice-circuit'/bank['bank']/'nominal500.txt'
     if vco.sha(path)!=receipt['raw_export_sha256']:raise ValueError('monolithic control identity')
     reference=np.loadtxt(path,skiprows=1,ndmin=2)
-    if reference[-1,0]!=vraw[-1,0] or not np.isfinite(reference).all():raise ValueError('reference horizon')
+    if abs(reference[-1,0]-vraw[-1,0])>1e-14 or not np.isfinite(reference).all():raise ValueError('reference horizon')
     t=np.union1d(reference[:,0],np.union1d(vraw[:,0],braw[:,0]));d={}
+    t=t[t<=min(reference[-1,0],vraw[-1,0],braw[-1,0])]
     for name in ('v(mix_bus_board4_pin4)','v(f4_recover_collector)','v(f4_main_output)'):
         x=np.interp(t,reference[:,0],reference[:,voice.VECTORS.index(name)+1])
         y=np.interp(t,braw[:,0],braw[:,p.BOARD_VECTORS.index(name)+1]);d[name]=float(np.max(np.abs(x-y)))
@@ -69,8 +70,8 @@ def solve(s,label,with_contour,work,exe,report,save):
 
 
 def main():
-    work=ROOT/'references-local/voice-circuit/port-relaxation01'
-    output=ROOT/'evidence/voice_port_relaxation01.json.gz'
+    work=ROOT/'references-local/voice-circuit/port-relaxation02'
+    output=ROOT/'evidence/voice_port_relaxation02.json.gz'
     if work.exists() or output.exists():raise ValueError('preserve prior screen')
     report=dict(schema='rf-d/voice-port-screen/v1',bank=work.name,gates=p.GATES,cases={},comparisons={},passed=False,
                 physical_fidelity=False,real_time=False)

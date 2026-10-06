@@ -70,6 +70,14 @@ class PortTests(unittest.TestCase):
     def test_closure_rejects_nonfinite_or_truncated_history(self):
         v,b=self.pair();b[-1,0]=.039
         with self.assertRaises(ValueError):p.closure(v,b,p.BOARD_VECTORS)
+
+    def test_export_endpoint_rounding_keeps_common_domain(self):
+        v,b=self.pair();b[-1,0]=np.nextafter(.04,0)
+        self.assertTrue(p.closure(v,b,p.BOARD_VECTORS)['passed'])
+        s=p.coupled.Scenario();fn,_=p.factory(s,'vco',b[:,0],b[:,1],False)
+        _,meta=fn(s,p.ROOT/'artifacts/test.txt')
+        self.assertEqual(meta['terminal_rounding_s'],.04-b[-1,0])
+        with self.assertRaises(ValueError):p.factory(s,'vco',[0,.039],[0,0],False)
         v,b=self.pair();b[1,2]=np.nan
         with self.assertRaises(ValueError):p.closure(v,b,p.BOARD_VECTORS)
 
