@@ -46,8 +46,8 @@ def historical_factory(label):
         meta=dict(scenario=asdict(s),source_sha256=copy.deepcopy(r['source_sha256']),decomposed_jfets=manifest,
             reproduced_deck_sha256=r['deck_sha256'],reproduced_commit=r['git_commit'],
             reproduced_label=label,diagnostic_only=True)
-        for path in (Path(model.__file__),Path(__file__)):
-            meta['source_sha256'][path.relative_to(ROOT).as_posix()]=vco.sha(path)
+        for helper in (Path(model.__file__),Path(__file__)):
+            meta['source_sha256'][helper.relative_to(ROOT).as_posix()]=vco.sha(helper)
         return text,meta
     return generate,r
 
@@ -67,7 +67,7 @@ def contrast(raw,reference):
 
 
 def main():
-    work=ROOT/'references-local/voice-circuit/jfet-decomposed01';output=ROOT/'evidence/voice_jfet_decomposed01.json.gz'
+    work=ROOT/'references-local/voice-circuit/jfet-decomposed02';output=ROOT/'evidence/voice_jfet_decomposed02.json.gz'
     if work.exists() or output.exists():raise ValueError('preserve previous experiment')
     exe=ROOT/'references-local/ngspice46/runtime/Spice64/bin/ngspice_con.exe'
     report=dict(schema='rf-d/jfet-decomposed-screen/v1',bank=work.name,gates=GATES,cases={},passed=False,
@@ -92,7 +92,9 @@ def main():
             else:case['frequency_hz']=ports.frequency(raw[:,0],raw[:,1])
             save();print(label,'passed',round(r['wall_s'],2),flush=True)
         except Exception as e:
-            r=vco.read(work/(label+'.json'));case=report['cases'].setdefault(label,dict(receipt=r))
+            receipt_path=work/(label+'.json')
+            r=vco.read(receipt_path) if receipt_path.exists() else None
+            case=report['cases'].setdefault(label,dict(receipt=r))
             case.update(passed=False,error=str(e));report['validation_error']=label+' rejected; remaining jobs not measured'
             if (work/(label+'.txt')).exists():case['last_clock_s']=float(np.loadtxt(work/(label+'.txt'),skiprows=1,ndmin=2)[-1,0])
             save();print(label,'rejected',str(e),flush=True);return

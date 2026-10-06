@@ -46,3 +46,10 @@ de uno y otras temperaturas requieren nuevas derivaciones y pruebas.
 El banco termina en el primer rechazo y conserva deck, log, export y
 recibo. Ningún resultado local admite automáticamente la unión con
 contorno, su refinamiento, audio de una nota larga o ejecución en tiempo real.
+
+El ensayo 01 pasa el banco terminal, pero el adaptador de reproducción
+sombrea su ruta capturada y falla antes de generar el control positivo.
+El wrapper además intenta leer un recibo que no existe. Se conservan el
+archivo y [ambos errores](../evidence/voice_jfet_decomposed_adapter_rejection.json).
+El ensayo 02 corrige la captura de ruta y conserva los mismos gates/modelo;
+la ausencia de recibo antes del solve queda representada explícitamente.
