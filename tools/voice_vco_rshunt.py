@@ -11,11 +11,12 @@ import vco1_circuit_reference as vco
 
 ROOT=vco.ROOT
 CANDIDATES=(1e9,1e10,1e11)
+REFINED=(1e13,1e14,1e15)
 LABELS=dict(constant='fixed-contour-control-01-vco',returned='fixed-contour-control-03-vco')
 
 
 def factory(label,resistance):
-    if resistance not in CANDIDATES:raise ValueError('frozen numerical regularization series required')
+    if resistance not in CANDIDATES+REFINED:raise ValueError('frozen numerical regularization series required')
     bank=json.loads(gzip.decompress((ROOT/'evidence/voice_port_behavioral01.json.gz').read_bytes()))
     original=next(k['vco_receipt'] for k in bank['cases']['fixed-contour-control']['iterations'] if k['vco_receipt']['label']==LABELS[label])
     work=ROOT/'references-local/voice-circuit'/bank['bank'];deck_path=work/(original['label']+'.cir')
@@ -40,19 +41,21 @@ def factory(label,resistance):
     return generate,original
 
 
-def main():
-    work=ROOT/'references-local/voice-circuit/vco-rshunt01';output=ROOT/'evidence/voice_vco_rshunt01.json.gz'
+def main(candidates=CANDIDATES,bank_name='vco-rshunt01'):
+    if candidates not in (CANDIDATES,REFINED):raise ValueError('one complete frozen series required')
+    work=ROOT/'references-local/voice-circuit'/bank_name
+    output=ROOT/'evidence'/('voice_'+bank_name.replace('-','_')+'.json.gz')
     if work.exists() or output.exists():raise ValueError('preserve previous screen')
     exe=ROOT/'references-local/ngspice46/runtime/Spice64/bin/ngspice_con.exe';s=coupled.Scenario()
-    report=dict(schema='rf-d/vco-rshunt-screen/v1',bank=work.name,candidates_ohm=CANDIDATES,
+    report=dict(schema='rf-d/vco-rshunt-screen/v1',bank=work.name,candidates_ohm=candidates,
                 gates=checks.GATES,cases={},comparisons={},passed=False,selected=None,
                 physical_fidelity=False,real_time=False,coupling_admitted=False)
     def save():output.write_bytes(gzip.compress((json.dumps(report,indent=2)+'\n').encode(),mtime=0))
     reference_path=ROOT/'references-local/voice-circuit/port-behavioral01/fixed-contour-control-01-vco.txt'
-    _,old=factory('constant',CANDIDATES[0])
+    _,old=factory('constant',candidates[0])
     if vco.sha(reference_path)!=old['raw_export_sha256']:raise ValueError('positive reference export identity')
     reference=np.loadtxt(reference_path,skiprows=1,ndmin=2);kept={}
-    for resistance in CANDIDATES:
+    for resistance in candidates:
         key=f'{resistance:.0e}'.replace('+','')
         for kind in ('constant','returned'):
             label=kind+'-'+key

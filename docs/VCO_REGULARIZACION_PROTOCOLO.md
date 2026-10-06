@@ -37,3 +37,18 @@ Se excluyen decks con `C... Q=`: `rshunt` también cargaría sus nodos
 generados de estado, como explica el
 [reporte primario ngspice 848](https://sourceforge.net/p/ngspice/bugs/848/).
 No se combina este ensayo con la transformación previa de cargas JFET.
+
+## Segundo ensayo, congelado después del primer rechazo
+
+1 Gohm completa el control, pero altera su frecuencia 0.783129 cent y mueve
+los cruces hasta 17.515484 microsegundos. La grilla común observa hasta
+8.095329 V de diferencia en el reset: rechazo; 10/100 Gohm no se midieron.
+La resistencia pequeña no se admite por completar el solve.
+
+Se declara otra serie completa antes de medir: **10/100/1000 Tohm**,
+conductancias .1/.01/.001 pS. Se conserva el primer rechazo y no se
+presupone que el error sea proporcional al cambio ni que esos valores
+ayuden a converger. Mismos seis jobs previstos, orden control/BUS variable,
+gates sin cambios y parada al primer rechazo. El nombre de banco es
+`vco-rshunt02`. La finalidad es contrastar una perturbación cuatro órdenes
+menor, con otros dos niveles decrecientes; no promover el resultado de 1 Gohm.
