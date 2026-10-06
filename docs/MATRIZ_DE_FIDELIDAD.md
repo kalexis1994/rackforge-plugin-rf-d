@@ -33,8 +33,12 @@ trayectorias exactas y dos capturas de 133 incógnitas/531 entradas. LU de
 80/120 dígitos observa diferencias de hasta 102 µV en el solve real; es
 error lineal del sistema estampado, no KCL no lineal independiente. La
 publicación de una raíz más precisa puede aumentar el residual L2. Pasan
-62 regresiones; el [refinamiento lineal](NEWTON_REFINAMIENTO_LINEAL_PROTOCOLO.md)
-aún no se mide. No se promueve ninguna tarjeta o conductancia física.
+62 regresiones en ese corte. El [refinamiento lineal](NEWTON_REFINAMIENTO_RESULTADOS.md)
+pasa replay con los factores reales y reduce el error a 0.122 nV. Ambos
+VCO mínimos activos completan 40 ms; control de forma/frecuencia/reset
+admitido. Pasan 70 regresiones y 280 contrastes C. La [voz monolítica](VOZ_REFINAMIENTO_UNION_PROTOCOLO.md)
+aún requiere otro banco: el retorno PWL no cierra la interfaz física.
+No se promueve ninguna tarjeta o conductancia física.
 Convergencia finita no identifica una unidad vintage ni admite tiempo real.
 Las reseñas numéricas anteriores se conservan como historial.
 

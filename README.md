@@ -1,10 +1,10 @@
 # RF-D
 
 **Prioridad activa:** [unión VCO/contorno cargado](docs/CONTORNO_VCO_UNION_RESULTADOS.md).
-Cuatro escenas monolíticas rechazan en reset. El cálculo dividido en R45
+El banco monolítico anterior rechaza cuatro escenas en reset. El cálculo dividido en R45
 conserva la reacción eléctrica, pero aún falla su control previo: diecisiete
-recibos auditados y cuatro defectos de puerto reproducidos. Próximo: resolver
-el VCO aislado con BUS variable antes de ampliar el banco. El
+recibos auditados y cuatro defectos de puerto reproducidos. El VCO aislado
+ya completa con el solve refinado; la unión todavía debe repetirse. El
 [diagnóstico de reset](docs/RESET_VCO_AISLADO_RESULTADOS.md) rechaza la
 representación alternativa y las regularizaciones; una sonda reproduce
 exactamente el fallo y añade once estados internos. La
@@ -26,8 +26,11 @@ sin medir. La [matriz Newton completa](docs/NEWTON_MATRIZ_COMPLETA_RESULTADOS.md
 conserva cuatro trayectorias exactas y contrasta dos sistemas de 133 incógnitas
 con 80/120 dígitos. El solve real difiere hasta 102 µV en el polo del 741;
 publicar una raíz más precisa puede aumentar su residual L2. Pasan 62 pruebas.
-Próximo: [refinamiento lineal](docs/NEWTON_REFINAMIENTO_LINEAL_PROTOCOLO.md)
-con la matriz e historia originales y control completo.
+El [refinamiento lineal](docs/NEWTON_REFINAMIENTO_RESULTADOS.md) conserva
+matriz, factores e historia: replay exacto reduce el error a 0.122 nV y
+ambos VCO mínimos completan 40 ms, con todos los gates del control. Pasan
+70 regresiones y 280 contrastes C. Próximo: [voz monolítica refinada](docs/VOZ_REFINAMIENTO_UNION_PROTOCOLO.md),
+primero control nominal y luego unión con contorno físico.
 El [contorno con entrada senoidal](docs/CONTORNO_PLACA4_RESULTADOS.md) mantiene
 diez escenas completas y escucha; la [voz con contorno fijo](docs/VOZ_ACOPLADA_RESULTADOS.md)
 sigue nominal, con cutoff bajo y ambos mute rechazados. Fidelidad física,
