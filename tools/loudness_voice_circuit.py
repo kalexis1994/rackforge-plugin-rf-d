@@ -89,7 +89,7 @@ def measurement(raw,s):
     delivered=(right-main)/1000+(right-val('v(f4_headphone_input)'))/1000
     vcap=val('v(f4_q17_collector)')-right
     outerr=10e-6*(vcap-vcap[0])-integrated(delivered)
-    edges=vco.crossings(t,val('v(schmitt_drive)'),0,False)
+    edges=vco.crossings(t,val('v(ramp_c1)'),-2,True)
     edges=edges[edges>=s.trigger_on_s+s.trigger_transition_s]
     if len(edges)<5:raise ValueError('measured reset train too short')
     periods=np.diff(edges)
