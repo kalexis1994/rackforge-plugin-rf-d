@@ -9,6 +9,7 @@ import loudness_board4_probes as p
 import voice_current_tolerance as tol
 import voice_jfet_charge_ports as charge
 import voice_circuit_reference as voice
+import validate_loudness_board4_bank as audit
 
 
 class LoudnessBoard4Tests(unittest.TestCase):
@@ -70,6 +71,15 @@ class LoudnessBoard4Tests(unittest.TestCase):
                 h=1e-6;numeric=(charge.charge(v+h,c0)-charge.charge(v-h,c0))/(2*h)
                 expected=c0/np.sqrt(1-v) if v<.5 else c0/np.sqrt(.5)+c0/(2*.5**1.5)*(v-.5)
                 self.assertAlmostEqual(numeric,expected,delta=1e-19)
+
+    def test_checkout_reconstruction_is_restricted_to_frozen_graph_bytes(self):
+        import subprocess
+        blob=subprocess.check_output(['git','show','776c2fd:evidence/loudness_contour_graph.json'],cwd=c.ROOT)
+        digest='f147a2e10dcf4fae6e18c13ad1c8f3842977f7e15c3bd019f27bfcd2300dee66'
+        self.assertEqual(audit.source_identity('evidence/loudness_contour_graph.json',digest,blob),'frozen-CRLF-checkout')
+        for name,data in [('evidence/other.json',blob),('evidence/loudness_contour_graph.json',blob+b' '),
+                          ('evidence/loudness_contour_graph.json',blob.replace(b'3300',b'3301',1))]:
+            with self.assertRaises(ValueError):audit.source_identity(name,digest,data)
 
 
 if __name__=='__main__':unittest.main()
