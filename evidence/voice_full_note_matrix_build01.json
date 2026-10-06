@@ -1,0 +1,605 @@
+{
+  "schema": "rf-d/full-note-matrix-build/v1",
+  "source_inventory_sha256": "2c4610e177de9117c2ffe83e15145d093099be4fd9034002de94dd9a69ee49da",
+  "source_files": 4338,
+  "patch": {
+    "path": "src/maths/ni/niiter.c",
+    "before_sha256": "432e78f93419db01930b6547822e43adb3855eb6d74c7c59a4926683658159b6",
+    "after_sha256": "6f9a7303917617607bad4b6e045d36ed3dfb70c2d08e4b2083d084cfd185c820",
+    "diff": "--- \n+++ \n@@ -27,4 +27,5 @@\n /* Laboratory observer selection; never used by numerical calculations. */\n int RFMatrixTrace = 0;\n+static unsigned int RFLongMatrixCaptures=0;\n static void RFMatrixVector(CKTcircuit *ckt, const char *stage)\n {\n@@ -213,7 +214,8 @@\n             RFMatrixTrace = getenv(\"RF_D_MATRIX_TRACE\") &&\n                 !strcmp(getenv(\"RF_D_MATRIX_TRACE\"),\"1\") && ckt->CKTkluMODE &&\n-                ckt->CKTtime>=0.0022773 && ckt->CKTtime<=0.0022775 &&\n-                ckt->CKTdelta<=1e-17 && (iterno==100 || iterno==101);\n+                ckt->CKTtime>=0.01594035 && ckt->CKTtime<=0.01594045 &&\n+                ckt->CKTdelta<=1e-17 && (iterno==100 || iterno==101) && RFLongMatrixCaptures<16;\n             if (RFMatrixTrace) {\n+                ++RFLongMatrixCaptures;\n                 fprintf(stderr,\"RFMATRIX,begin,%.17g,%.17g,%d,%d,%d,%u,%u,%.17g\\n\",\n                     ckt->CKTtime,ckt->CKTdelta,iterno,ckt->CKTorder,ckt->CKTmode,\n"
+  },
+  "relocated_generated_files": {
+    "baseline02/config.status": {
+      "before_sha256": "9494cfdb87c8dfac2efa7b9898fbdb63433d28c45b5cd53e85b6cc399ee677bf",
+      "after_sha256": "6019c399d941eadaaae2a0081ab628d1d6ff890a1fd3c05f06a728ca75a3ebc0"
+    },
+    "baseline02/Makefile": {
+      "before_sha256": "facbde14dc4dbf6a4245f1e724aa3fa28b45b47acb8f77c8d405abb2be7d1c62",
+      "after_sha256": "0c59788f630b7ccf864e5e6c656d2d59af2fed42d89a26fa04867d49c08f93ae"
+    },
+    "baseline02/man/Makefile": {
+      "before_sha256": "b9773c39305d38e09b04a382ee12110bea1d86cd882a9b8661482a8b8ec32003",
+      "after_sha256": "6d4d4f237530165375cf48cfc0f2465d2bf2d15af74d31ee54d8a4de0f0a0bfa"
+    },
+    "baseline02/src/Makefile": {
+      "before_sha256": "e1cdc2fb28890cdba4fdc7012bbc74975e6fd06da55b3f94efcefb64f354b099",
+      "after_sha256": "ba74afe5021350023b873c4a0c71736aa1acfb2a0b25c039bf6102e02ab94dec"
+    },
+    "baseline02/tests/Makefile": {
+      "before_sha256": "ca35e4753dd1569d2e76c68efcf8fb0398061814d270d477e7ac147fccec47b1",
+      "after_sha256": "d6043830661fa17140e9679138c24184078e26eadaac74e26f63e8930147d431"
+    },
+    "baseline02/man/man1/Makefile": {
+      "before_sha256": "a6c3c3e9380094c74cb81b709e91d8b6c54620f4e655f15f32adbba37e13d771",
+      "after_sha256": "a9048283044b9dfc2947f138802b89b6e06de1ec89ee3032fd9b1cf53f462dd1"
+    },
+    "baseline02/src/ciderlib/Makefile": {
+      "before_sha256": "3bfc6a229e9120a5aeb0a8596f01137942999f7bf407f5954be540483767c100",
+      "after_sha256": "d09e3b83b2c484f6f87d97c8d06af05b37d03ca672d46571abec6cb9f73f128b"
+    },
+    "baseline02/src/frontend/Makefile": {
+      "before_sha256": "561bd3a2c8a0ea3932881c44911991402b4f113c342ae20b4b27d3c07dbfef9b",
+      "after_sha256": "9e55a22d34807d6ddd3ee2e1a08e84f75c386ec7b62ac6e374aa67ad3078ace7"
+    },
+    "baseline02/src/maths/Makefile": {
+      "before_sha256": "66b858b290e1fa53d37ae66754d7c177dc4bba3003cf2b201b2c944d89d350fd",
+      "after_sha256": "40fa3422acac410754c5add78851e79251d4b22241612b0fa3a1df36c65bbef6"
+    },
+    "baseline02/src/misc/Makefile": {
+      "before_sha256": "0c145c58cca1890cf1783b8d39c6caf64a513ed5fd647d0750e1b7ac89c1ce60",
+      "after_sha256": "678c969b21d151c96733e9d5cb5acddb86482ec7aaa5dc98c1cc92a717f9d3fd"
+    },
+    "baseline02/src/osdi/Makefile": {
+      "before_sha256": "64c9c962b5b907ddfa708bdd606239b8dc56d5647405a4f863d9c866f98034ac",
+      "after_sha256": "3d45a8ed4359c6cac44a836f40ac21c45020318a02447debbcbc86953f009193"
+    },
+    "baseline02/src/spicelib/Makefile": {
+      "before_sha256": "dd1915b2c356e203e96b761e33bd6e5da36fd4fe9e4d361ae76aca578a4e1fe9",
+      "after_sha256": "2125d70abe9a2a27f448a952a04260b1d87cb88575a8bad5925238e3cbe23b14"
+    },
+    "baseline02/src/xspice/Makefile": {
+      "before_sha256": "322a0a0813d97fbe1a4bdbfdefe2e5ef6d8ee90a9d6385bf110d8f1643e66aa9",
+      "after_sha256": "f9f43e0349ad8ee628f833ccb8b61f7995a893495cb3aa729e130a4bef824a5c"
+    },
+    "baseline02/src/ciderlib/input/Makefile": {
+      "before_sha256": "d387efafaec63f08c413fd75a0de164a5c70cd3402e146a322533c4fd3be6102",
+      "after_sha256": "8a78f75b7f5402cf82803694c5b301e2cff12c20092c75f703f666f6a8f4d6fe"
+    },
+    "baseline02/src/ciderlib/oned/Makefile": {
+      "before_sha256": "21c0173123d76da6276bc76d3b6bdcc5d49213fd2d92b40259616484a6078b5c",
+      "after_sha256": "c31c9a397438dd0642253138b8fc23849c0c077abe800880daf929ecf866b4c6"
+    },
+    "baseline02/src/ciderlib/support/Makefile": {
+      "before_sha256": "b8838d71761ad7c523ed9509448d25d735e5fdf14bb830c18427d06f2e38873e",
+      "after_sha256": "740a0a77c4411146bfab493b07c3355499c0e53c5af9c697c442c854b88b8009"
+    },
+    "baseline02/src/ciderlib/twod/Makefile": {
+      "before_sha256": "d3e9ed913db497417817b5f1f64d9385e67d2efc12abbcfb5b97ffb31f15ebe1",
+      "after_sha256": "8c87fe6dfa04181f9a8e0f48c5262e6e30f753dbca9d3e5a5567a6d5a14d5a52"
+    },
+    "baseline02/src/frontend/help/Makefile": {
+      "before_sha256": "8979892c7b8053becf97b2cdf7b396a9d551d8138aba663af321c3bfb57d8c64",
+      "after_sha256": "ed89fe10efe7b9de18af919a376413c015b372df244b90a6fb8bb37f2da7745c"
+    },
+    "baseline02/src/frontend/numparam/Makefile": {
+      "before_sha256": "5383a49aef2f14c304e4b36c0a65f0532409eb763791401919913d8c1bb430dd",
+      "after_sha256": "9cfe89fb3e6011fe3270e6b894fdafdbbdfa5e3b5e1c9a748887f3f57922d0cd"
+    },
+    "baseline02/src/frontend/parser/Makefile": {
+      "before_sha256": "4ab0a68a2858a253119de39f9b9e0436f06d7147a48e72d11f91650659634ddb",
+      "after_sha256": "83d406b83493c43f1aac422beacbaa6783b46c46f1f2f9f414ec6e7bdc97cb59"
+    },
+    "baseline02/src/frontend/plotting/Makefile": {
+      "before_sha256": "a7f75b143286a0f749f53e3302f19f222f2198d150ae8eb95d704eb32a531121",
+      "after_sha256": "abbbf5a08e1126560151eed8fcc67d57caeaec1e7fef86070cfe2345816cb5ac"
+    },
+    "baseline02/src/frontend/trannoise/Makefile": {
+      "before_sha256": "f6a5fed0a39ca9e8d0e0dcf36063022e5b53a1c270cf276fa0eea6c82d2d5f7f",
+      "after_sha256": "e897b51c685287a1a1a9167f1773d8ebb8d99dc7e9dd2257bcd31ca08e576216"
+    },
+    "baseline02/src/frontend/wdisp/Makefile": {
+      "before_sha256": "3e64cb71b044f6133ec2aae2c6998596f6212758f41eed67c5b2aadcd52ac6de",
+      "after_sha256": "86cf1995c40ec69f9046ee6a2b8cbfe492b07918304daca7de58c2ea02957cff"
+    },
+    "baseline02/src/include/ngspice/Makefile": {
+      "before_sha256": "6fb2c6db5af0d6c1e6c6eab291fd595da2aa7a135abacc8b34c428ad064b1429",
+      "after_sha256": "70b4f9dc121af2edc4bbcdd1e340e2c5ba52785bdac0876da1d98ffb74225575"
+    },
+    "baseline02/src/include/cppduals/duals/Makefile": {
+      "before_sha256": "e10bf41a9f4d01a16264feb121f4129a358e168dd708ba8ec747a64df95f2f7b",
+      "after_sha256": "7a7f135115f03617d637c925aa4766e7896793925d6ccd82ab1a3eafbe56aa53"
+    },
+    "baseline02/src/maths/cmaths/Makefile": {
+      "before_sha256": "362004a60b126e8ef1caab5735e5ef0686fdee7dbb9933028cd52b5bc0b93c5b",
+      "after_sha256": "e87bc9b501bbd810ef40bf77d77b69bbe6561307c7a08033191fd42ff1afad50"
+    },
+    "baseline02/src/maths/dense/Makefile": {
+      "before_sha256": "b0b4c530c7992c36a03de903fc41edf2fa086a487afb5ff3b1106b5b86b7717f",
+      "after_sha256": "7fc2a36958a0e25da96e58e3eff618657c754c7ed386942925a18e22f5da4a1e"
+    },
+    "baseline02/src/maths/deriv/Makefile": {
+      "before_sha256": "8bbf8745306ec77d81b949336390281af05e4846f6a39df2c34b512e867a20e2",
+      "after_sha256": "897e2d92f03661a07d0b71245c75969d0086608087745f3af6c693e3f005fcba"
+    },
+    "baseline02/src/maths/fft/Makefile": {
+      "before_sha256": "3d6a0577aecabc4c75f83ffe7e169c71efa5c86f19abc0942c6f12f5bff2b68b",
+      "after_sha256": "110660418b11e9c140ac068f5a2c94f5c1df9bddbd5785bf1c88f739176f2e1c"
+    },
+    "baseline02/src/maths/KLU/Makefile": {
+      "before_sha256": "a8b2fbb89acb00fe208c9a6b573c7722132308c3bdb38f9501cdad3668038f97",
+      "after_sha256": "eb5be4bdd7ba23a816d345cda152666cdd9f96c12a7cb99103c902237c858216"
+    },
+    "baseline02/src/maths/misc/Makefile": {
+      "before_sha256": "a5c30c9ac57e788485f5e5f563f1fbe6c490a0b0c6254af87556c46712ff216f",
+      "after_sha256": "b4da5f9c0ce8dcf08aee93ea19753bf965178fe708050a8f7c84a4f82a798ae8"
+    },
+    "baseline02/src/maths/ni/Makefile": {
+      "before_sha256": "b8cc991811531915ab44aa38d74a511ea7e1a44791fcb4bf72f523119be24abe",
+      "after_sha256": "95153698cf4808ecc6393a91f18dee2157e270f71ba18197cdeaffb51819f338"
+    },
+    "baseline02/src/maths/poly/Makefile": {
+      "before_sha256": "5984510ab1737e5c4a17b02129f3f08f1f58acb024776a13b30d037f3797f03f",
+      "after_sha256": "00ee1a486315328e401f32f350a5108238dcd55ceab826a10ad4b3a6f6f87c62"
+    },
+    "baseline02/src/maths/sparse/Makefile": {
+      "before_sha256": "0cb622a2ac61ae044b1b76398620416ca4de1b7112bc725e594172bc3fd65187",
+      "after_sha256": "5ad36e2d0d21f68997cf5ca276c428078338405c36ce85c6bd9fe3938bc94a7d"
+    },
+    "baseline02/src/spicelib/analysis/Makefile": {
+      "before_sha256": "ff715bd0388c7fdb9e4550cf71e4c476b4fae76e237ecba16397b2da4002934e",
+      "after_sha256": "20735e7003e5fc81e9b5e7b596cc3ceb8121edb5e674258432572c6d73e4f3b9"
+    },
+    "baseline02/src/spicelib/devices/Makefile": {
+      "before_sha256": "971ed74cbafee988df6616c28f52a1634abb51b773b35eee13ca7567f4589963",
+      "after_sha256": "1f9f475e485556599d957942b9c10d7273ab4205e346914499f67fbe46253d9d"
+    },
+    "baseline02/src/spicelib/parser/Makefile": {
+      "before_sha256": "87be43a593863f5d1dae997b5d206177441497940dbc5734bcc19d4437caedcd",
+      "after_sha256": "5457c235a8646aceb89f120343a4b5a4280d56eadb1dbd96d6ebd17b66d1f18d"
+    },
+    "baseline02/src/spicelib/devices/asrc/Makefile": {
+      "before_sha256": "12c6bf8a387a63b906bf69ca24e9bae19183bb992efc4a6e337a94eb511f1a7a",
+      "after_sha256": "3bebab3bfd0fe2b20cbe1eab7d44a79e15667cf38ccf65da1eea62c4de83ba4b"
+    },
+    "baseline02/src/spicelib/devices/bjt/Makefile": {
+      "before_sha256": "f6504d526c2816429d4be4f17450170f2efe5b7d01867f4c93c0867c287becf7",
+      "after_sha256": "e178e31a8bb27aab579a1f7a6e6a48a938e52e447d5c11ca93682a6edede5a71"
+    },
+    "baseline02/src/spicelib/devices/bsim1/Makefile": {
+      "before_sha256": "78649fddd75d1aba84a7ff0777c40bc3d0be6a99537d715277eb83b930725543",
+      "after_sha256": "e4d9b159c965c1445fd547b0e9937d288928051faf1e94b819405d391e42825a"
+    },
+    "baseline02/src/spicelib/devices/bsim2/Makefile": {
+      "before_sha256": "91d4d229bdfc53894e5aaf8006b6f525573e3ea7abee704199bb258d1a24f29c",
+      "after_sha256": "fffc7ddb1e610d6444c6c83b2afeec48fe027f86f49571ca20db16b6a3e3f7fb"
+    },
+    "baseline02/src/spicelib/devices/bsim3/Makefile": {
+      "before_sha256": "cf8ff782ff8339230e1adaea307bf6c615bddafab50a66f37236c29850c785f2",
+      "after_sha256": "0361f09909c4c58f333068b5fde2f091a0e0b8fa15bbcabcab79385327f619a1"
+    },
+    "baseline02/src/spicelib/devices/bsim3soi_dd/Makefile": {
+      "before_sha256": "c95b987a1b418c2682447cb82da37b3e0b0f394e49cafc30a3183541f8737bc0",
+      "after_sha256": "9353fcdc2f4aee5db55ebd7fded6067f81b2b928d894cec46071079e418d1ac5"
+    },
+    "baseline02/src/spicelib/devices/bsim3soi_fd/Makefile": {
+      "before_sha256": "ee6bb3104eba28a0c1a4769460df297133029805a02bc8d7bd931066f123c123",
+      "after_sha256": "a98f9c322d73a1969aaf22bd1f1c19eb60a3cad4681ea3bf9a3372061f40ed79"
+    },
+    "baseline02/src/spicelib/devices/bsim3soi_pd/Makefile": {
+      "before_sha256": "469a95fa0b868f503065359024346aac13956b2cbc4212aa3c13bd6e5823a87d",
+      "after_sha256": "9ed6b04498c93408cc9070a0e82c80e1dca6fcaee21ba93b1449fd505cfcb0b9"
+    },
+    "baseline02/src/spicelib/devices/bsim3v0/Makefile": {
+      "before_sha256": "629a4fa553145a15cee1085f8b87fc2b8194ef72e053bad954bf5043e7a6b6db",
+      "after_sha256": "b9eefc34f29c11a056956836b7874b86828a3e755a440d68a7b6eb5427abc1c4"
+    },
+    "baseline02/src/spicelib/devices/bsim3v1/Makefile": {
+      "before_sha256": "60cb199f6c14fe1072b1b60a25d79f00f66b0012f4638db973d96bb0acb6c8e0",
+      "after_sha256": "2f56da9fd67cb531907a7d1c8db9e7dd7be7b43c2eb4e50890ae18e6b88b05ca"
+    },
+    "baseline02/src/spicelib/devices/bsim3v32/Makefile": {
+      "before_sha256": "d791fe51549e6ae0e08e9a54a2f316717d042adbe53bd6608e2fd8d7f914d720",
+      "after_sha256": "c07fdb16b4e922ee271416756f5ce20260600c238e90f593a7b25a60a0cd3a02"
+    },
+    "baseline02/src/spicelib/devices/bsim4/Makefile": {
+      "before_sha256": "39d63583b5d387dab43fbe2bf909912f303a22868a45063c01c4387928574ecf",
+      "after_sha256": "6711e8915f2d06c0d6ffd46d4ccd25ce42507f58cb3ac0cf16284eada6a3bb01"
+    },
+    "baseline02/src/spicelib/devices/bsim4v5/Makefile": {
+      "before_sha256": "b6ce18329e9664916036f2772f9f593602388a9c74fb3390fdc6da2e7659e68a",
+      "after_sha256": "9b646ad93d9d9f249a58e10d41acd91f80571745ab54fb4acd91be3959adffb8"
+    },
+    "baseline02/src/spicelib/devices/bsim4v6/Makefile": {
+      "before_sha256": "25f5ece22c3f2f67781a132ad0e4aba15db8b9370ae799c918db47d4c8ea2c19",
+      "after_sha256": "15754ea4cd4154cbd047cc0dd81a3286230efab6884f3708d24f025abea31c9b"
+    },
+    "baseline02/src/spicelib/devices/bsim4v7/Makefile": {
+      "before_sha256": "48df9a7de1ff062f79bc6515960ea5e5fc76b8c651aa1abeee9059112cad1f08",
+      "after_sha256": "a60c4e6d87c36660816a0827a5a746f73d8d35d1df5b89dbd68c5c092bbf0cee"
+    },
+    "baseline02/src/spicelib/devices/bsimsoi/Makefile": {
+      "before_sha256": "0831758b1bf23129fb40dc4ce94517b1cb42d0382dd9d4f07333e7767a332076",
+      "after_sha256": "c1e04f7a7284d5314de25e209eca48f87203aeb4f5dca7a350f6a76080e6a508"
+    },
+    "baseline02/src/spicelib/devices/cap/Makefile": {
+      "before_sha256": "7776c73f7d5d47346c2ab5b916e5c23c11fbc88e1a8ce511995a920e3ad8cd3e",
+      "after_sha256": "12bb337cee4e12c59e66e0699b099288aa13c0747144340800f585a30d053268"
+    },
+    "baseline02/src/spicelib/devices/cccs/Makefile": {
+      "before_sha256": "880b04efdcab03bb53bb7b022f35410311978e2d2e0fc2f8092de593aaaddacd",
+      "after_sha256": "738003923498f946628ddd7178a53fde05270498789db46e0feab5160a72e3a6"
+    },
+    "baseline02/src/spicelib/devices/ccvs/Makefile": {
+      "before_sha256": "de09ae627472a3584e723698d45e38d916bb7b78c7ce8e8b04a95d6d012ec928",
+      "after_sha256": "698a6f933a3ee0f1a79fa7c33869eb3f7a7446dcb01c9292be2d1f2f9c098c5b"
+    },
+    "baseline02/src/spicelib/devices/cpl/Makefile": {
+      "before_sha256": "ba821c5b3a55af97ac0aaca4145de7f78ecfba0c7fe1333b67b287f53a06e3fc",
+      "after_sha256": "f213c880e4902b0abcd5530e45de44e016d74fb7e0ebbbb8c85ca87ad401909f"
+    },
+    "baseline02/src/spicelib/devices/csw/Makefile": {
+      "before_sha256": "4ea3fe2779fc4b33ab8b5f0e3cde9ebdbb6a65ade73394e62760a54613c70d40",
+      "after_sha256": "1333920e2a759f7f29f59611f847fe4a14e4a9fe5e08eaf193ba4a4871deda70"
+    },
+    "baseline02/src/spicelib/devices/dio/Makefile": {
+      "before_sha256": "5427c65849075a66db39540097a18e143f7c091ad338e83be02b5113703b66d2",
+      "after_sha256": "f92ca760ffc13fca60abe9693aad8ae34d5409806778ce44df62cca1c7211d97"
+    },
+    "baseline02/src/spicelib/devices/hfet1/Makefile": {
+      "before_sha256": "f0c5a045be86b6fa65561af99a00b627a59031a5eff0e2562fc5d0e7e5629418",
+      "after_sha256": "4c7d1b9b9c97a6e4b68d47c5371efbfec011ea4a50e7e20353d15325f74af12e"
+    },
+    "baseline02/src/spicelib/devices/hfet2/Makefile": {
+      "before_sha256": "34dc3ed22a660a752c9bfad328f0c33104ec9852e7854790eb74850d4e718477",
+      "after_sha256": "3853841c8d01bac4e09869adfccc54d3d3a272041deec02c0f26abf1c311fbaf"
+    },
+    "baseline02/src/spicelib/devices/hicum2/Makefile": {
+      "before_sha256": "7c8962a22188199f0e721b5d51d386e8210b1930504a9e8604171db6d4761cfa",
+      "after_sha256": "3c25d203644eb5292feda7a39e20900628375731d17014a31dc45b94535a1797"
+    },
+    "baseline02/src/spicelib/devices/hisim2/Makefile": {
+      "before_sha256": "239dfe53a328d6fdf037f2bea48f4a6e087fa2cc8f4e993fdd49714358999104",
+      "after_sha256": "f03b55063b3711abdf26d8d50cfce2cbce61e19da504a06134722f5f70787f38"
+    },
+    "baseline02/src/spicelib/devices/hisimhv1/Makefile": {
+      "before_sha256": "56581471ecee38f1906397d1ce5a1424b2f2d98097cdb1b6a5b7caa20298b5c1",
+      "after_sha256": "fcfca12a1ed713fe0175c574359c86065987229bbcecb1a72ebdd0d32aa15ad7"
+    },
+    "baseline02/src/spicelib/devices/hisimhv2/Makefile": {
+      "before_sha256": "ff852155f196b19d850499fc49b00f5ada1533235cb976247748e471442e2fb9",
+      "after_sha256": "dc1aa91127588715424ec4e4989c3606a277639dbecff6280b04691e1b702f37"
+    },
+    "baseline02/src/spicelib/devices/ind/Makefile": {
+      "before_sha256": "2b0b0935aea740d48dbd774a1bb1fbbdb155abae6eee793ae5bfedf7aa6e2e22",
+      "after_sha256": "85ef26b1321785cd03c1ac4effec09624fc7ab0282a5d9334a21eb77282c5726"
+    },
+    "baseline02/src/spicelib/devices/isrc/Makefile": {
+      "before_sha256": "e05987442be5e83750a0b8e21c33506f03f33eb4932c5fb649db02734975cc6e",
+      "after_sha256": "8002aab75353d1a0fdc43a341496ab2ad3d0722036dbd2f9b4e8dcb984c7a83c"
+    },
+    "baseline02/src/spicelib/devices/jfet/Makefile": {
+      "before_sha256": "8f74d6d94436df756ab84c33ddba9fb2ddbd3c442f150b6fa2ec105d7e989c1f",
+      "after_sha256": "2256025149c4db82d83d9f16266bb1b24fc6ba667b96dc96995b67309e987ac6"
+    },
+    "baseline02/src/spicelib/devices/jfet2/Makefile": {
+      "before_sha256": "196193b1a6e4ef6a39d581926d7dc48e4b958c6232e3f345f1739907cd799a60",
+      "after_sha256": "f212184c1683d7d50a81c0a2403b7bed8af2ead4971cbf960ad522d611ad580a"
+    },
+    "baseline02/src/spicelib/devices/ltra/Makefile": {
+      "before_sha256": "9765b9cb7d94c1ac8b43d7a09fff55f22785026c19d82f5dc4e315ad828ee4b0",
+      "after_sha256": "4ed70cb7f28c6b00e4fbcbc0a7192f9d7da85861a2aaaed88bc5924d9d64a792"
+    },
+    "baseline02/src/spicelib/devices/mes/Makefile": {
+      "before_sha256": "3bf20c5ebdfbb51a20c1371c08b7c6e0d9b9894b8b0767307a8b0e0d44bcf2b5",
+      "after_sha256": "23019b36518c4dded735aac21d0119189f76e59199c32beb00f7669bbeb443b3"
+    },
+    "baseline02/src/spicelib/devices/mesa/Makefile": {
+      "before_sha256": "3cf783d21a817ccd11f5a86e727096d853536b6789a5e14c52f3ad6cb587b753",
+      "after_sha256": "877dcb808fc5c8e1e51d9c6f9ac441fbd102541104b43e758bc7df2507f1c466"
+    },
+    "baseline02/src/spicelib/devices/mos1/Makefile": {
+      "before_sha256": "b2094aed6ac84df8f19c8b98eebb0b7cac5c2fa3d637d5cbd42c8c3e7d7bb0a3",
+      "after_sha256": "f00728bc464c8135e8d5d0dbd18e7c4de766a90bebb7ae309ed3da1c5699471c"
+    },
+    "baseline02/src/spicelib/devices/mos2/Makefile": {
+      "before_sha256": "8cb97ad925ca0c3d076fe5df80e3bad4c59eee185075ec4a2ab79235bffdf15a",
+      "after_sha256": "aca441eea818e2841cf2de29490ced5b2157c48c5930afc3cde81803291c75df"
+    },
+    "baseline02/src/spicelib/devices/mos3/Makefile": {
+      "before_sha256": "66f06ff657aaecceb771c0cb7360ebe2235a27771978f6d4d760f61def8189e4",
+      "after_sha256": "0acbf40d37d282437c71b821183e2095aa4bd0ccf9a6149066e1fc85cf0936a6"
+    },
+    "baseline02/src/spicelib/devices/mos6/Makefile": {
+      "before_sha256": "9f7282c4e958ae674e3b8a4e31aaf8dcb30d1b6204b617df6b251df901979d19",
+      "after_sha256": "adfc30dda0b6cc87bcbec08c95487a80d478c99430933f8220eecd1ccb2833a8"
+    },
+    "baseline02/src/spicelib/devices/mos9/Makefile": {
+      "before_sha256": "1d84ee66a50bfe16738e72da929588f5972ee181303b97a723176818f438b007",
+      "after_sha256": "f1a7b29e56c6202f27f240c91fcfce5152fb88546998bd149b869bda4588442f"
+    },
+    "baseline02/src/spicelib/devices/nbjt/Makefile": {
+      "before_sha256": "2a5b919de3d53c6739bf4b8eae4187a0af0c12fe13d221c8d267b80775679761",
+      "after_sha256": "d37a3c8a668a0edc86ac1890957d2f5a4f39353c50e30e9f8b82fbe12127f1cb"
+    },
+    "baseline02/src/spicelib/devices/nbjt2/Makefile": {
+      "before_sha256": "ec765bbbd0d2885c809feee161a6b51f740c71549869e9db9711888168d23466",
+      "after_sha256": "55f0c425d8b67b4ffbc21226341b270b1d4a10c40769896daa190cc8fdce0322"
+    },
+    "baseline02/src/spicelib/devices/ndev/Makefile": {
+      "before_sha256": "bba1a26dce5ef6f267f373287f4d24342d3009daeb30f926f233948c9d23ec07",
+      "after_sha256": "7ae6d9bcbff747f26f4ed679145a5b719a25334f2887f1f174109d377ff1d7f7"
+    },
+    "baseline02/src/spicelib/devices/numd/Makefile": {
+      "before_sha256": "63974a7d48633f183bf4e3748272ec6f58b75bcc40cc7030654089d8b42106ed",
+      "after_sha256": "8d7f8db4ccd4fc7d6afea8766329b30bd66e927934178883fc1a192915742d21"
+    },
+    "baseline02/src/spicelib/devices/numd2/Makefile": {
+      "before_sha256": "1a14d68d1fa15af59096b0e80264ba186ba3802ad24c377ce3920c4195dbe0c2",
+      "after_sha256": "c5ece06c0b5076af579799e6f17def26c1e43293883917ce2677341f2a7f789c"
+    },
+    "baseline02/src/spicelib/devices/numos/Makefile": {
+      "before_sha256": "349e7842706995bb3944747847bca8861a8de70fe1b6d0ed99cdb5a2574c9350",
+      "after_sha256": "c56f37085eac95a1a29f1e94ae1c75ddffad0b7e7ad9b3ab22d1f58624ced74a"
+    },
+    "baseline02/src/spicelib/devices/res/Makefile": {
+      "before_sha256": "f3536c3030409af4f8d5bf5b1d931db5cfad3c7c8b4b82411a9f54de437f1044",
+      "after_sha256": "069ce990753fc28e5d4bdb24a49ee5352a49715c28d2e4ae04111bde09cafc5c"
+    },
+    "baseline02/src/spicelib/devices/soi3/Makefile": {
+      "before_sha256": "1d7f589b92f4b20d513abbe6816238e2cffb554e4140f8cd37bee3558d51e701",
+      "after_sha256": "574af8e028ac773268a8a8c1986687d6ee8b775177be37a1c1071abeb49eb794"
+    },
+    "baseline02/src/spicelib/devices/sw/Makefile": {
+      "before_sha256": "9e91f07d29a95a2d0e2dff82086cc3ff688b9533b538b0a65db4c858cd0f171a",
+      "after_sha256": "a1a3068dffd0ec7e0944b6bf5ba5ea9f4447d94491011f5365820c080e580204"
+    },
+    "baseline02/src/spicelib/devices/tra/Makefile": {
+      "before_sha256": "245f4b0a503db3d9675862522576c4c63e7da913e4ecc498fc91a7b206288d9b",
+      "after_sha256": "e66a6e88651ceedf99c2f19084bb72cc58a69ddb8f8d3beec3762d145f945e63"
+    },
+    "baseline02/src/spicelib/devices/txl/Makefile": {
+      "before_sha256": "df9eff257120541919cecc03cd3c188fac237016fe30a2e0022d4addb26f00d3",
+      "after_sha256": "bc787eb425a7376917196b1c4efe52ce9cbf48514761f1042fe7762a569f2159"
+    },
+    "baseline02/src/spicelib/devices/urc/Makefile": {
+      "before_sha256": "d9fe454719aeb6c4b5264ef4e5555103aa9e28e1fc3b4f834da9120e8ac1cfa0",
+      "after_sha256": "5132298093f57cb608c18a1b3973b07369935617e9102c3a7353ac0cbc039cb1"
+    },
+    "baseline02/src/spicelib/devices/vbic/Makefile": {
+      "before_sha256": "e4d5d55ab7823cfc9ff79997217c75093c3403d4ff1a0e827e1a96fc073574a9",
+      "after_sha256": "96cfc70c8e654ab3272dd949633a87f6dd5dd47102ec06826c39db361ff6c61b"
+    },
+    "baseline02/src/spicelib/devices/vccs/Makefile": {
+      "before_sha256": "9c4b88f06ffa9f4cd77a98a17576b8146ced8a3e0d6343a80d8d0f7a9e027500",
+      "after_sha256": "894eb8764eb5a476221ff20c36e335d49a387af4869934548447aede46fbfc02"
+    },
+    "baseline02/src/spicelib/devices/vcvs/Makefile": {
+      "before_sha256": "63257a5d1b77d134649d6af8999200786a9be609e994064b6ef15caad2ba434b",
+      "after_sha256": "ccd43ea68dda02c96b437d6a22d506f68eef7f24681896b3f6f379b05c5bec99"
+    },
+    "baseline02/src/spicelib/devices/vdmos/Makefile": {
+      "before_sha256": "c269c9e3dd5dae763d77e3aff38b5c7744d751e2d779ea4bd384f6af17a9f73b",
+      "after_sha256": "fe95d662f360f4aa8ada4e9fb7ea167843883ebd17687575f6958bd6a5f61067"
+    },
+    "baseline02/src/spicelib/devices/vsrc/Makefile": {
+      "before_sha256": "b9e49d5d6fb132f1902693ee7421811a2237f9c3ca8c541f8bc9d0a60374a0e6",
+      "after_sha256": "2c653bc69db72d0e461a9aaa69f84229c9dee3d75cf956d446206f9f9e3f979f"
+    },
+    "baseline02/src/xspice/cm/Makefile": {
+      "before_sha256": "da8d3ea701e800b050e5fb5321d5e4546e189da43f82324d0c7a6724d47a2968",
+      "after_sha256": "6b4a365f45eab8bebe74fc9d1726e58a26fa6e47265cfceb46fc9de66bfa996e"
+    },
+    "baseline02/src/xspice/cmpp/Makefile": {
+      "before_sha256": "a9184381db15ab00e78e3e6637d4683628e3c9af6ad66001f199caa1d4ee3bc3",
+      "after_sha256": "d3a0bfa947cb00175f5c1dfdbc0f8ab3d06814aa6a23b191603ad13adcca7902"
+    },
+    "baseline02/src/xspice/enh/Makefile": {
+      "before_sha256": "27c5fc49fd4ce663b8ac869700531429a053f74c21aafc6ad176db914952b245",
+      "after_sha256": "3fc475a79ed1130f4a336665258f5e73ce9feb02a3ff7171f3573595dccb018f"
+    },
+    "baseline02/src/xspice/evt/Makefile": {
+      "before_sha256": "3863d8a9934d09536dad02ec0ac25a194245a7a4d25807fa1035787f27bb0f08",
+      "after_sha256": "c9c1781ae7e32abfc2179f253f65a8a25c9fb02c282a7393017b09b0f4cc11ab"
+    },
+    "baseline02/src/xspice/idn/Makefile": {
+      "before_sha256": "c0c2b2f0f8ec11eaff384235df7e6277aacfbb7391aeeb8e43cb5a51e31c6d1e",
+      "after_sha256": "e862177f26a0235e6695703aeed6c19e3002aa0bb7cff18b1f2cd07c00a0f1eb"
+    },
+    "baseline02/src/xspice/mif/Makefile": {
+      "before_sha256": "dae2f835ef5884ebf3f54334991450fb50753de64c91415e59137006f50cb8a8",
+      "after_sha256": "440e92b62993e4ba7062d2dee8fa474b13bfea7b66cf3fe3b98b5ed789bb5388"
+    },
+    "baseline02/src/xspice/verilog/Makefile": {
+      "before_sha256": "d7437bdb383951d0e5e5f1216424e4c3f400381a0147ef0e8dbf103b1beec6bb",
+      "after_sha256": "b97c0246a7c52c52c8b7052b2f2a0e23046cb2cb5af32613b9baaa21079f3188"
+    },
+    "baseline02/src/xspice/vhdl/Makefile": {
+      "before_sha256": "530f3ad1727670bb3111a30967a691bcb43a8fc8882f3dfaa74a9a4c3dcc40cd",
+      "after_sha256": "12c1630c5f0e269c3f470fc682c0f90ef06ff05c5ff1f933c565d22cfcf327f6"
+    },
+    "baseline02/tests/bsim1/Makefile": {
+      "before_sha256": "09c8a6dc1f377420c5a1cf0eb4514d2a82eb23b12f7d50dc9d8358b8ba36ac34",
+      "after_sha256": "9f815ebd04eb842580f5918c33c8ba957362b0af126bc32f9e02db2501d87553"
+    },
+    "baseline02/tests/bsim2/Makefile": {
+      "before_sha256": "33661b1ff040a182aea6903e4e99e71d8c22ba03d3896a545c49520d3aecc624",
+      "after_sha256": "1a36d43695335e051ea1946a9d3296f8eb36700b9481d7a7808befcf273f882a"
+    },
+    "baseline02/tests/bsim3/Makefile": {
+      "before_sha256": "0d3e9a6673094368984eeaeae578d6fc0c098bee5db1f862375108f83b4a762d",
+      "after_sha256": "a730a7cb8bafb03a93a571f17ddfc56a4b2c0c67ae8f7ee25eaeccc406a51816"
+    },
+    "baseline02/tests/bsim3soidd/Makefile": {
+      "before_sha256": "97f79d0883ceda41784fc20a7feb1cb5894cf0ca938a8fedf850c1f0451a8717",
+      "after_sha256": "5b82b179c7a0462ad4d31a08f48b6916946813580b0a91b157af72c36b308be7"
+    },
+    "baseline02/tests/bsim3soifd/Makefile": {
+      "before_sha256": "7b894b1420811b487967f264e4c3d164796d6d2c7d4745a2b4add55a554ec096",
+      "after_sha256": "5e2a8e70bc1a6bc66326e16a9a0e0f6e637169b08955ed539d27d2692d3db09b"
+    },
+    "baseline02/tests/bsim3soipd/Makefile": {
+      "before_sha256": "bd32157e18e5705ff2c8eb58679df2f33385b81ad0824a6815c0a63f16c23f36",
+      "after_sha256": "ec12dac6262546f8684f303581e3876676a97f4dbb29c1458551cb7aef9dffa5"
+    },
+    "baseline02/tests/bsim4/Makefile": {
+      "before_sha256": "8f4b27e8c468a5802f8730070080abd7bc758cdb8e47fd8a04d8e31c0dcc730a",
+      "after_sha256": "22ec7b03e06fd69e9c783014256d06480484461dd2886efea5543411b45f6437"
+    },
+    "baseline02/tests/bsimsoi/Makefile": {
+      "before_sha256": "c939d71a7158cdba736d91cadb5054e17cf90db97061dd5ab58869e7e3801acf",
+      "after_sha256": "9eb836a5af6d8394b12e0b5fbbb33108368564a67834a80045f2fa14a3e54bdd"
+    },
+    "baseline02/tests/filters/Makefile": {
+      "before_sha256": "d3d655fc9f7baad41c94ef912c04a2fd673369197e98bfc2da6aa8a95f8545e9",
+      "after_sha256": "49b8c840f145106f95bd369cbd55a3f911f9d6434ef5a32c5c8b8709338447fb"
+    },
+    "baseline02/tests/general/Makefile": {
+      "before_sha256": "e198d98b0667e6756dd37610678fc0fd481162cbeb190e96ee8cdf17b9c92d63",
+      "after_sha256": "9998ea5e6a3548b31ce5ec6005019892b40e32c28c46580eff9b4fb1824b46f3"
+    },
+    "baseline02/tests/hfet/Makefile": {
+      "before_sha256": "bf6659fb1e28a45dce8b23641811802fcc938f54cf8ab964daaa5b59e81a3f1d",
+      "after_sha256": "0baffb1b85fd12c25d03d2e29d1e7cf13f269583c1f38d41c67f42e658196b3b"
+    },
+    "baseline02/tests/hicum2/Makefile": {
+      "before_sha256": "70ad4db9d90ea11bbb2cfec708a098a16338cc5cf62e9cac60ddf40f7ba1de15",
+      "after_sha256": "da3a9379720d357e7b4dd544ba3c386940dc06452cc3b113d4b4388740a246f5"
+    },
+    "baseline02/tests/hisim/Makefile": {
+      "before_sha256": "865af010403c12f5ebe06e3640cb431adbc914f0c054d56797c551d8d2e6d052",
+      "after_sha256": "cd7d4fe9b37c4a412c7d887bcb978a439bd28dba8a3bc111a5c7d0f1f57f084a"
+    },
+    "baseline02/tests/hisimhv1/Makefile": {
+      "before_sha256": "acb056ec5e33fb548ebf886b163a1f83e9b39fd8b2a724b8dc0c762cec899c82",
+      "after_sha256": "fc471791505babde6402d72baf5b613a111cf08e8925916a4a46470b6cabc572"
+    },
+    "baseline02/tests/hisimhv2/Makefile": {
+      "before_sha256": "6a2dd187dde52ff2386efcf89f48e06e1fd1a93824af78f8211308c26e25a4c5",
+      "after_sha256": "7b1f1e7fe9933b919f007c782ec30d6dd1b683dc6df702e3db4bb9d17123fd2e"
+    },
+    "baseline02/tests/jfet/Makefile": {
+      "before_sha256": "39a44017ed4f8a9787859b9b3fea784faf1ec076f86c175feadd54e47dfbe147",
+      "after_sha256": "96f310ef5a282278bb8b530072f53899495505d9ea238e6dcceac07a556a3745"
+    },
+    "baseline02/tests/mes/Makefile": {
+      "before_sha256": "e3e7403f41fa5db7cbb96ecd15593f2dea74773e3e9ed37898870be3f9ec33b0",
+      "after_sha256": "203caf26a5366cf49386c7e173b0a67c4016feac9656eb0908688a28a5cba4d9"
+    },
+    "baseline02/tests/mesa/Makefile": {
+      "before_sha256": "edcb37fac4c04a8bb47a1797472bcc170934b4b4be7e7bef20c6714c00fd5dcc",
+      "after_sha256": "9344288e1873f8cf084fff89023a1b2a915464d53f600ad72dd9dcda21abd74d"
+    },
+    "baseline02/tests/mos6/Makefile": {
+      "before_sha256": "885cb7ade885b0177881f552210fb6b33d76e0b5cf905b49331b9156f2b900a5",
+      "after_sha256": "1b37fa95fc002a1244a9aaca0c36dce40d55ffc91df6c21dc09814aad046fffe"
+    },
+    "baseline02/tests/polezero/Makefile": {
+      "before_sha256": "3dcdd3cfed8fed1872849bb5d9d7c50d40caaef055e254b1a06f41f63ea918b0",
+      "after_sha256": "def068e68e87e662584ccc0f9d40b752056e28dffa7924b873acd6a4269360e9"
+    },
+    "baseline02/tests/regression/Makefile": {
+      "before_sha256": "4886d79bdec615a1ae28e3014121f9cda48818a81aab9184b0b82396d1f6e451",
+      "after_sha256": "4f923674920a448fb77a8405ead99c6cc7e9b6462dba3789d001ca1e1687e9f2"
+    },
+    "baseline02/tests/resistance/Makefile": {
+      "before_sha256": "0c62f1388774cbaf90dba125d5fd2daa0bd28680ad458a543d9ec17d72d964e1",
+      "after_sha256": "ae445294b5bc3a5c3598d79602853f82145c74c4dfda9952b274aa1d19dbb4b6"
+    },
+    "baseline02/tests/sensitivity/Makefile": {
+      "before_sha256": "722705fc0cabf0b1ceb20dfc8c4e6d7c3c8c87650bf0d0fce718f094a4da0eee",
+      "after_sha256": "0b51fb599bbb3cbbc45f9db1dcc21d34cdeaac8e6f8cd6bee7b9805986638ef3"
+    },
+    "baseline02/tests/transient/Makefile": {
+      "before_sha256": "1f493d8a75e9f7babeaef31765aae6dc1971032e34cc8730a834a302794142c5",
+      "after_sha256": "10bad17dabb785978596f0be9a1652199cb2de79cab688d6493a70ae66766367"
+    },
+    "baseline02/tests/transmission/Makefile": {
+      "before_sha256": "21a01816530ae1c44c322d718450392c9f7b120791792899053fd4d303dc9abd",
+      "after_sha256": "46a97a7adab989cda8ee38f66aec13c6fa81d95e615eefa0f48be75c33f33fa3"
+    },
+    "baseline02/tests/vbic/Makefile": {
+      "before_sha256": "85fb561c4112ed5732b977e62d9b088124ad78b860ddf311db94529133c13fb3",
+      "after_sha256": "2bb0dfe3630f627d6681883054132c4f59f23afeee2854e273014b249c90845c"
+    },
+    "baseline02/tests/xspice/Makefile": {
+      "before_sha256": "58efbfc893aa5912d1772f962da11ae27d235f0e9c47c85b8ec83acbeedbeeaa",
+      "after_sha256": "03ed23e3d845173287d2a10f38927417b4b8d03a5108e2468b5dce213ab9191a"
+    },
+    "baseline02/tests/regression/func/Makefile": {
+      "before_sha256": "729ad456200f4aa0b0e5a2d503d48a287740e13328e0d8204b685f6f22b3efc5",
+      "after_sha256": "bf6ef441f95b522c577c53604ef55d845637abbcaa147a30465e9762ec313334"
+    },
+    "baseline02/tests/regression/lib-processing/Makefile": {
+      "before_sha256": "9927e5abb09c192375e5dc89758683c6953b535f237088f1f133bf1f431ccc05",
+      "after_sha256": "95437c4eeb7f533fbe516a83652d4b4674fa3e069669d51821a5868b04da5573"
+    },
+    "baseline02/tests/regression/misc/Makefile": {
+      "before_sha256": "cecc6269916651c5443c2174e5f6056aadd431c1138bdecfe89d65d93a765d13",
+      "after_sha256": "d3578554af11d55d635fc868b071cd313667a01fae81ab5ba52960f63e31c046"
+    },
+    "baseline02/tests/regression/model/Makefile": {
+      "before_sha256": "31b31e50e73d68d8a305700e102b54be0d35676123be5994c4c23e9235ff1239",
+      "after_sha256": "4b991a0de6761fd3eef11794360dbf0fbca712804d97ca552e13b0317aebcacc"
+    },
+    "baseline02/tests/regression/parser/Makefile": {
+      "before_sha256": "43bd8784d463086bbd845704ef1087c387f33f60b799bf52baec95ab576989f7",
+      "after_sha256": "fc3324697a4fdea69c69b21955ad07903eacc11a61cecb322b43f7bf20e4a984"
+    },
+    "baseline02/tests/regression/pipe/Makefile": {
+      "before_sha256": "2a6030575cfb54f2674acf84dbaa7d50040333de218984889578e1fd680e61e1",
+      "after_sha256": "070f84c2b508f6ba5519ecd7f21c972a77dd2497b6a344912c9e74a8fed17d18"
+    },
+    "baseline02/tests/regression/pz/Makefile": {
+      "before_sha256": "2a1dfe6ab6a73616fddb281f359caaf7787a23fec26bebd37460aad2bbfd614f",
+      "after_sha256": "8e8a65e741da82889edabe5500cdc199b6380e7504149e28f3d2f2600a4b1742"
+    },
+    "baseline02/tests/regression/sens/Makefile": {
+      "before_sha256": "4bca1bbb4e080e409f2899e3593a7545fbdc1405fde8002300e741c866fd2d65",
+      "after_sha256": "5fe38881689eff3716a2fb1d90bc00bb906ac016b78721356eea41f60f482e20"
+    },
+    "baseline02/tests/regression/subckt-processing/Makefile": {
+      "before_sha256": "dcb220c3fa3664786ccffdb1d170ab916051a7eba935251c60d821d94ec2d096",
+      "after_sha256": "36c9c8ae672b5f97930484999a2e4687fa229aefbc40640dc4c59a4e65a6dc7c"
+    },
+    "baseline02/tests/regression/temper/Makefile": {
+      "before_sha256": "12ea27a795a6ae8ecb75c3aed8f1d9c795ba3a532dd64c92e6d617af37bfec4d",
+      "after_sha256": "5707621c9d7c77c1227619efffba1165359219a3235ebdb21dfa473353d79514"
+    },
+    "baseline02/tests/xspice/digital/Makefile": {
+      "before_sha256": "c3d8037d6d183e5587dbb70490da09abb65565daa2150b80d3b2ce4fb072c6c1",
+      "after_sha256": "c9b68d7a50ca9ff11e6a44c5524a5639eabdb1da65ea376e3690dbc33e2ed525"
+    }
+  },
+  "prior_build_sha256": "9c5eccb2b851c578b2f80654e6d7654d64e937dd82341d92d37e49454f27a089",
+  "copy_bytes": 252460070,
+  "protocol_sha256": "4166df158eb88cace690fa8c2876cd9858b5ae718f61d199f4d481307af4a9d3",
+  "helper_sha256": "a7a20d5e6cac2a9d37cd31739e2334e7e6ce94eb7dff4c47bd5759311aec594f",
+  "compiler_path": "C:/msys64/ucrt64/bin/gcc.exe",
+  "compiler_sha256": "f96a3bdb1d3a3967b309d75c7413399391e857b5be4cb17162572ed66f6772a0",
+  "compiler_version": "gcc.exe (Rev5, Built by MSYS2 project) 16.1.0\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+  "command": [
+    "C:/msys64/usr/bin/bash.exe",
+    "--noprofile",
+    "--norc",
+    "-c",
+    "export MSYSTEM=UCRT64; export PATH=/ucrt64/bin:/usr/bin; make -C src/maths/ni -j2 && make -C src ngspice.exe -j2"
+  ],
+  "cflags": "-O2 -g -m64",
+  "ldflags": "-m64",
+  "corrections": 3,
+  "numerical_algorithm_changed": false,
+  "observer_selection_changed": true,
+  "capture_limit": 16,
+  "window_s": [
+    0.01594035,
+    0.01594045
+  ],
+  "device_stamps_changed": false,
+  "state_update_changed": false,
+  "new_spice_solves": 0,
+  "exit_code": 0,
+  "executable_sha256": "a91c8557588ce7bd6c0c55950162ee789ca0c6bd627e031f06dc48980d83b245",
+  "build_log_sha256": "9ff12a346bce1f525155e8c0592472820ed21501698367d51f980c62a97d7e49",
+  "compiler_sha256_after": "f96a3bdb1d3a3967b309d75c7413399391e857b5be4cb17162572ed66f6772a0",
+  "helper_sha256_after": "a7a20d5e6cac2a9d37cd31739e2334e7e6ce94eb7dff4c47bd5759311aec594f"
+}

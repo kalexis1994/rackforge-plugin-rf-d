@@ -1,0 +1,27 @@
+{
+  "schema": "rf-d/shadow-regression-rejection/v1",
+  "command": [
+    "C:\\Users\\kalex\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+    "-B",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "tests",
+    "-p",
+    "test_voice_full_note_shadow.py",
+    "-v"
+  ],
+  "exit_code": 1,
+  "tests_run": 6,
+  "passed_count": 5,
+  "error_count": 1,
+  "error": "ValueError: max() iterable argument is empty (synthetic fixture omitted current unknown)",
+  "stderr_is_excerpt": true,
+  "source_path": "tests/test_voice_full_note_shadow.py",
+  "failed_source_sha256": "d1d3c2f6a9fb03915af1499cddd718efa0c6672545be73872d5a188c9d41ee65",
+  "preserved_source_path": "references-local/voice-circuit/newton-build10/failed-shadow-fixture01.py",
+  "failed_source_text": "import sys,unittest\nfrom pathlib import Path\nsys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools'))\nimport voice_full_note_shadow_trace as shadow\nimport voice_full_note_shadow_build as build\n\ndef log():\n    lines=['RFMATRIX,begin,0.01594042,1e-18,100,1,257,1,1,0','RFREFINE,original,0,1']\n    for k in range(6):\n        tag='RFREFINE' if k<3 else 'RFSHADOW'\n        lines.extend([f'{tag},r,{k},0,0,0',f'{tag},correction,{k},0,0,1,0'])\n    return '\\n'.join(lines+['RFSHADOW,final,0,1','RFREFINE,final,0,1','RFMATRIX,end'])\n\ndef system():return dict(n=1,nodes={0:dict(name='v',type=3,unknown_unit='V',b=1.)},entries={(0,0):1.},time_s=.01594042,h_s=1e-18,iteration=100)\n\nclass ShadowTests(unittest.TestCase):\n    def test_six_complete_steps_same_precise_system(self):\n        d=shadow.parse(log())[0]\n        self.assertEqual(len(d['correction']),6)\n        self.assertTrue(shadow.compare_six(system(),d,dict(rows=[dict(precise='1')]))['passed'])\n\n    def test_missing_scratch_residual_rejected(self):\n        with self.assertRaises(ValueError):shadow.parse(log().replace('RFSHADOW,r,4,0,0,0\\n',''))\n\n    def test_scratch_cannot_overwrite_original_step(self):\n        with self.assertRaises(ValueError):shadow.parse(log().replace('RFSHADOW,r,3,','RFSHADOW,r,2,'))\n\n    def test_sixth_residual_requires_exact_arithmetic(self):\n        d=shadow.parse(log().replace('RFSHADOW,r,5,0,0,0','RFSHADOW,r,5,0,1,0'))[0]\n        with self.assertRaises(ValueError):shadow.compare_six(system(),d,dict(rows=[dict(precise='1')]))\n\n    def test_wrong_compensated_update_rejected(self):\n        d=shadow.parse(log().replace('RFSHADOW,correction,4,0,0,1,0','RFSHADOW,correction,4,0,1,1,0'))[0]\n        with self.assertRaises(ValueError):shadow.compare_six(system(),d,dict(rows=[dict(precise='1')]))\n\n    def test_patch_restores_original_pairs_before_publication(self):\n        s=(build.PRIOR/'ngspice-46'/build.NAME).read_text(encoding='utf-8');changed=build.patched(s)\n        a=s.index('static int RFLinearSolve(');b=s.index('/* NIiter() -')\n        c=changed.index('/* NIiter() -')\n        self.assertEqual(s[:a],changed[:a]);self.assertEqual(s[b:],changed[c:])\n        self.assertLess(changed.index('memcpy(x,saved,n*sizeof(RFDD))'),changed.index('double published=x[c].hi+x[c].lo;'))\n\nif __name__=='__main__':unittest.main()\n",
+  "correction": "two-unknown fixture containing voltage and current; unchanged production parser/comparison/gates",
+  "new_spice_solves": 0
+}
