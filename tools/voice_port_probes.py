@@ -35,19 +35,19 @@ def reference_contrast(vraw,braw):
         passed=max(d.values())<=p.GATES['trace_v'] and cents<=p.GATES['frequency_cents'])
 
 
-def solve(s,label,with_contour,work,exe,report,save):
+def solve(s,label,with_contour,work,exe,report,save,port_factory=p.factory):
     bt=np.array([0.,s.oscillator.duration_s]);bus=np.zeros(2);history=[]
     result=dict(iterations=history,passed=False);report['cases'][label]=result
     for k in range(p.GATES['max_iterations']):
         record=dict(iteration=k+1);history.append(record)
         try:
-            fn,vectors=p.factory(s,'vco',bt,bus,with_contour)
+            fn,vectors=port_factory(s,'vco',bt,bus,with_contour)
             vraw,vr=voice.run(s,f'{label}-{k+1:02d}-vco',work,exe,netlist_factory=fn,vectors=vectors,timeout=120)
             record['vco_receipt']=vr;save()
             if 'non-increasing PWL' in (work/(vr['label']+'.log')).read_text(encoding='utf-8'):
                 raise ValueError('serialized port clock rejected by ngspice')
             left=vraw[:,p.VCO_VECTORS.index('v(r6_wiper)')+1]
-            fn,bvectors=p.factory(s,'board',vraw[:,0],left,with_contour)
+            fn,bvectors=port_factory(s,'board',vraw[:,0],left,with_contour)
             braw,br=voice.run(s,f'{label}-{k+1:02d}-board',work,exe,netlist_factory=fn,vectors=bvectors,timeout=120)
             record['board_receipt']=br
             if 'non-increasing PWL' in (work/(br['label']+'.log')).read_text(encoding='utf-8'):
@@ -73,20 +73,20 @@ def solve(s,label,with_contour,work,exe,report,save):
     result['error']='port closure exhausted frozen iteration budget';save();return None
 
 
-def main():
-    work=ROOT/'references-local/voice-circuit/port-relaxation03'
-    output=ROOT/'evidence/voice_port_relaxation03.json.gz'
+def main(bank_name='port-relaxation03',port_factory=p.factory):
+    work=ROOT/'references-local/voice-circuit'/bank_name
+    output=ROOT/'evidence'/('voice_'+bank_name.replace('-','_')+'.json.gz')
     if work.exists() or output.exists():raise ValueError('preserve prior screen')
     report=dict(schema='rf-d/voice-port-screen/v1',bank=work.name,gates=p.GATES,cases={},comparisons={},passed=False,
                 physical_fidelity=False,real_time=False,runner_sha256=vco.sha(Path(__file__)))
     def save():output.write_bytes(gzip.compress((json.dumps(report,indent=2)+'\n').encode(),mtime=0))
     exe=ROOT/'references-local/ngspice46/runtime/Spice64/bin/ngspice_con.exe'
     control=c.Scenario()
-    if solve(control,'fixed-contour-control',False,work,exe,report,save) is None:
+    if solve(control,'fixed-contour-control',False,work,exe,report,save,port_factory) is None:
         report['validation_error']='monolithic control rejected; contour scenes not measured';save();return
     kept={};ss=screen.scenes()
     for label,s in ss.items():
-        pair=solve(s,label,True,work,exe,report,save)
+        pair=solve(s,label,True,work,exe,report,save,port_factory)
         if pair is None:
             report['validation_error']='contour scene rejected; remaining scenes not measured';save();return
         kept[label]=p.assemble(*pair,s)

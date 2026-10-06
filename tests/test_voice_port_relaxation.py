@@ -5,6 +5,7 @@ import unittest
 import numpy as np
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools'))
 import voice_port_relaxation as p
+import voice_port_behavioral as behavioral
 
 
 class PortTests(unittest.TestCase):
@@ -79,6 +80,16 @@ class PortTests(unittest.TestCase):
         self.assertEqual(meta['terminal_rounding_s'],.04-b[-1,0])
         self.assertNotIn('+ 0.040000000000000001 ',deck)
         with self.assertRaises(ValueError):p.factory(s,'vco',[0,.039],[0,0],False)
+
+    def test_expression_retains_polyline_current_orientation_and_r45(self):
+        s=p.coupled.Scenario();fn,vectors=behavioral.factory(s,'vco',[0,.02,.04],[0,.2,.1],False)
+        deck,meta=fn(s,p.ROOT/'artifacts/test.txt')
+        self.assertIn('Bmixer MIXER_DRIVE 0 V=pwl(time,',deck)
+        self.assertIn('Vmixer MIX_BUS_BOARD4_PIN4 MIXER_DRIVE 0',deck)
+        self.assertEqual(deck.count('R45_PANEL '),1)
+        self.assertEqual(vectors,p.VCO_VECTORS)
+        self.assertIn('+ 0.02, 0.20000000000000001,',deck)
+        self.assertFalse(meta['port_closed'])
         v,b=self.pair();b[1,2]=np.nan
         with self.assertRaises(ValueError):p.closure(v,b,p.BOARD_VECTORS)
 
