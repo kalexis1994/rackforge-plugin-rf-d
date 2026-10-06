@@ -41,5 +41,13 @@ class ObservationTests(unittest.TestCase):
         self.assertEqual(report['last_attempt_limiter_events'],0)
         self.assertFalse(report['full_nonlinear_kcl_residual_observed'])
 
+    def test_identical_attempt_clock_does_not_select_earlier_step(self):
+        rows=['RFTRACE,iteration,1,.1,1,1,0,x,10,1,2,.1',
+              'RFTRACE,step,1,.1,103,1',
+              'RFTRACE,iteration,1,.1,2,1,0,y,10,1,2,.1',
+              'RFTRACE,step,1,.1,103,1']
+        report=trace.summarize(trace.parse('\n'.join(rows)))
+        self.assertEqual(report['last_attempt_last_iterations'][0]['node'],'y')
+
 
 if __name__=='__main__':unittest.main()

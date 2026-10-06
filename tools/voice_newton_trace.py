@@ -43,7 +43,8 @@ def summarize(records):
     steps=[r for r in records if r['kind']=='step'];trunc=[r for r in records if r['kind']=='trunc']
     if not iterations or not steps:raise ValueError('solver iteration and return observations required')
     # Trailing records belong to the last attempt, which can reuse the same clock in binary64.
-    last=steps[-1];stop=records.index(last);start=max((i for i in range(stop) if records[i]['kind']=='step'),default=-1)+1
+    last=steps[-1];stop=max(i for i,r in enumerate(records) if r['kind']=='step')
+    start=max((i for i in range(stop) if records[i]['kind']=='step'),default=-1)+1
     tail=records[start:stop];last_iterations=[r for r in tail if r['kind']=='iteration']
     last_jfets=[r for r in tail if r['kind']=='jfet']
     return dict(record_counts=dict(Counter(r['kind'] for r in records)),

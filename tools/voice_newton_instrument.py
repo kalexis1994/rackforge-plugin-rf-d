@@ -30,6 +30,9 @@ def patch(name,text):
                     double tol = ckt->CKTreltol * MAX(fabs(a),fabs(b)) +
                         (rf_node->type == SP_VOLTAGE ? ckt->CKTvoltTol : ckt->CKTabstol);
                     double ratio = fabs(b-a)/tol;
+                    if (!isfinite(a) || !isfinite(b) || !isfinite(ratio))
+                        fprintf(stderr,"RFTRACE,invalid,%.17g,%.17g,%s\\n",
+                            ckt->CKTtime,ckt->CKTdelta,CKTnodName(ckt,rf_node->number));
                     if (ratio > rf_ratio) {
                         rf_ratio = ratio; rf_old = a; rf_new = b; rf_tol = tol;
                         rf_name = CKTnodName(ckt,rf_node->number);
