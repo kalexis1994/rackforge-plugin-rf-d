@@ -15,8 +15,12 @@ La [sonda de historia/flujo](docs/POLO_741_RESET_RESULTADOS.md) conserva
 las cuatro trayectorias y refuta un RHS variable: cero cambios en 811 grupos
 con historia fija. Observa amplificación de un ulp de corriente a 2.81 µV
 en la fila de L2; no admite la reformulación condicional. El build local
-no reproduce exactamente el oficial. Próximo: KCL y acoplamientos 16/17,
-escala de incógnitas y contraste entre builds.
+no reproduce exactamente el oficial. La [KCL de 16/17](docs/KCL_741_RESET_RESULTADOS.md)
+conserva cuatro trayectorias admitidas: las dos KCL y EOS tienen residuales
+pequeños, pero la reducción con controles fijados muestra una brecha de
+246.525 µV dominada por el desajuste de corriente amplificado. Se preservan
+los rechazos de observación y el timeout. Próximo: representación equivalente
+del subbloque con historia/DC y gates completos, luego contraste entre builds.
 El [contorno con entrada senoidal](docs/CONTORNO_PLACA4_RESULTADOS.md) mantiene
 diez escenas completas y escucha; la [voz con contorno fijo](docs/VOZ_ACOPLADA_RESULTADOS.md)
 sigue nominal, con cutoff bajo y ambos mute rechazados. Fidelidad física,

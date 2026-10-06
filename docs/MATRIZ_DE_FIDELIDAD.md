@@ -20,7 +20,11 @@ el residual eléctrico completo y la causa siguen abiertos. La
 trayectorias y encuentra RHS fijo en los 811 grupos BUS variable.
 Un ulp de corriente equivale a 2.81 µV en su fila al final; el contraste
 Decimal es constitutivo y no identifica la causa de toda la matriz.
-La reformulación condicional no se mide. Pasan 31 regresiones enfocadas.
+La reformulación condicional no se mide. La [KCL de 16/17](KCL_741_RESET_RESULTADOS.md)
+conserva cuatro trayectorias admitidas y confirma EOS, pero la reducción
+con controles fijados tiene una brecha máxima de 246.525 µV. No es un error
+de solución de toda la red ni una causa física identificada. Se conservan
+rechazos de observación y timeout; pasan 41 regresiones enfocadas.
 No se promueve ninguna tarjeta o conductancia física.
 Convergencia finita no identifica una unidad vintage ni admite tiempo real.
 Las reseñas numéricas anteriores se conservan como historial.
