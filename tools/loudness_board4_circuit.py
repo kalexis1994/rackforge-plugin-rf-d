@@ -13,7 +13,7 @@ import vco1_circuit_reference as vco
 
 ROOT=vco.ROOT
 GRAPH=ROOT/'evidence/loudness_contour_graph.json'
-EXTRA=['v(e2_timing_c2)','v(e2_reset_collector)','v(e2_attack_gate_lower)',
+EXTRA=['v(f4_loudness_contour)','v(e2_timing_c2)','v(e2_reset_collector)','v(e2_attack_gate_lower)',
        'v(e2_attack_panel_in)','v(e2_decay_out)','v(e2_follower_base)',
        'v(e2_reset_driver)','v(e2_trigger_collector)','v(e2_set_base)',
        'v(e2_reset_base)','v(e2_sustain_driver_emitter)','v(e2_key_rc)',

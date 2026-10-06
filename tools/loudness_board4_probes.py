@@ -57,8 +57,8 @@ def factory(s,export):
 
 def main():
     import voice_circuit_reference as voice
-    work=ROOT/'references-local/voice-circuit/loudness-board4-bank01'
-    output=ROOT/'evidence/loudness_board4_bank01.json.gz'
+    work=ROOT/'references-local/voice-circuit/loudness-board4-bank02'
+    output=ROOT/'evidence/loudness_board4_bank02.json.gz'
     if work.exists() or output.exists():raise ValueError('preserve previous bank')
     exe=ROOT/'references-local/ngspice46/runtime/Spice64/bin/ngspice_con.exe'
     report=dict(schema='rf-d/loudness-board4-bank/v1',bank=work.name,gates=GATES,
