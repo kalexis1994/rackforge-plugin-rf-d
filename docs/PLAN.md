@@ -20,9 +20,12 @@ exacta con controles fijados amplifica el desajuste de corriente hasta
 246.460 µV. La [fila equivalente](741_FILA_REDUCIDA_RESULTADOS.md) conserva
 álgebra, DC e implementación de memoria, pero falla el control completo
 al activarse. Su modo desactivado es exacto; BUS variable activo no se mide.
-Próximo: [capturar la matriz Newton completa](NEWTON_MATRIZ_COMPLETA_PROTOCOLO.md)
-y resolver el A/RHS observado con mayor precisión, separando solve lineal
-y evaluación no lineal antes de otro cambio. Contrastar después el oficial
+La [matriz Newton completa](NEWTON_MATRIZ_COMPLETA_RESULTADOS.md) conserva
+las cuatro trayectorias exactas. Dos sistemas de 133 incógnitas contrastados
+a 80/120 dígitos muestran hasta 102 µV de error lineal en el polo; el
+redondeo de la raíz puede empeorar el residual L2. Pasan 62 regresiones.
+Próximo: [refinamiento con factores originales](NEWTON_REFINAMIENTO_LINEAL_PROTOCOLO.md),
+sin alterar sellos, memoria o tolerancias. Contrastar después el oficial
 y volver al cierre de puerto.
 El [contorno cargado](CONTORNO_PLACA4_RESULTADOS.md) mantiene diez escenas
 y tres contrastes con entrada senoidal; la [voz con contorno fijo](VOZ_ACOPLADA_RESULTADOS.md)

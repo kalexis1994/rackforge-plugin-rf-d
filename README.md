@@ -22,8 +22,12 @@ pequeños, pero la reducción con controles fijados muestra una brecha de
 los rechazos de observación y el timeout. La [fila equivalente](docs/741_FILA_REDUCIDA_RESULTADOS.md)
 pasa álgebra/historia y reproduce el baseline al desactivarla, pero activa
 falla el control de 40 ms en el primer reset. BUS variable activo queda
-sin medir. Próximo: [matriz Newton completa](docs/NEWTON_MATRIZ_COMPLETA_PROTOCOLO.md)
-y solve de mayor precisión antes de otra intervención.
+sin medir. La [matriz Newton completa](docs/NEWTON_MATRIZ_COMPLETA_RESULTADOS.md)
+conserva cuatro trayectorias exactas y contrasta dos sistemas de 133 incógnitas
+con 80/120 dígitos. El solve real difiere hasta 102 µV en el polo del 741;
+publicar una raíz más precisa puede aumentar su residual L2. Pasan 62 pruebas.
+Próximo: [refinamiento lineal](docs/NEWTON_REFINAMIENTO_LINEAL_PROTOCOLO.md)
+con la matriz e historia originales y control completo.
 El [contorno con entrada senoidal](docs/CONTORNO_PLACA4_RESULTADOS.md) mantiene
 diez escenas completas y escucha; la [voz con contorno fijo](docs/VOZ_ACOPLADA_RESULTADOS.md)
 sigue nominal, con cutoff bajo y ambos mute rechazados. Fidelidad física,

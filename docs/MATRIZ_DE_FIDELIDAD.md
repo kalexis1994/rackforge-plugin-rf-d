@@ -28,7 +28,13 @@ rechazos de observación y timeout. La [fila equivalente](741_FILA_REDUCIDA_RESU
 es exacta al baseline en modo desactivado, pero activa falla el control
 completo durante el primer reset. Su álgebra y memoria no admiten la variante;
 BUS variable activo queda no medido. Pasan 50 regresiones enfocadas.
-No se promueve ninguna tarjeta o conductancia física.
+La [matriz completa](NEWTON_MATRIZ_COMPLETA_RESULTADOS.md) conserva cuatro
+trayectorias exactas y dos capturas de 133 incógnitas/531 entradas. LU de
+80/120 dígitos observa diferencias de hasta 102 µV en el solve real; es
+error lineal del sistema estampado, no KCL no lineal independiente. La
+publicación de una raíz más precisa puede aumentar el residual L2. Pasan
+62 regresiones; el [refinamiento lineal](NEWTON_REFINAMIENTO_LINEAL_PROTOCOLO.md)
+aún no se mide. No se promueve ninguna tarjeta o conductancia física.
 Convergencia finita no identifica una unidad vintage ni admite tiempo real.
 Las reseñas numéricas anteriores se conservan como historial.
 
