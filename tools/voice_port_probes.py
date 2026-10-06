@@ -44,10 +44,14 @@ def solve(s,label,with_contour,work,exe,report,save):
             fn,vectors=p.factory(s,'vco',bt,bus,with_contour)
             vraw,vr=voice.run(s,f'{label}-{k+1:02d}-vco',work,exe,netlist_factory=fn,vectors=vectors,timeout=120)
             record['vco_receipt']=vr;save()
+            if 'non-increasing PWL' in (work/(vr['label']+'.log')).read_text(encoding='utf-8'):
+                raise ValueError('serialized port clock rejected by ngspice')
             left=vraw[:,p.VCO_VECTORS.index('v(r6_wiper)')+1]
             fn,bvectors=p.factory(s,'board',vraw[:,0],left,with_contour)
             braw,br=voice.run(s,f'{label}-{k+1:02d}-board',work,exe,netlist_factory=fn,vectors=bvectors,timeout=120)
             record['board_receipt']=br
+            if 'non-increasing PWL' in (work/(br['label']+'.log')).read_text(encoding='utf-8'):
+                raise ValueError('serialized port clock rejected by ngspice')
             if any(r['source_sha256']!=r['source_sha256_after'] for r in (vr,br)):raise ValueError('source changed')
             record['closure']=p.closure(vraw,braw,bvectors);save()
             print(label,k+1,record['closure'],flush=True)
@@ -70,11 +74,11 @@ def solve(s,label,with_contour,work,exe,report,save):
 
 
 def main():
-    work=ROOT/'references-local/voice-circuit/port-relaxation02'
-    output=ROOT/'evidence/voice_port_relaxation02.json.gz'
+    work=ROOT/'references-local/voice-circuit/port-relaxation03'
+    output=ROOT/'evidence/voice_port_relaxation03.json.gz'
     if work.exists() or output.exists():raise ValueError('preserve prior screen')
     report=dict(schema='rf-d/voice-port-screen/v1',bank=work.name,gates=p.GATES,cases={},comparisons={},passed=False,
-                physical_fidelity=False,real_time=False)
+                physical_fidelity=False,real_time=False,runner_sha256=vco.sha(Path(__file__)))
     def save():output.write_bytes(gzip.compress((json.dumps(report,indent=2)+'\n').encode(),mtime=0))
     exe=ROOT/'references-local/ngspice46/runtime/Spice64/bin/ngspice_con.exe'
     control=c.Scenario()

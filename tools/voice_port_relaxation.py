@@ -75,8 +75,9 @@ def factory(s,side,t,x,with_contour):
     # ngspice's final export can round a complete horizon by one ULP.
     # Preserve that interval explicitly in metadata; no partial trace promotion.
     terminal_rounding_s=float(duration-t[-1])
-    if terminal_rounding_s>0:t=np.r_[t,duration];x=np.r_[x,x[-1]]
-    elif terminal_rounding_s<0:
+    # PWL already holds its last value. Do not append a near-coincident
+    # terminal knot: the SPICE decimal parser can collapse the two times.
+    if terminal_rounding_s<0:
         end=float(np.interp(duration,t,x));mask=t<duration
         t=np.r_[t[mask],duration];x=np.r_[x[mask],end]
     vectors=VCO_VECTORS if side=='vco' else board_vectors(with_contour)

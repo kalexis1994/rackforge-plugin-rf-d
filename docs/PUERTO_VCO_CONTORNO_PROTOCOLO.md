@@ -52,3 +52,13 @@ todos los gates físicos y numéricos; usa el gate previo de completitud
 1e-14 s para ese redondeo final, registra la diferencia, evalúa los puertos
 en el dominio común sin extrapolar y prolonga únicamente ese redondeo
 en una nueva fuente PWL. Una trayectoria parcial continúa rechazada.
+
+El ensayo 02 rechaza el segundo VCO en reset y registra un aviso de tiempos
+PWL no crecientes. El deck añade dos tiempos finales separados por
+6.9388939e-18 s con el mismo voltaje. El ensayo 03 elimina exclusivamente
+ese punto final agregado: PWL mantiene su último valor durante el redondeo
+registrado. Exige ausencia del aviso del parser y conserva error 1 microvolt,
+clocks originales, máximo de pasos y gates de cierre. No se suaviza el reset.
+El código primario de ngspice comprueba orden de coeficientes ya parseados:
+[VSRCparam, revisión fija, líneas 96–108](https://raw.githubusercontent.com/imr/ngspice/ebdaf58ec76a06ffaac7e0f138360dd1cf5ee4b6/src/spicelib/devices/vsrc/vsrcpar.c).
+Corregir ese aviso no implica corregir el rechazo transitorio anterior.
