@@ -1,10 +1,11 @@
 # RF-D
 
-**Prioridad activa:** [unión VCO/contorno cargado](docs/CONTORNO_VCO_UNION_RESULTADOS.md).
-El banco monolítico anterior rechaza cuatro escenas en reset. El cálculo dividido en R45
-conserva la reacción eléctrica, pero aún falla su control previo: diecisiete
-recibos auditados y cuatro defectos de puerto reproducidos. El VCO aislado
-ya completa con el solve refinado; la unión todavía debe repetirse. El
+**Prioridad activa:** [extender la voz refinada a 350 ms](docs/VOZ_REFINAMIENTO_SIGUIENTE_PROTOCOLO.md).
+La [unión VCO/contorno cargado](docs/VOZ_REFINAMIENTO_UNION_RESULTADOS.md)
+completa cuatro escenas de 40 ms con filtro, ambos VCA y salida; pasa sus
+tres contrastes y balances. Los rechazos monolíticos anteriores y el
+control dividido en R45 permanecen conservados: diecisiete recibos
+históricos y cuatro defectos de puerto reproducidos. El
 [diagnóstico de reset](docs/RESET_VCO_AISLADO_RESULTADOS.md) rechaza la
 representación alternativa y las regularizaciones; una sonda reproduce
 exactamente el fallo y añade once estados internos. La
@@ -29,8 +30,10 @@ publicar una raíz más precisa puede aumentar su residual L2. Pasan 62 pruebas.
 El [refinamiento lineal](docs/NEWTON_REFINAMIENTO_RESULTADOS.md) conserva
 matriz, factores e historia: replay exacto reduce el error a 0.122 nV y
 ambos VCO mínimos completan 40 ms, con todos los gates del control. Pasan
-70 regresiones y 280 contrastes C. Próximo: [voz monolítica refinada](docs/VOZ_REFINAMIENTO_UNION_PROTOCOLO.md),
-primero control nominal y luego unión con contorno físico.
+70 regresiones y 280 contrastes C en ese corte. La [voz monolítica refinada](docs/VOZ_REFINAMIENTO_UNION_RESULTADOS.md)
+completa ahora el control y cuatro escenas conjuntas de 40 ms: todos los
+contrastes y balances pasan; máximo de grilla 138.5 µV frente a 5 mV.
+Siguiente: [nota completa de 350 ms](docs/VOZ_REFINAMIENTO_SIGUIENTE_PROTOCOLO.md) y escucha de su trayectoria auditada.
 El [contorno con entrada senoidal](docs/CONTORNO_PLACA4_RESULTADOS.md) mantiene
 diez escenas completas y escucha; la [voz con contorno fijo](docs/VOZ_ACOPLADA_RESULTADOS.md)
 sigue nominal, con cutoff bajo y ambos mute rechazados. Fidelidad física,

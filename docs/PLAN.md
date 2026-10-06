@@ -1,11 +1,11 @@
 # Prioridad vigente
 
-La [unión VCO/contorno](CONTORNO_VCO_UNION_RESULTADOS.md) rechaza las cuatro
-escenas monolíticas. El ensayo por R45 falla el control previo aun con
-dos parejas completas: el puerto no cierra y el VCO siguiente rechaza.
-El VCO aislado ahora completa con solve refinado y tarjeta/R45/gates
-conservados. Prioridad: repetir la voz monolítica y cerrar la unión antes
-de extender la nota completa.
+La [voz monolítica refinada](VOZ_REFINAMIENTO_UNION_RESULTADOS.md)
+completa el control nominal y cuatro escenas conjuntas de 40 ms. Pasan
+los tres contrastes y ambos balances C2; la admisión es local al nominal
+corto con build08. El [banco anterior](CONTORNO_VCO_UNION_RESULTADOS.md)
+y el ensayo dividido por R45 conservan sus rechazos. Prioridad: [nota
+completa de 350 ms y escucha auditada](VOZ_REFINAMIENTO_SIGUIENTE_PROTOCOLO.md).
 El [diagnóstico aislado](RESET_VCO_AISLADO_RESULTADOS.md) reproduce el reloj
 y los seis vectores originales al observar once nodos adicionales. Dos
 bancos de equivalencia terminal pasan; el control VCO y ambas series de
@@ -27,9 +27,9 @@ a 80/120 dígitos muestran hasta 102 µV de error lineal en el polo; el
 redondeo de la raíz puede empeorar el residual L2. Pasan 62 regresiones.
 El [refinamiento con factores originales](NEWTON_REFINAMIENTO_RESULTADOS.md)
 pasa replay y control completo: BUS variable alcanza 40 ms; 70 regresiones
-y 280 contrastes C pasan sin modificar dispositivos o tolerancias. Próximo:
-[voz monolítica refinada](VOZ_REFINAMIENTO_UNION_PROTOCOLO.md), control nominal
-y banco conjunto con sus contrastes. Mantener separado el build oficial.
+y 280 contrastes C pasan sin modificar dispositivos o tolerancias. Su
+[nuevo banco monolítico](VOZ_REFINAMIENTO_UNION_RESULTADOS.md) pasa ahora
+los siete solves, con los gates congelados. Mantener separado el build oficial.
 El [contorno cargado](CONTORNO_PLACA4_RESULTADOS.md) mantiene diez escenas
 y tres contrastes con entrada senoidal; la [voz con contorno fijo](VOZ_ACOPLADA_RESULTADOS.md)
 mantiene alcance nominal y rechazos de cutoff bajo/mute. Contorno de filtro,

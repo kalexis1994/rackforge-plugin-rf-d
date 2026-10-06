@@ -4,11 +4,14 @@ Estado actual: [contorno cargado por filtro/dos VCA/salida](CONTORNO_PLACA4_RESU
 con diez escenas de 350 ms, tres contrastes y escucha de notas completas.
 La entrada senoidal, alimentación de contorno y base Q21 siguen impuestas;
 los semiconductores son tarjetas condicionadas. La [voz con VCO bajo carga](VOZ_ACOPLADA_RESULTADOS.md)
-sigue nominal: cutoff bajo y ambos mute rechazan. Integración del contorno
-con VCO [ensayada y rechazada](CONTORNO_VCO_UNION_RESULTADOS.md): cuatro
-escenas monolíticas y control de puerto R45 fallido. Diecisiete recibos
-auditados; completar cada parte no cierra su interfaz. Contorno de filtro,
-parámetros físicos y ruta portable abiertos.
+sigue nominal: cutoff bajo y ambos mute rechazan. La [integración refinada del contorno
+con VCO](VOZ_REFINAMIENTO_UNION_RESULTADOS.md) completa cuatro escenas
+monolíticas de 40 ms: tres contrastes, carga y control nominal pasan.
+Admisión numérica local del circuito con build08; no es una nota larga
+ni fidelidad vintage. Los [rechazos anteriores](CONTORNO_VCO_UNION_RESULTADOS.md)
+y los diecisiete recibos/defectos R45 permanecen conservados. Próximo:
+[350 ms completos y adaptación de escucha](VOZ_REFINAMIENTO_SIGUIENTE_PROTOCOLO.md).
+Contorno de filtro, parámetros físicos y ruta portable abiertos.
 El [diagnóstico de reset aislado](RESET_VCO_AISLADO_RESULTADOS.md) conserva
 rechazos de representación y regularización. La nueva observación reproduce
 exactamente el prefijo y su reloj. La [sonda Newton](NEWTON_RESET_RESULTADOS.md)
@@ -36,8 +39,10 @@ publicación de una raíz más precisa puede aumentar el residual L2. Pasan
 62 regresiones en ese corte. El [refinamiento lineal](NEWTON_REFINAMIENTO_RESULTADOS.md)
 pasa replay con los factores reales y reduce el error a 0.122 nV. Ambos
 VCO mínimos activos completan 40 ms; control de forma/frecuencia/reset
-admitido. Pasan 70 regresiones y 280 contrastes C. La [voz monolítica](VOZ_REFINAMIENTO_UNION_PROTOCOLO.md)
-aún requiere otro banco: el retorno PWL no cierra la interfaz física.
+admitido. Pasan 70 regresiones y 280 contrastes C en ese corte. La
+[voz monolítica refinada](VOZ_REFINAMIENTO_UNION_RESULTADOS.md) pasa ahora
+el banco corto completo. El retorno PWL y las iteraciones divididas
+no heredan un cierre de interfaz: la nueva admisión procede del solve directo.
 No se promueve ninguna tarjeta o conductancia física.
 Convergencia finita no identifica una unidad vintage ni admite tiempo real.
 Las reseñas numéricas anteriores se conservan como historial.
