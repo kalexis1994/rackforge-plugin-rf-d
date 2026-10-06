@@ -1,0 +1,149 @@
+{
+  "schema": "rf-d/reset-representation-audit/v1",
+  "passed": true,
+  "coupling_admitted": false,
+  "regularizer_selected": null,
+  "new_solves": 0,
+  "archives": {
+    "voice_jfet_decomposed01.json.gz": {
+      "archive_sha256": "96d48b7bd19c90781676ebe598b80105452fd7e340482ebe64bb36f37fcbce69",
+      "payload_sha256": "61b849263f92d51c8025190daedf7dec362197cbae4f4260111006403e5aabfd"
+    },
+    "voice_jfet_decomposed02.json.gz": {
+      "archive_sha256": "afc438b7eddbe2d92363bf319efca99d0a10445879ff71f7e714bdb6fdaa94dc",
+      "payload_sha256": "5d61a18c6d0ee931361f4241d8f1d064168e8e82dc50538252103aaf8080641e"
+    },
+    "voice_vco_rshunt01.json.gz": {
+      "archive_sha256": "e44c0413542668b39f4a669f3a7aeb5d37822a22aa2566b47b6fe5dc2e8ce458",
+      "payload_sha256": "c4004abbbc54a66e081b2cad1201a04869c344ccf049e5c551d2a644c15ff776"
+    },
+    "voice_vco_rshunt02.json.gz": {
+      "archive_sha256": "140410785a17de9ca24b59533faeb9bd4719c083f58e0745da511427656e356c",
+      "payload_sha256": "65460edf4ae74872bc2b9ae736984aa74a4e5d06385a6b4ce129712323f810de"
+    }
+  },
+  "records": [
+    {
+      "bank": "jfet-decomposed01",
+      "label": "terminal-benchmark",
+      "complete": true,
+      "last_clock_s": 1.9999999999999998e-05,
+      "receipt_sha256": "cd441e087bafe0c99e78cf6dcdf444c2ea44665478dda4a9ed5af13cca1a61f6",
+      "failure_report": null
+    },
+    {
+      "bank": "jfet-decomposed02",
+      "label": "terminal-benchmark",
+      "complete": true,
+      "last_clock_s": 1.9999999999999998e-05,
+      "receipt_sha256": "5142a88303355c6f0ff0ee2a5f4c867154fd180cec4c93b5a48f2d9f9e5fa5d8",
+      "failure_report": null
+    },
+    {
+      "bank": "jfet-decomposed02",
+      "label": "constant-control",
+      "complete": false,
+      "last_clock_s": 0.0022774107334634533,
+      "receipt_sha256": "6fb0e30e7ff69bb1c4c0fac6502d4a6aef9bd84ba8baf847b7e9fe017d863c5e",
+      "failure_report": "doAnalyses: TRAN:  Timestep too small; time = 0.00227741, timestep = 6.25e-19: trouble with node \"xic3.4\""
+    },
+    {
+      "bank": "vco-rshunt01",
+      "label": "constant-1e09",
+      "complete": true,
+      "last_clock_s": 0.04,
+      "receipt_sha256": "46bcef5c1c0c3cda7d44f8cdedcd220fbc2315de968415bc5f282b50c805162a",
+      "failure_report": null
+    },
+    {
+      "bank": "vco-rshunt02",
+      "label": "constant-1e13",
+      "complete": false,
+      "last_clock_s": 0.002277411170362544,
+      "receipt_sha256": "8cc8d62dc7e85d8344caf3ae92f9c9d10642e682e32dce3d49dd4be88e80bc40",
+      "failure_report": "doAnalyses: TRAN:  Timestep too small; time = 0.00227741, timestep = 6.25e-19: trouble with lab_e402-instance jq7_left"
+    }
+  ],
+  "replayed_measurements": {
+    "jfet-decomposed01": {
+      "gate": {
+        "max_current_difference_a": 1.2612133559741778e-13,
+        "max_current_ratio": 3.9336241676947713e-07,
+        "max_integrated_difference_c": 6.304094411814303e-22
+      },
+      "drain": {
+        "max_current_difference_a": 4.8203219193965197e-11,
+        "max_current_ratio": 6.211803723451051e-06,
+        "max_integrated_difference_c": 5.41100743708157e-19
+      },
+      "source": {
+        "max_current_difference_a": 9.58279462726086e-13,
+        "max_current_ratio": 0.00030857161839192626,
+        "max_integrated_difference_c": 1.6119970066271092e-19
+      }
+    },
+    "jfet-decomposed02": {
+      "gate": {
+        "max_current_difference_a": 1.2612133559741778e-13,
+        "max_current_ratio": 3.9336241676947713e-07,
+        "max_integrated_difference_c": 6.304094411814303e-22
+      },
+      "drain": {
+        "max_current_difference_a": 4.8203219193965197e-11,
+        "max_current_ratio": 6.211803723451051e-06,
+        "max_integrated_difference_c": 5.41100743708157e-19
+      },
+      "source": {
+        "max_current_difference_a": 9.58279462726086e-13,
+        "max_current_ratio": 0.00030857161839192626,
+        "max_integrated_difference_c": 1.6119970066271092e-19
+      }
+    },
+    "vco-rshunt01": {
+      "max_trace_difference_v": {
+        "v(ramp_c1)": 3.9864618590979344,
+        "v(schmitt_drive)": 8.095329076305653,
+        "v(saw_output_9b)": 3.6960246012961266,
+        "v(r6_wiper)": 1.5537387712653559,
+        "v(mix_bus_board4_pin4)": 0.0
+      },
+      "frequency_cents": 0.7831294546468134,
+      "max_reset_time_difference_s": 1.7515484352838284e-05,
+      "passed": false
+    }
+  },
+  "source_byte_modes": {
+    "evidence/vco1_laboratory_devices.json": "git-blob",
+    "tools/voice_jfet_decomposed.py": "git-blob",
+    "tools/voice_jfet_charge_ports.py": "git-blob",
+    "tools/voice_jfet_decomposed_probes.py": "git-blob",
+    "evidence/vco1_ramp_graph.json": "git-blob",
+    "evidence/vco1_ca3046_parts.json": "git-blob",
+    "evidence/vco1_panel_pulse_width.json": "git-blob",
+    "tools/vco1_circuit_reference.py": "git-blob",
+    "references-local/datasheets/ti_lm741_lm741.lib": "identified-private-file",
+    "tools/voice_port_relaxation.py": "git-blob",
+    "tools/loudness_voice_circuit.py": "git-blob",
+    "tools/voice_port_behavioral.py": "git-blob",
+    "tools/voice_port_probes.py": "git-blob",
+    "tools/voice_vco_rshunt.py": "git-blob"
+  },
+  "original_inputs_unchanged": [
+    "evidence/vco1_laboratory_devices.json",
+    "evidence/vco1_ramp_graph.json",
+    "evidence/voice_board4_graph.json",
+    "evidence/loudness_contour_graph.json",
+    "tools/vco1_circuit_reference.py",
+    "tools/voice_circuit_reference.py",
+    "tools/loudness_voice_circuit.py",
+    "tools/loudness_board4_circuit.py"
+  ],
+  "primary_source_manifest_sha256": "96515b90f4d741b77efa92f4b5ab8ea7a2625a4d88d9923a871e6abacf48ca53",
+  "adapter_rejection_sha256": "12af484bbb29d8a743b3474cdf624ea0e11100fec9360a5bad4916b3482484fc",
+  "failed_test_receipt_sha256": "1fb146dc8ccc6d0b568d360a3c971db2f1661c53788cec5ca9dfc76d187d4e9b",
+  "failed_test_snapshot_sha256": "03e8bdc66a361324bd5f2bbf3100453975776d836b6122491f09b04da65b3050",
+  "auditor_sha256": "529b6f5fe97b0e0983d8253d82deaec2a3b150ba2b1d3c568c2584255821068f",
+  "physical_fidelity": false,
+  "real_time": false,
+  "wall_s": 2.429997799990815
+}

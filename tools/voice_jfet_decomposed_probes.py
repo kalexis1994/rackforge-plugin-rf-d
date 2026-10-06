@@ -53,6 +53,11 @@ def historical_factory(label):
 
 
 def contrast(raw,reference):
+    for trace in (raw,reference):
+        if trace.ndim!=2 or trace.shape[1]!=len(p.VCO_VECTORS)+1 or len(trace)<2 or not np.isfinite(trace).all():
+            raise ValueError('finite complete VCO observation required')
+        if trace[0,0]!=0 or abs(trace[-1,0]-.04)>1e-14 or np.any(np.diff(trace[:,0])<=0):
+            raise ValueError('complete strictly increasing VCO clock required')
     t=np.arange(0,.04+GATES['observation_grid_s']/2,GATES['observation_grid_s']);diff={}
     for i,n in enumerate(p.VCO_VECTORS,1):
         if n=='i(vmixer)':continue
