@@ -60,6 +60,6 @@ lineal observado con mayor precisión antes de otro cambio de representación.
 Separará error del solve lineal, evaluación de dispositivos y convergencia
 no lineal. El ejecutable oficial conserva otra trayectoria.
 
-Pasan [50 regresiones enfocadas](../evidence/voice_741_row_tests01.json).
+Pasan [50 regresiones enfocadas](../evidence/voice_741_row_tests02.json).
 Los inputs físicos anteriores, ejecutable oficial y WAV conservan sus hashes.
 No hay tarjeta promovida, unión VCO/contorno admitida, audio nuevo o tiempo real.

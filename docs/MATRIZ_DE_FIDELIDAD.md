@@ -26,7 +26,7 @@ con controles fijados tiene una brecha máxima de 246.525 µV. No es un error
 de solución de toda la red ni una causa física identificada. Se conservan
 rechazos de observación y timeout. La [fila equivalente](741_FILA_REDUCIDA_RESULTADOS.md)
 es exacta al baseline en modo desactivado, pero activa falla el control
-completo antes del primer reset. Su álgebra y memoria no admiten la variante;
+completo durante el primer reset. Su álgebra y memoria no admiten la variante;
 BUS variable activo queda no medido. Pasan 50 regresiones enfocadas.
 No se promueve ninguna tarjeta o conductancia física.
 Convergencia finita no identifica una unidad vintage ni admite tiempo real.
