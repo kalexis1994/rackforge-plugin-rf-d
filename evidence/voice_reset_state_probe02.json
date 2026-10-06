@@ -1,0 +1,229 @@
+{
+  "schema": "rf-d/reset-state-observation/v1",
+  "observation_replay_passed": true,
+  "trajectory_complete": false,
+  "coupling_admitted": false,
+  "new_solves": 1,
+  "receipt": {
+    "scenario": {
+      "board": {
+        "oscillator": {
+          "keyboard_v": -2.1,
+          "other_control_v": -2.1,
+          "r8_fraction": 0.2613404652606161,
+          "r11_active_ohm": 521.3126579373712,
+          "c4_f": 1e-11,
+          "upper_contact": 3,
+          "lower_contact": 10,
+          "level_fraction": 0.5,
+          "imposed_mixer_v": 0.0,
+          "external_neg4_load_a": 0.0,
+          "duration_s": 0.04,
+          "max_step_s": 5e-07,
+          "method": "gear",
+          "order": 2
+        },
+        "cutoff_fraction": 0.5,
+        "range_fraction": 0.5,
+        "scale_ohm": 250,
+        "emphasis_ohm": 50000,
+        "regen_bottom_ohm": 500,
+        "r61_ohm": 200,
+        "first_loudness_v": 2,
+        "second_loudness_base_v": 2,
+        "contour_amount_v": 0,
+        "first_balance_ohm": 12.5,
+        "second_balance_ohm": 50,
+        "main_load_ohm": 100000,
+        "headphone_input_ohm": 100000
+      },
+      "controls": {
+        "attack_ohm": 10000.0,
+        "decay_ohm": 100000.0,
+        "sustain_lower_ohm": 2500.0,
+        "final_decay": true,
+        "external_s_short": false,
+        "trigger_base_ohm": 10000.0,
+        "reset_pullup_ohm": 3300.0
+      },
+      "trigger_on_s": 0.002,
+      "trigger_off_s": 0.025,
+      "trigger_transition_s": 1e-05,
+      "contour_supply_v": 9.3
+    },
+    "source_sha256": {
+      "evidence/vco1_ramp_graph.json": "bec931c06ac012fd14ee2b7ddf8f86f06c2d3c0ab2a78306dd6f33c88bead361",
+      "evidence/vco1_ca3046_parts.json": "2724e065969f8b0edc4f1191a787ae38c755aa4850fcfa6b9262828207689ad9",
+      "evidence/vco1_panel_pulse_width.json": "6da8d7eb376649cbda482c32f8da8ec55da5e2f7344756bac626a6e9d81b69c9",
+      "evidence/vco1_laboratory_devices.json": "50b4f163e29d2c4a9a19a186d871a0a83ff1d19c7d4c539e8e42add2dcd254f1",
+      "tools/vco1_circuit_reference.py": "c2e44b4e528744359300f7257a601c7e870a929e9f5c624f7ba741b07bff193b",
+      "references-local/datasheets/ti_lm741_lm741.lib": "f58370983c8bd22bf6a59ddd05a1dd492f1a0ea60f673ffd460a356da5e693dc",
+      "tools/voice_port_relaxation.py": "ef68a71c50f6b4945039479e9b1961f19f9e5ab39a144cc8b270cd18e3ca422d",
+      "tools/loudness_voice_circuit.py": "0ac19726aacb8bdae0ec7404600b79f5ec83ef5e9462f915d853187243f4dc12",
+      "tools/voice_port_behavioral.py": "fbe441fa75594560603794281a212d79c4d3858235b8d7f4ad5ecd109abab1eb",
+      "tools/voice_port_probes.py": "22d2505a6250dae4366d15be862ecdf39823f1ac3bb84601004f9a5644673269",
+      "tools/voice_vco_rshunt.py": "5a9fd7150f9613988a443b4bd6b35e3e2c77b8488af0ca60862c14fdf95dc186",
+      "tools/voice_jfet_decomposed_probes.py": "5ea95c130b194b768e3f04002bb5dfd111d710666a0d16ca179eadf7451bc237",
+      "tools/voice_reset_state_probe.py": "0a2972c1cea8f21d8cd19e48cb67e87074f5aca1eba3e6d3d96ee78e17488938"
+    },
+    "reproduced_label": "fixed-contour-control-03-vco",
+    "reproduced_commit": "541bd8bb067d6c189b2408726264826bac37cb25",
+    "reproduced_deck_sha256": "62d85aa29fe165c7c25ab286fa75f3e21dd82c7003749438f23cdf1ae134e283",
+    "rshunt_ohm": null,
+    "per_node_extra_conductance_s": 0,
+    "diagnostic_only": true,
+    "added_shunts_are_physical_components": false,
+    "exact_original_equations": true,
+    "observation_only": true,
+    "exported_vectors": [
+      "v(ramp_c1)",
+      "v(schmitt_drive)",
+      "v(saw_output_9b)",
+      "v(r6_wiper)",
+      "v(mix_bus_board4_pin4)",
+      "i(vmixer)",
+      "v(xic3.3)",
+      "v(xic3.4)",
+      "v(xic3.10)",
+      "v(xic3.5)",
+      "v(xic3.6)",
+      "v(xic3.20)",
+      "v(xic3.21)",
+      "v(xic3.22)",
+      "v(fet_left_drain)",
+      "v(fet_common_source)",
+      "v(q10_base)"
+    ],
+    "observation_node_log_sha256": "4bf911eea89210fc63951a2b16f5af12cec262defffb1b46cfb67ddad29fb444",
+    "label": "returned-bus-state",
+    "deck_sha256": "9b59c3fc64a84a48216ab96537f0f8d91fcfe52f3f8102612b976321b18b41bf",
+    "trajectory_complete": false,
+    "physical_fidelity": false,
+    "real_time": false,
+    "command": [
+      "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\ngspice46\\runtime\\Spice64\\bin\\ngspice_con.exe",
+      "-n",
+      "-b",
+      "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-circuit\\reset-state-probe02\\returned-bus-state.cir"
+    ],
+    "executable_sha256": "86c9ea5f645ca919e305639fa7bdb522355364c424d14e197f1ade617feb3453",
+    "git_commit": "8c23902a36ae7672b67025a643b0977d1f74e5ba",
+    "git_status": "",
+    "exit_code": 0,
+    "error_type": "ValueError",
+    "error": "SPICE reported failure; preserved run log",
+    "partial_export_sha256": "e77e64f7329b56dc4b084e93589a5e9197853bf1af68178326c2e5d6154c2748",
+    "wall_s": 0.4502658999990672,
+    "log_sha256": "44c89b2634216d4bcc7a4e4baa71784ba5fb59633d34f59a0cfb8caae6c2d752",
+    "source_sha256_after": {
+      "evidence/vco1_ramp_graph.json": "bec931c06ac012fd14ee2b7ddf8f86f06c2d3c0ab2a78306dd6f33c88bead361",
+      "evidence/vco1_ca3046_parts.json": "2724e065969f8b0edc4f1191a787ae38c755aa4850fcfa6b9262828207689ad9",
+      "evidence/vco1_panel_pulse_width.json": "6da8d7eb376649cbda482c32f8da8ec55da5e2f7344756bac626a6e9d81b69c9",
+      "evidence/vco1_laboratory_devices.json": "50b4f163e29d2c4a9a19a186d871a0a83ff1d19c7d4c539e8e42add2dcd254f1",
+      "tools/vco1_circuit_reference.py": "c2e44b4e528744359300f7257a601c7e870a929e9f5c624f7ba741b07bff193b",
+      "references-local/datasheets/ti_lm741_lm741.lib": "f58370983c8bd22bf6a59ddd05a1dd492f1a0ea60f673ffd460a356da5e693dc",
+      "tools/voice_port_relaxation.py": "ef68a71c50f6b4945039479e9b1961f19f9e5ab39a144cc8b270cd18e3ca422d",
+      "tools/loudness_voice_circuit.py": "0ac19726aacb8bdae0ec7404600b79f5ec83ef5e9462f915d853187243f4dc12",
+      "tools/voice_port_behavioral.py": "fbe441fa75594560603794281a212d79c4d3858235b8d7f4ad5ecd109abab1eb",
+      "tools/voice_port_probes.py": "22d2505a6250dae4366d15be862ecdf39823f1ac3bb84601004f9a5644673269",
+      "tools/voice_vco_rshunt.py": "5a9fd7150f9613988a443b4bd6b35e3e2c77b8488af0ca60862c14fdf95dc186",
+      "tools/voice_jfet_decomposed_probes.py": "5ea95c130b194b768e3f04002bb5dfd111d710666a0d16ca179eadf7451bc237",
+      "tools/voice_reset_state_probe.py": "0a2972c1cea8f21d8cd19e48cb67e87074f5aca1eba3e6d3d96ee78e17488938"
+    }
+  },
+  "original_partial_export_sha256": "776bf25fc33d01bdbff5b866429dcde22df8778ee7709b9a5347203321b31579",
+  "identical_original_clock_and_observations": true,
+  "last_clock_s": 0.002277414318997602,
+  "observed_final_window_s": 1e-07,
+  "final_window_rows": 692,
+  "accepted_state_window": {
+    "v(ramp_c1)": {
+      "min_v": -3.07643277085307,
+      "max_v": -0.05573589812916283,
+      "last_v": -0.05573589812916283
+    },
+    "v(schmitt_drive)": {
+      "min_v": -3.3983677596857356,
+      "max_v": -0.042691538005535296,
+      "last_v": -0.042691538005535296
+    },
+    "v(saw_output_9b)": {
+      "min_v": -1.4762634120101594,
+      "max_v": -0.0232057453848424,
+      "last_v": -0.0232057453848424
+    },
+    "v(r6_wiper)": {
+      "min_v": -0.48084778434147335,
+      "max_v": 0.13137157403274496,
+      "last_v": 0.13137157403274496
+    },
+    "v(mix_bus_board4_pin4)": {
+      "min_v": 0.8776113220423685,
+      "max_v": 0.8862766527416226,
+      "last_v": 0.8862766527416226
+    },
+    "i(vmixer)": {
+      "min_v": -4.116542746617702e-05,
+      "max_v": -2.2875911476026596e-05,
+      "last_v": -2.2875911476026596e-05
+    },
+    "v(xic3.3)": {
+      "min_v": -3.8610313792320747,
+      "max_v": -3.834023324876797,
+      "last_v": -3.8341809692898883
+    },
+    "v(xic3.4)": {
+      "min_v": -4.546409598790772,
+      "max_v": -4.500778318614859,
+      "last_v": -4.505013131215689
+    },
+    "v(xic3.10)": {
+      "min_v": -8.37,
+      "max_v": -8.37,
+      "last_v": -8.37
+    },
+    "v(xic3.5)": {
+      "min_v": 9.978705046583027,
+      "max_v": 9.992174998686124,
+      "last_v": 9.992174998686124
+    },
+    "v(xic3.6)": {
+      "min_v": 9.956207572800228,
+      "max_v": 9.969677517370918,
+      "last_v": 9.956207580166978
+    },
+    "v(xic3.20)": {
+      "min_v": -3.4663027158989284,
+      "max_v": -3.452486811043357,
+      "last_v": -3.452486811043357
+    },
+    "v(xic3.21)": {
+      "min_v": -3.8263027158989287,
+      "max_v": -3.812486811043357,
+      "last_v": -3.812486811043357
+    },
+    "v(xic3.22)": {
+      "min_v": -3.6463027158989285,
+      "max_v": -3.632486811043357,
+      "last_v": -3.632486811043357
+    },
+    "v(fet_left_drain)": {
+      "min_v": 8.038669212923006,
+      "max_v": 9.048067229320313,
+      "last_v": 8.038669212923006
+    },
+    "v(fet_common_source)": {
+      "min_v": -1.5839639878359315,
+      "max_v": 1.134024401971571,
+      "last_v": 1.134024401971571
+    },
+    "v(q10_base)": {
+      "min_v": -0.8016506578965114,
+      "max_v": -0.7901073090845332,
+      "last_v": -0.7939273838709392
+    }
+  },
+  "failed_newton_iterates_observed": false,
+  "physical_fidelity": false,
+  "real_time": false
+}

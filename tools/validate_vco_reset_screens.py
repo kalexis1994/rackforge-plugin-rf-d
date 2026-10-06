@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np
 import voice_jfet_decomposed_probes as p
 import voice_vco_rshunt as shunt
+import voice_reset_state_probe as state
 import vco1_circuit_reference as vco
 from validate_loudness_board4_bank import source_identity
 
@@ -16,7 +17,7 @@ def canonical(value):return json.dumps(value,sort_keys=True,separators=(',',':')
 
 
 def main():
-    output=ROOT/'evidence/voice_reset_representation_validation.json'
+    output=ROOT/'evidence/voice_reset_representation_validation02.json'
     if output.exists():raise ValueError('preserve prior audit')
     start=time.perf_counter();sources={};records=[];payloads={};results={};cache={}
     reference_path=ROOT/'references-local/voice-circuit/port-behavioral01/fixed-contour-control-01-vco.txt'
@@ -83,6 +84,46 @@ def main():
     if vco.sha(snapshot)!=failed['source_sha256']['tests/test_vco_reset_screens.py']:raise ValueError('rejected test source snapshot')
     blob=subprocess.check_output(['git','show','b007a84:tools/voice_jfet_decomposed_probes.py'],cwd=ROOT)
     source_identity('tools/voice_jfet_decomposed_probes.py',failed['source_sha256']['tools/voice_jfet_decomposed_probes.py'],blob)
+    observations=[]
+    old_bank=json.loads(gzip.decompress((ROOT/'evidence/voice_port_behavioral01.json.gz').read_bytes()))
+    old_receipt=old_bank['cases']['fixed-contour-control']['iterations'][2]['vco_receipt']
+    old_path=ROOT/'references-local/voice-circuit/port-behavioral01'/(old_receipt['label']+'.txt')
+    if vco.sha(old_path)!=old_receipt['partial_export_sha256']:raise ValueError('original failing clock identity')
+    original_trace=np.loadtxt(old_path,skiprows=1,ndmin=2)
+    for number in (1,2):
+        name='voice_reset_state_probe01_rejection.json' if number==1 else 'voice_reset_state_probe02.json'
+        archive=ROOT/'evidence'/name;report=vco.read(archive);r=report['receipt']
+        work=ROOT/f'references-local/voice-circuit/reset-state-probe{number:02d}';label=r['label']
+        if canonical(vco.read(work/(label+'.json')))!=canonical(r) or r['trajectory_complete'] or report['coupling_admitted']:
+            raise ValueError('observation scope/identity')
+        if r['source_sha256']!=r['source_sha256_after'] or r['executable_sha256']!=vco.EXPECTED_EXE_SHA:raise ValueError('observation input identity')
+        for source,digest in r['source_sha256'].items():
+            if source.startswith('references-local/'):
+                if vco.sha(ROOT/source)!=digest:raise ValueError('private observation input identity')
+            else:
+                blob=subprocess.check_output(['git','show',r['git_commit']+':'+source],cwd=ROOT)
+                source_identity(source,digest,blob)
+        for ext,key in (('cir','deck_sha256'),('log','log_sha256')):
+            if vco.sha(work/(label+'.'+ext))!=r[key]:raise ValueError('observation artifact identity')
+        log=(work/(label+'.log')).read_text(encoding='utf-8')
+        if 'Timestep too small' not in log:raise ValueError('observation must preserve rejection')
+        rawpath=work/(label+'.txt')
+        if number==1:
+            if rawpath.exists() or report['observation_replay_passed'] or 'Error: no such vector xic3.11' not in log:
+                raise ValueError('preserved export rejection')
+        else:
+            if vco.sha(rawpath)!=r['partial_export_sha256']:raise ValueError('observed raw identity')
+            raw=np.loadtxt(rawpath,skiprows=1,ndmin=2)
+            if raw.shape[1]!=len(state.VECTORS)+1 or not np.isfinite(raw).all() or not np.array_equal(raw[:,:7],original_trace):
+                raise ValueError('observation changed original clock or voltages/current')
+            mask=raw[:,0]>=raw[-1,0]-report['observed_final_window_s'];replay={}
+            for i,name_vector in enumerate(state.VECTORS,1):
+                x=raw[mask,i];replay[name_vector]=dict(min_v=float(x.min()),max_v=float(x.max()),last_v=float(x[-1]))
+            if canonical(replay)!=canonical(report['accepted_state_window']) or int(mask.sum())!=report['final_window_rows'] or report['failed_newton_iterates_observed']:
+                raise ValueError('accepted observation window replay')
+            if not report['observation_replay_passed'] or report['last_clock_s']!=float(raw[-1,0]):raise ValueError('observation replay status')
+        observations.append(dict(archive=name,sha256=vco.sha(archive),export_available=rawpath.exists(),
+                                 observation_replay_passed=report['observation_replay_passed']))
     documentary=vco.read(ROOT/'evidence/voice_reset_representation_sources.json')
     for item in documentary:
         if vco.sha(ROOT/item['path'])!=item['sha256']:raise ValueError('primary documentary source identity')
@@ -94,6 +135,7 @@ def main():
         source_identity(name,vco.sha(ROOT/name),blob)
     report=dict(schema='rf-d/reset-representation-audit/v1',passed=True,coupling_admitted=False,regularizer_selected=None,
                 new_solves=0,archives=payloads,records=records,replayed_measurements=results,source_byte_modes=sources,
+                observation_receipts=observations,observed_original_trace_replayed=True,
                 original_inputs_unchanged=unchanged,primary_source_manifest_sha256=vco.sha(ROOT/'evidence/voice_reset_representation_sources.json'),
                 adapter_rejection_sha256=vco.sha(ROOT/'evidence/voice_jfet_decomposed_adapter_rejection.json'),
                 failed_test_receipt_sha256=vco.sha(ROOT/'evidence/voice_reset_test_rejection.json'),

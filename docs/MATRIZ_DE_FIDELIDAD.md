@@ -9,6 +9,10 @@ con VCO [ensayada y rechazada](CONTORNO_VCO_UNION_RESULTADOS.md): cuatro
 escenas monolíticas y control de puerto R45 fallido. Diecisiete recibos
 auditados; completar cada parte no cierra su interfaz. Contorno de filtro,
 parámetros físicos y ruta portable abiertos.
+El [diagnóstico de reset aislado](RESET_VCO_AISLADO_RESULTADOS.md) conserva
+rechazos de representación y regularización. La nueva observación reproduce
+exactamente el prefijo y su reloj; las iteraciones Newton fallidas no están
+observadas todavía. No se promueve ninguna tarjeta o conductancia física.
 Convergencia finita no identifica una unidad vintage ni admite tiempo real.
 Las reseñas numéricas anteriores se conservan como historial.
 

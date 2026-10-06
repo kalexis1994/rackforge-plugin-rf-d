@@ -5,6 +5,11 @@ escenas monolíticas. El ensayo por R45 falla el control previo aun con
 dos parejas completas: el puerto no cierra y el VCO siguiente rechaza.
 Prioridad: reproducir y resolver el VCO aislado con BUS variable, conservando
 tarjeta, R45 y gates; luego cerrar la unión y extender la nota completa.
+El [diagnóstico aislado](RESET_VCO_AISLADO_RESULTADOS.md) reproduce el reloj
+y los seis vectores originales al observar once nodos adicionales. Dos
+bancos de equivalencia terminal pasan; el control VCO y ambas series de
+regularización rechazan. Próximo: residual/corrección Newton en el paso
+fallido, sin ampliar las escenas posteriores ni seleccionar una fuga física.
 El [contorno cargado](CONTORNO_PLACA4_RESULTADOS.md) mantiene diez escenas
 y tres contrastes con entrada senoidal; la [voz con contorno fijo](VOZ_ACOPLADA_RESULTADOS.md)
 mantiene alcance nominal y rechazos de cutoff bajo/mute. Contorno de filtro,

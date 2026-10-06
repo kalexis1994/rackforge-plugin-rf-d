@@ -4,7 +4,11 @@
 Cuatro escenas monolíticas rechazan en reset. El cálculo dividido en R45
 conserva la reacción eléctrica, pero aún falla su control previo: diecisiete
 recibos auditados y cuatro defectos de puerto reproducidos. Próximo: resolver
-el VCO aislado con BUS variable antes de ampliar el banco.
+el VCO aislado con BUS variable antes de ampliar el banco. El
+[diagnóstico de reset](docs/RESET_VCO_AISLADO_RESULTADOS.md) rechaza la
+representación alternativa y las regularizaciones; una sonda reproduce
+exactamente el fallo y añade once estados internos. Próximo: observar
+residual y corrección Newton del intervalo rechazado.
 El [contorno con entrada senoidal](docs/CONTORNO_PLACA4_RESULTADOS.md) mantiene
 diez escenas completas y escucha; la [voz con contorno fijo](docs/VOZ_ACOPLADA_RESULTADOS.md)
 sigue nominal, con cutoff bajo y ambos mute rechazados. Fidelidad física,
