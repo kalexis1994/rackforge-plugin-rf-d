@@ -18,12 +18,15 @@ def main():
     if not audit['passed'] or audit['coupling_admitted'] or audit['new_solves_during_validation'] or audit['measured_solves']!=6:
         raise ValueError('observation audit scope')
     if vco.sha(ROOT/'tools/validate_voice_newton.py')!=audit['auditor_sha256']:raise ValueError('auditor changed')
+    official=ROOT/'references-local/ngspice46/runtime/Spice64/bin/ngspice_con.exe'
+    if vco.sha(official)!=vco.EXPECTED_EXE_SHA:raise ValueError('official executable changed')
     originals=set(vco.read(ROOT/'evidence/voice_reset_tests.json')['source_sha256'])-set(DOCS)
+    originals.add('evidence/voice_port_behavioral01.json.gz')
     # The historical audit also includes documentation; only active summaries are updated.
     for name in sorted(originals):
         source_identity(name,vco.sha(ROOT/name),subprocess.check_output(['git','show',BASE+':'+name],cwd=ROOT))
     inputs=set(DOCS)|originals|{'evidence/voice_newton_observation01.json','evidence/voice_newton_build_rejections01.json',
-                             'evidence/voice_newton_preflight_rejection01.json'}
+                             'evidence/voice_newton_build_rejections02.json','evidence/voice_newton_preflight_rejection01.json'}
     inputs.update(p.relative_to(ROOT).as_posix() for p in (ROOT/'tools').glob('*voice_newton*.py'))
     inputs.update(p.relative_to(ROOT).as_posix() for p in (ROOT/'tools').glob('voice_newton*.py'))
     inputs.update(p.relative_to(ROOT).as_posix() for pattern in PATTERNS for p in (ROOT/'tests').glob(pattern))
@@ -55,6 +58,7 @@ def main():
                 source_sha256=before,source_sha256_after=after,original_inputs_unchanged=sorted(originals),
                 base_commit=BASE,git_commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
                 previous_audio=dict(path=listening['path'],sha256=listening['sha256'],**params),
+                official_executable_sha256=vco.sha(official),
                 local_document_links=len(targets),new_solves_during_qa=0,new_audio=False,
                 coupling_admitted=False,physical_fidelity=False,real_time=False)
     output.write_text(json.dumps(report,indent=2)+'\n',encoding='utf-8',newline='\n')

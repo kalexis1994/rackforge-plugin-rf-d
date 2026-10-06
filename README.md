@@ -7,8 +7,12 @@ recibos auditados y cuatro defectos de puerto reproducidos. Próximo: resolver
 el VCO aislado con BUS variable antes de ampliar el banco. El
 [diagnóstico de reset](docs/RESET_VCO_AISLADO_RESULTADOS.md) rechaza la
 representación alternativa y las regularizaciones; una sonda reproduce
-exactamente el fallo y añade once estados internos. Próximo: observar
-residual y corrección Newton del intervalo rechazado.
+exactamente el fallo y añade once estados internos. La
+[sonda Newton local](docs/NEWTON_RESET_RESULTADOS.md) conserva exactamente
+el baseline, con el control de 40 ms completo. Observa rechazo de ambos
+JFET sin limitadores y correcciones grandes en el polo L2 del 741.
+El build local no reproduce exactamente el ejecutable oficial. Próximo:
+historia/flujo de ese polo, residual completo y contraste entre builds.
 El [contorno con entrada senoidal](docs/CONTORNO_PLACA4_RESULTADOS.md) mantiene
 diez escenas completas y escucha; la [voz con contorno fijo](docs/VOZ_ACOPLADA_RESULTADOS.md)
 sigue nominal, con cutoff bajo y ambos mute rechazados. Fidelidad física,

@@ -11,8 +11,12 @@ auditados; completar cada parte no cierra su interfaz. Contorno de filtro,
 parámetros físicos y ruta portable abiertos.
 El [diagnóstico de reset aislado](RESET_VCO_AISLADO_RESULTADOS.md) conserva
 rechazos de representación y regularización. La nueva observación reproduce
-exactamente el prefijo y su reloj; las iteraciones Newton fallidas no están
-observadas todavía. No se promueve ninguna tarjeta o conductancia física.
+exactamente el prefijo y su reloj. La [sonda Newton](NEWTON_RESET_RESULTADOS.md)
+observa las iteraciones rechazadas en un build local, conservando exactamente
+su baseline. Ambos JFET fallan sin limitadores y el polo L2 del 741 tiene
+grandes correcciones. La trayectoria local no es idéntica a la oficial;
+el residual eléctrico completo y la causa siguen abiertos.
+No se promueve ninguna tarjeta o conductancia física.
 Convergencia finita no identifica una unidad vintage ni admite tiempo real.
 Las reseñas numéricas anteriores se conservan como historial.
 

@@ -55,7 +55,18 @@ def main():
     preflight=vco.read(ROOT/'evidence/voice_newton_preflight_rejection01.json')
     for key in ('deck','runner_snapshot'):
         if vco.sha(ROOT/preflight[key+'_path'])!=preflight[key+'_sha256']:raise ValueError('preflight rejection identity')
-    stages=('baseline-xspice02','instrumented-off','instrumented-on')
+    rejected02=vco.read(ROOT/'evidence/voice_newton_build_rejections02.json')
+    for r in rejected02['receipts']:
+        folder=WORK/'runs';label=r['label']
+        for suffix,key in (('.cir','deck_sha256'),('.log','log_sha256')):
+            if vco.sha(folder/(label+suffix))!=r[key]:raise ValueError('module initialization rejection identity')
+        if r['trajectory_complete'] or (folder/(label+'.txt')).exists():raise ValueError('module rejection produced a trajectory')
+        for name,digest in r['runtime_sha256'].items():
+            if vco.sha(ROOT/name)!=digest:raise ValueError('rejected module initialization changed')
+        for name,digest in r['helper_sha256'].items():
+            blob=subprocess.check_output(['git','show',rejected02['helper_commit']+':'+name],cwd=ROOT)
+            if hashlib.sha256(blob).hexdigest()!=digest:raise ValueError('rejected initialization helper identity')
+    stages=('baseline-xspice03','instrumented-off','instrumented-on')
     for stage in stages:
         for kind in ('constant','returned'):
             label=stage+'-'+kind;folder=WORK/'runs';r=vco.read(folder/(label+'.json'))
@@ -85,7 +96,8 @@ def main():
     official_exact=all(r['exact_official_trace']['passed'] for r in receipts.values())
     report=dict(schema='rf-d/newton-observation/v1',passed=True,new_solves_during_validation=0,
                 measured_solves=6,build=build,tree_identity=tree,receipts=receipts,
-                configuration_rejections=2,rejection_archive_sha256=vco.sha(ROOT/'evidence/voice_newton_build_rejections01.json'),
+                configuration_rejections=4,rejection_archive_sha256=vco.sha(ROOT/'evidence/voice_newton_build_rejections01.json'),
+                initialization_rejection_archive_sha256=vco.sha(ROOT/'evidence/voice_newton_build_rejections02.json'),
                 preflight_rejection_sha256=vco.sha(ROOT/'evidence/voice_newton_preflight_rejection01.json'),
                 exact_observation_comparisons=comparisons,exact_official_trajectory=official_exact,
                 observations=summaries,explains_official_failure=official_exact,

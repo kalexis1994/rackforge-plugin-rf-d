@@ -49,7 +49,7 @@ def run(exe,kind,label,trace=False):
     if trace:env['RF_D_TRACE']='1'
     env['PATH']='C:/msys64/ucrt64/bin;'+env['PATH']
     # The TI 741 POLY source is translated through this locally compiled module.
-    init=WORK/'init/spinit';module=WORK/'baseline02/src/xspice/icm/spice2poly/spice2poly.cm'
+    init=WORK/'init02/spinit';module=WORK/'baseline02/src/xspice/icm/spice2poly/spice2poly.cm'
     if not init.exists() or not module.exists():raise ValueError('local XSPICE poly initialization required')
     env['SPICE_SCRIPTS']=init.parent.as_posix()
     libraries=(init,module,Path('C:/msys64/ucrt64/bin/libwinpthread-1.dll'),
@@ -85,9 +85,9 @@ def run(exe,kind,label,trace=False):
 
 
 def main(stage):
-    if stage=='baseline-xspice02':
+    if stage=='baseline-xspice03':
         exe=WORK/'bin/baseline-xspice.exe'
-        for kind in ('constant','returned'):run(exe,kind,'baseline-xspice02-'+kind)
+        for kind in ('constant','returned'):run(exe,kind,'baseline-xspice03-'+kind)
     elif stage=='instrumented':
         exe=WORK/'bin/instrumented.exe'
         for kind in ('constant','returned'):
