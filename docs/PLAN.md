@@ -1,11 +1,19 @@
 # Prioridad vigente
 
+El [banco largo](VOZ_NOTA_LARGA_RESULTADOS.md) conserva sus rechazos.
+La [observación Newton](VOZ_NOTA_LARGA_MATRIZ_RESULTADOS.md) reproduce
+exactamente el prefijo y muestra error lineal después de tres correcciones.
+El [ensayo de seis sobre copia](VOZ_NOTA_LARGA_SEIS_CORRECCIONES_RESULTADOS.md)
+pasa los gates de dos matrices manteniendo la publicación original.
+Prioridad: [candidato activo separado](VOZ_NOTA_LARGA_SEIS_ACTIVO_PROTOCOLO.md),
+controles propios y nuevo banco de trayectorias antes de escucha.
+
 La [voz monolítica refinada](VOZ_REFINAMIENTO_UNION_RESULTADOS.md)
 completa el control nominal y cuatro escenas conjuntas de 40 ms. Pasan
 los tres contrastes y ambos balances C2; la admisión es local al nominal
 corto con build08. El [banco anterior](CONTORNO_VCO_UNION_RESULTADOS.md)
-y el ensayo dividido por R45 conservan sus rechazos. Prioridad: [nota
-completa de 350 ms y escucha auditada](VOZ_REFINAMIENTO_SIGUIENTE_PROTOCOLO.md).
+y el ensayo dividido por R45 conservan sus rechazos. El [protocolo largo](VOZ_REFINAMIENTO_SIGUIENTE_PROTOCOLO.md) se ejecutó
+y conserva el rechazo del conjunto.
 El [diagnóstico aislado](RESET_VCO_AISLADO_RESULTADOS.md) reproduce el reloj
 y los seis vectores originales al observar once nodos adicionales. Dos
 bancos de equivalencia terminal pasan; el control VCO y ambas series de

@@ -1,5 +1,13 @@
 # Matriz de fidelidad
 
+El [banco largo de voz](VOZ_NOTA_LARGA_RESULTADOS.md) conserva rechazos.
+La [matriz efectiva](VOZ_NOTA_LARGA_MATRIZ_RESULTADOS.md) reproduce el fallo:
+tres correcciones aún superan el gate de solución. El [ensayo de seis
+sobre copia](VOZ_NOTA_LARGA_SEIS_CORRECCIONES_RESULTADOS.md) pasa en dos
+matrices, pero no publica esos valores ni mide una variante activa.
+El [próximo protocolo](VOZ_NOTA_LARGA_SEIS_ACTIVO_PROTOCOLO.md) exige controles
+y nuevas trayectorias. No hay nueva escucha o afirmación de fidelidad.
+
 Estado actual: [contorno cargado por filtro/dos VCA/salida](CONTORNO_PLACA4_RESULTADOS.md)
 con diez escenas de 350 ms, tres contrastes y escucha de notas completas.
 La entrada senoidal, alimentación de contorno y base Q21 siguen impuestas;
@@ -9,8 +17,8 @@ con VCO](VOZ_REFINAMIENTO_UNION_RESULTADOS.md) completa cuatro escenas
 monolíticas de 40 ms: tres contrastes, carga y control nominal pasan.
 Admisión numérica local del circuito con build08; no es una nota larga
 ni fidelidad vintage. Los [rechazos anteriores](CONTORNO_VCO_UNION_RESULTADOS.md)
-y los diecisiete recibos/defectos R45 permanecen conservados. Próximo:
-[350 ms completos y adaptación de escucha](VOZ_REFINAMIENTO_SIGUIENTE_PROTOCOLO.md).
+y los diecisiete recibos/defectos R45 permanecen conservados. La [extensión de 350 ms](VOZ_REFINAMIENTO_SIGUIENTE_PROTOCOLO.md) conserva
+su rechazo; siguiente candidato y controles preceden otra escucha.
 Contorno de filtro, parámetros físicos y ruta portable abiertos.
 El [diagnóstico de reset aislado](RESET_VCO_AISLADO_RESULTADOS.md) conserva
 rechazos de representación y regularización. La nueva observación reproduce

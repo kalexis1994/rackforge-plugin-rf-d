@@ -1,6 +1,12 @@
 # RF-D
 
-**Prioridad activa:** [extender la voz refinada a 350 ms](docs/VOZ_REFINAMIENTO_SIGUIENTE_PROTOCOLO.md).
+**Prioridad activa:** [candidato activo separado de seis correcciones](docs/VOZ_NOTA_LARGA_SEIS_ACTIVO_PROTOCOLO.md).
+El [banco largo](docs/VOZ_NOTA_LARGA_RESULTADOS.md) conserva sus rechazos.
+Las [matrices observadas](docs/VOZ_NOTA_LARGA_MATRIZ_RESULTADOS.md) muestran
+un límite de las tres correcciones: ~9,851 µV frente a las raíces independientes.
+El [ensayo de seis sobre copia](docs/VOZ_NOTA_LARGA_SEIS_CORRECCIONES_RESULTADOS.md)
+pasa en dos matrices con 0,537 nV máximos y conserva exactamente la
+trayectoria original. El banco corto sigue admitido; no se genera audio nuevo.
 La [unión VCO/contorno cargado](docs/VOZ_REFINAMIENTO_UNION_RESULTADOS.md)
 completa cuatro escenas de 40 ms con filtro, ambos VCA y salida; pasa sus
 tres contrastes y balances. Los rechazos monolíticos anteriores y el
@@ -33,7 +39,7 @@ ambos VCO mínimos completan 40 ms, con todos los gates del control. Pasan
 70 regresiones y 280 contrastes C en ese corte. La [voz monolítica refinada](docs/VOZ_REFINAMIENTO_UNION_RESULTADOS.md)
 completa ahora el control y cuatro escenas conjuntas de 40 ms: todos los
 contrastes y balances pasan; máximo de grilla 138.5 µV frente a 5 mV.
-Siguiente: [nota completa de 350 ms](docs/VOZ_REFINAMIENTO_SIGUIENTE_PROTOCOLO.md) y escucha de su trayectoria auditada.
+Siguiente: [variante activa y controles](docs/VOZ_NOTA_LARGA_SEIS_ACTIVO_PROTOCOLO.md), después otro banco completo antes de escucha.
 El [contorno con entrada senoidal](docs/CONTORNO_PLACA4_RESULTADOS.md) mantiene
 diez escenas completas y escucha; la [voz con contorno fijo](docs/VOZ_ACOPLADA_RESULTADOS.md)
 sigue nominal, con cutoff bajo y ambos mute rechazados. Fidelidad física,

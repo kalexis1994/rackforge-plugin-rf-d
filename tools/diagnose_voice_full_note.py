@@ -38,7 +38,15 @@ def main():
     raw={};states={}
     for name,r in bank['records'].items():
         p=note.WORK/(name+'.txt')
+        if 'raw_export_sha256' not in r:
+            states[name]=dict(accepted_state_available=False,reason='export missing; audited receipt retained',
+                rejected_Newton_state_available=False,cause_identified=False)
+            continue
         if vco.sha(p)!=r['raw_export_sha256']:raise ValueError('raw identity')
+        if r.get('export_error'):
+            states[name]=dict(accepted_state_available=False,reason='export invalid: '+r['export_error'],
+                rejected_Newton_state_available=False,cause_identified=False)
+            continue
         a=np.loadtxt(p,skiprows=1,ndmin=2);raw[name]=a
         if r['trajectory_complete']:continue
         t=a[:,0];vectors=r['vectors'];ramp=vectors.index('v(ramp_c1)')+1
@@ -49,7 +57,7 @@ def main():
         if error:
             error.update(time_is_rounded_console_text=True,time_ulp_s=math.ulp(float(match[1])),
                 reported_step_over_time_ulp=float(match[2])/math.ulp(float(match[1])))
-        states[name]=dict(last_accepted_clock_s=float(t[-1]),accepted_reset_crossings_s=events.tolist(),
+        states[name]=dict(accepted_state_available=True,last_accepted_clock_s=float(t[-1]),accepted_reset_crossings_s=events.tolist(),
             accepted_reset_count=len(events),last_accepted_state_v={n:float(a[-1,i+1]) for i,n in enumerate(vectors)},
             time_since_last_accepted_upcross_s=float(t[-1]-events[-1]) if len(events) else None,
             time_since_keyboard_on_transition_end_s=float(t[-1]-(note.scenes()[name].trigger_on_s+note.scenes()[name].trigger_transition_s)),
@@ -57,7 +65,8 @@ def main():
                 min_v={n:float(a[near,i+1].min()) for i,n in enumerate(vectors)},
                 max_v={n:float(a[near,i+1].max()) for i,n in enumerate(vectors)}),
             solver_error=error,rejected_Newton_state_available=False,cause_identified=False)
-    comparisons={a+'--'+b:prefix(raw[a],raw[b],note.scenes()[a].vectors) for a,b in note.short.PAIRS}
+    comparisons={a+'--'+b:(prefix(raw[a],raw[b],note.scenes()[a].vectors) if a in raw and b in raw else
+        dict(measured=False,admission=False,reason='required valid export missing; no interpolation')) for a,b in note.short.PAIRS}
     helpers=[Path(__file__),Path(note.__file__),Path(vco.__file__)]
     report=dict(schema='rf-d/full-note-diagnostic/v1',passed=True,bank_sha256=vco.sha(bank_path),audit_sha256=vco.sha(audit_path),
         incomplete_scenes=states,prefix_comparisons=comparisons,new_solves=0,new_compiler_runs=0,
