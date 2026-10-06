@@ -76,3 +76,17 @@ fuente, deck, log, export y reloj; fuentes estables y escena completa
 son obligatorios. Aceptar este banco sólo cierra la referencia numérica
 bajo estas fronteras. Voz con VCO, filtro-contorno, parámetros físicos,
 estabilidad continua, ruta portable y deadlines permanecen abiertos.
+
+## Adaptación de escucha prevista
+
+Una escucha posterior exige auditoría del banco completo. Escenas nominal
+2 microsegundos, ataque 1000 ohm y decay final OFF: usar los 350 ms
+medidos completos de salida principal; no repetir un ciclo. Adaptar reloj
+no uniforme por interpolación lineal a 384 kHz, FIR simétrico 1025 taps,
+Kaiser beta=8.6, cutoff=21600 Hz, DC global retirada y delay compensado,
+padding reflejado, decimación a 48 kHz, PCM16 mono, 8 V/full scale fijo
+y fades de 10 ms. Rechazar señal no finita, cantidad de frames incorrecta
+o clipping. No se normaliza por escena. Montaje: tres notas de 0.35 s
+con dos pausas de 0.15 s; 1.35 s total. El input es una senoide impuesta,
+no audio de VCO resuelto bajo carga. La duración limitada y fades no
+acreditan que haya terminado el release natural.
