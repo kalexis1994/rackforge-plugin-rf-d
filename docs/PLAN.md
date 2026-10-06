@@ -1,12 +1,14 @@
 # Prioridad vigente
 
-La [voz nominal acoplada](VOZ_ACOPLADA_RESULTADOS.md) resuelve VCO1,
-mixer, filtro, ambos VCA y salida con KLU, sin cambiar componentes.
-Ocho escenas completan; tres contrastes nominales y tres escuchas pasan.
-Cutoff bajo y ambos mute rechazan: el banco completo permanece abierto.
-Prioridad: resolver esas escenas, conectar las redes de contorno y medir
-la implementación portable. La continuación formal del biestable sigue
-aplazada. Las secciones siguientes son historial y no el orden actual.
+El [contorno de volumen cargado](CONTORNO_PLACA4_RESULTADOS.md) pasa
+las diez escenas y tres contrastes con 35 BJT y memoria de dispositivo.
+Hay escucha de notas completas bajo entrada eléctrica explícita.
+La [voz con VCO](VOZ_ACOPLADA_RESULTADOS.md) mantiene el alcance nominal
+y los rechazos de cutoff bajo/mute. Prioridad: integrar el contorno con
+VCO bajo carga, resolver esos rechazos y cerrar contorno de filtro,
+alimentación común y Q21. Ruta portable y deadlines pendientes.
+La continuación formal del biestable sigue aplazada. Las secciones
+siguientes son historial y no el orden actual.
 
 # Plan de investigación RACE para RF-D
 

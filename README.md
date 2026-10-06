@@ -1,11 +1,12 @@
 # RF-D
 
-**Prioridad activa:** [voz nominal eléctricamente acoplada](docs/VOZ_ACOPLADA_RESULTADOS.md):
-VCO1, mixer, ladder, ambos VCA y salida. Ocho escenas completan con KLU;
-los tres contrastes nominales pasan y hay escucha de sierra, triángulo y pulso.
-El banco completo sigue rechazado por cutoff bajo y ambos mute. Próximo:
-resolver esos controles, conectar contornos y completar la ruta portable.
-Fidelidad física y plazo de audio siguen abiertos.
+**Prioridad activa:** [contorno de volumen cargado por filtro y ambos VCA](docs/CONTORNO_PLACA4_RESULTADOS.md).
+Diez escenas de 350 ms y tres contrastes pasan, con escucha de notas completas.
+La [voz con VCO bajo carga](docs/VOZ_ACOPLADA_RESULTADOS.md) sigue nominal;
+cutoff bajo y ambos mute conservan su rechazo. Próximo: unir el contorno a
+esa voz y cerrar contorno de filtro, alimentación y control de Q21.
+La escucha nueva usa entrada senoidal explícita. Fidelidad física y tiempo
+real permanecen abiertos.
 
 Proyecto de recreación del **Minimoog Model D clásico** para RackForge. Su sonido se investigará mediante **RACE — RackForge Architecture for Circuit Emulation**: circuito documentado, leyes de control, calibración de servicio, comparación de audio y presupuesto de tiempo real. Este repositorio es independiente del host y de otros plugins RF.
 

@@ -1,11 +1,12 @@
 # Matriz de fidelidad
 
-Estado actual: [voz nominal acoplada](VOZ_ACOPLADA_RESULTADOS.md) con
-VCO1/mixer/ladder/dos VCA/salida. KLU completa ocho escenas con los
-componentes originales; pasan tres contrastes nominales y tres escuchas.
-El banco completo permanece rechazado por cutoff bajo y ambos mute.
-Contornos impuestos, dispositivos condicionados y ruta portable sin admitir;
-la convergencia nominal no identifica una unidad física ni prueba tiempo real.
+Estado actual: [contorno cargado por filtro/dos VCA/salida](CONTORNO_PLACA4_RESULTADOS.md)
+con diez escenas de 350 ms, tres contrastes y escucha de notas completas.
+La entrada senoidal, alimentación de contorno y base Q21 siguen impuestas;
+los semiconductores son tarjetas condicionadas. La [voz con VCO bajo carga](VOZ_ACOPLADA_RESULTADOS.md)
+sigue nominal: cutoff bajo y ambos mute rechazan. Integración del contorno
+con VCO, contorno de filtro, parámetros físicos y ruta portable abiertos.
+Convergencia finita no identifica una unidad vintage ni admite tiempo real.
 Las reseñas numéricas anteriores se conservan como historial.
 
 El [refinamiento de memoria](BIESTABLE_MEMORIA_JUNTURAS_RESULTADOS.md)

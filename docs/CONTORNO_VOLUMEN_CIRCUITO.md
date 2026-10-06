@@ -12,7 +12,7 @@ Los escaneos se revisaron completos y mediante ampliaciones de pines, polaridade
 | --- | --- |
 | Gatillo de teclado | Pin 20 → CR10 → R60 → C7 a masa → R55 → base Q20; emisor Q20 a masa. Q20 colector tiene R23 hacia alimentación y gobierna Q12 por el resistor de base conflictivo. |
 | S-trigger | Pin 19 → R49 → colector Q20. Contacto externo cerrado pone su extremo a masa; abierto elimina esa rama. No equivale al V-trigger positivo del teclado. |
-| Reset común | Q12 emisor a masa; colector por R25 a alimentación. Colector Q12 → R28/C4 → base Q25 y, R36/CR8 parte del colector Q20 hacia base Q15 (revisión independiente 2026-10-06). CR9 lleva el reset a la referencia de sustain. |
+| Reset común | Q12 emisor a masa; colector por R25 a alimentación. Colector Q12 → R28/C4 → base Q25. Colector Q20 → R36/CR8 → base Q15 (revisión independiente 2026-10-06). CR9 lleva el reset a la referencia de sustain. |
 | Biestable | Q25/Q15 emisores a masa. R38: colector Q15 → base Q25; R39: alimentación → colector Q15; R56: colector Q25 → base Q15. CR6 realimenta desde el divisor R24/R27 de salida hacia Q15. |
 | Ataque | Alimentación → emisor PNP Q16; R41/R40 fijan su base desde colector Q25. Colector Q16 → R42 de placa → R13 de panel → C2 a masa. |
 | Decay | Colector Q25 → base Q17; Q17 colector a alimentación, emisor por R43 a −10 V y por R44 a **base** Q18. Q18 colector → R16 de panel → C2; Q18 emisor a referencia de sustain. |
@@ -29,6 +29,14 @@ Los escaneos se revisaron completos y mediante ampliaciones de pines, polaridade
 - R13 y R16 de panel: 1 MΩ, ley de audio; R19: 5 kΩ lineal. El programa recibe **resistencias eléctricas**, sin inventar una curva posición→Ω. Topes cero se unen como nodos exactos, sin resistencias epsilon. La regresión de unión no acredita aún convergencia de todo el contorno en esos topes.
 - R25 de gatillo: 3,3 kΩ en esquema, 1 kΩ en BOM. Resistor a base Q12: dibujo aparenta R9/10 kΩ, mientras R9 también nombra 4,7 kΩ en filtro y BOM. Hay duplicaciones de R41 y R60 entre etiquetas/lista. Se usan alias por posición y se exponen candidatos; no se adjudica una revisión física a ninguno.
 - La alimentación de contornos de ~9,3 V proviene del seguidor Q26 desde riel bruto +15 V, según §2.10 p. 14. Aquí **se impone** 9,3 V: Q26/R62/R63 y el riel bruto no están cerrados.
+
+## Actualización: contorno cargado con memoria de dispositivo
+
+El [banco SPICE posterior](CONTORNO_PLACA4_RESULTADOS.md) resuelve contorno,
+gatillo y placa 4 con carga Gummel–Poon condicionada. Diez escenas y tres
+contrastes pasan; conserva entrada de audio, alimentación y Q21 impuestos.
+No reemplaza los gates de los modelos históricos siguientes ni identifica
+semiconductores vintage.
 
 ## Primer oráculo, alcance exacto
 
