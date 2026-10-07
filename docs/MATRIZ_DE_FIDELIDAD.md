@@ -1,5 +1,7 @@
 # Matriz de fidelidad
 
+El [puerto ON/C27](MEZCLADOR_C27_RESULTADOS.md) admite reducción pasiva dinámica nominal, no la voz integrada: cinco tests ejecutados y 837 casos nodales. La campaña serial de 350 ms sigue en ejecución; no hay admisión de fidelidad física ni tiempo real.
+
 El [mezclador ON nativo](MEZCLADOR_NATIVO_RESULTADOS.md)
 pasa 279 controles nodales independientes, ocho tests Rust y cero
 asignaciones en 10000 evaluaciones. Entrega corrientes y tangentes

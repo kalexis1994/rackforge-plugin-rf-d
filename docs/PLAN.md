@@ -1,5 +1,7 @@
 # Prioridad vigente
 
+El [acoplamiento nativo ON/C27](MEZCLADOR_C27_RESULTADOS.md) pasa sus 837 casos y cinco tests. Próxima integración: estampar su corriente/tangente en BASE_Q29 con la misma historia y aceptar sólo el estado conjunto. La campaña serial SPICE de 350 ms está en ejecución tras pasar el preflight02; no se admite por prefijos.
+
 El [mezclador ON nativo](MEZCLADOR_NATIVO_RESULTADOS.md)
 pasa 279 controles nodales independientes, ocho tests Rust y cero
 asignaciones en 10000 evaluaciones. Entrega corrientes y tangentes

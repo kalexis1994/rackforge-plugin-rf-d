@@ -1,5 +1,7 @@
 # RF-D
 
+El [puerto ON/C27 nativo](docs/MEZCLADOR_C27_RESULTADOS.md) conserva carga y corrientes hacia las fuentes: 837 casos nodales, cinco tests nuevos y cero heap en 10000 evaluaciones. Falta cerrarlo con el solver del ladder. La campaña serial de cuatro notas SPICE de 350 ms está en ejecución, con fuentes congeladas; todavía no hay resultado admitido.
+
 El [mezclador ON nativo](docs/MEZCLADOR_NATIVO_RESULTADOS.md)
 pasa 279 controles nodales independientes, ocho tests Rust y cero
 asignaciones en 10000 evaluaciones. Entrega corrientes y tangentes
