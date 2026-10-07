@@ -1,5 +1,7 @@
 # Prioridad vigente
 
+El [puerto cargado](MEZCLADOR_PUERTO_CARGADO_RESULTADOS.md) ya entrega corriente/tangente para cerrar generadores reales sin confirmar histories. Tres tests nuevos contra BUS/cursores explícitos. Siguiente bloque: acoplamiento con VCO, usando este contrato y las referencias eléctricas del oscilador.
+
 La [cadena ON/C27→J7](MEZCLADOR_CADENA_RESULTADOS.md) ya cierra entrada, ladder, VCAs y salida con fuentes impuestas: cuatro escenas/64 pasos y cuatro tests nuevos. Siguiente integración: VCO real y sus cargas, sin redefinir el resultado como voz completa. La campaña SPICE continúa; Gear500 abortó a 136,63 ms.
 
 El [acoplamiento nativo ON/C27](MEZCLADOR_C27_RESULTADOS.md) pasa sus 837 casos y cinco tests. Próxima integración: estampar su corriente/tangente en BASE_Q29 con la misma historia y aceptar sólo el estado conjunto. La campaña serial SPICE de 350 ms está en ejecución tras pasar el preflight02; no se admite por prefijos.
