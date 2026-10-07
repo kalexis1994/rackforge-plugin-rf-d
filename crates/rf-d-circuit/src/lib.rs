@@ -578,3 +578,5 @@ pub fn initial_state(p: Parameters) -> Result<State, StepError> {
     }
     Err(StepError::IterationBudget)
 }
+
+pub mod mixer_chain66;

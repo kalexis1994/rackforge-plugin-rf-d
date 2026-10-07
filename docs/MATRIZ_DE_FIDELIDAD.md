@@ -1,5 +1,7 @@
 # Matriz de fidelidad
 
+La [cadena ON/C27→J7 nativa](MEZCLADOR_CADENA_RESULTADOS.md) admite las cuatro escenas nominales de su oráculo, con fuentes impuestas. Se mantienen pendientes VCO, contorno, OFF, taper, fidelidad física y RT. La nota SPICE larga sigue en ejecución con el rechazo Gear500 conservado.
+
 El [puerto ON/C27](MEZCLADOR_C27_RESULTADOS.md) admite reducción pasiva dinámica nominal, no la voz integrada: cinco tests ejecutados y 837 casos nodales. La campaña serial de 350 ms sigue en ejecución; no hay admisión de fidelidad física ni tiempo real.
 
 El [mezclador ON nativo](MEZCLADOR_NATIVO_RESULTADOS.md)

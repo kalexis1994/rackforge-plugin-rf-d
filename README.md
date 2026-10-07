@@ -1,5 +1,7 @@
 # RF-D
 
+La [cadena ON/C27→J7 nativa](docs/MEZCLADOR_CADENA_RESULTADOS.md) pasa cuatro escenas, 64 pasos nodales independientes y cuatro tests nuevos. Conserva carga, tangentes y estado atómico; aún usa generadores impuestos. La campaña SPICE larga continúa y ya conserva el rechazo Gear500 a 136,63 ms.
+
 El [puerto ON/C27 nativo](docs/MEZCLADOR_C27_RESULTADOS.md) conserva carga y corrientes hacia las fuentes: 837 casos nodales, cinco tests nuevos y cero heap en 10000 evaluaciones. Falta cerrarlo con el solver del ladder. La campaña serial de cuatro notas SPICE de 350 ms está en ejecución, con fuentes congeladas; todavía no hay resultado admitido.
 
 El [mezclador ON nativo](docs/MEZCLADOR_NATIVO_RESULTADOS.md)
