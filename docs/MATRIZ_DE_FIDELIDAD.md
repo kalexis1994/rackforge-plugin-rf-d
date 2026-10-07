@@ -3,9 +3,10 @@
 El [candidato activo de seis correcciones](VOZ_SEIS_ACTIVO_RESULTADOS.md)
 pasa identidad desactivada, control nominal y cuatro escenas de 40 ms.
 Los tres contrastes y ambos balances pasan con los gates originales.
-El preflight de cuatro notas largas rechaza por espacio; quedan no medidas.
-Prioridad: [control de export binario](VOZ_NOTA_LARGA_EXPORT_BINARIO_PROTOCOLO.md)
-con identidad completa antes de repetir la extensión de 350 ms.
+El [control de export binario](VOZ_EXPORT_BINARIO_RESULTADOS.md)
+conserva los 3642566 valores sin una diferencia de bits. Los archivos gzip/XZ
+restauran bytes exactos; aún rechaza el presupuesto largo, incluso serial.
+Siguiente frontera: recursos, productor serial y cuatro notas de 350 ms.
 No hay audio nuevo ni admisión de fidelidad física o tiempo real.
 
 Estado actual: [contorno cargado por filtro/dos VCA/salida](CONTORNO_PLACA4_RESULTADOS.md)
