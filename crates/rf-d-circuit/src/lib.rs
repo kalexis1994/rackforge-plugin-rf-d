@@ -589,3 +589,5 @@ pub mod mixer_chain_port_direct;
 pub mod junction_charge;
 
 pub mod vco_bjt;
+
+pub mod vco_jfet;

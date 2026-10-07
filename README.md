@@ -13,6 +13,7 @@ no acredita identidad sonora con una unidad vintage.
 | Cargas BE/BC y GS/GD | [Primitiva nativa](docs/VCO_CARGA_JUNTURA_RESULTADOS.md), 1280 vectores y derivadas | Transporte/difusión, binding térmico y dispositivos completos |
 | Cargas BE/BC y GS/GD | [Primitiva nativa](docs/VCO_CARGA_JUNTURA_RESULTADOS.md), 1280 vectores y derivadas | Transporte/difusión, binding térmico y dispositivos completos |
 | BJT NPN/PNP de VCO | [Transporte y cargas nativos](docs/VCO_BJT_NOMINAL_RESULTADOS.md), 1536 vectores y doce escenas SPICE | JFET, estados 741 y cierre autónomo |
+| JFET E402 de VCO | [Canal y cargas de una mitad](docs/VCO_JFET_NOMINAL_RESULTADOS.md), 2028 vectores y doce escenas SPICE | Dos mitades en grafo común, 741 y cierre autónomo |
 | VCO1 de referencia | [Circuito funcional, convergencia y calibraciÃ³n](docs/VCO1_RESULTADOS_CIRCUITO.md) | ImplementaciÃ³n nativa y carga cerrada con la cadena; osciladores 2/3 |
 | Mezclador ON y C27 | [Puerto dinÃ¡mico con memoria](docs/MEZCLADOR_C27_RESULTADOS.md), 837 casos nodales | OFF, taper e impedancias reales de generadores |
 | Entradaâ†’ladderâ†’VCAsâ†’J7 | [Entrada directa nativa](docs/MEZCLADOR_DIRECTO_RESULTADOS.md), 12 escenas/192 pasos a 500/250/125 ns | Contornos y generadores todavÃ­a impuestos |
@@ -21,10 +22,10 @@ no acredita identidad sonora con una unidad vintage.
 | Voz monolÃ­tica SPICE | [Banco corto admitido](docs/VOZ_SEIS_ACTIVO_RESULTADOS.md); [largo rechazado](docs/VOZ_SERIAL_CAMPANA_RESULTADOS.md) | Nota larga completa con sus tres contrastes |
 | Producto | NÃºcleos y herramientas de laboratorio | Voz nativa completa, recursos, MIDI/host y paquete instalable |
 
-La [QA nativa vigente](evidence/voice_vco_bjt_tests02.json) cubre
+La [QA nativa vigente](evidence/voice_vco_jfet_tests01.json) cubre
 193 controles: ocho tests nuevos ejecutados en el Ãºltimo bloque y 185
 heredados por identidad. Los bloques anteriores conservan sus propias
-regresiones y lÃ­mites; ese nÃºmero no representa 201 nuevas ejecuciones.
+regresiones y lÃ­mites; ese nÃºmero no representa 205 nuevas ejecuciones.
 
 La campaÃ±a serial de 350 ms comenzÃ³ tras pasar el
 [preflight02](evidence/voice_serial_preflight02.json). Gear500 y Gear250
@@ -35,7 +36,9 @@ las tres parejas no se midieron por falta de escenas completas. El
 
 ## Siguiente trabajo
 
-1. Completar JFET y estados internos de VCO1; el
+1. Completar los estados internos del 741 y el stamp de VCO1; el
+   [JFET nominal](docs/VCO_JFET_NOMINAL_RESULTADOS.md) ya conserva canal y
+   cargas en sus terminales físicos. El
    [BJT nominal](docs/VCO_BJT_NOMINAL_RESULTADOS.md) ya conserva transporte,
    difusión y retorno de sustrato. La
    [carga de depleción](docs/VCO_CARGA_JUNTURA_RESULTADOS.md) ya pasó su banco. La
@@ -59,7 +62,7 @@ las tres parejas no se midieron por falta de escenas completas. El
 Regresiones pÃºblicas de los dos cierres nativos recientes:
 
 ```powershell
-cargo test --offline --locked -p rf-d-circuit --test vco_bjt --test vco_bjt_no_alloc
+cargo test --offline --locked -p rf-d-circuit --test vco_jfet --test vco_jfet_no_alloc
 ```
 
 Los recibos de producciÃ³n registran compiler, flags, outputs y hashes.
@@ -82,7 +85,7 @@ Manuales, esquemas, fuentes originales, WAV y binarios privados se conservan
 en directorios locales ignorados. No se incluyen en Git o el paquete.
 RF-D no implica afiliaciÃ³n con Moog Music.
 
-La [QA de publicaciÃ³n](evidence/voice_vco_bjt_tests02.json) verifica
+La [QA de publicaciÃ³n](evidence/voice_vco_jfet_tests01.json) verifica
 inputs protegidos, nuevos tests y archivos privados. El
-[snapshot previo](evidence/voice_vco_bjt_documentation01.json) conserva
+[snapshot previo](evidence/voice_vco_jfet_documentation01.json) conserva
 las tres portadas anteriores por bytes exactos. El rechazo largo sigue vigente.

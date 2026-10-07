@@ -37,8 +37,11 @@ nuevos mÃ³dulos admiten 125 ns..1 ms; los anteriores siguen desde 0.5 Âµs.
 La [depleción BE/BC y GS/GD](VCO_CARGA_JUNTURA_RESULTADOS.md) pasó
 1280 vectores independientes y derivadas. El [BJT nominal](VCO_BJT_NOMINAL_RESULTADOS.md)
 ya incluye transporte/difusión y sustrato explícito a TEMP=TNOM=25 °C:
-1536 vectores y doce escenas independientes ngspice. Ahora completar
-JFET, estados internos de IC1/IC3 y su integración;
+1536 vectores y doce escenas independientes ngspice. El
+[JFET nominal](VCO_JFET_NOMINAL_RESULTADOS.md) pasó 2028 vectores y doce
+escenas propias: inversión del canal y cargas GS/GD físicas. Ahora completar
+estados internos de IC1/IC3 y el stamp del circuito, uniendo las mitades
+E402 a su fuente común;
 el VCO completo y su oscilaciÃ³n aÃºn requieren contraste propio.
 
 Primer alcance: VCO1 y cadena con controles impuestos. No declarar tres
