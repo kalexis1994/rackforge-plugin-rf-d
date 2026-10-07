@@ -9,6 +9,7 @@ no significa identidad sonora con el hardware.
 |---|---|---|---|
 | Teclado/glide/ruedas | Alcance del manual y controles de laboratorio | Fuentes impuestas | Leyes eléctricas y comportamiento mono/legato |
 | VCO1 | CA3046, convertidor, Schmitt/reset, ondas y panel trazados | [Oráculo funcional y calibrado](VCO1_RESULTADOS_CIRCUITO.md), parámetros condicionados | Núcleo nativo con carga cerrada; panel/CV/rieles completos |
+| Cargas de juntura VCO | Leyes de las tarjetas condicionadas | [Depleción nativa](VCO_CARGA_JUNTURA_RESULTADOS.md), Q/C/ΔQ/I/G y derivadas en 1280 casos | Transporte/difusión, térmica y BJT/JFET completos |
 | VCO2/VCO3 | Alcance documental | Sin núcleo nativo de voz admitido | Derivación y bancos propios |
 | Ruido/modulación | Hipótesis/manual | Sin cálculo completo admitido | Topología, espectro y destinos |
 | Mezclador ON | Cinco rutas y contactos límite de la red nominal | [837 casos con C27](MEZCLADOR_C27_RESULTADOS.md); [puerto directo 5×5 a 125 ns](MEZCLADOR_DIRECTO_RESULTADOS.md) | Generadores con impedancia real, OFF y taper |
@@ -42,8 +43,8 @@ por sí solo todo el sistema.
 - **Audio externo:** requiere procedencia y condiciones comparables; permanece abierto.
 - **RT/producto:** deadline, recursos y flujo de host deben medirse; permanecen abiertos.
 
-La [QA reciente](../evidence/voice_mixer_direct_tests01.json) cubre 193,
-con ocho ejecuciones nuevas y 185 heredadas. No convierte los nominales
+La [QA reciente](../evidence/voice_junction_charge_tests01.json) cubre 197,
+con cuatro ejecuciones nuevas y 193 heredadas. No convierte los nominales
 BJT/JFET en parámetros de un instrumento real. R61=200 Ω/200 kΩ sigue siendo
 una discrepancia documental; α no identifica taper y ramas omitidas no
 representan contactos OFF. Mantener manuales/audio/binarios en local ignorado.

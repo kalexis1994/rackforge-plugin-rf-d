@@ -585,3 +585,5 @@ pub mod mixer_chain_port;
 
 pub mod mixer_chain66_direct;
 pub mod mixer_chain_port_direct;
+
+pub mod junction_charge;

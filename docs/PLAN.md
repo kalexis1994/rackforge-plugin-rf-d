@@ -2,71 +2,73 @@
 
 2026-10-07. Prioridad: completar una voz de circuito utilizable con evidencia
 proporcionada al alcance. [Objetivo documental](OBJETIVO.md): CA3046 nominal;
-[sin acceso físico permanente](VALIDACION_SIN_HARDWARE.md).
+[sin acceso fÃ­sico permanente](VALIDACION_SIN_HARDWARE.md).
 
-## 1. Campaña monolítica cerrada
+## 1. CampaÃ±a monolÃ­tica cerrada
 
-El candidato activo de seis correcciones pasó controles y cuatro escenas
-cortas de 40 ms. Su extensión serial de 350 ms quedó
-[rechazada y auditada](VOZ_SERIAL_CAMPANA_RESULTADOS.md): Gear125 completó;
+El candidato activo de seis correcciones pasÃ³ controles y cuatro escenas
+cortas de 40 ms. Su extensiÃ³n serial de 350 ms quedÃ³
+[rechazada y auditada](VOZ_SERIAL_CAMPANA_RESULTADOS.md): Gear125 completÃ³;
 Gear500/Gear250/Trap125 abortaron a 136,630269/150,293268/15,940421 ms.
 Cuatro procesos desde DC propio, todos los exports/recibos archivados y
-ningún error de recursos o almacenamiento. Tres parejas no medidas.
+ningÃºn error de recursos o almacenamiento. Tres parejas no medidas.
 
 Se preservan fuentes, gates, fallos y datos completos/parciales. No lanzar
-otra ampliación de correcciones lineales ni relajar tolerancias sin causa
-contrastada. La audición del adaptador largo sigue sin admisión.
+otra ampliaciÃ³n de correcciones lineales ni relajar tolerancias sin causa
+contrastada. La audiciÃ³n del adaptador largo sigue sin admisiÃ³n.
 
-## 2. VCO1 nativo con carga eléctrica cerrada
+## 2. VCO1 nativo con carga elÃ©ctrica cerrada
 
-Ya existe el [oráculo funcional VCO1](VCO1_RESULTADOS_CIRCUITO.md). El
+Ya existe el [orÃ¡culo funcional VCO1](VCO1_RESULTADOS_CIRCUITO.md). El
 [puerto cargado directo](MEZCLADOR_DIRECTO_RESULTADOS.md)
 entrega corrientes, tangentes y estados provisionales de la cadena ON/C27
 hasta J7. Usarlo para conectar el generador y conservar la carga en ambos
 lados; no reemplazar ese cierre por una suma de voltajes.
 
-Aplicar el [protocolo previo nativo](VCO1_NATIVO_PROTOCOLO.md): revisión, formas de onda,
-CV/trims, parámetros de laboratorio, discretización, memoria y retornos.
-Contrastar oscilación, amplitud/offset, reset, frecuencia y source current
+Aplicar el [protocolo previo nativo](VCO1_NATIVO_PROTOCOLO.md): revisiÃ³n, formas de onda,
+CV/trims, parÃ¡metros de laboratorio, discretizaciÃ³n, memoria y retornos.
+Contrastar oscilaciÃ³n, amplitud/offset, reset, frecuencia y source current
 con las referencias ya existentes, incluyendo escenas reservadas. Confirmar
-sólo el estado conjunto final; fallo sin publicar cargas parciales.
+sÃ³lo el estado conjunto final; fallo sin publicar cargas parciales.
 
-La entrada Q29/C27 directa pasó 12 escenas/192 pasos y doce puertos
-cargados a 500/250/125 ns, además de 64 pasos en la zona anterior. Los
-nuevos módulos admiten 125 ns..1 ms; los anteriores siguen desde 0.5 µs.
-Ahora implementar dispositivos con carga y estados internos de IC1/IC3;
-el VCO completo y su oscilación aún requieren contraste propio.
+La entrada Q29/C27 directa pasÃ³ 12 escenas/192 pasos y doce puertos
+cargados a 500/250/125 ns, ademÃ¡s de 64 pasos en la zona anterior. Los
+nuevos mÃ³dulos admiten 125 ns..1 ms; los anteriores siguen desde 0.5 Âµs.
+La [depleción BE/BC y GS/GD](VCO_CARGA_JUNTURA_RESULTADOS.md) pasó
+1280 vectores independientes y derivadas. Ahora completar transporte y
+difusión, binding térmico y estados internos de IC1/IC3;
+el VCO completo y su oscilaciÃ³n aÃºn requieren contraste propio.
 
 Primer alcance: VCO1 y cadena con controles impuestos. No declarar tres
-osciladores, contorno completo o otra población física por ese prototipo.
+osciladores, contorno completo o otra poblaciÃ³n fÃ­sica por ese prototipo.
 
 ## 3. Completar comportamiento de voz
 
 - Integrar el contorno de volumen y su gatillo conservando las cargas del
-  [puerto C2/reset](PUERTO_CONTORNO_CADENA_71.md); usar los diagnósticos y
-  rechazos del biestable para definir la política siguiente.
+  [puerto C2/reset](PUERTO_CONTORNO_CADENA_71.md); usar los diagnÃ³sticos y
+  rechazos del biestable para definir la polÃ­tica siguiente.
 - Derivar el contorno de filtro y sus controles con fuentes/documentos propios.
-- Osciladores 2/3, ruido, modulación, teclado/glide/ruedas y entrada externa.
-- Completar OFF y taper del mezclador y acotar dispersión/hipótesis físicas.
-  Mantener R61=200 Ω y 200 kΩ como escenarios separados hasta nueva evidencia.
+- Osciladores 2/3, ruido, modulaciÃ³n, teclado/glide/ruedas y entrada externa.
+- Completar OFF y taper del mezclador y acotar dispersiÃ³n/hipÃ³tesis fÃ­sicas.
+  Mantener R61=200 Î© y 200 kÎ© como escenarios separados hasta nueva evidencia.
 
 ## 4. Escucha y producto
 
-Una escucha debe identificar qué genera la señal, nodo/carga de salida,
-voltios→audio, resampling, cobertura y limitaciones. Conservar el alcance de
+Una escucha debe identificar quÃ© genera la seÃ±al, nodo/carga de salida,
+voltiosâ†’audio, resampling, cobertura y limitaciones. Conservar el alcance de
 los WAV anteriores: la escucha de salida con seno impuesto no es la voz VCO.
 El adaptador de nota larga congelado requiere su banco completo admitido.
 
 Con la voz funcional: escenas musicales fijadas, diferencias de audio y
-costos por bloque en plataformas RackForge. Promover optimizaciones sólo
+costos por bloque en plataformas RackForge. Promover optimizaciones sÃ³lo
 conservando sonido/error y memoria; heap cero no sustituye deadlines.
-Después cerrar estado/parametrización, MIDI/host, UI y paquete RF-D.
+DespuÃ©s cerrar estado/parametrizaciÃ³n, MIDI/host, UI y paquete RF-D.
 
 ## Reglas de avance
 
-No repetir bancos heredados si sus algoritmos/inputs están idénticos y la
-QA declara la herencia. Añadir pruebas para el circuito que cambió y su
-integración; separar conformance, física, escucha y RT. Una campaña pendiente
+No repetir bancos heredados si sus algoritmos/inputs estÃ¡n idÃ©nticos y la
+QA declara la herencia. AÃ±adir pruebas para el circuito que cambiÃ³ y su
+integraciÃ³n; separar conformance, fÃ­sica, escucha y RT. Una campaÃ±a pendiente
 permite avanzar bloques independientes con contratos y gates propios.
 
 El [historial del plan](PLAN_HISTORICO_2026-10-07.md) conserva los estados
