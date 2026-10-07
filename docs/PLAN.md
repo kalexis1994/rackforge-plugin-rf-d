@@ -20,7 +20,7 @@ contrastada. La audición del adaptador largo sigue sin admisión.
 ## 2. VCO1 nativo con carga eléctrica cerrada
 
 Ya existe el [oráculo funcional VCO1](VCO1_RESULTADOS_CIRCUITO.md). El
-[puerto cargado de cinco fuentes](MEZCLADOR_PUERTO_CARGADO_RESULTADOS.md)
+[puerto cargado directo](MEZCLADOR_DIRECTO_RESULTADOS.md)
 entrega corrientes, tangentes y estados provisionales de la cadena ON/C27
 hasta J7. Usarlo para conectar el generador y conservar la carga en ambos
 lados; no reemplazar ese cierre por una suma de voltajes.
@@ -31,9 +31,11 @@ Contrastar oscilación, amplitud/offset, reset, frecuencia y source current
 con las referencias ya existentes, incluyendo escenas reservadas. Confirmar
 sólo el estado conjunto final; fallo sin publicar cargas parciales.
 
-Primero verificar la entrada Q29/C27 mediante stamp directo y extender
-su dominio contra un oráculo completo a 500/250/125 ns. El adaptador vigente
-admite desde 0.5 µs; todavía no se extiende por este protocolo.
+La entrada Q29/C27 directa pasó 12 escenas/192 pasos y doce puertos
+cargados a 500/250/125 ns, además de 64 pasos en la zona anterior. Los
+nuevos módulos admiten 125 ns..1 ms; los anteriores siguen desde 0.5 µs.
+Ahora implementar dispositivos con carga y estados internos de IC1/IC3;
+el VCO completo y su oscilación aún requieren contraste propio.
 
 Primer alcance: VCO1 y cadena con controles impuestos. No declarar tres
 osciladores, contorno completo o otra población física por ese prototipo.

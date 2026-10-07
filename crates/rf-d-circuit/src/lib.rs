@@ -582,3 +582,6 @@ pub fn initial_state(p: Parameters) -> Result<State, StepError> {
 pub mod mixer_chain66;
 
 pub mod mixer_chain_port;
+
+pub mod mixer_chain66_direct;
+pub mod mixer_chain_port_direct;
