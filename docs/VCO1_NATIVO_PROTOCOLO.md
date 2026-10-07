@@ -58,13 +58,16 @@ con error propio medido. La política actual permanece vigente hasta eso.
 
 La ruta directa se puede limitar a la fila BASE_Q29 (índice 6):
 `r6=(x6−x4)/470 Ω + IB_Q29(x6,x8,x5) + I_BASE_puerto`.
-Su Jacobiano conserva los términos de R24 y Q29 y añade la tangente
+Su Jacobiano conserva los términos de R54 y Q29 y añade la tangente
 BASE→BASE del puerto. Para Q29, con las leyes condicionadas del núcleo,
 `gf=IS·exp((x6−x5)/VT)/VT` y `gr=IS·exp((x6−x8)/VT)/VT`; columnas
 4/5/6/8: `−1/470`, `−gf/BF`, `1/470+gf/BF+gr/BR+Y_BASE_BASE`,
 `−gr/BR`, en siemens. Las otras filas quedan como en el núcleo de 66 nodos.
 Esto es una derivación prospectiva de SVC-9 Fig. 9-11, p. 13, cotejada con
-`circuit66.rs`: R24, Q29 y C27 son las únicas ramas de esa fila. Requiere
+`circuit66.rs` y `filter_ladder_ebers_moll_dc_reference.py`: R54, Q29 y C27
+son las únicas ramas de esa fila. La primera anotación de designador R24
+en `c5cf3c1` era incorrecta; se conserva en esa revisión y se corrige aquí
+sin modificar ecuaciones o circuito. Requiere
 oráculo sin reducción, Jacobiano y estados completos a 500/250/125 ns;
 todavía no extiende el dominio admitido del adaptador.
 
