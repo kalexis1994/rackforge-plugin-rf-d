@@ -35,8 +35,10 @@ La entrada Q29/C27 directa pasÃ³ 12 escenas/192 pasos y doce puertos
 cargados a 500/250/125 ns, ademÃ¡s de 64 pasos en la zona anterior. Los
 nuevos mÃ³dulos admiten 125 ns..1 ms; los anteriores siguen desde 0.5 Âµs.
 La [depleción BE/BC y GS/GD](VCO_CARGA_JUNTURA_RESULTADOS.md) pasó
-1280 vectores independientes y derivadas. Ahora completar transporte y
-difusión, binding térmico y estados internos de IC1/IC3;
+1280 vectores independientes y derivadas. El [BJT nominal](VCO_BJT_NOMINAL_RESULTADOS.md)
+ya incluye transporte/difusión y sustrato explícito a TEMP=TNOM=25 °C:
+1536 vectores y doce escenas independientes ngspice. Ahora completar
+JFET, estados internos de IC1/IC3 y su integración;
 el VCO completo y su oscilaciÃ³n aÃºn requieren contraste propio.
 
 Primer alcance: VCO1 y cadena con controles impuestos. No declarar tres

@@ -1,0 +1,147 @@
+{
+  "schema": "rf-d/vco-bjt-ac-audit/v1",
+  "spice_receipt_sha256": "4188cec8d4a00db246a3ff0123c531300a917dc2b45a0a63dcc558aea3c69e97",
+  "source_sha256": {
+    "references-local/voice-circuit/newton-build11/ngspice-46/src/spicelib/devices/bjt/bjtacld.c": "0ec5e43eebb0668062a0ecd6a39c402bc6f9436286f481a5df35dc5206b39a3e",
+    "tools/vco_bjt_ac_audit.py": "76615630a6831568f403f694522797ea0f7b7a00dceca944ac1138249f381df4"
+  },
+  "cases": [
+    {
+      "polarity": 1,
+      "terminal_v": [
+        0.17,
+        0.17,
+        0.17,
+        0.125
+      ],
+      "max_direct_error_s": 1e-12,
+      "max_after_explicit_missing_ac_branch_s": 1.3234889800848443e-23
+    },
+    {
+      "polarity": 1,
+      "terminal_v": [
+        1.17,
+        0.17,
+        -0.48,
+        0.125
+      ],
+      "max_direct_error_s": 1e-12,
+      "max_after_explicit_missing_ac_branch_s": 6.245004513660113e-17
+    },
+    {
+      "polarity": 1,
+      "terminal_v": [
+        -0.48,
+        0.17,
+        0.37,
+        0.125
+      ],
+      "max_direct_error_s": 1e-12,
+      "max_after_explicit_missing_ac_branch_s": 6.938893904715022e-17
+    },
+    {
+      "polarity": 1,
+      "terminal_v": [
+        -0.44999999999999996,
+        0.17,
+        -0.48,
+        0.125
+      ],
+      "max_direct_error_s": 1e-12,
+      "max_after_explicit_missing_ac_branch_s": 6.245004513516506e-17
+    },
+    {
+      "polarity": 1,
+      "terminal_v": [
+        -0.11000000000000001,
+        0.17,
+        -0.12999999999999998,
+        0.125
+      ],
+      "max_direct_error_s": 1e-12,
+      "max_after_explicit_missing_ac_branch_s": 2.6469779601696886e-23
+    },
+    {
+      "polarity": 1,
+      "terminal_v": [
+        1.17,
+        0.17,
+        0.37,
+        0.125
+      ],
+      "max_direct_error_s": 1e-12,
+      "max_after_explicit_missing_ac_branch_s": 6.61744490350571e-24
+    },
+    {
+      "polarity": -1,
+      "terminal_v": [
+        0.17,
+        0.17,
+        0.17,
+        0.125
+      ],
+      "max_direct_error_s": 1e-12,
+      "max_after_explicit_missing_ac_branch_s": 1.3234889800848443e-23
+    },
+    {
+      "polarity": -1,
+      "terminal_v": [
+        -0.83,
+        0.17,
+        0.8200000000000001,
+        0.125
+      ],
+      "max_direct_error_s": 1e-12,
+      "max_after_explicit_missing_ac_branch_s": 6.245004513660113e-17
+    },
+    {
+      "polarity": -1,
+      "terminal_v": [
+        0.8200000000000001,
+        0.17,
+        -0.03,
+        0.125
+      ],
+      "max_direct_error_s": 1e-12,
+      "max_after_explicit_missing_ac_branch_s": 6.938893904715022e-17
+    },
+    {
+      "polarity": -1,
+      "terminal_v": [
+        0.79,
+        0.17,
+        0.8200000000000001,
+        0.125
+      ],
+      "max_direct_error_s": 1e-12,
+      "max_after_explicit_missing_ac_branch_s": 6.245004513516506e-17
+    },
+    {
+      "polarity": -1,
+      "terminal_v": [
+        0.45000000000000007,
+        0.17,
+        0.47,
+        0.125
+      ],
+      "max_direct_error_s": 1e-12,
+      "max_after_explicit_missing_ac_branch_s": 1.852884572118782e-22
+    },
+    {
+      "polarity": -1,
+      "terminal_v": [
+        -0.83,
+        0.17,
+        -0.03,
+        0.125
+      ],
+      "max_direct_error_s": 1.0000000000000002e-12,
+      "max_after_explicit_missing_ac_branch_s": 6.61744490350571e-24
+    }
+  ],
+  "explanation": "bjtload.c includes gdsub in DC/transient; bjtacld.c loads substrate charge only and omits gdsub real stamp. Native retains full DC/Euler derivative. Raw AC data and gates unchanged.",
+  "new_spice_processes": 0,
+  "raw_or_kernel_modified": false,
+  "maximum_direct_error_s": 1.0000000000000002e-12,
+  "maximum_after_explicit_missing_ac_branch_s": 6.938893904715022e-17
+}
