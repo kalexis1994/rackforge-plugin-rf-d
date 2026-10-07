@@ -39,9 +39,11 @@ La [depleción BE/BC y GS/GD](VCO_CARGA_JUNTURA_RESULTADOS.md) pasó
 ya incluye transporte/difusión y sustrato explícito a TEMP=TNOM=25 °C:
 1536 vectores y doce escenas independientes ngspice. El
 [JFET nominal](VCO_JFET_NOMINAL_RESULTADOS.md) pasó 2028 vectores y doce
-escenas propias: inversión del canal y cargas GS/GD físicas. Ahora completar
-estados internos de IC1/IC3 y el stamp del circuito, uniendo las mitades
-E402 a su fuente común;
+escenas propias: inversión del canal y cargas GS/GD físicas. El
+[741 completo](VCO_741_NATIVO_RESULTADOS.md) conserva sus 37 incógnitas,
+tres capacitores y dos inductores: 60 stamps y seis DC propios. Ahora
+implementar Newton y trayectoria del 741, después el stamp del circuito,
+uniendo las mitades E402 a su fuente común;
 el VCO completo y su oscilaciÃ³n aÃºn requieren contraste propio.
 
 Primer alcance: VCO1 y cadena con controles impuestos. No declarar tres

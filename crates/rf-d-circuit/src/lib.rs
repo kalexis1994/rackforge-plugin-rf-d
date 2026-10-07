@@ -591,3 +591,5 @@ pub mod junction_charge;
 pub mod vco_bjt;
 
 pub mod vco_jfet;
+
+pub mod lm741;

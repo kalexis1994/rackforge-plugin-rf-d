@@ -12,6 +12,7 @@ no significa identidad sonora con el hardware.
 | Cargas de juntura VCO | Leyes de las tarjetas condicionadas | [Depleción nativa](VCO_CARGA_JUNTURA_RESULTADOS.md), Q/C/ΔQ/I/G y derivadas en 1280 casos | Transporte/difusión, térmica y BJT/JFET completos |
 | BJT de VCO | Subset condicionado de las tarjetas NPN/PNP | [Stamp de cuatro terminales](VCO_BJT_NOMINAL_RESULTADOS.md), transporte/difusión/depleción a 25 °C; 1536 vectores y doce probes SPICE | No identifica población física; JFET/741 e integración pendientes |
 | JFET de VCO | Una mitad E402 nominal, B=1, cargas GS/GD físicas | [Stamp de tres terminales](VCO_JFET_NOMINAL_RESULTADOS.md), 2028 vectores, inversión y doce probes SPICE | Fuente común de ambas mitades en el circuito, 741 e integración; matching físico no identificado |
+| LM741 de VCO | Macromodelo TI nominal y defaults ngspice a 25 °C | [Stamp completo de 37 incógnitas](VCO_741_NATIVO_RESULTADOS.md), cinco memorias, 60 stamps y seis raíces independientes | Newton y trayectoria propios, integración VCO; no equivalencia física del integrado |
 | VCO2/VCO3 | Alcance documental | Sin núcleo nativo de voz admitido | Derivación y bancos propios |
 | Ruido/modulación | Hipótesis/manual | Sin cálculo completo admitido | Topología, espectro y destinos |
 | Mezclador ON | Cinco rutas y contactos límite de la red nominal | [837 casos con C27](MEZCLADOR_C27_RESULTADOS.md); [puerto directo 5×5 a 125 ns](MEZCLADOR_DIRECTO_RESULTADOS.md) | Generadores con impedancia real, OFF y taper |
@@ -45,8 +46,8 @@ por sí solo todo el sistema.
 - **Audio externo:** requiere procedencia y condiciones comparables; permanece abierto.
 - **RT/producto:** deadline, recursos y flujo de host deben medirse; permanecen abiertos.
 
-La [QA reciente](../evidence/voice_vco_jfet_tests01.json) cubre 205,
-con cuatro ejecuciones nuevas y 201 heredadas. No convierte los nominales
+La [QA reciente](../evidence/voice_lm741_tests01.json) cubre 209,
+con cuatro ejecuciones nuevas y 205 heredadas. No convierte los nominales
 BJT/JFET en parámetros de un instrumento real. R61=200 Ω/200 kΩ sigue siendo
 una discrepancia documental; α no identifica taper y ramas omitidas no
 representan contactos OFF. Mantener manuales/audio/binarios en local ignorado.
