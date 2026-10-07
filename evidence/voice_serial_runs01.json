@@ -1,0 +1,2315 @@
+{
+  "schema": "rf-d/serial-long-bank/v1",
+  "preflight_path": "evidence/voice_serial_preflight02.json",
+  "preflight_sha256": "c9cbbf59b26e93d87eb83d3ae8ba016803255e75f8e91d3a5aeb80680d683f30",
+  "release_qa_sha256": "b44ce3d8121531816e20179f02fb94e0efacdc0bc150f290a1f977ad5a4e2a32",
+  "selected_codec": "xz6-crc64",
+  "helper_sha256": {
+    "tools/voice_serial_long.py": "91b5b7626f6a223ece81a914ae413642bf1bf057a167d97cc45e63c482b54f20",
+    "tools/voice_serial_archive.py": "ca1f641981db35cab6e1ce4d6c9f448b424e8cd04f9c4a3f34c8eea7335897c8",
+    "tools/voice_lossless_archive.py": "c3e819070ca4ccb69d3392cd78694c374836013d84e30ebadeb246db0b8fb744",
+    "tools/validate_voice_native_control.py": "b811170128439d1177725db547ef372d48d8ac840beaae04f6eb8d75ce1bf065",
+    "tools/voice_full_note.py": "002878c1c05fd8278cf06c3a7e4f694212161ff8e12149f17886d9fd13f5bea9",
+    "tools/voice_binary_long_probe.py": "864c791c443531189bc537460ac8e8dbb495f14bdeef66df2e6a426dad92778e",
+    "tools/validate_voice_serial_bank.py": "83125a13247093893b17c0a230bd046790b23feabc9fe7b3ba468a10918854ae",
+    "docs/VOZ_NOTA_LARGA_ARCHIVO_PROTOCOLO.md": "d1ce40767c212327e0a8fd88c3385ab497fb7a87cab5fb081fc89a341cf6e572",
+    "docs/VOZ_SERIAL_IMPLEMENTACION.md": "7f0ce2dda8926e7ceae347ad671489e7f02692b6443678645d1078ffac8552aa"
+  },
+  "records": {
+    "nominal500": {
+      "schema": "rf-d/native-export-run/v1",
+      "scene": "nominal500",
+      "long_mode": true,
+      "scenario": {
+        "board": {
+          "oscillator": {
+            "keyboard_v": -2.1,
+            "other_control_v": -2.1,
+            "r8_fraction": 0.2613404652606161,
+            "r11_active_ohm": 521.3126579373712,
+            "c4_f": 1e-11,
+            "upper_contact": 3,
+            "lower_contact": 10,
+            "level_fraction": 0.5,
+            "imposed_mixer_v": 0.0,
+            "external_neg4_load_a": 0.0,
+            "duration_s": 0.35,
+            "max_step_s": 5e-07,
+            "method": "gear",
+            "order": 2
+          },
+          "cutoff_fraction": 0.5,
+          "range_fraction": 0.5,
+          "scale_ohm": 250,
+          "emphasis_ohm": 50000,
+          "regen_bottom_ohm": 500,
+          "r61_ohm": 200,
+          "first_loudness_v": 2,
+          "second_loudness_base_v": 2,
+          "contour_amount_v": 0,
+          "first_balance_ohm": 12.5,
+          "second_balance_ohm": 50,
+          "main_load_ohm": 100000,
+          "headphone_input_ohm": 100000
+        },
+        "controls": {
+          "attack_ohm": 10000.0,
+          "decay_ohm": 100000.0,
+          "sustain_lower_ohm": 2500.0,
+          "final_decay": true,
+          "external_s_short": false,
+          "trigger_base_ohm": 10000.0,
+          "reset_pullup_ohm": 3300.0
+        },
+        "trigger_on_s": 0.01,
+        "trigger_off_s": 0.2,
+        "trigger_transition_s": 1e-05,
+        "contour_supply_v": 9.3
+      },
+      "vectors": [
+        "v(ramp_c1)",
+        "v(schmitt_drive)",
+        "v(saw_output_9b)",
+        "v(mix_bus_board4_pin4)",
+        "v(f4_recover_collector)",
+        "v(f4_main_output)",
+        "v(f4_q17_collector)",
+        "v(f4_c2_right)",
+        "v(f4_headphone_input)",
+        "v(f4_loudness_contour)",
+        "v(e2_timing_c2)",
+        "v(e2_attack_panel_in)",
+        "v(e2_decay_out)",
+        "v(e2_follower_base)",
+        "v(e2_reset_collector)",
+        "v(e2_attack_gate_lower)",
+        "v(e2_keyboard_trigger)",
+        "v(f4_q18_base)"
+      ],
+      "patch": {
+        "temporal_patch": {
+          "changes": [
+            {
+              "before": "VE2_keyboard E2_KEYBOARD_TRIGGER 0 PWL(0 0 0.002 0 0.0020100000000000001 10 0.025000000000000001 10 0.025010000000000001 0)\n",
+              "after": "VE2_keyboard E2_KEYBOARD_TRIGGER 0 PWL(0 0 0.01 0 0.01001 10 0.20000000000000001 10 0.20001000000000002 0)\n"
+            },
+            {
+              "before": "tran 4.9999999999999998e-07 0.040000000000000001 0 4.9999999999999998e-07\n",
+              "after": "tran 4.9999999999999998e-07 0.34999999999999998 0 4.9999999999999998e-07\n"
+            },
+            {
+              "before": "wrdata C:/Users/kalex/OneDrive/Documents/rackforge-plugin-rf-d/references-local/voice-circuit/active-six-short01/joint-nominal500.txt ",
+              "after": "wrdata C:/Users/kalex/OneDrive/Documents/rackforge-plugin-rf-d/references-local/voice-circuit/active-six-binary-long01/nominal500.txt "
+            }
+          ],
+          "unchanged_skeleton_sha256": "957b7ea688fdfeabb585f3bf5d3225b124b1ef3a743dff020853740ee26519e2",
+          "diff": "--- historical-short\n+++ long-note\n@@ -257 +257 @@\n-VE2_keyboard E2_KEYBOARD_TRIGGER 0 PWL(0 0 0.002 0 0.0020100000000000001 10 0.025000000000000001 10 0.025010000000000001 0)\n+VE2_keyboard E2_KEYBOARD_TRIGGER 0 PWL(0 0 0.01 0 0.01001 10 0.20000000000000001 10 0.20001000000000002 0)\n@@ -265,2 +265,2 @@\n-tran 4.9999999999999998e-07 0.040000000000000001 0 4.9999999999999998e-07\n-wrdata C:/Users/kalex/OneDrive/Documents/rackforge-plugin-rf-d/references-local/voice-circuit/active-six-short01/joint-nominal500.txt v(ramp_c1) v(schmitt_drive) v(saw_output_9b) v(mix_bus_board4_pin4) v(f4_recover_collector) v(f4_main_output) v(f4_q17_collector) v(f4_c2_right) v(f4_headphone_input) v(f4_loudness_contour) v(e2_timing_c2) v(e2_attack_panel_in) v(e2_decay_out) v(e2_follower_base) v(e2_reset_collector) v(e2_attack_gate_lower) v(e2_keyboard_trigger) v(f4_q18_base)\n+tran 4.9999999999999998e-07 0.34999999999999998 0 4.9999999999999998e-07\n+wrdata C:/Users/kalex/OneDrive/Documents/rackforge-plugin-rf-d/references-local/voice-circuit/active-six-binary-long01/nominal500.txt v(ramp_c1) v(schmitt_drive) v(saw_output_9b) v(mix_bus_board4_pin4) v(f4_recover_collector) v(f4_main_output) v(f4_q17_collector) v(f4_c2_right) v(f4_headphone_input) v(f4_loudness_contour) v(e2_timing_c2) v(e2_attack_panel_in) v(e2_decay_out) v(e2_follower_base) v(e2_reset_collector) v(e2_attack_gate_lower) v(e2_keyboard_trigger) v(f4_q18_base)\n",
+          "scenario": {
+            "board": {
+              "oscillator": {
+                "keyboard_v": -2.1,
+                "other_control_v": -2.1,
+                "r8_fraction": 0.2613404652606161,
+                "r11_active_ohm": 521.3126579373712,
+                "c4_f": 1e-11,
+                "upper_contact": 3,
+                "lower_contact": 10,
+                "level_fraction": 0.5,
+                "imposed_mixer_v": 0.0,
+                "external_neg4_load_a": 0.0,
+                "duration_s": 0.35,
+                "max_step_s": 5e-07,
+                "method": "gear",
+                "order": 2
+              },
+              "cutoff_fraction": 0.5,
+              "range_fraction": 0.5,
+              "scale_ohm": 250,
+              "emphasis_ohm": 50000,
+              "regen_bottom_ohm": 500,
+              "r61_ohm": 200,
+              "first_loudness_v": 2,
+              "second_loudness_base_v": 2,
+              "contour_amount_v": 0,
+              "first_balance_ohm": 12.5,
+              "second_balance_ohm": 50,
+              "main_load_ohm": 100000,
+              "headphone_input_ohm": 100000
+            },
+            "controls": {
+              "attack_ohm": 10000.0,
+              "decay_ohm": 100000.0,
+              "sustain_lower_ohm": 2500.0,
+              "final_decay": true,
+              "external_s_short": false,
+              "trigger_base_ohm": 10000.0,
+              "reset_pullup_ohm": 3300.0
+            },
+            "trigger_on_s": 0.01,
+            "trigger_off_s": 0.2,
+            "trigger_transition_s": 1e-05,
+            "contour_supply_v": 9.3
+          },
+          "vectors": [
+            "v(ramp_c1)",
+            "v(schmitt_drive)",
+            "v(saw_output_9b)",
+            "v(mix_bus_board4_pin4)",
+            "v(f4_recover_collector)",
+            "v(f4_main_output)",
+            "v(f4_q17_collector)",
+            "v(f4_c2_right)",
+            "v(f4_headphone_input)",
+            "v(f4_loudness_contour)",
+            "v(e2_timing_c2)",
+            "v(e2_attack_panel_in)",
+            "v(e2_decay_out)",
+            "v(e2_follower_base)",
+            "v(e2_reset_collector)",
+            "v(e2_attack_gate_lower)",
+            "v(e2_keyboard_trigger)",
+            "v(f4_q18_base)"
+          ]
+        },
+        "export_before": "wrdata C:/Users/kalex/OneDrive/Documents/rackforge-plugin-rf-d/references-local/voice-circuit/active-six-binary-long01/nominal500.txt v(ramp_c1) v(schmitt_drive) v(saw_output_9b) v(mix_bus_board4_pin4) v(f4_recover_collector) v(f4_main_output) v(f4_q17_collector) v(f4_c2_right) v(f4_headphone_input) v(f4_loudness_contour) v(e2_timing_c2) v(e2_attack_panel_in) v(e2_decay_out) v(e2_follower_base) v(e2_reset_collector) v(e2_attack_gate_lower) v(e2_keyboard_trigger) v(f4_q18_base)\n",
+        "export_after": "set filetype=binary\nwrite C:/Users/kalex/OneDrive/Documents/rackforge-plugin-rf-d/references-local/voice-circuit/active-six-binary-long01/nominal500.raw v(ramp_c1) v(schmitt_drive) v(saw_output_9b) v(mix_bus_board4_pin4) v(f4_recover_collector) v(f4_main_output) v(f4_q17_collector) v(f4_c2_right) v(f4_headphone_input) v(f4_loudness_contour) v(e2_timing_c2) v(e2_attack_panel_in) v(e2_decay_out) v(e2_follower_base) v(e2_reset_collector) v(e2_attack_gate_lower) v(e2_keyboard_trigger) v(f4_q18_base)\n",
+        "diff": "--- \n+++ \n@@ -257 +257 @@\n-VE2_keyboard E2_KEYBOARD_TRIGGER 0 PWL(0 0 0.002 0 0.0020100000000000001 10 0.025000000000000001 10 0.025010000000000001 0)\n+VE2_keyboard E2_KEYBOARD_TRIGGER 0 PWL(0 0 0.01 0 0.01001 10 0.20000000000000001 10 0.20001000000000002 0)\n@@ -265,2 +265,3 @@\n-tran 4.9999999999999998e-07 0.040000000000000001 0 4.9999999999999998e-07\n-wrdata C:/Users/kalex/OneDrive/Documents/rackforge-plugin-rf-d/references-local/voice-circuit/active-six-short01/joint-nominal500.txt v(ramp_c1) v(schmitt_drive) v(saw_output_9b) v(mix_bus_board4_pin4) v(f4_recover_collector) v(f4_main_output) v(f4_q17_collector) v(f4_c2_right) v(f4_headphone_input) v(f4_loudness_contour) v(e2_timing_c2) v(e2_attack_panel_in) v(e2_decay_out) v(e2_follower_base) v(e2_reset_collector) v(e2_attack_gate_lower) v(e2_keyboard_trigger) v(f4_q18_base)\n+tran 4.9999999999999998e-07 0.34999999999999998 0 4.9999999999999998e-07\n+set filetype=binary\n+write C:/Users/kalex/OneDrive/Documents/rackforge-plugin-rf-d/references-local/voice-circuit/active-six-binary-long01/nominal500.raw v(ramp_c1) v(schmitt_drive) v(saw_output_9b) v(mix_bus_board4_pin4) v(f4_recover_collector) v(f4_main_output) v(f4_q17_collector) v(f4_c2_right) v(f4_headphone_input) v(f4_loudness_contour) v(e2_timing_c2) v(e2_attack_panel_in) v(e2_decay_out) v(e2_follower_base) v(e2_reset_collector) v(e2_attack_gate_lower) v(e2_keyboard_trigger) v(f4_q18_base)\n",
+        "dual_export": false,
+        "electrical_changes": false
+      },
+      "short_receipt_path": "references-local/voice-circuit/active-six-short01/joint-nominal500.json",
+      "short_receipt_sha256": "2c8103678bd006fc4a5b5e2d1097e437bc18d674f34b75ab47dc58c434c57aa0",
+      "short_bank_sha256": "e99a5b629d4e93b483e88e3e6a83b702bb749676c115848733e6c6796d1b4ed9",
+      "short_audit_sha256": "148d5b63747f13e3a9e41798e47a47d24db370042cc3de46fe56d9f26e39a751",
+      "original_deck_sha256": "142d0d54374026cd4da62a184e9dd46bc5c5099956635712ce56511e95cc2906",
+      "current_source_sha256": {
+        "evidence/vco1_ramp_graph.json": "bec931c06ac012fd14ee2b7ddf8f86f06c2d3c0ab2a78306dd6f33c88bead361",
+        "evidence/vco1_ca3046_parts.json": "2724e065969f8b0edc4f1191a787ae38c755aa4850fcfa6b9262828207689ad9",
+        "evidence/vco1_panel_pulse_width.json": "6da8d7eb376649cbda482c32f8da8ec55da5e2f7344756bac626a6e9d81b69c9",
+        "evidence/vco1_laboratory_devices.json": "50b4f163e29d2c4a9a19a186d871a0a83ff1d19c7d4c539e8e42add2dcd254f1",
+        "tools/vco1_circuit_reference.py": "c2e44b4e528744359300f7257a601c7e870a929e9f5c624f7ba741b07bff193b",
+        "references-local/datasheets/ti_lm741_lm741.lib": "f58370983c8bd22bf6a59ddd05a1dd492f1a0ea60f673ffd460a356da5e693dc",
+        "evidence/voice_board4_graph.json": "dae24df4d2ea7635cc1935e556a9d989ec34f48950ec884069532cc5d3ba49f9",
+        "tools/voice_circuit_reference.py": "88267ed30db730315eca9d0099d40ee7e1a8ac9f751bee9e7f1b6a24d114e17c",
+        "tools/filter_vca_circuit_reference.py": "41de5bab7bfa2a78246c0fc5e0fbd744bd9939aead4881cabd85acef2774d9db",
+        "evidence/loudness_contour_graph.json": "f147a2e10dcf4fae6e18c13ad1c8f3842977f7e15c3bd019f27bfcd2300dee66",
+        "tools/loudness_contour_reference.py": "1dcceac0102af47d0111c6710634f58e63ff04f27f0e30cb3b418228d07094a3",
+        "tools/loudness_board4_circuit.py": "9aaec972855bdcc15ac834697cfcc523deec44f75149a4f11671433c1154e616",
+        "tools/loudness_voice_circuit.py": "0ac19726aacb8bdae0ec7404600b79f5ec83ef5e9462f915d853187243f4dc12",
+        "tools/loudness_voice_probes.py": "55fba545bacbe249738d8691142a02fcdec887fd39fe92e6ab390e360670e254"
+      },
+      "helper_sha256": {
+        "tools/voice_binary_runner.py": "ab3df93cfdbb2ee1b79962f72fca93447e2b6fce91b27271dbe8ae3fa8b059e4",
+        "tools/voice_native_raw.py": "0c57179317e2fb54515ee0049c34196c6cb694999c1442fc561c130a432da0a6",
+        "tools/voice_six_runner.py": "fe2dea31d98567b9da891b34dcb0cf6227a19bb1006d4cbbfd7686167b8ce94a",
+        "tools/voice_six_build.py": "a1d444f244495aa3e7db0699f68c43700e22c607e014ebe40287f22651759f5c",
+        "tools/voice_full_note.py": "002878c1c05fd8278cf06c3a7e4f694212161ff8e12149f17886d9fd13f5bea9",
+        "tools/vco1_circuit_reference.py": "c2e44b4e528744359300f7257a601c7e870a929e9f5c624f7ba741b07bff193b",
+        "tools/loudness_voice_probes.py": "55fba545bacbe249738d8691142a02fcdec887fd39fe92e6ab390e360670e254",
+        "tools/loudness_voice_circuit.py": "0ac19726aacb8bdae0ec7404600b79f5ec83ef5e9462f915d853187243f4dc12"
+      },
+      "runtime_sha256": {
+        "references-local/voice-circuit/newton-build11/init02/spinit": "9cb857d73fe223122ec7eecd796bbcc7615add973ca7afedbe7a0914c5600ef2",
+        "references-local/voice-circuit/newton-build11/baseline02/src/xspice/icm/spice2poly/spice2poly.cm": "369554828e74e7ec588f80d876fa6f4ebb8dceaf82ba46e6c7f9f7d62a38a341",
+        "C:/msys64/ucrt64/bin/libwinpthread-1.dll": "c7844629395e7813508fc9bb58c068ca9240a04d6d8529db0a75b6efc53590e7",
+        "C:/msys64/ucrt64/bin/libstdc++-6.dll": "d9a58184f6bb27936ef03c3a3286950e4aa61c66a9f74dfa94a532b1433b368d",
+        "C:/msys64/ucrt64/bin/libgcc_s_seh-1.dll": "ff139cfe956709283f7b70a06af8bc8bb9d1c3bef60ec1bc8d363c91351cfeb2"
+      },
+      "compiled_source_sha256": {
+        "src/maths/ni/niiter.c": "464e001a80db05f7141b9c813168b4deba8990b1f31294eb5625ede281c00066",
+        "src/frontend/rawfile.c": "fa5d8625a5b4168d4f928af455f685a9a7edb0ef7999af2f18853e8bf5216840",
+        "src/frontend/postcoms.c": "60bcc3b4bd6e2cc4203dc8bd4f3185b27d1376e321613ce89f6c84ee1887901c"
+      },
+      "executable_path": "references-local/voice-circuit/newton-build11/bin/candidate.exe",
+      "executable_sha256": "333174ac4345ae786e515a6e66345e8a36af494e24bf76c63f92c8f1813af505",
+      "build_sha256": "7a7929d4de4aa42827662ada164503be15099c6a36b816c625f0b896365c6654",
+      "protocol_sha256": "594c6da49e96d4b0b208a500b50a7e40efc102fa6d74dbc6bda9858ff47821d5",
+      "deck_sha256": "fad286014430100d5cfbb37efd1dc7c02e4c96a6abbcbc9739d5f115b4c6daba",
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-circuit\\newton-build11\\bin\\candidate.exe",
+        "-n",
+        "-b",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-circuit\\active-six-binary-long01\\nominal500.cir"
+      ],
+      "controlled_environment": {
+        "RF_D_LINEAR_REFINE": "1",
+        "RF_D_REFINE_REPLAY": null,
+        "RF_D_MATRIX_TRACE": null,
+        "RF_D_TRACE": null,
+        "RF_D_741_REDUCE": null,
+        "RF_D_REFINE_SHADOW": null
+      },
+      "published_corrections": 6,
+      "wall_limit_s": 7200,
+      "process_started": true,
+      "trajectory_complete": false,
+      "git_commit": "3e7ce511d3939b73789fdd788c77b5b679d6b7db",
+      "physical_fidelity": false,
+      "real_time": false,
+      "new_audio": false,
+      "control_audit_sha256": "e90acdb10cfc633a5013b52de69e4cbcde802548ac17af85709a408016fa2f5d",
+      "exit_code": 0,
+      "wall_s": 798.4026156000036,
+      "helper_sha256_after": {
+        "tools/voice_binary_runner.py": "ab3df93cfdbb2ee1b79962f72fca93447e2b6fce91b27271dbe8ae3fa8b059e4",
+        "tools/voice_native_raw.py": "0c57179317e2fb54515ee0049c34196c6cb694999c1442fc561c130a432da0a6",
+        "tools/voice_six_runner.py": "fe2dea31d98567b9da891b34dcb0cf6227a19bb1006d4cbbfd7686167b8ce94a",
+        "tools/voice_six_build.py": "a1d444f244495aa3e7db0699f68c43700e22c607e014ebe40287f22651759f5c",
+        "tools/voice_full_note.py": "002878c1c05fd8278cf06c3a7e4f694212161ff8e12149f17886d9fd13f5bea9",
+        "tools/vco1_circuit_reference.py": "c2e44b4e528744359300f7257a601c7e870a929e9f5c624f7ba741b07bff193b",
+        "tools/loudness_voice_probes.py": "55fba545bacbe249738d8691142a02fcdec887fd39fe92e6ab390e360670e254",
+        "tools/loudness_voice_circuit.py": "0ac19726aacb8bdae0ec7404600b79f5ec83ef5e9462f915d853187243f4dc12"
+      },
+      "runtime_sha256_after": {
+        "references-local/voice-circuit/newton-build11/init02/spinit": "9cb857d73fe223122ec7eecd796bbcc7615add973ca7afedbe7a0914c5600ef2",
+        "references-local/voice-circuit/newton-build11/baseline02/src/xspice/icm/spice2poly/spice2poly.cm": "369554828e74e7ec588f80d876fa6f4ebb8dceaf82ba46e6c7f9f7d62a38a341",
+        "C:/msys64/ucrt64/bin/libwinpthread-1.dll": "c7844629395e7813508fc9bb58c068ca9240a04d6d8529db0a75b6efc53590e7",
+        "C:/msys64/ucrt64/bin/libstdc++-6.dll": "d9a58184f6bb27936ef03c3a3286950e4aa61c66a9f74dfa94a532b1433b368d",
+        "C:/msys64/ucrt64/bin/libgcc_s_seh-1.dll": "ff139cfe956709283f7b70a06af8bc8bb9d1c3bef60ec1bc8d363c91351cfeb2"
+      },
+      "current_source_sha256_after": {
+        "evidence/vco1_ramp_graph.json": "bec931c06ac012fd14ee2b7ddf8f86f06c2d3c0ab2a78306dd6f33c88bead361",
+        "evidence/vco1_ca3046_parts.json": "2724e065969f8b0edc4f1191a787ae38c755aa4850fcfa6b9262828207689ad9",
+        "evidence/vco1_panel_pulse_width.json": "6da8d7eb376649cbda482c32f8da8ec55da5e2f7344756bac626a6e9d81b69c9",
+        "evidence/vco1_laboratory_devices.json": "50b4f163e29d2c4a9a19a186d871a0a83ff1d19c7d4c539e8e42add2dcd254f1",
+        "tools/vco1_circuit_reference.py": "c2e44b4e528744359300f7257a601c7e870a929e9f5c624f7ba741b07bff193b",
+        "references-local/datasheets/ti_lm741_lm741.lib": "f58370983c8bd22bf6a59ddd05a1dd492f1a0ea60f673ffd460a356da5e693dc",
+        "evidence/voice_board4_graph.json": "dae24df4d2ea7635cc1935e556a9d989ec34f48950ec884069532cc5d3ba49f9",
+        "tools/voice_circuit_reference.py": "88267ed30db730315eca9d0099d40ee7e1a8ac9f751bee9e7f1b6a24d114e17c",
+        "tools/filter_vca_circuit_reference.py": "41de5bab7bfa2a78246c0fc5e0fbd744bd9939aead4881cabd85acef2774d9db",
+        "evidence/loudness_contour_graph.json": "f147a2e10dcf4fae6e18c13ad1c8f3842977f7e15c3bd019f27bfcd2300dee66",
+        "tools/loudness_contour_reference.py": "1dcceac0102af47d0111c6710634f58e63ff04f27f0e30cb3b418228d07094a3",
+        "tools/loudness_board4_circuit.py": "9aaec972855bdcc15ac834697cfcc523deec44f75149a4f11671433c1154e616",
+        "tools/loudness_voice_circuit.py": "0ac19726aacb8bdae0ec7404600b79f5ec83ef5e9462f915d853187243f4dc12",
+        "tools/loudness_voice_probes.py": "55fba545bacbe249738d8691142a02fcdec887fd39fe92e6ab390e360670e254"
+      },
+      "compiled_source_sha256_after": {
+        "src/maths/ni/niiter.c": "464e001a80db05f7141b9c813168b4deba8990b1f31294eb5625ede281c00066",
+        "src/frontend/rawfile.c": "fa5d8625a5b4168d4f928af455f685a9a7edb0ef7999af2f18853e8bf5216840",
+        "src/frontend/postcoms.c": "60bcc3b4bd6e2cc4203dc8bd4f3185b27d1376e321613ce89f6c84ee1887901c"
+      },
+      "executable_sha256_after": "333174ac4345ae786e515a6e66345e8a36af494e24bf76c63f92c8f1813af505",
+      "log_sha256": "88c8254cb309eeb74fbdc0ec65f1b79219ff457062db7c3442c0fe4fbdfa4c52",
+      "solver_failure_reported": true,
+      "refinement_activation_confirmed": true,
+      "unwanted_instrumentation": false,
+      "unexpected_correction_announcement": false,
+      "activation_gate_passed": false,
+      "raw_sha256": "a942dadbe988a00f717a25fdbd67580c9c9a010e3a1739c4e39ea1d89f26d0ac",
+      "raw_bytes": 98665999,
+      "native_layout": {
+        "schema": "rf-d/native-raw-layout/v1",
+        "dtype": "<f8",
+        "endianness": "little",
+        "columns": 19,
+        "rows": 649113,
+        "header_bytes": 823,
+        "payload_bytes": 98665176,
+        "header_sha256": "4e1d0d5491c835ebe2b76b18e5248b0fc7404ce624960fb1a1b3f30028f710f5",
+        "payload_sha256": "078329223954434ccdb80e9d69a946c69c29e4095288679b5bf9827019d3c220",
+        "variables": [
+          {
+            "index": 0,
+            "name": "time",
+            "canonical_name": "time",
+            "unit": "time"
+          },
+          {
+            "index": 1,
+            "name": "v(ramp_c1)",
+            "canonical_name": "v(ramp_c1)",
+            "unit": "voltage"
+          },
+          {
+            "index": 2,
+            "name": "v(schmitt_drive)",
+            "canonical_name": "v(schmitt_drive)",
+            "unit": "voltage"
+          },
+          {
+            "index": 3,
+            "name": "v(saw_output_9b)",
+            "canonical_name": "v(saw_output_9b)",
+            "unit": "voltage"
+          },
+          {
+            "index": 4,
+            "name": "v(mix_bus_board4_pin4)",
+            "canonical_name": "v(mix_bus_board4_pin4)",
+            "unit": "voltage"
+          },
+          {
+            "index": 5,
+            "name": "v(f4_recover_collector)",
+            "canonical_name": "v(f4_recover_collector)",
+            "unit": "voltage"
+          },
+          {
+            "index": 6,
+            "name": "v(f4_main_output)",
+            "canonical_name": "v(f4_main_output)",
+            "unit": "voltage"
+          },
+          {
+            "index": 7,
+            "name": "v(f4_q17_collector)",
+            "canonical_name": "v(f4_q17_collector)",
+            "unit": "voltage"
+          },
+          {
+            "index": 8,
+            "name": "v(f4_c2_right)",
+            "canonical_name": "v(f4_c2_right)",
+            "unit": "voltage"
+          },
+          {
+            "index": 9,
+            "name": "v(f4_headphone_input)",
+            "canonical_name": "v(f4_headphone_input)",
+            "unit": "voltage"
+          },
+          {
+            "index": 10,
+            "name": "v(f4_loudness_contour)",
+            "canonical_name": "v(f4_loudness_contour)",
+            "unit": "voltage"
+          },
+          {
+            "index": 11,
+            "name": "v(e2_timing_c2)",
+            "canonical_name": "v(e2_timing_c2)",
+            "unit": "voltage"
+          },
+          {
+            "index": 12,
+            "name": "v(e2_attack_panel_in)",
+            "canonical_name": "v(e2_attack_panel_in)",
+            "unit": "voltage"
+          },
+          {
+            "index": 13,
+            "name": "v(e2_decay_out)",
+            "canonical_name": "v(e2_decay_out)",
+            "unit": "voltage"
+          },
+          {
+            "index": 14,
+            "name": "v(e2_follower_base)",
+            "canonical_name": "v(e2_follower_base)",
+            "unit": "voltage"
+          },
+          {
+            "index": 15,
+            "name": "v(e2_reset_collector)",
+            "canonical_name": "v(e2_reset_collector)",
+            "unit": "voltage"
+          },
+          {
+            "index": 16,
+            "name": "v(e2_attack_gate_lower)",
+            "canonical_name": "v(e2_attack_gate_lower)",
+            "unit": "voltage"
+          },
+          {
+            "index": 17,
+            "name": "v(e2_keyboard_trigger)",
+            "canonical_name": "v(e2_keyboard_trigger)",
+            "unit": "voltage"
+          },
+          {
+            "index": 18,
+            "name": "v(f4_q18_base)",
+            "canonical_name": "v(f4_q18_base)",
+            "unit": "voltage"
+          }
+        ],
+        "canonical_columns": [
+          "time",
+          "v(ramp_c1)",
+          "v(schmitt_drive)",
+          "v(saw_output_9b)",
+          "v(mix_bus_board4_pin4)",
+          "v(f4_recover_collector)",
+          "v(f4_main_output)",
+          "v(f4_q17_collector)",
+          "v(f4_c2_right)",
+          "v(f4_headphone_input)",
+          "v(f4_loudness_contour)",
+          "v(e2_timing_c2)",
+          "v(e2_attack_panel_in)",
+          "v(e2_decay_out)",
+          "v(e2_follower_base)",
+          "v(e2_reset_collector)",
+          "v(e2_attack_gate_lower)",
+          "v(e2_keyboard_trigger)",
+          "v(f4_q18_base)"
+        ],
+        "column_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18
+        ],
+        "physical_fidelity": false,
+        "real_time": false
+      },
+      "rows": 649113,
+      "last_clock_s": 0.13663026942474873,
+      "max_step_observed_s": 5.000000000005e-07,
+      "endpoint_complete": false,
+      "max_step_passed": true
+    },
+    "nominal250": {
+      "schema": "rf-d/native-export-run/v1",
+      "scene": "nominal250",
+      "long_mode": true,
+      "scenario": {
+        "board": {
+          "oscillator": {
+            "keyboard_v": -2.1,
+            "other_control_v": -2.1,
+            "r8_fraction": 0.2613404652606161,
+            "r11_active_ohm": 521.3126579373712,
+            "c4_f": 1e-11,
+            "upper_contact": 3,
+            "lower_contact": 10,
+            "level_fraction": 0.5,
+            "imposed_mixer_v": 0.0,
+            "external_neg4_load_a": 0.0,
+            "duration_s": 0.35,
+            "max_step_s": 2.5e-07,
+            "method": "gear",
+            "order": 2
+          },
+          "cutoff_fraction": 0.5,
+          "range_fraction": 0.5,
+          "scale_ohm": 250,
+          "emphasis_ohm": 50000,
+          "regen_bottom_ohm": 500,
+          "r61_ohm": 200,
+          "first_loudness_v": 2,
+          "second_loudness_base_v": 2,
+          "contour_amount_v": 0,
+          "first_balance_ohm": 12.5,
+          "second_balance_ohm": 50,
+          "main_load_ohm": 100000,
+          "headphone_input_ohm": 100000
+        },
+        "controls": {
+          "attack_ohm": 10000.0,
+          "decay_ohm": 100000.0,
+          "sustain_lower_ohm": 2500.0,
+          "final_decay": true,
+          "external_s_short": false,
+          "trigger_base_ohm": 10000.0,
+          "reset_pullup_ohm": 3300.0
+        },
+        "trigger_on_s": 0.01,
+        "trigger_off_s": 0.2,
+        "trigger_transition_s": 1e-05,
+        "contour_supply_v": 9.3
+      },
+      "vectors": [
+        "v(ramp_c1)",
+        "v(schmitt_drive)",
+        "v(saw_output_9b)",
+        "v(mix_bus_board4_pin4)",
+        "v(f4_recover_collector)",
+        "v(f4_main_output)",
+        "v(f4_q17_collector)",
+        "v(f4_c2_right)",
+        "v(f4_headphone_input)",
+        "v(f4_loudness_contour)",
+        "v(e2_timing_c2)",
+        "v(e2_attack_panel_in)",
+        "v(e2_decay_out)",
+        "v(e2_follower_base)",
+        "v(e2_reset_collector)",
+        "v(e2_attack_gate_lower)",
+        "v(e2_keyboard_trigger)",
+        "v(f4_q18_base)"
+      ],
+      "patch": {
+        "temporal_patch": {
+          "changes": [
+            {
+              "before": "VE2_keyboard E2_KEYBOARD_TRIGGER 0 PWL(0 0 0.002 0 0.0020100000000000001 10 0.025000000000000001 10 0.025010000000000001 0)\n",
+              "after": "VE2_keyboard E2_KEYBOARD_TRIGGER 0 PWL(0 0 0.01 0 0.01001 10 0.20000000000000001 10 0.20001000000000002 0)\n"
+            },
+            {
+              "before": "tran 2.4999999999999999e-07 0.040000000000000001 0 2.4999999999999999e-07\n",
+              "after": "tran 2.4999999999999999e-07 0.34999999999999998 0 2.4999999999999999e-07\n"
+            },
+            {
+              "before": "wrdata C:/Users/kalex/OneDrive/Documents/rackforge-plugin-rf-d/references-local/voice-circuit/active-six-short01/joint-nominal250.txt ",
+              "after": "wrdata C:/Users/kalex/OneDrive/Documents/rackforge-plugin-rf-d/references-local/voice-circuit/active-six-binary-long01/nominal250.txt "
+            }
+          ],
+          "unchanged_skeleton_sha256": "957b7ea688fdfeabb585f3bf5d3225b124b1ef3a743dff020853740ee26519e2",
+          "diff": "--- historical-short\n+++ long-note\n@@ -257 +257 @@\n-VE2_keyboard E2_KEYBOARD_TRIGGER 0 PWL(0 0 0.002 0 0.0020100000000000001 10 0.025000000000000001 10 0.025010000000000001 0)\n+VE2_keyboard E2_KEYBOARD_TRIGGER 0 PWL(0 0 0.01 0 0.01001 10 0.20000000000000001 10 0.20001000000000002 0)\n@@ -265,2 +265,2 @@\n-tran 2.4999999999999999e-07 0.040000000000000001 0 2.4999999999999999e-07\n-wrdata C:/Users/kalex/OneDrive/Documents/rackforge-plugin-rf-d/references-local/voice-circuit/active-six-short01/joint-nominal250.txt v(ramp_c1) v(schmitt_drive) v(saw_output_9b) v(mix_bus_board4_pin4) v(f4_recover_collector) v(f4_main_output) v(f4_q17_collector) v(f4_c2_right) v(f4_headphone_input) v(f4_loudness_contour) v(e2_timing_c2) v(e2_attack_panel_in) v(e2_decay_out) v(e2_follower_base) v(e2_reset_collector) v(e2_attack_gate_lower) v(e2_keyboard_trigger) v(f4_q18_base)\n+tran 2.4999999999999999e-07 0.34999999999999998 0 2.4999999999999999e-07\n+wrdata C:/Users/kalex/OneDrive/Documents/rackforge-plugin-rf-d/references-local/voice-circuit/active-six-binary-long01/nominal250.txt v(ramp_c1) v(schmitt_drive) v(saw_output_9b) v(mix_bus_board4_pin4) v(f4_recover_collector) v(f4_main_output) v(f4_q17_collector) v(f4_c2_right) v(f4_headphone_input) v(f4_loudness_contour) v(e2_timing_c2) v(e2_attack_panel_in) v(e2_decay_out) v(e2_follower_base) v(e2_reset_collector) v(e2_attack_gate_lower) v(e2_keyboard_trigger) v(f4_q18_base)\n",
+          "scenario": {
+            "board": {
+              "oscillator": {
+                "keyboard_v": -2.1,
+                "other_control_v": -2.1,
+                "r8_fraction": 0.2613404652606161,
+                "r11_active_ohm": 521.3126579373712,
+                "c4_f": 1e-11,
+                "upper_contact": 3,
+                "lower_contact": 10,
+                "level_fraction": 0.5,
+                "imposed_mixer_v": 0.0,
+                "external_neg4_load_a": 0.0,
+                "duration_s": 0.35,
+                "max_step_s": 2.5e-07,
+                "method": "gear",
+                "order": 2
+              },
+              "cutoff_fraction": 0.5,
+              "range_fraction": 0.5,
+              "scale_ohm": 250,
+              "emphasis_ohm": 50000,
+              "regen_bottom_ohm": 500,
+              "r61_ohm": 200,
+              "first_loudness_v": 2,
+              "second_loudness_base_v": 2,
+              "contour_amount_v": 0,
+              "first_balance_ohm": 12.5,
+              "second_balance_ohm": 50,
+              "main_load_ohm": 100000,
+              "headphone_input_ohm": 100000
+            },
+            "controls": {
+              "attack_ohm": 10000.0,
+              "decay_ohm": 100000.0,
+              "sustain_lower_ohm": 2500.0,
+              "final_decay": true,
+              "external_s_short": false,
+              "trigger_base_ohm": 10000.0,
+              "reset_pullup_ohm": 3300.0
+            },
+            "trigger_on_s": 0.01,
+            "trigger_off_s": 0.2,
+            "trigger_transition_s": 1e-05,
+            "contour_supply_v": 9.3
+          },
+          "vectors": [
+            "v(ramp_c1)",
+            "v(schmitt_drive)",
+            "v(saw_output_9b)",
+            "v(mix_bus_board4_pin4)",
+            "v(f4_recover_collector)",
+            "v(f4_main_output)",
+            "v(f4_q17_collector)",
+            "v(f4_c2_right)",
+            "v(f4_headphone_input)",
+            "v(f4_loudness_contour)",
+            "v(e2_timing_c2)",
+            "v(e2_attack_panel_in)",
+            "v(e2_decay_out)",
+            "v(e2_follower_base)",
+            "v(e2_reset_collector)",
+            "v(e2_attack_gate_lower)",
+            "v(e2_keyboard_trigger)",
+            "v(f4_q18_base)"
+          ]
+        },
+        "export_before": "wrdata C:/Users/kalex/OneDrive/Documents/rackforge-plugin-rf-d/references-local/voice-circuit/active-six-binary-long01/nominal250.txt v(ramp_c1) v(schmitt_drive) v(saw_output_9b) v(mix_bus_board4_pin4) v(f4_recover_collector) v(f4_main_output) v(f4_q17_collector) v(f4_c2_right) v(f4_headphone_input) v(f4_loudness_contour) v(e2_timing_c2) v(e2_attack_panel_in) v(e2_decay_out) v(e2_follower_base) v(e2_reset_collector) v(e2_attack_gate_lower) v(e2_keyboard_trigger) v(f4_q18_base)\n",
+        "export_after": "set filetype=binary\nwrite C:/Users/kalex/OneDrive/Documents/rackforge-plugin-rf-d/references-local/voice-circuit/active-six-binary-long01/nominal250.raw v(ramp_c1) v(schmitt_drive) v(saw_output_9b) v(mix_bus_board4_pin4) v(f4_recover_collector) v(f4_main_output) v(f4_q17_collector) v(f4_c2_right) v(f4_headphone_input) v(f4_loudness_contour) v(e2_timing_c2) v(e2_attack_panel_in) v(e2_decay_out) v(e2_follower_base) v(e2_reset_collector) v(e2_attack_gate_lower) v(e2_keyboard_trigger) v(f4_q18_base)\n",
+        "diff": "--- \n+++ \n@@ -257 +257 @@\n-VE2_keyboard E2_KEYBOARD_TRIGGER 0 PWL(0 0 0.002 0 0.0020100000000000001 10 0.025000000000000001 10 0.025010000000000001 0)\n+VE2_keyboard E2_KEYBOARD_TRIGGER 0 PWL(0 0 0.01 0 0.01001 10 0.20000000000000001 10 0.20001000000000002 0)\n@@ -265,2 +265,3 @@\n-tran 2.4999999999999999e-07 0.040000000000000001 0 2.4999999999999999e-07\n-wrdata C:/Users/kalex/OneDrive/Documents/rackforge-plugin-rf-d/references-local/voice-circuit/active-six-short01/joint-nominal250.txt v(ramp_c1) v(schmitt_drive) v(saw_output_9b) v(mix_bus_board4_pin4) v(f4_recover_collector) v(f4_main_output) v(f4_q17_collector) v(f4_c2_right) v(f4_headphone_input) v(f4_loudness_contour) v(e2_timing_c2) v(e2_attack_panel_in) v(e2_decay_out) v(e2_follower_base) v(e2_reset_collector) v(e2_attack_gate_lower) v(e2_keyboard_trigger) v(f4_q18_base)\n+tran 2.4999999999999999e-07 0.34999999999999998 0 2.4999999999999999e-07\n+set filetype=binary\n+write C:/Users/kalex/OneDrive/Documents/rackforge-plugin-rf-d/references-local/voice-circuit/active-six-binary-long01/nominal250.raw v(ramp_c1) v(schmitt_drive) v(saw_output_9b) v(mix_bus_board4_pin4) v(f4_recover_collector) v(f4_main_output) v(f4_q17_collector) v(f4_c2_right) v(f4_headphone_input) v(f4_loudness_contour) v(e2_timing_c2) v(e2_attack_panel_in) v(e2_decay_out) v(e2_follower_base) v(e2_reset_collector) v(e2_attack_gate_lower) v(e2_keyboard_trigger) v(f4_q18_base)\n",
+        "dual_export": false,
+        "electrical_changes": false
+      },
+      "short_receipt_path": "references-local/voice-circuit/active-six-short01/joint-nominal250.json",
+      "short_receipt_sha256": "aeff5355749840ae78704a78c15f226d1656d1372e770b84e3a965fba9bf3ce7",
+      "short_bank_sha256": "e99a5b629d4e93b483e88e3e6a83b702bb749676c115848733e6c6796d1b4ed9",
+      "short_audit_sha256": "148d5b63747f13e3a9e41798e47a47d24db370042cc3de46fe56d9f26e39a751",
+      "original_deck_sha256": "b12e47a65899445284f1db41fdf4534c4a4d455eb0c5d0eaeee4a2e18663a1ac",
+      "current_source_sha256": {
+        "evidence/vco1_ramp_graph.json": "bec931c06ac012fd14ee2b7ddf8f86f06c2d3c0ab2a78306dd6f33c88bead361",
+        "evidence/vco1_ca3046_parts.json": "2724e065969f8b0edc4f1191a787ae38c755aa4850fcfa6b9262828207689ad9",
+        "evidence/vco1_panel_pulse_width.json": "6da8d7eb376649cbda482c32f8da8ec55da5e2f7344756bac626a6e9d81b69c9",
+        "evidence/vco1_laboratory_devices.json": "50b4f163e29d2c4a9a19a186d871a0a83ff1d19c7d4c539e8e42add2dcd254f1",
+        "tools/vco1_circuit_reference.py": "c2e44b4e528744359300f7257a601c7e870a929e9f5c624f7ba741b07bff193b",
+        "references-local/datasheets/ti_lm741_lm741.lib": "f58370983c8bd22bf6a59ddd05a1dd492f1a0ea60f673ffd460a356da5e693dc",
+        "evidence/voice_board4_graph.json": "dae24df4d2ea7635cc1935e556a9d989ec34f48950ec884069532cc5d3ba49f9",
+        "tools/voice_circuit_reference.py": "88267ed30db730315eca9d0099d40ee7e1a8ac9f751bee9e7f1b6a24d114e17c",
+        "tools/filter_vca_circuit_reference.py": "41de5bab7bfa2a78246c0fc5e0fbd744bd9939aead4881cabd85acef2774d9db",
+        "evidence/loudness_contour_graph.json": "f147a2e10dcf4fae6e18c13ad1c8f3842977f7e15c3bd019f27bfcd2300dee66",
+        "tools/loudness_contour_reference.py": "1dcceac0102af47d0111c6710634f58e63ff04f27f0e30cb3b418228d07094a3",
+        "tools/loudness_board4_circuit.py": "9aaec972855bdcc15ac834697cfcc523deec44f75149a4f11671433c1154e616",
+        "tools/loudness_voice_circuit.py": "0ac19726aacb8bdae0ec7404600b79f5ec83ef5e9462f915d853187243f4dc12",
+        "tools/loudness_voice_probes.py": "55fba545bacbe249738d8691142a02fcdec887fd39fe92e6ab390e360670e254"
+      },
+      "helper_sha256": {
+        "tools/voice_binary_runner.py": "ab3df93cfdbb2ee1b79962f72fca93447e2b6fce91b27271dbe8ae3fa8b059e4",
+        "tools/voice_native_raw.py": "0c57179317e2fb54515ee0049c34196c6cb694999c1442fc561c130a432da0a6",
+        "tools/voice_six_runner.py": "fe2dea31d98567b9da891b34dcb0cf6227a19bb1006d4cbbfd7686167b8ce94a",
+        "tools/voice_six_build.py": "a1d444f244495aa3e7db0699f68c43700e22c607e014ebe40287f22651759f5c",
+        "tools/voice_full_note.py": "002878c1c05fd8278cf06c3a7e4f694212161ff8e12149f17886d9fd13f5bea9",
+        "tools/vco1_circuit_reference.py": "c2e44b4e528744359300f7257a601c7e870a929e9f5c624f7ba741b07bff193b",
+        "tools/loudness_voice_probes.py": "55fba545bacbe249738d8691142a02fcdec887fd39fe92e6ab390e360670e254",
+        "tools/loudness_voice_circuit.py": "0ac19726aacb8bdae0ec7404600b79f5ec83ef5e9462f915d853187243f4dc12"
+      },
+      "runtime_sha256": {
+        "references-local/voice-circuit/newton-build11/init02/spinit": "9cb857d73fe223122ec7eecd796bbcc7615add973ca7afedbe7a0914c5600ef2",
+        "references-local/voice-circuit/newton-build11/baseline02/src/xspice/icm/spice2poly/spice2poly.cm": "369554828e74e7ec588f80d876fa6f4ebb8dceaf82ba46e6c7f9f7d62a38a341",
+        "C:/msys64/ucrt64/bin/libwinpthread-1.dll": "c7844629395e7813508fc9bb58c068ca9240a04d6d8529db0a75b6efc53590e7",
+        "C:/msys64/ucrt64/bin/libstdc++-6.dll": "d9a58184f6bb27936ef03c3a3286950e4aa61c66a9f74dfa94a532b1433b368d",
+        "C:/msys64/ucrt64/bin/libgcc_s_seh-1.dll": "ff139cfe956709283f7b70a06af8bc8bb9d1c3bef60ec1bc8d363c91351cfeb2"
+      },
+      "compiled_source_sha256": {
+        "src/maths/ni/niiter.c": "464e001a80db05f7141b9c813168b4deba8990b1f31294eb5625ede281c00066",
+        "src/frontend/rawfile.c": "fa5d8625a5b4168d4f928af455f685a9a7edb0ef7999af2f18853e8bf5216840",
+        "src/frontend/postcoms.c": "60bcc3b4bd6e2cc4203dc8bd4f3185b27d1376e321613ce89f6c84ee1887901c"
+      },
+      "executable_path": "references-local/voice-circuit/newton-build11/bin/candidate.exe",
+      "executable_sha256": "333174ac4345ae786e515a6e66345e8a36af494e24bf76c63f92c8f1813af505",
+      "build_sha256": "7a7929d4de4aa42827662ada164503be15099c6a36b816c625f0b896365c6654",
+      "protocol_sha256": "594c6da49e96d4b0b208a500b50a7e40efc102fa6d74dbc6bda9858ff47821d5",
+      "deck_sha256": "f7f6f51086c6f149adfe4502f59214082eb1098c80e1e3b8d99fe9f1e6123956",
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-circuit\\newton-build11\\bin\\candidate.exe",
+        "-n",
+        "-b",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-circuit\\active-six-binary-long01\\nominal250.cir"
+      ],
+      "controlled_environment": {
+        "RF_D_LINEAR_REFINE": "1",
+        "RF_D_REFINE_REPLAY": null,
+        "RF_D_MATRIX_TRACE": null,
+        "RF_D_TRACE": null,
+        "RF_D_741_REDUCE": null,
+        "RF_D_REFINE_SHADOW": null
+      },
+      "published_corrections": 6,
+      "wall_limit_s": 7200,
+      "process_started": true,
+      "trajectory_complete": false,
+      "git_commit": "3e7ce511d3939b73789fdd788c77b5b679d6b7db",
+      "physical_fidelity": false,
+      "real_time": false,
+      "new_audio": false,
+      "control_audit_sha256": "e90acdb10cfc633a5013b52de69e4cbcde802548ac17af85709a408016fa2f5d",
+      "exit_code": 0,
+      "wall_s": 1203.9253038000024,
+      "helper_sha256_after": {
+        "tools/voice_binary_runner.py": "ab3df93cfdbb2ee1b79962f72fca93447e2b6fce91b27271dbe8ae3fa8b059e4",
+        "tools/voice_native_raw.py": "0c57179317e2fb54515ee0049c34196c6cb694999c1442fc561c130a432da0a6",
+        "tools/voice_six_runner.py": "fe2dea31d98567b9da891b34dcb0cf6227a19bb1006d4cbbfd7686167b8ce94a",
+        "tools/voice_six_build.py": "a1d444f244495aa3e7db0699f68c43700e22c607e014ebe40287f22651759f5c",
+        "tools/voice_full_note.py": "002878c1c05fd8278cf06c3a7e4f694212161ff8e12149f17886d9fd13f5bea9",
+        "tools/vco1_circuit_reference.py": "c2e44b4e528744359300f7257a601c7e870a929e9f5c624f7ba741b07bff193b",
+        "tools/loudness_voice_probes.py": "55fba545bacbe249738d8691142a02fcdec887fd39fe92e6ab390e360670e254",
+        "tools/loudness_voice_circuit.py": "0ac19726aacb8bdae0ec7404600b79f5ec83ef5e9462f915d853187243f4dc12"
+      },
+      "runtime_sha256_after": {
+        "references-local/voice-circuit/newton-build11/init02/spinit": "9cb857d73fe223122ec7eecd796bbcc7615add973ca7afedbe7a0914c5600ef2",
+        "references-local/voice-circuit/newton-build11/baseline02/src/xspice/icm/spice2poly/spice2poly.cm": "369554828e74e7ec588f80d876fa6f4ebb8dceaf82ba46e6c7f9f7d62a38a341",
+        "C:/msys64/ucrt64/bin/libwinpthread-1.dll": "c7844629395e7813508fc9bb58c068ca9240a04d6d8529db0a75b6efc53590e7",
+        "C:/msys64/ucrt64/bin/libstdc++-6.dll": "d9a58184f6bb27936ef03c3a3286950e4aa61c66a9f74dfa94a532b1433b368d",
+        "C:/msys64/ucrt64/bin/libgcc_s_seh-1.dll": "ff139cfe956709283f7b70a06af8bc8bb9d1c3bef60ec1bc8d363c91351cfeb2"
+      },
+      "current_source_sha256_after": {
+        "evidence/vco1_ramp_graph.json": "bec931c06ac012fd14ee2b7ddf8f86f06c2d3c0ab2a78306dd6f33c88bead361",
+        "evidence/vco1_ca3046_parts.json": "2724e065969f8b0edc4f1191a787ae38c755aa4850fcfa6b9262828207689ad9",
+        "evidence/vco1_panel_pulse_width.json": "6da8d7eb376649cbda482c32f8da8ec55da5e2f7344756bac626a6e9d81b69c9",
+        "evidence/vco1_laboratory_devices.json": "50b4f163e29d2c4a9a19a186d871a0a83ff1d19c7d4c539e8e42add2dcd254f1",
+        "tools/vco1_circuit_reference.py": "c2e44b4e528744359300f7257a601c7e870a929e9f5c624f7ba741b07bff193b",
+        "references-local/datasheets/ti_lm741_lm741.lib": "f58370983c8bd22bf6a59ddd05a1dd492f1a0ea60f673ffd460a356da5e693dc",
+        "evidence/voice_board4_graph.json": "dae24df4d2ea7635cc1935e556a9d989ec34f48950ec884069532cc5d3ba49f9",
+        "tools/voice_circuit_reference.py": "88267ed30db730315eca9d0099d40ee7e1a8ac9f751bee9e7f1b6a24d114e17c",
+        "tools/filter_vca_circuit_reference.py": "41de5bab7bfa2a78246c0fc5e0fbd744bd9939aead4881cabd85acef2774d9db",
+        "evidence/loudness_contour_graph.json": "f147a2e10dcf4fae6e18c13ad1c8f3842977f7e15c3bd019f27bfcd2300dee66",
+        "tools/loudness_contour_reference.py": "1dcceac0102af47d0111c6710634f58e63ff04f27f0e30cb3b418228d07094a3",
+        "tools/loudness_board4_circuit.py": "9aaec972855bdcc15ac834697cfcc523deec44f75149a4f11671433c1154e616",
+        "tools/loudness_voice_circuit.py": "0ac19726aacb8bdae0ec7404600b79f5ec83ef5e9462f915d853187243f4dc12",
+        "tools/loudness_voice_probes.py": "55fba545bacbe249738d8691142a02fcdec887fd39fe92e6ab390e360670e254"
+      },
+      "compiled_source_sha256_after": {
+        "src/maths/ni/niiter.c": "464e001a80db05f7141b9c813168b4deba8990b1f31294eb5625ede281c00066",
+        "src/frontend/rawfile.c": "fa5d8625a5b4168d4f928af455f685a9a7edb0ef7999af2f18853e8bf5216840",
+        "src/frontend/postcoms.c": "60bcc3b4bd6e2cc4203dc8bd4f3185b27d1376e321613ce89f6c84ee1887901c"
+      },
+      "executable_sha256_after": "333174ac4345ae786e515a6e66345e8a36af494e24bf76c63f92c8f1813af505",
+      "log_sha256": "df59f0600a1946d56614d41ae5c371873b50501146a18d9419a0e68d62dbec4a",
+      "solver_failure_reported": true,
+      "refinement_activation_confirmed": true,
+      "unwanted_instrumentation": false,
+      "unexpected_correction_announcement": false,
+      "activation_gate_passed": false,
+      "raw_sha256": "95a3b0d391e16d49d298b4c3df96b9b64fc925142b8061892b52cce1ef8e8c22",
+      "raw_bytes": 152125616,
+      "native_layout": {
+        "schema": "rf-d/native-raw-layout/v1",
+        "dtype": "<f8",
+        "endianness": "little",
+        "columns": 19,
+        "rows": 1000821,
+        "header_bytes": 824,
+        "payload_bytes": 152124792,
+        "header_sha256": "d0d90bffe11db46ff9b71c92cb630112f5aff7a91ac39e76fcfdbb1a3853fc5d",
+        "payload_sha256": "8bc3926511257311adbdd3fd87fe17b3a963dc4c114bb37fa67fe6d4c2b5ab2c",
+        "variables": [
+          {
+            "index": 0,
+            "name": "time",
+            "canonical_name": "time",
+            "unit": "time"
+          },
+          {
+            "index": 1,
+            "name": "v(ramp_c1)",
+            "canonical_name": "v(ramp_c1)",
+            "unit": "voltage"
+          },
+          {
+            "index": 2,
+            "name": "v(schmitt_drive)",
+            "canonical_name": "v(schmitt_drive)",
+            "unit": "voltage"
+          },
+          {
+            "index": 3,
+            "name": "v(saw_output_9b)",
+            "canonical_name": "v(saw_output_9b)",
+            "unit": "voltage"
+          },
+          {
+            "index": 4,
+            "name": "v(mix_bus_board4_pin4)",
+            "canonical_name": "v(mix_bus_board4_pin4)",
+            "unit": "voltage"
+          },
+          {
+            "index": 5,
+            "name": "v(f4_recover_collector)",
+            "canonical_name": "v(f4_recover_collector)",
+            "unit": "voltage"
+          },
+          {
+            "index": 6,
+            "name": "v(f4_main_output)",
+            "canonical_name": "v(f4_main_output)",
+            "unit": "voltage"
+          },
+          {
+            "index": 7,
+            "name": "v(f4_q17_collector)",
+            "canonical_name": "v(f4_q17_collector)",
+            "unit": "voltage"
+          },
+          {
+            "index": 8,
+            "name": "v(f4_c2_right)",
+            "canonical_name": "v(f4_c2_right)",
+            "unit": "voltage"
+          },
+          {
+            "index": 9,
+            "name": "v(f4_headphone_input)",
+            "canonical_name": "v(f4_headphone_input)",
+            "unit": "voltage"
+          },
+          {
+            "index": 10,
+            "name": "v(f4_loudness_contour)",
+            "canonical_name": "v(f4_loudness_contour)",
+            "unit": "voltage"
+          },
+          {
+            "index": 11,
+            "name": "v(e2_timing_c2)",
+            "canonical_name": "v(e2_timing_c2)",
+            "unit": "voltage"
+          },
+          {
+            "index": 12,
+            "name": "v(e2_attack_panel_in)",
+            "canonical_name": "v(e2_attack_panel_in)",
+            "unit": "voltage"
+          },
+          {
+            "index": 13,
+            "name": "v(e2_decay_out)",
+            "canonical_name": "v(e2_decay_out)",
+            "unit": "voltage"
+          },
+          {
+            "index": 14,
+            "name": "v(e2_follower_base)",
+            "canonical_name": "v(e2_follower_base)",
+            "unit": "voltage"
+          },
+          {
+            "index": 15,
+            "name": "v(e2_reset_collector)",
+            "canonical_name": "v(e2_reset_collector)",
+            "unit": "voltage"
+          },
+          {
+            "index": 16,
+            "name": "v(e2_attack_gate_lower)",
+            "canonical_name": "v(e2_attack_gate_lower)",
+            "unit": "voltage"
+          },
+          {
+            "index": 17,
+            "name": "v(e2_keyboard_trigger)",
+            "canonical_name": "v(e2_keyboard_trigger)",
+            "unit": "voltage"
+          },
+          {
+            "index": 18,
+            "name": "v(f4_q18_base)",
+            "canonical_name": "v(f4_q18_base)",
+            "unit": "voltage"
+          }
+        ],
+        "canonical_columns": [
+          "time",
+          "v(ramp_c1)",
+          "v(schmitt_drive)",
+          "v(saw_output_9b)",
+          "v(mix_bus_board4_pin4)",
+          "v(f4_recover_collector)",
+          "v(f4_main_output)",
+          "v(f4_q17_collector)",
+          "v(f4_c2_right)",
+          "v(f4_headphone_input)",
+          "v(f4_loudness_contour)",
+          "v(e2_timing_c2)",
+          "v(e2_attack_panel_in)",
+          "v(e2_decay_out)",
+          "v(e2_follower_base)",
+          "v(e2_reset_collector)",
+          "v(e2_attack_gate_lower)",
+          "v(e2_keyboard_trigger)",
+          "v(f4_q18_base)"
+        ],
+        "column_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18
+        ],
+        "physical_fidelity": false,
+        "real_time": false
+      },
+      "rows": 1000821,
+      "last_clock_s": 0.15029326835327658,
+      "max_step_observed_s": 2.500000000071889e-07,
+      "endpoint_complete": false,
+      "max_step_passed": true
+    },
+    "nominal125": {
+      "schema": "rf-d/native-export-run/v1",
+      "scene": "nominal125",
+      "long_mode": true,
+      "scenario": {
+        "board": {
+          "oscillator": {
+            "keyboard_v": -2.1,
+            "other_control_v": -2.1,
+            "r8_fraction": 0.2613404652606161,
+            "r11_active_ohm": 521.3126579373712,
+            "c4_f": 1e-11,
+            "upper_contact": 3,
+            "lower_contact": 10,
+            "level_fraction": 0.5,
+            "imposed_mixer_v": 0.0,
+            "external_neg4_load_a": 0.0,
+            "duration_s": 0.35,
+            "max_step_s": 1.25e-07,
+            "method": "gear",
+            "order": 2
+          },
+          "cutoff_fraction": 0.5,
+          "range_fraction": 0.5,
+          "scale_ohm": 250,
+          "emphasis_ohm": 50000,
+          "regen_bottom_ohm": 500,
+          "r61_ohm": 200,
+          "first_loudness_v": 2,
+          "second_loudness_base_v": 2,
+          "contour_amount_v": 0,
+          "first_balance_ohm": 12.5,
+          "second_balance_ohm": 50,
+          "main_load_ohm": 100000,
+          "headphone_input_ohm": 100000
+        },
+        "controls": {
+          "attack_ohm": 10000.0,
+          "decay_ohm": 100000.0,
+          "sustain_lower_ohm": 2500.0,
+          "final_decay": true,
+          "external_s_short": false,
+          "trigger_base_ohm": 10000.0,
+          "reset_pullup_ohm": 3300.0
+        },
+        "trigger_on_s": 0.01,
+        "trigger_off_s": 0.2,
+        "trigger_transition_s": 1e-05,
+        "contour_supply_v": 9.3
+      },
+      "vectors": [
+        "v(ramp_c1)",
+        "v(schmitt_drive)",
+        "v(saw_output_9b)",
+        "v(mix_bus_board4_pin4)",
+        "v(f4_recover_collector)",
+        "v(f4_main_output)",
+        "v(f4_q17_collector)",
+        "v(f4_c2_right)",
+        "v(f4_headphone_input)",
+        "v(f4_loudness_contour)",
+        "v(e2_timing_c2)",
+        "v(e2_attack_panel_in)",
+        "v(e2_decay_out)",
+        "v(e2_follower_base)",
+        "v(e2_reset_collector)",
+        "v(e2_attack_gate_lower)",
+        "v(e2_keyboard_trigger)",
+        "v(f4_q18_base)"
+      ],
+      "patch": {
+        "temporal_patch": {
+          "changes": [
+            {
+              "before": "VE2_keyboard E2_KEYBOARD_TRIGGER 0 PWL(0 0 0.002 0 0.0020100000000000001 10 0.025000000000000001 10 0.025010000000000001 0)\n",
+              "after": "VE2_keyboard E2_KEYBOARD_TRIGGER 0 PWL(0 0 0.01 0 0.01001 10 0.20000000000000001 10 0.20001000000000002 0)\n"
+            },
+            {
+              "before": "tran 1.2499999999999999e-07 0.040000000000000001 0 1.2499999999999999e-07\n",
+              "after": "tran 1.2499999999999999e-07 0.34999999999999998 0 1.2499999999999999e-07\n"
+            },
+            {
+              "before": "wrdata C:/Users/kalex/OneDrive/Documents/rackforge-plugin-rf-d/references-local/voice-circuit/active-six-short01/joint-nominal125.txt ",
+              "after": "wrdata C:/Users/kalex/OneDrive/Documents/rackforge-plugin-rf-d/references-local/voice-circuit/active-six-binary-long01/nominal125.txt "
+            }
+          ],
+          "unchanged_skeleton_sha256": "957b7ea688fdfeabb585f3bf5d3225b124b1ef3a743dff020853740ee26519e2",
+          "diff": "--- historical-short\n+++ long-note\n@@ -257 +257 @@\n-VE2_keyboard E2_KEYBOARD_TRIGGER 0 PWL(0 0 0.002 0 0.0020100000000000001 10 0.025000000000000001 10 0.025010000000000001 0)\n+VE2_keyboard E2_KEYBOARD_TRIGGER 0 PWL(0 0 0.01 0 0.01001 10 0.20000000000000001 10 0.20001000000000002 0)\n@@ -265,2 +265,2 @@\n-tran 1.2499999999999999e-07 0.040000000000000001 0 1.2499999999999999e-07\n-wrdata C:/Users/kalex/OneDrive/Documents/rackforge-plugin-rf-d/references-local/voice-circuit/active-six-short01/joint-nominal125.txt v(ramp_c1) v(schmitt_drive) v(saw_output_9b) v(mix_bus_board4_pin4) v(f4_recover_collector) v(f4_main_output) v(f4_q17_collector) v(f4_c2_right) v(f4_headphone_input) v(f4_loudness_contour) v(e2_timing_c2) v(e2_attack_panel_in) v(e2_decay_out) v(e2_follower_base) v(e2_reset_collector) v(e2_attack_gate_lower) v(e2_keyboard_trigger) v(f4_q18_base)\n+tran 1.2499999999999999e-07 0.34999999999999998 0 1.2499999999999999e-07\n+wrdata C:/Users/kalex/OneDrive/Documents/rackforge-plugin-rf-d/references-local/voice-circuit/active-six-binary-long01/nominal125.txt v(ramp_c1) v(schmitt_drive) v(saw_output_9b) v(mix_bus_board4_pin4) v(f4_recover_collector) v(f4_main_output) v(f4_q17_collector) v(f4_c2_right) v(f4_headphone_input) v(f4_loudness_contour) v(e2_timing_c2) v(e2_attack_panel_in) v(e2_decay_out) v(e2_follower_base) v(e2_reset_collector) v(e2_attack_gate_lower) v(e2_keyboard_trigger) v(f4_q18_base)\n",
+          "scenario": {
+            "board": {
+              "oscillator": {
+                "keyboard_v": -2.1,
+                "other_control_v": -2.1,
+                "r8_fraction": 0.2613404652606161,
+                "r11_active_ohm": 521.3126579373712,
+                "c4_f": 1e-11,
+                "upper_contact": 3,
+                "lower_contact": 10,
+                "level_fraction": 0.5,
+                "imposed_mixer_v": 0.0,
+                "external_neg4_load_a": 0.0,
+                "duration_s": 0.35,
+                "max_step_s": 1.25e-07,
+                "method": "gear",
+                "order": 2
+              },
+              "cutoff_fraction": 0.5,
+              "range_fraction": 0.5,
+              "scale_ohm": 250,
+              "emphasis_ohm": 50000,
+              "regen_bottom_ohm": 500,
+              "r61_ohm": 200,
+              "first_loudness_v": 2,
+              "second_loudness_base_v": 2,
+              "contour_amount_v": 0,
+              "first_balance_ohm": 12.5,
+              "second_balance_ohm": 50,
+              "main_load_ohm": 100000,
+              "headphone_input_ohm": 100000
+            },
+            "controls": {
+              "attack_ohm": 10000.0,
+              "decay_ohm": 100000.0,
+              "sustain_lower_ohm": 2500.0,
+              "final_decay": true,
+              "external_s_short": false,
+              "trigger_base_ohm": 10000.0,
+              "reset_pullup_ohm": 3300.0
+            },
+            "trigger_on_s": 0.01,
+            "trigger_off_s": 0.2,
+            "trigger_transition_s": 1e-05,
+            "contour_supply_v": 9.3
+          },
+          "vectors": [
+            "v(ramp_c1)",
+            "v(schmitt_drive)",
+            "v(saw_output_9b)",
+            "v(mix_bus_board4_pin4)",
+            "v(f4_recover_collector)",
+            "v(f4_main_output)",
+            "v(f4_q17_collector)",
+            "v(f4_c2_right)",
+            "v(f4_headphone_input)",
+            "v(f4_loudness_contour)",
+            "v(e2_timing_c2)",
+            "v(e2_attack_panel_in)",
+            "v(e2_decay_out)",
+            "v(e2_follower_base)",
+            "v(e2_reset_collector)",
+            "v(e2_attack_gate_lower)",
+            "v(e2_keyboard_trigger)",
+            "v(f4_q18_base)"
+          ]
+        },
+        "export_before": "wrdata C:/Users/kalex/OneDrive/Documents/rackforge-plugin-rf-d/references-local/voice-circuit/active-six-binary-long01/nominal125.txt v(ramp_c1) v(schmitt_drive) v(saw_output_9b) v(mix_bus_board4_pin4) v(f4_recover_collector) v(f4_main_output) v(f4_q17_collector) v(f4_c2_right) v(f4_headphone_input) v(f4_loudness_contour) v(e2_timing_c2) v(e2_attack_panel_in) v(e2_decay_out) v(e2_follower_base) v(e2_reset_collector) v(e2_attack_gate_lower) v(e2_keyboard_trigger) v(f4_q18_base)\n",
+        "export_after": "set filetype=binary\nwrite C:/Users/kalex/OneDrive/Documents/rackforge-plugin-rf-d/references-local/voice-circuit/active-six-binary-long01/nominal125.raw v(ramp_c1) v(schmitt_drive) v(saw_output_9b) v(mix_bus_board4_pin4) v(f4_recover_collector) v(f4_main_output) v(f4_q17_collector) v(f4_c2_right) v(f4_headphone_input) v(f4_loudness_contour) v(e2_timing_c2) v(e2_attack_panel_in) v(e2_decay_out) v(e2_follower_base) v(e2_reset_collector) v(e2_attack_gate_lower) v(e2_keyboard_trigger) v(f4_q18_base)\n",
+        "diff": "--- \n+++ \n@@ -257 +257 @@\n-VE2_keyboard E2_KEYBOARD_TRIGGER 0 PWL(0 0 0.002 0 0.0020100000000000001 10 0.025000000000000001 10 0.025010000000000001 0)\n+VE2_keyboard E2_KEYBOARD_TRIGGER 0 PWL(0 0 0.01 0 0.01001 10 0.20000000000000001 10 0.20001000000000002 0)\n@@ -265,2 +265,3 @@\n-tran 1.2499999999999999e-07 0.040000000000000001 0 1.2499999999999999e-07\n-wrdata C:/Users/kalex/OneDrive/Documents/rackforge-plugin-rf-d/references-local/voice-circuit/active-six-short01/joint-nominal125.txt v(ramp_c1) v(schmitt_drive) v(saw_output_9b) v(mix_bus_board4_pin4) v(f4_recover_collector) v(f4_main_output) v(f4_q17_collector) v(f4_c2_right) v(f4_headphone_input) v(f4_loudness_contour) v(e2_timing_c2) v(e2_attack_panel_in) v(e2_decay_out) v(e2_follower_base) v(e2_reset_collector) v(e2_attack_gate_lower) v(e2_keyboard_trigger) v(f4_q18_base)\n+tran 1.2499999999999999e-07 0.34999999999999998 0 1.2499999999999999e-07\n+set filetype=binary\n+write C:/Users/kalex/OneDrive/Documents/rackforge-plugin-rf-d/references-local/voice-circuit/active-six-binary-long01/nominal125.raw v(ramp_c1) v(schmitt_drive) v(saw_output_9b) v(mix_bus_board4_pin4) v(f4_recover_collector) v(f4_main_output) v(f4_q17_collector) v(f4_c2_right) v(f4_headphone_input) v(f4_loudness_contour) v(e2_timing_c2) v(e2_attack_panel_in) v(e2_decay_out) v(e2_follower_base) v(e2_reset_collector) v(e2_attack_gate_lower) v(e2_keyboard_trigger) v(f4_q18_base)\n",
+        "dual_export": false,
+        "electrical_changes": false
+      },
+      "short_receipt_path": "references-local/voice-circuit/active-six-short01/joint-nominal125.json",
+      "short_receipt_sha256": "b3f3276b60ec19c249a62415ef259e64a470cff5f880be13ba52b309d04a09aa",
+      "short_bank_sha256": "e99a5b629d4e93b483e88e3e6a83b702bb749676c115848733e6c6796d1b4ed9",
+      "short_audit_sha256": "148d5b63747f13e3a9e41798e47a47d24db370042cc3de46fe56d9f26e39a751",
+      "original_deck_sha256": "2483c175a733c93350b9639d2b56e9048b5ebcdd861b58fd9a188d35ab80700b",
+      "current_source_sha256": {
+        "evidence/vco1_ramp_graph.json": "bec931c06ac012fd14ee2b7ddf8f86f06c2d3c0ab2a78306dd6f33c88bead361",
+        "evidence/vco1_ca3046_parts.json": "2724e065969f8b0edc4f1191a787ae38c755aa4850fcfa6b9262828207689ad9",
+        "evidence/vco1_panel_pulse_width.json": "6da8d7eb376649cbda482c32f8da8ec55da5e2f7344756bac626a6e9d81b69c9",
+        "evidence/vco1_laboratory_devices.json": "50b4f163e29d2c4a9a19a186d871a0a83ff1d19c7d4c539e8e42add2dcd254f1",
+        "tools/vco1_circuit_reference.py": "c2e44b4e528744359300f7257a601c7e870a929e9f5c624f7ba741b07bff193b",
+        "references-local/datasheets/ti_lm741_lm741.lib": "f58370983c8bd22bf6a59ddd05a1dd492f1a0ea60f673ffd460a356da5e693dc",
+        "evidence/voice_board4_graph.json": "dae24df4d2ea7635cc1935e556a9d989ec34f48950ec884069532cc5d3ba49f9",
+        "tools/voice_circuit_reference.py": "88267ed30db730315eca9d0099d40ee7e1a8ac9f751bee9e7f1b6a24d114e17c",
+        "tools/filter_vca_circuit_reference.py": "41de5bab7bfa2a78246c0fc5e0fbd744bd9939aead4881cabd85acef2774d9db",
+        "evidence/loudness_contour_graph.json": "f147a2e10dcf4fae6e18c13ad1c8f3842977f7e15c3bd019f27bfcd2300dee66",
+        "tools/loudness_contour_reference.py": "1dcceac0102af47d0111c6710634f58e63ff04f27f0e30cb3b418228d07094a3",
+        "tools/loudness_board4_circuit.py": "9aaec972855bdcc15ac834697cfcc523deec44f75149a4f11671433c1154e616",
+        "tools/loudness_voice_circuit.py": "0ac19726aacb8bdae0ec7404600b79f5ec83ef5e9462f915d853187243f4dc12",
+        "tools/loudness_voice_probes.py": "55fba545bacbe249738d8691142a02fcdec887fd39fe92e6ab390e360670e254"
+      },
+      "helper_sha256": {
+        "tools/voice_binary_runner.py": "ab3df93cfdbb2ee1b79962f72fca93447e2b6fce91b27271dbe8ae3fa8b059e4",
+        "tools/voice_native_raw.py": "0c57179317e2fb54515ee0049c34196c6cb694999c1442fc561c130a432da0a6",
+        "tools/voice_six_runner.py": "fe2dea31d98567b9da891b34dcb0cf6227a19bb1006d4cbbfd7686167b8ce94a",
+        "tools/voice_six_build.py": "a1d444f244495aa3e7db0699f68c43700e22c607e014ebe40287f22651759f5c",
+        "tools/voice_full_note.py": "002878c1c05fd8278cf06c3a7e4f694212161ff8e12149f17886d9fd13f5bea9",
+        "tools/vco1_circuit_reference.py": "c2e44b4e528744359300f7257a601c7e870a929e9f5c624f7ba741b07bff193b",
+        "tools/loudness_voice_probes.py": "55fba545bacbe249738d8691142a02fcdec887fd39fe92e6ab390e360670e254",
+        "tools/loudness_voice_circuit.py": "0ac19726aacb8bdae0ec7404600b79f5ec83ef5e9462f915d853187243f4dc12"
+      },
+      "runtime_sha256": {
+        "references-local/voice-circuit/newton-build11/init02/spinit": "9cb857d73fe223122ec7eecd796bbcc7615add973ca7afedbe7a0914c5600ef2",
+        "references-local/voice-circuit/newton-build11/baseline02/src/xspice/icm/spice2poly/spice2poly.cm": "369554828e74e7ec588f80d876fa6f4ebb8dceaf82ba46e6c7f9f7d62a38a341",
+        "C:/msys64/ucrt64/bin/libwinpthread-1.dll": "c7844629395e7813508fc9bb58c068ca9240a04d6d8529db0a75b6efc53590e7",
+        "C:/msys64/ucrt64/bin/libstdc++-6.dll": "d9a58184f6bb27936ef03c3a3286950e4aa61c66a9f74dfa94a532b1433b368d",
+        "C:/msys64/ucrt64/bin/libgcc_s_seh-1.dll": "ff139cfe956709283f7b70a06af8bc8bb9d1c3bef60ec1bc8d363c91351cfeb2"
+      },
+      "compiled_source_sha256": {
+        "src/maths/ni/niiter.c": "464e001a80db05f7141b9c813168b4deba8990b1f31294eb5625ede281c00066",
+        "src/frontend/rawfile.c": "fa5d8625a5b4168d4f928af455f685a9a7edb0ef7999af2f18853e8bf5216840",
+        "src/frontend/postcoms.c": "60bcc3b4bd6e2cc4203dc8bd4f3185b27d1376e321613ce89f6c84ee1887901c"
+      },
+      "executable_path": "references-local/voice-circuit/newton-build11/bin/candidate.exe",
+      "executable_sha256": "333174ac4345ae786e515a6e66345e8a36af494e24bf76c63f92c8f1813af505",
+      "build_sha256": "7a7929d4de4aa42827662ada164503be15099c6a36b816c625f0b896365c6654",
+      "protocol_sha256": "594c6da49e96d4b0b208a500b50a7e40efc102fa6d74dbc6bda9858ff47821d5",
+      "deck_sha256": "40fd212d7ec94bf943232c1f2e1bc20190dc0651fb4373c26f7fd72597dea499",
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-circuit\\newton-build11\\bin\\candidate.exe",
+        "-n",
+        "-b",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-circuit\\active-six-binary-long01\\nominal125.cir"
+      ],
+      "controlled_environment": {
+        "RF_D_LINEAR_REFINE": "1",
+        "RF_D_REFINE_REPLAY": null,
+        "RF_D_MATRIX_TRACE": null,
+        "RF_D_TRACE": null,
+        "RF_D_741_REDUCE": null,
+        "RF_D_REFINE_SHADOW": null
+      },
+      "published_corrections": 6,
+      "wall_limit_s": 7200,
+      "process_started": true,
+      "trajectory_complete": true,
+      "git_commit": "34825be259b454f724dbbf903025f53b2ec71d94",
+      "physical_fidelity": false,
+      "real_time": false,
+      "new_audio": false,
+      "control_audit_sha256": "e90acdb10cfc633a5013b52de69e4cbcde802548ac17af85709a408016fa2f5d",
+      "exit_code": 0,
+      "wall_s": 4409.838785300002,
+      "helper_sha256_after": {
+        "tools/voice_binary_runner.py": "ab3df93cfdbb2ee1b79962f72fca93447e2b6fce91b27271dbe8ae3fa8b059e4",
+        "tools/voice_native_raw.py": "0c57179317e2fb54515ee0049c34196c6cb694999c1442fc561c130a432da0a6",
+        "tools/voice_six_runner.py": "fe2dea31d98567b9da891b34dcb0cf6227a19bb1006d4cbbfd7686167b8ce94a",
+        "tools/voice_six_build.py": "a1d444f244495aa3e7db0699f68c43700e22c607e014ebe40287f22651759f5c",
+        "tools/voice_full_note.py": "002878c1c05fd8278cf06c3a7e4f694212161ff8e12149f17886d9fd13f5bea9",
+        "tools/vco1_circuit_reference.py": "c2e44b4e528744359300f7257a601c7e870a929e9f5c624f7ba741b07bff193b",
+        "tools/loudness_voice_probes.py": "55fba545bacbe249738d8691142a02fcdec887fd39fe92e6ab390e360670e254",
+        "tools/loudness_voice_circuit.py": "0ac19726aacb8bdae0ec7404600b79f5ec83ef5e9462f915d853187243f4dc12"
+      },
+      "runtime_sha256_after": {
+        "references-local/voice-circuit/newton-build11/init02/spinit": "9cb857d73fe223122ec7eecd796bbcc7615add973ca7afedbe7a0914c5600ef2",
+        "references-local/voice-circuit/newton-build11/baseline02/src/xspice/icm/spice2poly/spice2poly.cm": "369554828e74e7ec588f80d876fa6f4ebb8dceaf82ba46e6c7f9f7d62a38a341",
+        "C:/msys64/ucrt64/bin/libwinpthread-1.dll": "c7844629395e7813508fc9bb58c068ca9240a04d6d8529db0a75b6efc53590e7",
+        "C:/msys64/ucrt64/bin/libstdc++-6.dll": "d9a58184f6bb27936ef03c3a3286950e4aa61c66a9f74dfa94a532b1433b368d",
+        "C:/msys64/ucrt64/bin/libgcc_s_seh-1.dll": "ff139cfe956709283f7b70a06af8bc8bb9d1c3bef60ec1bc8d363c91351cfeb2"
+      },
+      "current_source_sha256_after": {
+        "evidence/vco1_ramp_graph.json": "bec931c06ac012fd14ee2b7ddf8f86f06c2d3c0ab2a78306dd6f33c88bead361",
+        "evidence/vco1_ca3046_parts.json": "2724e065969f8b0edc4f1191a787ae38c755aa4850fcfa6b9262828207689ad9",
+        "evidence/vco1_panel_pulse_width.json": "6da8d7eb376649cbda482c32f8da8ec55da5e2f7344756bac626a6e9d81b69c9",
+        "evidence/vco1_laboratory_devices.json": "50b4f163e29d2c4a9a19a186d871a0a83ff1d19c7d4c539e8e42add2dcd254f1",
+        "tools/vco1_circuit_reference.py": "c2e44b4e528744359300f7257a601c7e870a929e9f5c624f7ba741b07bff193b",
+        "references-local/datasheets/ti_lm741_lm741.lib": "f58370983c8bd22bf6a59ddd05a1dd492f1a0ea60f673ffd460a356da5e693dc",
+        "evidence/voice_board4_graph.json": "dae24df4d2ea7635cc1935e556a9d989ec34f48950ec884069532cc5d3ba49f9",
+        "tools/voice_circuit_reference.py": "88267ed30db730315eca9d0099d40ee7e1a8ac9f751bee9e7f1b6a24d114e17c",
+        "tools/filter_vca_circuit_reference.py": "41de5bab7bfa2a78246c0fc5e0fbd744bd9939aead4881cabd85acef2774d9db",
+        "evidence/loudness_contour_graph.json": "f147a2e10dcf4fae6e18c13ad1c8f3842977f7e15c3bd019f27bfcd2300dee66",
+        "tools/loudness_contour_reference.py": "1dcceac0102af47d0111c6710634f58e63ff04f27f0e30cb3b418228d07094a3",
+        "tools/loudness_board4_circuit.py": "9aaec972855bdcc15ac834697cfcc523deec44f75149a4f11671433c1154e616",
+        "tools/loudness_voice_circuit.py": "0ac19726aacb8bdae0ec7404600b79f5ec83ef5e9462f915d853187243f4dc12",
+        "tools/loudness_voice_probes.py": "55fba545bacbe249738d8691142a02fcdec887fd39fe92e6ab390e360670e254"
+      },
+      "compiled_source_sha256_after": {
+        "src/maths/ni/niiter.c": "464e001a80db05f7141b9c813168b4deba8990b1f31294eb5625ede281c00066",
+        "src/frontend/rawfile.c": "fa5d8625a5b4168d4f928af455f685a9a7edb0ef7999af2f18853e8bf5216840",
+        "src/frontend/postcoms.c": "60bcc3b4bd6e2cc4203dc8bd4f3185b27d1376e321613ce89f6c84ee1887901c"
+      },
+      "executable_sha256_after": "333174ac4345ae786e515a6e66345e8a36af494e24bf76c63f92c8f1813af505",
+      "log_sha256": "b81e6921b28b1efe7bafaecc8098760fddb8be81aa132b40352a3de0f1ba2b12",
+      "solver_failure_reported": false,
+      "refinement_activation_confirmed": true,
+      "unwanted_instrumentation": false,
+      "unexpected_correction_announcement": false,
+      "activation_gate_passed": true,
+      "raw_sha256": "81b8eb0b793d7d063f1a5ebb7b1d331cbf3b04252be00ef1eeedf0c1274e6c5a",
+      "raw_bytes": 562940728,
+      "native_layout": {
+        "schema": "rf-d/native-raw-layout/v1",
+        "dtype": "<f8",
+        "endianness": "little",
+        "columns": 19,
+        "rows": 3703552,
+        "header_bytes": 824,
+        "payload_bytes": 562939904,
+        "header_sha256": "e490596fe13672f65d409928d1e7f3d3d3f57710a1a1000129e3e04576b6c286",
+        "payload_sha256": "4ea0dee845ed59d0412e4b8898905faed80e4833a4e8968706a1b87d39dd7572",
+        "variables": [
+          {
+            "index": 0,
+            "name": "time",
+            "canonical_name": "time",
+            "unit": "time"
+          },
+          {
+            "index": 1,
+            "name": "v(ramp_c1)",
+            "canonical_name": "v(ramp_c1)",
+            "unit": "voltage"
+          },
+          {
+            "index": 2,
+            "name": "v(schmitt_drive)",
+            "canonical_name": "v(schmitt_drive)",
+            "unit": "voltage"
+          },
+          {
+            "index": 3,
+            "name": "v(saw_output_9b)",
+            "canonical_name": "v(saw_output_9b)",
+            "unit": "voltage"
+          },
+          {
+            "index": 4,
+            "name": "v(mix_bus_board4_pin4)",
+            "canonical_name": "v(mix_bus_board4_pin4)",
+            "unit": "voltage"
+          },
+          {
+            "index": 5,
+            "name": "v(f4_recover_collector)",
+            "canonical_name": "v(f4_recover_collector)",
+            "unit": "voltage"
+          },
+          {
+            "index": 6,
+            "name": "v(f4_main_output)",
+            "canonical_name": "v(f4_main_output)",
+            "unit": "voltage"
+          },
+          {
+            "index": 7,
+            "name": "v(f4_q17_collector)",
+            "canonical_name": "v(f4_q17_collector)",
+            "unit": "voltage"
+          },
+          {
+            "index": 8,
+            "name": "v(f4_c2_right)",
+            "canonical_name": "v(f4_c2_right)",
+            "unit": "voltage"
+          },
+          {
+            "index": 9,
+            "name": "v(f4_headphone_input)",
+            "canonical_name": "v(f4_headphone_input)",
+            "unit": "voltage"
+          },
+          {
+            "index": 10,
+            "name": "v(f4_loudness_contour)",
+            "canonical_name": "v(f4_loudness_contour)",
+            "unit": "voltage"
+          },
+          {
+            "index": 11,
+            "name": "v(e2_timing_c2)",
+            "canonical_name": "v(e2_timing_c2)",
+            "unit": "voltage"
+          },
+          {
+            "index": 12,
+            "name": "v(e2_attack_panel_in)",
+            "canonical_name": "v(e2_attack_panel_in)",
+            "unit": "voltage"
+          },
+          {
+            "index": 13,
+            "name": "v(e2_decay_out)",
+            "canonical_name": "v(e2_decay_out)",
+            "unit": "voltage"
+          },
+          {
+            "index": 14,
+            "name": "v(e2_follower_base)",
+            "canonical_name": "v(e2_follower_base)",
+            "unit": "voltage"
+          },
+          {
+            "index": 15,
+            "name": "v(e2_reset_collector)",
+            "canonical_name": "v(e2_reset_collector)",
+            "unit": "voltage"
+          },
+          {
+            "index": 16,
+            "name": "v(e2_attack_gate_lower)",
+            "canonical_name": "v(e2_attack_gate_lower)",
+            "unit": "voltage"
+          },
+          {
+            "index": 17,
+            "name": "v(e2_keyboard_trigger)",
+            "canonical_name": "v(e2_keyboard_trigger)",
+            "unit": "voltage"
+          },
+          {
+            "index": 18,
+            "name": "v(f4_q18_base)",
+            "canonical_name": "v(f4_q18_base)",
+            "unit": "voltage"
+          }
+        ],
+        "canonical_columns": [
+          "time",
+          "v(ramp_c1)",
+          "v(schmitt_drive)",
+          "v(saw_output_9b)",
+          "v(mix_bus_board4_pin4)",
+          "v(f4_recover_collector)",
+          "v(f4_main_output)",
+          "v(f4_q17_collector)",
+          "v(f4_c2_right)",
+          "v(f4_headphone_input)",
+          "v(f4_loudness_contour)",
+          "v(e2_timing_c2)",
+          "v(e2_attack_panel_in)",
+          "v(e2_decay_out)",
+          "v(e2_follower_base)",
+          "v(e2_reset_collector)",
+          "v(e2_attack_gate_lower)",
+          "v(e2_keyboard_trigger)",
+          "v(f4_q18_base)"
+        ],
+        "column_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18
+        ],
+        "physical_fidelity": false,
+        "real_time": false
+      },
+      "rows": 3703552,
+      "last_clock_s": 0.35000000000000003,
+      "max_step_observed_s": 1.2500000001747225e-07,
+      "endpoint_complete": true,
+      "max_step_passed": true
+    },
+    "nominal-trap125": {
+      "schema": "rf-d/native-export-run/v1",
+      "scene": "nominal-trap125",
+      "long_mode": true,
+      "scenario": {
+        "board": {
+          "oscillator": {
+            "keyboard_v": -2.1,
+            "other_control_v": -2.1,
+            "r8_fraction": 0.2613404652606161,
+            "r11_active_ohm": 521.3126579373712,
+            "c4_f": 1e-11,
+            "upper_contact": 3,
+            "lower_contact": 10,
+            "level_fraction": 0.5,
+            "imposed_mixer_v": 0.0,
+            "external_neg4_load_a": 0.0,
+            "duration_s": 0.35,
+            "max_step_s": 1.25e-07,
+            "method": "trap",
+            "order": 2
+          },
+          "cutoff_fraction": 0.5,
+          "range_fraction": 0.5,
+          "scale_ohm": 250,
+          "emphasis_ohm": 50000,
+          "regen_bottom_ohm": 500,
+          "r61_ohm": 200,
+          "first_loudness_v": 2,
+          "second_loudness_base_v": 2,
+          "contour_amount_v": 0,
+          "first_balance_ohm": 12.5,
+          "second_balance_ohm": 50,
+          "main_load_ohm": 100000,
+          "headphone_input_ohm": 100000
+        },
+        "controls": {
+          "attack_ohm": 10000.0,
+          "decay_ohm": 100000.0,
+          "sustain_lower_ohm": 2500.0,
+          "final_decay": true,
+          "external_s_short": false,
+          "trigger_base_ohm": 10000.0,
+          "reset_pullup_ohm": 3300.0
+        },
+        "trigger_on_s": 0.01,
+        "trigger_off_s": 0.2,
+        "trigger_transition_s": 1e-05,
+        "contour_supply_v": 9.3
+      },
+      "vectors": [
+        "v(ramp_c1)",
+        "v(schmitt_drive)",
+        "v(saw_output_9b)",
+        "v(mix_bus_board4_pin4)",
+        "v(f4_recover_collector)",
+        "v(f4_main_output)",
+        "v(f4_q17_collector)",
+        "v(f4_c2_right)",
+        "v(f4_headphone_input)",
+        "v(f4_loudness_contour)",
+        "v(e2_timing_c2)",
+        "v(e2_attack_panel_in)",
+        "v(e2_decay_out)",
+        "v(e2_follower_base)",
+        "v(e2_reset_collector)",
+        "v(e2_attack_gate_lower)",
+        "v(e2_keyboard_trigger)",
+        "v(f4_q18_base)"
+      ],
+      "patch": {
+        "temporal_patch": {
+          "changes": [
+            {
+              "before": "VE2_keyboard E2_KEYBOARD_TRIGGER 0 PWL(0 0 0.002 0 0.0020100000000000001 10 0.025000000000000001 10 0.025010000000000001 0)\n",
+              "after": "VE2_keyboard E2_KEYBOARD_TRIGGER 0 PWL(0 0 0.01 0 0.01001 10 0.20000000000000001 10 0.20001000000000002 0)\n"
+            },
+            {
+              "before": "tran 1.2499999999999999e-07 0.040000000000000001 0 1.2499999999999999e-07\n",
+              "after": "tran 1.2499999999999999e-07 0.34999999999999998 0 1.2499999999999999e-07\n"
+            },
+            {
+              "before": "wrdata C:/Users/kalex/OneDrive/Documents/rackforge-plugin-rf-d/references-local/voice-circuit/active-six-short01/joint-nominal-trap125.txt ",
+              "after": "wrdata C:/Users/kalex/OneDrive/Documents/rackforge-plugin-rf-d/references-local/voice-circuit/active-six-binary-long01/nominal-trap125.txt "
+            }
+          ],
+          "unchanged_skeleton_sha256": "552ed556e72d0bba8742b9a5ca7bd1aeb3f250d56ccb218793aa9cde832929c0",
+          "diff": "--- historical-short\n+++ long-note\n@@ -257 +257 @@\n-VE2_keyboard E2_KEYBOARD_TRIGGER 0 PWL(0 0 0.002 0 0.0020100000000000001 10 0.025000000000000001 10 0.025010000000000001 0)\n+VE2_keyboard E2_KEYBOARD_TRIGGER 0 PWL(0 0 0.01 0 0.01001 10 0.20000000000000001 10 0.20001000000000002 0)\n@@ -265,2 +265,2 @@\n-tran 1.2499999999999999e-07 0.040000000000000001 0 1.2499999999999999e-07\n-wrdata C:/Users/kalex/OneDrive/Documents/rackforge-plugin-rf-d/references-local/voice-circuit/active-six-short01/joint-nominal-trap125.txt v(ramp_c1) v(schmitt_drive) v(saw_output_9b) v(mix_bus_board4_pin4) v(f4_recover_collector) v(f4_main_output) v(f4_q17_collector) v(f4_c2_right) v(f4_headphone_input) v(f4_loudness_contour) v(e2_timing_c2) v(e2_attack_panel_in) v(e2_decay_out) v(e2_follower_base) v(e2_reset_collector) v(e2_attack_gate_lower) v(e2_keyboard_trigger) v(f4_q18_base)\n+tran 1.2499999999999999e-07 0.34999999999999998 0 1.2499999999999999e-07\n+wrdata C:/Users/kalex/OneDrive/Documents/rackforge-plugin-rf-d/references-local/voice-circuit/active-six-binary-long01/nominal-trap125.txt v(ramp_c1) v(schmitt_drive) v(saw_output_9b) v(mix_bus_board4_pin4) v(f4_recover_collector) v(f4_main_output) v(f4_q17_collector) v(f4_c2_right) v(f4_headphone_input) v(f4_loudness_contour) v(e2_timing_c2) v(e2_attack_panel_in) v(e2_decay_out) v(e2_follower_base) v(e2_reset_collector) v(e2_attack_gate_lower) v(e2_keyboard_trigger) v(f4_q18_base)\n",
+          "scenario": {
+            "board": {
+              "oscillator": {
+                "keyboard_v": -2.1,
+                "other_control_v": -2.1,
+                "r8_fraction": 0.2613404652606161,
+                "r11_active_ohm": 521.3126579373712,
+                "c4_f": 1e-11,
+                "upper_contact": 3,
+                "lower_contact": 10,
+                "level_fraction": 0.5,
+                "imposed_mixer_v": 0.0,
+                "external_neg4_load_a": 0.0,
+                "duration_s": 0.35,
+                "max_step_s": 1.25e-07,
+                "method": "trap",
+                "order": 2
+              },
+              "cutoff_fraction": 0.5,
+              "range_fraction": 0.5,
+              "scale_ohm": 250,
+              "emphasis_ohm": 50000,
+              "regen_bottom_ohm": 500,
+              "r61_ohm": 200,
+              "first_loudness_v": 2,
+              "second_loudness_base_v": 2,
+              "contour_amount_v": 0,
+              "first_balance_ohm": 12.5,
+              "second_balance_ohm": 50,
+              "main_load_ohm": 100000,
+              "headphone_input_ohm": 100000
+            },
+            "controls": {
+              "attack_ohm": 10000.0,
+              "decay_ohm": 100000.0,
+              "sustain_lower_ohm": 2500.0,
+              "final_decay": true,
+              "external_s_short": false,
+              "trigger_base_ohm": 10000.0,
+              "reset_pullup_ohm": 3300.0
+            },
+            "trigger_on_s": 0.01,
+            "trigger_off_s": 0.2,
+            "trigger_transition_s": 1e-05,
+            "contour_supply_v": 9.3
+          },
+          "vectors": [
+            "v(ramp_c1)",
+            "v(schmitt_drive)",
+            "v(saw_output_9b)",
+            "v(mix_bus_board4_pin4)",
+            "v(f4_recover_collector)",
+            "v(f4_main_output)",
+            "v(f4_q17_collector)",
+            "v(f4_c2_right)",
+            "v(f4_headphone_input)",
+            "v(f4_loudness_contour)",
+            "v(e2_timing_c2)",
+            "v(e2_attack_panel_in)",
+            "v(e2_decay_out)",
+            "v(e2_follower_base)",
+            "v(e2_reset_collector)",
+            "v(e2_attack_gate_lower)",
+            "v(e2_keyboard_trigger)",
+            "v(f4_q18_base)"
+          ]
+        },
+        "export_before": "wrdata C:/Users/kalex/OneDrive/Documents/rackforge-plugin-rf-d/references-local/voice-circuit/active-six-binary-long01/nominal-trap125.txt v(ramp_c1) v(schmitt_drive) v(saw_output_9b) v(mix_bus_board4_pin4) v(f4_recover_collector) v(f4_main_output) v(f4_q17_collector) v(f4_c2_right) v(f4_headphone_input) v(f4_loudness_contour) v(e2_timing_c2) v(e2_attack_panel_in) v(e2_decay_out) v(e2_follower_base) v(e2_reset_collector) v(e2_attack_gate_lower) v(e2_keyboard_trigger) v(f4_q18_base)\n",
+        "export_after": "set filetype=binary\nwrite C:/Users/kalex/OneDrive/Documents/rackforge-plugin-rf-d/references-local/voice-circuit/active-six-binary-long01/nominal-trap125.raw v(ramp_c1) v(schmitt_drive) v(saw_output_9b) v(mix_bus_board4_pin4) v(f4_recover_collector) v(f4_main_output) v(f4_q17_collector) v(f4_c2_right) v(f4_headphone_input) v(f4_loudness_contour) v(e2_timing_c2) v(e2_attack_panel_in) v(e2_decay_out) v(e2_follower_base) v(e2_reset_collector) v(e2_attack_gate_lower) v(e2_keyboard_trigger) v(f4_q18_base)\n",
+        "diff": "--- \n+++ \n@@ -257 +257 @@\n-VE2_keyboard E2_KEYBOARD_TRIGGER 0 PWL(0 0 0.002 0 0.0020100000000000001 10 0.025000000000000001 10 0.025010000000000001 0)\n+VE2_keyboard E2_KEYBOARD_TRIGGER 0 PWL(0 0 0.01 0 0.01001 10 0.20000000000000001 10 0.20001000000000002 0)\n@@ -265,2 +265,3 @@\n-tran 1.2499999999999999e-07 0.040000000000000001 0 1.2499999999999999e-07\n-wrdata C:/Users/kalex/OneDrive/Documents/rackforge-plugin-rf-d/references-local/voice-circuit/active-six-short01/joint-nominal-trap125.txt v(ramp_c1) v(schmitt_drive) v(saw_output_9b) v(mix_bus_board4_pin4) v(f4_recover_collector) v(f4_main_output) v(f4_q17_collector) v(f4_c2_right) v(f4_headphone_input) v(f4_loudness_contour) v(e2_timing_c2) v(e2_attack_panel_in) v(e2_decay_out) v(e2_follower_base) v(e2_reset_collector) v(e2_attack_gate_lower) v(e2_keyboard_trigger) v(f4_q18_base)\n+tran 1.2499999999999999e-07 0.34999999999999998 0 1.2499999999999999e-07\n+set filetype=binary\n+write C:/Users/kalex/OneDrive/Documents/rackforge-plugin-rf-d/references-local/voice-circuit/active-six-binary-long01/nominal-trap125.raw v(ramp_c1) v(schmitt_drive) v(saw_output_9b) v(mix_bus_board4_pin4) v(f4_recover_collector) v(f4_main_output) v(f4_q17_collector) v(f4_c2_right) v(f4_headphone_input) v(f4_loudness_contour) v(e2_timing_c2) v(e2_attack_panel_in) v(e2_decay_out) v(e2_follower_base) v(e2_reset_collector) v(e2_attack_gate_lower) v(e2_keyboard_trigger) v(f4_q18_base)\n",
+        "dual_export": false,
+        "electrical_changes": false
+      },
+      "short_receipt_path": "references-local/voice-circuit/active-six-short01/joint-nominal-trap125.json",
+      "short_receipt_sha256": "3dcd043cf57a70de6a4d4d8d5ec43f287fa9ac27acb1060ffa4e3682e3aa203f",
+      "short_bank_sha256": "e99a5b629d4e93b483e88e3e6a83b702bb749676c115848733e6c6796d1b4ed9",
+      "short_audit_sha256": "148d5b63747f13e3a9e41798e47a47d24db370042cc3de46fe56d9f26e39a751",
+      "original_deck_sha256": "de9a6daefae23f23005a8a08a886bc9e70f01ac95dd81a82d5b60ff5483bb25c",
+      "current_source_sha256": {
+        "evidence/vco1_ramp_graph.json": "bec931c06ac012fd14ee2b7ddf8f86f06c2d3c0ab2a78306dd6f33c88bead361",
+        "evidence/vco1_ca3046_parts.json": "2724e065969f8b0edc4f1191a787ae38c755aa4850fcfa6b9262828207689ad9",
+        "evidence/vco1_panel_pulse_width.json": "6da8d7eb376649cbda482c32f8da8ec55da5e2f7344756bac626a6e9d81b69c9",
+        "evidence/vco1_laboratory_devices.json": "50b4f163e29d2c4a9a19a186d871a0a83ff1d19c7d4c539e8e42add2dcd254f1",
+        "tools/vco1_circuit_reference.py": "c2e44b4e528744359300f7257a601c7e870a929e9f5c624f7ba741b07bff193b",
+        "references-local/datasheets/ti_lm741_lm741.lib": "f58370983c8bd22bf6a59ddd05a1dd492f1a0ea60f673ffd460a356da5e693dc",
+        "evidence/voice_board4_graph.json": "dae24df4d2ea7635cc1935e556a9d989ec34f48950ec884069532cc5d3ba49f9",
+        "tools/voice_circuit_reference.py": "88267ed30db730315eca9d0099d40ee7e1a8ac9f751bee9e7f1b6a24d114e17c",
+        "tools/filter_vca_circuit_reference.py": "41de5bab7bfa2a78246c0fc5e0fbd744bd9939aead4881cabd85acef2774d9db",
+        "evidence/loudness_contour_graph.json": "f147a2e10dcf4fae6e18c13ad1c8f3842977f7e15c3bd019f27bfcd2300dee66",
+        "tools/loudness_contour_reference.py": "1dcceac0102af47d0111c6710634f58e63ff04f27f0e30cb3b418228d07094a3",
+        "tools/loudness_board4_circuit.py": "9aaec972855bdcc15ac834697cfcc523deec44f75149a4f11671433c1154e616",
+        "tools/loudness_voice_circuit.py": "0ac19726aacb8bdae0ec7404600b79f5ec83ef5e9462f915d853187243f4dc12",
+        "tools/loudness_voice_probes.py": "55fba545bacbe249738d8691142a02fcdec887fd39fe92e6ab390e360670e254"
+      },
+      "helper_sha256": {
+        "tools/voice_binary_runner.py": "ab3df93cfdbb2ee1b79962f72fca93447e2b6fce91b27271dbe8ae3fa8b059e4",
+        "tools/voice_native_raw.py": "0c57179317e2fb54515ee0049c34196c6cb694999c1442fc561c130a432da0a6",
+        "tools/voice_six_runner.py": "fe2dea31d98567b9da891b34dcb0cf6227a19bb1006d4cbbfd7686167b8ce94a",
+        "tools/voice_six_build.py": "a1d444f244495aa3e7db0699f68c43700e22c607e014ebe40287f22651759f5c",
+        "tools/voice_full_note.py": "002878c1c05fd8278cf06c3a7e4f694212161ff8e12149f17886d9fd13f5bea9",
+        "tools/vco1_circuit_reference.py": "c2e44b4e528744359300f7257a601c7e870a929e9f5c624f7ba741b07bff193b",
+        "tools/loudness_voice_probes.py": "55fba545bacbe249738d8691142a02fcdec887fd39fe92e6ab390e360670e254",
+        "tools/loudness_voice_circuit.py": "0ac19726aacb8bdae0ec7404600b79f5ec83ef5e9462f915d853187243f4dc12"
+      },
+      "runtime_sha256": {
+        "references-local/voice-circuit/newton-build11/init02/spinit": "9cb857d73fe223122ec7eecd796bbcc7615add973ca7afedbe7a0914c5600ef2",
+        "references-local/voice-circuit/newton-build11/baseline02/src/xspice/icm/spice2poly/spice2poly.cm": "369554828e74e7ec588f80d876fa6f4ebb8dceaf82ba46e6c7f9f7d62a38a341",
+        "C:/msys64/ucrt64/bin/libwinpthread-1.dll": "c7844629395e7813508fc9bb58c068ca9240a04d6d8529db0a75b6efc53590e7",
+        "C:/msys64/ucrt64/bin/libstdc++-6.dll": "d9a58184f6bb27936ef03c3a3286950e4aa61c66a9f74dfa94a532b1433b368d",
+        "C:/msys64/ucrt64/bin/libgcc_s_seh-1.dll": "ff139cfe956709283f7b70a06af8bc8bb9d1c3bef60ec1bc8d363c91351cfeb2"
+      },
+      "compiled_source_sha256": {
+        "src/maths/ni/niiter.c": "464e001a80db05f7141b9c813168b4deba8990b1f31294eb5625ede281c00066",
+        "src/frontend/rawfile.c": "fa5d8625a5b4168d4f928af455f685a9a7edb0ef7999af2f18853e8bf5216840",
+        "src/frontend/postcoms.c": "60bcc3b4bd6e2cc4203dc8bd4f3185b27d1376e321613ce89f6c84ee1887901c"
+      },
+      "executable_path": "references-local/voice-circuit/newton-build11/bin/candidate.exe",
+      "executable_sha256": "333174ac4345ae786e515a6e66345e8a36af494e24bf76c63f92c8f1813af505",
+      "build_sha256": "7a7929d4de4aa42827662ada164503be15099c6a36b816c625f0b896365c6654",
+      "protocol_sha256": "594c6da49e96d4b0b208a500b50a7e40efc102fa6d74dbc6bda9858ff47821d5",
+      "deck_sha256": "4773812ebe40e00d5027527902cdcda576d5236e9e94147b37ed26a9a120ee97",
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-circuit\\newton-build11\\bin\\candidate.exe",
+        "-n",
+        "-b",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-circuit\\active-six-binary-long01\\nominal-trap125.cir"
+      ],
+      "controlled_environment": {
+        "RF_D_LINEAR_REFINE": "1",
+        "RF_D_REFINE_REPLAY": null,
+        "RF_D_MATRIX_TRACE": null,
+        "RF_D_TRACE": null,
+        "RF_D_741_REDUCE": null,
+        "RF_D_REFINE_SHADOW": null
+      },
+      "published_corrections": 6,
+      "wall_limit_s": 7200,
+      "process_started": true,
+      "trajectory_complete": false,
+      "git_commit": "2c2c66f85a81c5775b90bab51a19761aab8cab47",
+      "physical_fidelity": false,
+      "real_time": false,
+      "new_audio": false,
+      "control_audit_sha256": "e90acdb10cfc633a5013b52de69e4cbcde802548ac17af85709a408016fa2f5d",
+      "exit_code": 0,
+      "wall_s": 182.51678909998736,
+      "helper_sha256_after": {
+        "tools/voice_binary_runner.py": "ab3df93cfdbb2ee1b79962f72fca93447e2b6fce91b27271dbe8ae3fa8b059e4",
+        "tools/voice_native_raw.py": "0c57179317e2fb54515ee0049c34196c6cb694999c1442fc561c130a432da0a6",
+        "tools/voice_six_runner.py": "fe2dea31d98567b9da891b34dcb0cf6227a19bb1006d4cbbfd7686167b8ce94a",
+        "tools/voice_six_build.py": "a1d444f244495aa3e7db0699f68c43700e22c607e014ebe40287f22651759f5c",
+        "tools/voice_full_note.py": "002878c1c05fd8278cf06c3a7e4f694212161ff8e12149f17886d9fd13f5bea9",
+        "tools/vco1_circuit_reference.py": "c2e44b4e528744359300f7257a601c7e870a929e9f5c624f7ba741b07bff193b",
+        "tools/loudness_voice_probes.py": "55fba545bacbe249738d8691142a02fcdec887fd39fe92e6ab390e360670e254",
+        "tools/loudness_voice_circuit.py": "0ac19726aacb8bdae0ec7404600b79f5ec83ef5e9462f915d853187243f4dc12"
+      },
+      "runtime_sha256_after": {
+        "references-local/voice-circuit/newton-build11/init02/spinit": "9cb857d73fe223122ec7eecd796bbcc7615add973ca7afedbe7a0914c5600ef2",
+        "references-local/voice-circuit/newton-build11/baseline02/src/xspice/icm/spice2poly/spice2poly.cm": "369554828e74e7ec588f80d876fa6f4ebb8dceaf82ba46e6c7f9f7d62a38a341",
+        "C:/msys64/ucrt64/bin/libwinpthread-1.dll": "c7844629395e7813508fc9bb58c068ca9240a04d6d8529db0a75b6efc53590e7",
+        "C:/msys64/ucrt64/bin/libstdc++-6.dll": "d9a58184f6bb27936ef03c3a3286950e4aa61c66a9f74dfa94a532b1433b368d",
+        "C:/msys64/ucrt64/bin/libgcc_s_seh-1.dll": "ff139cfe956709283f7b70a06af8bc8bb9d1c3bef60ec1bc8d363c91351cfeb2"
+      },
+      "current_source_sha256_after": {
+        "evidence/vco1_ramp_graph.json": "bec931c06ac012fd14ee2b7ddf8f86f06c2d3c0ab2a78306dd6f33c88bead361",
+        "evidence/vco1_ca3046_parts.json": "2724e065969f8b0edc4f1191a787ae38c755aa4850fcfa6b9262828207689ad9",
+        "evidence/vco1_panel_pulse_width.json": "6da8d7eb376649cbda482c32f8da8ec55da5e2f7344756bac626a6e9d81b69c9",
+        "evidence/vco1_laboratory_devices.json": "50b4f163e29d2c4a9a19a186d871a0a83ff1d19c7d4c539e8e42add2dcd254f1",
+        "tools/vco1_circuit_reference.py": "c2e44b4e528744359300f7257a601c7e870a929e9f5c624f7ba741b07bff193b",
+        "references-local/datasheets/ti_lm741_lm741.lib": "f58370983c8bd22bf6a59ddd05a1dd492f1a0ea60f673ffd460a356da5e693dc",
+        "evidence/voice_board4_graph.json": "dae24df4d2ea7635cc1935e556a9d989ec34f48950ec884069532cc5d3ba49f9",
+        "tools/voice_circuit_reference.py": "88267ed30db730315eca9d0099d40ee7e1a8ac9f751bee9e7f1b6a24d114e17c",
+        "tools/filter_vca_circuit_reference.py": "41de5bab7bfa2a78246c0fc5e0fbd744bd9939aead4881cabd85acef2774d9db",
+        "evidence/loudness_contour_graph.json": "f147a2e10dcf4fae6e18c13ad1c8f3842977f7e15c3bd019f27bfcd2300dee66",
+        "tools/loudness_contour_reference.py": "1dcceac0102af47d0111c6710634f58e63ff04f27f0e30cb3b418228d07094a3",
+        "tools/loudness_board4_circuit.py": "9aaec972855bdcc15ac834697cfcc523deec44f75149a4f11671433c1154e616",
+        "tools/loudness_voice_circuit.py": "0ac19726aacb8bdae0ec7404600b79f5ec83ef5e9462f915d853187243f4dc12",
+        "tools/loudness_voice_probes.py": "55fba545bacbe249738d8691142a02fcdec887fd39fe92e6ab390e360670e254"
+      },
+      "compiled_source_sha256_after": {
+        "src/maths/ni/niiter.c": "464e001a80db05f7141b9c813168b4deba8990b1f31294eb5625ede281c00066",
+        "src/frontend/rawfile.c": "fa5d8625a5b4168d4f928af455f685a9a7edb0ef7999af2f18853e8bf5216840",
+        "src/frontend/postcoms.c": "60bcc3b4bd6e2cc4203dc8bd4f3185b27d1376e321613ce89f6c84ee1887901c"
+      },
+      "executable_sha256_after": "333174ac4345ae786e515a6e66345e8a36af494e24bf76c63f92c8f1813af505",
+      "log_sha256": "fb1e7ec299fad2ed36e7e6dd739dd4de81a8c0053bc2132f25f3b24350d3776c",
+      "solver_failure_reported": true,
+      "refinement_activation_confirmed": true,
+      "unwanted_instrumentation": false,
+      "unexpected_correction_announcement": false,
+      "activation_gate_passed": false,
+      "raw_sha256": "1866f924c220b326941643db1665e612e5ac58490e68e7b96043e2e47da9d638",
+      "raw_bytes": 23664183,
+      "native_layout": {
+        "schema": "rf-d/native-raw-layout/v1",
+        "dtype": "<f8",
+        "endianness": "little",
+        "columns": 19,
+        "rows": 155680,
+        "header_bytes": 823,
+        "payload_bytes": 23663360,
+        "header_sha256": "829f378732993c3288ccc3518bf7bfdaef7e2188a9b0c4795a9b72c52989d21e",
+        "payload_sha256": "0bb084335eaf8fa54327cf579edcda483d0ee8484f465c44f66778090013e81a",
+        "variables": [
+          {
+            "index": 0,
+            "name": "time",
+            "canonical_name": "time",
+            "unit": "time"
+          },
+          {
+            "index": 1,
+            "name": "v(ramp_c1)",
+            "canonical_name": "v(ramp_c1)",
+            "unit": "voltage"
+          },
+          {
+            "index": 2,
+            "name": "v(schmitt_drive)",
+            "canonical_name": "v(schmitt_drive)",
+            "unit": "voltage"
+          },
+          {
+            "index": 3,
+            "name": "v(saw_output_9b)",
+            "canonical_name": "v(saw_output_9b)",
+            "unit": "voltage"
+          },
+          {
+            "index": 4,
+            "name": "v(mix_bus_board4_pin4)",
+            "canonical_name": "v(mix_bus_board4_pin4)",
+            "unit": "voltage"
+          },
+          {
+            "index": 5,
+            "name": "v(f4_recover_collector)",
+            "canonical_name": "v(f4_recover_collector)",
+            "unit": "voltage"
+          },
+          {
+            "index": 6,
+            "name": "v(f4_main_output)",
+            "canonical_name": "v(f4_main_output)",
+            "unit": "voltage"
+          },
+          {
+            "index": 7,
+            "name": "v(f4_q17_collector)",
+            "canonical_name": "v(f4_q17_collector)",
+            "unit": "voltage"
+          },
+          {
+            "index": 8,
+            "name": "v(f4_c2_right)",
+            "canonical_name": "v(f4_c2_right)",
+            "unit": "voltage"
+          },
+          {
+            "index": 9,
+            "name": "v(f4_headphone_input)",
+            "canonical_name": "v(f4_headphone_input)",
+            "unit": "voltage"
+          },
+          {
+            "index": 10,
+            "name": "v(f4_loudness_contour)",
+            "canonical_name": "v(f4_loudness_contour)",
+            "unit": "voltage"
+          },
+          {
+            "index": 11,
+            "name": "v(e2_timing_c2)",
+            "canonical_name": "v(e2_timing_c2)",
+            "unit": "voltage"
+          },
+          {
+            "index": 12,
+            "name": "v(e2_attack_panel_in)",
+            "canonical_name": "v(e2_attack_panel_in)",
+            "unit": "voltage"
+          },
+          {
+            "index": 13,
+            "name": "v(e2_decay_out)",
+            "canonical_name": "v(e2_decay_out)",
+            "unit": "voltage"
+          },
+          {
+            "index": 14,
+            "name": "v(e2_follower_base)",
+            "canonical_name": "v(e2_follower_base)",
+            "unit": "voltage"
+          },
+          {
+            "index": 15,
+            "name": "v(e2_reset_collector)",
+            "canonical_name": "v(e2_reset_collector)",
+            "unit": "voltage"
+          },
+          {
+            "index": 16,
+            "name": "v(e2_attack_gate_lower)",
+            "canonical_name": "v(e2_attack_gate_lower)",
+            "unit": "voltage"
+          },
+          {
+            "index": 17,
+            "name": "v(e2_keyboard_trigger)",
+            "canonical_name": "v(e2_keyboard_trigger)",
+            "unit": "voltage"
+          },
+          {
+            "index": 18,
+            "name": "v(f4_q18_base)",
+            "canonical_name": "v(f4_q18_base)",
+            "unit": "voltage"
+          }
+        ],
+        "canonical_columns": [
+          "time",
+          "v(ramp_c1)",
+          "v(schmitt_drive)",
+          "v(saw_output_9b)",
+          "v(mix_bus_board4_pin4)",
+          "v(f4_recover_collector)",
+          "v(f4_main_output)",
+          "v(f4_q17_collector)",
+          "v(f4_c2_right)",
+          "v(f4_headphone_input)",
+          "v(f4_loudness_contour)",
+          "v(e2_timing_c2)",
+          "v(e2_attack_panel_in)",
+          "v(e2_decay_out)",
+          "v(e2_follower_base)",
+          "v(e2_reset_collector)",
+          "v(e2_attack_gate_lower)",
+          "v(e2_keyboard_trigger)",
+          "v(f4_q18_base)"
+        ],
+        "column_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18
+        ],
+        "physical_fidelity": false,
+        "real_time": false
+      },
+      "rows": 155680,
+      "last_clock_s": 0.01594042072898988,
+      "max_step_observed_s": 1.25000000000125e-07,
+      "endpoint_complete": false,
+      "max_step_passed": true
+    }
+  },
+  "archives": {
+    "nominal500": {
+      "schema": "rf-d/serial-raw-archive/v1",
+      "scene": "nominal500",
+      "codec": "xz6-crc64",
+      "original_path": "nominal500.raw",
+      "original_sha256": "a942dadbe988a00f717a25fdbd67580c9c9a010e3a1739c4e39ea1d89f26d0ac",
+      "original_bytes": 98665999,
+      "receipt_path": "nominal500.json",
+      "receipt_sha256": "9ff156674a230a9f7c187a8c57ec8c291e2a1286f27ad5632a755e757b361afc",
+      "archive_path": "nominal500.raw.xz",
+      "archive_sha256": "244720378cbd4a3deef917801df949d4340c5867d8f701f1be4f7788eaf25ea8",
+      "archive_bytes": 53922052,
+      "encoding_s": 26.059329699986847,
+      "verification_s": 2.5878292999987025,
+      "full_restoration_verified": true,
+      "raw_retired": true,
+      "original_receipt_retained": true,
+      "private_data_only": true,
+      "helper_sha256": "ca1f641981db35cab6e1ce4d6c9f448b424e8cd04f9c4a3f34c8eea7335897c8"
+    },
+    "nominal250": {
+      "schema": "rf-d/serial-raw-archive/v1",
+      "scene": "nominal250",
+      "codec": "xz6-crc64",
+      "original_path": "nominal250.raw",
+      "original_sha256": "95a3b0d391e16d49d298b4c3df96b9b64fc925142b8061892b52cce1ef8e8c22",
+      "original_bytes": 152125616,
+      "receipt_path": "nominal250.json",
+      "receipt_sha256": "fc9665d420d7cd9a444e81074d6353077b94d0bcdd033e122f29ff3c1145fa0e",
+      "archive_path": "nominal250.raw.xz",
+      "archive_sha256": "2ddf6eab5f37e6e54def51c28d21dc1700fcfb334a36e8e87bab755322722db0",
+      "archive_bytes": 84839156,
+      "encoding_s": 41.43547950001084,
+      "verification_s": 4.069738499994855,
+      "full_restoration_verified": true,
+      "raw_retired": true,
+      "original_receipt_retained": true,
+      "private_data_only": true,
+      "helper_sha256": "ca1f641981db35cab6e1ce4d6c9f448b424e8cd04f9c4a3f34c8eea7335897c8"
+    },
+    "nominal125": {
+      "schema": "rf-d/serial-raw-archive/v1",
+      "scene": "nominal125",
+      "codec": "xz6-crc64",
+      "original_path": "nominal125.raw",
+      "original_sha256": "81b8eb0b793d7d063f1a5ebb7b1d331cbf3b04252be00ef1eeedf0c1274e6c5a",
+      "original_bytes": 562940728,
+      "receipt_path": "nominal125.json",
+      "receipt_sha256": "88ab0047e46b7a960fab0e43b8d83a03fc3506bf20e0dc5b1330c928fb5b137d",
+      "archive_path": "nominal125.raw.xz",
+      "archive_sha256": "1058af63f293745f0c91d660eadafce654f61bcfac036c81d85de68b52c69154",
+      "archive_bytes": 314777016,
+      "encoding_s": 153.7069627000019,
+      "verification_s": 15.024306400009664,
+      "full_restoration_verified": true,
+      "raw_retired": true,
+      "original_receipt_retained": true,
+      "private_data_only": true,
+      "helper_sha256": "ca1f641981db35cab6e1ce4d6c9f448b424e8cd04f9c4a3f34c8eea7335897c8"
+    },
+    "nominal-trap125": {
+      "schema": "rf-d/serial-raw-archive/v1",
+      "scene": "nominal-trap125",
+      "codec": "xz6-crc64",
+      "original_path": "nominal-trap125.raw",
+      "original_sha256": "1866f924c220b326941643db1665e612e5ac58490e68e7b96043e2e47da9d638",
+      "original_bytes": 23664183,
+      "receipt_path": "nominal-trap125.json",
+      "receipt_sha256": "f2db2f224585886fb78f11d44e67a080afc2046d16abd2828a86c2a9611bb06f",
+      "archive_path": "nominal-trap125.raw.xz",
+      "archive_sha256": "53939bdb2bac9167fd67451403e2b86b7d7681c1e7d8d0d82e8b2dd1a98e871a",
+      "archive_bytes": 11495960,
+      "encoding_s": 6.081632699992042,
+      "verification_s": 0.5558054999855813,
+      "full_restoration_verified": true,
+      "raw_retired": true,
+      "original_receipt_retained": true,
+      "private_data_only": true,
+      "helper_sha256": "ca1f641981db35cab6e1ce4d6c9f448b424e8cd04f9c4a3f34c8eea7335897c8"
+    }
+  },
+  "archive_manifest_sha256": {
+    "nominal500": "14ebf667f2e3f21b4e016fd1a73cfa1ea87ecc2e5a2c62ef662e14a224a542f5",
+    "nominal250": "d56bf125c2f8e21de73ad88cfc27cae53b1db1d1c0aa2f08d9ebbc246d87c28c",
+    "nominal125": "7708fff5a2fd512104d55615a96775dd74136ef0275114c994c3bbe0d9ac817c",
+    "nominal-trap125": "8a17b98f756e70a027589261ac84c900ba1655dae5d675aa8de9006b075a448f"
+  },
+  "measurements": {
+    "nominal125": {
+      "frequency_hz": 439.1422766205844,
+      "reset_crossings_s": [
+        0.011386025299668574,
+        0.013663192800618543,
+        0.015940360280085036,
+        0.018217527738445725,
+        0.020494695175650654,
+        0.022771862591926508,
+        0.025049029987567605,
+        0.02732619736229531,
+        0.029603364716572433,
+        0.03188053205060161,
+        0.03415769936434115,
+        0.03643486665805739,
+        0.03871203393191216,
+        0.04098920118594598,
+        0.04326636842027655,
+        0.045543535635204066,
+        0.047820702830723615,
+        0.05009787000679961,
+        0.052375037163814704,
+        0.05465220430189025,
+        0.05692937142094534,
+        0.059206538521352,
+        0.06148370560324092,
+        0.06376087266662862,
+        0.06603803971165757,
+        0.06831520673836916,
+        0.07059237374668272,
+        0.07286954073696772,
+        0.07514670770938069,
+        0.07742387466404066,
+        0.07970104160074258,
+        0.081978208519819,
+        0.08425537542144784,
+        0.08653254230557805,
+        0.08880970917257176,
+        0.09108687602209167,
+        0.09336404285459836,
+        0.09564120967010248,
+        0.09791837646859354,
+        0.10019554325027537,
+        0.10247271001518707,
+        0.10474987676358156,
+        0.10702704349547033,
+        0.10930421021075223,
+        0.11158137690990137,
+        0.11385854359262429,
+        0.11613571025923035,
+        0.11841287690984265,
+        0.12069004354426796,
+        0.12296721016306424,
+        0.12524437676601077,
+        0.1275215433530576,
+        0.12979870992435655,
+        0.1320758764802143,
+        0.1343530430206581,
+        0.13663020954594304,
+        0.13890737605570916,
+        0.14118454255036214,
+        0.14346170903011232,
+        0.14573887549489847,
+        0.1480160419447139,
+        0.15029320837971355,
+        0.1525703748000315,
+        0.15484754120563324,
+        0.1571247075965564,
+        0.15940187397305905,
+        0.161679040335222,
+        0.16395620668309166,
+        0.1662333730167447,
+        0.1685105393361021,
+        0.1707877056414038,
+        0.17306487193283734,
+        0.17534203821030628,
+        0.1776192044738712,
+        0.17989637072373119,
+        0.18217353695988936,
+        0.18445070318256052,
+        0.1867278693915258,
+        0.1890050355871056,
+        0.1912822017691916,
+        0.19355936793805148,
+        0.19583653409388746,
+        0.19811370023644279,
+        0.20039086636607684,
+        0.20266803248245083,
+        0.2049451985859356,
+        0.20722236467667085,
+        0.20949953075449174,
+        0.2117766968197233,
+        0.21405386287224615,
+        0.21633102891222192,
+        0.21860819493954803,
+        0.2208853609546721,
+        0.22316252695728264,
+        0.22543969294758667,
+        0.22771685892577356,
+        0.2299940248917748,
+        0.23227119084568257,
+        0.23454835678755287,
+        0.23682552271755214,
+        0.23910268863569195,
+        0.2413798545419082,
+        0.24365702043643483,
+        0.24593418631952008,
+        0.24821135219065424,
+        0.25048851805046596,
+        0.252765683899225,
+        0.25504284973650676,
+        0.2573200155624856,
+        0.2595971813771539,
+        0.26187434718043195,
+        0.26415151297279155,
+        0.2664286787537695,
+        0.2687058445239246,
+        0.2709830102830166,
+        0.27326017603121827,
+        0.27553734176857114,
+        0.277814507495183,
+        0.28009167321092304,
+        0.28236883891600756,
+        0.2846460046105357,
+        0.28692317029447595,
+        0.28920033596793615,
+        0.2914775016310691,
+        0.2937546672838049,
+        0.2960318329262097,
+        0.29830899855833676,
+        0.3005861641802927,
+        0.3028633297918048,
+        0.3051404953935783,
+        0.3074176609852728,
+        0.309694826566823,
+        0.3119719921386435,
+        0.31424915770041506,
+        0.31652632325246843,
+        0.31880348879488685,
+        0.32108065432773175,
+        0.32335781985071366,
+        0.32563498536411484,
+        0.32791215086801906,
+        0.3301893163625081,
+        0.3324664818475102,
+        0.3347436473231024,
+        0.33702081278945967,
+        0.3392979782463203,
+        0.3415751436941062,
+        0.34385230913270554,
+        0.3461294745623438,
+        0.34840663998275656
+      ],
+      "period_spread_relative": 9.136518353592779e-07,
+      "contour_min_v": -0.29003224215239376,
+      "contour_max_v": 5.517345894489367,
+      "timing_balance_max_c": 1.7026359230801657e-13,
+      "output_balance_max_c": 3.5525789410048834e-15,
+      "windows": {
+        "rest": {
+          "output_dc_v": 1.3080952784116742e-05,
+          "output_ac_rms_v": 8.13517953209122e-06,
+          "contour_mean_v": -0.29003224123059695
+        },
+        "attack": {
+          "output_dc_v": -0.0032543304656782834,
+          "output_ac_rms_v": 0.09764977833540162,
+          "contour_mean_v": 2.23576363236007
+        },
+        "held": {
+          "output_dc_v": 0.005671514568191709,
+          "output_ac_rms_v": 0.19140049867744005,
+          "contour_mean_v": 5.402410017205939
+        },
+        "release": {
+          "output_dc_v": 0.025395561055413785,
+          "output_ac_rms_v": 0.19191997470622676,
+          "contour_mean_v": 4.824249501555393
+        }
+      },
+      "window_spans_s": {
+        "rest": [
+          0.002,
+          0.008
+        ],
+        "attack": [
+          0.02,
+          0.08
+        ],
+        "held": [
+          0.12,
+          0.19
+        ],
+        "release": [
+          0.23,
+          0.34
+        ]
+      },
+      "dc_v": {
+        "v(ramp_c1)": 0.0,
+        "v(schmitt_drive)": 3.9077452896283127,
+        "v(saw_output_9b)": 1.8600634048356703,
+        "v(mix_bus_board4_pin4)": 0.9300317024178351,
+        "v(f4_recover_collector)": 2.960737546184135,
+        "v(f4_main_output)": 0.0,
+        "v(f4_q17_collector)": 2.6862920666174803,
+        "v(f4_c2_right)": 0.0,
+        "v(f4_headphone_input)": 0.0,
+        "v(f4_loudness_contour)": -0.2900322413310375,
+        "v(e2_timing_c2)": 0.8469359014881469,
+        "v(e2_attack_panel_in)": 0.8469360138741643,
+        "v(e2_decay_out)": 0.8509502324724707,
+        "v(e2_follower_base)": 0.8465343560036971,
+        "v(e2_reset_collector)": 8.29410061834293,
+        "v(e2_attack_gate_lower)": 0.010050989802520439,
+        "v(e2_keyboard_trigger)": 0.0,
+        "v(f4_q18_base)": -0.29003189263676554
+      },
+      "output_min_v": -0.32687993175567115,
+      "output_max_v": 0.32330186831234703,
+      "output_final_v": -0.024013533858103342,
+      "contour_final_v": 4.499931069598855
+    }
+  },
+  "comparisons": {
+    "nominal500--nominal250": {
+      "measured": false,
+      "passed": false,
+      "reason": "required complete archived scene missing"
+    },
+    "nominal250--nominal125": {
+      "measured": false,
+      "passed": false,
+      "reason": "required complete archived scene missing"
+    },
+    "nominal125--nominal-trap125": {
+      "measured": false,
+      "passed": false,
+      "reason": "required complete archived scene missing"
+    }
+  },
+  "electrical_errors": {
+    "nominal500": "solver trajectory incomplete",
+    "nominal250": "solver trajectory incomplete",
+    "nominal-trap125": "solver trajectory incomplete"
+  },
+  "storage_errors": {},
+  "resource_errors": {},
+  "phase_resources": [
+    {
+      "pending": [
+        "nominal500",
+        "nominal250",
+        "nominal125",
+        "nominal-trap125"
+      ],
+      "estimated_future_archives_bytes": 946447547,
+      "largest_intermediate_bytes": 564491431,
+      "margin_bytes": 2147483648,
+      "required_free_bytes": 3658422626,
+      "available_free_bytes": 3793068032,
+      "passed": true,
+      "estimates_are_not_bounds": true,
+      "before_scene": "nominal500"
+    },
+    {
+      "pending": [
+        "nominal250",
+        "nominal125",
+        "nominal-trap125"
+      ],
+      "estimated_future_archives_bytes": 804398482,
+      "largest_intermediate_bytes": 564491431,
+      "margin_bytes": 2147483648,
+      "required_free_bytes": 3516373561,
+      "available_free_bytes": 3717230592,
+      "passed": true,
+      "estimates_are_not_bounds": true,
+      "before_scene": "nominal250"
+    },
+    {
+      "pending": [
+        "nominal125",
+        "nominal-trap125"
+      ],
+      "estimated_future_archives_bytes": 606016472,
+      "largest_intermediate_bytes": 564491431,
+      "margin_bytes": 2147483648,
+      "required_free_bytes": 3317991551,
+      "available_free_bytes": 3920351232,
+      "passed": true,
+      "estimates_are_not_bounds": true,
+      "before_scene": "nominal125"
+    },
+    {
+      "pending": [
+        "nominal-trap125"
+      ],
+      "estimated_future_archives_bytes": 291539586,
+      "largest_intermediate_bytes": 523318583,
+      "margin_bytes": 2147483648,
+      "required_free_bytes": 2962341817,
+      "available_free_bytes": 3585208320,
+      "passed": true,
+      "estimates_are_not_bounds": true,
+      "before_scene": "nominal-trap125"
+    }
+  ],
+  "restorations": [
+    {
+      "scene": "nominal125",
+      "restored_sha256": "81b8eb0b793d7d063f1a5ebb7b1d331cbf3b04252be00ef1eeedf0c1274e6c5a",
+      "restored_bytes": 562940728,
+      "archive_sha256": "1058af63f293745f0c91d660eadafce654f61bcfac036c81d85de68b52c69154",
+      "manifest_sha256": "7708fff5a2fd512104d55615a96775dd74136ef0275114c994c3bbe0d9ac817c",
+      "passed": true,
+      "temporary_retired": true
+    }
+  ],
+  "scene_order": [
+    "nominal500",
+    "nominal250",
+    "nominal125",
+    "nominal-trap125"
+  ],
+  "max_workers": 1,
+  "gates": {
+    "trace_v": 0.005,
+    "frequency_cents": 1,
+    "rms_relative": 0.01,
+    "rms_absolute_v": 1e-05,
+    "charge_c": 1e-10,
+    "observation_grid_s": 5e-06
+  },
+  "window_spans_s": {
+    "rest": [
+      0.002,
+      0.008
+    ],
+    "attack": [
+      0.02,
+      0.08
+    ],
+    "held": [
+      0.12,
+      0.19
+    ],
+    "release": [
+      0.23,
+      0.34
+    ]
+  },
+  "decision": "serial long note rejected",
+  "long_note_admitted_locally": false,
+  "new_audio": false,
+  "physical_fidelity": false,
+  "real_time": false,
+  "measured_spice_solves": 4,
+  "unreceipted_attempts": {},
+  "observation_resources": {
+    "required_free_bytes": 2710424376,
+    "available_free_bytes": 3577499648
+  },
+  "helper_sha256_after": {
+    "tools/voice_serial_long.py": "91b5b7626f6a223ece81a914ae413642bf1bf057a167d97cc45e63c482b54f20",
+    "tools/voice_serial_archive.py": "ca1f641981db35cab6e1ce4d6c9f448b424e8cd04f9c4a3f34c8eea7335897c8",
+    "tools/voice_lossless_archive.py": "c3e819070ca4ccb69d3392cd78694c374836013d84e30ebadeb246db0b8fb744",
+    "tools/validate_voice_native_control.py": "b811170128439d1177725db547ef372d48d8ac840beaae04f6eb8d75ce1bf065",
+    "tools/voice_full_note.py": "002878c1c05fd8278cf06c3a7e4f694212161ff8e12149f17886d9fd13f5bea9",
+    "tools/voice_binary_long_probe.py": "864c791c443531189bc537460ac8e8dbb495f14bdeef66df2e6a426dad92778e",
+    "tools/validate_voice_serial_bank.py": "83125a13247093893b17c0a230bd046790b23feabc9fe7b3ba468a10918854ae",
+    "docs/VOZ_NOTA_LARGA_ARCHIVO_PROTOCOLO.md": "d1ce40767c212327e0a8fd88c3385ab497fb7a87cab5fb081fc89a341cf6e572",
+    "docs/VOZ_SERIAL_IMPLEMENTACION.md": "7f0ce2dda8926e7ceae347ad671489e7f02692b6443678645d1078ffac8552aa"
+  }
+}

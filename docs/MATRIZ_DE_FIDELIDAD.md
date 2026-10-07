@@ -15,16 +15,17 @@ no significa identidad sonora con el hardware.
 | Ladder/VCAs/salida | Q29/Q30, ladder, recuperación, C10, dos VCAs y ruta J4/J5/J7 | [Cierre ON/C27 nativo](MEZCLADOR_CADENA_RESULTADOS.md), ambos R61, cuatro escenas/64 pasos; algoritmos anteriores conservados | Controles y fuentes completos; población física y RT |
 | Contorno de volumen | Gatillo, seguidor y cargas documentados; laboratorio con rechazos conservados | [Puerto C2/reset cargado](PUERTO_CONTORNO_CADENA_71.md); C2/reset aún impuestos en el nativo de 71 nodos | Conmutación estable e integración del contorno completo |
 | Contorno de filtro | Alcance y puntos de entrada documentados | Frontera impuesta | Circuito y banco propios |
-| Voz SPICE conjunta | VCO1 y cadena con contorno de laboratorio | [Cuatro escenas cortas admitidas](VOZ_SEIS_ACTIVO_RESULTADOS.md); banco largo serial en curso | Cobertura de 350 ms, tres contrastes y decisión auditada |
+| Voz SPICE conjunta | VCO1 y cadena con contorno de laboratorio | [Cuatro escenas cortas admitidas](VOZ_SEIS_ACTIVO_RESULTADOS.md); [largo rechazado y auditado](VOZ_SERIAL_CAMPANA_RESULTADOS.md), una de cuatro completa | Contrastes largos sin medir; causas de abortos pendientes |
 | Audio / producto | Escuchas de alcance parcial conservadas | Sin voz nativa instalable admitida | Voz completa, adaptador de escucha, deadlines, host y paquete |
 
 ## Estado de la nota larga
 
 El [preflight02](../evidence/voice_serial_preflight02.json) admitió recursos,
-no el circuito. Gear500/Gear250 se detuvieron a 136,630269/150,293268 ms;
-Gear125 sigue calculando y Trap125 está pendiente. Sus prefijos no aportan
-cobertura de tiempo ausente ni habilitan contrastes completos. La auditoría
-final y la nota larga siguen pendientes.
+no el circuito. Gear500/Gear250/Trap125 se detuvieron a
+136,630269/150,293268/15,940421 ms; Gear125 completó 350 ms. La
+[auditoría final](VOZ_SERIAL_CAMPANA_RESULTADOS.md) conserva los cuatro recibos y
+archivos. Banco rechazado, tres parejas no medidas y ningún error de
+recursos/almacenamiento. Los prefijos no cubren tiempo ausente.
 
 El [diagnóstico Gear500](../evidence/voice_serial_prefix_nominal50001.json)
 y la [auditoría decimal](../evidence/voice_serial_prefix_decimal01.json)
