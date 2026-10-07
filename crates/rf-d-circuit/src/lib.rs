@@ -13,6 +13,7 @@ pub mod loudness_follower;
 pub mod output;
 pub mod output_conversion;
 pub mod output_conversion_c4;
+pub mod mixer_on;
 pub mod panel;
 pub mod recovery_vca_output;
 pub mod vca1_output;

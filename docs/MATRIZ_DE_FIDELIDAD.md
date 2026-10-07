@@ -1,5 +1,11 @@
 # Matriz de fidelidad
 
+El [mezclador ON nativo](MEZCLADOR_NATIVO_RESULTADOS.md)
+pasa 279 controles nodales independientes, ocho tests Rust y cero
+asignaciones en 10000 evaluaciones. Entrega corrientes y tangentes
+de seis terminales; su integración con C27/ladder y fuentes queda pendiente.
+La nota larga monolítica continúa pendiente por recursos; no hay audio nuevo.
+
 El [candidato activo de seis correcciones](VOZ_SEIS_ACTIVO_RESULTADOS.md)
 pasa identidad desactivada, control nominal y cuatro escenas de 40 ms.
 Los tres contrastes y ambos balances pasan con los gates originales.
