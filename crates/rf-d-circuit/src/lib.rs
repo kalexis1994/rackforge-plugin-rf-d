@@ -593,3 +593,5 @@ pub mod vco_bjt;
 pub mod vco_jfet;
 
 pub mod lm741;
+
+pub mod lm741_port;

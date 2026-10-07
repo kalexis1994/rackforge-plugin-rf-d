@@ -1,0 +1,161 @@
+{
+  "schema": "rf-d/lm741-port-production/v1",
+  "passed": true,
+  "source_sha256": {
+    "crates/rf-d-circuit/src/lm741.rs": "b88f37749daf8dcabe577e6f0686570e825ee28508faa03eefd70065c9878f3a",
+    "crates/rf-d-circuit/src/lm741_port.rs": "528082e0cdb51cb464c576da2833ffdb1cadd721173bf6557a227de29d13915b",
+    "crates/rf-d-circuit/tests/lm741_port.rs": "af121fe45b46473a6bbf794f684500c1a90b523a9029d946e627291fe5ec6f60",
+    "crates/rf-d-circuit/tests/lm741_port_no_alloc.rs": "a63d423a30953ee1e3dd6e07f49961ea3e44964f8fa926c02550d84cbea4b9b6",
+    "docs/VCO_741_PUERTO_PROTOCOLO.md": "ec80bd19dcd87294031a5087791e831526a74d558bd389d52bc86d779991c0ad",
+    "evidence/voice_lm741_port_reference12.json": "98cc67f8feaf2d7dd19a6bd7910b8e24a01cd2e2518676afc8a43b8ea3e718bb",
+    "evidence/voice_lm741_port_spice12.txt": "5aa330bbc5a09e16a530e743a9d61f51bbfe643cf1f0abe9b75ef3e6c708bf08",
+    "evidence/voice_lm741_port_trajectory12.txt": "09b44bd897d8056ada57aa8ca16daa8f724f97ac252e0090beeb04798477b887",
+    "tools/lm741_port_native.py": "cd922c26707ed4120278c5f51b0a5c958d9d1f0fbf106d6658990c98b313e0e3",
+    "tools/lm741_port_reference.py": "80262f0cbbc3ddd4daf3ef2086930a4ea7a07ca16efdd2e4ef056cb0c5047169",
+    "tools/lm741_reference.py": "996de7a63b08f4ccec60fbbc3fcd120a196d8e3081b87ee5f8e93af6b32c463f"
+  },
+  "compiler": {
+    "path": "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+    "sha256": "fd6232f90a981e28472ce6900232946a1f1bcad8ec8270cd5ae6a3a357208b98",
+    "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+  },
+  "available_free_bytes": 4836601856,
+  "estimated_build_bytes": 67108864,
+  "margin_bytes": 2147483648,
+  "resource_passed": true,
+  "estimates_are_not_bounds": true,
+  "commands": [
+    {
+      "kind": "compile",
+      "command": [
+        "C:\\Users\\kalex\\.rustup\\toolchains\\stable-x86_64-pc-windows-gnu\\bin\\rustc.exe",
+        "--edition=2021",
+        "--crate-type",
+        "lib",
+        "--crate-name",
+        "rf_d_circuit",
+        "crates/rf-d-circuit/src/lib.rs",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\lm741-port-native05\\librf_d_circuit.rlib"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "kind": "compile",
+      "command": [
+        "C:\\Users\\kalex\\.rustup\\toolchains\\stable-x86_64-pc-windows-gnu\\bin\\rustc.exe",
+        "--edition=2021",
+        "--test",
+        "--crate-name",
+        "lm741_port",
+        "crates/rf-d-circuit/tests/lm741_port.rs",
+        "--extern",
+        "rf_d_circuit=C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\lm741-port-native05\\librf_d_circuit.rlib",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\lm741-port-native05\\lm741_port.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "kind": "test",
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\lm741-port-native05\\lm741_port.exe",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "exit_code": 0,
+      "stdout": "\nrunning 3 tests\ntest independent_spice_euler_intervals_with_fixed_history ... LM741_PORT_SPICE,intervals=371,max_node_v=2.22363238933098728e-11,max_branch_a=6.89100198344311243e-14,max_port_a=6.89099656243225001e-14,max_iterations=5\nok\ntest loaded_derivatives_purity_rejections_and_atomic_retry ... ok\ntest own_dc_and_672_step_decimal100_trajectories ... LM741_PORT_TRAJECTORY,dc=6,profiles=9,steps=672,max_node_v=5.98347316138614360e-10,max_branch_a=1.25416931817646203e-12,max_port_a=1.25416931817646203e-12,max_iterations=7,max_trials=6\nok\n\ntest result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.58s\n\n",
+      "stderr": ""
+    },
+    {
+      "kind": "compile",
+      "command": [
+        "C:\\Users\\kalex\\.rustup\\toolchains\\stable-x86_64-pc-windows-gnu\\bin\\rustc.exe",
+        "--edition=2021",
+        "--test",
+        "--crate-name",
+        "lm741_port_no_alloc",
+        "crates/rf-d-circuit/tests/lm741_port_no_alloc.rs",
+        "--extern",
+        "rf_d_circuit=C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\lm741-port-native05\\librf_d_circuit.rlib",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\lm741-port-native05\\lm741_port_no_alloc.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "kind": "test",
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\lm741-port-native05\\lm741_port_no_alloc.exe",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "exit_code": 0,
+      "stdout": "\nrunning 1 test\ntest full_solver_and_five_rhs_use_no_heap ... LM741_PORT_ALLOCATION,solves=1000,rhs=5,allocations=0\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.69s\n\n",
+      "stderr": ""
+    }
+  ],
+  "unchanged_replays": [],
+  "outputs": [
+    {
+      "path": "references-local/lm741-port-native05/librf_d_circuit.rlib",
+      "sha256": "25ff49bf43ebd4ba275587fc1eccdcf8c5db5d3865669b0e0cac9aca728ea747",
+      "bytes": 4743114
+    },
+    {
+      "path": "references-local/lm741-port-native05/lm741_port.exe",
+      "sha256": "bd297cdd6c83b5fe66e7ae1a27f930b4c23e1cc6a9c95b10142304d46c1cf7b2",
+      "bytes": 10190838
+    },
+    {
+      "path": "references-local/lm741-port-native05/lm741_port_no_alloc.exe",
+      "sha256": "447d8c833c86f6d04a4dd078ffda1bec0ec8c8eff0eee34245e922510af2d16a",
+      "bytes": 8572122
+    }
+  ],
+  "new_spice_solves": 0,
+  "new_audio": false,
+  "private_input_sha256": {
+    "references-local/datasheets/ti_lm741_lm741.lib": "f58370983c8bd22bf6a59ddd05a1dd492f1a0ea60f673ffd460a356da5e693dc",
+    "references-local/ngspice46/runtime/Spice64/bin/ngspice_con.exe": "86c9ea5f645ca919e305639fa7bdb522355364c424d14e197f1ade617feb3453",
+    "references-local/voice-circuit/newton-build11/ngspice-46/src/spicelib/devices/bjt/bjtload.c": "1b557959b6bc5a7123673106f41c4cacb2170b7b53df3ec8448d7f27fed70be9",
+    "references-local/voice-circuit/newton-build11/ngspice-46/src/spicelib/devices/bjt/bjtsetup.c": "5568d7b09c578f306f5d6579da7559881ad26d866fbc2349f6c980431c83792d",
+    "references-local/voice-circuit/newton-build11/ngspice-46/src/spicelib/devices/bjt/bjttemp.c": "c2faae7d1d3b717113458bc409b224b00a1b9fba30f82bd730cad4715d83a0e4",
+    "references-local/voice-circuit/newton-build11/ngspice-46/src/spicelib/devices/dio/dioload.c": "fffaaaca5627323d69c3f31b28fbc130f20478cd2d5e165ed0e2ffbdf5334818",
+    "references-local/voice-circuit/newton-build11/ngspice-46/src/spicelib/devices/dio/diosetup.c": "a180c434a4b90d6ee5fe9af756916ffb098b36d40120a33f0f0db422a838ec74",
+    "references-local/voice-circuit/newton-build11/ngspice-46/src/include/ngspice/const.h": "000d6dda4b539e748c8aeabcea866c866dd7f5145aa745dcb575eb2a83947551",
+    "references-local/voice-circuit/newton-build11/ngspice-46/src/spicelib/analysis/cktdojob.c": "5007a84813eedf779a37a80d6f40010c1fa4c3ce2f709ef8e34d18339ac2faf8"
+  },
+  "wall_s": 5.2707971000054386,
+  "source_sha256_after": {
+    "crates/rf-d-circuit/src/lm741.rs": "b88f37749daf8dcabe577e6f0686570e825ee28508faa03eefd70065c9878f3a",
+    "crates/rf-d-circuit/src/lm741_port.rs": "528082e0cdb51cb464c576da2833ffdb1cadd721173bf6557a227de29d13915b",
+    "crates/rf-d-circuit/tests/lm741_port.rs": "af121fe45b46473a6bbf794f684500c1a90b523a9029d946e627291fe5ec6f60",
+    "crates/rf-d-circuit/tests/lm741_port_no_alloc.rs": "a63d423a30953ee1e3dd6e07f49961ea3e44964f8fa926c02550d84cbea4b9b6",
+    "docs/VCO_741_PUERTO_PROTOCOLO.md": "ec80bd19dcd87294031a5087791e831526a74d558bd389d52bc86d779991c0ad",
+    "evidence/voice_lm741_port_reference12.json": "98cc67f8feaf2d7dd19a6bd7910b8e24a01cd2e2518676afc8a43b8ea3e718bb",
+    "evidence/voice_lm741_port_spice12.txt": "5aa330bbc5a09e16a530e743a9d61f51bbfe643cf1f0abe9b75ef3e6c708bf08",
+    "evidence/voice_lm741_port_trajectory12.txt": "09b44bd897d8056ada57aa8ca16daa8f724f97ac252e0090beeb04798477b887",
+    "tools/lm741_port_native.py": "cd922c26707ed4120278c5f51b0a5c958d9d1f0fbf106d6658990c98b313e0e3",
+    "tools/lm741_port_reference.py": "80262f0cbbc3ddd4daf3ef2086930a4ea7a07ca16efdd2e4ef056cb0c5047169",
+    "tools/lm741_reference.py": "996de7a63b08f4ccec60fbbc3fcd120a196d8e3081b87ee5f8e93af6b32c463f"
+  },
+  "compiler_sha256_after": "fd6232f90a981e28472ce6900232946a1f1bcad8ec8270cd5ae6a3a357208b98",
+  "private_input_sha256_after": {
+    "references-local/datasheets/ti_lm741_lm741.lib": "f58370983c8bd22bf6a59ddd05a1dd492f1a0ea60f673ffd460a356da5e693dc",
+    "references-local/ngspice46/runtime/Spice64/bin/ngspice_con.exe": "86c9ea5f645ca919e305639fa7bdb522355364c424d14e197f1ade617feb3453",
+    "references-local/voice-circuit/newton-build11/ngspice-46/src/spicelib/devices/bjt/bjtload.c": "1b557959b6bc5a7123673106f41c4cacb2170b7b53df3ec8448d7f27fed70be9",
+    "references-local/voice-circuit/newton-build11/ngspice-46/src/spicelib/devices/bjt/bjtsetup.c": "5568d7b09c578f306f5d6579da7559881ad26d866fbc2349f6c980431c83792d",
+    "references-local/voice-circuit/newton-build11/ngspice-46/src/spicelib/devices/bjt/bjttemp.c": "c2faae7d1d3b717113458bc409b224b00a1b9fba30f82bd730cad4715d83a0e4",
+    "references-local/voice-circuit/newton-build11/ngspice-46/src/spicelib/devices/dio/dioload.c": "fffaaaca5627323d69c3f31b28fbc130f20478cd2d5e165ed0e2ffbdf5334818",
+    "references-local/voice-circuit/newton-build11/ngspice-46/src/spicelib/devices/dio/diosetup.c": "a180c434a4b90d6ee5fe9af756916ffb098b36d40120a33f0f0db422a838ec74",
+    "references-local/voice-circuit/newton-build11/ngspice-46/src/include/ngspice/const.h": "000d6dda4b539e748c8aeabcea866c866dd7f5145aa745dcb575eb2a83947551",
+    "references-local/voice-circuit/newton-build11/ngspice-46/src/spicelib/analysis/cktdojob.c": "5007a84813eedf779a37a80d6f40010c1fa4c3ce2f709ef8e34d18339ac2faf8"
+  }
+}

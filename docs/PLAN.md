@@ -42,7 +42,8 @@ ya incluye transporte/difusión y sustrato explícito a TEMP=TNOM=25 °C:
 escenas propias: inversión del canal y cargas GS/GD físicas. El
 [741 completo](VCO_741_NATIVO_RESULTADOS.md) conserva sus 37 incógnitas,
 tres capacitores y dos inductores: 60 stamps y seis DC propios. Ahora
-implementar Newton y trayectoria del 741, después el stamp del circuito,
+integrar el [puerto 741](VCO_741_PUERTO_RESULTADOS.md) (Newton, cinco RHS
+y nueve trayectorias propias/672 pasos) en el stamp del circuito,
 uniendo las mitades E402 a su fuente común;
 el VCO completo y su oscilaciÃ³n aÃºn requieren contraste propio.
 
