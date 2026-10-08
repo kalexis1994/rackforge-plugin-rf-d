@@ -33,8 +33,11 @@ no acredita identidad sonora con una unidad vintage.
 | Voz monolÃ­tica SPICE | [Banco corto admitido](docs/VOZ_SEIS_ACTIVO_RESULTADOS.md); [largo rechazado](docs/VOZ_SERIAL_CAMPANA_RESULTADOS.md) | Nota larga completa con sus tres contrastes |
 | Producto | NÃºcleos y herramientas de laboratorio | Voz nativa completa, recursos, MIDI/host y paquete instalable |
 
-La [QA vigente](evidence/voice_vco1_portable_tests01.json) conserva
-235 tests heredados por identidad y cuatro nuevos ejecutados. El
+La [QA vigente](evidence/voice_chain_charge_tests01.json) conserva
+239 tests heredados por identidad y cuatro nuevos ejecutados. La
+[cadena con cargas explícitas](docs/CADENA_CARGA_RADAU_RESULTADOS.md) pasa
+72 etapas y 180 corrientes, con medios pasos de7,629 ps; fuentes impuestas.
+El
 [motor portable de referencia](docs/VCO1_PORTABLE_RESULTADOS.md) incorpora
 arranque, checkpoints y rollback; heap cero medido, deadline pendiente. Radau
 completa dos recorridos propios nominales de30 ms y pasa periodicidad,
@@ -53,11 +56,12 @@ las tres parejas no se midieron por falta de escenas completas. El
 ## Siguiente trabajo
 
 1. Integrar el [motor portable VCO](docs/VCO1_PORTABLE_RESULTADOS.md) tras
-   resolver el dominio conjunto de paso y carga. Ampliar CV/trims reservados
+   cerrar el stamp y la carga conjunta. Ampliar CV/trims reservados
    y C4=100 pF antes de promover calibración u otro perfil.
-2. Resolver el dominio temporal comÃºn con el [mixer cargado](docs/MEZCLADOR_PUERTO_CARGADO_PROTOCOLO.md):
-   sus125 ns actuales no cubren los mÃ­nimos del VCO. DespuÃ©s acoplar la carga,
-   transfiriendo R6/R45 una sola vez y contrastando la cadena conjunta.
+2. Acoplar la [cadena Radau de68 tensiones](docs/CADENA_CARGA_RADAU_RESULTADOS.md)
+   con el VCO, transfiriendo R6/R45 una sola vez y confirmando ambos estados
+   conjuntamente. El dominio pequeño está contrastado localmente con fuentes
+   impuestas; no admite todavía una trayectoria de voz completa.
 3. Cerrar contornos, controles y fuentes restantes; despuÃ©s comprobar la voz,
    plazos y adaptadores de escucha/host para su alcance declarado.
 

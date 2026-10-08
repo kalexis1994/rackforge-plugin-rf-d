@@ -153,3 +153,17 @@ No acredita deadline, voz completa o física.
 Próximo cierre: dominio de paso y carga conjunto con mixer/ladder/VCAs,
 sin duplicar R6/R45 ni imponer un piso de125 ns al VCO.
 [QA](../evidence/voice_vco1_portable_tests01.json).
+
+## Cadena Radau con carga explícita — 2026-10-08
+
+[68 tensiones y memoria hi/lo](CADENA_CARGA_RADAU_RESULTADOS.md), BUS/C10
+explícitos, leyes anteriores conservadas. Doce escenas y 72 etapas propias
+del oráculo pasan contra el nativo, 180 corrientes, 221.952 entradas de
+Jacobiano y ocho casos estructurales de contacto. Cuatro tests nuevos;
+243 cubiertos con 239 heredados. Medios pasos de7,629 ps contrastados
+localmente y heap cero en operaciones medidas; sin SPICE/audio/RT nuevos.
+
+Siguiente: stamp conjunto VCO/cadena y transferencia única de R6/R45;
+el VCO todavía no recibe la carga activa de este banco. Las fuentes
+continúan impuestas y no se admite una trayectoria larga conjunta.
+[QA](../evidence/voice_chain_charge_tests01.json).

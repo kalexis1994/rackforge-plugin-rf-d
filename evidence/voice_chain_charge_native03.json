@@ -1,0 +1,101 @@
+{
+  "schema": "rf-d/chain-charge-native/v1",
+  "passed": true,
+  "compiler": {
+    "path": "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+    "sha256": "fd6232f90a981e28472ce6900232946a1f1bcad8ec8270cd5ae6a3a357208b98",
+    "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+  },
+  "source_sha256": {
+    "docs/CADENA_CARGA_RADAU_PROTOCOLO.md": "21ebe3506aeeb84d895693dc12f0191ce42d18c0fca6b7017d845b5e79339d6c",
+    "crates/rf-d-circuit/src/lib.rs": "00b2a449f010a575168f5ea7c6cf0fe0e6419d5ce125d0cfc7904bf63d97cc1c",
+    "crates/rf-d-circuit/src/chain_charge.rs": "9dcf5b483561c294cdded8d85ba0bf07a7dd160ef72c33a055d27f8b4d38ae06",
+    "crates/rf-d-circuit/src/chain_radau.rs": "6129b8ae2754eae3889f9a4a9e166723887bee36a83997cd647f97978e2a1811",
+    "crates/rf-d-circuit/tests/chain_charge.rs": "2b47252b9617f2e244f4461d9f689e82ca86d7c122eb2fcc2099a9ddc7854712",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+    "evidence/voice_chain_charge_reference06.json": "d1d97fb31dd46cbee1521b045b2c6c9399667bfb42296928bb8c41d3d5546274",
+    "evidence/voice_chain_charge_vectors06.txt": "0facf3c5346e8609e35820273cdfc4bd9a7cca5bb1f76b9f8021fb482084bf1c",
+    "tools/run_chain_charge.py": "f930f9bfe761dea9bb7d4ebe2809dafedd3b881ab3e0c07cd401260dd2b45b00"
+  },
+  "commands": [
+    {
+      "command": [
+        "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+        "--edition=2021",
+        "-C",
+        "opt-level=2",
+        "-C",
+        "link-arg=-Wl,--stack,8388608",
+        "--crate-type",
+        "lib",
+        "--crate-name",
+        "rf_d_circuit",
+        "crates/rf-d-circuit/src/lib.rs",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\chain-charge-native03\\librf_d_circuit.rlib"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "warning: unused import: `Memory`\n --> crates/rf-d-circuit/src\\vco1_substep.rs:4:27\n  |\n4 | use vco1_stamp::{Controls,Memory,Mode,Stamp,N,NV};\n  |                           ^^^^^^\n  |\n  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default\n\nwarning: constant `NV` is never used\n --> crates/rf-d-circuit/src\\vco1_stamp_data.rs:2:11\n  |\n2 | pub const NV: usize = 98;\n  |           ^^\n  |\n  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: constant `N` is never used\n --> crates/rf-d-circuit/src\\vco1_stamp_data.rs:3:11\n  |\n3 | pub const N: usize = 134;\n  |           ^\n\nwarning: constant `GROUND` is never used\n --> crates/rf-d-circuit/src\\vco1_stamp_data.rs:4:11\n  |\n4 | pub const GROUND: usize = N;\n  |           ^^^^^^\n\nwarning: constant `NAMES` is never used\n --> crates/rf-d-circuit/src\\vco1_stamp_data.rs:5:11\n  |\n5 | pub const NAMES: [&str;N] = [\"BEND\",\"EXT\",\"FET_C3_LEFT\",\"FET_C4_LEFT\",\"FET_COMMON_SOURCE\",\"FET_LEFT_DRAIN\",\"FET_RIGHT_DRAIN\",\"IC1_OUT...\n  |           ^^^^^\n\nwarning: constant `RESISTORS` is never used\n --> crates/rf-d-circuit/src\\vco1_stamp_data.rs:6:18\n  |\n6 | pub(crate) const RESISTORS: [(usize,usize,f64);61] = [(20,22,43000.0),(22,25,910000.0),(19,27,10700.0),(19,3,33200.0),(19,6,5600.0),(...\n  |                  ^^^^^^^^^\n\nwarning: constant `VOLTAGES` is never used\n  --> crates/rf-d-circuit/src\\vco1_stamp_data.rs:10:18\n   |\n10 | pub(crate) const VOLTAGES: [(usize,usize,f64);11] = [(14,134,-10.0),(19,134,10.0),(16,134,-5.0),(0,134,-2.1),(55,134,-2.1),(11,134,-...\n   |                  ^^^^^^^^\n\nwarning: constant `TRIMS` is never used\n  --> crates/rf-d-circuit/src\\vco1_stamp_data.rs:11:18\n   |\n11 | pub(crate) const TRIMS: [(usize,usize);3] = [(42,34),(34,41),(9,38)];\n   |                  ^^^^^\n\nwarning: function `merit` is never used\n  --> crates/rf-d-circuit/src\\vco1_radau_fine.rs:65:4\n   |\n65 | fn merit(r:&[f64;N])->f64 {r.iter().enumerate().fold(0_f64,|a,(i,v)|a.max(v.abs()/if i<NV {1e-13} else {1e-11}))}\n   |    ^^^^^\n\nwarning: function `correction` is never used\n  --> crates/rf-d-circuit/src\\vco1_radau_fine.rs:66:4\n   |\n66 | fn correction(d:&[f64;N])->f64 {d.iter().enumerate().fold(0_f64,|a,(i,v)|a.max(v.abs()/if i<NV {2e-9} else {2e-12}))}\n   |    ^^^^^^^^^^\n\nwarning: function `solve` is never used\n  --> crates/rf-d-circuit/src\\vco1_radau_fine.rs:67:8\n   |\n67 | pub fn solve(c:Controls,previous:State,dt:f64,budget:Budget)->Result<Solution,Error> {\n   |        ^^^^^\n\nwarning: 11 warnings emitted\n\n"
+    },
+    {
+      "command": [
+        "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+        "--edition=2021",
+        "-C",
+        "opt-level=2",
+        "-C",
+        "link-arg=-Wl,--stack,8388608",
+        "--test",
+        "crates/rf-d-circuit/tests/chain_charge.rs",
+        "--extern",
+        "rf_d_circuit=C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\chain-charge-native03\\librf_d_circuit.rlib",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\chain-charge-native03\\tests.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "warning: unused import: `std::time::Instant`\n --> crates/rf-d-circuit/tests\\support\\mixer_chain_lab.rs:3:5\n  |\n3 | use std::time::Instant;\n  |     ^^^^^^^^^^^^^^^^^^\n  |\n  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default\n\nwarning: unused imports: `Parameters`, `initial_state`, `step_with_emphasis`, and `step`\n --> crates/rf-d-circuit/tests\\support\\mixer_chain_lab.rs:8:5\n  |\n8 |     initial_state, step, step_with_emphasis, Boundary, Parameters,\n  |     ^^^^^^^^^^^^^  ^^^^  ^^^^^^^^^^^^^^^^^^            ^^^^^^^^^^\n\nwarning: unused import: `SolverBudget`\n  --> crates/rf-d-circuit/tests\\support\\mixer_chain_lab.rs:16:55\n   |\n16 | use rf_d_circuit::{Parameters as HeadphoneParameters, SolverBudget};\n   |                                                       ^^^^^^^^^^^^\n\nwarning: 3 warnings emitted\n\n"
+    },
+    {
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\chain-charge-native03\\tests.exe",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "exit_code": 0,
+      "stdout": "\nrunning 4 tests\ntest accepted_and_rejected_charge_operations_use_no_heap ... CHAIN_CHARGE_HEAP,accepted_and_rejected_allocations=0\nok\ntest all_radau_stages_and_loaded_currents_match_independent_roots ... CHAIN_CHARGE_ROOTS,scenes=12,stages=72,currents=180,max_v=1.3766765505351941e-14,max_i=2.117582368135751e-22,max_lte=8.035911505670915e-4\nok\ntest explicit_euler_stamp_matches_previous_reduced_chain_at_125ns ... CHAIN_CHARGE_EULER,physical_rows=264,max_error_a=8.742102534768387e-13\nok\ntest full_jacobian_and_contact_charge_rows_are_consistent ... CHAIN_CHARGE_JACOBIAN,columns=1632,entries=221952,max_gate_ratio=2.2320108823872367e-4,contact_cases=6\nok\n\ntest result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.30s\n\n",
+      "stderr": ""
+    }
+  ],
+  "replays": [],
+  "outputs": [
+    {
+      "path": "references-local/chain-charge-native03/librf_d_circuit.rlib",
+      "sha256": "b7309c50135c996de19691ff37971d584cb7f86d7438d2f4a5851f6b4848d373",
+      "bytes": 3853968
+    },
+    {
+      "path": "references-local/chain-charge-native03/tests.exe",
+      "sha256": "1fd36db0450e88c13ad3ae244811eb33475cee96bb96cda079ecd629bbfa763a",
+      "bytes": 8975779
+    }
+  ],
+  "available_free_bytes": 1275645952,
+  "reserve_bytes": 1073741824,
+  "estimated_build_bytes": 134217728,
+  "process_budget_s": 900,
+  "lab_stack_bytes": 8388608,
+  "source_sha256_after": {
+    "docs/CADENA_CARGA_RADAU_PROTOCOLO.md": "21ebe3506aeeb84d895693dc12f0191ce42d18c0fca6b7017d845b5e79339d6c",
+    "crates/rf-d-circuit/src/lib.rs": "00b2a449f010a575168f5ea7c6cf0fe0e6419d5ce125d0cfc7904bf63d97cc1c",
+    "crates/rf-d-circuit/src/chain_charge.rs": "9dcf5b483561c294cdded8d85ba0bf07a7dd160ef72c33a055d27f8b4d38ae06",
+    "crates/rf-d-circuit/src/chain_radau.rs": "6129b8ae2754eae3889f9a4a9e166723887bee36a83997cd647f97978e2a1811",
+    "crates/rf-d-circuit/tests/chain_charge.rs": "2b47252b9617f2e244f4461d9f689e82ca86d7c122eb2fcc2099a9ddc7854712",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+    "evidence/voice_chain_charge_reference06.json": "d1d97fb31dd46cbee1521b045b2c6c9399667bfb42296928bb8c41d3d5546274",
+    "evidence/voice_chain_charge_vectors06.txt": "0facf3c5346e8609e35820273cdfc4bd9a7cca5bb1f76b9f8021fb482084bf1c",
+    "tools/run_chain_charge.py": "f930f9bfe761dea9bb7d4ebe2809dafedd3b881ab3e0c07cd401260dd2b45b00"
+  },
+  "wall_s": 4.537526100000832
+}

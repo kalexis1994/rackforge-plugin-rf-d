@@ -613,3 +613,6 @@ pub mod vco1_increment_adaptive;
 mod vco1_radau_fine;
 pub mod vco1_radau;
 pub mod vco1_engine;
+
+pub mod chain_charge;
+pub mod chain_radau;
