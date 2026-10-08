@@ -94,3 +94,17 @@ El [historial de esta matriz](MATRIZ_DE_FIDELIDAD_HISTORICA_2026-10-07.md)
 conserva todos los estados y resultados anteriores. El
 [snapshot por hash](../evidence/voice_documentation_snapshot01.json)
 respalda esa copia exacta; ningún algoritmo, dato numérico o gate cambia.
+
+## Puerto 741 exacto — 2026-10-08
+
+[Contrato y resultados](VCO1_741_CONDENSACION_RESULTADOS.md): eliminación
+exacta de interiores en Newton, 12 sistemas y nueve pares de raíces
+cargadas Decimal100. Retiene cinco terminales/memorias, retornos y
+reconstrucción completa; no suprime dinámica ni cambia producción.
+La alimentación dinámica de la base Q2 por L2 explica más del 99,98 %
+de la diferencia full−end en los dos pisos SDIRK; explicación local,
+no causalidad de todo el reset ni identificación física del integrado.
+Mantener rechazos temporales, ciclos/refinamiento/frecuencia, carga activa,
+física y RT abiertos. [QA](../evidence/voice_vco1_741_condensation_tests01.json)
+hereda 235 tests; cero nuevos o reejecutados. Publicación distingue
+repeticiones y raíces de laboratorio de tests unitarios.

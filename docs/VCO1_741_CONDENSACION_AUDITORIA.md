@@ -1,0 +1,5 @@
+# Auditoría del retorno global del adaptador
+
+Los intentos01/02 conservan el mismo primer rechazo y hashes de fuentes idénticos antes/después. No pasan publicación. En la primera escena DC, un diagnóstico de sus mismas funciones sin cambiar ecuaciones encuentra diferencia de corrección 4,5607e−92 y residual reconstruido 4,51491e−94, pero balance global ≈105,327 µA. El diagnóstico completo queda privado por hash; las fuentes fallidas están preservadas en ambos recibos.
+
+El adaptador sumaba el suelo de los dos 741 y el pin de IC1 ligado a suelo, pero omitía la variación de las corrientes de la placa hacia suelo, incluidas fuentes impuestas y semiconductores. La tarjeta local y las correcciones cargadas no eran la causa de ese gate fallido. Se añade el gradiente del retorno de placa por sus incidencias originales R/C/V/trim/Q/J, sin inferirlo de la suma de las filas globales (eso haría tautológica la comprobación). No cambian modelos, historia, partición, algoritmo LU o gates. El intento03 repite los 12 sistemas completos con el retorno corregido; su resultado no reinterpreta los rechazos01/02.

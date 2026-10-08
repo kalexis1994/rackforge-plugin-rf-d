@@ -77,6 +77,14 @@ confirmado en XIC3.7. Modos rápidos coincidentes≈7,629 fs/0,370 ps, sin
 certificación global. Cerrar subdivisiones; derivar contrato del puerto741
 contra tarjeta completa antes de modificar sus dinámicas o integración.
 
+El [puerto exacto del 741](VCO1_741_CONDENSACION_RESULTADOS.md) ya
+reconstruye las 134 incógnitas desde 70 exteriores y pasa nueve pares
+condicionales de raíces Decimal100. La memoria de L2 explica más del
+99,98 % del error full−end en la base Q2 de ambos pisos SDIRK. La
+condensación no cambia ese rechazo. Siguiente: puerto dinámico conservando
+el aporte derivativo de modo común, y error exterior frente a tarjeta
+completa antes de una simplificación. Sin nueva grilla o trayectoria.
+
 ## 3. Completar comportamiento de voz
 
 - Integrar el contorno de volumen y su gatillo conservando las cargas del
