@@ -23,6 +23,12 @@ no significa identidad sonora con el hardware.
 | Voz SPICE conjunta | VCO1 y cadena con contorno de laboratorio | [Cuatro escenas cortas admitidas](VOZ_SEIS_ACTIVO_RESULTADOS.md); [largo rechazado y auditado](VOZ_SERIAL_CAMPANA_RESULTADOS.md), una de cuatro completa | Contrastes largos sin medir; causas de abortos pendientes |
 | Audio / producto | Escuchas de alcance parcial conservadas | Sin voz nativa instalable admitida | Voz completa, adaptador de escucha, deadlines, host y paquete |
 
+El [VCO1 nativo ensamblado](VCO1_STAMP_RESULTADOS.md) conserva 134
+incógnitas, dos 741 completos, BJT/JFET, Schmitt/reset y cargas del panel.
+40 casos y todas las derivadas admiten el stamp, con arranque DC C1=0
+condicionado y snapshots SPICE. No admite DC libre, arranque calibrado
+rechazado, Newton conjunto, trayectoria autónoma o refinamiento nativo.
+
 ## Estado de la nota larga
 
 El [preflight02](../evidence/voice_serial_preflight02.json) admitió recursos,
@@ -47,8 +53,8 @@ por sí solo todo el sistema.
 - **Audio externo:** requiere procedencia y condiciones comparables; permanece abierto.
 - **RT/producto:** deadline, recursos y flujo de host deben medirse; permanecen abiertos.
 
-La [QA reciente](../evidence/voice_lm741_port_tests01.json) cubre 213,
-con cuatro ejecuciones nuevas y 209 heredadas. No convierte los nominales
+La [QA reciente](../evidence/voice_vco1_stamp_tests01.json) cubre 217,
+con cuatro ejecuciones nuevas y 213 heredadas. No convierte los nominales
 BJT/JFET en parámetros de un instrumento real. R61=200 Ω/200 kΩ sigue siendo
 una discrepancia documental; α no identifica taper y ramas omitidas no
 representan contactos OFF. Mantener manuales/audio/binarios en local ignorado.

@@ -42,10 +42,12 @@ ya incluye transporte/difusión y sustrato explícito a TEMP=TNOM=25 °C:
 escenas propias: inversión del canal y cargas GS/GD físicas. El
 [741 completo](VCO_741_NATIVO_RESULTADOS.md) conserva sus 37 incógnitas,
 tres capacitores y dos inductores: 60 stamps y seis DC propios. Ahora
-integrar el [puerto 741](VCO_741_PUERTO_RESULTADOS.md) (Newton, cinco RHS
-y nueve trayectorias propias/672 pasos) en el stamp del circuito,
-uniendo las mitades E402 a su fuente común;
-el VCO completo y su oscilaciÃ³n aÃºn requieren contraste propio.
+el [ensamblaje VCO1 completo](VCO1_STAMP_RESULTADOS.md) ya reúne las
+134 incógnitas, ambos E402 en fuente común, Schmitt/reset, waveformers,
+panel y referencia −4 V. Pasó 40 casos y las 134×134 derivadas. Resolver
+ahora Newton conjunto con arranque propio, conservando historia/candidato
+atómicos. Seguir trayectoria/refinamiento/calibración y carga activa;
+transferir R6/R45 antes de acoplar al mixer que posee esas cargas.
 
 Primer alcance: VCO1 y cadena con controles impuestos. No declarar tres
 osciladores, contorno completo o otra poblaciÃ³n fÃ­sica por ese prototipo.
