@@ -71,6 +71,12 @@ XIC3.7 tras 188,881 ns de continuación condicional y 32.300 pasos.
 22 raíces coinciden con Decimal100. Analizar dinámica/discretización
 741 antes de extender otra grilla o banco; código de producción intacto.
 
+El [ensayo SDIRK y descriptor local](VCO1_SDIRK_RESULTADOS.md)
+contrasta etapas/cargas, pero ambos recorridos quedan rechazados por LTE
+confirmado en XIC3.7. Modos rápidos coincidentes≈7,629 fs/0,370 ps, sin
+certificación global. Cerrar subdivisiones; derivar contrato del puerto741
+contra tarjeta completa antes de modificar sus dinámicas o integración.
+
 ## 3. Completar comportamiento de voz
 
 - Integrar el contorno de volumen y su gatillo conservando las cargas del

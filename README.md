@@ -17,6 +17,7 @@ no acredita identidad sonora con una unidad vintage.
 | Puerto LM741 | [Newton y cinco derivadas cargadas](docs/VCO_741_PUERTO_RESULTADOS.md), seis DC, nueve trayectorias/672 pasos y 371 intervalos SPICE | Cierre activo con mixer y deadlines |
 | VCO1 nativo ensamblado | [Circuito completo de 134 incógnitas](docs/VCO1_STAMP_RESULTADOS.md), 40 casos, Jacobiano completo y contactos exactos | Arranque propio, ciclos completos y carga activa |
 | VCO1 arranque propio | [Diez raíces propias](docs/VCO1_ARRANQUE_RESULTADOS.md), semilla de circuito y contraste independiente | Reset/refinamiento temporal: pasos fijos rechazados; carga activa |
+| VCO1 integración/rigidez | [SDIRK contrastado y modos rápidos locales](docs/VCO1_SDIRK_RESULTADOS.md) | Dos continuaciones rechazadas; contrato de equivalencia del puerto 741 |
 | VCO1 grilla de reset | [22 raíces contrastadas y segundo piso temporal](docs/VCO1_RESET_GRILLA_RESULTADOS.md) | Prefijo privado de 189 ns; analizar dinámica/integración 741 antes de ampliar |
 | VCO1 incrementos/memoria | [50 raíces y 897.800 derivadas; precisión recuperada](docs/VCO1_INCREMENTOS_RESULTADOS.md) | Reset rechazado por error temporal a 2,434 ms; grilla más fina |
 | VCO1 subpasos/control temporal | [48 stamps y 28 raíces locales; controlador atómico](docs/VCO1_SUBPASOS_RESULTADOS.md) | Referencia histórica: límite de representación recuperado localmente en el bloque de incrementos |
@@ -29,9 +30,10 @@ no acredita identidad sonora con una unidad vintage.
 | Voz monolÃ­tica SPICE | [Banco corto admitido](docs/VOZ_SEIS_ACTIVO_RESULTADOS.md); [largo rechazado](docs/VOZ_SERIAL_CAMPANA_RESULTADOS.md) | Nota larga completa con sus tres contrastes |
 | Producto | NÃºcleos y herramientas de laboratorio | Voz nativa completa, recursos, MIDI/host y paquete instalable |
 
-La [QA vigente](evidence/voice_vco1_reset_grid_tests01.json) conserva
+La [QA vigente](evidence/voice_vco1_sdirk_tests01.json) conserva
 235 controles heredados por identidad. El bloque previo ejecutó seis
-tests nuevos; el diagnóstico de grilla contrasta 22 raíces Decimal100. Los bloques anteriores conservan sus propias
+tests nuevos. El bloque SDIRK audita 124 comparaciones de raíces,
+incluyendo repeticiones; no se cuentan como nuevos tests unitarios. Los bloques anteriores conservan sus propias
 regresiones y límites; ese número no representa 235 nuevas ejecuciones.
 
 La campaÃ±a serial de 350 ms comenzÃ³ tras pasar el
@@ -43,9 +45,10 @@ las tres parejas no se midieron por falta de escenas completas. El
 
 ## Siguiente trabajo
 
-1. Analizar la dinámica/integración del 741 en el [segundo piso de reset](docs/VCO1_RESET_GRILLA_RESULTADOS.md).
-   La grilla más fina recupera el primer intervalo, pero vuelve a rechazar
-   por LTE tras 189 ns. Preservar ecuaciones, cargas y gates.
+1. Derivar el contrato de equivalencia del puerto 741 desde el
+   [análisis de integración/rigidez](docs/VCO1_SDIRK_RESULTADOS.md).
+   Preservar terminales, cargas, corrientes/retornos y memoria frente a
+   la tarjeta completa antes de simplificar o cambiar otra integración.
 2. Contrastar ciclos completos, refinamiento y calibración según el
    [protocolo VCO1](docs/VCO1_NATIVO_PROTOCOLO.md); después unir el
    [mixer cargado](docs/MEZCLADOR_PUERTO_CARGADO_PROTOCOLO.md), transfiriendo

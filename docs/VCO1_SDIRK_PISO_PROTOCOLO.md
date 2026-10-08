@@ -1,0 +1,3 @@
+# Causa del aborto SDIRK preservado
+
+2026-10-08. El runner SDIRK01 registra PrecisionLimit tanto si el error local excede el gate como si un solve rechaza en el piso. Conservar ese mensaje y su alcance; no inferir causa a partir de él. Desde el último estado del prefijo, reproducir full=16 ticks y dos half=8 ticks usando exactamente fine/linear/data/sdirk publicados en el recibo. Exportar cada etapa y el error concreto si falla. Comparar las seis raíces con Decimal100 desde historia y etapa1 propias, con gates originales. Si las raíces pasan y el error local supera1, atribuir sólo ese rechazo a LTE. No ampliar dt, tolerancias o trayectoria. Original/replay de un fallo preservados. Pila8 MiB; compiler/hash y fuentes antes/después. Sin producción, SPICE o audio.

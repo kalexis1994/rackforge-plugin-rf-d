@@ -1,0 +1,5 @@
+# Normalización del residual espectral
+
+2026-10-08. El análisis01 no admite ningún candidato: su denominador por fila suma contribuciones ponderadas por cada componente del propio vector. En una fila de fuente ideal cuyo modo debe ser cero, residuo y denominador pueden ser ambos de orden del redondeo; el cociente vale uno aunque el residuo absoluto sea minúsculo. No hay polos admitidos con ese criterio; se conservan el análisis y sus fuentes exactas.
+
+El análisis02 usa un criterio nuevo, especificado antes de medir: para P=G+λM y S=diag(1 V/1 mA), normar cada residual por sum_j (|Gij|+(|Re λ|+|Im λ|)|Mij|) Sj * ||S^-1 v||∞. Es un error hacia atrás del lápiz equilibrado; no una cota de error del eigenvalor. Gate 1e-8, mismos tres shifts y coincidencia1e-3. Se registra también el criterio anterior sin admitir sus candidatos. Se verifica que G y M de ambos análisis sean idénticos en Decimal100. Los gates eléctricos y de integración no cambian y la confianza espectral es un alcance distinto. No usar residuales pequeños para afirmar que el modo es único o físicamente identificado.
