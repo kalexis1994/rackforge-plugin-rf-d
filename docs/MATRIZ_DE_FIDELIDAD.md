@@ -40,6 +40,13 @@ verifica48 stamps y28 raíces disponibles;20 raíces independientes fallan.
 La campaña del controlador se rechaza por precisión de representación,
 con KCL fuera de gate y corrección menor que1ULP en la referencia −4V.
 
+El [bloque de incrementos](VCO1_INCREMENTOS_RESULTADOS.md) recupera
+50 raíces con memoria hi/lo y referencia completa Decimal100. El
+controlador mantiene los gates y transporta ambas componentes. Campaña
+rechazada a 2,434338 ms por LTE confirmado en Q6 (2,013 µV > 2 µV).
+No admite ciclo completo/refinamiento; sigue grilla más fina. Pila de
+laboratorio 8 MiB declarada; heap cero no admite RT.
+
 ## Estado de la nota larga
 
 El [preflight02](../evidence/voice_serial_preflight02.json) admitió recursos,

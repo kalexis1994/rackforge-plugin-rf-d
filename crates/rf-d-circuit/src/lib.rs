@@ -605,3 +605,7 @@ pub mod vco1_startup;
 pub mod vco1_substep;
 
 pub mod vco1_adaptive;
+
+pub mod vco1_increment;
+
+pub mod vco1_increment_adaptive;

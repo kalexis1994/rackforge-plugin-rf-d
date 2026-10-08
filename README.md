@@ -17,7 +17,8 @@ no acredita identidad sonora con una unidad vintage.
 | Puerto LM741 | [Newton y cinco derivadas cargadas](docs/VCO_741_PUERTO_RESULTADOS.md), seis DC, nueve trayectorias/672 pasos y 371 intervalos SPICE | Cierre activo con mixer y deadlines |
 | VCO1 nativo ensamblado | [Circuito completo de 134 incógnitas](docs/VCO1_STAMP_RESULTADOS.md), 40 casos, Jacobiano completo y contactos exactos | Arranque propio, ciclos completos y carga activa |
 | VCO1 arranque propio | [Diez raíces propias](docs/VCO1_ARRANQUE_RESULTADOS.md), semilla de circuito y contraste independiente | Reset/refinamiento temporal: pasos fijos rechazados; carga activa |
-| VCO1 subpasos/control temporal | [48 stamps y 28 raíces locales; controlador atómico](docs/VCO1_SUBPASOS_RESULTADOS.md) | Campaña rechazada por límite de representación; coordenadas de incremento |
+| VCO1 incrementos/memoria | [50 raíces y 897.800 derivadas; precisión recuperada](docs/VCO1_INCREMENTOS_RESULTADOS.md) | Reset rechazado por error temporal a 2,434 ms; grilla más fina |
+| VCO1 subpasos/control temporal | [48 stamps y 28 raíces locales; controlador atómico](docs/VCO1_SUBPASOS_RESULTADOS.md) | Referencia histórica: límite de representación recuperado localmente en el bloque de incrementos |
 | VCO1 Newton conjunto | [Dos DC condicionados y seis continuaciones/224 pasos](docs/VCO1_NEWTON_RESULTADOS.md), memoria atómica | Semilla propia, ciclos completos, refinamiento y carga activa |
 | VCO1 de referencia | [Circuito funcional, convergencia y calibraciÃ³n](docs/VCO1_RESULTADOS_CIRCUITO.md) | Trayectoria nativa de ciclos completos y carga activa; osciladores 2/3 |
 | Mezclador ON y C27 | [Puerto dinÃ¡mico con memoria](docs/MEZCLADOR_C27_RESULTADOS.md), 837 casos nodales | OFF, taper e impedancias reales de generadores |
@@ -27,10 +28,10 @@ no acredita identidad sonora con una unidad vintage.
 | Voz monolÃ­tica SPICE | [Banco corto admitido](docs/VOZ_SEIS_ACTIVO_RESULTADOS.md); [largo rechazado](docs/VOZ_SERIAL_CAMPANA_RESULTADOS.md) | Nota larga completa con sus tres contrastes |
 | Producto | NÃºcleos y herramientas de laboratorio | Voz nativa completa, recursos, MIDI/host y paquete instalable |
 
-La [QA nativa vigente](evidence/voice_vco1_substep_tests02.json) cubre
-229 controles: seis tests nuevos ejecutados en este bloque y 223
+La [QA nativa vigente](evidence/voice_vco1_increment_tests01.json) cubre
+235 controles: seis tests nuevos ejecutados en este bloque y 229
 heredados por identidad. Los bloques anteriores conservan sus propias
-regresiones y límites; ese número no representa 229 nuevas ejecuciones.
+regresiones y límites; ese número no representa 235 nuevas ejecuciones.
 
 La campaÃ±a serial de 350 ms comenzÃ³ tras pasar el
 [preflight02](evidence/voice_serial_preflight02.json). Gear500 y Gear250
@@ -41,10 +42,9 @@ las tres parejas no se midieron por falta de escenas completas. El
 
 ## Siguiente trabajo
 
-1. Derivar coordenadas de incremento y memoria capacitiva para el
-   [límite de representación encontrado](docs/VCO1_SUBPASOS_RESULTADOS.md).
-   El stamp de subpasos y el controlador se verificaron; la campaña
-   se rechazó y los gates permanecen iguales.
+1. Afinar la grilla temporal del [reset contrastado](docs/VCO1_INCREMENTOS_RESULTADOS.md).
+   La memoria compensada recupera el límite de representación; el reset
+   conserva un rechazo LTE confirmado por Decimal100, sin relajar gates.
 2. Contrastar ciclos completos, refinamiento y calibración según el
    [protocolo VCO1](docs/VCO1_NATIVO_PROTOCOLO.md); después unir el
    [mixer cargado](docs/MEZCLADOR_PUERTO_CARGADO_PROTOCOLO.md), transfiriendo
@@ -64,7 +64,9 @@ las tres parejas no se midieron por falta de escenas completas. El
 Regresiones pÃºblicas de los dos cierres nativos recientes:
 
 ```powershell
-cargo test --offline --locked -p rf-d-circuit --test lm741_port --test lm741_port_no_alloc
+$env:RUST_MIN_STACK = "8388608"
+$env:RUSTFLAGS = "-C link-arg=-Wl,--stack,8388608" # toolchain GNU de los recibos
+cargo test --offline --locked -p rf-d-circuit --test vco1_increment --test vco1_increment_no_alloc --test vco1_increment_adaptive --test vco1_increment_adaptive_no_alloc
 ```
 
 Los recibos de producciÃ³n registran compiler, flags, outputs y hashes.
@@ -87,7 +89,7 @@ Manuales, esquemas, fuentes originales, WAV y binarios privados se conservan
 en directorios locales ignorados. No se incluyen en Git o el paquete.
 RF-D no implica afiliaciÃ³n con Moog Music.
 
-La [QA de publicaciÃ³n](evidence/voice_vco1_substep_tests02.json) verifica
+La [QA de publicaciÃ³n](evidence/voice_vco1_increment_tests01.json) verifica
 inputs protegidos, nuevos tests y archivos privados. El
 [snapshot previo](evidence/voice_lm741_port_documentation01.json) conserva
 las tres portadas anteriores por bytes exactos. El rechazo largo sigue vigente.

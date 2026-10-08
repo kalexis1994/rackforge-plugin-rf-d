@@ -52,8 +52,11 @@ Los pasos fijos 500/250/125ns se rechazan durante el reset; subpasos en
 laboratorio completan 30ms pero fallan periodicidad. El [stamp de subpasos
 y controlador](VCO1_SUBPASOS_RESULTADOS.md) pasan sus tests, pero la campaña
 se rechaza por estancamiento local de la representación binary64.
-Derivar coordenadas de incremento/memoria capacitiva sin relajar gates,
-y verificar ciclos completos/refinamiento/calibración;
+Los [incrementos/memoria compensada](VCO1_INCREMENTOS_RESULTADOS.md) pasan
+50 raíces y recuperan el antiguo piso. La nueva campaña se detiene a
+2,434 ms por LTE: Decimal100 confirma 2,013 µV en el colector de Q6,
+gate 2 µV. Afinar la grilla temporal, conservando los gates; después
+verificar ciclos completos/refinamiento/calibración;
 seguir con carga activa;
 transferir R6/R45 antes de acoplar al mixer que posee esas cargas.
 

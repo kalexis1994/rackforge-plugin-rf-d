@@ -1,0 +1,5 @@
+# Diagnóstico local del segundo rechazo
+
+2026-10-08. El intento de ciclos 02 rechazó el reset a 2,434338134765625 ms (79768392 ticks), por PrecisionLimit. Original y replay completos por bytes quedaron conservados. La memoria de entrada contiene 134 pares hi/lo del último intervalo aceptado. No es una raíz independiente global ni una trayectoria completa.
+
+Reproducir el ensayo full de 2 ticks y los dos half de 1 tick con el motor sin cambios. Registrar cada estado y sus gates. Desde la misma memoria, resolver las mismas tres ecuaciones con leyes e incidencias Decimal100 sin seed del candidato nativo. Comparar cada raíz con 2e-7 V/2e-10 A y verificar KCL independiente con 2e-14 A/2e-12 V y masa 1e-11 A. Comparar full frente a endpoint con el gate anterior 2e-6 V/2e-9 A en todas las incógnitas. Una coincidencia de raíces no admite el error temporal; un rechazo sigue siendo rechazo. Registrar la incógnita limitante y su cambio respecto de la historia. Sin nuevos SPICE ni audio; no modificar circuito ni tolerancias.
