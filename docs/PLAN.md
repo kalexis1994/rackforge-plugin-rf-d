@@ -1,6 +1,6 @@
 # Plan vigente de RF-D
 
-2026-10-07. Prioridad: completar una voz de circuito utilizable con evidencia
+2026-10-08. Prioridad: completar una voz de circuito utilizable con evidencia
 proporcionada al alcance. [Objetivo documental](OBJETIVO.md): CA3046 nominal;
 [sin acceso fÃ­sico permanente](VALIDACION_SIN_HARDWARE.md).
 
@@ -46,8 +46,12 @@ el [ensamblaje VCO1 completo](VCO1_STAMP_RESULTADOS.md) ya reúne las
 134 incógnitas, ambos E402 en fuente común, Schmitt/reset, waveformers,
 panel y referencia −4 V. Pasó 40 casos y las 134×134 derivadas. El [Newton conjunto](VCO1_NEWTON_RESULTADOS.md) ya resuelve dos DC
 condicionados y seis continuaciones libres cortas/224 pasos conservando
-historia y candidato atómicos. Derivar ahora semilla propia/arranque robusto,
-ciclos completos, refinamiento/calibración y carga activa;
+historia y candidato atómicos. El [arranque propio](VCO1_ARRANQUE_RESULTADOS.md)
+pasa diez raíces desde semilla de circuito y contraste independiente.
+Los pasos fijos 500/250/125ns se rechazan durante el reset; subpasos en
+laboratorio completan 30ms pero fallan periodicidad. Derivar control de
+precisión temporal y verificar ciclos completos/refinamiento/calibración;
+seguir con carga activa;
 transferir R6/R45 antes de acoplar al mixer que posee esas cargas.
 
 Primer alcance: VCO1 y cadena con controles impuestos. No declarar tres

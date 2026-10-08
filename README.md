@@ -16,6 +16,7 @@ no acredita identidad sonora con una unidad vintage.
 | LM741 de VCO | [Stamp completo](docs/VCO_741_NATIVO_RESULTADOS.md), 37 incógnitas, cinco memorias, 60 vectores y seis DC propios | Parámetros físicos y trayectoria VCO estacionaria |
 | Puerto LM741 | [Newton y cinco derivadas cargadas](docs/VCO_741_PUERTO_RESULTADOS.md), seis DC, nueve trayectorias/672 pasos y 371 intervalos SPICE | Cierre activo con mixer y deadlines |
 | VCO1 nativo ensamblado | [Circuito completo de 134 incógnitas](docs/VCO1_STAMP_RESULTADOS.md), 40 casos, Jacobiano completo y contactos exactos | Arranque propio, ciclos completos y carga activa |
+| VCO1 arranque propio | [Diez raíces propias](docs/VCO1_ARRANQUE_RESULTADOS.md), semilla de circuito y contraste independiente | Reset/refinamiento temporal: pasos fijos rechazados; carga activa |
 | VCO1 Newton conjunto | [Dos DC condicionados y seis continuaciones/224 pasos](docs/VCO1_NEWTON_RESULTADOS.md), memoria atómica | Semilla propia, ciclos completos, refinamiento y carga activa |
 | VCO1 de referencia | [Circuito funcional, convergencia y calibraciÃ³n](docs/VCO1_RESULTADOS_CIRCUITO.md) | Trayectoria nativa de ciclos completos y carga activa; osciladores 2/3 |
 | Mezclador ON y C27 | [Puerto dinÃ¡mico con memoria](docs/MEZCLADOR_C27_RESULTADOS.md), 837 casos nodales | OFF, taper e impedancias reales de generadores |
@@ -25,10 +26,10 @@ no acredita identidad sonora con una unidad vintage.
 | Voz monolÃ­tica SPICE | [Banco corto admitido](docs/VOZ_SEIS_ACTIVO_RESULTADOS.md); [largo rechazado](docs/VOZ_SERIAL_CAMPANA_RESULTADOS.md) | Nota larga completa con sus tres contrastes |
 | Producto | NÃºcleos y herramientas de laboratorio | Voz nativa completa, recursos, MIDI/host y paquete instalable |
 
-La [QA nativa vigente](evidence/voice_vco1_newton_tests01.json) cubre
-220 controles: tres tests nuevos ejecutados en este bloque y 217
+La [QA nativa vigente](evidence/voice_vco1_startup_tests01.json) cubre
+223 controles: tres tests nuevos ejecutados en este bloque y 220
 heredados por identidad. Los bloques anteriores conservan sus propias
-regresiones y límites; ese número no representa 220 nuevas ejecuciones.
+regresiones y límites; ese número no representa 223 nuevas ejecuciones.
 
 La campaÃ±a serial de 350 ms comenzÃ³ tras pasar el
 [preflight02](evidence/voice_serial_preflight02.json). Gear500 y Gear250
@@ -39,9 +40,10 @@ las tres parejas no se midieron por falta de escenas completas. El
 
 ## Siguiente trabajo
 
-1. Derivar la semilla propia y completar arranque robusto del
-   [Newton conjunto](docs/VCO1_NEWTON_RESULTADOS.md). Sus seis continuaciones
-   libres cortas/224 pasos ya transportan estado aceptado completo.
+1. Resolver el reset con control de precisión temporal: el
+   [arranque propio](docs/VCO1_ARRANQUE_RESULTADOS.md) ya pasó diez raíces;
+   los ciclos de paso fijo se rechazaron y el subpaso sólo ante rechazo
+   aún falla la dispersión entre períodos.
 2. Contrastar ciclos completos, refinamiento y calibración según el
    [protocolo VCO1](docs/VCO1_NATIVO_PROTOCOLO.md); después unir el
    [mixer cargado](docs/MEZCLADOR_PUERTO_CARGADO_PROTOCOLO.md), transfiriendo
@@ -84,7 +86,7 @@ Manuales, esquemas, fuentes originales, WAV y binarios privados se conservan
 en directorios locales ignorados. No se incluyen en Git o el paquete.
 RF-D no implica afiliaciÃ³n con Moog Music.
 
-La [QA de publicaciÃ³n](evidence/voice_vco1_newton_tests01.json) verifica
+La [QA de publicaciÃ³n](evidence/voice_vco1_startup_tests01.json) verifica
 inputs protegidos, nuevos tests y archivos privados. El
 [snapshot previo](evidence/voice_lm741_port_documentation01.json) conserva
 las tres portadas anteriores por bytes exactos. El rechazo largo sigue vigente.

@@ -1,6 +1,6 @@
 # Matriz de fidelidad vigente
 
-2026-10-07. [Perfil CA3046 documental nominal](OBJETIVO.md); no hay acceso
+2026-10-08. [Perfil CA3046 documental nominal](OBJETIVO.md); no hay acceso
 físico presente o futuro. Los parámetros activos, tolerancias y población
 vintage conservan sus incertidumbres. Equivalencia numérica con un oráculo
 no significa identidad sonora con el hardware.
@@ -31,6 +31,10 @@ rechazado, arranque propio, ciclos completos o refinamiento nativo.
 El [Newton conjunto](VCO1_NEWTON_RESULTADOS.md) pasa dos DC condicionados
 y seis continuaciones libres de 8 us/224 pasos desde semillas importadas
 de laboratorio; no identifica periodos o eventos de reset.
+El [arranque propio posterior](VCO1_ARRANQUE_RESULTADOS.md) sí pasa diez
+raíces desde circuito e incidencias independientes. Los ciclos de paso
+fijo se rechazan en el reset. La copia privada con subpasos completa 30ms,
+pero no pasa dispersión entre períodos y no es producción admitida.
 
 ## Estado de la nota larga
 
