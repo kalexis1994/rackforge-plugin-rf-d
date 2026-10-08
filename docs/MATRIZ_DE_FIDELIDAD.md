@@ -120,3 +120,19 @@ independiente, arranque propio, periodicidad/frecuencia refinada o física.
 Producción intacta; heap/RT y voz completa pendientes. [QA](../evidence/voice_vco1_radau_tests01.json)
 hereda 235 tests y conserva todos los rechazos anteriores; cero nuevos
 tests unitarios/ejecuciones heredadas y cero SPICE/audio nuevos.
+
+## Ciclos propios Radau y escucha nativa â€” 2026-10-08
+
+[Dos recorridos de30 ms](VCO1_RADAU_CICLOS_RESULTADOS.md) desde arranque propio,
+C4=10 pF nominal, pasan periodicidad/corrientes/refinamiento y conformidad
+con Gear/Trap archivados.16 comparaciones de etapas reales; diagnÃ³stico
+Newton:18 comparaciones independientes/14 etapas Ãºnicas, con fallo y replay.
+235 tests Rust heredados por identidad. Cuatro WAV del VCO nativo: ciclo real
+repetido, sin filtro/VCA y sin simular toda la duraciÃ³n. ProducciÃ³n/RT abiertos.
+
+Siguiente: motor portable, CV/trims reservados/C4=100 pF y dominio temporal
+comÃºn con la cadena. El VCO usa mÃ­nimos por debajo125 ns; resolver esa brecha
+antes del mixer activo y transferir R6/R45 una sola vez. No relajar gates o
+duplicar cargas. [QA](../evidence/voice_vco1_radau_cycles_tests01.json) conserva
+rechazos y snapshots, verifica checkpoints/trazas reversibles y regenera PCM.
+La validaciÃ³n nominal no identifica una unidad vintage.
