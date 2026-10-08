@@ -136,3 +136,16 @@ antes del mixer activo y transferir R6/R45 una sola vez. No relajar gates o
 duplicar cargas. [QA](../evidence/voice_vco1_radau_cycles_tests01.json) conserva
 rechazos y snapshots, verifica checkpoints/trazas reversibles y regenera PCM.
 La validaciÃ³n nominal no identifica una unidad vintage.
+
+## Motor portable de referencia — 2026-10-08
+
+[VCO1 portable](VCO1_PORTABLE_RESULTADOS.md) incorpora arranque propio,
+reloj u64, checkpoint completo y aceptación atómica con corrientes Radau.
+Cuatro tests nuevos pasan; 26 comparaciones de etapas con Decimal heredado,
+12 corrientes y heap cero medido. 235 tests heredados; 239 cubiertos.
+Kernel y leyes mantienen identidad; no se repitieron los dos bancos largos.
+No acredita deadline, voz completa o física.
+
+Próximo cierre: dominio de paso y carga conjunto con mixer/ladder/VCAs,
+sin duplicar R6/R45 ni imponer un piso de125 ns al VCO.
+[QA](../evidence/voice_vco1_portable_tests01.json).

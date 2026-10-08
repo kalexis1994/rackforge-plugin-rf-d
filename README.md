@@ -17,6 +17,7 @@ no acredita identidad sonora con una unidad vintage.
 | Puerto LM741 | [Newton y cinco derivadas cargadas](docs/VCO_741_PUERTO_RESULTADOS.md), seis DC, nueve trayectorias/672 pasos y 371 intervalos SPICE | Cierre activo con mixer y deadlines |
 | VCO1 nativo ensamblado | [Circuito completo de 134 incógnitas](docs/VCO1_STAMP_RESULTADOS.md), 40 casos, Jacobiano completo y contactos exactos | Arranque propio, ciclos completos y carga activa |
 | VCO1 arranque propio | [Diez raíces propias](docs/VCO1_ARRANQUE_RESULTADOS.md), semilla de circuito y contraste independiente | Reset/refinamiento temporal: pasos fijos rechazados; carga activa |
+| VCO1 motor portable | [Arranque/checkpoint y cuatro tests nativos](docs/VCO1_PORTABLE_RESULTADOS.md), 26 comparaciones de etapas y heap cero | Referencia nominal; carga conjunta, stack/deadline y host pendientes |
 | VCO1 Radau nominal | [Dos recorridos propios de30 ms](docs/VCO1_RADAU_CICLOS_RESULTADOS.md), periodicidad/refinamiento y escucha nativa aislada | CV/trims reservados, C4=100 pF, carga activa y producciÃ³n/RT |
 | VCO1 puerto 741 exacto | [70 incógnitas exteriores, 12 sistemas y nueve pares de raíces](docs/VCO1_741_CONDENSACION_RESULTADOS.md) | Laboratorio Decimal100; error dinámico del puerto y reset temporal pendientes |
 | VCO1 integración/rigidez | [SDIRK contrastado y modos rápidos locales](docs/VCO1_SDIRK_RESULTADOS.md) | Dos continuaciones rechazadas; contrato exacto cerrado localmente en el bloque del puerto |
@@ -32,8 +33,10 @@ no acredita identidad sonora con una unidad vintage.
 | Voz monolÃ­tica SPICE | [Banco corto admitido](docs/VOZ_SEIS_ACTIVO_RESULTADOS.md); [largo rechazado](docs/VOZ_SERIAL_CAMPANA_RESULTADOS.md) | Nota larga completa con sus tres contrastes |
 | Producto | NÃºcleos y herramientas de laboratorio | Voz nativa completa, recursos, MIDI/host y paquete instalable |
 
-La [QA vigente](evidence/voice_vco1_radau_cycles_tests01.json) conserva
-235 tests heredados por identidad; cero nuevos o reejecutados. Radau
+La [QA vigente](evidence/voice_vco1_portable_tests01.json) conserva
+235 tests heredados por identidad y cuatro nuevos ejecutados. El
+[motor portable de referencia](docs/VCO1_PORTABLE_RESULTADOS.md) incorpora
+arranque, checkpoints y rollback; heap cero medido, deadline pendiente. Radau
 completa dos recorridos propios nominales de30 ms y pasa periodicidad,
 balance/refinamiento y cuatro comparaciones con Gear/Trap archivados.
 Contrasta16 etapas reales y el rechazo Newton local; no son tests Rust.
@@ -49,9 +52,9 @@ las tres parejas no se midieron por falta de escenas completas. El
 
 ## Siguiente trabajo
 
-1. Llevar el [VCO nominal con ciclos admitidos](docs/VCO1_RADAU_CICLOS_RESULTADOS.md)
-   al motor portable con recursos explÃ­citos. Ampliar CV/trims reservados y
-   C4=100 pF antes de promover calibraciÃ³n u otro perfil.
+1. Integrar el [motor portable VCO](docs/VCO1_PORTABLE_RESULTADOS.md) tras
+   resolver el dominio conjunto de paso y carga. Ampliar CV/trims reservados
+   y C4=100 pF antes de promover calibración u otro perfil.
 2. Resolver el dominio temporal comÃºn con el [mixer cargado](docs/MEZCLADOR_PUERTO_CARGADO_PROTOCOLO.md):
    sus125 ns actuales no cubren los mÃ­nimos del VCO. DespuÃ©s acoplar la carga,
    transfiriendo R6/R45 una sola vez y contrastando la cadena conjunta.

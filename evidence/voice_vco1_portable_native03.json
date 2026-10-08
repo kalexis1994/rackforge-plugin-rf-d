@@ -1,0 +1,76 @@
+{
+  "schema": "rf-d/portable-native/v1",
+  "passed": true,
+  "compiler": {
+    "path": "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+    "sha256": "fd6232f90a981e28472ce6900232946a1f1bcad8ec8270cd5ae6a3a357208b98",
+    "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+  },
+  "cargo_sha256": "6c5c35f11b57debeae8da2dafcafe860ff32aecf0e64c4b01566947e2694d68d",
+  "source_sha256": {
+    "Cargo.toml": "3d99b4890da463a2bea59f4b53476f1ff5304be6624aab009ec5874b8ae05ecf",
+    "Cargo.lock": "b64356a8f5cd15780a7b5a889a7bf97af49eb2f5e91462e1c1f71a6af108376d",
+    "crates/rf-d-circuit/Cargo.toml": "1c219dc0e015603a8b157e6d2f78b14b4bb34fe50c3b96f52a48ead84983afe7",
+    "crates/rf-d-circuit/src/lib.rs": "2f79ef8f4d571d4c503a50aa7ca1d4361ad34e41c67df4ab3c973f9c8fc1b541",
+    "crates/rf-d-circuit/src/vco1_radau_fine.rs": "14ca77c1677b5273085dec6899c65b7396867e20fd6d92cfa4589dbaab925344",
+    "crates/rf-d-circuit/src/vco1_radau.rs": "ac809c46cc97f2374bb6a8b981d55cce118e346f4d039cc9752d529fb1ae28af",
+    "crates/rf-d-circuit/src/vco1_engine.rs": "e046a7f5cabb49e5ddf6de9ae34d630168f35c41e74791ade01ad074b1271a13",
+    "crates/rf-d-circuit/tests/vco1_engine.rs": "6d213f1727f2c1eaeeec4805c2e8437e7193a19cbe7bad555e18afafdbbd7ad8",
+    "evidence/voice_vco1_portable_vectors01.json": "294770a2a23b5c7f4e1118c867ba6c180316289261bcbe6a23985c513ea7b25b",
+    "docs/VCO1_PORTABLE_PROTOCOLO.md": "91f00eb87d136b5e9235bd4033c3bd7f9a5bcd84e0e154e93c6537a2db2f6d8a",
+    "tools/run_vco1_portable.py": "c5c986532ea7e39bbb9ff3e0639a540aa9d2e4316fc7fc651c15ba0fe8a952d5"
+  },
+  "command": [
+    "C:\\Users\\kalex\\.rustup\\toolchains\\stable-x86_64-pc-windows-gnu\\bin\\cargo.exe",
+    "test",
+    "--offline",
+    "--locked",
+    "-p",
+    "rf-d-circuit",
+    "--test",
+    "vco1_engine",
+    "--target-dir",
+    "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\vco1-portable-build03",
+    "--",
+    "--nocapture",
+    "--test-threads=1"
+  ],
+  "cwd": "C:/Users/kalex/OneDrive/Documents/rackforge-plugin-rf-d",
+  "env": {
+    "RUSTC": "C:\\Users\\kalex\\.rustup\\toolchains\\stable-x86_64-pc-windows-gnu\\bin\\rustc.exe",
+    "RUST_MIN_STACK": "8388608",
+    "RUSTFLAGS": "-C opt-level=2 -C link-arg=-Wl,--stack,8388608"
+  },
+  "available_free_bytes": 1360957440,
+  "reserve_bytes": 1073741824,
+  "estimated_build_bytes": 134217728,
+  "process_budget_s": 900,
+  "commands": [
+    {
+      "exit_code": 0,
+      "stdout": "\nrunning 4 tests\ntest admitted_intervals_and_recovered_newton_match_independent_roots ... VCO1_PORTABLE_ROOTS,comparisons=26,actual_currents=12,new_independent_solves=0\nok\ntest budget_rejection_rolls_back_all_state_and_uses_no_heap ... VCO1_PORTABLE_ROLLBACK,temporal_and_nonlinear=true,allocations=0\nok\ntest integer_clock_limits_and_invalid_restores ... VCO1_PORTABLE_CLOCK,u64_boundary=true,invalid_restore_cases=6\nok\ntest own_startup_checkpoint_continuity_and_zero_heap ... VCO1_PORTABLE_HEAP,startup_restore_accepted_allocations=0,first_attempts=5\nok\n\ntest result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.37s\n\n",
+      "stderr": "   Compiling serde_core v1.0.229\n   Compiling zmij v1.0.23\n   Compiling serde_json v1.0.151\n   Compiling memchr v2.8.3\n   Compiling itoa v1.0.18\n   Compiling rf-d-circuit v0.1.0 (C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\crates\\rf-d-circuit)\nwarning: unused import: `Memory`\n --> crates\\rf-d-circuit\\src\\vco1_substep.rs:4:27\n  |\n4 | use vco1_stamp::{Controls,Memory,Mode,Stamp,N,NV};\n  |                           ^^^^^^\n  |\n  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default\n\nwarning: constant `NV` is never used\n --> crates\\rf-d-circuit\\src\\vco1_stamp_data.rs:2:11\n  |\n2 | pub const NV: usize = 98;\n  |           ^^\n  |\n  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: constant `N` is never used\n --> crates\\rf-d-circuit\\src\\vco1_stamp_data.rs:3:11\n  |\n3 | pub const N: usize = 134;\n  |           ^\n\nwarning: constant `GROUND` is never used\n --> crates\\rf-d-circuit\\src\\vco1_stamp_data.rs:4:11\n  |\n4 | pub const GROUND: usize = N;\n  |           ^^^^^^\n\nwarning: constant `NAMES` is never used\n --> crates\\rf-d-circuit\\src\\vco1_stamp_data.rs:5:11\n  |\n5 | pub const NAMES: [&str;N] = [\"BEND\",\"EXT\",\"FET_C3_LEFT\",\"FET_C4_LEFT\",\"FET_COMMON_SOURCE\",\"FET_LEFT_DRAIN\",\"FET_RIGHT_DRAIN\",\"IC1_OUT...\n  |           ^^^^^\n\nwarning: constant `RESISTORS` is never used\n --> crates\\rf-d-circuit\\src\\vco1_stamp_data.rs:6:18\n  |\n6 | pub(crate) const RESISTORS: [(usize,usize,f64);61] = [(20,22,43000.0),(22,25,910000.0),(19,27,10700.0),(19,3,33200.0),(19,6,5600.0),(...\n  |                  ^^^^^^^^^\n\nwarning: constant `VOLTAGES` is never used\n  --> crates\\rf-d-circuit\\src\\vco1_stamp_data.rs:10:18\n   |\n10 | pub(crate) const VOLTAGES: [(usize,usize,f64);11] = [(14,134,-10.0),(19,134,10.0),(16,134,-5.0),(0,134,-2.1),(55,134,-2.1),(11,134,-...\n   |                  ^^^^^^^^\n\nwarning: constant `TRIMS` is never used\n  --> crates\\rf-d-circuit\\src\\vco1_stamp_data.rs:11:18\n   |\n11 | pub(crate) const TRIMS: [(usize,usize);3] = [(42,34),(34,41),(9,38)];\n   |                  ^^^^^\n\nwarning: constant `NV` is never used\n --> crates\\rf-d-circuit\\src\\vco1_stamp_data.rs:2:11\n  |\n2 | pub const NV: usize = 98;\n  |           ^^\n\nwarning: function `merit` is never used\n  --> crates\\rf-d-circuit\\src\\vco1_radau_fine.rs:65:4\n   |\n65 | fn merit(r:&[f64;N])->f64 {r.iter().enumerate().fold(0_f64,|a,(i,v)|a.max(v.abs()/if i<NV {1e-13} else {1e-11}))}\n   |    ^^^^^\n\nwarning: function `correction` is never used\n  --> crates\\rf-d-circuit\\src\\vco1_radau_fine.rs:66:4\n   |\n66 | fn correction(d:&[f64;N])->f64 {d.iter().enumerate().fold(0_f64,|a,(i,v)|a.max(v.abs()/if i<NV {2e-9} else {2e-12}))}\n   |    ^^^^^^^^^^\n\nwarning: function `solve` is never used\n  --> crates\\rf-d-circuit\\src\\vco1_radau_fine.rs:67:8\n   |\n67 | pub fn solve(c:Controls,previous:State,dt:f64,budget:Budget)->Result<Solution,Error> {\n   |        ^^^^^\n\nwarning: `rf-d-circuit` (lib) generated 25 warnings (13 duplicates) (run `cargo fix --lib -p rf-d-circuit` to apply 1 suggestion)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 7.61s\n     Running tests\\vco1_engine.rs (tmp\\vco1-portable-build03\\debug\\deps\\vco1_engine-13761da52475f460.exe)\n",
+      "wall_s": 8.300642199988943
+    }
+  ],
+  "replays": [],
+  "new_independent_solves": 0,
+  "new_full_campaigns": 0,
+  "test_thread_stack_bytes": 8388608,
+  "main_stack_reserve_bytes": 8388608,
+  "source_sha256_after": {
+    "Cargo.toml": "3d99b4890da463a2bea59f4b53476f1ff5304be6624aab009ec5874b8ae05ecf",
+    "Cargo.lock": "b64356a8f5cd15780a7b5a889a7bf97af49eb2f5e91462e1c1f71a6af108376d",
+    "crates/rf-d-circuit/Cargo.toml": "1c219dc0e015603a8b157e6d2f78b14b4bb34fe50c3b96f52a48ead84983afe7",
+    "crates/rf-d-circuit/src/lib.rs": "2f79ef8f4d571d4c503a50aa7ca1d4361ad34e41c67df4ab3c973f9c8fc1b541",
+    "crates/rf-d-circuit/src/vco1_radau_fine.rs": "14ca77c1677b5273085dec6899c65b7396867e20fd6d92cfa4589dbaab925344",
+    "crates/rf-d-circuit/src/vco1_radau.rs": "ac809c46cc97f2374bb6a8b981d55cce118e346f4d039cc9752d529fb1ae28af",
+    "crates/rf-d-circuit/src/vco1_engine.rs": "e046a7f5cabb49e5ddf6de9ae34d630168f35c41e74791ade01ad074b1271a13",
+    "crates/rf-d-circuit/tests/vco1_engine.rs": "6d213f1727f2c1eaeeec4805c2e8437e7193a19cbe7bad555e18afafdbbd7ad8",
+    "evidence/voice_vco1_portable_vectors01.json": "294770a2a23b5c7f4e1118c867ba6c180316289261bcbe6a23985c513ea7b25b",
+    "docs/VCO1_PORTABLE_PROTOCOLO.md": "91f00eb87d136b5e9235bd4033c3bd7f9a5bcd84e0e154e93c6537a2db2f6d8a",
+    "tools/run_vco1_portable.py": "c5c986532ea7e39bbb9ff3e0639a540aa9d2e4316fc7fc651c15ba0fe8a952d5"
+  },
+  "compiler_sha256_after": "fd6232f90a981e28472ce6900232946a1f1bcad8ec8270cd5ae6a3a357208b98",
+  "target_build_bytes": 114975122
+}
