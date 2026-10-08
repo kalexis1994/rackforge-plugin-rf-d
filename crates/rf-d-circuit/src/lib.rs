@@ -597,3 +597,5 @@ pub mod lm741;
 pub mod lm741_port;
 
 pub mod vco1_stamp;
+
+pub mod vco1_newton;

@@ -44,9 +44,10 @@ escenas propias: inversión del canal y cargas GS/GD físicas. El
 tres capacitores y dos inductores: 60 stamps y seis DC propios. Ahora
 el [ensamblaje VCO1 completo](VCO1_STAMP_RESULTADOS.md) ya reúne las
 134 incógnitas, ambos E402 en fuente común, Schmitt/reset, waveformers,
-panel y referencia −4 V. Pasó 40 casos y las 134×134 derivadas. Resolver
-ahora Newton conjunto con arranque propio, conservando historia/candidato
-atómicos. Seguir trayectoria/refinamiento/calibración y carga activa;
+panel y referencia −4 V. Pasó 40 casos y las 134×134 derivadas. El [Newton conjunto](VCO1_NEWTON_RESULTADOS.md) ya resuelve dos DC
+condicionados y seis continuaciones libres cortas/224 pasos conservando
+historia y candidato atómicos. Derivar ahora semilla propia/arranque robusto,
+ciclos completos, refinamiento/calibración y carga activa;
 transferir R6/R45 antes de acoplar al mixer que posee esas cargas.
 
 Primer alcance: VCO1 y cadena con controles impuestos. No declarar tres

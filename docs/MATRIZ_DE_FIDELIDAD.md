@@ -27,7 +27,10 @@ El [VCO1 nativo ensamblado](VCO1_STAMP_RESULTADOS.md) conserva 134
 incógnitas, dos 741 completos, BJT/JFET, Schmitt/reset y cargas del panel.
 40 casos y todas las derivadas admiten el stamp, con arranque DC C1=0
 condicionado y snapshots SPICE. No admite DC libre, arranque calibrado
-rechazado, Newton conjunto, trayectoria autónoma o refinamiento nativo.
+rechazado, arranque propio, ciclos completos o refinamiento nativo.
+El [Newton conjunto](VCO1_NEWTON_RESULTADOS.md) pasa dos DC condicionados
+y seis continuaciones libres de 8 us/224 pasos desde semillas importadas
+de laboratorio; no identifica periodos o eventos de reset.
 
 ## Estado de la nota larga
 
@@ -53,8 +56,8 @@ por sí solo todo el sistema.
 - **Audio externo:** requiere procedencia y condiciones comparables; permanece abierto.
 - **RT/producto:** deadline, recursos y flujo de host deben medirse; permanecen abiertos.
 
-La [QA reciente](../evidence/voice_vco1_stamp_tests01.json) cubre 217,
-con cuatro ejecuciones nuevas y 213 heredadas. No convierte los nominales
+La [QA reciente](../evidence/voice_vco1_newton_tests01.json) cubre 220,
+con tres ejecuciones nuevas y 217 heredadas. No convierte los nominales
 BJT/JFET en parámetros de un instrumento real. R61=200 Ω/200 kΩ sigue siendo
 una discrepancia documental; α no identifica taper y ramas omitidas no
 representan contactos OFF. Mantener manuales/audio/binarios en local ignorado.
