@@ -108,3 +108,15 @@ Mantener rechazos temporales, ciclos/refinamiento/frecuencia, carga activa,
 física y RT abiertos. [QA](../evidence/voice_vco1_741_condensation_tests01.json)
 hereda 235 tests; cero nuevos o reejecutados. Publicación distingue
 repeticiones y raíces de laboratorio de tests unitarios.
+
+## Radau cargado — 2026-10-08
+
+[Etapas acopladas y resultados](VCO1_RADAU_RESULTADOS.md): discretización
+distinta sobre las mismas cargas/tarjetas. Pasa 48 raíces iniciales y
+recupera ambos pisos SDIRK; continuación de 1 µs y dos perfiles de 3 ms
+completos atraviesan el siguiente reset. 72 etapas seleccionadas y 144
+identidades de base Q2/L2 contrastadas. No son una trayectoria completa
+independiente, arranque propio, periodicidad/frecuencia refinada o física.
+Producción intacta; heap/RT y voz completa pendientes. [QA](../evidence/voice_vco1_radau_tests01.json)
+hereda 235 tests y conserva todos los rechazos anteriores; cero nuevos
+tests unitarios/ejecuciones heredadas y cero SPICE/audio nuevos.

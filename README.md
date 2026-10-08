@@ -17,6 +17,7 @@ no acredita identidad sonora con una unidad vintage.
 | Puerto LM741 | [Newton y cinco derivadas cargadas](docs/VCO_741_PUERTO_RESULTADOS.md), seis DC, nueve trayectorias/672 pasos y 371 intervalos SPICE | Cierre activo con mixer y deadlines |
 | VCO1 nativo ensamblado | [Circuito completo de 134 incógnitas](docs/VCO1_STAMP_RESULTADOS.md), 40 casos, Jacobiano completo y contactos exactos | Arranque propio, ciclos completos y carga activa |
 | VCO1 arranque propio | [Diez raíces propias](docs/VCO1_ARRANQUE_RESULTADOS.md), semilla de circuito y contraste independiente | Reset/refinamiento temporal: pasos fijos rechazados; carga activa |
+| VCO1 Radau cargado | [48 raíces, 1 µs recuperado y dos recorridos de 3 ms](docs/VCO1_RADAU_RESULTADOS.md) | Siguiente reset atravesado; arranque propio y varios períodos/refinamiento pendientes |
 | VCO1 puerto 741 exacto | [70 incógnitas exteriores, 12 sistemas y nueve pares de raíces](docs/VCO1_741_CONDENSACION_RESULTADOS.md) | Laboratorio Decimal100; error dinámico del puerto y reset temporal pendientes |
 | VCO1 integración/rigidez | [SDIRK contrastado y modos rápidos locales](docs/VCO1_SDIRK_RESULTADOS.md) | Dos continuaciones rechazadas; contrato exacto cerrado localmente en el bloque del puerto |
 | VCO1 grilla de reset | [22 raíces contrastadas y segundo piso temporal](docs/VCO1_RESET_GRILLA_RESULTADOS.md) | Prefijo privado de 189 ns; analizar dinámica/integración 741 antes de ampliar |
@@ -31,12 +32,12 @@ no acredita identidad sonora con una unidad vintage.
 | Voz monolÃ­tica SPICE | [Banco corto admitido](docs/VOZ_SEIS_ACTIVO_RESULTADOS.md); [largo rechazado](docs/VOZ_SERIAL_CAMPANA_RESULTADOS.md) | Nota larga completa con sus tres contrastes |
 | Producto | NÃºcleos y herramientas de laboratorio | Voz nativa completa, recursos, MIDI/host y paquete instalable |
 
-La [QA vigente](evidence/voice_vco1_741_condensation_tests01.json) conserva
-235 tests heredados por identidad; cero nuevos o reejecutados. Audita
-12 sistemas lineales únicos y nueve pares de raíces no lineales únicos
-con repeticiones, sin contarlos como tests Rust. La condensación exacta
-no modifica las ecuaciones discretas ni sus rechazos temporales. Los
-bloques anteriores conservan sus regresiones y límites.
+La [QA vigente](evidence/voice_vco1_radau_tests01.json) conserva
+235 tests heredados por identidad; cero nuevos o reejecutados. El bloque
+Radau contrasta 72 etapas seleccionadas y 144 identidades del puerto,
+sin contarlas como tests Rust. Recupera los pisos locales y dos perfiles
+condicionales de 3 ms atraviesan el siguiente reset. Arranque propio,
+varios períodos/refinamiento y producción del nuevo método están abiertos.
 
 La campaÃ±a serial de 350 ms comenzÃ³ tras pasar el
 [preflight02](evidence/voice_serial_preflight02.json). Gear500 y Gear250
@@ -47,11 +48,10 @@ las tres parejas no se midieron por falta de escenas completas. El
 
 ## Siguiente trabajo
 
-1. Estudiar el puerto dinámico desde el [contrato cargado y raíces
-   condensadas](docs/VCO1_741_CONDENSACION_RESULTADOS.md). Conservar el
-   aporte derivativo de modo común y sus memorias antes de transformar
-   el descriptor o simplificar subredes rápidas; contrastar error temporal
-   exterior contra la tarjeta completa.
+1. Llevar el [Radau cargado de laboratorio](docs/VCO1_RADAU_RESULTADOS.md)
+   al arranque propio y varios períodos completos con memoria y cargas
+   conservadas. Cerrar periodicidad, corrientes de ciclo y refinamiento
+   antes de promover el método; la continuación heredada no acredita esos gates.
 2. Contrastar ciclos completos, refinamiento y calibración según el
    [protocolo VCO1](docs/VCO1_NATIVO_PROTOCOLO.md); después unir el
    [mixer cargado](docs/MEZCLADOR_PUERTO_CARGADO_PROTOCOLO.md), transfiriendo

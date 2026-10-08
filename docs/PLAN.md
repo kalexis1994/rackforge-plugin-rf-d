@@ -85,6 +85,12 @@ condensación no cambia ese rechazo. Siguiente: puerto dinámico conservando
 el aporte derivativo de modo común, y error exterior frente a tarjeta
 completa antes de una simplificación. Sin nueva grilla o trayectoria.
 
+El [Radau cargado](VCO1_RADAU_RESULTADOS.md) recupera ambos pisos
+SDIRK y completa 1 µs más dos perfiles de 3 ms, con el siguiente reset
+observado. Conserva tarjetas/cargas/memorias y gates; 72 etapas y 144
+identidades locales contrastadas. Siguiente: arranque propio, varios
+períodos, corrientes de ciclo y refinamiento; el método sigue en laboratorio.
+
 ## 3. Completar comportamiento de voz
 
 - Integrar el contorno de volumen y su gatillo conservando las cargas del
