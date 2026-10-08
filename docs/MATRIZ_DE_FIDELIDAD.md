@@ -35,6 +35,10 @@ El [arranque propio posterior](VCO1_ARRANQUE_RESULTADOS.md) sí pasa diez
 raíces desde circuito e incidencias independientes. Los ciclos de paso
 fijo se rechazan en el reset. La copia privada con subpasos completa 30ms,
 pero no pasa dispersión entre períodos y no es producción admitida.
+El [stamp de subpasos/control temporal](VCO1_SUBPASOS_RESULTADOS.md)
+verifica48 stamps y28 raíces disponibles;20 raíces independientes fallan.
+La campaña del controlador se rechaza por precisión de representación,
+con KCL fuera de gate y corrección menor que1ULP en la referencia −4V.
 
 ## Estado de la nota larga
 

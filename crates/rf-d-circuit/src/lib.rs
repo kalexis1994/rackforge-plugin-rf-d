@@ -601,3 +601,7 @@ pub mod vco1_stamp;
 pub mod vco1_newton;
 
 pub mod vco1_startup;
+
+pub mod vco1_substep;
+
+pub mod vco1_adaptive;
