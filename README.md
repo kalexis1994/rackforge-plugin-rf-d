@@ -35,10 +35,14 @@ no acredita identidad sonora con una unidad vintage.
 
 El [cierre eléctrico conjunto](docs/VOZ_BUS_CONJUNTO_RESULTADOS.md) une VCO1 y
 la cadena hasta J7: cuatro pasos y ocho etapas contrastadas localmente.
-Trayectoria y error temporal conjuntos pendientes.
+Ese banco comprueba pasos locales; la continuación está en el motor siguiente.
 
-La [QA vigente](evidence/voice_joint_tests01.json) conserva
-243 tests heredados por identidad y dos nuevos ejecutados. La
+El [motor temporal conjunto](docs/VOZ_MOTOR_TEMPORAL_RESULTADOS.md) admite
+cuatro continuaciones de2 µs, control LTE, restore exacto y rollback.
+El primer ciclo/reset bajo carga sigue pendiente.
+
+La [QA vigente](evidence/voice_joint_engine_tests01.json) conserva
+245 tests heredados por identidad y tres nuevos ejecutados. La
 [cadena con cargas explícitas](docs/CADENA_CARGA_RADAU_RESULTADOS.md) pasa
 72 etapas y 180 corrientes, con medios pasos de7,629 ps; fuentes impuestas.
 El
@@ -48,7 +52,7 @@ completa dos recorridos propios nominales de30 ms y pasa periodicidad,
 balance/refinamiento y cuatro comparaciones con Gear/Trap archivados.
 Contrasta16 etapas reales y el rechazo Newton local; no son tests Rust.
 Ya hay escucha del VCO nativo aislado: repite un ciclo real del perfil125,
-sin filtro/VCA. ProducciÃ³n, carga activa, CV/trims y RT siguen abiertos.
+sin filtro/VCA. ProducciÃ³n, carga activa durante ciclos completos, CV/trims y RT siguen abiertos.
 
 La campaÃ±a serial de 350 ms comenzÃ³ tras pasar el
 [preflight02](evidence/voice_serial_preflight02.json). Gear500 y Gear250

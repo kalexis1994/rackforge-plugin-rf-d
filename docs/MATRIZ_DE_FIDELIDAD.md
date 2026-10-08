@@ -171,3 +171,11 @@ continúan impuestas y no se admite una trayectoria larga conjunta.
 único; sin fuente ideal en BUS. No son raíces independientes ni trayectoria
 con error temporal admitido. Historia inicial condicionada; fidelidad y RT
 pendientes.
+
+## Motor temporal conjunto — 2026-10-08
+
+[Motor condicionado](VOZ_MOTOR_TEMPORAL_RESULTADOS.md): cuatro perfiles
+de2 µs/80 intervalos; LTE y refinamiento al mismo reloj pasan.24 etapas
+seleccionadas verificadas por residuos independientes en puntos nativos.
+Heap cero en dos rutas medidas, stack32 MiB y sin admisión RT. No se
+admiten primer reset/ciclo, nota musical, arranque DC conjunto ni fidelidad.

@@ -174,3 +174,11 @@ El [stamp de200 incógnitas](VOZ_BUS_CONJUNTO_RESULTADOS.md) cierra eléctricame
 VCO1, BUS/C27 y cadena hasta J7 con carga única del panel. Ocho etapas
 contrastadas; siguiente bloque: motor conjunto con LTE, rollback e historia
 propia corta. No ampliar campañas largas antes de ese contrato temporal.
+
+## Motor temporal conjunto — 2026-10-08
+
+[Cuatro continuaciones de2 µs](VOZ_MOTOR_TEMPORAL_RESULTADOS.md) controlan
+error temporal, restauración exacta y rechazo atómico con historia posterior
+generada por el solve conjunto. Siguiente: primer reset/ciclo con carga activa,
+trazas y contraste de refinamiento antes de escucha. Arranque conjunto DC
+propio, contornos completos y tiempo real siguen pendientes.

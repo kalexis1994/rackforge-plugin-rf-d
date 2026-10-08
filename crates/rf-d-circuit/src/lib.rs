@@ -619,3 +619,5 @@ pub mod chain_radau;
 
 #[allow(dead_code)] mod joint_vco_fine;
 pub mod joint_voice;
+
+pub mod joint_engine;
