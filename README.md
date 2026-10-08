@@ -6,7 +6,7 @@ nominal documentada; [revisiÃ³n y alcance](docs/OBJETIVO.md). No hay ni habrÃ
 un instrumento fÃ­sico de referencia. La equivalencia numÃ©rica de un modelo
 no acredita identidad sonora con una unidad vintage.
 
-## Estado actual â€” 2026-10-07
+## Estado actual — 2026-10-08
 
 | Ruta | Resultado disponible | Alcance pendiente |
 |---|---|---|
@@ -17,6 +17,7 @@ no acredita identidad sonora con una unidad vintage.
 | Puerto LM741 | [Newton y cinco derivadas cargadas](docs/VCO_741_PUERTO_RESULTADOS.md), seis DC, nueve trayectorias/672 pasos y 371 intervalos SPICE | Cierre activo con mixer y deadlines |
 | VCO1 nativo ensamblado | [Circuito completo de 134 incógnitas](docs/VCO1_STAMP_RESULTADOS.md), 40 casos, Jacobiano completo y contactos exactos | Arranque propio, ciclos completos y carga activa |
 | VCO1 arranque propio | [Diez raíces propias](docs/VCO1_ARRANQUE_RESULTADOS.md), semilla de circuito y contraste independiente | Reset/refinamiento temporal: pasos fijos rechazados; carga activa |
+| VCO1 grilla de reset | [22 raíces contrastadas y segundo piso temporal](docs/VCO1_RESET_GRILLA_RESULTADOS.md) | Prefijo privado de 189 ns; analizar dinámica/integración 741 antes de ampliar |
 | VCO1 incrementos/memoria | [50 raíces y 897.800 derivadas; precisión recuperada](docs/VCO1_INCREMENTOS_RESULTADOS.md) | Reset rechazado por error temporal a 2,434 ms; grilla más fina |
 | VCO1 subpasos/control temporal | [48 stamps y 28 raíces locales; controlador atómico](docs/VCO1_SUBPASOS_RESULTADOS.md) | Referencia histórica: límite de representación recuperado localmente en el bloque de incrementos |
 | VCO1 Newton conjunto | [Dos DC condicionados y seis continuaciones/224 pasos](docs/VCO1_NEWTON_RESULTADOS.md), memoria atómica | Semilla propia, ciclos completos, refinamiento y carga activa |
@@ -28,9 +29,9 @@ no acredita identidad sonora con una unidad vintage.
 | Voz monolÃ­tica SPICE | [Banco corto admitido](docs/VOZ_SEIS_ACTIVO_RESULTADOS.md); [largo rechazado](docs/VOZ_SERIAL_CAMPANA_RESULTADOS.md) | Nota larga completa con sus tres contrastes |
 | Producto | NÃºcleos y herramientas de laboratorio | Voz nativa completa, recursos, MIDI/host y paquete instalable |
 
-La [QA nativa vigente](evidence/voice_vco1_increment_tests01.json) cubre
-235 controles: seis tests nuevos ejecutados en este bloque y 229
-heredados por identidad. Los bloques anteriores conservan sus propias
+La [QA vigente](evidence/voice_vco1_reset_grid_tests01.json) conserva
+235 controles heredados por identidad. El bloque previo ejecutó seis
+tests nuevos; el diagnóstico de grilla contrasta 22 raíces Decimal100. Los bloques anteriores conservan sus propias
 regresiones y límites; ese número no representa 235 nuevas ejecuciones.
 
 La campaÃ±a serial de 350 ms comenzÃ³ tras pasar el
@@ -42,9 +43,9 @@ las tres parejas no se midieron por falta de escenas completas. El
 
 ## Siguiente trabajo
 
-1. Afinar la grilla temporal del [reset contrastado](docs/VCO1_INCREMENTOS_RESULTADOS.md).
-   La memoria compensada recupera el límite de representación; el reset
-   conserva un rechazo LTE confirmado por Decimal100, sin relajar gates.
+1. Analizar la dinámica/integración del 741 en el [segundo piso de reset](docs/VCO1_RESET_GRILLA_RESULTADOS.md).
+   La grilla más fina recupera el primer intervalo, pero vuelve a rechazar
+   por LTE tras 189 ns. Preservar ecuaciones, cargas y gates.
 2. Contrastar ciclos completos, refinamiento y calibración según el
    [protocolo VCO1](docs/VCO1_NATIVO_PROTOCOLO.md); después unir el
    [mixer cargado](docs/MEZCLADOR_PUERTO_CARGADO_PROTOCOLO.md), transfiriendo

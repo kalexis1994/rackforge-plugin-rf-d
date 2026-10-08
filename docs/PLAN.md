@@ -55,13 +55,21 @@ se rechaza por estancamiento local de la representación binary64.
 Los [incrementos/memoria compensada](VCO1_INCREMENTOS_RESULTADOS.md) pasan
 50 raíces y recuperan el antiguo piso. La nueva campaña se detiene a
 2,434 ms por LTE: Decimal100 confirma 2,013 µV en el colector de Q6,
-gate 2 µV. Afinar la grilla temporal, conservando los gates; después
+gate 2 µV. La grilla privada más fina encuentra un segundo piso en el 741;
+analizar su dinámica e integración, conservando los gates; después
 verificar ciclos completos/refinamiento/calibración;
 seguir con carga activa;
 transferir R6/R45 antes de acoplar al mixer que posee esas cargas.
 
 Primer alcance: VCO1 y cadena con controles impuestos. No declarar tres
 osciladores, contorno completo o otra poblaciÃ³n fÃ­sica por ese prototipo.
+
+
+El [diagnóstico de grilla más fina](VCO1_RESET_GRILLA_RESULTADOS.md)
+recupera el intervalo inicial, pero conserva otro rechazo temporal en
+XIC3.7 tras 188,881 ns de continuación condicional y 32.300 pasos.
+22 raíces coinciden con Decimal100. Analizar dinámica/discretización
+741 antes de extender otra grilla o banco; código de producción intacto.
 
 ## 3. Completar comportamiento de voz
 

@@ -47,6 +47,13 @@ rechazada a 2,434338 ms por LTE confirmado en Q6 (2,013 µV > 2 µV).
 No admite ciclo completo/refinamiento; sigue grilla más fina. Pila de
 laboratorio 8 MiB declarada; heap cero no admite RT.
 
+
+El [diagnóstico de grilla más fina](VCO1_RESET_GRILLA_RESULTADOS.md)
+recupera el intervalo inicial, pero conserva otro rechazo temporal en
+XIC3.7 tras 188,881 ns de continuación condicional y 32.300 pasos.
+22 raíces coinciden con Decimal100. Analizar dinámica/discretización
+741 antes de extender otra grilla o banco; código de producción intacto.
+
 ## Estado de la nota larga
 
 El [preflight02](../evidence/voice_serial_preflight02.json) admitió recursos,

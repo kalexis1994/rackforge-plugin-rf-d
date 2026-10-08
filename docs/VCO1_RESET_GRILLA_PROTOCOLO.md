@@ -1,0 +1,9 @@
+# Reset: subdivisión local antes de extender la producción
+
+2026-10-08. Base 236f170. Mantener los módulos y gates publicados. El rechazo de 2,434338134765625 ms fue confirmado por Decimal100. Una copia privada del núcleo cambia sólo MIN_DT_S de 125 ns/4096 a 125 ns/65536. Es una extensión de dominio numérico de laboratorio, no una ley del sintetizador ni producción admitida.
+
+Resolver desde la misma historia cinco tríos full/mid/end, con medio paso 30,517578125 ps / 2^p, p=0..4. La referencia Decimal100 parte de la historia para full/mid y del mid independiente para end; nunca del candidato nativo. Mantener residual, corrección y contraste del protocolo de incrementos. Registrar la incógnita limitante y el ratio full frente a endpoint en todas las 134 incógnitas.
+
+Después, una copia privada del controlador permite máximo half 524288 ticks y 20 intentos para conservar el máximo físico de 500 ns y llegar al piso de 1,9073486328125 ps. Conserva los mismos gates de error local 2 µV/2 nA, Newton 64/24, publicación atómica y duplicación del paso. El reloj del recorrido local es entero, no extiende aún el reloj de producción. Registrar cada hi/lo y dt real durante 50 µs desde la memoria preservada; continuar sólo estados aceptados. Original y replay de cualquier fallo quedan conservados antes de reparar. Contrastar cuatro intervalos aceptados con Decimal100: primero, último y dos de mayor cambio nodal en el reset. Esto acredita sólo esa continuación condicional, no ciclo completo, frecuencia, audio o deadline.
+
+Pila de laboratorio 8 MiB, compilador O2 fijado. Reserva de disco 2 GiB con monitor durante el proceso; detener y preservar prefijo si se cruza. Fuentes públicas/privadas y outputs por hash, sin procesos SPICE. Si el piso aún falla, el resultado sigue siendo un diagnóstico rechazado; no seguir ampliando esta campaña.
