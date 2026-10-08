@@ -167,3 +167,10 @@ Siguiente: stamp conjunto VCO/cadena y transferencia única de R6/R45;
 el VCO todavía no recibe la carga activa de este banco. Las fuentes
 continúan impuestas y no se admite una trayectoria larga conjunta.
 [QA](../evidence/voice_chain_charge_tests01.json).
+
+## Cierre conjunto local — 2026-10-08
+
+El [stamp de200 incógnitas](VOZ_BUS_CONJUNTO_RESULTADOS.md) cierra eléctricamente
+VCO1, BUS/C27 y cadena hasta J7 con carga única del panel. Ocho etapas
+contrastadas; siguiente bloque: motor conjunto con LTE, rollback e historia
+propia corta. No ampliar campañas largas antes de ese contrato temporal.

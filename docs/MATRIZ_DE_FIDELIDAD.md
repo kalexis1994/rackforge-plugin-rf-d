@@ -163,3 +163,11 @@ Siguiente: stamp conjunto VCO/cadena y transferencia única de R6/R45;
 el VCO todavía no recibe la carga activa de este banco. Las fuentes
 continúan impuestas y no se admite una trayectoria larga conjunta.
 [QA](../evidence/voice_chain_charge_tests01.json).
+
+## Cierre VCO1/cadena local — 2026-10-08
+
+[Cuatro pasos acoplados](VOZ_BUS_CONJUNTO_RESULTADOS.md), ocho etapas y
+1.600 residuos independientes en candidatos nativos. Panel y C27 con dueño
+único; sin fuente ideal en BUS. No son raíces independientes ni trayectoria
+con error temporal admitido. Historia inicial condicionada; fidelidad y RT
+pendientes.

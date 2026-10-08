@@ -33,8 +33,12 @@ no acredita identidad sonora con una unidad vintage.
 | Voz monolÃ­tica SPICE | [Banco corto admitido](docs/VOZ_SEIS_ACTIVO_RESULTADOS.md); [largo rechazado](docs/VOZ_SERIAL_CAMPANA_RESULTADOS.md) | Nota larga completa con sus tres contrastes |
 | Producto | NÃºcleos y herramientas de laboratorio | Voz nativa completa, recursos, MIDI/host y paquete instalable |
 
-La [QA vigente](evidence/voice_chain_charge_tests01.json) conserva
-239 tests heredados por identidad y cuatro nuevos ejecutados. La
+El [cierre eléctrico conjunto](docs/VOZ_BUS_CONJUNTO_RESULTADOS.md) une VCO1 y
+la cadena hasta J7: cuatro pasos y ocho etapas contrastadas localmente.
+Trayectoria y error temporal conjuntos pendientes.
+
+La [QA vigente](evidence/voice_joint_tests01.json) conserva
+243 tests heredados por identidad y dos nuevos ejecutados. La
 [cadena con cargas explícitas](docs/CADENA_CARGA_RADAU_RESULTADOS.md) pasa
 72 etapas y 180 corrientes, con medios pasos de7,629 ps; fuentes impuestas.
 El

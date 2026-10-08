@@ -616,3 +616,6 @@ pub mod vco1_engine;
 
 pub mod chain_charge;
 pub mod chain_radau;
+
+#[allow(dead_code)] mod joint_vco_fine;
+pub mod joint_voice;
