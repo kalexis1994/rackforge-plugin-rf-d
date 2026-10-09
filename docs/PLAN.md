@@ -249,3 +249,18 @@ un warmup fijo sin causa contrastada. Luego contornos, controles y fuentes
 restantes, escenas reservadas y coste/host para el alcance de escucha.
 Sin nuevos tests Rust/audio/SPICE ni admisión de encendido/fidelidad/RT.
 [QA actual](../evidence/voice_joint_conditioned_cycles_tests01.json).
+
+## Semillas con cargas prescritas — 2026-10-09
+
+[Condicionador conjunto de laboratorio](VOZ_CARGAS_SEMILLA_RESULTADOS.md)
+admitido: 218 incógnitas, dos objetivos y dos guesses; 872 ecuaciones de
+acondicionamiento/9600 dinámicas contrastadas. Memoria 0 conserva 18 cargas;
+memoria 1 conserva 17 y cambia C27 por una hipótesis guiada por media saw.
+Cuatro liberaciones de 2 µs, refinamiento y restores exactos pasan.
+
+Siguiente: ciclos desde estas semillas, con ledger de corrientes, carga
+por fase, media panel y J7. Contrastar la reducción de deriva antes de
+corregir o elegir memoria. La cuadratura de endpoints orienta el objetivo,
+sin admitir periodicidad. No prolongar un warmup fijo sin evidencia.
+248 tests Rust heredados; sin nuevos tests Rust, audio, SPICE o RT.
+[QA actual](../evidence/voice_joint_charge_seed_tests01.json).

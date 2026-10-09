@@ -140,3 +140,9 @@ exactos. La continuación de esa historia está completada abajo.
 dos perfiles de5,25 ms, 68558 intervalos,9600 ecuaciones nuevas contrastadas
 y dos seams exactos. Cargas y J7 aún derivan entre cruces; siguiente:
 inicialización para régimen oscilatorio. Sin nuevo audio ni admisión de RT.
+
+[Condicionador de cargas de cadena](docs/VOZ_CARGAS_SEMILLA_RESULTADOS.md):
+218 incógnitas, dos memorias/dos guesses, 872 ecuaciones de inicialización
+y 9600 dinámicas contrastadas. Conserva 18 cargas históricas o retargetea
+solo C27; libera cuatro perfiles de 2 µs con restores exactos. Laboratorio,
+sin cambio de física. Siguiente: ciclos propios y deriva, antes de escucha.

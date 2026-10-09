@@ -247,3 +247,15 @@ un warmup fijo sin causa contrastada. Luego contornos, controles y fuentes
 restantes, escenas reservadas y coste/host para el alcance de escucha.
 Sin nuevos tests Rust/audio/SPICE ni admisión de encendido/fidelidad/RT.
 [QA actual](../evidence/voice_joint_conditioned_cycles_tests01.json).
+
+## Inicialización con carga prescrita — 2026-10-09
+
+[Condicionador de laboratorio](VOZ_CARGAS_SEMILLA_RESULTADOS.md):
+218 incógnitas restauran algebraicos a fase retenida y conservan 18 cargas
+históricas o 17 con C27 retargeteado explícitamente. 872 ecuaciones iniciales
+y 9600 dinámicas contrastadas; cuatro perfiles de 2 µs y restores exactos.
+La física temporal no cambia. Pendientes ciclos propios y periodicidad;
+media saw de endpoints y sesgo de entrada 6 son hipótesis de semilla.
+No se admite arranque físico, contornos completos, audio nuevo, fidelidad
+vintage o RT. 248 tests heredados sin reejecutarlos.
+[QA vigente](../evidence/voice_joint_charge_seed_tests01.json).
