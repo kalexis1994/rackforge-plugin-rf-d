@@ -278,3 +278,17 @@ Menor deriva de C27 no acredita las demás cargas ni asentamiento de J7.
 Mantener cada historia, su fuente y gates. Sin warmup fijo, ajuste de
 componentes o nuevos tests Rust/audio/SPICE/RT.
 [QA actual](../evidence/voice_joint_seed_cycles_tests01.json).
+
+## Respuesta de cargas y cierre conjunto — 2026-10-09
+
+[Banco de las 18 cargas](VOZ_CARGAS_RESPUESTA_RESULTADOS.md): S de rango
+18 en ambas memorias, 32700 ecuaciones de inicialización y 9600 dinámicas
+nuevas. Derivadas centrales a ±125/62,5 µV admitidas con gates originales;
+rechazos de perturbación, decoder, import y disco preservados.
+Dos objetivos corregidos cierran el circuito y se liberan a 2 µs a dos
+resoluciones, con cuatro restores exactos.
+
+Siguiente: ciclos propios de estos objetivos a dos resoluciones; medir
+18 cargas, salida y periodos consecutivos. La matriz estática no es
+Jacobiano del mapa periódico ni la predicción una mejora ya medida.
+[QA actual](../evidence/voice_joint_charge_response_tests01.json).

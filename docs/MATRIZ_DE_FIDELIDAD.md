@@ -270,3 +270,14 @@ Radau de saw/BUS/entrada 6 y balances de carga del panel/C27 cerrados.
 consecutivos; no se admite escucha de voz completa, encendido físico,
 fidelidad vintage o RT. Física intacta; 248 tests Rust heredados sin
 reejecutarlos. [QA vigente](../evidence/voice_joint_seed_cycles_tests01.json).
+
+## Respuesta estática y memorias corregidas — 2026-10-09
+
+[Respuesta de las 18 cargas](VOZ_CARGAS_RESPUESTA_RESULTADOS.md) admitida
+con contraste independiente y perturbación refinada. Cuatro raíces
+corregidas/872 ecuaciones y cuatro liberaciones de 2 µs/9600 ecuaciones
+dinámicas nuevas, cuatro restores exactos. Respuesta de fase retenida,
+no del mapa periódico. Pendiente deriva de ciclos propios y periodos
+consecutivos. Sin fidelidad vintage, encendido físico, nuevo audio o RT.
+Física y biblioteca intactas; 248 tests heredados por identidad.
+[QA vigente](../evidence/voice_joint_charge_response_tests01.json).

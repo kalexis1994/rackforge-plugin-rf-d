@@ -152,3 +152,8 @@ cuatro perfiles de 5,25 ms, 137193 intervalos y 19200 ecuaciones nuevas
 contrastadas; ocho restores exactos y reproducción de 2 µs por bytes.
 Ledger Radau de medias del panel/C27 y 18 cargas por fase. Periodicidad
 asentada aún pendiente; sin nuevo audio, cambio de física o admisión de RT.
+
+[Corrección conjunta de 18 cargas](docs/VOZ_CARGAS_RESPUESTA_RESULTADOS.md):
+36 columnas de respuesta contrastadas, perturbación refinada conservando
+el rechazo original, dos memorias nuevas con cierre no lineal y cuatro
+liberaciones de 2 µs. Mejora de deriva periódica aún no medida.
