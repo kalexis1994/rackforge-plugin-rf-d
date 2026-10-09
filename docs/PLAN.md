@@ -292,3 +292,13 @@ Siguiente: ciclos propios de estos objetivos a dos resoluciones; medir
 18 cargas, salida y periodos consecutivos. La matriz estática no es
 Jacobiano del mapa periódico ni la predicción una mejora ya medida.
 [QA actual](../evidence/voice_joint_charge_response_tests01.json).
+
+## Ciclos propios de la corrección conjunta — 2026-10-09
+
+[Cuatro perfiles a dos resoluciones](VOZ_CICLOS_CORREGIDOS_RESULTADOS.md)
+completos, 19200 ecuaciones nuevas contrastadas, ocho restores exactos y
+cuatro prefijos de 2 µs bit exactos. La comparación reporta las 18 cargas,
+J7 y la predicción estática con mejoras/empeoramientos, sin convertir
+refinamiento en periodicidad. Siguiente: evaluar cargas restantes y periodos
+consecutivos de una historia. Sin cambiar componentes ni elegir por amplitud.
+[QA vigente](../evidence/voice_joint_corrected_cycles_tests01.json).

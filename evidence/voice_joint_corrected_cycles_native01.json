@@ -1,0 +1,323 @@
+{
+  "schema": "rf-d/joint-corrected-cycles-native/v1",
+  "passed": true,
+  "source_sha256": {
+    "evidence/voice_joint_charge_corrected_native01.json": "176325c3f953923aefaad4c93e1bfdf2c6b8577eaf9bc12d2055e209109d1fd5",
+    "evidence/voice_joint_corrected_cycles_inputs01.json": "8d1493de98f2afb9004ffbefbf234d0660cca3051575b641532345834188c746",
+    "tools/run_joint_corrected_cycles.py": "22316c72018cbc6683d01e5e4900eb6f8964a03b5a1ee8f932b64e22ccddfef2",
+    "tools/prepare_joint_corrected_cycles.py": "f179dfde7ef024791bf2fc23f4cf19d6df462077d7c5ea715cc725f6acb72433",
+    "tools/joint_corrected_cycles_runner.rs": "cf6b694cbaa3ad5cdcf64f2e46464de515b01f928e65bf7565b629e364e1a1b6",
+    "tools/joint_conditioned_cycles_runner.rs": "bacf5e745828dacd9907125dc34365e48e6cf9964818dc6880457879c391bdba",
+    "tools/joint_cycles_analysis.py": "854d938928f39fcb35c64385b81bf87e5f3aa916924442da71f13a849555b164",
+    "docs/VOZ_CICLOS_CORREGIDOS_PROTOCOLO.md": "3da958fdf7eb15e1dad571b16f68d4108801ff247197635af5f4940eaad41d73",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+    "evidence/voice_chain_charge_vectors06.txt": "0facf3c5346e8609e35820273cdfc4bd9a7cca5bb1f76b9f8021fb482084bf1c"
+  },
+  "private_used_sha256": {
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd",
+    "references-local/joint-corrected-cycle-inputs01/0-65536.ckp": "60288c3dffa17848febd934bce12f37de326d657811130b66fded5e9bc60a722",
+    "references-local/joint-corrected-cycle-inputs01/0-32768.ckp": "10426d3473e64fb8c263e745cea6ce666d45a673b358179faa5d86f8e0f0c049",
+    "references-local/joint-corrected-cycle-inputs01/1-65536.ckp": "1ce22d9e3bbdd538fdfae570ba1df1d9439cb8aa6485c3815a50f1c1df3ef267",
+    "references-local/joint-corrected-cycle-inputs01/1-32768.ckp": "d2f81485b88fd0287bdfee1149c12b63314cb6b45132e0d09516c23d08d872b0"
+  },
+  "compiler": {
+    "path": "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+    "sha256": "fd6232f90a981e28472ce6900232946a1f1bcad8ec8270cd5ae6a3a357208b98",
+    "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+  },
+  "cached_library": {
+    "path": "references-local/joint-startup01/librf_d_circuit.rlib",
+    "sha256": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd"
+  },
+  "commands": [
+    {
+      "command": [
+        "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+        "--edition=2021",
+        "-C",
+        "opt-level=2",
+        "-C",
+        "strip=symbols",
+        "-C",
+        "link-arg=-Wl,--stack,33554432",
+        "tools/joint_corrected_cycles_runner.rs",
+        "--extern",
+        "rf_d_circuit=C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-startup01\\librf_d_circuit.rlib",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-corrected-cycles01\\run.exe"
+      ],
+      "exit_code": 0,
+      "wall_s": 0.8588328000041656,
+      "stdout": "",
+      "stderr": "warning: unused import: `std::time::Instant`\n --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:3:5\n  |\n3 | use std::time::Instant;\n  |     ^^^^^^^^^^^^^^^^^^\n  |\n  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default\n\nwarning: unused imports: `Parameters`, `initial_state`, `step_with_emphasis`, and `step`\n --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:8:5\n  |\n8 |     initial_state, step, step_with_emphasis, Boundary, Parameters,\n  |     ^^^^^^^^^^^^^  ^^^^  ^^^^^^^^^^^^^^^^^^            ^^^^^^^^^^\n\nwarning: unused import: `SolverBudget`\n  --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:16:55\n   |\n16 | use rf_d_circuit::{Parameters as HeadphoneParameters, SolverBudget};\n   |                                                       ^^^^^^^^^^^^\n\nwarning: 3 warnings emitted\n\n"
+    }
+  ],
+  "profiles": [
+    {
+      "seed_id": 0,
+      "maximum_half_ticks": 65536,
+      "interval_budget": 32000,
+      "initial_checkpoint": "references-local/joint-corrected-cycle-inputs01/0-65536.ckp",
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-corrected-cycles01\\run.exe",
+        "run",
+        "65536",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-corrected-cycles01\\0-65536",
+        "32000",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-corrected-cycle-inputs01\\0-65536.ckp"
+      ],
+      "exit_code": 0,
+      "wall_s": 750.3859009000007,
+      "minimum_free_bytes": 1588146176,
+      "administrative_stop": false,
+      "stop_reason": null,
+      "stdout": "",
+      "stderr": "PROGRESS,intervals=2000,ticks=260800512,wall_s=57.512\nPROGRESS,intervals=4000,ticks=522715136,wall_s=115.004\nPROGRESS,intervals=6000,ticks=769781760,wall_s=177.442\nPROGRESS,intervals=8000,ticks=1030995968,wall_s=234.876\nPROGRESS,intervals=10000,ticks=1276310400,wall_s=304.569\nRESET,crossing=1,ticks=1276366016\nPROGRESS,intervals=12000,ticks=1387921344,wall_s=383.718\nPROGRESS,intervals=14000,ticks=1647574784,wall_s=440.442\nPROGRESS,intervals=16000,ticks=1897567232,wall_s=500.714\nPROGRESS,intervals=18000,ticks=2153639936,wall_s=559.183\nPROGRESS,intervals=20000,ticks=2414854144,wall_s=616.982\nRESET,crossing=2,ticks=2552621440\nPROGRESS,intervals=22000,ticks=2552727600,wall_s=691.324\nSUMMARY,intervals=23854,ticks=2752512000,crossings=2,restore_replays=2,max_lte=9.99688636284067678e-1,max_bus=1.28749007982653652e-19,max_c1=9.64228696886948455e-14,charge=6.25234121163306355e-9,absolute=1.66048026301213672e-7,delta_ramp=-6.25234121163272816e-1,balance=2.01753766995258519e-15\nMEAN_LEDGER,2.21949030621273352e-4,-1.89149548380895057e-4,1.02975276346869635e-2,7.64647296029380165e-9,3.00124063691531732e-4\n"
+    },
+    {
+      "seed_id": 0,
+      "maximum_half_ticks": 32768,
+      "interval_budget": 48000,
+      "initial_checkpoint": "references-local/joint-corrected-cycle-inputs01/0-32768.ckp",
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-corrected-cycles01\\run.exe",
+        "run",
+        "32768",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-corrected-cycles01\\0-32768",
+        "48000",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-corrected-cycle-inputs01\\0-32768.ckp"
+      ],
+      "exit_code": 0,
+      "wall_s": 1272.9212342999526,
+      "minimum_free_bytes": 1573535744,
+      "administrative_stop": false,
+      "stop_reason": null,
+      "stdout": "",
+      "stderr": "PROGRESS,intervals=2000,ticks=130727936,wall_s=55.470\nPROGRESS,intervals=4000,ticks=261718016,wall_s=111.034\nPROGRESS,intervals=6000,ticks=392757248,wall_s=166.421\nPROGRESS,intervals=8000,ticks=523829248,wall_s=221.023\nPROGRESS,intervals=10000,ticks=649488384,wall_s=278.564\nPROGRESS,intervals=12000,ticks=780201984,wall_s=332.419\nPROGRESS,intervals=14000,ticks=911073280,wall_s=386.207\nPROGRESS,intervals=16000,ticks=1042006016,wall_s=440.127\nPROGRESS,intervals=18000,ticks=1172996096,wall_s=493.853\nRESET,crossing=1,ticks=1276366016\nPROGRESS,intervals=20000,ticks=1276397520,wall_s=557.924\nPROGRESS,intervals=22000,ticks=1353318368,wall_s=628.500\nPROGRESS,intervals=24000,ticks=1483734976,wall_s=683.143\nPROGRESS,intervals=26000,ticks=1614217088,wall_s=737.896\nPROGRESS,intervals=28000,ticks=1744764672,wall_s=792.584\nPROGRESS,intervals=30000,ticks=1875377664,wall_s=845.754\nPROGRESS,intervals=32000,ticks=2000354304,wall_s=903.311\nPROGRESS,intervals=34000,ticks=2131097600,wall_s=956.964\nPROGRESS,intervals=36000,ticks=2261905408,wall_s=1010.570\nPROGRESS,intervals=38000,ticks=2392776704,wall_s=1064.233\nPROGRESS,intervals=40000,ticks=2523709440,wall_s=1117.887\nRESET,crossing=2,ticks=2552621440\nPROGRESS,intervals=42000,ticks=2574207232,wall_s=1198.007\nPROGRESS,intervals=44000,ticks=2704539136,wall_s=1252.596\nSUMMARY,intervals=44733,ticks=2752512000,crossings=2,restore_replays=2,max_lte=9.99008864520575801e-1,max_bus=9.14795583034644366e-20,max_c1=9.86988268891764164e-14,charge=6.25234091934968002e-9,absolute=1.66048026257343056e-7,delta_ramp=-6.25234091934934844e-1,balance=1.99761137250552230e-15\nMEAN_LEDGER,2.21948975721804890e-4,-1.89149548770667337e-4,1.02975276343602248e-2,7.64647227086802012e-9,3.00124036631569768e-4\n"
+    },
+    {
+      "seed_id": 1,
+      "maximum_half_ticks": 65536,
+      "interval_budget": 32000,
+      "initial_checkpoint": "references-local/joint-corrected-cycle-inputs01/1-65536.ckp",
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-corrected-cycles01\\run.exe",
+        "run",
+        "65536",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-corrected-cycles01\\1-65536",
+        "32000",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-corrected-cycle-inputs01\\1-65536.ckp"
+      ],
+      "exit_code": 0,
+      "wall_s": 735.0086229000008,
+      "minimum_free_bytes": 1565904896,
+      "administrative_stop": false,
+      "stop_reason": null,
+      "stdout": "",
+      "stderr": "PROGRESS,intervals=2000,ticks=260800512,wall_s=57.057\nPROGRESS,intervals=4000,ticks=522715136,wall_s=113.955\nPROGRESS,intervals=6000,ticks=769781760,wall_s=175.404\nPROGRESS,intervals=8000,ticks=1030995968,wall_s=232.189\nPROGRESS,intervals=10000,ticks=1276310400,wall_s=294.950\nRESET,crossing=1,ticks=1276366016\nPROGRESS,intervals=12000,ticks=1387921344,wall_s=371.073\nPROGRESS,intervals=14000,ticks=1647574784,wall_s=427.075\nPROGRESS,intervals=16000,ticks=1897567232,wall_s=486.344\nPROGRESS,intervals=18000,ticks=2153639936,wall_s=543.995\nPROGRESS,intervals=20000,ticks=2414854144,wall_s=600.555\nRESET,crossing=2,ticks=2552621440\nPROGRESS,intervals=22000,ticks=2552727568,wall_s=675.486\nSUMMARY,intervals=23853,ticks=2752512000,crossings=2,restore_replays=2,max_lte=9.96889087514323813e-1,max_bus=1.05032085459533242e-19,max_c1=9.98090499138015730e-14,charge=6.25234125880586032e-9,absolute=1.66048026173243405e-7,delta_ramp=-6.25234125880552272e-1,balance=2.03248239500011341e-15\nMEAN_LEDGER,2.21904608346965937e-4,-1.90924360437608962e-4,1.02974748758881685e-2,7.69112521302145013e-9,3.01876664611091931e-4\n"
+    },
+    {
+      "seed_id": 1,
+      "maximum_half_ticks": 32768,
+      "interval_budget": 48000,
+      "initial_checkpoint": "references-local/joint-corrected-cycle-inputs01/1-32768.ckp",
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-corrected-cycles01\\run.exe",
+        "run",
+        "32768",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-corrected-cycles01\\1-32768",
+        "48000",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-corrected-cycle-inputs01\\1-32768.ckp"
+      ],
+      "exit_code": 0,
+      "wall_s": 1279.717432400037,
+      "minimum_free_bytes": 1548128256,
+      "administrative_stop": false,
+      "stop_reason": null,
+      "stdout": "",
+      "stderr": "PROGRESS,intervals=2000,ticks=130727936,wall_s=55.674\nPROGRESS,intervals=4000,ticks=261718016,wall_s=111.456\nPROGRESS,intervals=6000,ticks=392757248,wall_s=167.502\nPROGRESS,intervals=8000,ticks=523829248,wall_s=222.603\nPROGRESS,intervals=10000,ticks=649488384,wall_s=280.457\nPROGRESS,intervals=12000,ticks=780201984,wall_s=334.998\nPROGRESS,intervals=14000,ticks=911073280,wall_s=389.029\nPROGRESS,intervals=16000,ticks=1042006016,wall_s=442.948\nPROGRESS,intervals=18000,ticks=1172996096,wall_s=496.932\nRESET,crossing=1,ticks=1276366016\nPROGRESS,intervals=20000,ticks=1276397520,wall_s=561.118\nPROGRESS,intervals=22000,ticks=1353252832,wall_s=631.857\nPROGRESS,intervals=24000,ticks=1483669440,wall_s=686.830\nPROGRESS,intervals=26000,ticks=1614151552,wall_s=741.757\nPROGRESS,intervals=28000,ticks=1744699136,wall_s=796.853\nPROGRESS,intervals=30000,ticks=1875312128,wall_s=850.175\nPROGRESS,intervals=32000,ticks=2000288768,wall_s=907.879\nPROGRESS,intervals=34000,ticks=2131032064,wall_s=961.863\nPROGRESS,intervals=36000,ticks=2261839872,wall_s=1015.983\nPROGRESS,intervals=38000,ticks=2392711168,wall_s=1069.831\nPROGRESS,intervals=40000,ticks=2523643904,wall_s=1123.707\nRESET,crossing=2,ticks=2552621440\nPROGRESS,intervals=42000,ticks=2574010624,wall_s=1204.402\nPROGRESS,intervals=44000,ticks=2704342528,wall_s=1259.328\nSUMMARY,intervals=44736,ticks=2752512000,crossings=2,restore_replays=2,max_lte=9.98113150169007146e-1,max_bus=1.11808349037567645e-19,max_c1=9.70890035034699395e-14,charge=6.25234096651894721e-9,absolute=1.66048026196269625e-7,delta_ramp=-6.25234096651860582e-1,balance=2.05739026720255767e-15\nMEAN_LEDGER,2.21904553446815756e-4,-1.90924360827385905e-4,1.02974748755614263e-2,7.69112452358710231e-9,3.01876637550793755e-4\n"
+    }
+  ],
+  "replays": [],
+  "outputs": [
+    {
+      "path": "references-local/joint-corrected-cycles01/0-32768/checkpoints.bin",
+      "sha256": "df5f1573f103a4e5785448d393d2fa4d2d11a23aa642a6d76a63e60462b835e6",
+      "bytes": 74160
+    },
+    {
+      "path": "references-local/joint-corrected-cycles01/0-32768/events.txt",
+      "sha256": "fc86464927d52b6034a0d87d1836efb1f4783a39b7e0ecf9e9db9502533118f5",
+      "bytes": 38274
+    },
+    {
+      "path": "references-local/joint-corrected-cycles01/0-32768/final.ckp",
+      "sha256": "9ef19a9a7e3ac890f1c9974a9259a39510d40b9f6040f45bc7231d33b323b0c4",
+      "bytes": 3224
+    },
+    {
+      "path": "references-local/joint-corrected-cycles01/0-32768/selected.txt",
+      "sha256": "d79f47b02d19cf6a382a08f1cd4e84c9fc755e5407df435248c16afb0bc21276",
+      "bytes": 569793
+    },
+    {
+      "path": "references-local/joint-corrected-cycles01/0-32768/stderr.txt",
+      "sha256": "20c12648cf7c66dee92b62de100526b8df9affa4d27cdb9b52cee3901718de4d",
+      "bytes": 1737
+    },
+    {
+      "path": "references-local/joint-corrected-cycles01/0-32768/stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "references-local/joint-corrected-cycles01/0-32768/trace.bin",
+      "sha256": "9c25316b278ae72508a0d6d524193a584bce660ed1557096ca415c44efa65fea",
+      "bytes": 14314568
+    },
+    {
+      "path": "references-local/joint-corrected-cycles01/0-65536/checkpoints.bin",
+      "sha256": "5a87840e0e138a9e330467e70514147e4701fefde5c9d2ed76ab2eb369dcc28f",
+      "bytes": 74160
+    },
+    {
+      "path": "references-local/joint-corrected-cycles01/0-65536/events.txt",
+      "sha256": "c7c85795ddb6e8f7d06df88af11f4f6592416da2578be9f479007dceb843a7c7",
+      "bytes": 38279
+    },
+    {
+      "path": "references-local/joint-corrected-cycles01/0-65536/final.ckp",
+      "sha256": "3fea7af1bff45be94b8afedb0cc10f17cd8ae2974f2ebefd456433d74f20c944",
+      "bytes": 3224
+    },
+    {
+      "path": "references-local/joint-corrected-cycles01/0-65536/selected.txt",
+      "sha256": "cbc7cd041d19029e565cb6df1530516796db600ff4c52977cf49233acfc4965c",
+      "bytes": 570170
+    },
+    {
+      "path": "references-local/joint-corrected-cycles01/0-65536/stderr.txt",
+      "sha256": "4e9780cdb9016bc3fdf6d5ec0b7eed31541e00e53497c0ff2be95494218fc009",
+      "bytes": 1109
+    },
+    {
+      "path": "references-local/joint-corrected-cycles01/0-65536/stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "references-local/joint-corrected-cycles01/0-65536/trace.bin",
+      "sha256": "59f1a6f4a45dc3a830c46c24bf2f8e8556b623ee9a4a29d46caa804f7ff5b371",
+      "bytes": 7633288
+    },
+    {
+      "path": "references-local/joint-corrected-cycles01/1-32768/checkpoints.bin",
+      "sha256": "71de02716b2097a44a2a81098703bf440233e1caebaf9df5849f82535ff3e3a2",
+      "bytes": 74160
+    },
+    {
+      "path": "references-local/joint-corrected-cycles01/1-32768/events.txt",
+      "sha256": "a634e991934d2ef6cfabe518e5d58acce140ecff42ca15696d525a3332f911ab",
+      "bytes": 38278
+    },
+    {
+      "path": "references-local/joint-corrected-cycles01/1-32768/final.ckp",
+      "sha256": "ae5d017ab7edf5a0040b077201181f0024f8d84589b6e6787ad8483d7aca8042",
+      "bytes": 3224
+    },
+    {
+      "path": "references-local/joint-corrected-cycles01/1-32768/selected.txt",
+      "sha256": "fe08a099064dfd72745e12720f06a6f4f4edd73ebf17dad1bd67541242d17aa6",
+      "bytes": 569775
+    },
+    {
+      "path": "references-local/joint-corrected-cycles01/1-32768/stderr.txt",
+      "sha256": "df6684213fb33788e3b57114a0667860224abd757935dd0ec88801772949e06a",
+      "bytes": 1737
+    },
+    {
+      "path": "references-local/joint-corrected-cycles01/1-32768/stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "references-local/joint-corrected-cycles01/1-32768/trace.bin",
+      "sha256": "fa15bbf49f1684e7e77defc0cbce4a0290409036886636837750ace6c82587b5",
+      "bytes": 14315528
+    },
+    {
+      "path": "references-local/joint-corrected-cycles01/1-65536/checkpoints.bin",
+      "sha256": "aa5baf0fd9f5d3023e689a30d115ecdf1e206956f387667c8f7c1908be2b3ca4",
+      "bytes": 74160
+    },
+    {
+      "path": "references-local/joint-corrected-cycles01/1-65536/events.txt",
+      "sha256": "36f25698226556ce6350067fbc8f8581aa62b554c141fe1f08bda3db492d7907",
+      "bytes": 38228
+    },
+    {
+      "path": "references-local/joint-corrected-cycles01/1-65536/final.ckp",
+      "sha256": "c12d9edbacf1564d0b6a5bed855ae68c1c0d7634e6275bf67695e477ccfa8890",
+      "bytes": 3224
+    },
+    {
+      "path": "references-local/joint-corrected-cycles01/1-65536/selected.txt",
+      "sha256": "97913ed7138c8d1cb01282102caae2222b109f2fabee6ea6e96c015c0c441614",
+      "bytes": 570016
+    },
+    {
+      "path": "references-local/joint-corrected-cycles01/1-65536/stderr.txt",
+      "sha256": "af979a44f7353fb3784b2a13cded3bba7a506dc84c9f6476819947b48f78485d",
+      "bytes": 1109
+    },
+    {
+      "path": "references-local/joint-corrected-cycles01/1-65536/stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "references-local/joint-corrected-cycles01/1-65536/trace.bin",
+      "sha256": "54b36322909b9e2cdfcad95fb9f7ba48726abc3440fa898b4800d9cbcff3516a",
+      "bytes": 7632968
+    },
+    {
+      "path": "references-local/joint-corrected-cycles01/run.exe",
+      "sha256": "668bfd12da5baf19223176d0099c38d74d06c360ed75e3c54b626e64520c5c92",
+      "bytes": 1510912
+    }
+  ],
+  "available_free_bytes": 1839128576,
+  "reserve_bytes": 1073741824,
+  "estimated_output_bytes": 67108864,
+  "profile_budget_s": 1800,
+  "global_budget_s": 7200,
+  "interval_budgets": {
+    "65536": 32000,
+    "32768": 48000
+  },
+  "goal_ticks": 2752512000,
+  "lab_stack_bytes": 33554432,
+  "new_audio": false,
+  "new_spice_processes": 0,
+  "new_library_compile": false,
+  "wall_s": 4039.043553500029,
+  "source_sha256_after": {
+    "evidence/voice_joint_charge_corrected_native01.json": "176325c3f953923aefaad4c93e1bfdf2c6b8577eaf9bc12d2055e209109d1fd5",
+    "evidence/voice_joint_corrected_cycles_inputs01.json": "8d1493de98f2afb9004ffbefbf234d0660cca3051575b641532345834188c746",
+    "tools/run_joint_corrected_cycles.py": "22316c72018cbc6683d01e5e4900eb6f8964a03b5a1ee8f932b64e22ccddfef2",
+    "tools/prepare_joint_corrected_cycles.py": "f179dfde7ef024791bf2fc23f4cf19d6df462077d7c5ea715cc725f6acb72433",
+    "tools/joint_corrected_cycles_runner.rs": "cf6b694cbaa3ad5cdcf64f2e46464de515b01f928e65bf7565b629e364e1a1b6",
+    "tools/joint_conditioned_cycles_runner.rs": "bacf5e745828dacd9907125dc34365e48e6cf9964818dc6880457879c391bdba",
+    "tools/joint_cycles_analysis.py": "854d938928f39fcb35c64385b81bf87e5f3aa916924442da71f13a849555b164",
+    "docs/VOZ_CICLOS_CORREGIDOS_PROTOCOLO.md": "3da958fdf7eb15e1dad571b16f68d4108801ff247197635af5f4940eaad41d73",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+    "evidence/voice_chain_charge_vectors06.txt": "0facf3c5346e8609e35820273cdfc4bd9a7cca5bb1f76b9f8021fb482084bf1c"
+  },
+  "private_used_sha256_after": {
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd",
+    "references-local/joint-corrected-cycle-inputs01/0-65536.ckp": "60288c3dffa17848febd934bce12f37de326d657811130b66fded5e9bc60a722",
+    "references-local/joint-corrected-cycle-inputs01/0-32768.ckp": "10426d3473e64fb8c263e745cea6ce666d45a673b358179faa5d86f8e0f0c049",
+    "references-local/joint-corrected-cycle-inputs01/1-65536.ckp": "1ce22d9e3bbdd538fdfae570ba1df1d9439cb8aa6485c3815a50f1c1df3ef267",
+    "references-local/joint-corrected-cycle-inputs01/1-32768.ckp": "d2f81485b88fd0287bdfee1149c12b63314cb6b45132e0d09516c23d08d872b0"
+  }
+}

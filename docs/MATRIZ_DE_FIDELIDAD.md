@@ -281,3 +281,13 @@ no del mapa periódico. Pendiente deriva de ciclos propios y periodos
 consecutivos. Sin fidelidad vintage, encendido físico, nuevo audio o RT.
 Física y biblioteca intactas; 248 tests heredados por identidad.
 [QA vigente](../evidence/voice_joint_charge_response_tests01.json).
+
+## Ciclos de dos objetivos corregidos — 2026-10-09
+
+[Trayectorias propias completas](VOZ_CICLOS_CORREGIDOS_RESULTADOS.md), dos
+memorias/dos resoluciones, 19200 ecuaciones y 96 corrientes nuevas
+contrastadas. Ocho restores, cuatro prefijos bit exactos, ledgers propios
+de panel/C27 y contraste de 18 cargas/J7 con sus historias anteriores.
+No acredita periodos consecutivos asentados, encendido físico, fidelidad
+vintage, nuevo audio o RT. Física intacta, 248 tests Rust heredados.
+[QA actual](../evidence/voice_joint_corrected_cycles_tests01.json).

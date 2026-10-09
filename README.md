@@ -157,3 +157,8 @@ asentada aún pendiente; sin nuevo audio, cambio de física o admisión de RT.
 36 columnas de respuesta contrastadas, perturbación refinada conservando
 el rechazo original, dos memorias nuevas con cierre no lineal y cuatro
 liberaciones de 2 µs. Mejora de deriva periódica aún no medida.
+
+[Ciclos de las memorias corregidas](docs/VOZ_CICLOS_CORREGIDOS_RESULTADOS.md):
+cuatro trayectorias de 5,25 ms, 137176 intervalos y 19200 ecuaciones nuevas
+contrastadas; ocho restores exactos y reproducción de 2 µs por bytes.
+Comparación propia de las 18 cargas y J7. Asentamiento todavía pendiente.
