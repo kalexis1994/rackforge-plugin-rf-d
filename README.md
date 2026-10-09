@@ -6,7 +6,7 @@ nominal documentada; [revisiÃ³n y alcance](docs/OBJETIVO.md). No hay ni habrÃ
 un instrumento fÃ­sico de referencia. La equivalencia numÃ©rica de un modelo
 no acredita identidad sonora con una unidad vintage.
 
-## Estado actual — 2026-10-08
+## Estado actual — 2026-10-09
 
 | Ruta | Resultado disponible | Alcance pendiente |
 |---|---|---|
@@ -44,7 +44,14 @@ ya pasa dos perfiles de5,25 ms: dos resets, un ciclo transitorio, balances
 y refinamiento al mismo reloj. Conserva dos pausas administrativas y sus
 continuaciones exactas; no admite aún una nota asentada.
 
-La [QA vigente](evidence/voice_joint_cycles_tests01.json) conserva
+La [inicialización conjunta condicionada](docs/VOZ_INICIALIZACION_RESULTADOS.md)
+ya resuelve DC con C1=0 desde dos semillas y libera dos perfiles de2 µs.
+Contrasta400 ecuaciones DC,4800 dinámicas y la transferencia local BUS→J7.
+C27 cambia≈0,9305 V respecto de la memoria histórica; los modos locales
+alcanzan≈265 ms. La nueva inicialización todavía requiere ciclos propios
+y periodicidad; el ciclo anterior conserva su historia y alcance.
+
+La [QA vigente](evidence/voice_joint_startup_tests01.json) conserva
 248 tests Rust heredados por identidad y el nuevo banco de trayectorias. La
 [cadena con cargas explícitas](docs/CADENA_CARGA_RADAU_RESULTADOS.md) pasa
 72 etapas y 180 corrientes, con medios pasos de7,629 ps; fuentes impuestas.
@@ -69,10 +76,10 @@ las tres parejas no se midieron por falta de escenas completas. El
 1. Integrar el [motor portable VCO](docs/VCO1_PORTABLE_RESULTADOS.md) tras
    cerrar el stamp y la carga conjunta. Ampliar CV/trims reservados
    y C4=100 pF antes de promover calibración u otro perfil.
-2. Comprobar inicialización, niveles y asentamiento de la cadena cargada
-   después del [primer ciclo conjunto](docs/VOZ_PRIMER_CICLO_RESULTADOS.md).
-   Contrastar offset, periodicidad y salida J7 antes de escucha; mantiene
-   controles impuestos y no admite todavía una voz completa.
+2. Integrar la [condición inicial conjunta](docs/VOZ_INICIALIZACION_RESULTADOS.md)
+   en un banco de ciclos propio. Definir periodicidad y carga por ciclo,
+   niveles/offset de J7 y coste antes de extender la ventana o escuchar.
+   Los controles permanecen impuestos; la escala local no es una cota global.
 3. Cerrar contornos, controles y fuentes restantes; despuÃ©s comprobar la voz,
    plazos y adaptadores de escucha/host para su alcance declarado.
 

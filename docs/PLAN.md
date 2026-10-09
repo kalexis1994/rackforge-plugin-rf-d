@@ -1,6 +1,6 @@
 # Plan vigente de RF-D
 
-2026-10-08. Prioridad: completar una voz de circuito utilizable con evidencia
+2026-10-09. Prioridad: completar una voz de circuito utilizable con evidencia
 proporcionada al alcance. [Objetivo documental](OBJETIVO.md): CA3046 nominal;
 [sin acceso fÃ­sico permanente](VALIDACION_SIN_HARDWARE.md).
 
@@ -197,3 +197,19 @@ y periodicidad asentada antes de escucha. Arranque DC propio conjunto,
 contornos completos, nota musical, fidelidad vintage y tiempo real siguen
 pendientes. Los límites anteriores describen sus bancos históricos.
 [QA vigente](../evidence/voice_joint_cycles_tests01.json).
+
+## Condición inicial conjunta y escalas locales — 2026-10-09
+
+[DC condicionado con C1=0](VOZ_INICIALIZACION_RESULTADOS.md), dos semillas
+y liberación2 µs/14+20 intervalos.400 ecuaciones DC y4800 de etapas pasan
+con referencia independiente en puntos nativos. La memoria C27 difiere
+≈0,9305 V respecto del lift histórico. La ganancia local BUS→J7 a410,8 Hz
+es≈0,00448 V/V;18 modos de carga incluyen escalas hasta≈265 ms. Son
+diagnósticos de cadena con BUS impuesto, sin cota global de asentamiento.
+
+Siguiente: ciclos desde esta condición inicial, periodicidad/carga por
+ciclo y niveles de J7 antes de escucha. El ciclo5,25 ms conserva su
+semilla histórica. No se admite DC libre, encendido físico, contornos
+completos, nota asentada, fidelidad o RT.248 tests Rust heredados,
+sin tests Rust/audio/SPICE nuevos.
+[QA vigente](../evidence/voice_joint_startup_tests01.json).
