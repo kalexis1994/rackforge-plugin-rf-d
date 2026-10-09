@@ -39,10 +39,13 @@ Ese banco comprueba pasos locales; la continuación está en el motor siguiente.
 
 El [motor temporal conjunto](docs/VOZ_MOTOR_TEMPORAL_RESULTADOS.md) admite
 cuatro continuaciones de2 µs, control LTE, restore exacto y rollback.
-El primer ciclo/reset bajo carga sigue pendiente.
+El [primer ciclo con carga activa](docs/VOZ_PRIMER_CICLO_RESULTADOS.md)
+ya pasa dos perfiles de5,25 ms: dos resets, un ciclo transitorio, balances
+y refinamiento al mismo reloj. Conserva dos pausas administrativas y sus
+continuaciones exactas; no admite aún una nota asentada.
 
-La [QA vigente](evidence/voice_joint_engine_tests01.json) conserva
-245 tests heredados por identidad y tres nuevos ejecutados. La
+La [QA vigente](evidence/voice_joint_cycles_tests01.json) conserva
+248 tests Rust heredados por identidad y el nuevo banco de trayectorias. La
 [cadena con cargas explícitas](docs/CADENA_CARGA_RADAU_RESULTADOS.md) pasa
 72 etapas y 180 corrientes, con medios pasos de7,629 ps; fuentes impuestas.
 El
@@ -52,7 +55,7 @@ completa dos recorridos propios nominales de30 ms y pasa periodicidad,
 balance/refinamiento y cuatro comparaciones con Gear/Trap archivados.
 Contrasta16 etapas reales y el rechazo Newton local; no son tests Rust.
 Ya hay escucha del VCO nativo aislado: repite un ciclo real del perfil125,
-sin filtro/VCA. ProducciÃ³n, carga activa durante ciclos completos, CV/trims y RT siguen abiertos.
+sin filtro/VCA. ProducciÃ³n, ciclos asentados de voz, CV/trims y RT siguen abiertos.
 
 La campaÃ±a serial de 350 ms comenzÃ³ tras pasar el
 [preflight02](evidence/voice_serial_preflight02.json). Gear500 y Gear250
@@ -66,10 +69,10 @@ las tres parejas no se midieron por falta de escenas completas. El
 1. Integrar el [motor portable VCO](docs/VCO1_PORTABLE_RESULTADOS.md) tras
    cerrar el stamp y la carga conjunta. Ampliar CV/trims reservados
    y C4=100 pF antes de promover calibración u otro perfil.
-2. Acoplar la [cadena Radau de68 tensiones](docs/CADENA_CARGA_RADAU_RESULTADOS.md)
-   con el VCO, transfiriendo R6/R45 una sola vez y confirmando ambos estados
-   conjuntamente. El dominio pequeño está contrastado localmente con fuentes
-   impuestas; no admite todavía una trayectoria de voz completa.
+2. Comprobar inicialización, niveles y asentamiento de la cadena cargada
+   después del [primer ciclo conjunto](docs/VOZ_PRIMER_CICLO_RESULTADOS.md).
+   Contrastar offset, periodicidad y salida J7 antes de escucha; mantiene
+   controles impuestos y no admite todavía una voz completa.
 3. Cerrar contornos, controles y fuentes restantes; despuÃ©s comprobar la voz,
    plazos y adaptadores de escucha/host para su alcance declarado.
 

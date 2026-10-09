@@ -8,7 +8,7 @@ no significa identidad sonora con el hardware.
 | Bloque | Topología / cálculo disponible | Implementación o contraste actual | Brecha siguiente |
 |---|---|---|---|
 | Teclado/glide/ruedas | Alcance del manual y controles de laboratorio | Fuentes impuestas | Leyes eléctricas y comportamiento mono/legato |
-| VCO1 | CA3046, convertidor, Schmitt/reset, ondas y panel trazados | [Oráculo funcional y calibrado](VCO1_RESULTADOS_CIRCUITO.md), parámetros condicionados | Núcleo nativo con carga cerrada; panel/CV/rieles completos |
+| VCO1 | CA3046, convertidor, Schmitt/reset, ondas y panel trazados | [Primer ciclo nativo con carga activa](VOZ_PRIMER_CICLO_RESULTADOS.md), parámetros condicionados y refinamiento | Periodicidad asentada; panel/CV/rieles completos |
 | Cargas de juntura VCO | Leyes de las tarjetas condicionadas | [Depleción nativa](VCO_CARGA_JUNTURA_RESULTADOS.md), Q/C/ΔQ/I/G y derivadas en 1280 casos | Transporte/difusión, térmica y BJT/JFET completos |
 | BJT de VCO | Subset condicionado de las tarjetas NPN/PNP | [Stamp de cuatro terminales](VCO_BJT_NOMINAL_RESULTADOS.md), transporte/difusión/depleción a 25 °C; 1536 vectores y doce probes SPICE | No identifica población física; JFET/741 e integración pendientes |
 | JFET de VCO | Una mitad E402 nominal, B=1, cargas GS/GD físicas | [Stamp de tres terminales](VCO_JFET_NOMINAL_RESULTADOS.md), 2028 vectores, inversión y doce probes SPICE | Fuente común de ambas mitades en el circuito, 741 e integración; matching físico no identificado |
@@ -20,6 +20,7 @@ no significa identidad sonora con el hardware.
 | Ladder/VCAs/salida | Q29/Q30, ladder, recuperación, C10, dos VCAs y ruta J4/J5/J7 | [Entrada directa ON/C27 nativa](MEZCLADOR_DIRECTO_RESULTADOS.md), ambos R61, 12 escenas/192 pasos y zona previa; algoritmos anteriores conservados | Controles y fuentes completos; población física y RT |
 | Contorno de volumen | Gatillo, seguidor y cargas documentados; laboratorio con rechazos conservados | [Puerto C2/reset cargado](PUERTO_CONTORNO_CADENA_71.md); C2/reset aún impuestos en el nativo de 71 nodos | Conmutación estable e integración del contorno completo |
 | Contorno de filtro | Alcance y puntos de entrada documentados | Frontera impuesta | Circuito y banco propios |
+| Voz nativa conjunta | VCO1, BUS/C27 y cadena hasta J7 con controles impuestos | [Dos perfiles de5,25 ms](VOZ_PRIMER_CICLO_RESULTADOS.md), resets, balances y refinamiento | Arranque DC conjunto, asentamiento, contornos, fuentes restantes y RT |
 | Voz SPICE conjunta | VCO1 y cadena con contorno de laboratorio | [Cuatro escenas cortas admitidas](VOZ_SEIS_ACTIVO_RESULTADOS.md); [largo rechazado y auditado](VOZ_SERIAL_CAMPANA_RESULTADOS.md), una de cuatro completa | Contrastes largos sin medir; causas de abortos pendientes |
 | Audio / producto | Escuchas de alcance parcial conservadas | Sin voz nativa instalable admitida | Voz completa, adaptador de escucha, deadlines, host y paquete |
 
@@ -179,3 +180,18 @@ de2 µs/80 intervalos; LTE y refinamiento al mismo reloj pasan.24 etapas
 seleccionadas verificadas por residuos independientes en puntos nativos.
 Heap cero en dos rutas medidas, stack32 MiB y sin admisión RT. No se
 admiten primer reset/ciclo, nota musical, arranque DC conjunto ni fidelidad.
+
+## Primer ciclo conjunto con carga activa — 2026-10-08
+
+[Dos perfiles hasta5,25 ms](VOZ_PRIMER_CICLO_RESULTADOS.md), dos resets y
+un ciclo transitorio VCO1→BUS→ladder/VCAs→J7. LTE, balances C1/BUS y
+refinamiento de200 coordenadas en21 relojes pasan;60 etapas contrastadas,
+12000 residuos,60 corrientes terminales. Dos pausas administrativas quedan
+conservadas y se retoman por bits sin duplicar prefijos.248 tests Rust
+heredados, sin pruebas Rust, audio o SPICE nuevos.
+
+Siguiente: inicialización y controles de cadena, niveles BUS/J7, offset
+y periodicidad asentada antes de escucha. Arranque DC propio conjunto,
+contornos completos, nota musical, fidelidad vintage y tiempo real siguen
+pendientes. Los límites anteriores describen sus bancos históricos.
+[QA vigente](../evidence/voice_joint_cycles_tests01.json).

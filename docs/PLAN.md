@@ -182,3 +182,18 @@ error temporal, restauración exacta y rechazo atómico con historia posterior
 generada por el solve conjunto. Siguiente: primer reset/ciclo con carga activa,
 trazas y contraste de refinamiento antes de escucha. Arranque conjunto DC
 propio, contornos completos y tiempo real siguen pendientes.
+
+## Primer ciclo conjunto con carga activa — 2026-10-08
+
+[Dos perfiles hasta5,25 ms](VOZ_PRIMER_CICLO_RESULTADOS.md), dos resets y
+un ciclo transitorio VCO1→BUS→ladder/VCAs→J7. LTE, balances C1/BUS y
+refinamiento de200 coordenadas en21 relojes pasan;60 etapas contrastadas,
+12000 residuos,60 corrientes terminales. Dos pausas administrativas quedan
+conservadas y se retoman por bits sin duplicar prefijos.248 tests Rust
+heredados, sin pruebas Rust, audio o SPICE nuevos.
+
+Siguiente: inicialización y controles de cadena, niveles BUS/J7, offset
+y periodicidad asentada antes de escucha. Arranque DC propio conjunto,
+contornos completos, nota musical, fidelidad vintage y tiempo real siguen
+pendientes. Los límites anteriores describen sus bancos históricos.
+[QA vigente](../evidence/voice_joint_cycles_tests01.json).
