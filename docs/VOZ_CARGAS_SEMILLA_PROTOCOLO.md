@@ -19,7 +19,10 @@ Para 200 incógnitas conjuntas x y 18 corrientes i, resolver 218 ecuaciones:
 terminal a de cada capacitor de cadena y −1 en b, salvo riel fijo. Las
 condiciones de este laboratorio no tienen contactos que redirijan esas
 filas. C10 es explícito (67,7). Los valores de E son adimensionales,
-v en V, i en A, Q=C·v en C. Una corriente positiva va de a a b.
+v=Eᵀx en V, i en A; Q=C·(v−v_fijo) en C, con la referencia
+del terminal fijo restada en la tensión física. Para riel constante,
+ΔQ=C·Δv. [Aclaración y errata](VOZ_CARGAS_RIELES_NOTA.md).
+Una corriente positiva va de a a b.
 Las corrientes calculadas son derivadas instantáneas de carga de cadena,
 no fuentes añadidas al circuito temporal. En la liberación desaparecen
 las restricciones y se usa el motor conjunto original.

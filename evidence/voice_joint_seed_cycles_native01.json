@@ -1,0 +1,323 @@
+{
+  "schema": "rf-d/joint-seed-cycles-native/v1",
+  "passed": true,
+  "source_sha256": {
+    "evidence/voice_joint_charge_seed_native02.json": "4361f6e5f52e6fceed06a57473d177a23811b61e9a5b0d897f41173de4310c43",
+    "evidence/voice_joint_seed_cycles_inputs01.json": "54ebad1fdcba1f8cb0981fd9dcfef1aaea983eb10250e11f737845cfeff54c70",
+    "tools/run_joint_seed_cycles.py": "8358b503482f17fa8e11e57bf9d80165e97214a79b036a71d527eff8156359e0",
+    "tools/prepare_joint_seed_cycles.py": "a7939cbc6ef056a1a109e87c4a76db76e0989c24dde95d2066ef6df5b7814479",
+    "tools/joint_seed_cycles_runner.rs": "cf6b694cbaa3ad5cdcf64f2e46464de515b01f928e65bf7565b629e364e1a1b6",
+    "tools/joint_conditioned_cycles_runner.rs": "bacf5e745828dacd9907125dc34365e48e6cf9964818dc6880457879c391bdba",
+    "tools/joint_cycles_analysis.py": "854d938928f39fcb35c64385b81bf87e5f3aa916924442da71f13a849555b164",
+    "docs/VOZ_CICLOS_SEMILLAS_PROTOCOLO.md": "eb4b54b8fa1f982148a92618f328d95c30b4f511ca0ea387222f8d69d0c6ae2b",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+    "evidence/voice_chain_charge_vectors06.txt": "0facf3c5346e8609e35820273cdfc4bd9a7cca5bb1f76b9f8021fb482084bf1c"
+  },
+  "private_used_sha256": {
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd",
+    "references-local/joint-seed-cycle-inputs01/0-65536.ckp": "697749cb65e55dd335271a8e035532ba2b5febfcc2263c93e316ecfc959d20cf",
+    "references-local/joint-seed-cycle-inputs01/0-32768.ckp": "9a1318b16691022c232cdc69342fd0bd4aeffe50c2d67d3a01c20edf3229d618",
+    "references-local/joint-seed-cycle-inputs01/1-65536.ckp": "aa24d8dd850b2fb47345afe7afd2e17e70555b2bdc0acf3655c6a3e8707176f6",
+    "references-local/joint-seed-cycle-inputs01/1-32768.ckp": "e20ec215011d2e3813e9eb3c7674dad2d97e2ec04523838a2a2748ba1d846c07"
+  },
+  "compiler": {
+    "path": "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+    "sha256": "fd6232f90a981e28472ce6900232946a1f1bcad8ec8270cd5ae6a3a357208b98",
+    "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+  },
+  "cached_library": {
+    "path": "references-local/joint-startup01/librf_d_circuit.rlib",
+    "sha256": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd"
+  },
+  "commands": [
+    {
+      "command": [
+        "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+        "--edition=2021",
+        "-C",
+        "opt-level=2",
+        "-C",
+        "strip=symbols",
+        "-C",
+        "link-arg=-Wl,--stack,33554432",
+        "tools/joint_seed_cycles_runner.rs",
+        "--extern",
+        "rf_d_circuit=C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-startup01\\librf_d_circuit.rlib",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-seed-cycles01\\run.exe"
+      ],
+      "exit_code": 0,
+      "wall_s": 0.8691270999843255,
+      "stdout": "",
+      "stderr": "warning: unused import: `std::time::Instant`\n --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:3:5\n  |\n3 | use std::time::Instant;\n  |     ^^^^^^^^^^^^^^^^^^\n  |\n  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default\n\nwarning: unused imports: `Parameters`, `initial_state`, `step_with_emphasis`, and `step`\n --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:8:5\n  |\n8 |     initial_state, step, step_with_emphasis, Boundary, Parameters,\n  |     ^^^^^^^^^^^^^  ^^^^  ^^^^^^^^^^^^^^^^^^            ^^^^^^^^^^\n\nwarning: unused import: `SolverBudget`\n  --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:16:55\n   |\n16 | use rf_d_circuit::{Parameters as HeadphoneParameters, SolverBudget};\n   |                                                       ^^^^^^^^^^^^\n\nwarning: 3 warnings emitted\n\n"
+    }
+  ],
+  "profiles": [
+    {
+      "seed_id": 0,
+      "maximum_half_ticks": 65536,
+      "interval_budget": 32000,
+      "initial_checkpoint": "references-local/joint-seed-cycle-inputs01/0-65536.ckp",
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-seed-cycles01\\run.exe",
+        "run",
+        "65536",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-seed-cycles01\\0-65536",
+        "32000",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-seed-cycle-inputs01\\0-65536.ckp"
+      ],
+      "exit_code": 0,
+      "wall_s": 794.081398899958,
+      "minimum_free_bytes": 1149808640,
+      "administrative_stop": false,
+      "stop_reason": null,
+      "stdout": "",
+      "stderr": "PROGRESS,intervals=2000,ticks=260800512,wall_s=57.234\nPROGRESS,intervals=4000,ticks=522715136,wall_s=114.128\nPROGRESS,intervals=6000,ticks=769781760,wall_s=175.684\nPROGRESS,intervals=8000,ticks=1030995968,wall_s=233.192\nPROGRESS,intervals=10000,ticks=1276310592,wall_s=296.911\nRESET,crossing=1,ticks=1276366080\nPROGRESS,intervals=12000,ticks=1387790304,wall_s=378.842\nPROGRESS,intervals=14000,ticks=1647181696,wall_s=445.268\nPROGRESS,intervals=16000,ticks=1897490944,wall_s=509.914\nPROGRESS,intervals=18000,ticks=2152724480,wall_s=569.134\nPROGRESS,intervals=20000,ticks=2413682688,wall_s=631.351\nRESET,crossing=2,ticks=2552621568\nPROGRESS,intervals=22000,ticks=2552727504,wall_s=720.304\nSUMMARY,intervals=23866,ticks=2752512000,crossings=2,restore_replays=2,max_lte=9.99298515815875033e-1,max_bus=1.30443073877162252e-19,max_c1=9.74775815620887442e-14,charge=6.25233596780074386e-9,absolute=1.66048029476580949e-7,delta_ramp=-6.25233596780039202e-1,balance=2.11716911933976820e-15\nMEAN_LEDGER,2.26745004886837393e-4,2.46611438184369220e-6,1.02953353574334033e-2,2.82564046016751623e-9,1.10906388061575006e-4\n"
+    },
+    {
+      "seed_id": 0,
+      "maximum_half_ticks": 32768,
+      "interval_budget": 48000,
+      "initial_checkpoint": "references-local/joint-seed-cycle-inputs01/0-32768.ckp",
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-seed-cycles01\\run.exe",
+        "run",
+        "32768",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-seed-cycles01\\0-32768",
+        "48000",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-seed-cycle-inputs01\\0-32768.ckp"
+      ],
+      "exit_code": 0,
+      "wall_s": 1516.6827113000327,
+      "minimum_free_bytes": 1123651584,
+      "administrative_stop": false,
+      "stop_reason": null,
+      "stdout": "",
+      "stderr": "PROGRESS,intervals=2000,ticks=130727936,wall_s=67.453\nPROGRESS,intervals=4000,ticks=261718016,wall_s=134.096\nPROGRESS,intervals=6000,ticks=392757248,wall_s=201.304\nPROGRESS,intervals=8000,ticks=523829248,wall_s=267.325\nPROGRESS,intervals=10000,ticks=649488384,wall_s=337.472\nPROGRESS,intervals=12000,ticks=780201984,wall_s=405.905\nPROGRESS,intervals=14000,ticks=911073280,wall_s=471.653\nPROGRESS,intervals=16000,ticks=1042006016,wall_s=537.105\nPROGRESS,intervals=18000,ticks=1172996096,wall_s=602.552\nRESET,crossing=1,ticks=1276366080\nPROGRESS,intervals=20000,ticks=1276397568,wall_s=680.754\nPROGRESS,intervals=22000,ticks=1353252832,wall_s=765.936\nPROGRESS,intervals=24000,ticks=1483669440,wall_s=832.696\nPROGRESS,intervals=26000,ticks=1614151552,wall_s=901.542\nPROGRESS,intervals=28000,ticks=1744699136,wall_s=975.498\nPROGRESS,intervals=30000,ticks=1875312128,wall_s=1035.198\nPROGRESS,intervals=32000,ticks=2000288768,wall_s=1094.747\nPROGRESS,intervals=34000,ticks=2131032064,wall_s=1149.828\nPROGRESS,intervals=36000,ticks=2261839872,wall_s=1205.196\nPROGRESS,intervals=38000,ticks=2392711168,wall_s=1264.345\nPROGRESS,intervals=40000,ticks=2523643904,wall_s=1326.304\nRESET,crossing=2,ticks=2552621568\nPROGRESS,intervals=42000,ticks=2573945264,wall_s=1424.277\nPROGRESS,intervals=44000,ticks=2703949792,wall_s=1491.253\nSUMMARY,intervals=44742,ticks=2752512000,crossings=2,restore_replays=2,max_lte=9.98695829889595377e-1,max_bus=1.45689666927739658e-19,max_c1=9.90596493721795923e-14,charge=6.25233582333438690e-9,absolute=1.66048030057755082e-7,delta_ramp=-6.25233582333407201e-1,balance=1.89797983916512342e-15\nMEAN_LEDGER,2.26744977507472504e-4,2.46611416968416845e-6,1.02953353572699090e-2,2.82564011679113592e-9,1.10906374584052075e-4\n"
+    },
+    {
+      "seed_id": 1,
+      "maximum_half_ticks": 65536,
+      "interval_budget": 32000,
+      "initial_checkpoint": "references-local/joint-seed-cycle-inputs01/1-65536.ckp",
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-seed-cycles01\\run.exe",
+        "run",
+        "65536",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-seed-cycles01\\1-65536",
+        "32000",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-seed-cycle-inputs01\\1-65536.ckp"
+      ],
+      "exit_code": 0,
+      "wall_s": 836.6747676999657,
+      "minimum_free_bytes": 1105809408,
+      "administrative_stop": false,
+      "stop_reason": null,
+      "stdout": "",
+      "stderr": "PROGRESS,intervals=2000,ticks=260800512,wall_s=71.304\nPROGRESS,intervals=4000,ticks=522715136,wall_s=147.657\nPROGRESS,intervals=6000,ticks=769781760,wall_s=230.907\nPROGRESS,intervals=8000,ticks=1030995968,wall_s=309.223\nPROGRESS,intervals=10000,ticks=1276310400,wall_s=384.526\nRESET,crossing=1,ticks=1276366016\nPROGRESS,intervals=12000,ticks=1387790272,wall_s=462.548\nPROGRESS,intervals=14000,ticks=1647443712,wall_s=520.024\nPROGRESS,intervals=16000,ticks=1897534464,wall_s=581.080\nPROGRESS,intervals=18000,ticks=2153508864,wall_s=640.792\nPROGRESS,intervals=20000,ticks=2414723072,wall_s=698.888\nRESET,crossing=2,ticks=2552621440\nPROGRESS,intervals=22000,ticks=2552727568,wall_s=775.731\nSUMMARY,intervals=23855,ticks=2752512000,crossings=2,restore_replays=2,max_lte=9.97697545931894081e-1,max_bus=1.05455601933160392e-19,max_c1=9.76996261670137756e-14,charge=6.25234112729720080e-9,absolute=1.66048026443558961e-7,delta_ramp=-6.25234112729686431e-1,balance=2.02750081720192276e-15\nMEAN_LEDGER,2.22028503216065398e-4,-1.85974364280653323e-4,1.02976180728798807e-2,7.56658893983913473e-9,2.96988615888686008e-4\n"
+    },
+    {
+      "seed_id": 1,
+      "maximum_half_ticks": 32768,
+      "interval_budget": 48000,
+      "initial_checkpoint": "references-local/joint-seed-cycle-inputs01/1-32768.ckp",
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-seed-cycles01\\run.exe",
+        "run",
+        "32768",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-seed-cycles01\\1-32768",
+        "48000",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-seed-cycle-inputs01\\1-32768.ckp"
+      ],
+      "exit_code": 0,
+      "wall_s": 1452.7252340999548,
+      "minimum_free_bytes": 1104171008,
+      "administrative_stop": false,
+      "stop_reason": null,
+      "stdout": "",
+      "stderr": "PROGRESS,intervals=2000,ticks=130727936,wall_s=61.621\nPROGRESS,intervals=4000,ticks=261718016,wall_s=118.203\nPROGRESS,intervals=6000,ticks=392757248,wall_s=175.347\nPROGRESS,intervals=8000,ticks=523829248,wall_s=231.772\nPROGRESS,intervals=10000,ticks=649488384,wall_s=290.738\nPROGRESS,intervals=12000,ticks=780201984,wall_s=347.333\nPROGRESS,intervals=14000,ticks=911073280,wall_s=407.246\nPROGRESS,intervals=16000,ticks=1042006016,wall_s=481.736\nPROGRESS,intervals=18000,ticks=1172996096,wall_s=560.767\nRESET,crossing=1,ticks=1276366016\nPROGRESS,intervals=20000,ticks=1276397552,wall_s=645.007\nPROGRESS,intervals=22000,ticks=1353449440,wall_s=717.847\nPROGRESS,intervals=24000,ticks=1483866048,wall_s=777.966\nPROGRESS,intervals=26000,ticks=1614348160,wall_s=840.564\nPROGRESS,intervals=28000,ticks=1744895744,wall_s=920.200\nPROGRESS,intervals=30000,ticks=1875508736,wall_s=1000.357\nPROGRESS,intervals=32000,ticks=2000485376,wall_s=1070.903\nPROGRESS,intervals=34000,ticks=2131228672,wall_s=1126.169\nPROGRESS,intervals=36000,ticks=2262036480,wall_s=1181.600\nPROGRESS,intervals=38000,ticks=2392907776,wall_s=1237.016\nPROGRESS,intervals=40000,ticks=2523840512,wall_s=1292.492\nRESET,crossing=2,ticks=2552621440\nPROGRESS,intervals=42000,ticks=2574403840,wall_s=1375.460\nPROGRESS,intervals=44000,ticks=2704735744,wall_s=1431.943\nSUMMARY,intervals=44730,ticks=2752512000,crossings=2,restore_replays=2,max_lte=9.99985143971540813e-1,max_bus=1.32137139771670853e-19,max_c1=9.92816939771046236e-14,charge=6.25234083556818709e-9,absolute=1.66048026352434283e-7,delta_ramp=-6.25234083556784226e-1,balance=2.07731656323631905e-15\nMEAN_LEDGER,2.22028448297079128e-4,-1.85974364670545163e-4,1.02976180725530275e-2,7.56658825016776328e-9,2.96988588819084728e-4\n"
+    }
+  ],
+  "replays": [],
+  "outputs": [
+    {
+      "path": "references-local/joint-seed-cycles01/0-32768/checkpoints.bin",
+      "sha256": "4ca4e6a97d4d4bce6b7833a0a4092f6573563b77ae35143b5c8ea1cf6a9a9d37",
+      "bytes": 74160
+    },
+    {
+      "path": "references-local/joint-seed-cycles01/0-32768/events.txt",
+      "sha256": "9d66a9a6bf5ab3d937d160c8c3874e9a1f1fafcdb0f3780ab66e5cf09e37df73",
+      "bytes": 38256
+    },
+    {
+      "path": "references-local/joint-seed-cycles01/0-32768/final.ckp",
+      "sha256": "a1023e06545d9e50b5f275309d59752fabad436334e800dbe29f91901a7ba9d7",
+      "bytes": 3224
+    },
+    {
+      "path": "references-local/joint-seed-cycles01/0-32768/selected.txt",
+      "sha256": "6cfdf337df84324cd770de2496b1cffeb9493d9cf4bebb82d879ac8add835b58",
+      "bytes": 570089
+    },
+    {
+      "path": "references-local/joint-seed-cycles01/0-32768/stderr.txt",
+      "sha256": "00b8f1d7a52a6425301ad6534f45f8b67d5fc0e7f4d2e8b17690d7c090205321",
+      "bytes": 1739
+    },
+    {
+      "path": "references-local/joint-seed-cycles01/0-32768/stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "references-local/joint-seed-cycles01/0-32768/trace.bin",
+      "sha256": "2ae440e13a5642b842bd8ed527401f3584c38834fad6539d243aca04bcdf0bf1",
+      "bytes": 14317448
+    },
+    {
+      "path": "references-local/joint-seed-cycles01/0-65536/checkpoints.bin",
+      "sha256": "47d597882bd9145dbd825b59ad167fc4c4c6618fb9b5d332cb2e877b83735cac",
+      "bytes": 74160
+    },
+    {
+      "path": "references-local/joint-seed-cycles01/0-65536/events.txt",
+      "sha256": "da415979efeb604eab3bcf3fa0b5a4f9364f9b43bbf21e66d4c41b5bf3222fb6",
+      "bytes": 38267
+    },
+    {
+      "path": "references-local/joint-seed-cycles01/0-65536/final.ckp",
+      "sha256": "ed82ac999e03fc47746f7750947f84ff54fa4b30d40c724f1b34e99e13cd3c78",
+      "bytes": 3224
+    },
+    {
+      "path": "references-local/joint-seed-cycles01/0-65536/selected.txt",
+      "sha256": "eb8952c4185d61fa225b21756ede128da00d18cc1f2704abe128a3e86cc2244f",
+      "bytes": 570333
+    },
+    {
+      "path": "references-local/joint-seed-cycles01/0-65536/stderr.txt",
+      "sha256": "44d362d630b9697b5e22f59d98c2580a03ebddc418f1089206afe7890d42729a",
+      "bytes": 1108
+    },
+    {
+      "path": "references-local/joint-seed-cycles01/0-65536/stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "references-local/joint-seed-cycles01/0-65536/trace.bin",
+      "sha256": "f93b82cecd01c226d93f30e741f5cad4967a8c09a39349ae12b0eeec6ca1925d",
+      "bytes": 7637128
+    },
+    {
+      "path": "references-local/joint-seed-cycles01/1-32768/checkpoints.bin",
+      "sha256": "9c8736e20a0af7ba311c259e29788bc166f6cfe92113f621de2ef9558d267cdc",
+      "bytes": 74160
+    },
+    {
+      "path": "references-local/joint-seed-cycles01/1-32768/events.txt",
+      "sha256": "2e28fc9f14ab0a09b728c3b9d569bb563997ac5857c0f6063d574b5e4a061775",
+      "bytes": 38272
+    },
+    {
+      "path": "references-local/joint-seed-cycles01/1-32768/final.ckp",
+      "sha256": "0ca33a5e37b2168b07e59dffeabd908a90166b0b0dbd9471cc2cae1855fc0794",
+      "bytes": 3224
+    },
+    {
+      "path": "references-local/joint-seed-cycles01/1-32768/selected.txt",
+      "sha256": "4bb431ae45dcfa8cea099ed4d840ff2012fb16bb258a0fc2e3973c1d29c5bdb9",
+      "bytes": 570052
+    },
+    {
+      "path": "references-local/joint-seed-cycles01/1-32768/stderr.txt",
+      "sha256": "db838508e7e63d35fee6707022606bc6c11fe0d598e97bf1d4579074c27c667f",
+      "bytes": 1740
+    },
+    {
+      "path": "references-local/joint-seed-cycles01/1-32768/stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "references-local/joint-seed-cycles01/1-32768/trace.bin",
+      "sha256": "70b5a3800cb1e53955db26c32f74145dbb35e418fb8d468e73ff6bf6a05910c2",
+      "bytes": 14313608
+    },
+    {
+      "path": "references-local/joint-seed-cycles01/1-65536/checkpoints.bin",
+      "sha256": "68d4e3aaafd230c1240e058eeed3f86286e71c7ca64ca62823241714def9ae1e",
+      "bytes": 74160
+    },
+    {
+      "path": "references-local/joint-seed-cycles01/1-65536/events.txt",
+      "sha256": "371af5a9ab6307bc75c24df64ecc7eb4ed1905de9715f960bf20e9924dce6e4c",
+      "bytes": 38253
+    },
+    {
+      "path": "references-local/joint-seed-cycles01/1-65536/final.ckp",
+      "sha256": "ca861943b030f7c63b3b65cb472dceefd0ac64e93ba159a584533d03a19c991d",
+      "bytes": 3224
+    },
+    {
+      "path": "references-local/joint-seed-cycles01/1-65536/selected.txt",
+      "sha256": "f0832bafdc0f3733b395a06a405a2b3b6f17a3d8d3e31669df9f013934e29b80",
+      "bytes": 570344
+    },
+    {
+      "path": "references-local/joint-seed-cycles01/1-65536/stderr.txt",
+      "sha256": "eef0426daf9b07635bfa7bf2149c2c0cf2992cc541f7ff4ae4ef1fa452d3a804",
+      "bytes": 1109
+    },
+    {
+      "path": "references-local/joint-seed-cycles01/1-65536/stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "references-local/joint-seed-cycles01/1-65536/trace.bin",
+      "sha256": "542837a71cb80349e8bad193ffc37b6c992caa38d71b2aa0f556d0694bc814fb",
+      "bytes": 7633608
+    },
+    {
+      "path": "references-local/joint-seed-cycles01/run.exe",
+      "sha256": "ed7c97a23705baf18ab656ad53ede93f8c32097bc48ca94ccddcfedfdd39e32b",
+      "bytes": 1510912
+    }
+  ],
+  "available_free_bytes": 1165025280,
+  "reserve_bytes": 1073741824,
+  "estimated_output_bytes": 67108864,
+  "profile_budget_s": 1800,
+  "global_budget_s": 7200,
+  "interval_budgets": {
+    "65536": 32000,
+    "32768": 48000
+  },
+  "goal_ticks": 2752512000,
+  "lab_stack_bytes": 33554432,
+  "new_audio": false,
+  "new_spice_processes": 0,
+  "new_library_compile": false,
+  "wall_s": 4601.089625000022,
+  "source_sha256_after": {
+    "evidence/voice_joint_charge_seed_native02.json": "4361f6e5f52e6fceed06a57473d177a23811b61e9a5b0d897f41173de4310c43",
+    "evidence/voice_joint_seed_cycles_inputs01.json": "54ebad1fdcba1f8cb0981fd9dcfef1aaea983eb10250e11f737845cfeff54c70",
+    "tools/run_joint_seed_cycles.py": "8358b503482f17fa8e11e57bf9d80165e97214a79b036a71d527eff8156359e0",
+    "tools/prepare_joint_seed_cycles.py": "a7939cbc6ef056a1a109e87c4a76db76e0989c24dde95d2066ef6df5b7814479",
+    "tools/joint_seed_cycles_runner.rs": "cf6b694cbaa3ad5cdcf64f2e46464de515b01f928e65bf7565b629e364e1a1b6",
+    "tools/joint_conditioned_cycles_runner.rs": "bacf5e745828dacd9907125dc34365e48e6cf9964818dc6880457879c391bdba",
+    "tools/joint_cycles_analysis.py": "854d938928f39fcb35c64385b81bf87e5f3aa916924442da71f13a849555b164",
+    "docs/VOZ_CICLOS_SEMILLAS_PROTOCOLO.md": "eb4b54b8fa1f982148a92618f328d95c30b4f511ca0ea387222f8d69d0c6ae2b",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+    "evidence/voice_chain_charge_vectors06.txt": "0facf3c5346e8609e35820273cdfc4bd9a7cca5bb1f76b9f8021fb482084bf1c"
+  },
+  "private_used_sha256_after": {
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd",
+    "references-local/joint-seed-cycle-inputs01/0-65536.ckp": "697749cb65e55dd335271a8e035532ba2b5febfcc2263c93e316ecfc959d20cf",
+    "references-local/joint-seed-cycle-inputs01/0-32768.ckp": "9a1318b16691022c232cdc69342fd0bd4aeffe50c2d67d3a01c20edf3229d618",
+    "references-local/joint-seed-cycle-inputs01/1-65536.ckp": "aa24d8dd850b2fb47345afe7afd2e17e70555b2bdc0acf3655c6a3e8707176f6",
+    "references-local/joint-seed-cycle-inputs01/1-32768.ckp": "e20ec215011d2e3813e9eb3c7674dad2d97e2ec04523838a2a2748ba1d846c07"
+  }
+}

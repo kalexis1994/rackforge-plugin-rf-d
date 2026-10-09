@@ -146,3 +146,9 @@ inicialización para régimen oscilatorio. Sin nuevo audio ni admisión de RT.
 y 9600 dinámicas contrastadas. Conserva 18 cargas históricas o retargetea
 solo C27; libera cuatro perfiles de 2 µs con restores exactos. Laboratorio,
 sin cambio de física. Siguiente: ciclos propios y deriva, antes de escucha.
+
+[Ciclos de dos memorias de carga](docs/VOZ_CICLOS_SEMILLAS_RESULTADOS.md):
+cuatro perfiles de 5,25 ms, 137193 intervalos y 19200 ecuaciones nuevas
+contrastadas; ocho restores exactos y reproducción de 2 µs por bytes.
+Ledger Radau de medias del panel/C27 y 18 cargas por fase. Periodicidad
+asentada aún pendiente; sin nuevo audio, cambio de física o admisión de RT.

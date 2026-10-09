@@ -264,3 +264,17 @@ corregir o elegir memoria. La cuadratura de endpoints orienta el objetivo,
 sin admitir periodicidad. No prolongar un warmup fijo sin evidencia.
 248 tests Rust heredados; sin nuevos tests Rust, audio, SPICE o RT.
 [QA actual](../evidence/voice_joint_charge_seed_tests01.json).
+
+## Ciclos de las semillas con cargas — 2026-10-09
+
+[Cuatro perfiles hasta 5,25 ms](VOZ_CICLOS_SEMILLAS_RESULTADOS.md), dos
+memorias/dos resoluciones, 19200 ecuaciones y 96 corrientes de terminales
+nuevas contrastadas. Endpoints de 2 µs idénticos por bytes; ocho restores
+exactos. Las medias Radau y balances C27 se cierran con los estados reales.
+
+Siguiente: corregir memoria usando corrientes medias y las 18 cargas,
+contrastar la trayectoria y exigir periodos consecutivos antes de escucha.
+Menor deriva de C27 no acredita las demás cargas ni asentamiento de J7.
+Mantener cada historia, su fuente y gates. Sin warmup fijo, ajuste de
+componentes o nuevos tests Rust/audio/SPICE/RT.
+[QA actual](../evidence/voice_joint_seed_cycles_tests01.json).

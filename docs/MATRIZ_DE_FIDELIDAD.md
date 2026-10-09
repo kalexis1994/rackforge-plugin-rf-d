@@ -259,3 +259,14 @@ media saw de endpoints y sesgo de entrada 6 son hipótesis de semilla.
 No se admite arranque físico, contornos completos, audio nuevo, fidelidad
 vintage o RT. 248 tests heredados sin reejecutarlos.
 [QA vigente](../evidence/voice_joint_charge_seed_tests01.json).
+
+## Ciclos propios de dos memorias — 2026-10-09
+
+[Cuatro perfiles de 5,25 ms](VOZ_CICLOS_SEMILLAS_RESULTADOS.md) admitidos:
+dos memorias/dos resoluciones, 19200 ecuaciones y 96 corrientes nuevas
+contrastadas. Reproducción bit exacta de 2 µs y ocho restores; medias
+Radau de saw/BUS/entrada 6 y balances de carga del panel/C27 cerrados.
+18 cargas por fase y J7 medidos. Pendientes memoria periódica y periodos
+consecutivos; no se admite escucha de voz completa, encendido físico,
+fidelidad vintage o RT. Física intacta; 248 tests Rust heredados sin
+reejecutarlos. [QA vigente](../evidence/voice_joint_seed_cycles_tests01.json).
