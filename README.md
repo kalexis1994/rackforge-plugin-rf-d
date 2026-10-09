@@ -48,10 +48,11 @@ La [inicialización conjunta condicionada](docs/VOZ_INICIALIZACION_RESULTADOS.md
 ya resuelve DC con C1=0 desde dos semillas y libera dos perfiles de2 µs.
 Contrasta400 ecuaciones DC,4800 dinámicas y la transferencia local BUS→J7.
 C27 cambia≈0,9305 V respecto de la memoria histórica; los modos locales
-alcanzan≈265 ms. La nueva inicialización todavía requiere ciclos propios
-y periodicidad; el ciclo anterior conserva su historia y alcance.
+alcanzan≈265 ms. Los [ciclos de esta nueva raíz](docs/VOZ_CICLOS_CONDICIONADOS_RESULTADOS.md)
+completan dos perfiles de5,25 ms con refinamiento y cargas observadas;
+la periodicidad aún queda abierta. El ciclo anterior conserva su historia.
 
-La [QA vigente](evidence/voice_joint_startup_tests01.json) conserva
+La [QA vigente](evidence/voice_joint_conditioned_cycles_tests01.json) conserva
 248 tests Rust heredados por identidad y el nuevo banco de trayectorias. La
 [cadena con cargas explícitas](docs/CADENA_CARGA_RADAU_RESULTADOS.md) pasa
 72 etapas y 180 corrientes, con medios pasos de7,629 ps; fuentes impuestas.
@@ -76,9 +77,10 @@ las tres parejas no se midieron por falta de escenas completas. El
 1. Integrar el [motor portable VCO](docs/VCO1_PORTABLE_RESULTADOS.md) tras
    cerrar el stamp y la carga conjunta. Ampliar CV/trims reservados
    y C4=100 pF antes de promover calibración u otro perfil.
-2. Integrar la [condición inicial conjunta](docs/VOZ_INICIALIZACION_RESULTADOS.md)
-   en un banco de ciclos propio. Definir periodicidad y carga por ciclo,
-   niveles/offset de J7 y coste antes de extender la ventana o escuchar.
+2. La [condición inicial conjunta](docs/VOZ_INICIALIZACION_RESULTADOS.md)
+   ya completó sus ciclos propios. Contrastar una inicialización para
+   régimen oscilatorio y reducir la deriva medida, con carga por ciclo,
+   niveles/offset de J7 y coste antes de ampliar o escuchar.
    Los controles permanecen impuestos; la escala local no es una cota global.
 3. Cerrar contornos, controles y fuentes restantes; despuÃ©s comprobar la voz,
    plazos y adaptadores de escucha/host para su alcance declarado.
@@ -128,8 +130,13 @@ las tres portadas anteriores por bytes exactos. El rechazo largo sigue vigente.
 [Modos de carga: excitación y observación](docs/VOZ_MODOS_RESULTADOS.md),
 27 contrastes complejos y diagnóstico de energía. El modo local más lento
 no fija el tiempo de arranque de la voz. ≈129 MiB recuperados por compresión
-transparente sin borrar evidencia. Ciclos desde la raíz conjunta aún pendientes.
+transparente sin borrar evidencia. Diagnóstico local, sin bound global.
 
 [Prefijo conjunto desde DC condicionado](docs/VOZ_PREFIJO_CONDICIONADO_RESULTADOS.md):
 500 µs en dos perfiles, 4800 ecuaciones contrastadas, checkpoints y restores
-exactos. Continuar ciclos desde esa historia; aún sin periodicidad ni audio.
+exactos. La continuación de esa historia está completada abajo.
+
+[Ciclos desde raíz conjunta](docs/VOZ_CICLOS_CONDICIONADOS_RESULTADOS.md):
+dos perfiles de5,25 ms, 68558 intervalos,9600 ecuaciones nuevas contrastadas
+y dos seams exactos. Cargas y J7 aún derivan entre cruces; siguiente:
+inicialización para régimen oscilatorio. Sin nuevo audio ni admisión de RT.

@@ -233,3 +233,19 @@ relojes comunes. Raíz high/low idéntica; sin cambio de física ni gates.
 C27 cambia +0,255 mV en este prefijo; no hubo reset ni admisión de
 periodicidad. Continuar desde los checkpoints finales hasta los ciclos,
 con balance de carga/estado a la misma fase. Sin nuevo audio ni RT.
+
+## Ciclos desde raíz conjunta y siguiente bloque — 2026-10-09
+
+[Ciclos desde500 µs hasta5,25 ms](VOZ_CICLOS_CONDICIONADOS_RESULTADOS.md)
+completados en ambos perfiles con seams, cargas y reloj preservados.
+9600 ecuaciones nuevas,48 corrientes terminales y200 coordenadas contrastadas
+al mismo reloj. Dos resets por perfil y un periodo observado entre ellos;
+KCL/balance/refinamiento pasan, pero los18 capacitores y J7 muestran deriva.
+
+Siguiente: contrastar una inicialización para régimen oscilatorio con carga
+y restauración algebraica. La raíz DC condicionada válida no acredita ese
+régimen. Conservar ambas historias, no relajar tolerancias ni extender
+un warmup fijo sin causa contrastada. Luego contornos, controles y fuentes
+restantes, escenas reservadas y coste/host para el alcance de escucha.
+Sin nuevos tests Rust/audio/SPICE ni admisión de encendido/fidelidad/RT.
+[QA actual](../evidence/voice_joint_conditioned_cycles_tests01.json).

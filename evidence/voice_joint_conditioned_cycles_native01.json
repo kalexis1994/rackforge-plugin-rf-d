@@ -1,0 +1,202 @@
+{
+  "schema": "rf-d/joint-conditioned-cycles-native/v1",
+  "passed": true,
+  "source_sha256": {
+    "evidence/voice_joint_prefix_native01.json": "7300e8c719a387348e3184018f0db240d89ae950af1d7177a3813ac2a200943a",
+    "tools/run_joint_conditioned_cycles.py": "5d7c7beb07e1b5341f5d3139b83ddf49bf4fe5ad156454c10f8d87388903432e",
+    "tools/prepare_joint_conditioned_cycles.py": "6164a42c24d245ab4823a88cd70e9c0d48518011938253d4f537deb6dd11b8ad",
+    "tools/joint_conditioned_cycles_runner.rs": "bacf5e745828dacd9907125dc34365e48e6cf9964818dc6880457879c391bdba",
+    "tools/joint_cycles_resume_runner.rs": "8042ba7f94986b9f99546663c1ef8aa3a4551e0fe1a30b661aee027858935b55",
+    "tools/joint_cycles_analysis.py": "854d938928f39fcb35c64385b81bf87e5f3aa916924442da71f13a849555b164",
+    "docs/VOZ_CICLOS_CONDICIONADOS_PROTOCOLO.md": "447cf0e4ca9d75189f6b1899668a9f5758787497724e4a632582a5e867ae8a8c",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+    "evidence/voice_chain_charge_vectors06.txt": "0facf3c5346e8609e35820273cdfc4bd9a7cca5bb1f76b9f8021fb482084bf1c"
+  },
+  "private_used_sha256": {
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd",
+    "references-local/joint-prefix01/65536/final.ckp": "a2ef985cd1a69ee445616a99fae6217f6f24b6c61e137f07d824fc66fd6c2454",
+    "references-local/joint-prefix01/32768/final.ckp": "8107579583a31d497cf12930180cc9192571e00e69c58cf6bd71ddd9a58959b3"
+  },
+  "compiler": {
+    "path": "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+    "sha256": "fd6232f90a981e28472ce6900232946a1f1bcad8ec8270cd5ae6a3a357208b98",
+    "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+  },
+  "cached_library": {
+    "path": "references-local/joint-startup01/librf_d_circuit.rlib",
+    "sha256": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd",
+    "bytes": 4346552
+  },
+  "commands": [
+    {
+      "command": [
+        "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+        "--edition=2021",
+        "-C",
+        "opt-level=2",
+        "-C",
+        "strip=symbols",
+        "-C",
+        "link-arg=-Wl,--stack,33554432",
+        "tools/joint_conditioned_cycles_runner.rs",
+        "--extern",
+        "rf_d_circuit=C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-startup01\\librf_d_circuit.rlib",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-conditioned-cycles01\\run.exe"
+      ],
+      "exit_code": 0,
+      "wall_s": 1.150288200005889,
+      "stdout": "",
+      "stderr": "warning: unused import: `std::time::Instant`\n --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:3:5\n  |\n3 | use std::time::Instant;\n  |     ^^^^^^^^^^^^^^^^^^\n  |\n  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default\n\nwarning: unused imports: `Parameters`, `initial_state`, `step_with_emphasis`, and `step`\n --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:8:5\n  |\n8 |     initial_state, step, step_with_emphasis, Boundary, Parameters,\n  |     ^^^^^^^^^^^^^  ^^^^  ^^^^^^^^^^^^^^^^^^            ^^^^^^^^^^\n\nwarning: unused import: `SolverBudget`\n  --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:16:55\n   |\n16 | use rf_d_circuit::{Parameters as HeadphoneParameters, SolverBudget};\n   |                                                       ^^^^^^^^^^^^\n\nwarning: 3 warnings emitted\n\n"
+    }
+  ],
+  "profiles": [
+    {
+      "maximum_half_ticks": 65536,
+      "interval_budget": 29991,
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-conditioned-cycles01\\run.exe",
+        "run",
+        "65536",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-conditioned-cycles01\\65536",
+        "29991",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-prefix01\\65536\\final.ckp"
+      ],
+      "exit_code": 0,
+      "wall_s": 785.0056717999978,
+      "minimum_free_bytes": 1137078272,
+      "administrative_stop": false,
+      "stop_reason": null,
+      "stdout": "",
+      "stderr": "PROGRESS,intervals=2000,ticks=523960320,wall_s=57.515\nPROGRESS,intervals=4000,ticks=771219456,wall_s=119.726\nPROGRESS,intervals=6000,ticks=1032683520,wall_s=182.280\nPROGRESS,intervals=8000,ticks=1276313856,wall_s=255.231\nRESET,crossing=1,ticks=1276368128\nPROGRESS,intervals=10000,ticks=1389494240,wall_s=345.782\nPROGRESS,intervals=12000,ticks=1648885632,wall_s=413.627\nPROGRESS,intervals=14000,ticks=1898166784,wall_s=485.641\nPROGRESS,intervals=16000,ticks=2154690560,wall_s=555.035\nPROGRESS,intervals=18000,ticks=2415648768,wall_s=624.685\nRESET,crossing=2,ticks=2552625664\nPROGRESS,intervals=20000,ticks=2552731872,wall_s=715.805\nSUMMARY,intervals=21844,ticks=2752512000,crossings=2,restore_replays=1,max_lte=9.99675415205984463e-1,max_bus=1.21972744404619249e-19,max_c1=9.84212711330201273e-14,charge=-1.94285036612698813e-9,absolute=1.57845888724752717e-7,delta_ramp=1.94285036612718953e-1,balance=1.27604513987621312e-15\n"
+    },
+    {
+      "maximum_half_ticks": 32768,
+      "interval_budget": 43994,
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-conditioned-cycles01\\run.exe",
+        "run",
+        "32768",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-conditioned-cycles01\\32768",
+        "43994",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-prefix01\\32768\\final.ckp"
+      ],
+      "exit_code": 0,
+      "wall_s": 1246.1044458000106,
+      "minimum_free_bytes": 1125371904,
+      "administrative_stop": false,
+      "stop_reason": null,
+      "stdout": "",
+      "stderr": "PROGRESS,intervals=2000,ticks=393183232,wall_s=63.484\nPROGRESS,intervals=4000,ticks=524222464,wall_s=126.872\nPROGRESS,intervals=6000,ticks=649883648,wall_s=193.901\nPROGRESS,intervals=8000,ticks=780722176,wall_s=259.408\nPROGRESS,intervals=10000,ticks=911654912,wall_s=324.900\nPROGRESS,intervals=12000,ticks=1042644992,wall_s=390.956\nPROGRESS,intervals=14000,ticks=1173684224,wall_s=453.054\nRESET,crossing=1,ticks=1276368128\nPROGRESS,intervals=16000,ticks=1276399984,wall_s=518.610\nPROGRESS,intervals=18000,ticks=1354497536,wall_s=591.465\nPROGRESS,intervals=20000,ticks=1485175808,wall_s=647.497\nPROGRESS,intervals=22000,ticks=1615919104,wall_s=703.225\nPROGRESS,intervals=24000,ticks=1746726912,wall_s=758.992\nPROGRESS,intervals=26000,ticks=1877598208,wall_s=812.854\nPROGRESS,intervals=28000,ticks=2002843648,wall_s=871.146\nPROGRESS,intervals=30000,ticks=2133651456,wall_s=925.575\nPROGRESS,intervals=32000,ticks=2264522752,wall_s=979.936\nPROGRESS,intervals=34000,ticks=2395455488,wall_s=1034.272\nPROGRESS,intervals=36000,ticks=2526445568,wall_s=1088.725\nRESET,crossing=2,ticks=2552625664\nPROGRESS,intervals=38000,ticks=2576636400,wall_s=1170.637\nPROGRESS,intervals=40000,ticks=2706767840,wall_s=1226.208\nSUMMARY,intervals=40699,ticks=2752512000,crossings=2,restore_replays=1,max_lte=9.99682166354910695e-1,max_bus=1.35525271560688054e-19,max_c1=9.94204718551827682e-14,charge=-1.94285058620210042e-9,absolute=1.57845887861203686e-7,delta_ramp=1.94285058620232182e-1,balance=1.40181551040785883e-15\n"
+    }
+  ],
+  "replays": [],
+  "outputs": [
+    {
+      "path": "references-local/joint-conditioned-cycles01/32768/checkpoints.bin",
+      "sha256": "eef52bc40a8cd36cc5a3ffc40846c0254bd32a7ec270d8eb5ab4bc3bc422d00e",
+      "bytes": 64488
+    },
+    {
+      "path": "references-local/joint-conditioned-cycles01/32768/events.txt",
+      "sha256": "3b89e664ccd4b12a5fb4bde55dc1549f08750aa4f74a9d4ce964d5a3aef9a094",
+      "bytes": 38054
+    },
+    {
+      "path": "references-local/joint-conditioned-cycles01/32768/final.ckp",
+      "sha256": "dc81e601438c02fb220a8e24bf45452eb0decf6f0337243dd94b57ef1f684ae9",
+      "bytes": 3224
+    },
+    {
+      "path": "references-local/joint-conditioned-cycles01/32768/selected.txt",
+      "sha256": "21e4fd29b09cbf84a6b0969aa6a2e743f712238c6879923d35bfd33c1d556ea8",
+      "bytes": 570512
+    },
+    {
+      "path": "references-local/joint-conditioned-cycles01/32768/stderr.txt",
+      "sha256": "d45f0ebaee1068286eb4bc6801364984ddbfe20ac5e1e6cb579736f6a6dfff5e",
+      "bytes": 1496
+    },
+    {
+      "path": "references-local/joint-conditioned-cycles01/32768/stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "references-local/joint-conditioned-cycles01/32768/trace.bin",
+      "sha256": "b596a41106eb38daa53c4f958678b672c21555ca699aaefdc78059961b26c7c5",
+      "bytes": 13023688
+    },
+    {
+      "path": "references-local/joint-conditioned-cycles01/65536/checkpoints.bin",
+      "sha256": "daa2a8184640ca5050f9165c29a00d577dc17e021fc062ec6d8cbe015bf70be7",
+      "bytes": 64488
+    },
+    {
+      "path": "references-local/joint-conditioned-cycles01/65536/events.txt",
+      "sha256": "cffb7988a2fc98e87f87ed372b9cad9f0b53a5c971b1360b352c9deb972c7b32",
+      "bytes": 38024
+    },
+    {
+      "path": "references-local/joint-conditioned-cycles01/65536/final.ckp",
+      "sha256": "d2ccba3493084e7c689f61030839b4466bb5352da84e14265e71cd9566899249",
+      "bytes": 3224
+    },
+    {
+      "path": "references-local/joint-conditioned-cycles01/65536/selected.txt",
+      "sha256": "3403371d70499838ed853ab095717cba6706f75ab109f42b9a4d3b1bb4602c55",
+      "bytes": 570737
+    },
+    {
+      "path": "references-local/joint-conditioned-cycles01/65536/stderr.txt",
+      "sha256": "e50c2ef2beb616dec66bb584070e011a1879e715d39712e389f3e541d59cc814",
+      "bytes": 925
+    },
+    {
+      "path": "references-local/joint-conditioned-cycles01/65536/stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "references-local/joint-conditioned-cycles01/65536/trace.bin",
+      "sha256": "ad8771b244d955cf84068aea4b8d797ba60969092317964d5e50e57103f1ff11",
+      "bytes": 6990088
+    },
+    {
+      "path": "references-local/joint-conditioned-cycles01/run.exe",
+      "sha256": "daf9e71d866bb277fdda853e6bdde796ce4f0008d9c1d1c1b667834f46881831",
+      "bytes": 1509376
+    }
+  ],
+  "available_free_bytes": 1152753664,
+  "reserve_bytes": 1073741824,
+  "estimated_output_bytes": 41943040,
+  "profile_budget_s": 1800,
+  "global_budget_s": 3600,
+  "remaining_interval_budgets": {
+    "65536": 29991,
+    "32768": 43994
+  },
+  "goal_ticks": 2752512000,
+  "lab_stack_bytes": 33554432,
+  "new_audio": false,
+  "new_spice_processes": 0,
+  "new_library_compile": false,
+  "wall_s": 2032.288348800037,
+  "source_sha256_after": {
+    "evidence/voice_joint_prefix_native01.json": "7300e8c719a387348e3184018f0db240d89ae950af1d7177a3813ac2a200943a",
+    "tools/run_joint_conditioned_cycles.py": "5d7c7beb07e1b5341f5d3139b83ddf49bf4fe5ad156454c10f8d87388903432e",
+    "tools/prepare_joint_conditioned_cycles.py": "6164a42c24d245ab4823a88cd70e9c0d48518011938253d4f537deb6dd11b8ad",
+    "tools/joint_conditioned_cycles_runner.rs": "bacf5e745828dacd9907125dc34365e48e6cf9964818dc6880457879c391bdba",
+    "tools/joint_cycles_resume_runner.rs": "8042ba7f94986b9f99546663c1ef8aa3a4551e0fe1a30b661aee027858935b55",
+    "tools/joint_cycles_analysis.py": "854d938928f39fcb35c64385b81bf87e5f3aa916924442da71f13a849555b164",
+    "docs/VOZ_CICLOS_CONDICIONADOS_PROTOCOLO.md": "447cf0e4ca9d75189f6b1899668a9f5758787497724e4a632582a5e867ae8a8c",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+    "evidence/voice_chain_charge_vectors06.txt": "0facf3c5346e8609e35820273cdfc4bd9a7cca5bb1f76b9f8021fb482084bf1c"
+  },
+  "private_used_sha256_after": {
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd",
+    "references-local/joint-prefix01/65536/final.ckp": "a2ef985cd1a69ee445616a99fae6217f6f24b6c61e137f07d824fc66fd6c2454",
+    "references-local/joint-prefix01/32768/final.ckp": "8107579583a31d497cf12930180cc9192571e00e69c58cf6bd71ddd9a58959b3"
+  }
+}
