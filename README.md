@@ -129,3 +129,7 @@ las tres portadas anteriores por bytes exactos. El rechazo largo sigue vigente.
 27 contrastes complejos y diagnóstico de energía. El modo local más lento
 no fija el tiempo de arranque de la voz. ≈129 MiB recuperados por compresión
 transparente sin borrar evidencia. Ciclos desde la raíz conjunta aún pendientes.
+
+[Prefijo conjunto desde DC condicionado](docs/VOZ_PREFIJO_CONDICIONADO_RESULTADOS.md):
+500 µs en dos perfiles, 4800 ecuaciones contrastadas, checkpoints y restores
+exactos. Continuar ciclos desde esa historia; aún sin periodicidad ni audio.

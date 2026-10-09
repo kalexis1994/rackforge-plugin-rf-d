@@ -223,3 +223,13 @@ Los siguientes bancos parten de la nueva raíz conjunta condicionada y deben
 medir carga/estado por ciclo. Compresión transparente de 626 archivos de
 cache conservó todos los hashes y recuperó ≈129 MiB; mantener el guard de
 1 GiB y los checkpoints. Sin nueva admisión de ciclos/audio ni cambio físico.
+
+## Prefijo desde raíz conjunta — 2026-10-09
+
+[500 µs a dos resoluciones](VOZ_PREFIJO_CONDICIONADO_RESULTADOS.md)
+completados: 6015 intervalos, 12.030 medios endpoints, dos restores exactos,
+4800 ecuaciones independientes y refinamiento de 200 coordenadas a dos
+relojes comunes. Raíz high/low idéntica; sin cambio de física ni gates.
+C27 cambia +0,255 mV en este prefijo; no hubo reset ni admisión de
+periodicidad. Continuar desde los checkpoints finales hasta los ciclos,
+con balance de carga/estado a la misma fase. Sin nuevo audio ni RT.
