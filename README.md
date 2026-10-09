@@ -124,3 +124,8 @@ La [QA de publicaciÃ³n](evidence/voice_vco1_increment_tests01.json) verifica
 inputs protegidos, nuevos tests y archivos privados. El
 [snapshot previo](evidence/voice_lm741_port_documentation01.json) conserva
 las tres portadas anteriores por bytes exactos. El rechazo largo sigue vigente.
+
+[Modos de carga: excitación y observación](docs/VOZ_MODOS_RESULTADOS.md),
+27 contrastes complejos y diagnóstico de energía. El modo local más lento
+no fija el tiempo de arranque de la voz. ≈129 MiB recuperados por compresión
+transparente sin borrar evidencia. Ciclos desde la raíz conjunta aún pendientes.

@@ -211,3 +211,13 @@ semilla histórica. No se admite DC libre, encendido físico, contornos
 completos, nota asentada, fidelidad o RT.248 tests Rust heredados,
 sin tests Rust/audio/SPICE nuevos.
 [QA vigente](../evidence/voice_joint_startup_tests01.json).
+
+## Diagnóstico local de excitación y observación — 2026-10-09
+
+[Excitación y observación de los 18 modos](VOZ_MODOS_RESULTADOS.md): 27
+soluciones complejas contrastadas y ocho escalones analíticos. El modo de
+265 ms es débil en BUS→J7; no adoptar su tiempo como warmup de la voz.
+Los siguientes bancos parten de la nueva raíz conjunta condicionada y deben
+medir carga/estado por ciclo. Compresión transparente de 626 archivos de
+cache conservó todos los hashes y recuperó ≈129 MiB; mantener el guard de
+1 GiB y los checkpoints. Sin nueva admisión de ciclos/audio ni cambio físico.
