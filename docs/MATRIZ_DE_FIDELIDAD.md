@@ -300,3 +300,13 @@ de los pasos admitidos y 1728 solves perturbados; biblioteca física intacta.
 No admite propagación periódica, elección adaptativa de paso, nueva memoria
 asentada, fidelidad física, audio o RT. 248 tests Rust heredados.
 [QA vigente](../evidence/voice_history_tangent_tests01.json).
+
+## Composición temporal de historia — 2026-10-10
+
+[Propagación de nueve direcciones](VOZ_PROPAGACION_HISTORIA_RESULTADOS.md)
+en 12 ventanas/768 pasos del calendario real. Dos escalas centrales con
+historias propias y Jacobianos independientes; 24 pasos seleccionados y
+768 observaciones finales reproducidos por bits. Biblioteca/física intactas.
+No acredita periodo completo, calendario adaptativo, derivada de tiempo de
+evento, fidelidad física, audio o RT. 248 tests heredados por identidad.
+[QA vigente](../evidence/voice_history_propagation_tests01.json).

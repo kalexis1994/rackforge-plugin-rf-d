@@ -312,3 +312,12 @@ preservados. Siguiente: propagación con RHS múltiples y calendario fijo,
 contraste de historias propias, luego dependencia del tiempo/fase del retorno.
 La selección adaptativa de paso y el mapa periódico siguen pendientes.
 [QA actual](../evidence/voice_history_tangent_tests01.json).
+
+## Propagación de memoria en calendarios registrados — 2026-10-10
+
+[Doce ventanas contrastadas](VOZ_PROPAGACION_HISTORIA_RESULTADOS.md),
+768 pasos, nueve RHS compartidos y 27648 solves de historias propias.
+Jacobiano independiente propagado, continuidad y observaciones por bits.
+Siguiente: retorno completo y derivada del tiempo/fase antes de corregir
+memoria periódica. Calendario adaptativo y asentamiento siguen abiertos.
+[QA actual](../evidence/voice_history_propagation_tests01.json).

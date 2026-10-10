@@ -6,7 +6,7 @@ nominal documentada; [revisiÃ³n y alcance](docs/OBJETIVO.md). No hay ni habrÃ
 un instrumento fÃ­sico de referencia. La equivalencia numÃ©rica de un modelo
 no acredita identidad sonora con una unidad vintage.
 
-## Estado actual — 2026-10-09
+## Estado actual — 2026-10-10
 
 | Ruta | Resultado disponible | Alcance pendiente |
 |---|---|---|
@@ -52,7 +52,7 @@ alcanzan≈265 ms. Los [ciclos de esta nueva raíz](docs/VOZ_CICLOS_CONDICIONADO
 completan dos perfiles de5,25 ms con refinamiento y cargas observadas;
 la periodicidad aún queda abierta. El ciclo anterior conserva su historia.
 
-La [QA vigente](evidence/voice_joint_conditioned_cycles_tests01.json) conserva
+La [QA vigente](evidence/voice_history_propagation_tests01.json) conserva
 248 tests Rust heredados por identidad y el nuevo banco de trayectorias. La
 [cadena con cargas explícitas](docs/CADENA_CARGA_RADAU_RESULTADOS.md) pasa
 72 etapas y 180 corrientes, con medios pasos de7,629 ps; fuentes impuestas.
@@ -167,3 +167,9 @@ Comparación propia de las 18 cargas y J7. Asentamiento todavía pendiente.
 48 pasos contrastados, 9600 columnas Hx, 432 direcciones y 1728 solves
 perturbados. Reproducción por bytes de las raíces anteriores; cuatro
 rechazos con replay conservados. Respuesta local a h fijo, aún no mapa periódico.
+
+[Propagación temporal de memoria](docs/VOZ_PROPAGACION_HISTORIA_RESULTADOS.md):
+12 ventanas/768 pasos, 6912 direcciones y 27648 solves de historias propias.
+Contraste independiente y continuidad exacta; nueve RHS por factorización.
+Admisión limitada al calendario fijo de esas ventanas; retorno completo pendiente.
+[QA vigente](evidence/voice_history_propagation_tests01.json).
