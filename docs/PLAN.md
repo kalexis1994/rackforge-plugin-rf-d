@@ -302,3 +302,13 @@ J7 y la predicción estática con mejoras/empeoramientos, sin convertir
 refinamiento en periodicidad. Siguiente: evaluar cargas restantes y periodos
 consecutivos de una historia. Sin cambiar componentes ni elegir por amplitud.
 [QA vigente](../evidence/voice_joint_corrected_cycles_tests01.json).
+
+## Dependencia del paso respecto de su memoria — 2026-10-10
+
+[Tangente absoluta de etapas](VOZ_TANGENTE_HISTORIA_RESULTADOS.md)
+contrastada en 48 pasos/9600 columnas y 432 direcciones. Solves nuevos a
+perturbaciones escaladas, con gates originales y cuatro rechazos/replays
+preservados. Siguiente: propagación con RHS múltiples y calendario fijo,
+contraste de historias propias, luego dependencia del tiempo/fase del retorno.
+La selección adaptativa de paso y el mapa periódico siguen pendientes.
+[QA actual](../evidence/voice_history_tangent_tests01.json).

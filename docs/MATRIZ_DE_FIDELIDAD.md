@@ -291,3 +291,12 @@ de panel/C27 y contraste de 18 cargas/J7 con sus historias anteriores.
 No acredita periodos consecutivos asentados, encendido físico, fidelidad
 vintage, nuevo audio o RT. Física intacta, 248 tests Rust heredados.
 [QA actual](../evidence/voice_joint_corrected_cycles_tests01.json).
+
+## Respuesta temporal local de memoria — 2026-10-10
+
+[Hx y respuestas de etapa](VOZ_TANGENTE_HISTORIA_RESULTADOS.md), 48 pasos,
+9600 columnas/432 direcciones contrastadas. 48 reproducciones bit exactas
+de los pasos admitidos y 1728 solves perturbados; biblioteca física intacta.
+No admite propagación periódica, elección adaptativa de paso, nueva memoria
+asentada, fidelidad física, audio o RT. 248 tests Rust heredados.
+[QA vigente](../evidence/voice_history_tangent_tests01.json).

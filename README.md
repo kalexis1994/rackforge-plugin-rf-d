@@ -162,3 +162,8 @@ liberaciones de 2 µs. Mejora de deriva periódica aún no medida.
 cuatro trayectorias de 5,25 ms, 137176 intervalos y 19200 ecuaciones nuevas
 contrastadas; ocho restores exactos y reproducción de 2 µs por bytes.
 Comparación propia de las 18 cargas y J7. Asentamiento todavía pendiente.
+
+[Tangente temporal de historia](docs/VOZ_TANGENTE_HISTORIA_RESULTADOS.md):
+48 pasos contrastados, 9600 columnas Hx, 432 direcciones y 1728 solves
+perturbados. Reproducción por bytes de las raíces anteriores; cuatro
+rechazos con replay conservados. Respuesta local a h fijo, aún no mapa periódico.
