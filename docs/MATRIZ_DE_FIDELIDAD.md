@@ -338,3 +338,13 @@ y propagación de cuatro pasos. Control positivo distingue C27 condicionada
 de inyección 139. No admite retorno completo desde la raíz, asentamiento,
 mapa periódico, adaptación, fidelidad, audio ni RT. 248 tests heredados.
 [QA vigente](../evidence/voice_charge_basis_tests01.json).
+
+## Retorno del dominio condicionado — 2026-10-11
+
+[C27 desde su raíz hasta dos resets](VOZ_RETORNO_CONDICIONADO_RESULTADOS.md):
+42544 pasos base, cuatro raíces propias y 170176 solves perturbados.
+20 operadores/8000 ecuaciones y ambos tiempos/estados de evento contrastados.
+FD completa sólo objetivo 5, memoria 0/calendario 125 ns. Falta admitir
+las demás direcciones y la corrección dinámica. No admite Poincaré,
+asentamiento, adaptación, fidelidad física o RT; 248 tests heredados.
+[QA vigente](../evidence/voice_conditioned_return_tests01.json).

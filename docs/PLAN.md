@@ -349,3 +349,12 @@ de 18 RHS reproduce dos lotes de nueve por bits. La columna condicionada
 de C27 difiere de la inyección unitaria 139. Siguiente: propagar desde
 estas raíces hasta ambos resets y medir la dependencia de la deriva.
 [QA actual](../evidence/voice_charge_basis_tests01.json).
+
+## Raíz condicionada hasta ambos resets — 2026-10-11
+
+[Retorno de C27](VOZ_RETORNO_CONDICIONADO_RESULTADOS.md): 42544 pasos
+desde el origen y cuatro historias completas (170176 solves), con cinco
+raíces auditadas y 20 operadores independientes. Siguiente: admitir las
+direcciones necesarias mediante FD completa antes de corregir la deriva
+dinámica y contrastar perfiles. Memoria periódica y adaptación pendientes.
+[QA actual](../evidence/voice_conditioned_return_tests01.json).
