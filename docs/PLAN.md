@@ -321,3 +321,13 @@ Jacobiano independiente propagado, continuidad y observaciones por bits.
 Siguiente: retorno completo y derivada del tiempo/fase antes de corregir
 memoria periódica. Calendario adaptativo y asentamiento siguen abiertos.
 [QA actual](../evidence/voice_history_propagation_tests01.json).
+
+## Tiempo del reset observado y estado en fase — 2026-10-10
+
+[Ocho cruces locales](VOZ_EVENTO_HISTORIA_RESULTADOS.md) contrastan
+el término de tiempo y la proyección de 72 direcciones, con 576 pasos
+perturbados propios. El control positivo demuestra el efecto de omitir
+el término temporal. Siguiente: propagación entre retornos y respuesta
+respecto de las cargas iniciales, antes de corregir memoria periódica.
+El observador interpolado no admite evento continuo ni adaptación.
+[QA actual](../evidence/voice_history_event_tests01.json).

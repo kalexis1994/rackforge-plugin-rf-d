@@ -310,3 +310,12 @@ historias propias y Jacobianos independientes; 24 pasos seleccionados y
 No acredita periodo completo, calendario adaptativo, derivada de tiempo de
 evento, fidelidad física, audio o RT. 248 tests heredados por identidad.
 [QA vigente](../evidence/voice_history_propagation_tests01.json).
+
+## Observador de reset y fase local — 2026-10-10
+
+[Tiempo y estado interpolados](VOZ_EVENTO_HISTORIA_RESULTADOS.md), ocho
+brackets/72 direcciones y 576 solves propios contrastados. 16 pasos y
+57600 coordenadas de sensibilidad reproducidos por bits. Física intacta.
+No acredita periodo completo, evento continuo, calendario adaptativo,
+memoria periódica, fidelidad, audio ni RT. 248 tests Rust heredados.
+[QA vigente](../evidence/voice_history_event_tests01.json).
