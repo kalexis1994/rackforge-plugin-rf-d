@@ -340,3 +340,12 @@ El observador interpolado no admite evento continuo ni adaptación.
 independiente de todo el intervalo. Siguiente: construir el dominio de
 cargas iniciales y contrastar perfiles antes de corregir memoria periódica.
 [QA actual](../evidence/voice_return_interval_tests01.json).
+
+## Base de cargas en las semillas corregidas — 2026-10-11
+
+[36 columnas y liberación inicial](VOZ_BASE_CARGAS_CORREGIDAS_RESULTADOS.md)
+contrastadas con 146 raíces propias y 288 pasos perturbados. El adaptador
+de 18 RHS reproduce dos lotes de nueve por bits. La columna condicionada
+de C27 difiere de la inyección unitaria 139. Siguiente: propagar desde
+estas raíces hasta ambos resets y medir la dependencia de la deriva.
+[QA actual](../evidence/voice_charge_basis_tests01.json).

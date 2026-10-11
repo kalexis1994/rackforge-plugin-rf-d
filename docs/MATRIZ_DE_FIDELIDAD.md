@@ -329,3 +329,12 @@ Las otras ocho columnas son recurrencia nativa con operadores seleccionados.
 No admite raíz condicionada de cargas, mapa de Poincaré, adaptación,
 memoria periódica asentada, fidelidad, audio ni RT. 248 tests heredados.
 [QA vigente](../evidence/voice_return_interval_tests01.json).
+
+## Base de memoria condicionada en las semillas corregidas — 2026-10-11
+
+[36 columnas, 146 raíces y 288 pasos propios](VOZ_BASE_CARGAS_CORREGIDAS_RESULTADOS.md).
+Raíces/corrientes y cuatro fixtures reproducidos por bits; oráculo de base
+y propagación de cuatro pasos. Control positivo distingue C27 condicionada
+de inyección 139. No admite retorno completo desde la raíz, asentamiento,
+mapa periódico, adaptación, fidelidad, audio ni RT. 248 tests heredados.
+[QA vigente](../evidence/voice_charge_basis_tests01.json).

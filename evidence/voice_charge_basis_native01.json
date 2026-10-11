@@ -1,0 +1,141 @@
+{
+  "schema": "rf-d/charge-basis-native/v1",
+  "passed": true,
+  "source_sha256": {
+    "tools/run_charge_basis.py": "6254b2030abed3dd0ec82cfed3aa9455ff6eb82e40f0e38c222ed8c929a4b3da",
+    "tools/joint_history_tangent.rs": "ae957ec6f01a9c4a470960529a55bcb7996afa7a9e85cf856f3d65d1c5fa6543",
+    "tools/joint_history_propagation.rs": "96d94b2b7d1a967f6f3f6a4f043b7fa48eaf56a07c4e2547cd314b9e3d2cccc4",
+    "tools/joint_history_event.rs": "2a4a4a5d33e00453e91f08198f6bb9f5efee3bc1c4be74ae58c40bbd9586b8bc",
+    "tools/joint_charge_basis_runner.rs": "cc27ca2fd00c0b19727604c39e57fb5d93c5e86c5acd7fc6c99b5b9eb58aa13c",
+    "docs/VOZ_BASE_CARGAS_CORREGIDAS_PROTOCOLO.md": "1922c58ceb19f212781f85ab3c38769d5067ac26f2a271fa3b87639282f810e6",
+    "evidence/voice_charge_basis_inputs01.json": "5ab3a3b5756cf030c8658c0dc6075a6a3c99040ddf4e15d495505725172645bd",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+    "crates/rf-d-circuit/src/joint_voice.rs": "9c43e1bd6bc62302911b7c6529ddc9e3a5be77a792818d1d71a452b735b3c4f0",
+    "crates/rf-d-circuit/src/joint_vco_fine.rs": "32a9150540b6279e0f3242e9d39c305325cd31243c6ad69d9c254edbc01e1cd5",
+    "crates/rf-d-circuit/src/chain_charge.rs": "39499f27fc4b8d9ecdd760962d40001b9cc2bee5161f51b12b60f7b133c5dadc",
+    "tools/joint_charge_basis_propagation.rs": "e78896e03769d3d60b7221331c61561ec04f5036b5d8ff75103a4e4cc8d25cd1",
+    "tools/charge_basis_tail.rs": "be5321c6bebd641fbb1bccfd339312ff367392571f7adb504bf695f0be64232c",
+    "tools/prepare_charge_basis.py": "6aba953ed595e085a85a9c775ea92de10e305c5ef609bb86b6f80014700a8faa",
+    "tools/joint_charge_corrected_runner.rs": "cea8785fa4b344f4b0a0f31ddb89317bd3070f590eea78668a8d3a36ae697fa7",
+    "evidence/voice_joint_charge_response_targets01.txt": "421f53ec2b5bd8e4622cfaee1d6520c46e347e6e29d64756cf973a92acc0f57e",
+    "evidence/voice_chain_charge_vectors06.txt": "0facf3c5346e8609e35820273cdfc4bd9a7cca5bb1f76b9f8021fb482084bf1c"
+  },
+  "private_used_sha256": {
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd",
+    "references-local/charge-basis-inputs01.bin": "3f5b6c161e30f0539777d21c3888aa6bf16100cfa189cb306868e9cf3af87131",
+    "references-local/joint-corrected-cycles01/0-65536/trace.bin": "59f1a6f4a45dc3a830c46c24bf2f8e8556b623ee9a4a29d46caa804f7ff5b371",
+    "references-local/joint-corrected-cycles01/0-65536/selected.txt": "cbc7cd041d19029e565cb6df1530516796db600ff4c52977cf49233acfc4965c",
+    "references-local/joint-corrected-cycles01/1-65536/trace.bin": "54b36322909b9e2cdfcad95fb9f7ba48726abc3440fa898b4800d9cbcff3516a",
+    "references-local/joint-corrected-cycles01/1-65536/selected.txt": "97913ed7138c8d1cb01282102caae2222b109f2fabee6ea6e96c015c0c441614"
+  },
+  "compiler": {
+    "path": "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+    "sha256": "fd6232f90a981e28472ce6900232946a1f1bcad8ec8270cd5ae6a3a357208b98",
+    "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+  },
+  "commands": [
+    {
+      "command": [
+        "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+        "--edition=2021",
+        "-C",
+        "opt-level=2",
+        "-C",
+        "link-arg=-Wl,--stack,33554432",
+        "-C",
+        "strip=symbols",
+        "tools/joint_charge_basis_runner.rs",
+        "--extern",
+        "rf_d_circuit=C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-startup01\\librf_d_circuit.rlib",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\charge-basis01\\run.exe"
+      ],
+      "exit_code": 0,
+      "wall_s": 1.5099803000339307,
+      "stdout_path": "references-local/charge-basis01/command0.stdout",
+      "stderr_path": "references-local/charge-basis01/command0.stderr",
+      "administrative_stop": null
+    },
+    {
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\charge-basis01\\run.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\charge-basis-inputs01.bin",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\charge-basis01\\basis.bin"
+      ],
+      "exit_code": 0,
+      "wall_s": 3.29999750002753,
+      "stdout_path": "references-local/charge-basis01/command1.stdout",
+      "stderr_path": "references-local/charge-basis01/command1.stderr",
+      "administrative_stop": null
+    }
+  ],
+  "replays": [],
+  "outputs": [
+    {
+      "path": "references-local/charge-basis01/basis.bin",
+      "sha256": "78a4c683dbebef691d85cfd624dba4e3baebd8856450cd315cb29e55c46a2702",
+      "bytes": 1797392
+    },
+    {
+      "path": "references-local/charge-basis01/command0.stderr",
+      "sha256": "6c44c1b99bdf154403b712024843fade49c51a19b69a36d5502802cf7bb6a294",
+      "bytes": 2640
+    },
+    {
+      "path": "references-local/charge-basis01/command0.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "references-local/charge-basis01/command1.stderr",
+      "sha256": "a75c441d91d9595d27bd9cb68b15d62a9c00e6759248dc2f978ab690cecad463",
+      "bytes": 1148
+    },
+    {
+      "path": "references-local/charge-basis01/command1.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "references-local/charge-basis01/run.exe",
+      "sha256": "c9edaf036407123f817c35944d0372f78b11c724433239e424e0c9fb36f57263",
+      "bytes": 1530368
+    }
+  ],
+  "reserve_bytes": 1073741824,
+  "estimated_output_bytes": 16777216,
+  "available_free_bytes": 16353390592,
+  "lab_stack_bytes": 33554432,
+  "new_library_compile": false,
+  "new_audio": false,
+  "new_spice_processes": 0,
+  "minimum_free_bytes": 16350003200,
+  "wall_s": 4.812099700036924,
+  "source_sha256_after": {
+    "tools/run_charge_basis.py": "6254b2030abed3dd0ec82cfed3aa9455ff6eb82e40f0e38c222ed8c929a4b3da",
+    "tools/joint_history_tangent.rs": "ae957ec6f01a9c4a470960529a55bcb7996afa7a9e85cf856f3d65d1c5fa6543",
+    "tools/joint_history_propagation.rs": "96d94b2b7d1a967f6f3f6a4f043b7fa48eaf56a07c4e2547cd314b9e3d2cccc4",
+    "tools/joint_history_event.rs": "2a4a4a5d33e00453e91f08198f6bb9f5efee3bc1c4be74ae58c40bbd9586b8bc",
+    "tools/joint_charge_basis_runner.rs": "cc27ca2fd00c0b19727604c39e57fb5d93c5e86c5acd7fc6c99b5b9eb58aa13c",
+    "docs/VOZ_BASE_CARGAS_CORREGIDAS_PROTOCOLO.md": "1922c58ceb19f212781f85ab3c38769d5067ac26f2a271fa3b87639282f810e6",
+    "evidence/voice_charge_basis_inputs01.json": "5ab3a3b5756cf030c8658c0dc6075a6a3c99040ddf4e15d495505725172645bd",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+    "crates/rf-d-circuit/src/joint_voice.rs": "9c43e1bd6bc62302911b7c6529ddc9e3a5be77a792818d1d71a452b735b3c4f0",
+    "crates/rf-d-circuit/src/joint_vco_fine.rs": "32a9150540b6279e0f3242e9d39c305325cd31243c6ad69d9c254edbc01e1cd5",
+    "crates/rf-d-circuit/src/chain_charge.rs": "39499f27fc4b8d9ecdd760962d40001b9cc2bee5161f51b12b60f7b133c5dadc",
+    "tools/joint_charge_basis_propagation.rs": "e78896e03769d3d60b7221331c61561ec04f5036b5d8ff75103a4e4cc8d25cd1",
+    "tools/charge_basis_tail.rs": "be5321c6bebd641fbb1bccfd339312ff367392571f7adb504bf695f0be64232c",
+    "tools/prepare_charge_basis.py": "6aba953ed595e085a85a9c775ea92de10e305c5ef609bb86b6f80014700a8faa",
+    "tools/joint_charge_corrected_runner.rs": "cea8785fa4b344f4b0a0f31ddb89317bd3070f590eea78668a8d3a36ae697fa7",
+    "evidence/voice_joint_charge_response_targets01.txt": "421f53ec2b5bd8e4622cfaee1d6520c46e347e6e29d64756cf973a92acc0f57e",
+    "evidence/voice_chain_charge_vectors06.txt": "0facf3c5346e8609e35820273cdfc4bd9a7cca5bb1f76b9f8021fb482084bf1c"
+  },
+  "private_used_sha256_after": {
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd",
+    "references-local/charge-basis-inputs01.bin": "3f5b6c161e30f0539777d21c3888aa6bf16100cfa189cb306868e9cf3af87131",
+    "references-local/joint-corrected-cycles01/0-65536/trace.bin": "59f1a6f4a45dc3a830c46c24bf2f8e8556b623ee9a4a29d46caa804f7ff5b371",
+    "references-local/joint-corrected-cycles01/0-65536/selected.txt": "cbc7cd041d19029e565cb6df1530516796db600ff4c52977cf49233acfc4965c",
+    "references-local/joint-corrected-cycles01/1-65536/trace.bin": "54b36322909b9e2cdfcad95fb9f7ba48726abc3440fa898b4800d9cbcff3516a",
+    "references-local/joint-corrected-cycles01/1-65536/selected.txt": "97913ed7138c8d1cb01282102caae2222b109f2fabee6ea6e96c015c0c441614"
+  }
+}

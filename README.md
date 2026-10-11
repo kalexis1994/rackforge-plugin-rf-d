@@ -52,7 +52,7 @@ alcanzan≈265 ms. Los [ciclos de esta nueva raíz](docs/VOZ_CICLOS_CONDICIONADO
 completan dos perfiles de5,25 ms con refinamiento y cargas observadas;
 la periodicidad aún queda abierta. El ciclo anterior conserva su historia.
 
-La [QA vigente](evidence/voice_return_interval_tests01.json) conserva
+La [QA vigente](evidence/voice_charge_basis_tests01.json) conserva
 248 tests Rust heredados por identidad y el nuevo banco de trayectorias. La
 [cadena con cargas explícitas](docs/CADENA_CARGA_RADAU_RESULTADOS.md) pasa
 72 etapas y 180 corrientes, con medios pasos de7,629 ps; fuentes impuestas.
@@ -185,3 +185,9 @@ Retorno de periodo completo y calendario adaptativo siguen pendientes.
 del periodo y deriva de las 18 tensiones de memoria. 15 operadores
 independientes seleccionados; sólo la dirección 139 tiene FD completa.
 [QA vigente](evidence/voice_return_interval_tests01.json).
+
+[Base condicionada de las semillas corregidas](docs/VOZ_BASE_CARGAS_CORREGIDAS_RESULTADOS.md):
+36 columnas, 146 raíces y 288 pasos perturbados. Propagación independiente
+de la base por los dos primeros pasos de cada memoria; control explícito
+frente a la inyección aislada de C27. Falta el retorno completo desde estas raíces.
+[QA vigente](evidence/voice_charge_basis_tests01.json).
