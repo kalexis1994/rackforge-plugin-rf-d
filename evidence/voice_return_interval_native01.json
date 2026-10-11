@@ -1,0 +1,125 @@
+{
+  "schema": "rf-d/return-interval-native/v1",
+  "passed": true,
+  "source_sha256": {
+    "tools/run_return_interval.py": "1503c82958bc8be549e7bef13f3be8680026ece1b7f5098a09d5f99da8d05020",
+    "tools/joint_history_tangent.rs": "ae957ec6f01a9c4a470960529a55bcb7996afa7a9e85cf856f3d65d1c5fa6543",
+    "tools/joint_history_propagation.rs": "96d94b2b7d1a967f6f3f6a4f043b7fa48eaf56a07c4e2547cd314b9e3d2cccc4",
+    "tools/joint_history_event.rs": "2a4a4a5d33e00453e91f08198f6bb9f5efee3bc1c4be74ae58c40bbd9586b8bc",
+    "tools/joint_return_interval_runner.rs": "ad62da9fde8d069704471b7cd448d08ae213fe905081e6392d2fc3f353164749",
+    "docs/VOZ_INTERVALO_RETORNO_PROTOCOLO.md": "ade1675e848caeb6825abc64b5881ec3e0592570f07cd2972d63702b844024a7",
+    "evidence/voice_return_interval_inputs01.json": "28ee984e78381ca42728df1578199be9fcb4753ac26553ea9f267540ad70afd8",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+    "crates/rf-d-circuit/src/joint_voice.rs": "9c43e1bd6bc62302911b7c6529ddc9e3a5be77a792818d1d71a452b735b3c4f0",
+    "crates/rf-d-circuit/src/joint_vco_fine.rs": "32a9150540b6279e0f3242e9d39c305325cd31243c6ad69d9c254edbc01e1cd5",
+    "crates/rf-d-circuit/src/chain_charge.rs": "39499f27fc4b8d9ecdd760962d40001b9cc2bee5161f51b12b60f7b133c5dadc"
+  },
+  "private_used_sha256": {
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd",
+    "references-local/return-interval-inputs01.bin": "a32ef7f6afa6ce91dea8efaea19424b21da95fbbf0834afc892fa2a7a4382184",
+    "references-local/joint-corrected-cycles01/0-65536/selected.txt": "cbc7cd041d19029e565cb6df1530516796db600ff4c52977cf49233acfc4965c",
+    "references-local/joint-corrected-cycles01/0-65536/trace.bin": "59f1a6f4a45dc3a830c46c24bf2f8e8556b623ee9a4a29d46caa804f7ff5b371"
+  },
+  "compiler": {
+    "path": "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+    "sha256": "fd6232f90a981e28472ce6900232946a1f1bcad8ec8270cd5ae6a3a357208b98",
+    "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+  },
+  "commands": [
+    {
+      "command": [
+        "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+        "--edition=2021",
+        "-C",
+        "opt-level=2",
+        "-C",
+        "link-arg=-Wl,--stack,33554432",
+        "-C",
+        "strip=symbols",
+        "tools/joint_return_interval_runner.rs",
+        "--extern",
+        "rf_d_circuit=C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-startup01\\librf_d_circuit.rlib",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\return-interval01\\run.exe"
+      ],
+      "exit_code": 0,
+      "wall_s": 1.2624406999675557,
+      "stdout_path": "references-local/return-interval01/command0.stdout",
+      "stderr_path": "references-local/return-interval01/command0.stderr",
+      "administrative_stop": null
+    },
+    {
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\return-interval01\\run.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\return-interval-inputs01.bin",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\return-interval01\\return.bin"
+      ],
+      "exit_code": 0,
+      "wall_s": 1619.4255104999756,
+      "stdout_path": "references-local/return-interval01/command1.stdout",
+      "stderr_path": "references-local/return-interval01/command1.stderr",
+      "administrative_stop": null
+    }
+  ],
+  "replays": [],
+  "outputs": [
+    {
+      "path": "references-local/return-interval01/command0.stderr",
+      "sha256": "fe7e9c55f5dd4e07d1ead94321712e8fb0d3f35121b11ee69ee42adfbb80046d",
+      "bytes": 1692
+    },
+    {
+      "path": "references-local/return-interval01/command0.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "references-local/return-interval01/command1.stderr",
+      "sha256": "1a403127be13cb8460a688f2cc89430657667b9df8b3e4fab2c41fade7c983a9",
+      "bytes": 2538
+    },
+    {
+      "path": "references-local/return-interval01/command1.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "references-local/return-interval01/return.bin",
+      "sha256": "4fd371237f3f32fa3f7217e143896141a5110dbe0bcc0cbd4f9e6a00e4c80537",
+      "bytes": 2648696
+    },
+    {
+      "path": "references-local/return-interval01/run.exe",
+      "sha256": "aa6a7bd93f7fbeb9d0fee4f1ae894b8fd7468783104e6e911606249820b25a5f",
+      "bytes": 1372160
+    }
+  ],
+  "reserve_bytes": 1073741824,
+  "estimated_output_bytes": 67108864,
+  "available_free_bytes": 16840388608,
+  "lab_stack_bytes": 33554432,
+  "new_library_compile": false,
+  "new_audio": false,
+  "new_spice_processes": 0,
+  "minimum_free_bytes": 16479637504,
+  "wall_s": 1620.689990199986,
+  "source_sha256_after": {
+    "tools/run_return_interval.py": "1503c82958bc8be549e7bef13f3be8680026ece1b7f5098a09d5f99da8d05020",
+    "tools/joint_history_tangent.rs": "ae957ec6f01a9c4a470960529a55bcb7996afa7a9e85cf856f3d65d1c5fa6543",
+    "tools/joint_history_propagation.rs": "96d94b2b7d1a967f6f3f6a4f043b7fa48eaf56a07c4e2547cd314b9e3d2cccc4",
+    "tools/joint_history_event.rs": "2a4a4a5d33e00453e91f08198f6bb9f5efee3bc1c4be74ae58c40bbd9586b8bc",
+    "tools/joint_return_interval_runner.rs": "ad62da9fde8d069704471b7cd448d08ae213fe905081e6392d2fc3f353164749",
+    "docs/VOZ_INTERVALO_RETORNO_PROTOCOLO.md": "ade1675e848caeb6825abc64b5881ec3e0592570f07cd2972d63702b844024a7",
+    "evidence/voice_return_interval_inputs01.json": "28ee984e78381ca42728df1578199be9fcb4753ac26553ea9f267540ad70afd8",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+    "crates/rf-d-circuit/src/joint_voice.rs": "9c43e1bd6bc62302911b7c6529ddc9e3a5be77a792818d1d71a452b735b3c4f0",
+    "crates/rf-d-circuit/src/joint_vco_fine.rs": "32a9150540b6279e0f3242e9d39c305325cd31243c6ad69d9c254edbc01e1cd5",
+    "crates/rf-d-circuit/src/chain_charge.rs": "39499f27fc4b8d9ecdd760962d40001b9cc2bee5161f51b12b60f7b133c5dadc"
+  },
+  "private_used_sha256_after": {
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd",
+    "references-local/return-interval-inputs01.bin": "a32ef7f6afa6ce91dea8efaea19424b21da95fbbf0834afc892fa2a7a4382184",
+    "references-local/joint-corrected-cycles01/0-65536/selected.txt": "cbc7cd041d19029e565cb6df1530516796db600ff4c52977cf49233acfc4965c",
+    "references-local/joint-corrected-cycles01/0-65536/trace.bin": "59f1a6f4a45dc3a830c46c24bf2f8e8556b623ee9a4a29d46caa804f7ff5b371"
+  }
+}

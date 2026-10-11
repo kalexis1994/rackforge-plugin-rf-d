@@ -331,3 +331,12 @@ el término temporal. Siguiente: propagación entre retornos y respuesta
 respecto de las cargas iniciales, antes de corregir memoria periódica.
 El observador interpolado no admite evento continuo ni adaptación.
 [QA actual](../evidence/voice_history_event_tests01.json).
+
+## Un intervalo completo: respuesta de C27 — 2026-10-11
+
+[Periodo y deriva observados](VOZ_INTERVALO_RETORNO_RESULTADOS.md):
+22356 pasos y 89424 solves perturbados, cuatro historias completas de
+139, con ambas proyecciones. 15 operadores independientes; no propagación
+independiente de todo el intervalo. Siguiente: construir el dominio de
+cargas iniciales y contrastar perfiles antes de corregir memoria periódica.
+[QA actual](../evidence/voice_return_interval_tests01.json).

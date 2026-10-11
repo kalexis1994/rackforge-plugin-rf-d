@@ -319,3 +319,13 @@ brackets/72 direcciones y 576 solves propios contrastados. 16 pasos y
 No acredita periodo completo, evento continuo, calendario adaptativo,
 memoria periódica, fidelidad, audio ni RT. 248 tests Rust heredados.
 [QA vigente](../evidence/voice_history_event_tests01.json).
+
+## Respuesta de C27 entre dos resets — 2026-10-11
+
+[Recorrido completo a calendario fijo](VOZ_INTERVALO_RETORNO_RESULTADOS.md):
+22356 pasos por bits, cuatro historias/89424 solves propios para 139.
+Periodo, deriva en fase y las 18 tensiones de capacitores contrastados.
+Las otras ocho columnas son recurrencia nativa con operadores seleccionados.
+No admite raíz condicionada de cargas, mapa de Poincaré, adaptación,
+memoria periódica asentada, fidelidad, audio ni RT. 248 tests heredados.
+[QA vigente](../evidence/voice_return_interval_tests01.json).
