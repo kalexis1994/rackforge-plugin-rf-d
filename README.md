@@ -52,7 +52,7 @@ alcanzan≈265 ms. Los [ciclos de esta nueva raíz](docs/VOZ_CICLOS_CONDICIONADO
 completan dos perfiles de5,25 ms con refinamiento y cargas observadas;
 la periodicidad aún queda abierta. El ciclo anterior conserva su historia.
 
-La [QA vigente](evidence/voice_loudness_tests01.json) conserva
+La [QA vigente](evidence/voice_loudness_control_tests01.json) conserva
 248 tests Rust heredados por identidad y el nuevo banco de trayectorias. La
 [cadena con cargas explícitas](docs/CADENA_CARGA_RADAU_RESULTADOS.md) pasa
 72 etapas y 180 corrientes, con medios pasos de7,629 ps; fuentes impuestas.
@@ -77,6 +77,12 @@ sustituye la fuente de2 V por Q3/Q2/CR6 dentro de la voz VCO1→J7:
 205 incógnitas, doce perfiles de2 µs,9840 ecuaciones contrastadas y
 corrientes C2/reset explícitas. C2 y reset siguen impuestos; contorno
 completo, integración adaptativa205 y filtro-contour pendientes.
+
+Los [controles temporales C2/reset](docs/VOZ_SEGUIDOR_CONTROL_RESULTADOS.md)
+ya conservan la memoria205 durante cinco tramos de10 µs totales por
+perfil:8200 ecuaciones, balances C18/C27 y veinte restores con replay
+completo de tramo por bits. C2/reset todavía son fuentes ideales; el
+próximo cierre incorpora C2 y su red de carga/descarga.
 
 ## Siguiente trabajo
 
@@ -235,4 +241,4 @@ dos perfiles hasta5,25 ms desde el prefijo propio, dos resets por perfil,
 55200 ecuaciones y balances de carga/medias. Escucha de inspección admitida:
 True; réplica de un intervalo, escala explícita80×.
 No acredita voz completa, periodo asintótico o RT.
-[QA vigente](evidence/voice_loudness_tests01.json).
+[QA vigente](evidence/voice_loudness_control_tests01.json).

@@ -1,0 +1,236 @@
+{
+  "passed": true,
+  "source_sha256": {
+    "tools/run_loudness_control.py": "9bb3e105b45f4ed6480527b1a6ae65a3ae8660cd69ee0b9bec694a4a57f26038",
+    "tools/prepare_loudness_control.py": "12d06e26475e90b998edd57ae847896181bfbc66a32761ac4ee270a2a18bcc1f",
+    "tools/joint_loudness_control_body.rs": "0bb14d07bdf0ee8ea2f6a09c7334cab822613024e08055a31b4aa2fa82fab354",
+    "tools/joint_loudness_control_runner.rs": "be0620c7d6daf500cd1bcd3d0a757ff5665edc81f1e238f512c9b5bad6f33c5a",
+    "tools/joint_loudness_runner.rs": "13f88061273ff4092e6448e105ce575406a43c2cf73ddcd18126892c6fa77b72",
+    "tools/joint_loudness_kernel.rs": "7400b5b1854c15c22ad668376964bff75e67c802d190f5b42f91984b2db95932",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+    "docs/VOZ_SEGUIDOR_CONTROL_PROTOCOLO.md": "f22e7cb19e10b5ab99fc3f5dbd85d7ff16951c0285d97dfff37f42dbeaeab118",
+    "evidence/voice_loudness_control_inputs01.json": "8c5b6ea14773c95a23d3d7673cbc42ce278f80f14209e69919e297f56af8c718"
+  },
+  "private_used_sha256": {
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd",
+    "references-local/joint-loudness02/selected.txt": "bb90f0eb4d6165bdc314fd7b7993f942b99396340625536f3bd3d942ccf0ea82",
+    "references-local/loudness-control-inputs01/65536.ckp": "c4b40cf663841948bf11e95ac91418f4be4365bb2bdf690232d41870e0fe616d",
+    "references-local/loudness-control-inputs01/32768.ckp": "7583d285a771ca5b4f6a53ace4c579eee9e0d2013bb14f55fd2014e835ff190f"
+  },
+  "compiler": {
+    "path": "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+    "sha256": "fd6232f90a981e28472ce6900232946a1f1bcad8ec8270cd5ae6a3a357208b98",
+    "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+  },
+  "commands": [
+    {
+      "command": [
+        "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+        "--edition=2021",
+        "-C",
+        "opt-level=2",
+        "-C",
+        "strip=symbols",
+        "-C",
+        "link-arg=-Wl,--stack,33554432",
+        "tools/joint_loudness_control_runner.rs",
+        "--extern",
+        "rf_d_circuit=C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-startup01\\librf_d_circuit.rlib",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\loudness-control01\\run.exe"
+      ],
+      "exit_code": 0,
+      "wall_s": 0.7174380000215024,
+      "stdout": "",
+      "stderr": "warning: unused imports: `Mode` and `self`\n --> tools\\joint_loudness_kernel.rs:3:33\n  |\n3 | use rf_d_circuit::{vco1_stamp::{self,Controls,Mode},chain_charge::{self,Parameters as Chain},mixer_on::OnMixer,StepError};\n  |                                 ^^^^          ^^^^\n  |\n  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default\n\nwarning: unused imports: `SolverBudget` and `self`\n --> tools/joint_loudness_control_runner.rs:3:35\n  |\n3 | ...n_charge::{self,Parameters as Chain},mixer_on::OnMixer,vco1_stamp::Controls,loudness_follower as follower,SolverBudget};\n  |               ^^^^                                                                                           ^^^^^^^^^^^^\n\nwarning: unused import: `std::time::Instant`\n --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:3:5\n  |\n3 | use std::time::Instant;\n  |     ^^^^^^^^^^^^^^^^^^\n\nwarning: unused imports: `Parameters`, `initial_state`, `step_with_emphasis`, and `step`\n --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:8:5\n  |\n8 |     initial_state, step, step_with_emphasis, Boundary, Parameters,\n  |     ^^^^^^^^^^^^^  ^^^^  ^^^^^^^^^^^^^^^^^^            ^^^^^^^^^^\n\nwarning: unused import: `SolverBudget`\n  --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:16:55\n   |\n16 | use rf_d_circuit::{Parameters as HeadphoneParameters, SolverBudget};\n   |                                                       ^^^^^^^^^^^^\n\nwarning: constant `BUS` is never used\n --> tools\\joint_loudness_kernel.rs:6:11\n  |\n6 | pub const BUS:usize=12;\n  |           ^^^\n  |\n  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: constant `MIN_DT_S` is never used\n --> tools\\joint_loudness_kernel.rs:7:11\n  |\n7 | pub const MIN_DT_S:f64=chain_charge::MIN_DT_S;\n  |           ^^^^^^^^\n\nwarning: function `vco_index` is never used\n --> tools\\joint_loudness_kernel.rs:9:14\n  |\n9 | pub const fn vco_index(k:usize)->Option<usize> {if k==108 {None} else if k<108 {Some(k)} else {Some(k-1)}}\n  |              ^^^^^^^^^\n\nwarning: function `chain_index` is never used\n  --> tools\\joint_loudness_kernel.rs:10:14\n   |\n10 | pub const fn chain_index(k:usize)->usize {if k==66 {BUS} else if k==67 {199} else {133+k}}\n   |              ^^^^^^^^^^^\n\nwarning: method `chain` is never used\n  --> tools\\joint_loudness_kernel.rs:20:9\n   |\n13 | impl Parameters {\n   | --------------- method in this implementation\n...\n20 |  pub fn chain(self)->Chain {self.chain}\n   |         ^^^^^\n\nwarning: associated items `lift` and `chain` are never used\n  --> tools\\joint_loudness_kernel.rs:30:9\n   |\n24 | impl State {\n   | ---------- associated items in this implementation\n...\n30 |  pub fn lift(vco_high:[f64;134],vco_low:[f64;134],chain:chain_charge::State)->Self {\n   |         ^^^^\n...\n35 |  fn chain(self)->chain_charge::State {chain_charge::State{high:std::array::from_fn(|k|self.high[chain_index(k)]),low:std::array::fro...\n   |     ^^^^^\n\nwarning: function `solve_linear` is never used\n  --> tools\\joint_loudness_kernel.rs:94:8\n   |\n94 | pub fn solve_linear<const M: usize>(\n   |        ^^^^^^^^^^^^\n\nwarning: 12 warnings emitted\n\n"
+    }
+  ],
+  "profiles": [
+    {
+      "half_ticks": 65536,
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\loudness-control01\\run.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\loudness-control-inputs01\\65536.ckp",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\loudness-control01\\65536"
+      ],
+      "exit_code": 0,
+      "wall_s": 2.7967575000366196,
+      "stdout": "",
+      "stderr": "COMPLETED,half=65536,steps=80,restores=10,replay_steps=120,corruptions=4,wall_s=2.7099731\n"
+    },
+    {
+      "half_ticks": 32768,
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\loudness-control01\\run.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\loudness-control-inputs01\\32768.ckp",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\loudness-control01\\32768"
+      ],
+      "exit_code": 0,
+      "wall_s": 4.990752400015481,
+      "stdout": "",
+      "stderr": "COMPLETED,half=32768,steps=160,restores=10,replay_steps=240,corruptions=4,wall_s=4.9638997\n"
+    }
+  ],
+  "replays": [],
+  "outputs": [
+    {
+      "path": "references-local/loudness-control01/32768/checkpoints.bin",
+      "sha256": "f6b3019a3d2cb65cc707b67c5295d9102594860c2bbb59cb60f7ffe7b902bbc0",
+      "bytes": 36520
+    },
+    {
+      "path": "references-local/loudness-control01/32768/final.ckp",
+      "sha256": "fe960c0b9ea5abc82b5e370f6e8e6556f94bd94648a02b229f227d5b17efb121",
+      "bytes": 3320
+    },
+    {
+      "path": "references-local/loudness-control01/32768/phase0-middle.ckp",
+      "sha256": "6a7c359fc5ef74185a96dfb29497ff77cf524176125868284dfc0d144408186a",
+      "bytes": 3320
+    },
+    {
+      "path": "references-local/loudness-control01/32768/phase0-start.ckp",
+      "sha256": "7583d285a771ca5b4f6a53ace4c579eee9e0d2013bb14f55fd2014e835ff190f",
+      "bytes": 3320
+    },
+    {
+      "path": "references-local/loudness-control01/32768/phase1-middle.ckp",
+      "sha256": "b16f0f372eca0890a0d710d2c50dd791b11277da7cbe99174345588e00c1faaf",
+      "bytes": 3320
+    },
+    {
+      "path": "references-local/loudness-control01/32768/phase1-start.ckp",
+      "sha256": "e3f53f388eb5e2a9feba47e62593f198e71bbefbc06b747f7ee26fcd16090516",
+      "bytes": 3320
+    },
+    {
+      "path": "references-local/loudness-control01/32768/phase2-middle.ckp",
+      "sha256": "3819a33d483e036aab31b30721a9199e9771c5bdeda246b98a0f968666c47db6",
+      "bytes": 3320
+    },
+    {
+      "path": "references-local/loudness-control01/32768/phase2-start.ckp",
+      "sha256": "f6676c4c46067a6718c6980ceb8cb35225a7b6f5bd8ebd0c370ffbd8c67dc9e0",
+      "bytes": 3320
+    },
+    {
+      "path": "references-local/loudness-control01/32768/phase3-middle.ckp",
+      "sha256": "cea6b4bc04935b111d2a6b98bdeed33e3234acbaf8b33b8b2ae14cb964e9223d",
+      "bytes": 3320
+    },
+    {
+      "path": "references-local/loudness-control01/32768/phase3-start.ckp",
+      "sha256": "0b4bc109566b5d01ba96b965f80ef1ec3cff2fac38aff1568c3a10d7e2971c77",
+      "bytes": 3320
+    },
+    {
+      "path": "references-local/loudness-control01/32768/phase4-middle.ckp",
+      "sha256": "56c37315ad0b0c54786b9bdbb47d8ba1fa5a21b6a9ee14b651bcc7f7f03d5b55",
+      "bytes": 3320
+    },
+    {
+      "path": "references-local/loudness-control01/32768/phase4-start.ckp",
+      "sha256": "cb1a30ce9aab0c2bab74e6d86572644e1547f38ebc1d8d21c0d09b76f9ad4581",
+      "bytes": 3320
+    },
+    {
+      "path": "references-local/loudness-control01/32768/selected.txt",
+      "sha256": "5067166af2181600e082c8ecf0dcc441cce0a9385ab579254f26de412ca0960e",
+      "bytes": 626692
+    },
+    {
+      "path": "references-local/loudness-control01/65536/checkpoints.bin",
+      "sha256": "59fd0f322987747294acce56348de058745270214fcf1d844694d33042ba071b",
+      "bytes": 36520
+    },
+    {
+      "path": "references-local/loudness-control01/65536/final.ckp",
+      "sha256": "45cd45e5594a56198803e2bb011415d9449b9bd265b0b6d010de9e0bc6e3bc31",
+      "bytes": 3320
+    },
+    {
+      "path": "references-local/loudness-control01/65536/phase0-middle.ckp",
+      "sha256": "dda28053ad18979833897db981cf616de6e1f40bd26026ea55712887d107bfa2",
+      "bytes": 3320
+    },
+    {
+      "path": "references-local/loudness-control01/65536/phase0-start.ckp",
+      "sha256": "c4b40cf663841948bf11e95ac91418f4be4365bb2bdf690232d41870e0fe616d",
+      "bytes": 3320
+    },
+    {
+      "path": "references-local/loudness-control01/65536/phase1-middle.ckp",
+      "sha256": "4afe114095641e80cab3c05614e7f5a99400d7e36f1700dcfb1452e4fafcbc1a",
+      "bytes": 3320
+    },
+    {
+      "path": "references-local/loudness-control01/65536/phase1-start.ckp",
+      "sha256": "33332d81d494524fcfa97e45839869629c4183f8e18b9b352cb2a674504d23c6",
+      "bytes": 3320
+    },
+    {
+      "path": "references-local/loudness-control01/65536/phase2-middle.ckp",
+      "sha256": "be820f244a0e310353808532ac43ca6eb6dbf3929a2873c956086e98261ff537",
+      "bytes": 3320
+    },
+    {
+      "path": "references-local/loudness-control01/65536/phase2-start.ckp",
+      "sha256": "0ad68bd2064bfa9c75ac8e4f077af6134c884b08dd1947e3e0e4b4a93935051a",
+      "bytes": 3320
+    },
+    {
+      "path": "references-local/loudness-control01/65536/phase3-middle.ckp",
+      "sha256": "a19f8c4a18474913cce32eb8d3d438eaf6964c3fe279ddaddda1a99eed06ebd0",
+      "bytes": 3320
+    },
+    {
+      "path": "references-local/loudness-control01/65536/phase3-start.ckp",
+      "sha256": "55fe6e155d0b3f0cce08ccb5bdcdbb037ddbaa32b9c8640ce54098dabd130d09",
+      "bytes": 3320
+    },
+    {
+      "path": "references-local/loudness-control01/65536/phase4-middle.ckp",
+      "sha256": "5bde93c078db99a00fbc3e5c88e540db6a132326ca33a76c861fc8269518ab3c",
+      "bytes": 3320
+    },
+    {
+      "path": "references-local/loudness-control01/65536/phase4-start.ckp",
+      "sha256": "f4d30e7d9f9389718127d60f69249a41b0197c50fc38bf12cd491f440e509486",
+      "bytes": 3320
+    },
+    {
+      "path": "references-local/loudness-control01/65536/selected.txt",
+      "sha256": "2306abb8f3dc08ec07670028d71baa83ff87ff2afcfc4499a0ce31bb17b64c13",
+      "bytes": 617143
+    },
+    {
+      "path": "references-local/loudness-control01/run.exe",
+      "sha256": "09c20b907d26d2acb12019fa97d9cf19aa874190d19464ca209fcd9f0e7f07ee",
+      "bytes": 1364480
+    }
+  ],
+  "reserve_bytes": 1073741824,
+  "estimated_output_bytes": 16777216,
+  "available_free_bytes": 126601601024,
+  "lab_stack_bytes": 33554432,
+  "new_library_compile": false,
+  "wall_s": 8.505139700020663,
+  "source_sha256_after": {
+    "tools/run_loudness_control.py": "9bb3e105b45f4ed6480527b1a6ae65a3ae8660cd69ee0b9bec694a4a57f26038",
+    "tools/prepare_loudness_control.py": "12d06e26475e90b998edd57ae847896181bfbc66a32761ac4ee270a2a18bcc1f",
+    "tools/joint_loudness_control_body.rs": "0bb14d07bdf0ee8ea2f6a09c7334cab822613024e08055a31b4aa2fa82fab354",
+    "tools/joint_loudness_control_runner.rs": "be0620c7d6daf500cd1bcd3d0a757ff5665edc81f1e238f512c9b5bad6f33c5a",
+    "tools/joint_loudness_runner.rs": "13f88061273ff4092e6448e105ce575406a43c2cf73ddcd18126892c6fa77b72",
+    "tools/joint_loudness_kernel.rs": "7400b5b1854c15c22ad668376964bff75e67c802d190f5b42f91984b2db95932",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+    "docs/VOZ_SEGUIDOR_CONTROL_PROTOCOLO.md": "f22e7cb19e10b5ab99fc3f5dbd85d7ff16951c0285d97dfff37f42dbeaeab118",
+    "evidence/voice_loudness_control_inputs01.json": "8c5b6ea14773c95a23d3d7673cbc42ce278f80f14209e69919e297f56af8c718"
+  },
+  "private_used_sha256_after": {
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd",
+    "references-local/joint-loudness02/selected.txt": "bb90f0eb4d6165bdc314fd7b7993f942b99396340625536f3bd3d942ccf0ea82",
+    "references-local/loudness-control-inputs01/65536.ckp": "c4b40cf663841948bf11e95ac91418f4be4365bb2bdf690232d41870e0fe616d",
+    "references-local/loudness-control-inputs01/32768.ckp": "7583d285a771ca5b4f6a53ace4c579eee9e0d2013bb14f55fd2014e835ff190f"
+  },
+  "minimum_free_bytes": 126598733824
+}

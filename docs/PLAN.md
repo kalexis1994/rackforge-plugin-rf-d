@@ -410,3 +410,13 @@ Conserva por bits400 coordenadas entrantes;72 corrientes de endpoints
 contrastadas. Siguiente: cambios temporales C2/reset con memoria y restore,
 luego contorno causal completo. No admite ADSR, adaptación205, hardware,
 RT o nuevo audio. [QA](../evidence/voice_loudness_tests01.json).
+
+## Fuentes C2/reset con memoria — 2026-10-12
+
+[Dos continuaciones205 de10 µs](VOZ_SEGUIDOR_CONTROL_RESULTADOS.md):
+cinco tramos,8200 ecuaciones, balances C18/C27 y veinte restores completos
+de tramo por bits. Checkpoint conserva reloj, fuentes y410 componentes;
+60 corrientes de endpoints contrastadas. Sigue: incorporar el estado C2
+con carga/descarga y puerto de reset antes del biestable causal completo.
+Sin audio nuevo, ADSR, adaptación205, hardware o RT.
+[QA actual](../evidence/voice_loudness_control_tests01.json).
