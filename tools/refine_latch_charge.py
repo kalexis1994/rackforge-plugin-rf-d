@@ -1,0 +1,16 @@
+"""Freeze the rejected mesh, halve h and retain the accepted finer seed."""
+import base64,json,struct
+from prepare_vco1_portable import ROOT,sha,write
+from prepare_latch_charge import caller
+from joint_cycles_analysis import require
+BODY_OLD='![16384,8192].contains(&half)';BODY_NEW='![8192,4096].contains(&half)'
+def oracle(s):
+ return s.replace('half in [16384,8192]','half in [8192,4096]').replace('for h in [16384,8192]','for h in [8192,4096]').replace('voice_latch_charge_native03','voice_latch_charge_native04').replace('voice_latch_charge_inputs03','voice_latch_charge_inputs04').replace('new_steps=1920','new_steps=3840').replace('replayed_steps=2880','replayed_steps=5760').replace(" for attempt in [1,2]:\n  for name in ['selected.txt','checkpoints.bin']:\n   a=ROOT/f'references-local/latch-charge{attempt:02d}/1-16384'/name;b=ROOT/'references-local/latch-charge03/1-16384'/name;require(b.read_bytes().startswith(a.read_bytes()),'unchanged nominal prefix by bytes')", " for on in [1,0]:\n  for name in ['selected.txt','checkpoints.bin']:\n   a=ROOT/f'references-local/latch-charge03/{on}-8192'/name;b=ROOT/f'references-local/latch-charge04/{on}-8192'/name;require(b.read_bytes()==a.read_bytes(),'same complete finer history by bytes')")
+def main():
+ bad=json.loads((ROOT/'evidence/voice_latch_charge_reference04.json').read_text(encoding='utf8'));require(not bad['passed'] and bad['failure'].splitlines()[-1]==bad['replay'].splitlines()[-1]=='ValueError: 229 refinement','same mesh rejection');names=['tools/joint_latch_body.rs','tools/joint_latch_runner.rs','tools/check_latch_charge.py'];write('evidence/voice_latch_charge_mesh_before01.json',dict(source_base64={n:base64.b64encode((ROOT/n).read_bytes()).decode() for n in names}));p=ROOT/'tools/joint_latch_body.rs';s=p.read_text(encoding='utf8');require(s.count(BODY_OLD)==1,'codec only');p.write_text(s.replace(BODY_OLD,BODY_NEW),encoding='utf8',newline='\n');(ROOT/'tools/joint_latch_runner.rs').write_text(caller(),encoding='utf8',newline='\n');p=ROOT/'tools/check_latch_charge.py';s=p.read_text(encoding='utf8');require(s==bad['failed_source_text'],'failed oracle');p.write_text(oracle(s),encoding='utf8',newline='\n');work=ROOT/'references-local/latch-charge-inputs02';require(not work.exists(),'exclusive seeds');work.mkdir();inp=json.loads((ROOT/'evidence/voice_latch_charge_inputs03.json').read_text(encoding='utf8'));seeds=[]
+ for on in [True,False]:
+  old=next(s for s in inp['seeds'] if s['final_decay']==on and s['half_ticks']==8192);require(sha(ROOT/old['path'])==old['sha256'],'same finer seed');raw=(ROOT/old['path']).read_bytes()
+  for half in [8192,4096]:
+   b=bytearray(raw);b[16:20]=struct.pack('<I',half);p=work/f'{int(on)}-{half}.ckp';p.write_bytes(b);seeds.append(dict(old,path=p.relative_to(ROOT).as_posix(),sha256=sha(p),half_ticks=half,previous_seed_path=old['path'],previous_seed_sha256=old['sha256']))
+ inp['seeds']=seeds;inp['source_sha256']={n:sha(ROOT/n) for n in inp['source_sha256']};inp['source_sha256'].update({n:sha(ROOT/n) for n in ['tools/refine_latch_charge.py','docs/VOZ_BIESTABLE_REFINAMIENTO_PROTOCOLO.md']});inp['mesh_failure_receipt_sha256']=sha(ROOT/'evidence/voice_latch_charge_reference04.json');write('evidence/voice_latch_charge_inputs04.json',inp)
+if __name__=='__main__':main()

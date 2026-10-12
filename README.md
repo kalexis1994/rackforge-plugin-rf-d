@@ -52,7 +52,7 @@ alcanzan≈265 ms. Los [ciclos de esta nueva raíz](docs/VOZ_CICLOS_CONDICIONADO
 completan dos perfiles de5,25 ms con refinamiento y cargas observadas;
 la periodicidad aún queda abierta. El ciclo anterior conserva su historia.
 
-La [QA vigente](evidence/voice_trigger_charge_tests01.json) conserva
+La [QA vigente](evidence/voice_latch_charge_tests01.json) conserva
 248 tests Rust heredados por identidad y el nuevo banco de trayectorias. La
 [cadena con cargas explícitas](docs/CADENA_CARGA_RADAU_RESULTADOS.md) pasa
 72 etapas y 180 corrientes, con medios pasos de7,629 ps; fuentes impuestas.
@@ -253,4 +253,16 @@ dos perfiles hasta5,25 ms desde el prefijo propio, dos resets por perfil,
 55200 ecuaciones y balances de carga/medias. Escucha de inspección admitida:
 True; réplica de un intervalo, escala explícita80×.
 No acredita voz completa, periodo asintótico o RT.
-[QA vigente](evidence/voice_trigger_charge_tests01.json).
+[QA vigente](evidence/voice_latch_charge_tests01.json).
+
+
+## Q25/Q15 cargados en la voz — 2026-10-12
+
+[Cierre229](docs/VOZ_BIESTABLE_CARGADO_RESULTADOS.md) conecta el biestable
+con carga intrínseca compatible, C2 y el gatillo hasta J7. Los tres terminales
+Q25/Q15 dejan de ser fuentes ideales; C4 conserva sus dos placas internas.
+Cuatro perfiles de10 µs,18320 ecuaciones,3840 pasos y40 restores completos.
+La malla inicial se rechaza;15.625/7.8125 ns pasan el gate2 µV con1.553 µV
+máximo en los finales comparados. Hipótesis de dispositivos explícitas,
+ventana local; ADSR completo, contorno de filtro y RT siguen pendientes.
+[QA](evidence/voice_latch_charge_tests01.json).

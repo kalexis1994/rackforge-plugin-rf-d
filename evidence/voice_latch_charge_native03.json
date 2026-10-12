@@ -1,0 +1,410 @@
+{
+  "passed": true,
+  "source_sha256": {
+    "tools/run_latch_charge.py": "74fff3828d6c316bacc58536b2d7c139c0c0ce54eb230f7c35b386d174832202",
+    "tools/prepare_latch_charge.py": "6496dfc8790febe09fc87302ceb262e1389298196150b8631d418e66108b9a1d",
+    "tools/latch_charge_driver.rs": "84af1a316124aa950c023aa19885a2f1b55db699446a0ec8ff75db7da34cc901",
+    "tools/latch_charge_reference.py": "6f20318652372f8f21c403f7cf16c59fc69e80237359a903055c63b3590f13ed",
+    "tools/contour_closed_driver.rs": "326423fe5be49fb8d8b595d90a6517524aeffa217210bb54846bc23fc2781eb2",
+    "tools/joint_latch_kernel.rs": "4af602c49d191b150c02c6ed87e3a8b3aa539513b17859ef8b73da4596cfeb78",
+    "tools/joint_latch_body.rs": "d66989974b4afcb7e7790d6833c92401c4dd36a65464b5d403310cad34b09857",
+    "tools/joint_latch_runner.rs": "10fa3d20149963df272bef70f85a7044ef5d8ebd8082205d60dc404586e130d2",
+    "tools/joint_loudness_kernel.rs": "7400b5b1854c15c22ad668376964bff75e67c802d190f5b42f91984b2db95932",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+    "evidence/voice_latch_charge_inputs03.json": "905c2a6d4c252d23deeae30323d77fc60d75070aa1ddd48a6374dd34e1936eb1",
+    "docs/VOZ_GATILLO_CARGADO_PROTOCOLO.md": "31c31aa3343b7aeb4a255cdede6cd009bb96a26b9d9f4e00ebafbd8ee3442380"
+  },
+  "private_used_sha256": {
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd",
+    "references-local/latch-charge-inputs01/1-16384.ckp": "793027db26aba023db84b19c5ff5c5e6a776de99160d8f89979191ab80568e39",
+    "references-local/latch-charge-inputs01/1-8192.ckp": "741a213675f169f3251f1ade396ba2c8a394ec6422c83a44c9a1832fa7f27144",
+    "references-local/latch-charge-inputs01/0-16384.ckp": "0e63dfa942ac99349623a42829b30ad195223425e0267bbd97753af4ae19a6ff",
+    "references-local/latch-charge-inputs01/0-8192.ckp": "5ba9bffa29edaf84b6adbb94c297cb11c92bd72f713e20d33e178898ece3b71d",
+    "references-local/trigger-charge02/1-65536/final.ckp": "9eebdfe7664930b7dd20322b3950a4754a1f35c6a68f8b8fbff2cc056a6fe791",
+    "references-local/trigger-charge02/1-32768/final.ckp": "2cb344ccb94454ee316804c37959f33f0885b53e8db9432973f4b450f15b801e",
+    "references-local/trigger-charge02/0-65536/final.ckp": "a5e267ac477f1b20eea8850c51889b98db6d4abcf3bd99ea655815da82b1eb56",
+    "references-local/trigger-charge02/0-32768/final.ckp": "5d8ff88a570e97e48122d54965b5d8eb71db8250b7dcf6025d318360ff138707"
+  },
+  "compiler": {
+    "path": "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+    "sha256": "fd6232f90a981e28472ce6900232946a1f1bcad8ec8270cd5ae6a3a357208b98",
+    "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+  },
+  "commands": [
+    {
+      "command": [
+        "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+        "--edition=2021",
+        "-C",
+        "opt-level=2",
+        "-C",
+        "strip=symbols",
+        "-C",
+        "link-arg=-Wl,--stack,33554432",
+        "tools/joint_latch_runner.rs",
+        "--extern",
+        "rf_d_circuit=C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-startup01\\librf_d_circuit.rlib",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\latch-charge03\\run.exe"
+      ],
+      "exit_code": 0,
+      "wall_s": 0.7932387000182644,
+      "stdout": "",
+      "stderr": "warning: unused imports: `Mode` and `self`\n --> tools\\joint_latch_kernel.rs:5:33\n  |\n5 | use rf_d_circuit::{vco1_stamp::{self,Controls,Mode},chain_charge::{self,Parameters as Chain},mixer_on::OnMixer,StepError};\n  |                                 ^^^^          ^^^^\n  |\n  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default\n\nwarning: unused imports: `SolverBudget`, `loudness_follower as follower`, and `self`\n --> tools/joint_latch_runner.rs:3:35\n  |\n3 | ...n_charge::{self,Parameters as Chain},mixer_on::OnMixer,vco1_stamp::Controls,loudness_follower as follower,SolverBudget};\n  |               ^^^^                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ^^^^^^^^^^^^\n\nwarning: unused import: `std::time::Instant`\n --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:3:5\n  |\n3 | use std::time::Instant;\n  |     ^^^^^^^^^^^^^^^^^^\n\nwarning: unused imports: `Parameters`, `initial_state`, `step_with_emphasis`, and `step`\n --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:8:5\n  |\n8 |     initial_state, step, step_with_emphasis, Boundary, Parameters,\n  |     ^^^^^^^^^^^^^  ^^^^  ^^^^^^^^^^^^^^^^^^            ^^^^^^^^^^\n\nwarning: unused import: `SolverBudget`\n  --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:16:55\n   |\n16 | use rf_d_circuit::{Parameters as HeadphoneParameters, SolverBudget};\n   |                                                       ^^^^^^^^^^^^\n\nwarning: constant `BUS` is never used\n --> tools\\joint_latch_kernel.rs:8:11\n  |\n8 | pub const BUS:usize=12;\n  |           ^^^\n  |\n  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: constant `MIN_DT_S` is never used\n --> tools\\joint_latch_kernel.rs:9:11\n  |\n9 | pub const MIN_DT_S:f64=chain_charge::MIN_DT_S;\n  |           ^^^^^^^^\n\nwarning: function `vco_index` is never used\n  --> tools\\joint_latch_kernel.rs:11:14\n   |\n11 | pub const fn vco_index(k:usize)->Option<usize> {if k==108 {None} else if k<108 {Some(k)} else {Some(k-1)}}\n   |              ^^^^^^^^^\n\nwarning: function `chain_index` is never used\n  --> tools\\joint_latch_kernel.rs:12:14\n   |\n12 | pub const fn chain_index(k:usize)->usize {if k==66 {BUS} else if k==67 {199} else {133+k}}\n   |              ^^^^^^^^^^^\n\nwarning: fields `c2_v`, `reset_v`, `q25`, `reset_driver`, and `set_base` are never read\n  --> tools\\joint_latch_kernel.rs:14:82\n   |\n14 | ...ct Parameters {pub controls:Controls,chain:Chain,pub sources:[f64;5],pub c2_v:f64,pub reset_v:f64,pub q25:f64,pub reset_driver:f64,pub final_decay:bool,pub keyboard:f64,pub short:bool,pub set_base:f64}\n   |       ---------- fields in this struct                                      ^^^^         ^^^^^^^         ^^^         ^^^^^^^^^^^^                                                              ^^^^^^^^\n   |\n   = note: `Parameters` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis\n\nwarning: method `chain` is never used\n  --> tools\\joint_latch_kernel.rs:22:9\n   |\n15 | impl Parameters {\n   | --------------- method in this implementation\n...\n22 |  pub fn chain(self)->Chain {self.chain}\n   |         ^^^^^\n\nwarning: associated items `lift` and `chain` are never used\n  --> tools\\joint_latch_kernel.rs:32:9\n   |\n26 | impl State {\n   | ---------- associated items in this implementation\n...\n32 |  pub fn lift(vco_high:[f64;134],vco_low:[f64;134],chain:chain_charge::State)->Self {\n   |         ^^^^\n...\n37 |  fn chain(self)->chain_charge::State {chain_charge::State{high:std::array::from_fn(|k|self.high[chain_index(k)]),low:std::array::fro...\n   |     ^^^^^\n\nwarning: function `solve_linear` is never used\n   --> tools\\joint_latch_kernel.rs:108:8\n    |\n108 | pub fn solve_linear<const M: usize>(\n    |        ^^^^^^^^^^^^\n\nwarning: 13 warnings emitted\n\n"
+    }
+  ],
+  "profiles": [
+    {
+      "final_decay": true,
+      "half_ticks": 16384,
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\latch-charge03\\run.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\latch-charge-inputs01\\1-16384.ckp",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\latch-charge03\\1-16384"
+      ],
+      "exit_code": 0,
+      "wall_s": 13.565783999976702,
+      "stdout": "",
+      "stderr": "COMPLETED,on=1,half=16384,steps=320,restores=10,replay_steps=480,corruptions=4,wall_s=13.4739925\n"
+    },
+    {
+      "final_decay": true,
+      "half_ticks": 8192,
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\latch-charge03\\run.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\latch-charge-inputs01\\1-8192.ckp",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\latch-charge03\\1-8192"
+      ],
+      "exit_code": 0,
+      "wall_s": 26.701022500055842,
+      "stdout": "",
+      "stderr": "COMPLETED,on=1,half=8192,steps=640,restores=10,replay_steps=960,corruptions=4,wall_s=26.6709378\n"
+    },
+    {
+      "final_decay": false,
+      "half_ticks": 16384,
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\latch-charge03\\run.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\latch-charge-inputs01\\0-16384.ckp",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\latch-charge03\\0-16384"
+      ],
+      "exit_code": 0,
+      "wall_s": 13.4313792999601,
+      "stdout": "",
+      "stderr": "COMPLETED,on=0,half=16384,steps=320,restores=10,replay_steps=480,corruptions=4,wall_s=13.4011197\n"
+    },
+    {
+      "final_decay": false,
+      "half_ticks": 8192,
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\latch-charge03\\run.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\latch-charge-inputs01\\0-8192.ckp",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\latch-charge03\\0-8192"
+      ],
+      "exit_code": 0,
+      "wall_s": 26.714585300069302,
+      "stdout": "",
+      "stderr": "COMPLETED,on=0,half=8192,steps=640,restores=10,replay_steps=960,corruptions=4,wall_s=26.6854261\n"
+    }
+  ],
+  "replays": [],
+  "outputs": [
+    {
+      "path": "references-local/latch-charge03/0-16384/checkpoints.bin",
+      "sha256": "dfb5456ffe8d2d597705f922a6961b615f83c98ab27bc96e5d0e4edacaec3f17",
+      "bytes": 40832
+    },
+    {
+      "path": "references-local/latch-charge03/0-16384/final.ckp",
+      "sha256": "f9761a7495a34cb7c2cfa83ccad0f6c6e6fe8898e2b26959f01086035881c552",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/0-16384/phase0-middle.ckp",
+      "sha256": "609c03357623997cd7a3fa8a5e65837a137bd2e961d15479eb00f8ecefa428fc",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/0-16384/phase0-start.ckp",
+      "sha256": "0e63dfa942ac99349623a42829b30ad195223425e0267bbd97753af4ae19a6ff",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/0-16384/phase1-middle.ckp",
+      "sha256": "d04377f634a923756632e7fc6d6ba476510754aafdf4d409e366c11c5a391c03",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/0-16384/phase1-start.ckp",
+      "sha256": "4441db7dce853970b52e6793d975f91baa554380aae31540a0e84f2743caa888",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/0-16384/phase2-middle.ckp",
+      "sha256": "b520bb934dbf93a4233a1d4f04740a067e87d5981f21bf61659149da77ee64fc",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/0-16384/phase2-start.ckp",
+      "sha256": "e1cc7e289072bab1fb5cb99b78fc7e67356126eecb103aece0bcb4310160da55",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/0-16384/phase3-middle.ckp",
+      "sha256": "c4ac846587ef37e38164c6466c6ee1f630aa816b0b3ee5556447e1d9f0097c31",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/0-16384/phase3-start.ckp",
+      "sha256": "4d3ffc674c7f47fb81354ec26062a03525768f1294361b7fa49c5d5f6e866408",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/0-16384/phase4-middle.ckp",
+      "sha256": "4ab3ec7238788da980e7311566bab2d78f6d0b0c3bfcb8b14d25da99c5a0c6ec",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/0-16384/phase4-start.ckp",
+      "sha256": "288bc7e87e8bfe6450474c18862bc866152c3f1ae9de571bccfc11e56625fb6f",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/0-16384/selected.txt",
+      "sha256": "7b5d3fadb1da375339720ef162d5196d9abad116328e255fb1305392202bbe03",
+      "bytes": 777725
+    },
+    {
+      "path": "references-local/latch-charge03/0-8192/checkpoints.bin",
+      "sha256": "a5c5fa668a5ccf1431d17c9fa8eaee411571a9324bffc8bafad831271e4acd9d",
+      "bytes": 40832
+    },
+    {
+      "path": "references-local/latch-charge03/0-8192/final.ckp",
+      "sha256": "42622bbd4f6029651cc8528b626c679e79bff04e5b3c7b97ef5b7a6062d5dcac",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/0-8192/phase0-middle.ckp",
+      "sha256": "0c0479444ea3df690c3f97448b50dd1a4ef99a0173493996f2e9927d911f1df7",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/0-8192/phase0-start.ckp",
+      "sha256": "5ba9bffa29edaf84b6adbb94c297cb11c92bd72f713e20d33e178898ece3b71d",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/0-8192/phase1-middle.ckp",
+      "sha256": "5146c6e93a38f85c5806b48d028ec7f66158bf84497dc76c7075c97471f25727",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/0-8192/phase1-start.ckp",
+      "sha256": "404ea51231189ba5f4ed8585f3b675268633379e53a3b3173f37b80e46f07ac7",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/0-8192/phase2-middle.ckp",
+      "sha256": "79eca47ed60501bdd376976198bdc12dc84ff65af8f686be9115e6f6f1fc30ee",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/0-8192/phase2-start.ckp",
+      "sha256": "054754fb21927566c1f25be90d964efd200b77c5546c8139df1bc81186152cf8",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/0-8192/phase3-middle.ckp",
+      "sha256": "90be8f1ecd347097718aebecf69b07e405ffb417e684f6140332dd78980270c4",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/0-8192/phase3-start.ckp",
+      "sha256": "499b34896a6da19fa1b069dee64768ac6b711aa92dfa572a6963ca89e5a3b806",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/0-8192/phase4-middle.ckp",
+      "sha256": "41b168b14b401e9ca2ee70563ab957be788cd7558d4568e9390ac52ef79b7a92",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/0-8192/phase4-start.ckp",
+      "sha256": "31c8c29cbd42016c4c31215630700d0d536257f4a894c2c5870d2a6bf4d1c8df",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/0-8192/selected.txt",
+      "sha256": "6d9da2f635feb8fdd1f84420bd4a0714c2fbac924061827978938da9fea426e2",
+      "bytes": 878050
+    },
+    {
+      "path": "references-local/latch-charge03/1-16384/checkpoints.bin",
+      "sha256": "93907c9af7eb05e4e6eede8eedd0b023ef0befa20b33481000d3a4f144de4b3b",
+      "bytes": 40832
+    },
+    {
+      "path": "references-local/latch-charge03/1-16384/final.ckp",
+      "sha256": "3e0b552434bc7f6aec1dd80492cac464182796a4923664b5b2b8865f23e30d07",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/1-16384/phase0-middle.ckp",
+      "sha256": "55e870d2230b2ec462f29490e558bbb8bf6c261299f6497a7eaafd4082ffea45",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/1-16384/phase0-start.ckp",
+      "sha256": "793027db26aba023db84b19c5ff5c5e6a776de99160d8f89979191ab80568e39",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/1-16384/phase1-middle.ckp",
+      "sha256": "7dbf528fce078ddb1d9f80e04452bdbbca180bd8366e3878bace5955f59b5e03",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/1-16384/phase1-start.ckp",
+      "sha256": "ad173eb267bac8d814b1ccb3450bb88efcaa5f847748210374a1956cdff921b8",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/1-16384/phase2-middle.ckp",
+      "sha256": "408d857dc6e08fb2e014feecd54919766af4681f8b9e6039f2630d0e1f065a0b",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/1-16384/phase2-start.ckp",
+      "sha256": "008e55e3a0e6416c00fc985f7e9f6b611da02913bbc073553c4fdeb57b5cc61b",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/1-16384/phase3-middle.ckp",
+      "sha256": "2dbacdef376bb3e1be63b9604dd4f364a74da9ef23e366cdac27a286aa0df7b2",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/1-16384/phase3-start.ckp",
+      "sha256": "29ca853b10140386be3b1faf38d5f2f2f585e1eca842702718943f75c67acaea",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/1-16384/phase4-middle.ckp",
+      "sha256": "81cc76471b4d3a1092062fd1e7780cd42ffdf14e62d0f058ac54802557f9a81f",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/1-16384/phase4-start.ckp",
+      "sha256": "c700748b36e1333b15d109d91dd0b3b76a7139fe2d9f1f046e8b495d002922a4",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/1-16384/selected.txt",
+      "sha256": "e2fee72d8387ed0f54699d987ccbfd97add1c58229241611bebbc56033e0e137",
+      "bytes": 777733
+    },
+    {
+      "path": "references-local/latch-charge03/1-8192/checkpoints.bin",
+      "sha256": "0757b53ba39e743ebf2b1cc43916b7a263cd08c0cf42c0d4bf4cafb2dcc08d47",
+      "bytes": 40832
+    },
+    {
+      "path": "references-local/latch-charge03/1-8192/final.ckp",
+      "sha256": "b52ac979c785e9297ecd036d5a7d2c166a5269cdf3685836008bdb7a2ed351b4",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/1-8192/phase0-middle.ckp",
+      "sha256": "a5e442c957d514c2aa6ef3c3e2b4bb5995b27a14194b9e28d6be685c787ddf61",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/1-8192/phase0-start.ckp",
+      "sha256": "741a213675f169f3251f1ade396ba2c8a394ec6422c83a44c9a1832fa7f27144",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/1-8192/phase1-middle.ckp",
+      "sha256": "2c28e69576e275f36f5f168efe3d82055bb32037314ac72701a2da80f918155d",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/1-8192/phase1-start.ckp",
+      "sha256": "2966df464b9f8cfcf9e877c335d24469c626d2431f32a02f0249c6414c4cfe5e",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/1-8192/phase2-middle.ckp",
+      "sha256": "9db739629426be3cc17cc1e365b7e3c52c2b87ccabbeda2478453ad81c7829f6",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/1-8192/phase2-start.ckp",
+      "sha256": "43cd28c1a9a4110963c8ca18a90f2447ee38bde82e1bae10abc7fe5bc462cde9",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/1-8192/phase3-middle.ckp",
+      "sha256": "0e01599769e1fdb4578d7b8855753e9790cc4107c92522fe5b9b9f5458addebe",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/1-8192/phase3-start.ckp",
+      "sha256": "d18d30b74c20ed3f3d06b7d9403950ee88a8bcef0cbfbd98b3efe8032fe26891",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/1-8192/phase4-middle.ckp",
+      "sha256": "9d7f4a0c3dbd8f936880095c2a991c2970625deb8bcd032cf54f5560e879d7a4",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/1-8192/phase4-start.ckp",
+      "sha256": "560adaa17e5c6ff18110d765f95307a1fe5e5ae8fc8bef29a3acd81a9160ccf8",
+      "bytes": 3712
+    },
+    {
+      "path": "references-local/latch-charge03/1-8192/selected.txt",
+      "sha256": "c50750a5c24983a2fc761db182598846e67171b4463e501ee7c2016b87460918",
+      "bytes": 878357
+    },
+    {
+      "path": "references-local/latch-charge03/run.exe",
+      "sha256": "6cb4312e2973c788db0739fabe915f2aec528ebd64014bacd262a04d1cac1fcb",
+      "bytes": 1378816
+    }
+  ],
+  "available_free_bytes": 125557985280,
+  "reserve_bytes": 1073741824,
+  "estimated_output_bytes": 33554432,
+  "lab_stack_bytes": 33554432,
+  "new_library_compile": false,
+  "source_sha256_after": {
+    "tools/run_latch_charge.py": "74fff3828d6c316bacc58536b2d7c139c0c0ce54eb230f7c35b386d174832202",
+    "tools/prepare_latch_charge.py": "6496dfc8790febe09fc87302ceb262e1389298196150b8631d418e66108b9a1d",
+    "tools/latch_charge_driver.rs": "84af1a316124aa950c023aa19885a2f1b55db699446a0ec8ff75db7da34cc901",
+    "tools/latch_charge_reference.py": "6f20318652372f8f21c403f7cf16c59fc69e80237359a903055c63b3590f13ed",
+    "tools/contour_closed_driver.rs": "326423fe5be49fb8d8b595d90a6517524aeffa217210bb54846bc23fc2781eb2",
+    "tools/joint_latch_kernel.rs": "4af602c49d191b150c02c6ed87e3a8b3aa539513b17859ef8b73da4596cfeb78",
+    "tools/joint_latch_body.rs": "d66989974b4afcb7e7790d6833c92401c4dd36a65464b5d403310cad34b09857",
+    "tools/joint_latch_runner.rs": "10fa3d20149963df272bef70f85a7044ef5d8ebd8082205d60dc404586e130d2",
+    "tools/joint_loudness_kernel.rs": "7400b5b1854c15c22ad668376964bff75e67c802d190f5b42f91984b2db95932",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+    "evidence/voice_latch_charge_inputs03.json": "905c2a6d4c252d23deeae30323d77fc60d75070aa1ddd48a6374dd34e1936eb1",
+    "docs/VOZ_GATILLO_CARGADO_PROTOCOLO.md": "31c31aa3343b7aeb4a255cdede6cd009bb96a26b9d9f4e00ebafbd8ee3442380"
+  },
+  "private_used_sha256_after": {
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd",
+    "references-local/latch-charge-inputs01/1-16384.ckp": "793027db26aba023db84b19c5ff5c5e6a776de99160d8f89979191ab80568e39",
+    "references-local/latch-charge-inputs01/1-8192.ckp": "741a213675f169f3251f1ade396ba2c8a394ec6422c83a44c9a1832fa7f27144",
+    "references-local/latch-charge-inputs01/0-16384.ckp": "0e63dfa942ac99349623a42829b30ad195223425e0267bbd97753af4ae19a6ff",
+    "references-local/latch-charge-inputs01/0-8192.ckp": "5ba9bffa29edaf84b6adbb94c297cb11c92bd72f713e20d33e178898ece3b71d",
+    "references-local/trigger-charge02/1-65536/final.ckp": "9eebdfe7664930b7dd20322b3950a4754a1f35c6a68f8b8fbff2cc056a6fe791",
+    "references-local/trigger-charge02/1-32768/final.ckp": "2cb344ccb94454ee316804c37959f33f0885b53e8db9432973f4b450f15b801e",
+    "references-local/trigger-charge02/0-65536/final.ckp": "a5e267ac477f1b20eea8850c51889b98db6d4abcf3bd99ea655815da82b1eb56",
+    "references-local/trigger-charge02/0-32768/final.ckp": "5d8ff88a570e97e48122d54965b5d8eb71db8250b7dcf6025d318360ff138707"
+  },
+  "wall_s": 81.22239790007006,
+  "minimum_free_bytes": 125470007296
+}

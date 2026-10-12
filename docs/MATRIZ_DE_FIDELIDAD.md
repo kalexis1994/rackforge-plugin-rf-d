@@ -426,3 +426,16 @@ Fallo Newton/replay y adaptador de C4 preservados, mismos gates.
 Siguiente: Q25/Q15 con carga no lineal y continuidad/refinamiento causal.
 Sin latch completo, audio nuevo, adaptación225, identificación física o RT.
 [QA](../evidence/voice_trigger_charge_tests01.json).
+
+
+## Biestable cargado en la voz — 2026-10-12
+
+[Cierre229](VOZ_BIESTABLE_CARGADO_RESULTADOS.md): Q25/Q15, R38/R39/R56 y
+cargas de juntura compatibles liberan SET_BASE/Q25 colector/RESET_BASE.
+C4 conserva historia y matriz de dos terminales;450 componentes heredadas
+por bits. Cuatro perfiles de10 µs,18320 ecuaciones,3840 pasos y40 restores.
+Malla inicial rechazada, refinamiento15.625/7.8125 ns admitido en los finales.
+Siguiente: trayectoria de ataque/sustain/liberación con el circuito cerrado.
+Cargas omitidas de otros dispositivos explícitas; sin ADSR completo,
+contorno de filtro, audio nuevo, identificación física o RT.
+[QA](../evidence/voice_latch_charge_tests01.json).
