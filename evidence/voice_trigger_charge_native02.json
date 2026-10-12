@@ -1,0 +1,408 @@
+{
+  "passed": true,
+  "source_sha256": {
+    "tools/run_trigger_charge.py": "71277a1bf14b72275b89c16f24857016e02abe1f4eb4efab2302c1ac8a05f3f7",
+    "tools/prepare_trigger_charge.py": "36d6da60b64c9450d535c389b0e5cc528b56ec2beb7ad034f493397b744f9317",
+    "tools/trigger_charge_driver.rs": "cbf61ffaf89dcb811c37151001de7deefa7b4c64705c3ac969b63e455e89933b",
+    "tools/trigger_charge_reference.py": "e0b14ea03256eb35a85aae84ac34ea2c541918f1dcfc778f7d286a6a00894d6c",
+    "tools/joint_trigger_kernel.rs": "11f00a2c94dfe8bafe09223de199542f232159a059b4ba1f51b3894e7e548f38",
+    "tools/joint_trigger_body.rs": "5baf90087d8f1882d53af27d96367966d72ec6cf091170389506ac5ad9c3c9ff",
+    "tools/joint_trigger_runner.rs": "67e8b73edbe9996479d2eb641f7cf97d1d2fcd40b97e11833116ce09e04fcff5",
+    "tools/joint_loudness_kernel.rs": "7400b5b1854c15c22ad668376964bff75e67c802d190f5b42f91984b2db95932",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+    "evidence/voice_trigger_charge_inputs02.json": "94c130aebc778bbbc073d0fcd8e6a87863e0a92a20e50724bf0cdedb12c30e63",
+    "docs/VOZ_GATILLO_CARGADO_PROTOCOLO.md": "31c31aa3343b7aeb4a255cdede6cd009bb96a26b9d9f4e00ebafbd8ee3442380"
+  },
+  "private_used_sha256": {
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd",
+    "references-local/trigger-charge-inputs01/1-65536.ckp": "033b38a502fd37e68a6ede0f3af6142935a3c85cbb08dfbba4680bad57af0c02",
+    "references-local/trigger-charge-inputs01/1-32768.ckp": "c619178b582000db73b161beaa8e717118453887f66b7b1eac6c2591051944c0",
+    "references-local/trigger-charge-inputs01/0-65536.ckp": "56f31d9e535264285705f084ecadbb268de1fb2d86390329ad2450cd76425070",
+    "references-local/trigger-charge-inputs01/0-32768.ckp": "d48378adedc0aa9b5c050c180d60706aa40d70acccb5e623361842c2d3549ef4",
+    "references-local/c2-charge02/1-65536/final.ckp": "3511420fa6cf96b81818a6956c82fc067e920b4ac949bdbe3ae2984be5088def",
+    "references-local/c2-charge02/1-32768/final.ckp": "f356a5f268905b06ca6e13105a2e97ac266f7485d237a665babbefba8ba724fd",
+    "references-local/c2-charge02/0-65536/final.ckp": "c5a8e76c2c71e81bd4b70a2fd21009052607adea4a65bc62eeb8ca7c4793e7e1",
+    "references-local/c2-charge02/0-32768/final.ckp": "520afd20e9af88a2e169301851733d140198dae5f8d08dcec4b2d81693938fb1"
+  },
+  "compiler": {
+    "path": "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+    "sha256": "fd6232f90a981e28472ce6900232946a1f1bcad8ec8270cd5ae6a3a357208b98",
+    "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+  },
+  "commands": [
+    {
+      "command": [
+        "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+        "--edition=2021",
+        "-C",
+        "opt-level=2",
+        "-C",
+        "strip=symbols",
+        "-C",
+        "link-arg=-Wl,--stack,33554432",
+        "tools/joint_trigger_runner.rs",
+        "--extern",
+        "rf_d_circuit=C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-startup01\\librf_d_circuit.rlib",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\trigger-charge02\\run.exe"
+      ],
+      "exit_code": 0,
+      "wall_s": 0.9001403000438586,
+      "stdout": "",
+      "stderr": "warning: unused imports: `Mode` and `self`\n --> tools\\joint_trigger_kernel.rs:5:33\n  |\n5 | use rf_d_circuit::{vco1_stamp::{self,Controls,Mode},chain_charge::{self,Parameters as Chain},mixer_on::OnMixer,StepError};\n  |                                 ^^^^          ^^^^\n  |\n  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default\n\nwarning: unused imports: `SolverBudget`, `loudness_follower as follower`, and `self`\n --> tools/joint_trigger_runner.rs:3:35\n  |\n3 | ...n_charge::{self,Parameters as Chain},mixer_on::OnMixer,vco1_stamp::Controls,loudness_follower as follower,SolverBudget};\n  |               ^^^^                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ^^^^^^^^^^^^\n\nwarning: unused import: `std::time::Instant`\n --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:3:5\n  |\n3 | use std::time::Instant;\n  |     ^^^^^^^^^^^^^^^^^^\n\nwarning: unused imports: `Parameters`, `initial_state`, `step_with_emphasis`, and `step`\n --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:8:5\n  |\n8 |     initial_state, step, step_with_emphasis, Boundary, Parameters,\n  |     ^^^^^^^^^^^^^  ^^^^  ^^^^^^^^^^^^^^^^^^            ^^^^^^^^^^\n\nwarning: unused import: `SolverBudget`\n  --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:16:55\n   |\n16 | use rf_d_circuit::{Parameters as HeadphoneParameters, SolverBudget};\n   |                                                       ^^^^^^^^^^^^\n\nwarning: constant `BUS` is never used\n --> tools\\joint_trigger_kernel.rs:8:11\n  |\n8 | pub const BUS:usize=12;\n  |           ^^^\n  |\n  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: constant `MIN_DT_S` is never used\n --> tools\\joint_trigger_kernel.rs:9:11\n  |\n9 | pub const MIN_DT_S:f64=chain_charge::MIN_DT_S;\n  |           ^^^^^^^^\n\nwarning: function `vco_index` is never used\n  --> tools\\joint_trigger_kernel.rs:11:14\n   |\n11 | pub const fn vco_index(k:usize)->Option<usize> {if k==108 {None} else if k<108 {Some(k)} else {Some(k-1)}}\n   |              ^^^^^^^^^\n\nwarning: function `chain_index` is never used\n  --> tools\\joint_trigger_kernel.rs:12:14\n   |\n12 | pub const fn chain_index(k:usize)->usize {if k==66 {BUS} else if k==67 {199} else {133+k}}\n   |              ^^^^^^^^^^^\n\nwarning: fields `c2_v` and `reset_driver` are never read\n  --> tools\\joint_trigger_kernel.rs:14:82\n   |\n14 | ...ct Parameters {pub controls:Controls,chain:Chain,pub sources:[f64;5],pub c2_v:f64,pub reset_v:f64,pub q25:f64,pub reset_driver:f6...\n   |       ---------- fields in this struct                                      ^^^^                                     ^^^^^^^^^^^^\n   |\n   = note: `Parameters` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis\n\nwarning: method `chain` is never used\n  --> tools\\joint_trigger_kernel.rs:22:9\n   |\n15 | impl Parameters {\n   | --------------- method in this implementation\n...\n22 |  pub fn chain(self)->Chain {self.chain}\n   |         ^^^^^\n\nwarning: associated items `lift` and `chain` are never used\n  --> tools\\joint_trigger_kernel.rs:32:9\n   |\n26 | impl State {\n   | ---------- associated items in this implementation\n...\n32 |  pub fn lift(vco_high:[f64;134],vco_low:[f64;134],chain:chain_charge::State)->Self {\n   |         ^^^^\n...\n37 |  fn chain(self)->chain_charge::State {chain_charge::State{high:std::array::from_fn(|k|self.high[chain_index(k)]),low:std::array::fro...\n   |     ^^^^^\n\nwarning: function `solve_linear` is never used\n   --> tools\\joint_trigger_kernel.rs:124:8\n    |\n124 | pub fn solve_linear<const M: usize>(\n    |        ^^^^^^^^^^^^\n\nwarning: 13 warnings emitted\n\n"
+    }
+  ],
+  "profiles": [
+    {
+      "final_decay": true,
+      "half_ticks": 65536,
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\trigger-charge02\\run.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\trigger-charge-inputs01\\1-65536.ckp",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\trigger-charge02\\1-65536"
+      ],
+      "exit_code": 0,
+      "wall_s": 8.192016699933447,
+      "stdout": "",
+      "stderr": "COMPLETED,on=1,half=65536,steps=80,restores=10,replay_steps=120,corruptions=4,wall_s=8.1020634\n"
+    },
+    {
+      "final_decay": true,
+      "half_ticks": 32768,
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\trigger-charge02\\run.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\trigger-charge-inputs01\\1-32768.ckp",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\trigger-charge02\\1-32768"
+      ],
+      "exit_code": 0,
+      "wall_s": 15.7124036999885,
+      "stdout": "",
+      "stderr": "COMPLETED,on=1,half=32768,steps=160,restores=10,replay_steps=240,corruptions=4,wall_s=15.6835556\n"
+    },
+    {
+      "final_decay": false,
+      "half_ticks": 65536,
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\trigger-charge02\\run.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\trigger-charge-inputs01\\0-65536.ckp",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\trigger-charge02\\0-65536"
+      ],
+      "exit_code": 0,
+      "wall_s": 8.87724399997387,
+      "stdout": "",
+      "stderr": "COMPLETED,on=0,half=65536,steps=80,restores=10,replay_steps=120,corruptions=4,wall_s=8.8494535\n"
+    },
+    {
+      "final_decay": false,
+      "half_ticks": 32768,
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\trigger-charge02\\run.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\trigger-charge-inputs01\\0-32768.ckp",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\trigger-charge02\\0-32768"
+      ],
+      "exit_code": 0,
+      "wall_s": 16.125913699972443,
+      "stdout": "",
+      "stderr": "COMPLETED,on=0,half=32768,steps=160,restores=10,replay_steps=240,corruptions=4,wall_s=16.0945006\n"
+    }
+  ],
+  "replays": [],
+  "outputs": [
+    {
+      "path": "references-local/trigger-charge02/0-32768/checkpoints.bin",
+      "sha256": "390439e1d0bd8ab8bc4329c6fac12d5940adb4baf3e1af70dc106b5b5bc0317f",
+      "bytes": 40304
+    },
+    {
+      "path": "references-local/trigger-charge02/0-32768/final.ckp",
+      "sha256": "5d8ff88a570e97e48122d54965b5d8eb71db8250b7dcf6025d318360ff138707",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/0-32768/phase0-middle.ckp",
+      "sha256": "7f9965eeb68b4fe7509cc3d5927fce69c2efafd382e669a8aae2ae2cdddd7d41",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/0-32768/phase0-start.ckp",
+      "sha256": "d48378adedc0aa9b5c050c180d60706aa40d70acccb5e623361842c2d3549ef4",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/0-32768/phase1-middle.ckp",
+      "sha256": "a7408e43592f1a896ae9cab9542d617ba877cb99bf4e7cd50e1b5b13d30b282c",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/0-32768/phase1-start.ckp",
+      "sha256": "ea32e5cbfc9652bf1d7d7a13d26f059f9356f2d374b0c57e3882d04da2f7e486",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/0-32768/phase2-middle.ckp",
+      "sha256": "3e5695d513da9404c2b1daf73578e0a47a9602e02f864805af63a746bec387fc",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/0-32768/phase2-start.ckp",
+      "sha256": "162ebd6eabe7cd24ede44c7b28932c0c84d539edfd12305ac91a87958064405f",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/0-32768/phase3-middle.ckp",
+      "sha256": "74210f7a195cfa20105c009cf60d7db5cdcd911f9707a34924654d11d60b31e5",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/0-32768/phase3-start.ckp",
+      "sha256": "2a65a937bfaffcccef53d9c4f48b0e5dab654cc4916f7387b527ca25a922d777",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/0-32768/phase4-middle.ckp",
+      "sha256": "41ab10f781453b809536f274ae06dc04900b0536777ce5cf3f77a150b888023a",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/0-32768/phase4-start.ckp",
+      "sha256": "a7e57c83e08e19bd90696a516b3d2dd5d1cb7c08027ffeaf02f94c4ab0e9b4a5",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/0-32768/selected.txt",
+      "sha256": "0f9425296fd4d1f9b079cf38dd30952e39ed490b2fd89a17c3e231ee9cf24c63",
+      "bytes": 729802
+    },
+    {
+      "path": "references-local/trigger-charge02/0-65536/checkpoints.bin",
+      "sha256": "1c7d15e9f3a2eb15899dc38308e69a876744e0d6763a265929d14e81f9822ab0",
+      "bytes": 40304
+    },
+    {
+      "path": "references-local/trigger-charge02/0-65536/final.ckp",
+      "sha256": "a5e267ac477f1b20eea8850c51889b98db6d4abcf3bd99ea655815da82b1eb56",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/0-65536/phase0-middle.ckp",
+      "sha256": "399027113721c01970698d8efc7e35b74da1c8b6deeae2381ef3ec60e3127f0c",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/0-65536/phase0-start.ckp",
+      "sha256": "56f31d9e535264285705f084ecadbb268de1fb2d86390329ad2450cd76425070",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/0-65536/phase1-middle.ckp",
+      "sha256": "9a48105ed9ae1605cd1a1dc5e7e5ea0502fa210e3a5dde709a9bc5fd857c78fa",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/0-65536/phase1-start.ckp",
+      "sha256": "cc8883055b819f55793d05713487ebc70c28cb9ee986d7227e911a26ae8fda79",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/0-65536/phase2-middle.ckp",
+      "sha256": "47b7c920a85c3393dfd49f88fe9a7993a108363a99c3784c3e2a7a5aa9e2c4c8",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/0-65536/phase2-start.ckp",
+      "sha256": "4a1344791e49b7d7ad9a5e147e7826b77e9755ca10d83fe94047f05a9c2b4e3e",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/0-65536/phase3-middle.ckp",
+      "sha256": "a096c0fb78af56537a515ffbea22abd6ec967c347b0253a5450fa9425e1fe3a7",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/0-65536/phase3-start.ckp",
+      "sha256": "c6a24a72dd3368dd3ef417213d31c0fd653f9abd7c938229c5f82102f9a9408a",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/0-65536/phase4-middle.ckp",
+      "sha256": "ba9ebe622e760021b071a9e0bbf5825535728c72909686bec3e034a255276c8b",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/0-65536/phase4-start.ckp",
+      "sha256": "8a021f964f8d9b77ec1de50ab55183dff3978c0283f68dfbf1298e174c1c08bf",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/0-65536/selected.txt",
+      "sha256": "11140232ebf76fd9cf3389f29265e4cd9698cc87fe30c5bda5c94b353f18d9b2",
+      "bytes": 699578
+    },
+    {
+      "path": "references-local/trigger-charge02/1-32768/checkpoints.bin",
+      "sha256": "aac47aa5e24efed11877d9383cfe125840465701a53e36ed80483dbc53be7a68",
+      "bytes": 40304
+    },
+    {
+      "path": "references-local/trigger-charge02/1-32768/final.ckp",
+      "sha256": "2cb344ccb94454ee316804c37959f33f0885b53e8db9432973f4b450f15b801e",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/1-32768/phase0-middle.ckp",
+      "sha256": "699d3acf33c4042bcd167e4e656ecc7de508b1688429ae87a78b33424508ba36",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/1-32768/phase0-start.ckp",
+      "sha256": "c619178b582000db73b161beaa8e717118453887f66b7b1eac6c2591051944c0",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/1-32768/phase1-middle.ckp",
+      "sha256": "5a96041fd8e0aaec5baf799cfe6b31d43ab238889b37c50bb949ce86e2bab26e",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/1-32768/phase1-start.ckp",
+      "sha256": "1f2516b0da821d768dd315f48435fee0a7d98b2cb64faab03cbc5ec99d2fd52f",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/1-32768/phase2-middle.ckp",
+      "sha256": "6962f5949958447c1fe9dfc9aa98951ea2657f45054875f52a4a201904880ca1",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/1-32768/phase2-start.ckp",
+      "sha256": "4bb48189acc160da9225b7c92eae470755cf504eece15de3eb66ef9db5f57045",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/1-32768/phase3-middle.ckp",
+      "sha256": "ead8671679a2a5ec361eeb1391e6e61e64ee9adcf9c002f32f7106cc5bcf6270",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/1-32768/phase3-start.ckp",
+      "sha256": "3258361bfb7c05360702095206af7e96bb8eef25d23bfa505dfb1648165d3cc2",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/1-32768/phase4-middle.ckp",
+      "sha256": "2d55fa9c77cb791cfd54b4fe4b9c19592029595a71af5b4c0b6e46f150df6ae8",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/1-32768/phase4-start.ckp",
+      "sha256": "1740a647538fd2d41096fc1923a02583a272012027f0c7747750a332200eca38",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/1-32768/selected.txt",
+      "sha256": "50e8e790e86c8d74ae6aecb810b489f61378f1a38df714ab5b65d020d181888a",
+      "bytes": 729742
+    },
+    {
+      "path": "references-local/trigger-charge02/1-65536/checkpoints.bin",
+      "sha256": "42d9b56d1485929b27bf7925bbefbef24b9ac27be069d6981f99371809bd263e",
+      "bytes": 40304
+    },
+    {
+      "path": "references-local/trigger-charge02/1-65536/final.ckp",
+      "sha256": "9eebdfe7664930b7dd20322b3950a4754a1f35c6a68f8b8fbff2cc056a6fe791",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/1-65536/phase0-middle.ckp",
+      "sha256": "d5fed07ba0a2a6280edec824ab4756791fcc0138552e0f1fe4e73f4f660b9428",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/1-65536/phase0-start.ckp",
+      "sha256": "033b38a502fd37e68a6ede0f3af6142935a3c85cbb08dfbba4680bad57af0c02",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/1-65536/phase1-middle.ckp",
+      "sha256": "b392739a66362cf6a8681d2640cc4cf39a5585c16f5b8c7f4a1efab184fefa10",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/1-65536/phase1-start.ckp",
+      "sha256": "e2b4c5a161dd8634553fd88fc83f844c13d37bdd96b680382e8f4f830947fb3e",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/1-65536/phase2-middle.ckp",
+      "sha256": "293e18bc593dbe0f0b83c570427cdb11d3d7946864cf502ce009e70458a63589",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/1-65536/phase2-start.ckp",
+      "sha256": "9b46ed725a3e09a5e64934f6688db469af98784293621e0abe927cac12864561",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/1-65536/phase3-middle.ckp",
+      "sha256": "4d73b736647b5aa9f6ea0b245ebcdeeee0966118e24722ac9336700c07caf4c3",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/1-65536/phase3-start.ckp",
+      "sha256": "cbe862431c8f30fc1a90f50be5d4eb01a562582b0e4cc35c09dee1b00d2459e9",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/1-65536/phase4-middle.ckp",
+      "sha256": "5ff42a34e3c1f002c8140f7e9839ce0851a409b1eb950df15716642162d1b3bc",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/1-65536/phase4-start.ckp",
+      "sha256": "7803bb54252e2429f153105579dd286a899fab33b344c6570a9d752c4890599b",
+      "bytes": 3664
+    },
+    {
+      "path": "references-local/trigger-charge02/1-65536/selected.txt",
+      "sha256": "b581b4998334e0b6124522459c011b8f64410d55820155fa73764e006bff0974",
+      "bytes": 699597
+    },
+    {
+      "path": "references-local/trigger-charge02/run.exe",
+      "sha256": "dfb887f706775e37483ad099d2f9b4634299e92555f22003b13bf6fa4bff8da7",
+      "bytes": 1381376
+    }
+  ],
+  "available_free_bytes": 125652373504,
+  "reserve_bytes": 1073741824,
+  "estimated_output_bytes": 33554432,
+  "lab_stack_bytes": 33554432,
+  "new_library_compile": false,
+  "source_sha256_after": {
+    "tools/run_trigger_charge.py": "71277a1bf14b72275b89c16f24857016e02abe1f4eb4efab2302c1ac8a05f3f7",
+    "tools/prepare_trigger_charge.py": "36d6da60b64c9450d535c389b0e5cc528b56ec2beb7ad034f493397b744f9317",
+    "tools/trigger_charge_driver.rs": "cbf61ffaf89dcb811c37151001de7deefa7b4c64705c3ac969b63e455e89933b",
+    "tools/trigger_charge_reference.py": "e0b14ea03256eb35a85aae84ac34ea2c541918f1dcfc778f7d286a6a00894d6c",
+    "tools/joint_trigger_kernel.rs": "11f00a2c94dfe8bafe09223de199542f232159a059b4ba1f51b3894e7e548f38",
+    "tools/joint_trigger_body.rs": "5baf90087d8f1882d53af27d96367966d72ec6cf091170389506ac5ad9c3c9ff",
+    "tools/joint_trigger_runner.rs": "67e8b73edbe9996479d2eb641f7cf97d1d2fcd40b97e11833116ce09e04fcff5",
+    "tools/joint_loudness_kernel.rs": "7400b5b1854c15c22ad668376964bff75e67c802d190f5b42f91984b2db95932",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+    "evidence/voice_trigger_charge_inputs02.json": "94c130aebc778bbbc073d0fcd8e6a87863e0a92a20e50724bf0cdedb12c30e63",
+    "docs/VOZ_GATILLO_CARGADO_PROTOCOLO.md": "31c31aa3343b7aeb4a255cdede6cd009bb96a26b9d9f4e00ebafbd8ee3442380"
+  },
+  "private_used_sha256_after": {
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd",
+    "references-local/trigger-charge-inputs01/1-65536.ckp": "033b38a502fd37e68a6ede0f3af6142935a3c85cbb08dfbba4680bad57af0c02",
+    "references-local/trigger-charge-inputs01/1-32768.ckp": "c619178b582000db73b161beaa8e717118453887f66b7b1eac6c2591051944c0",
+    "references-local/trigger-charge-inputs01/0-65536.ckp": "56f31d9e535264285705f084ecadbb268de1fb2d86390329ad2450cd76425070",
+    "references-local/trigger-charge-inputs01/0-32768.ckp": "d48378adedc0aa9b5c050c180d60706aa40d70acccb5e623361842c2d3549ef4",
+    "references-local/c2-charge02/1-65536/final.ckp": "3511420fa6cf96b81818a6956c82fc067e920b4ac949bdbe3ae2984be5088def",
+    "references-local/c2-charge02/1-32768/final.ckp": "f356a5f268905b06ca6e13105a2e97ac266f7485d237a665babbefba8ba724fd",
+    "references-local/c2-charge02/0-65536/final.ckp": "c5a8e76c2c71e81bd4b70a2fd21009052607adea4a65bc62eeb8ca7c4793e7e1",
+    "references-local/c2-charge02/0-32768/final.ckp": "520afd20e9af88a2e169301851733d140198dae5f8d08dcec4b2d81693938fb1"
+  },
+  "wall_s": 49.82199580001179,
+  "minimum_free_bytes": 125654614016
+}

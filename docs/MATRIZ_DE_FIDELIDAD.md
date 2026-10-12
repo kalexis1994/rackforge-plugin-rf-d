@@ -416,3 +416,13 @@ Condición inicial de C2 declarada;410 coordenadas de voz heredadas por bits.
 Siguiente: biestable/gatillo causal con los tres puertos cargados.
 Sin ADSR completo, audio nuevo, adaptación217, identificación física o RT.
 [QA](../evidence/voice_c2_charge_tests01.json).
+
+## Gatillo común cargado y memorias — 2026-10-12
+
+[Cierre225](VOZ_GATILLO_CARGADO_RESULTADOS.md): Q12/Q20 y C7/C4 reciben
+la carga de C2; RESET_DRIVER deja de ser fuente ideal. Cuatro perfiles de
+10 µs,18000 ecuaciones, balances C2/C18/C27/C7/C4 y40 restores.
+Fallo Newton/replay y adaptador de C4 preservados, mismos gates.
+Siguiente: Q25/Q15 con carga no lineal y continuidad/refinamiento causal.
+Sin latch completo, audio nuevo, adaptación225, identificación física o RT.
+[QA](../evidence/voice_trigger_charge_tests01.json).

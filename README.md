@@ -52,7 +52,7 @@ alcanzan≈265 ms. Los [ciclos de esta nueva raíz](docs/VOZ_CICLOS_CONDICIONADO
 completan dos perfiles de5,25 ms con refinamiento y cargas observadas;
 la periodicidad aún queda abierta. El ciclo anterior conserva su historia.
 
-La [QA vigente](evidence/voice_c2_charge_tests01.json) conserva
+La [QA vigente](evidence/voice_trigger_charge_tests01.json) conserva
 248 tests Rust heredados por identidad y el nuevo banco de trayectorias. La
 [cadena con cargas explícitas](docs/CADENA_CARGA_RADAU_RESULTADOS.md) pasa
 72 etapas y 180 corrientes, con medios pasos de7,629 ps; fuentes impuestas.
@@ -89,6 +89,12 @@ C2 ya es un [estado dinámico conectado](docs/VOZ_C2_CARGA_RESULTADOS.md):
 Cuatro perfiles de50 µs pasan17360 ecuaciones, balances C2/C18/C27,
 ON/OFF y40 restores completos de tramo. Los terminales del biestable
 siguen impuestos; su integración causal permanece pendiente.
+
+El [gatillo común cargado](docs/VOZ_GATILLO_CARGADO_RESULTADOS.md) ya
+cierra Q12/Q20, C7/C4 y la carga real de RESET_DRIVER dentro de225
+incógnitas:18000 ecuaciones, cinco balances y40 restores completos de tramo.
+Q25/Q15 siguen como fronteras explícitas; su conmutación causal permanece
+pendiente. Teclado y S-trigger se reciben como estímulos del circuito.
 
 ## Siguiente trabajo
 
@@ -247,4 +253,4 @@ dos perfiles hasta5,25 ms desde el prefijo propio, dos resets por perfil,
 55200 ecuaciones y balances de carga/medias. Escucha de inspección admitida:
 True; réplica de un intervalo, escala explícita80×.
 No acredita voz completa, periodo asintótico o RT.
-[QA vigente](evidence/voice_c2_charge_tests01.json).
+[QA vigente](evidence/voice_trigger_charge_tests01.json).
