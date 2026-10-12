@@ -384,3 +384,11 @@ puede abrir la transferencia sin cambiar componentes. Próximo bloque:
 control temporal corto con cargas entrantes, caso nominal por bits y
 refinamiento; después ampliar a una escena audible con nivel observado.
 [QA actual](../evidence/voice_cutoff_opening_tests01.json).
+
+## Control temporal de cutoff — 2026-10-12
+
+[Cuatro perfiles de250 µs](VOZ_CUTOFF_TEMPORAL_RESULTADOS.md) con VCO/carga
+conjunta. C18/cola y J7 responden; 28800 ecuaciones, balances y refinamiento.
+Continuar desde los dos checkpoints abiertos propios hasta resets completos;
+no recondicionar las memorias para sustituir la respuesta al cambio de panel.
+[QA actual](../evidence/voice_cutoff_temporal_tests01.json).

@@ -372,3 +372,10 @@ mejora: True. Sin cota asintótica, audio o RT.
 G por FD a1/2 µV, C por incidencias, 48 solves/24 transferencias.
 BUS ideal y pequeña señal; no acredita el nivel de una nota no lineal
 ni trayectoria/audio nuevos. [QA vigente](../evidence/voice_cutoff_opening_tests01.json).
+
+## Apertura temporal con carga conjunta — 2026-10-12
+
+[C18/cola/J7](VOZ_CUTOFF_TEMPORAL_RESULTADOS.md): fuente de panel variable,
+VCO/BUS reales, cuatro perfiles de250 µs y nominal por bits a2 µs.
+Admisión numérica/control eléctrico, sin ciclos completos, audio o RT.
+[QA vigente](../evidence/voice_cutoff_temporal_tests01.json).

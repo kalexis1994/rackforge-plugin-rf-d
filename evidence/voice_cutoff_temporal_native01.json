@@ -1,0 +1,325 @@
+{
+  "schema": "rf-d/cutoff-temporal-native/v1",
+  "passed": true,
+  "source_sha256": {
+    "tools/run_cutoff_temporal.py": "046d75a77a9fff5242ba2f04e0d9b0847bdde931cb363886b5105ffacd6b7a8f",
+    "tools/prepare_cutoff_temporal.py": "dc0a47ef93a090177a490cbcce5bcae4d92ac45a80bbc78d0c04db8db28c358b",
+    "tools/joint_cutoff_temporal_runner.rs": "68db1089e1d56537d2dba10949ae5eb80280f1200884a7f7f1c83f43e26d19c9",
+    "tools/joint_candidate_cycles_runner.rs": "41fbdd6bebacbc69ef9275f7a5fa5b3ae7bf6b9b551c852b4ea5a2e2c0526b79",
+    "docs/VOZ_CUTOFF_TEMPORAL_PROTOCOLO.md": "02ec156503088028b6ae13bc12f3897cbf53058ddb8d0494b938671b89c73f34",
+    "evidence/voice_cutoff_temporal_inputs01.json": "323af36cdff06fba78557d3371150c4b8229d9eb3bc0ad64322a1f78e0396a4c",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+    "evidence/voice_chain_charge_vectors06.txt": "0facf3c5346e8609e35820273cdfc4bd9a7cca5bb1f76b9f8021fb482084bf1c"
+  },
+  "private_used_sha256": {
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd",
+    "references-local/candidate-cycles-seed-6553601.ckp": "b159b74958dc25acf2dd7c38759f8e190a56a9be4ca5f8efbe96d96ddaf858ac",
+    "references-local/candidate-cycles-seed-3276801.ckp": "b38d4e12806175ae9d2afea0b53b9b9134d9a1ffb502f4ef00ad7af9da6028c8"
+  },
+  "compiler": {
+    "path": "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+    "sha256": "fd6232f90a981e28472ce6900232946a1f1bcad8ec8270cd5ae6a3a357208b98",
+    "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+  },
+  "commands": [
+    {
+      "command": [
+        "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+        "--edition=2021",
+        "-C",
+        "opt-level=2",
+        "-C",
+        "strip=symbols",
+        "-C",
+        "link-arg=-Wl,--stack,33554432",
+        "tools/joint_cutoff_temporal_runner.rs",
+        "--extern",
+        "rf_d_circuit=C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-startup01\\librf_d_circuit.rlib",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\cutoff-temporal01\\run.exe"
+      ],
+      "exit_code": 0,
+      "wall_s": 1.0791093999287114,
+      "stdout": "",
+      "stderr": "warning: unused import: `std::time::Instant`\n --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:3:5\n  |\n3 | use std::time::Instant;\n  |     ^^^^^^^^^^^^^^^^^^\n  |\n  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default\n\nwarning: unused imports: `Parameters`, `initial_state`, `step_with_emphasis`, and `step`\n --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:8:5\n  |\n8 |     initial_state, step, step_with_emphasis, Boundary, Parameters,\n  |     ^^^^^^^^^^^^^  ^^^^  ^^^^^^^^^^^^^^^^^^            ^^^^^^^^^^\n\nwarning: unused import: `SolverBudget`\n  --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:16:55\n   |\n16 | use rf_d_circuit::{Parameters as HeadphoneParameters, SolverBudget};\n   |                                                       ^^^^^^^^^^^^\n\nwarning: constant `ANCHOR` is never used\n --> tools/joint_cutoff_temporal_runner.rs:5:7\n  |\n5 | const ANCHOR:u64=131072000;const GOAL:u64=131072000;const MARKS:[u64;5]=[1048576,8388608,33554432,65536000,131072000];\n  |       ^^^^^^\n  |\n  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: 4 warnings emitted\n\n"
+    }
+  ],
+  "profiles": [
+    {
+      "cutoff_fraction": 0.5,
+      "maximum_half_ticks": 65536,
+      "initial_checkpoint": "references-local/candidate-cycles-seed-6553601.ckp",
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\cutoff-temporal01\\run.exe",
+        "run",
+        "65536",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\cutoff-temporal01\\0.5-65536",
+        "12000",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\candidate-cycles-seed-6553601.ckp",
+        "0.5"
+      ],
+      "exit_code": 0,
+      "wall_s": 31.378412500023842,
+      "administrative_stop": false,
+      "stop_reason": null,
+      "stdout": "",
+      "stderr": "SUMMARY,intervals=1012,ticks=131072000,crossings=0,restore_replays=2,max_lte=8.75827603409839228e-1,max_bus=2.71050543121376109e-20,max_c1=1.03676832743926362e-18,charge=4.09746000996707436e-9,absolute=4.10119841012068649e-9,delta_ramp=-4.09746000996707382e-1,balance=2.01692415200338020e-16\nMEAN_LEDGER,4.08360649849729611e-4,-6.90316690772569776e-6,4.92702945045334984e-4,5.37792335879211411e-9,2.11083491832590481e-4\n"
+    },
+    {
+      "cutoff_fraction": 0.5,
+      "maximum_half_ticks": 32768,
+      "initial_checkpoint": "references-local/candidate-cycles-seed-3276801.ckp",
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\cutoff-temporal01\\run.exe",
+        "run",
+        "32768",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\cutoff-temporal01\\0.5-32768",
+        "12000",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\candidate-cycles-seed-3276801.ckp",
+        "0.5"
+      ],
+      "exit_code": 0,
+      "wall_s": 64.6902412000345,
+      "administrative_stop": false,
+      "stop_reason": null,
+      "stdout": "",
+      "stderr": "PROGRESS,intervals=2000,ticks=130613248,wall_s=64.258\nSUMMARY,intervals=2007,ticks=131072000,crossings=0,restore_replays=2,max_lte=8.75827603409839228e-1,max_bus=2.37169225231204095e-20,max_c1=1.03676832743926362e-18,charge=4.09746000996707436e-9,absolute=4.10119841012068649e-9,delta_ramp=-4.09746000996707382e-1,balance=2.01692415200338020e-16\nMEAN_LEDGER,4.08360649849729503e-4,-6.90316690772569776e-6,4.92702945045334984e-4,5.37792335879211411e-9,2.11083491832590454e-4\n"
+    },
+    {
+      "cutoff_fraction": 1.0,
+      "maximum_half_ticks": 65536,
+      "initial_checkpoint": "references-local/candidate-cycles-seed-6553601.ckp",
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\cutoff-temporal01\\run.exe",
+        "run",
+        "65536",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\cutoff-temporal01\\1.0-65536",
+        "12000",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\candidate-cycles-seed-6553601.ckp",
+        "1.0"
+      ],
+      "exit_code": 0,
+      "wall_s": 32.81778360006865,
+      "administrative_stop": false,
+      "stop_reason": null,
+      "stdout": "",
+      "stderr": "SUMMARY,intervals=1030,ticks=131072000,crossings=0,restore_replays=2,max_lte=9.55535165548457188e-1,max_bus=2.03287907341032081e-20,max_c1=1.57209315010398143e-18,charge=4.09746000997602115e-9,absolute=4.10119841011176948e-9,delta_ramp=-4.09746000997602111e-1,balance=0.00000000000000000e0\nMEAN_LEDGER,4.08358312496087650e-4,-6.99652476671250728e-6,4.92609557530452875e-4,5.38027212776449254e-9,2.11175681014756330e-4\n"
+    },
+    {
+      "cutoff_fraction": 1.0,
+      "maximum_half_ticks": 32768,
+      "initial_checkpoint": "references-local/candidate-cycles-seed-3276801.ckp",
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\cutoff-temporal01\\run.exe",
+        "run",
+        "32768",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\cutoff-temporal01\\1.0-32768",
+        "12000",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\candidate-cycles-seed-3276801.ckp",
+        "1.0"
+      ],
+      "exit_code": 0,
+      "wall_s": 60.62449319998268,
+      "administrative_stop": false,
+      "stop_reason": null,
+      "stdout": "",
+      "stderr": "PROGRESS,intervals=2000,ticks=129695744,wall_s=59.901\nSUMMARY,intervals=2021,ticks=131072000,crossings=0,restore_replays=2,max_lte=9.55535165548457188e-1,max_bus=2.71050543121376109e-20,max_c1=9.92722614182039997e-19,charge=4.09746000997602115e-9,absolute=4.10119841011177031e-9,delta_ramp=-4.09746000997602167e-1,balance=2.01692415200776503e-16\nMEAN_LEDGER,4.08358312496087596e-4,-6.99652476671258860e-6,4.92609557530452767e-4,5.38027212776449419e-9,2.11175681014756384e-4\n"
+    }
+  ],
+  "replays": [],
+  "outputs": [
+    {
+      "path": "references-local/cutoff-temporal01/0.5-32768/checkpoints.bin",
+      "sha256": "5352d1251110d20c71604a31b0fda0af7b28ace5d29082ea85fe7dac45002237",
+      "bytes": 19352
+    },
+    {
+      "path": "references-local/cutoff-temporal01/0.5-32768/control.bin",
+      "sha256": "53ce0ec799cdba36268fee0724ccea7d31edc185cbc723009d53e01233dd3bcd",
+      "bytes": 160568
+    },
+    {
+      "path": "references-local/cutoff-temporal01/0.5-32768/events.txt",
+      "sha256": "1cc761bfcfc427deba0bd5cc4ccc36a611ddc48397cbe7645f8083fbb01cc0dd",
+      "bytes": 11
+    },
+    {
+      "path": "references-local/cutoff-temporal01/0.5-32768/final.ckp",
+      "sha256": "624f96fc2075950a301b7ad85db1abec89820900f5bae738e4c8d0f88ccd55e9",
+      "bytes": 3224
+    },
+    {
+      "path": "references-local/cutoff-temporal01/0.5-32768/selected.txt",
+      "sha256": "690086258703ca630e0b44c1a4bf6e04632675dbda70c5a12da497576e17b8fc",
+      "bytes": 857318
+    },
+    {
+      "path": "references-local/cutoff-temporal01/0.5-32768/stderr.txt",
+      "sha256": "457e9889becdfeadec8591066d77329b4cf812111ed8d4b7f1506274ea9db15f",
+      "bytes": 474
+    },
+    {
+      "path": "references-local/cutoff-temporal01/0.5-32768/stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "references-local/cutoff-temporal01/0.5-32768/trace.bin",
+      "sha256": "0cd955f16d3a2b1b493a37e8684846c35b0944da8caa2dea1d99ca1fa7bf8b06",
+      "bytes": 642248
+    },
+    {
+      "path": "references-local/cutoff-temporal01/0.5-65536/checkpoints.bin",
+      "sha256": "68defcb1baabecb7dc1627fc502a2eaa7eb30bf9f38fdd61d774aede9eb09361",
+      "bytes": 19352
+    },
+    {
+      "path": "references-local/cutoff-temporal01/0.5-65536/control.bin",
+      "sha256": "2654a652aeb92d33e6078cfe0c137cf20277c6f59a81ac991ba3c8c094291c1e",
+      "bytes": 80968
+    },
+    {
+      "path": "references-local/cutoff-temporal01/0.5-65536/events.txt",
+      "sha256": "1cc761bfcfc427deba0bd5cc4ccc36a611ddc48397cbe7645f8083fbb01cc0dd",
+      "bytes": 11
+    },
+    {
+      "path": "references-local/cutoff-temporal01/0.5-65536/final.ckp",
+      "sha256": "4888078b4c2d097f0e7dda3d3dc85d7d7a69b40cfa7b5bd1da983c8df208ac0b",
+      "bytes": 3224
+    },
+    {
+      "path": "references-local/cutoff-temporal01/0.5-65536/selected.txt",
+      "sha256": "ef0abfe16c772641a7ab8c1680ee2ae3663e3654427e4101b814ad4c66459057",
+      "bytes": 857657
+    },
+    {
+      "path": "references-local/cutoff-temporal01/0.5-65536/stderr.txt",
+      "sha256": "595518947636a7865d49c0a6614dae61258cc72d34521e966f0aa94ec7bd7b2d",
+      "bytes": 420
+    },
+    {
+      "path": "references-local/cutoff-temporal01/0.5-65536/stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "references-local/cutoff-temporal01/0.5-65536/trace.bin",
+      "sha256": "b89fa61249683e302da548ea58689f17ae0b8fc551d02495f1bdc4d7109d5b49",
+      "bytes": 323848
+    },
+    {
+      "path": "references-local/cutoff-temporal01/1.0-32768/checkpoints.bin",
+      "sha256": "00ae07ea7ad47364225ed78c7e2b2f86256010cae29d2291dd55b7c36aa4e400",
+      "bytes": 19352
+    },
+    {
+      "path": "references-local/cutoff-temporal01/1.0-32768/control.bin",
+      "sha256": "d21102d5fdcbb64fde95bf3eaeac1203986cce5c10bca80382aedabc5e30cd62",
+      "bytes": 161688
+    },
+    {
+      "path": "references-local/cutoff-temporal01/1.0-32768/events.txt",
+      "sha256": "1cc761bfcfc427deba0bd5cc4ccc36a611ddc48397cbe7645f8083fbb01cc0dd",
+      "bytes": 11
+    },
+    {
+      "path": "references-local/cutoff-temporal01/1.0-32768/final.ckp",
+      "sha256": "25173b9dc79b01d3f0179d294a59bef027af3c9d69976fc3dfef6b8749bdeb22",
+      "bytes": 3224
+    },
+    {
+      "path": "references-local/cutoff-temporal01/1.0-32768/selected.txt",
+      "sha256": "6dd277104c09ace502535b490efd4ca14a2c0b57a20588b1b2e0bccef3b6786b",
+      "bytes": 856337
+    },
+    {
+      "path": "references-local/cutoff-temporal01/1.0-32768/stderr.txt",
+      "sha256": "ca6040461280838455821f94bfd2f5e1635e88a4c957cb1c9f4a029bf306df61",
+      "bytes": 474
+    },
+    {
+      "path": "references-local/cutoff-temporal01/1.0-32768/stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "references-local/cutoff-temporal01/1.0-32768/trace.bin",
+      "sha256": "01afdb57a5a74e7502f7d4ea82f7e32ebb3c0abfd1693e3d668027d72ca495c5",
+      "bytes": 646728
+    },
+    {
+      "path": "references-local/cutoff-temporal01/1.0-65536/checkpoints.bin",
+      "sha256": "7669d71698a39147ae6e21ddb7c32c3ee777148c53907a61207fc4ccbcfc1876",
+      "bytes": 19352
+    },
+    {
+      "path": "references-local/cutoff-temporal01/1.0-65536/control.bin",
+      "sha256": "8800c90286ec4688f0d51c2e69cf055650cac50c6b5d4a49ece77fbfd763e6da",
+      "bytes": 82408
+    },
+    {
+      "path": "references-local/cutoff-temporal01/1.0-65536/events.txt",
+      "sha256": "1cc761bfcfc427deba0bd5cc4ccc36a611ddc48397cbe7645f8083fbb01cc0dd",
+      "bytes": 11
+    },
+    {
+      "path": "references-local/cutoff-temporal01/1.0-65536/final.ckp",
+      "sha256": "b4cf40be2ffc7c5983a4afd2a383ed361c77112a434e686ca8d08da17b6aff05",
+      "bytes": 3224
+    },
+    {
+      "path": "references-local/cutoff-temporal01/1.0-65536/selected.txt",
+      "sha256": "ca6da8b22011030db7ebe7034cad2cc2cc1f515416caf18251713a00e8dc60a2",
+      "bytes": 856535
+    },
+    {
+      "path": "references-local/cutoff-temporal01/1.0-65536/stderr.txt",
+      "sha256": "d3deca998fb351d70fae88f3218a1ae23bca174137075c8224a5d818d8d1d691",
+      "bytes": 418
+    },
+    {
+      "path": "references-local/cutoff-temporal01/1.0-65536/stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "references-local/cutoff-temporal01/1.0-65536/trace.bin",
+      "sha256": "9a2c028e5f39650b14bac1b713f73d0083362da9fc5cc65cf16cb7db6e8bd477",
+      "bytes": 329608
+    },
+    {
+      "path": "references-local/cutoff-temporal01/run.exe",
+      "sha256": "58d3654cfcfe2d0253dbbfd1e7f9778a168c29cb046443d4734f34b58a0cc169",
+      "bytes": 1518592
+    }
+  ],
+  "reserve_bytes": 1073741824,
+  "estimated_output_bytes": 33554432,
+  "available_free_bytes": 128778665984,
+  "profile_budget_s": 900,
+  "interval_budget": 12000,
+  "success_budget_s": 3800,
+  "administrative_budget_s": 4200,
+  "lab_stack_bytes": 33554432,
+  "new_library_compile": false,
+  "new_audio": false,
+  "new_spice_processes": 0,
+  "minimum_free_bytes": 128770400256,
+  "wall_s": 190.59579319995828,
+  "source_sha256_after": {
+    "tools/run_cutoff_temporal.py": "046d75a77a9fff5242ba2f04e0d9b0847bdde931cb363886b5105ffacd6b7a8f",
+    "tools/prepare_cutoff_temporal.py": "dc0a47ef93a090177a490cbcce5bcae4d92ac45a80bbc78d0c04db8db28c358b",
+    "tools/joint_cutoff_temporal_runner.rs": "68db1089e1d56537d2dba10949ae5eb80280f1200884a7f7f1c83f43e26d19c9",
+    "tools/joint_candidate_cycles_runner.rs": "41fbdd6bebacbc69ef9275f7a5fa5b3ae7bf6b9b551c852b4ea5a2e2c0526b79",
+    "docs/VOZ_CUTOFF_TEMPORAL_PROTOCOLO.md": "02ec156503088028b6ae13bc12f3897cbf53058ddb8d0494b938671b89c73f34",
+    "evidence/voice_cutoff_temporal_inputs01.json": "323af36cdff06fba78557d3371150c4b8229d9eb3bc0ad64322a1f78e0396a4c",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+    "evidence/voice_chain_charge_vectors06.txt": "0facf3c5346e8609e35820273cdfc4bd9a7cca5bb1f76b9f8021fb482084bf1c"
+  },
+  "private_used_sha256_after": {
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd",
+    "references-local/candidate-cycles-seed-6553601.ckp": "b159b74958dc25acf2dd7c38759f8e190a56a9be4ca5f8efbe96d96ddaf858ac",
+    "references-local/candidate-cycles-seed-3276801.ckp": "b38d4e12806175ae9d2afea0b53b9b9134d9a1ffb502f4ef00ad7af9da6028c8"
+  }
+}

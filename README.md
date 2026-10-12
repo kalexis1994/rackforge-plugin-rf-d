@@ -52,7 +52,7 @@ alcanzan≈265 ms. Los [ciclos de esta nueva raíz](docs/VOZ_CICLOS_CONDICIONADO
 completan dos perfiles de5,25 ms con refinamiento y cargas observadas;
 la periodicidad aún queda abierta. El ciclo anterior conserva su historia.
 
-La [QA vigente](evidence/voice_cutoff_opening_tests01.json) conserva
+La [QA vigente](evidence/voice_cutoff_temporal_tests01.json) conserva
 248 tests Rust heredados por identidad y el nuevo banco de trayectorias. La
 [cadena con cargas explícitas](docs/CADENA_CARGA_RADAU_RESULTADOS.md) pasa
 72 etapas y 180 corrientes, con medios pasos de7,629 ps; fuentes impuestas.
@@ -217,3 +217,9 @@ tres DC archivados, G/C contrastadas y cuatro armónicos con BUS ideal.
 Abrir0,5→1 eleva |J7/BUS| unas 53.75 veces en la fundamental.
 Diagnóstico de pequeña señal; siguiente: control temporal con carga propia.
 [QA vigente](evidence/voice_cutoff_opening_tests01.json).
+
+[Control temporal de cutoff con carga real](docs/VOZ_CUTOFF_TEMPORAL_RESULTADOS.md):
+cuatro perfiles de250 µs, C18/cola/J7, 28800 ecuaciones y ocho restores.
+J7 cambia≈2,7 mV, cargas entrantes intactas y caso nominal por bits a2 µs.
+Siguiente: continuar los perfiles abiertos hasta resets completos.
+[QA vigente](evidence/voice_cutoff_temporal_tests01.json).
