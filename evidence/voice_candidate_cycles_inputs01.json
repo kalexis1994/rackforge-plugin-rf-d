@@ -1,0 +1,58 @@
+{
+  "passed": true,
+  "candidate_path": "references-local/dynamic-direction01/own-4.bin",
+  "candidate_sha256": "14ef4b906e125988485c05661cbff9b66e553248ab8a1df064bda51bdc3c0515",
+  "state_offset": 24,
+  "state_bytes": 3200,
+  "outputs": [
+    {
+      "path": "references-local/candidate-cycles-seed-6553601.ckp",
+      "maximum_half_ticks": 65536,
+      "sha256": "b159b74958dc25acf2dd7c38759f8e190a56a9be4ca5f8efbe96d96ddaf858ac",
+      "bytes": 3224
+    },
+    {
+      "path": "references-local/candidate-cycles-seed-3276801.ckp",
+      "maximum_half_ticks": 32768,
+      "sha256": "b38d4e12806175ae9d2afea0b53b9b9134d9a1ffb502f4ef00ad7af9da6028c8",
+      "bytes": 3224
+    }
+  ],
+  "goal_ticks": 5373952000,
+  "substitutions": [
+    [
+      "const GOAL:u64=2752512000;",
+      "const GOAL:u64=5373952000;"
+    ],
+    [
+      "as_secs_f64()>1800.",
+      "as_secs_f64()>7200."
+    ],
+    [
+      "before.elapsed_ticks==ANCHOR||before.elapsed_ticks==9*ANCHOR",
+      "before.elapsed_ticks==ANCHOR||before.elapsed_ticks==9*ANCHOR||before.elapsed_ticks==29*ANCHOR"
+    ],
+    [
+      "if crossings<=2 {event=true;}",
+      "event=true;"
+    ],
+    [
+      "if balance>0.002 {",
+      "if crossings!=4||restores!=3||balance>0.002 {"
+    ],
+    [
+      "if !same(&accepted,&echo)",
+      "if !same(&accepted,&echo)||!same_bits(&accepted,&echo)"
+    ],
+    [
+      "fn run(maximum:",
+      "fn state_bits(a:joint::State,b:joint::State)->bool {\n a.high.into_iter().chain(a.low).zip(b.high.into_iter().chain(b.low)).all(|(x,y)|x.to_bits()==y.to_bits())\n}\nfn same_bits(a:&Accepted,b:&Accepted)->bool {\n let pairs=[(&a.coarse,&b.coarse),(&a.endpoints[0].pair,&b.endpoints[0].pair),(&a.endpoints[1].pair,&b.endpoints[1].pair)];\n a.error_ratio.to_bits()==b.error_ratio.to_bits()&&pairs.into_iter().all(|(x,y)|x.residual_ratio.to_bits()==y.residual_ratio.to_bits()&&x.correction_ratio.to_bits()==y.correction_ratio.to_bits()&&(0..2).all(|k|state_bits(x.candidates[k],y.candidates[k])&&state_bits(x.increments[k],y.increments[k])))\n}\nfn run(maximum:"
+    ]
+  ],
+  "source_sha256": {
+    "tools/prepare_candidate_cycles.py": "f6d0f9d2e26b472d45ab5677a507d57221aa6e37c4ff5d056f4e0caa66fa969b",
+    "tools/joint_corrected_cycles_runner.rs": "cf6b694cbaa3ad5cdcf64f2e46464de515b01f928e65bf7565b629e364e1a1b6",
+    "tools/joint_candidate_cycles_runner.rs": "41fbdd6bebacbc69ef9275f7a5fa5b3ae7bf6b9b551c852b4ea5a2e2c0526b79",
+    "docs/VOZ_CANDIDATO_CICLOS_PROTOCOLO.md": "aed6dad7cfd87a990caa741444e671ecf266eeae4290e4874517d554baeeeb4d"
+  }
+}

@@ -52,7 +52,7 @@ alcanzan≈265 ms. Los [ciclos de esta nueva raíz](docs/VOZ_CICLOS_CONDICIONADO
 completan dos perfiles de5,25 ms con refinamiento y cargas observadas;
 la periodicidad aún queda abierta. El ciclo anterior conserva su historia.
 
-La [QA vigente](evidence/voice_dynamic_direction_tests01.json) conserva
+La [QA vigente](evidence/voice_candidate_cycles_tests01.json) conserva
 248 tests Rust heredados por identidad y el nuevo banco de trayectorias. La
 [cadena con cargas explícitas](docs/CADENA_CARGA_RADAU_RESULTADOS.md) pasa
 72 etapas y 180 corrientes, con medios pasos de7,629 ps; fuentes impuestas.
@@ -204,3 +204,10 @@ propio. Ratio L2 de deriva 0.00218670557; ratio máximo 0.00199744081.
 Rango 16, 212720 solves, 40000 ecuaciones y prefijos seriales por bits.
 Admisión del candidato en este dominio: True.
 [QA vigente](evidence/voice_dynamic_direction_tests01.json).
+
+[Candidato dinámico con calendario propio](docs/VOZ_CANDIDATO_CICLOS_RESULTADOS.md):
+dos perfiles de10,25 ms, cuatro resets y tres retornos por perfil;
+14400 ecuaciones independientes, estados al mismo reloj y seis restores
+por bits. Persistencia de la mejora bajo criterio previo: True.
+No acredita periodicidad asintótica; siguiente bloque: controles/cargas.
+[QA vigente](evidence/voice_candidate_cycles_tests01.json).

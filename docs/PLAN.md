@@ -367,3 +367,12 @@ Ratio L2 0.00218670557; máximo 0.00199744081.
 Siguiente: ciclos posteriores, calendario propio adaptativo y contraste
 de perfil antes de adoptar una inicialización estable de la voz.
 [QA actual](../evidence/voice_dynamic_direction_tests01.json).
+
+## Candidato adaptativo y retornos posteriores — 2026-10-12
+
+[Cuatro resets, dos resoluciones](VOZ_CANDIDATO_CICLOS_RESULTADOS.md),
+10,25 ms, tres retornos por perfil, 14400 ecuaciones y seis restores por bits.
+Persistencia de mejora en esta duración: True.
+Siguiente: avanzar controles/cargas funcionales; no exigir una cota global
+de asentamiento para iniciar un banco corto de otra frontera identificada.
+[QA actual](../evidence/voice_candidate_cycles_tests01.json).

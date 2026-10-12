@@ -357,3 +357,11 @@ raíces, 40000 ecuaciones y 640000 coordenadas de prefijos por bits.
 Mejora del candidato a=1 en este dominio: True.
 No acredita todas las columnas, periodicidad, adaptación, fidelidad o RT.
 [QA vigente](../evidence/voice_dynamic_direction_tests01.json).
+
+## Candidato dinámico con calendario propio — 2026-10-12
+
+[Dos perfiles adaptativos](VOZ_CANDIDATO_CICLOS_RESULTADOS.md) hasta10,25 ms;
+ocho resets/seis intervalos, estados al mismo reloj, balances de carga,
+14400 ecuaciones y seis restores por bits. Persistencia del criterio de
+mejora: True. Sin cota asintótica, audio o RT.
+[QA vigente](../evidence/voice_candidate_cycles_tests01.json).

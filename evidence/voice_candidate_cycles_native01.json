@@ -1,0 +1,196 @@
+{
+  "schema": "rf-d/candidate-cycles-native/v1",
+  "passed": true,
+  "source_sha256": {
+    "tools/run_candidate_cycles.py": "96a2d49c5e09c033504eb2598d6a16cca2c053b248529cc96bbc557058a804e3",
+    "tools/prepare_candidate_cycles.py": "f6d0f9d2e26b472d45ab5677a507d57221aa6e37c4ff5d056f4e0caa66fa969b",
+    "tools/joint_candidate_cycles_runner.rs": "41fbdd6bebacbc69ef9275f7a5fa5b3ae7bf6b9b551c852b4ea5a2e2c0526b79",
+    "tools/joint_corrected_cycles_runner.rs": "cf6b694cbaa3ad5cdcf64f2e46464de515b01f928e65bf7565b629e364e1a1b6",
+    "docs/VOZ_CANDIDATO_CICLOS_PROTOCOLO.md": "aed6dad7cfd87a990caa741444e671ecf266eeae4290e4874517d554baeeeb4d",
+    "evidence/voice_candidate_cycles_inputs01.json": "83393969bf769f78ba56925f4b0b2db06b7e8f0c833447a79b8deb433e439af2",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+    "evidence/voice_chain_charge_vectors06.txt": "0facf3c5346e8609e35820273cdfc4bd9a7cca5bb1f76b9f8021fb482084bf1c"
+  },
+  "private_used_sha256": {
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd",
+    "references-local/dynamic-direction01/own-4.bin": "14ef4b906e125988485c05661cbff9b66e553248ab8a1df064bda51bdc3c0515",
+    "references-local/candidate-cycles-seed-6553601.ckp": "b159b74958dc25acf2dd7c38759f8e190a56a9be4ca5f8efbe96d96ddaf858ac",
+    "references-local/candidate-cycles-seed-3276801.ckp": "b38d4e12806175ae9d2afea0b53b9b9134d9a1ffb502f4ef00ad7af9da6028c8"
+  },
+  "compiler": {
+    "path": "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+    "sha256": "fd6232f90a981e28472ce6900232946a1f1bcad8ec8270cd5ae6a3a357208b98",
+    "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+  },
+  "commands": [
+    {
+      "command": [
+        "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+        "--edition=2021",
+        "-C",
+        "opt-level=2",
+        "-C",
+        "strip=symbols",
+        "-C",
+        "link-arg=-Wl,--stack,33554432",
+        "tools/joint_candidate_cycles_runner.rs",
+        "--extern",
+        "rf_d_circuit=C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-startup01\\librf_d_circuit.rlib",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\candidate-cycles01\\run.exe"
+      ],
+      "exit_code": 0,
+      "wall_s": 1.2429710000287741,
+      "stdout": "",
+      "stderr": "warning: unused import: `std::time::Instant`\n --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:3:5\n  |\n3 | use std::time::Instant;\n  |     ^^^^^^^^^^^^^^^^^^\n  |\n  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default\n\nwarning: unused imports: `Parameters`, `initial_state`, `step_with_emphasis`, and `step`\n --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:8:5\n  |\n8 |     initial_state, step, step_with_emphasis, Boundary, Parameters,\n  |     ^^^^^^^^^^^^^  ^^^^  ^^^^^^^^^^^^^^^^^^            ^^^^^^^^^^\n\nwarning: unused import: `SolverBudget`\n  --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:16:55\n   |\n16 | use rf_d_circuit::{Parameters as HeadphoneParameters, SolverBudget};\n   |                                                       ^^^^^^^^^^^^\n\nwarning: 3 warnings emitted\n\n"
+    }
+  ],
+  "profiles": [
+    {
+      "maximum_half_ticks": 65536,
+      "initial_checkpoint": "references-local/candidate-cycles-seed-6553601.ckp",
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\candidate-cycles01\\run.exe",
+        "run",
+        "65536",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\candidate-cycles01\\65536",
+        "65000",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\candidate-cycles-seed-6553601.ckp"
+      ],
+      "exit_code": 0,
+      "wall_s": 1742.0501109999605,
+      "administrative_stop": false,
+      "stop_reason": null,
+      "stderr": "PROGRESS,intervals=2000,ticks=260800512,wall_s=65.070\nPROGRESS,intervals=4000,ticks=522715136,wall_s=131.735\nPROGRESS,intervals=6000,ticks=769781760,wall_s=202.872\nPROGRESS,intervals=8000,ticks=1030995968,wall_s=269.997\nPROGRESS,intervals=10000,ticks=1276310400,wall_s=341.962\nRESET,crossing=1,ticks=1276366016\nPROGRESS,intervals=12000,ticks=1387921344,wall_s=432.754\nPROGRESS,intervals=14000,ticks=1647574784,wall_s=498.512\nPROGRESS,intervals=16000,ticks=1897567232,wall_s=585.770\nPROGRESS,intervals=18000,ticks=2153639936,wall_s=659.533\nPROGRESS,intervals=20000,ticks=2414854144,wall_s=725.754\nRESET,crossing=2,ticks=2552621440\nPROGRESS,intervals=22000,ticks=2552727568,wall_s=815.554\nPROGRESS,intervals=24000,ticks=2770468800,wall_s=888.943\nPROGRESS,intervals=26000,ticks=3030122240,wall_s=955.732\nPROGRESS,intervals=28000,ticks=3276760576,wall_s=1027.611\nPROGRESS,intervals=30000,ticks=3536844800,wall_s=1095.313\nPROGRESS,intervals=32000,ticks=3797803008,wall_s=1160.738\nRESET,crossing=3,ticks=3828876800\nPROGRESS,intervals=34000,ticks=3894306208,wall_s=1255.791\nPROGRESS,intervals=36000,ticks=4153016192,wall_s=1320.497\nPROGRESS,intervals=38000,ticks=4412931584,wall_s=1385.540\nPROGRESS,intervals=40000,ticks=4658952192,wall_s=1458.425\nPROGRESS,intervals=42000,ticks=4919910400,wall_s=1528.787\nRESET,crossing=4,ticks=5105132224\nPROGRESS,intervals=44000,ticks=5105181232,wall_s=1614.243\nPROGRESS,intervals=46000,ticks=5275385728,wall_s=1712.303\nSUMMARY,intervals=46753,ticks=5373952000,crossings=4,restore_replays=3,max_lte=9.98185112531176699e-1,max_bus=1.32137139771670853e-19,max_c1=9.89763826453327056e-14,charge=8.40722909792043884e-9,absolute=3.27994794105741092e-7,delta_ramp=-8.40722909791986939e-1,balance=1.73508931136575536e-15\nMEAN_LEDGER,7.39312355728855808e-6,-3.75201151709727762e-4,2.01020540944976990e-2,9.65344492964005189e-9,3.78897713488372009e-4\n",
+      "stdout": ""
+    },
+    {
+      "maximum_half_ticks": 32768,
+      "initial_checkpoint": "references-local/candidate-cycles-seed-3276801.ckp",
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\candidate-cycles01\\run.exe",
+        "run",
+        "32768",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\candidate-cycles01\\32768",
+        "100000",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\candidate-cycles-seed-3276801.ckp"
+      ],
+      "exit_code": 0,
+      "wall_s": 2868.3998037999263,
+      "administrative_stop": false,
+      "stop_reason": null,
+      "stderr": "PROGRESS,intervals=2000,ticks=130727936,wall_s=63.603\nPROGRESS,intervals=4000,ticks=261718016,wall_s=128.634\nPROGRESS,intervals=6000,ticks=392757248,wall_s=192.755\nPROGRESS,intervals=8000,ticks=523829248,wall_s=256.628\nPROGRESS,intervals=10000,ticks=649488384,wall_s=323.794\nPROGRESS,intervals=12000,ticks=780201984,wall_s=388.861\nPROGRESS,intervals=14000,ticks=911073280,wall_s=452.810\nPROGRESS,intervals=16000,ticks=1042006016,wall_s=516.326\nPROGRESS,intervals=18000,ticks=1172996096,wall_s=598.024\nRESET,crossing=1,ticks=1276366016\nPROGRESS,intervals=20000,ticks=1276397520,wall_s=675.483\nPROGRESS,intervals=22000,ticks=1353252832,wall_s=759.440\nPROGRESS,intervals=24000,ticks=1483669440,wall_s=823.549\nPROGRESS,intervals=26000,ticks=1614151552,wall_s=886.931\nPROGRESS,intervals=28000,ticks=1744699136,wall_s=952.629\nPROGRESS,intervals=30000,ticks=1875312128,wall_s=1015.293\nPROGRESS,intervals=32000,ticks=2000288768,wall_s=1084.154\nPROGRESS,intervals=34000,ticks=2131032064,wall_s=1146.297\nPROGRESS,intervals=36000,ticks=2261839872,wall_s=1208.480\nPROGRESS,intervals=38000,ticks=2392711168,wall_s=1270.493\nPROGRESS,intervals=40000,ticks=2523643904,wall_s=1332.411\nRESET,crossing=2,ticks=2552621440\nPROGRESS,intervals=42000,ticks=2574010624,wall_s=1424.446\nPROGRESS,intervals=44000,ticks=2704342528,wall_s=1492.725\nPROGRESS,intervals=46000,ticks=2835020800,wall_s=1557.536\nPROGRESS,intervals=48000,ticks=2965764096,wall_s=1630.667\nPROGRESS,intervals=50000,ticks=3096571904,wall_s=1706.248\nPROGRESS,intervals=52000,ticks=3221907456,wall_s=1774.935\nPROGRESS,intervals=54000,ticks=3352621056,wall_s=1830.938\nPROGRESS,intervals=56000,ticks=3483492352,wall_s=1887.139\nPROGRESS,intervals=58000,ticks=3614425088,wall_s=1942.254\nPROGRESS,intervals=60000,ticks=3745415168,wall_s=1997.586\nRESET,crossing=3,ticks=3828876800\nPROGRESS,intervals=62000,ticks=3828960720,wall_s=2070.574\nPROGRESS,intervals=64000,ticks=3926615472,wall_s=2139.702\nPROGRESS,intervals=66000,ticks=4056678368,wall_s=2196.334\nPROGRESS,intervals=68000,ticks=4187094976,wall_s=2252.437\nPROGRESS,intervals=70000,ticks=4317577088,wall_s=2309.520\nPROGRESS,intervals=72000,ticks=4448124672,wall_s=2365.785\nPROGRESS,intervals=74000,ticks=4572970496,wall_s=2428.864\nPROGRESS,intervals=76000,ticks=4703648768,wall_s=2487.363\nPROGRESS,intervals=78000,ticks=4834392064,wall_s=2549.342\nPROGRESS,intervals=80000,ticks=4965199872,wall_s=2609.561\nPROGRESS,intervals=82000,ticks=5096071168,wall_s=2670.350\nRESET,crossing=4,ticks=5105132224\nPROGRESS,intervals=84000,ticks=5145165792,wall_s=2759.738\nPROGRESS,intervals=86000,ticks=5275582400,wall_s=2821.260\nSUMMARY,intervals=87502,ticks=5373952000,crossings=4,restore_replays=3,max_lte=9.98886472272243142e-1,max_bus=1.18584612615602047e-19,max_c1=1.00197627972420378e-13,charge=8.40722848521229084e-9,absolute=3.27994794223339123e-7,delta_ramp=-8.40722848521170851e-1,balance=1.77544022494700400e-15\nMEAN_LEDGER,7.39301643566468263e-6,-3.75201152727784224e-4,2.01020540938524270e-2,9.65344359097112305e-9,3.78897660945616598e-4\n",
+      "stdout": ""
+    }
+  ],
+  "replays": [],
+  "outputs": [
+    {
+      "path": "references-local/candidate-cycles01/32768/checkpoints.bin",
+      "sha256": "a8efa07db8bbf47e20a8e7a01d5a4e878f5f2e1752f7d93be6e5147aae5edb82",
+      "bytes": 138640
+    },
+    {
+      "path": "references-local/candidate-cycles01/32768/events.txt",
+      "sha256": "29c7bd5231882a48e6174dfb399414ff8720996accf24179e523f230e60487ad",
+      "bytes": 76517
+    },
+    {
+      "path": "references-local/candidate-cycles01/32768/final.ckp",
+      "sha256": "294369e002690a4caf960cc9b941affa5e52e5fb49c1358199fa9e0645ce3d4e",
+      "bytes": 3224
+    },
+    {
+      "path": "references-local/candidate-cycles01/32768/selected.txt",
+      "sha256": "5a2353bf68b2c6bb55f2c4c21f844732a69e677797fc26b706e66c36ac4afe6a",
+      "bytes": 856927
+    },
+    {
+      "path": "references-local/candidate-cycles01/32768/stderr.txt",
+      "sha256": "712510f5f7f9abd9ef578716b53b662855c50c5cfc0c045e9fa79852a9aec5de",
+      "bytes": 3026
+    },
+    {
+      "path": "references-local/candidate-cycles01/32768/stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "references-local/candidate-cycles01/32768/trace.bin",
+      "sha256": "93be5c648060864d0487d0bb710cb22837755139ec9f9c1ee802b8ff384986de",
+      "bytes": 28000648
+    },
+    {
+      "path": "references-local/candidate-cycles01/65536/checkpoints.bin",
+      "sha256": "d5f083e201d45c4c591281b8ad11405f150db9820aea9d927d39376bdfc5415c",
+      "bytes": 138640
+    },
+    {
+      "path": "references-local/candidate-cycles01/65536/events.txt",
+      "sha256": "2104c53b000a9528f895562b6214ca5607228153feeabf5332e24a5299c99ee9",
+      "bytes": 76516
+    },
+    {
+      "path": "references-local/candidate-cycles01/65536/final.ckp",
+      "sha256": "7231b6252ecc8f488960a84f8b49d81bed643940e11acded691a23d52d66a70e",
+      "bytes": 3224
+    },
+    {
+      "path": "references-local/candidate-cycles01/65536/selected.txt",
+      "sha256": "773c8d3405397eab1dd16eb466478bf2de156e82c60f30514d0d5c5a0c2e4f9d",
+      "bytes": 857081
+    },
+    {
+      "path": "references-local/candidate-cycles01/65536/stderr.txt",
+      "sha256": "d788fb60c7f475e2f30bd49ec790abb26bbb2bcd5326d3b18cafbac499e377aa",
+      "bytes": 1871
+    },
+    {
+      "path": "references-local/candidate-cycles01/65536/stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "references-local/candidate-cycles01/65536/trace.bin",
+      "sha256": "13f882a0661cdb130bde1f1a8a2b2ece10ff25b1afcddd4d77c9bfc4657225ae",
+      "bytes": 14960968
+    },
+    {
+      "path": "references-local/candidate-cycles01/run.exe",
+      "sha256": "1de0df7fc89fc22d6f85f3ff3a1bc8af568d59fe62beffb57375bd8fc2d7e6f0",
+      "bytes": 1511936
+    }
+  ],
+  "workers": 2,
+  "processor_count": 12,
+  "initial_available_memory_bytes": 32147427328,
+  "lab_stack_bytes": 33554432,
+  "reserve_bytes": 1073741824,
+  "estimated_output_bytes": 67108864,
+  "available_free_bytes": 125703536640,
+  "goal_ticks": 5373952000,
+  "profile_budget_s": 7200,
+  "success_budget_s": 7400,
+  "administrative_budget_s": 9000,
+  "new_library_compile": false,
+  "new_audio": false,
+  "new_spice_processes": 0,
+  "minimum_free_bytes": 125550329856,
+  "wall_s": 2869.963783000014,
+  "source_sha256_after": {
+    "tools/run_candidate_cycles.py": "96a2d49c5e09c033504eb2598d6a16cca2c053b248529cc96bbc557058a804e3",
+    "tools/prepare_candidate_cycles.py": "f6d0f9d2e26b472d45ab5677a507d57221aa6e37c4ff5d056f4e0caa66fa969b",
+    "tools/joint_candidate_cycles_runner.rs": "41fbdd6bebacbc69ef9275f7a5fa5b3ae7bf6b9b551c852b4ea5a2e2c0526b79",
+    "tools/joint_corrected_cycles_runner.rs": "cf6b694cbaa3ad5cdcf64f2e46464de515b01f928e65bf7565b629e364e1a1b6",
+    "docs/VOZ_CANDIDATO_CICLOS_PROTOCOLO.md": "aed6dad7cfd87a990caa741444e671ecf266eeae4290e4874517d554baeeeb4d",
+    "evidence/voice_candidate_cycles_inputs01.json": "83393969bf769f78ba56925f4b0b2db06b7e8f0c833447a79b8deb433e439af2",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+    "evidence/voice_chain_charge_vectors06.txt": "0facf3c5346e8609e35820273cdfc4bd9a7cca5bb1f76b9f8021fb482084bf1c"
+  },
+  "private_used_sha256_after": {
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd",
+    "references-local/dynamic-direction01/own-4.bin": "14ef4b906e125988485c05661cbff9b66e553248ab8a1df064bda51bdc3c0515",
+    "references-local/candidate-cycles-seed-6553601.ckp": "b159b74958dc25acf2dd7c38759f8e190a56a9be4ca5f8efbe96d96ddaf858ac",
+    "references-local/candidate-cycles-seed-3276801.ckp": "b38d4e12806175ae9d2afea0b53b9b9134d9a1ffb502f4ef00ad7af9da6028c8"
+  }
+}
