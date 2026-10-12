@@ -420,3 +420,13 @@ de tramo por bits. Checkpoint conserva reloj, fuentes y410 componentes;
 con carga/descarga y puerto de reset antes del biestable causal completo.
 Sin audio nuevo, ADSR, adaptación205, hardware o RT.
 [QA actual](../evidence/voice_loudness_control_tests01.json).
+
+## C2 dinámico y red de carga/descarga — 2026-10-12
+
+[Cierre217](VOZ_C2_CARGA_RESULTADOS.md): C2 deja de ser fuente ideal,
+con Q16/Q17/Q18/Q19, panel eléctrico, CR9 y decay final ON/OFF. Cuatro
+perfiles de50 µs,17360 ecuaciones, balances C2/C18/C27 y40 restores.
+Condición inicial de C2 declarada;410 coordenadas de voz heredadas por bits.
+Siguiente: biestable/gatillo causal con los tres puertos cargados.
+Sin ADSR completo, audio nuevo, adaptación217, identificación física o RT.
+[QA](../evidence/voice_c2_charge_tests01.json).

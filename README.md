@@ -52,7 +52,7 @@ alcanzan≈265 ms. Los [ciclos de esta nueva raíz](docs/VOZ_CICLOS_CONDICIONADO
 completan dos perfiles de5,25 ms con refinamiento y cargas observadas;
 la periodicidad aún queda abierta. El ciclo anterior conserva su historia.
 
-La [QA vigente](evidence/voice_loudness_control_tests01.json) conserva
+La [QA vigente](evidence/voice_c2_charge_tests01.json) conserva
 248 tests Rust heredados por identidad y el nuevo banco de trayectorias. La
 [cadena con cargas explícitas](docs/CADENA_CARGA_RADAU_RESULTADOS.md) pasa
 72 etapas y 180 corrientes, con medios pasos de7,629 ps; fuentes impuestas.
@@ -83,6 +83,12 @@ ya conservan la memoria205 durante cinco tramos de10 µs totales por
 perfil:8200 ecuaciones, balances C18/C27 y veinte restores con replay
 completo de tramo por bits. C2/reset todavía son fuentes ideales; el
 próximo cierre incorpora C2 y su red de carga/descarga.
+
+C2 ya es un [estado dinámico conectado](docs/VOZ_C2_CARGA_RESULTADOS.md):
+217 incógnitas con ataque/decay/sustain, CR4/CR9 y carga real del seguidor.
+Cuatro perfiles de50 µs pasan17360 ecuaciones, balances C2/C18/C27,
+ON/OFF y40 restores completos de tramo. Los terminales del biestable
+siguen impuestos; su integración causal permanece pendiente.
 
 ## Siguiente trabajo
 
@@ -241,4 +247,4 @@ dos perfiles hasta5,25 ms desde el prefijo propio, dos resets por perfil,
 55200 ecuaciones y balances de carga/medias. Escucha de inspección admitida:
 True; réplica de un intervalo, escala explícita80×.
 No acredita voz completa, periodo asintótico o RT.
-[QA vigente](evidence/voice_loudness_control_tests01.json).
+[QA vigente](evidence/voice_c2_charge_tests01.json).

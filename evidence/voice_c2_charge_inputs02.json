@@ -1,0 +1,142 @@
+{
+  "passed": true,
+  "start_ticks": 2758803456,
+  "phase_span_ticks": 5242880,
+  "sources": [
+    [
+      8.3,
+      9.0,
+      0.7
+    ],
+    [
+      0.05,
+      9.0,
+      0.7
+    ],
+    [
+      8.3,
+      9.0,
+      0.7
+    ],
+    [
+      8.3,
+      0.03,
+      0.7
+    ],
+    [
+      8.3,
+      0.03,
+      0.01
+    ]
+  ],
+  "seeds": [
+    {
+      "path": "references-local/c2-charge-inputs01/1-65536.ckp",
+      "sha256": "f666a1b561c7f38fa9ad6d0c59fd4f614933fd89182b7b47f5d77e1a9f802cff",
+      "origin_path": "references-local/loudness-control01/65536/final.ckp",
+      "origin_sha256": "45cd45e5594a56198803e2bb011415d9449b9bd265b0b6d010de9e0bc6e3bc31",
+      "final_decay": true,
+      "half_ticks": 65536,
+      "algebraic_preparation": {
+        "iterations": 7,
+        "max_kcl_a": 2.7321894746634712e-17,
+        "correction_v": 2.6720821277294926e-16,
+        "unknowns": 11
+      },
+      "new_c2_initial_v": 3.2,
+      "new_c2_initial_charge_c": 3.2e-05
+    },
+    {
+      "path": "references-local/c2-charge-inputs01/1-32768.ckp",
+      "sha256": "6249b8fd9e56f21656aa50ba3ef1c7e4aa549e1bc163cc6f803a6471b4223781",
+      "origin_path": "references-local/loudness-control01/32768/final.ckp",
+      "origin_sha256": "fe960c0b9ea5abc82b5e370f6e8e6556f94bd94648a02b229f227d5b17efb121",
+      "final_decay": true,
+      "half_ticks": 32768,
+      "algebraic_preparation": {
+        "iterations": 7,
+        "max_kcl_a": 2.7321894746634712e-17,
+        "correction_v": 2.6720821277294926e-16,
+        "unknowns": 11
+      },
+      "new_c2_initial_v": 3.2,
+      "new_c2_initial_charge_c": 3.2e-05
+    },
+    {
+      "path": "references-local/c2-charge-inputs01/0-65536.ckp",
+      "sha256": "ecf9775c35a40965fd76d5bacb4a4b819ea3562f41d147243e2dd165189a91f5",
+      "origin_path": "references-local/loudness-control01/65536/final.ckp",
+      "origin_sha256": "45cd45e5594a56198803e2bb011415d9449b9bd265b0b6d010de9e0bc6e3bc31",
+      "final_decay": false,
+      "half_ticks": 65536,
+      "algebraic_preparation": {
+        "iterations": 7,
+        "max_kcl_a": 2.7321894746634712e-17,
+        "correction_v": 2.6720821277294926e-16,
+        "unknowns": 11
+      },
+      "new_c2_initial_v": 3.2,
+      "new_c2_initial_charge_c": 3.2e-05
+    },
+    {
+      "path": "references-local/c2-charge-inputs01/0-32768.ckp",
+      "sha256": "6fca81cce380637c71bda835902a83b2c534eba567e0afbedf07da6f0c5d22b7",
+      "origin_path": "references-local/loudness-control01/32768/final.ckp",
+      "origin_sha256": "fe960c0b9ea5abc82b5e370f6e8e6556f94bd94648a02b229f227d5b17efb121",
+      "final_decay": false,
+      "half_ticks": 32768,
+      "algebraic_preparation": {
+        "iterations": 7,
+        "max_kcl_a": 2.7321894746634712e-17,
+        "correction_v": 2.6720821277294926e-16,
+        "unknowns": 11
+      },
+      "new_c2_initial_v": 3.2,
+      "new_c2_initial_charge_c": 3.2e-05
+    }
+  ],
+  "kernel_substitutions": [
+    [
+      "pub const N:usize=205;",
+      "pub const N:usize=217;"
+    ],
+    [
+      "pub c2_v:f64,pub reset_v:f64",
+      "pub c2_v:f64,pub reset_v:f64,pub q25:f64,pub reset_driver:f64,pub final_decay:bool"
+    ],
+    [
+      "c2_v:3.2,reset_v:0.01",
+      "c2_v:3.2,reset_v:0.01,q25:8.3,reset_driver:9.,final_decay:true"
+    ],
+    [
+      "c2_v:p.c2_v",
+      "c2_v:now.high[205]"
+    ],
+    [
+      " if s.dc.iter()",
+      "\n let driver=c2_charge_driver::linearize(std::array::from_fn(|k|now.high[205+k]),c2_charge_driver::Controls{q25:p.q25,reset_driver:p.reset_driver,final_decay:p.final_decay})?;\n for a in 0..12 {\n  s.candidate.high[205+a]=now.high[205+a];s.candidate.low[205+a]=now.low[205+a];\n  s.dc[205+a]+=driver.dc[a]+(0..12).map(|b|driver.jacobian[a][b]*now.low[205+b]).sum::<f64>();\n  for b in 0..12 {s.dc_jacobian[205+a][205+b]+=driver.jacobian[a][b];}\n }\n s.dc[200]-=now.low[205]/10000.;s.dc_jacobian[200][205]-=1./10000.;\n s.dc[205]+=(now.high[205]-now.high[200]+now.low[205]-now.low[200])/10000.;s.dc_jacobian[205][205]+=1./10000.;s.dc_jacobian[205][200]-=1./10000.;\n s.charge_over_h[205]=1e-5/h*(delta.high[205]+delta.low[205]);s.mass_over_h[205][205]=1e-5/h;\n if s.dc.iter()"
+    ],
+    [
+      "let mut delta=[State::from_nodes([0.;N]);2];",
+      "let mut seed=[0.;N];\n if p.q25-(old.high[209]+old.low[209])>0.6 {seed[209]=p.q25-0.6-old.high[209]-old.low[209];}\n if old.high[214]+old.low[214]-p.reset_driver>0.5 {\n  let emitter=p.reset_driver+0.5;seed[214]=emitter-old.high[214]-old.low[214];\n  if old.high[210]+old.low[210]-emitter>0.6 {seed[210]=emitter+0.6-old.high[210]-old.low[210];}\n }\n if !p.final_decay&&old.high[205]+old.low[205]-old.high[216]-old.low[216]>0.5 {seed[216]=old.high[205]+old.low[205]-0.5-old.high[216]-old.low[216];}\n let mut delta=[State::from_nodes(seed);2];"
+    ]
+  ],
+  "source_sha256": {
+    "tools/prepare_c2_charge.py": "46d81e9cb5ad5a594129608bbfc9d2f8deaea187415beb22647caa29fcc11330",
+    "tools/c2_charge_reference.py": "bf1955b9cf8832521ccb16814fdf58c7dee8854d6ec5b6a4640b9b134f80e9c9",
+    "tools/c2_charge_driver.rs": "dd4bdd651c9de54a66b8e33d1856a0dd07a05648e3fb20756805257c4e22f3d8",
+    "tools/joint_c2_body.rs": "0eff30298dd8884babde1fc08b75554c414c426e508a9fbb6c265ab60a1dd927",
+    "tools/joint_c2_kernel.rs": "7a115b92366e5d909b33a695e5048f8b75c585ee677ca7e118865758b4ef21eb",
+    "tools/joint_c2_runner.rs": "c713a7792fd5aa6d8c778f6e8d7ed800e69b1ae8af420d3b6f30abe2e971fb23",
+    "tools/joint_loudness_kernel.rs": "7400b5b1854c15c22ad668376964bff75e67c802d190f5b42f91984b2db95932",
+    "tools/joint_loudness_runner.rs": "13f88061273ff4092e6448e105ce575406a43c2cf73ddcd18126892c6fa77b72",
+    "evidence/loudness_contour_graph.json": "f147a2e10dcf4fae6e18c13ad1c8f3842977f7e15c3bd019f27bfcd2300dee66",
+    "tools/loudness_contour_reference.py": "1dcceac0102af47d0111c6710634f58e63ff04f27f0e30cb3b418228d07094a3",
+    "docs/VOZ_C2_CARGA_PROTOCOLO.md": "81f8b911b125d1acf86f86e7ff6b94e5e7afce6be07289f46f9b2f94562648cc",
+    "tools/repair_c2_charge.py": "40832c11b8c16da1645c8fa45605c43229b3789c7d8e7d372776a7a9a69ebd21"
+  },
+  "compiler_only_repair": [
+    "module follows inner doc comments",
+    "explicit usize source index"
+  ]
+}

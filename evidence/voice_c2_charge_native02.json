@@ -1,0 +1,404 @@
+{
+  "passed": true,
+  "source_sha256": {
+    "tools/run_c2_charge.py": "d2806468b455368f579286172d5edeaf2d1e2d96c0af0949d2be2198cc8e9e2a",
+    "tools/prepare_c2_charge.py": "46d81e9cb5ad5a594129608bbfc9d2f8deaea187415beb22647caa29fcc11330",
+    "tools/c2_charge_driver.rs": "dd4bdd651c9de54a66b8e33d1856a0dd07a05648e3fb20756805257c4e22f3d8",
+    "tools/c2_charge_reference.py": "bf1955b9cf8832521ccb16814fdf58c7dee8854d6ec5b6a4640b9b134f80e9c9",
+    "tools/joint_c2_kernel.rs": "7a115b92366e5d909b33a695e5048f8b75c585ee677ca7e118865758b4ef21eb",
+    "tools/joint_c2_body.rs": "0eff30298dd8884babde1fc08b75554c414c426e508a9fbb6c265ab60a1dd927",
+    "tools/joint_c2_runner.rs": "c713a7792fd5aa6d8c778f6e8d7ed800e69b1ae8af420d3b6f30abe2e971fb23",
+    "tools/joint_loudness_kernel.rs": "7400b5b1854c15c22ad668376964bff75e67c802d190f5b42f91984b2db95932",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+    "evidence/voice_c2_charge_inputs02.json": "28fc94b3c72e6b036a74aa9b66357334d5b32ec9b01c36ecbf4aa3da30e1d6c4",
+    "docs/VOZ_C2_CARGA_PROTOCOLO.md": "81f8b911b125d1acf86f86e7ff6b94e5e7afce6be07289f46f9b2f94562648cc"
+  },
+  "private_used_sha256": {
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd",
+    "references-local/c2-charge-inputs01/1-65536.ckp": "f666a1b561c7f38fa9ad6d0c59fd4f614933fd89182b7b47f5d77e1a9f802cff",
+    "references-local/c2-charge-inputs01/1-32768.ckp": "6249b8fd9e56f21656aa50ba3ef1c7e4aa549e1bc163cc6f803a6471b4223781",
+    "references-local/c2-charge-inputs01/0-65536.ckp": "ecf9775c35a40965fd76d5bacb4a4b819ea3562f41d147243e2dd165189a91f5",
+    "references-local/c2-charge-inputs01/0-32768.ckp": "6fca81cce380637c71bda835902a83b2c534eba567e0afbedf07da6f0c5d22b7",
+    "references-local/loudness-control01/65536/final.ckp": "45cd45e5594a56198803e2bb011415d9449b9bd265b0b6d010de9e0bc6e3bc31",
+    "references-local/loudness-control01/32768/final.ckp": "fe960c0b9ea5abc82b5e370f6e8e6556f94bd94648a02b229f227d5b17efb121"
+  },
+  "compiler": {
+    "path": "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+    "sha256": "fd6232f90a981e28472ce6900232946a1f1bcad8ec8270cd5ae6a3a357208b98",
+    "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+  },
+  "commands": [
+    {
+      "command": [
+        "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+        "--edition=2021",
+        "-C",
+        "opt-level=2",
+        "-C",
+        "strip=symbols",
+        "-C",
+        "link-arg=-Wl,--stack,33554432",
+        "tools/joint_c2_runner.rs",
+        "--extern",
+        "rf_d_circuit=C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-startup01\\librf_d_circuit.rlib",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\c2-charge02\\run.exe"
+      ],
+      "exit_code": 0,
+      "wall_s": 0.9227117000846192,
+      "stdout": "",
+      "stderr": "warning: unused imports: `Mode` and `self`\n --> tools\\joint_c2_kernel.rs:4:33\n  |\n4 | use rf_d_circuit::{vco1_stamp::{self,Controls,Mode},chain_charge::{self,Parameters as Chain},mixer_on::OnMixer,StepError};\n  |                                 ^^^^          ^^^^\n  |\n  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default\n\nwarning: unused imports: `SolverBudget`, `loudness_follower as follower`, and `self`\n --> tools/joint_c2_runner.rs:3:35\n  |\n3 | ...n_charge::{self,Parameters as Chain},mixer_on::OnMixer,vco1_stamp::Controls,loudness_follower as follower,SolverBudget};\n  |               ^^^^                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ^^^^^^^^^^^^\n\nwarning: unused import: `std::time::Instant`\n --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:3:5\n  |\n3 | use std::time::Instant;\n  |     ^^^^^^^^^^^^^^^^^^\n\nwarning: unused imports: `Parameters`, `initial_state`, `step_with_emphasis`, and `step`\n --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:8:5\n  |\n8 |     initial_state, step, step_with_emphasis, Boundary, Parameters,\n  |     ^^^^^^^^^^^^^  ^^^^  ^^^^^^^^^^^^^^^^^^            ^^^^^^^^^^\n\nwarning: unused import: `SolverBudget`\n  --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:16:55\n   |\n16 | use rf_d_circuit::{Parameters as HeadphoneParameters, SolverBudget};\n   |                                                       ^^^^^^^^^^^^\n\nwarning: constant `BUS` is never used\n --> tools\\joint_c2_kernel.rs:7:11\n  |\n7 | pub const BUS:usize=12;\n  |           ^^^\n  |\n  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: constant `MIN_DT_S` is never used\n --> tools\\joint_c2_kernel.rs:8:11\n  |\n8 | pub const MIN_DT_S:f64=chain_charge::MIN_DT_S;\n  |           ^^^^^^^^\n\nwarning: function `vco_index` is never used\n  --> tools\\joint_c2_kernel.rs:10:14\n   |\n10 | pub const fn vco_index(k:usize)->Option<usize> {if k==108 {None} else if k<108 {Some(k)} else {Some(k-1)}}\n   |              ^^^^^^^^^\n\nwarning: function `chain_index` is never used\n  --> tools\\joint_c2_kernel.rs:11:14\n   |\n11 | pub const fn chain_index(k:usize)->usize {if k==66 {BUS} else if k==67 {199} else {133+k}}\n   |              ^^^^^^^^^^^\n\nwarning: field `c2_v` is never read\n  --> tools\\joint_c2_kernel.rs:13:82\n   |\n13 | pub struct Parameters {pub controls:Controls,chain:Chain,pub sources:[f64;5],pub c2_v:f64,pub reset_v:f64,pub q25:f64,pub reset_driv...\n   |            ---------- field in this struct                                       ^^^^\n   |\n   = note: `Parameters` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis\n\nwarning: method `chain` is never used\n  --> tools\\joint_c2_kernel.rs:21:9\n   |\n14 | impl Parameters {\n   | --------------- method in this implementation\n...\n21 |  pub fn chain(self)->Chain {self.chain}\n   |         ^^^^^\n\nwarning: associated items `lift` and `chain` are never used\n  --> tools\\joint_c2_kernel.rs:31:9\n   |\n25 | impl State {\n   | ---------- associated items in this implementation\n...\n31 |  pub fn lift(vco_high:[f64;134],vco_low:[f64;134],chain:chain_charge::State)->Self {\n   |         ^^^^\n...\n36 |  fn chain(self)->chain_charge::State {chain_charge::State{high:std::array::from_fn(|k|self.high[chain_index(k)]),low:std::array::fro...\n   |     ^^^^^\n\nwarning: function `solve_linear` is never used\n   --> tools\\joint_c2_kernel.rs:112:8\n    |\n112 | pub fn solve_linear<const M: usize>(\n    |        ^^^^^^^^^^^^\n\nwarning: 13 warnings emitted\n\n"
+    }
+  ],
+  "profiles": [
+    {
+      "final_decay": true,
+      "half_ticks": 65536,
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\c2-charge02\\run.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\c2-charge-inputs01\\1-65536.ckp",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\c2-charge02\\1-65536"
+      ],
+      "exit_code": 0,
+      "wall_s": 71.49857000005431,
+      "stdout": "",
+      "stderr": "COMPLETED,on=1,half=65536,steps=400,restores=10,replay_steps=600,corruptions=4,wall_s=71.3949979\n"
+    },
+    {
+      "final_decay": true,
+      "half_ticks": 32768,
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\c2-charge02\\run.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\c2-charge-inputs01\\1-32768.ckp",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\c2-charge02\\1-32768"
+      ],
+      "exit_code": 0,
+      "wall_s": 146.11863629997242,
+      "stdout": "",
+      "stderr": "COMPLETED,on=1,half=32768,steps=800,restores=10,replay_steps=1200,corruptions=4,wall_s=146.0861252\n"
+    },
+    {
+      "final_decay": false,
+      "half_ticks": 65536,
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\c2-charge02\\run.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\c2-charge-inputs01\\0-65536.ckp",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\c2-charge02\\0-65536"
+      ],
+      "exit_code": 0,
+      "wall_s": 68.39032290002797,
+      "stdout": "",
+      "stderr": "COMPLETED,on=0,half=65536,steps=400,restores=10,replay_steps=600,corruptions=4,wall_s=68.3578035\n"
+    },
+    {
+      "final_decay": false,
+      "half_ticks": 32768,
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\c2-charge02\\run.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\c2-charge-inputs01\\0-32768.ckp",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\c2-charge02\\0-32768"
+      ],
+      "exit_code": 0,
+      "wall_s": 170.70098500000313,
+      "stdout": "",
+      "stderr": "COMPLETED,on=0,half=32768,steps=800,restores=10,replay_steps=1200,corruptions=4,wall_s=170.6684131\n"
+    }
+  ],
+  "replays": [],
+  "outputs": [
+    {
+      "path": "references-local/c2-charge02/0-32768/checkpoints.bin",
+      "sha256": "357dd6f47245c4a46b377d4a414b28ce261ed2bc96054b1e4eda82a6aaf0f4a0",
+      "bytes": 38808
+    },
+    {
+      "path": "references-local/c2-charge02/0-32768/final.ckp",
+      "sha256": "520afd20e9af88a2e169301851733d140198dae5f8d08dcec4b2d81693938fb1",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/0-32768/phase0-middle.ckp",
+      "sha256": "5fee3986be605f64610127a5c88c7662654ccaa123800b399be50d5b673386ac",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/0-32768/phase0-start.ckp",
+      "sha256": "6fca81cce380637c71bda835902a83b2c534eba567e0afbedf07da6f0c5d22b7",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/0-32768/phase1-middle.ckp",
+      "sha256": "404b01ea6e5f9e08d1e4b7e3d2cfd01654949cc967851ee7bed30a6cd605f481",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/0-32768/phase1-start.ckp",
+      "sha256": "b75dd004503ead96bcd7189ca0a54b2a81090c4ea404d89a9fc4738f6bef742b",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/0-32768/phase2-middle.ckp",
+      "sha256": "06c8c120c1282e082e979b91d89978318819c04ee2c63f7e6989658f732fef24",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/0-32768/phase2-start.ckp",
+      "sha256": "1e2aa288e8d190427284a9e9ea39a28dfb089c026784ba09d0c7ee883eaa2770",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/0-32768/phase3-middle.ckp",
+      "sha256": "9dc25dae1fc79b49b64badbae23cdbe0057ef1b666a9246c23f35f98e5cae97c",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/0-32768/phase3-start.ckp",
+      "sha256": "b268c2e1919f1c99b20ee4a213db7e3946022008df3741a7fead03bce7e70d45",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/0-32768/phase4-middle.ckp",
+      "sha256": "0687f2cdee700e75303db264a346ee7f848286fe776b1d4bcc7472d9782b0250",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/0-32768/phase4-start.ckp",
+      "sha256": "bee0b6362336f7dec503dd3a43da5a1e3c952f5291972f2f77ad580e46f64b0a",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/0-32768/selected.txt",
+      "sha256": "265c994755929cbaf3f80c685e549e9f0e0970f4c8710014de7ec09bc535c531",
+      "bytes": 843072
+    },
+    {
+      "path": "references-local/c2-charge02/0-65536/checkpoints.bin",
+      "sha256": "5a66bf428a29b9fb2323ff0a619c613b9642f0460c24023ad8261598eb951400",
+      "bytes": 38808
+    },
+    {
+      "path": "references-local/c2-charge02/0-65536/final.ckp",
+      "sha256": "c5a8e76c2c71e81bd4b70a2fd21009052607adea4a65bc62eeb8ca7c4793e7e1",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/0-65536/phase0-middle.ckp",
+      "sha256": "e0253dacb7dbc2737bb83a6aaf5f7b9c1522c377194f246c27d7c4918badb3df",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/0-65536/phase0-start.ckp",
+      "sha256": "ecf9775c35a40965fd76d5bacb4a4b819ea3562f41d147243e2dd165189a91f5",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/0-65536/phase1-middle.ckp",
+      "sha256": "85d2b4ae9f17b97a2c1bd1762cbdf586e8d8e52aa1c5cf549c0c38ece83cbcf6",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/0-65536/phase1-start.ckp",
+      "sha256": "c4b26720faae0030bdb5e56aefcaac78020e4b7585f6eeeac1f7d599c23a5569",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/0-65536/phase2-middle.ckp",
+      "sha256": "117bb7fddbc2576aec64241d60d2ad8566d962993dc7ffd0912e52e77745bc99",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/0-65536/phase2-start.ckp",
+      "sha256": "a69c8990bbf27c72b720cb3d2e522f435b48461b7e24b3c902d4db97629a4da7",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/0-65536/phase3-middle.ckp",
+      "sha256": "a0d85e9b940c436943e8bdff0ddcd4beba291bdcfcd7c1b15baceb4939972889",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/0-65536/phase3-start.ckp",
+      "sha256": "353d4622dbc503d40704d4e2e3158bb883c61b91f902c35cc0bc8adee4447048",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/0-65536/phase4-middle.ckp",
+      "sha256": "e0ad9365d58edb9a7c5a60e275dfc7bcd5edcb5e1b29ed94a5a99f62e85998cf",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/0-65536/phase4-start.ckp",
+      "sha256": "916fb0d8c32e8f80815fad4f87e62d2581723025eccf36a082d5b00aa421d95e",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/0-65536/selected.txt",
+      "sha256": "d759a5c29470286bb34873d4e24b2a3463b3b1a97a21c3dec14646c3ddc34959",
+      "bytes": 743817
+    },
+    {
+      "path": "references-local/c2-charge02/1-32768/checkpoints.bin",
+      "sha256": "46efa85a590b178fb3a5fbdc68d4a5bba0fc5e0ce54e8797a810e6e5b0eb61d0",
+      "bytes": 38808
+    },
+    {
+      "path": "references-local/c2-charge02/1-32768/final.ckp",
+      "sha256": "f356a5f268905b06ca6e13105a2e97ac266f7485d237a665babbefba8ba724fd",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/1-32768/phase0-middle.ckp",
+      "sha256": "c325f0e35a657a87de282d97ba19dbb7112098a8ad4c8cea605baac89673ebb9",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/1-32768/phase0-start.ckp",
+      "sha256": "6249b8fd9e56f21656aa50ba3ef1c7e4aa549e1bc163cc6f803a6471b4223781",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/1-32768/phase1-middle.ckp",
+      "sha256": "0ac78d96cc32ee8a5b0116c5bd624719ea329781d1fb5fefa620f42677ef98fe",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/1-32768/phase1-start.ckp",
+      "sha256": "19b677cd73f96b5b83799ad3ec5185691db0af349ea88762aec129426b66d1f9",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/1-32768/phase2-middle.ckp",
+      "sha256": "f46e5db7035494f625b44dde7ac063641fe6d51a57b6b1ed489abaa10cf0b929",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/1-32768/phase2-start.ckp",
+      "sha256": "338cc2995425440ed306e560d2024c0a31b260925d32f0721407c1dc9e686db4",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/1-32768/phase3-middle.ckp",
+      "sha256": "e42915e4c16b0dc3968c4a16e956ec5c72ca6264fdfda443305b7fdcff680139",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/1-32768/phase3-start.ckp",
+      "sha256": "829c09cfcbe6f77feccc1e25c03c337a20fde4172a0deac56a68570cac4fc958",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/1-32768/phase4-middle.ckp",
+      "sha256": "96d89852849c22da4ec8280047284a6446429a7ea577d802bd6c01bba1989ced",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/1-32768/phase4-start.ckp",
+      "sha256": "fecaaf9ca5a1aee179f590421741310f5a7c2a3e9b3671b18a729cec9ce89edd",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/1-32768/selected.txt",
+      "sha256": "c9cae8fa36b3da299eb5cfdbf3a17154c43128ee827da962170052f978d232c0",
+      "bytes": 841064
+    },
+    {
+      "path": "references-local/c2-charge02/1-65536/checkpoints.bin",
+      "sha256": "2624cf15469904fb7edd72acf1d0d5d2bb59b97587a96e9a91bc7544e6b42dc3",
+      "bytes": 38808
+    },
+    {
+      "path": "references-local/c2-charge02/1-65536/final.ckp",
+      "sha256": "3511420fa6cf96b81818a6956c82fc067e920b4ac949bdbe3ae2984be5088def",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/1-65536/phase0-middle.ckp",
+      "sha256": "c2a2faaa2e51715599e415ffb09dbd8b51acc489bf55fca34a18ce9a31f9421e",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/1-65536/phase0-start.ckp",
+      "sha256": "f666a1b561c7f38fa9ad6d0c59fd4f614933fd89182b7b47f5d77e1a9f802cff",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/1-65536/phase1-middle.ckp",
+      "sha256": "52a24e0d77f05ffc33d5e867a91c34d286e595d990cb9296e54891b845aaf858",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/1-65536/phase1-start.ckp",
+      "sha256": "d2852c80a71445b8677b7428cffdd9eccbf0d1063b66c93b0b5f74958fb8c5d9",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/1-65536/phase2-middle.ckp",
+      "sha256": "0abb7aff7fba8d18a0696a0f53ad4caf7fe1a58c3c91c22a051959e5d16908fe",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/1-65536/phase2-start.ckp",
+      "sha256": "7d7042311f98e15d90442c02593b416bd7717bd27527d4b976d5a99b8fdbedc6",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/1-65536/phase3-middle.ckp",
+      "sha256": "6d014e2b988160bc3bec262b8a0b0d09dcd846fd477ae177682ae0e86c292751",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/1-65536/phase3-start.ckp",
+      "sha256": "b83781f39deb95126d3afe56cb3ae94728ce62e23c2d052a92cb9b57889eec0e",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/1-65536/phase4-middle.ckp",
+      "sha256": "caa0baac76bc753f5d9900c9bc4a6e46ae8c960a89e2c96826f64daa72384596",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/1-65536/phase4-start.ckp",
+      "sha256": "812767b8a6303d1eecc275f2803ca23680457845f98f824be7d0d2ea8fa4fe31",
+      "bytes": 3528
+    },
+    {
+      "path": "references-local/c2-charge02/1-65536/selected.txt",
+      "sha256": "51e2252c73cd656affeb0ee82732bc4cb60c654da9e2fe95c6fe704d0c3517c8",
+      "bytes": 742844
+    },
+    {
+      "path": "references-local/c2-charge02/run.exe",
+      "sha256": "e491f07321032198e0e7f6d2c565490979e145e959a80aff542cac6be5f95fdc",
+      "bytes": 1378304
+    }
+  ],
+  "available_free_bytes": 126093062144,
+  "reserve_bytes": 1073741824,
+  "estimated_output_bytes": 33554432,
+  "lab_stack_bytes": 33554432,
+  "new_library_compile": false,
+  "source_sha256_after": {
+    "tools/run_c2_charge.py": "d2806468b455368f579286172d5edeaf2d1e2d96c0af0949d2be2198cc8e9e2a",
+    "tools/prepare_c2_charge.py": "46d81e9cb5ad5a594129608bbfc9d2f8deaea187415beb22647caa29fcc11330",
+    "tools/c2_charge_driver.rs": "dd4bdd651c9de54a66b8e33d1856a0dd07a05648e3fb20756805257c4e22f3d8",
+    "tools/c2_charge_reference.py": "bf1955b9cf8832521ccb16814fdf58c7dee8854d6ec5b6a4640b9b134f80e9c9",
+    "tools/joint_c2_kernel.rs": "7a115b92366e5d909b33a695e5048f8b75c585ee677ca7e118865758b4ef21eb",
+    "tools/joint_c2_body.rs": "0eff30298dd8884babde1fc08b75554c414c426e508a9fbb6c265ab60a1dd927",
+    "tools/joint_c2_runner.rs": "c713a7792fd5aa6d8c778f6e8d7ed800e69b1ae8af420d3b6f30abe2e971fb23",
+    "tools/joint_loudness_kernel.rs": "7400b5b1854c15c22ad668376964bff75e67c802d190f5b42f91984b2db95932",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+    "evidence/voice_c2_charge_inputs02.json": "28fc94b3c72e6b036a74aa9b66357334d5b32ec9b01c36ecbf4aa3da30e1d6c4",
+    "docs/VOZ_C2_CARGA_PROTOCOLO.md": "81f8b911b125d1acf86f86e7ff6b94e5e7afce6be07289f46f9b2f94562648cc"
+  },
+  "private_used_sha256_after": {
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd",
+    "references-local/c2-charge-inputs01/1-65536.ckp": "f666a1b561c7f38fa9ad6d0c59fd4f614933fd89182b7b47f5d77e1a9f802cff",
+    "references-local/c2-charge-inputs01/1-32768.ckp": "6249b8fd9e56f21656aa50ba3ef1c7e4aa549e1bc163cc6f803a6471b4223781",
+    "references-local/c2-charge-inputs01/0-65536.ckp": "ecf9775c35a40965fd76d5bacb4a4b819ea3562f41d147243e2dd165189a91f5",
+    "references-local/c2-charge-inputs01/0-32768.ckp": "6fca81cce380637c71bda835902a83b2c534eba567e0afbedf07da6f0c5d22b7",
+    "references-local/loudness-control01/65536/final.ckp": "45cd45e5594a56198803e2bb011415d9449b9bd265b0b6d010de9e0bc6e3bc31",
+    "references-local/loudness-control01/32768/final.ckp": "fe960c0b9ea5abc82b5e370f6e8e6556f94bd94648a02b229f227d5b17efb121"
+  },
+  "wall_s": 457.6446685999399,
+  "minimum_free_bytes": 125942427648
+}
