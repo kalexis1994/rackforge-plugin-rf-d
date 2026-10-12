@@ -1,0 +1,82 @@
+{
+  "passed": true,
+  "source_sha256": {
+    "tools/run_newton_reuse_bench.py": "c9279aa4bb651bcaa015c6e32042d48ee3607f80c02453340abe19f249ce18a7",
+    "tools/newton_reuse_bench.rs": "ed98cb7f7f618f9f1eb757143dd284f8d961a6f59943d8720c74a81e40633de2",
+    "tools/prepare_newton_reuse.py": "8944577bed1ac913a51f8548ea5dd735c61814d84b7e1010e4d280b17f1a6f3a",
+    "evidence/newton_reuse_inputs01.json": "edfd47af9fd022ff82cdf792eec23670a9cd96b7e346e81bc907a13ce9f2a053",
+    "docs/NEWTON_REUSO_PROTOCOLO.md": "3f60c758e50ebd685cd050971f3c879526273697c032517327347a2af41d547f"
+  },
+  "private_used_sha256": {
+    "references-local/contour-cycle02/1-1048576/selected.txt": "a3beeab4a6a81f3a4c551cb29d51f28392f11b7597576fcc1143a8d63c2635c4",
+    "references-local/contour-cycle02/1-524288/selected.txt": "4d8e9b40a14e0aa335cb0569dc7921fa4e718ee6b761954845bdcd368d05aa22",
+    "references-local/contour-cycle02/0-1048576/selected.txt": "6ca6502bbd2be11bdc62e80ca41361a8def596c045ca1c7cba3db7a8f78c7582",
+    "references-local/contour-cycle02/0-524288/selected.txt": "a63870e8bc244a601188fdcec7139376efddf14283079f04b4141a558018a271",
+    "references-local/newton-reuse-inputs01/pairs.bin": "6631f4b5830ebb78be119beea52d4bd7df2cca0f01624f1065431ce45280843f",
+    "references-local/newton-reuse-inputs01/reference_profile.rs": "519198140a5ab570cf69b431c2a64cbaee0c9a5993fb1cbfae441de8c04c52fa",
+    "references-local/newton-reuse-inputs01/reuse_profile.rs": "2b56a007068419bab9a2754031021e32edd1a90f2b84280d1a423c9346291e47",
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd"
+  },
+  "compiler": {
+    "path": "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+    "sha256": "fd6232f90a981e28472ce6900232946a1f1bcad8ec8270cd5ae6a3a357208b98",
+    "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+  },
+  "commands": [
+    {
+      "command": [
+        "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+        "--edition=2021",
+        "-C",
+        "opt-level=2",
+        "-C",
+        "strip=symbols",
+        "-C",
+        "link-arg=-Wl,--stack,33554432",
+        "tools/newton_reuse_bench.rs",
+        "--extern",
+        "rf_d_circuit=C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-startup01\\librf_d_circuit.rlib",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\newton-reuse-bench01\\bench.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "warning: unused imports: `Mode` and `self`\n --> tools\\..\\references-local\\newton-reuse-inputs01\\reference_profile.rs:5:33\n  |\n5 | use rf_d_circuit::{vco1_stamp::{self,Controls,Mode},chain_charge::{self,Parameters as Chain},mixer_on::OnMixer,StepError};\n  |                                 ^^^^          ^^^^\n  |\n  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default\n\nwarning: unused imports: `Mode` and `self`\n --> tools\\..\\references-local\\newton-reuse-inputs01\\reuse_profile.rs:5:33\n  |\n5 | use rf_d_circuit::{vco1_stamp::{self,Controls,Mode},chain_charge::{self,Parameters as Chain},mixer_on::OnMixer,StepError};\n  |                                 ^^^^          ^^^^\n\nwarning: unused import: `std::time::Instant`\n --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:3:5\n  |\n3 | use std::time::Instant;\n  |     ^^^^^^^^^^^^^^^^^^\n\nwarning: unused imports: `Parameters`, `initial_state`, `step_with_emphasis`, and `step`\n --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:8:5\n  |\n8 |     initial_state, step, step_with_emphasis, Boundary, Parameters,\n  |     ^^^^^^^^^^^^^  ^^^^  ^^^^^^^^^^^^^^^^^^            ^^^^^^^^^^\n\nwarning: unused import: `SolverBudget`\n  --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:16:55\n   |\n16 | use rf_d_circuit::{Parameters as HeadphoneParameters, SolverBudget};\n   |                                                       ^^^^^^^^^^^^\n\nwarning: constant `BUS` is never used\n --> tools\\..\\references-local\\newton-reuse-inputs01\\reference_profile.rs:8:11\n  |\n8 | pub const BUS:usize=12;\n  |           ^^^\n  |\n  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: constant `MIN_DT_S` is never used\n --> tools\\..\\references-local\\newton-reuse-inputs01\\reference_profile.rs:9:11\n  |\n9 | pub const MIN_DT_S:f64=chain_charge::MIN_DT_S;\n  |           ^^^^^^^^\n\nwarning: function `vco_index` is never used\n  --> tools\\..\\references-local\\newton-reuse-inputs01\\reference_profile.rs:11:14\n   |\n11 | pub const fn vco_index(k:usize)->Option<usize> {if k==108 {None} else if k<108 {Some(k)} else {Some(k-1)}}\n   |              ^^^^^^^^^\n\nwarning: function `chain_index` is never used\n  --> tools\\..\\references-local\\newton-reuse-inputs01\\reference_profile.rs:12:14\n   |\n12 | pub const fn chain_index(k:usize)->usize {if k==66 {BUS} else if k==67 {199} else {133+k}}\n   |              ^^^^^^^^^^^\n\nwarning: fields `c2_v`, `reset_v`, `q25`, `reset_driver`, and `set_base` are never read\n  --> tools\\..\\references-local\\newton-reuse-inputs01\\reference_profile.rs:14:82\n   |\n14 | ...ct Parameters {pub controls:Controls,chain:Chain,pub sources:[f64;5],pub c2_v:f64,pub reset_v:f64,pub q25:f64,pub reset_driver:f64,pub final_decay:bool,pub keyboard:f64,pub short:bool,pub set_base:f64}\n   |       ---------- fields in this struct                                      ^^^^         ^^^^^^^         ^^^         ^^^^^^^^^^^^                                                              ^^^^^^^^\n   |\n   = note: `Parameters` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis\n\nwarning: method `chain` is never used\n  --> tools\\..\\references-local\\newton-reuse-inputs01\\reference_profile.rs:22:9\n   |\n15 | impl Parameters {\n   | --------------- method in this implementation\n...\n22 |  pub fn chain(self)->Chain {self.chain}\n   |         ^^^^^\n\nwarning: associated items `lift` and `chain` are never used\n  --> tools\\..\\references-local\\newton-reuse-inputs01\\reference_profile.rs:32:9\n   |\n26 | impl State {\n   | ---------- associated items in this implementation\n...\n32 |  pub fn lift(vco_high:[f64;134],vco_low:[f64;134],chain:chain_charge::State)->Self {\n   |         ^^^^\n...\n37 |  fn chain(self)->chain_charge::State {chain_charge::State{high:std::array::from_fn(|k|self.high[chain_index(k)]),low:std::array::fro...\n   |     ^^^^^\n\nwarning: function `solve_linear` is never used\n   --> tools\\..\\references-local\\newton-reuse-inputs01\\reference_profile.rs:108:8\n    |\n108 | pub fn solve_linear<const M: usize>(\n    |        ^^^^^^^^^^^^\n\nwarning: constant `BUS` is never used\n --> tools\\..\\references-local\\newton-reuse-inputs01\\reuse_profile.rs:8:11\n  |\n8 | pub const BUS:usize=12;\n  |           ^^^\n\nwarning: constant `MIN_DT_S` is never used\n --> tools\\..\\references-local\\newton-reuse-inputs01\\reuse_profile.rs:9:11\n  |\n9 | pub const MIN_DT_S:f64=chain_charge::MIN_DT_S;\n  |           ^^^^^^^^\n\nwarning: function `vco_index` is never used\n  --> tools\\..\\references-local\\newton-reuse-inputs01\\reuse_profile.rs:11:14\n   |\n11 | pub const fn vco_index(k:usize)->Option<usize> {if k==108 {None} else if k<108 {Some(k)} else {Some(k-1)}}\n   |              ^^^^^^^^^\n\nwarning: function `chain_index` is never used\n  --> tools\\..\\references-local\\newton-reuse-inputs01\\reuse_profile.rs:12:14\n   |\n12 | pub const fn chain_index(k:usize)->usize {if k==66 {BUS} else if k==67 {199} else {133+k}}\n   |              ^^^^^^^^^^^\n\nwarning: fields `c2_v`, `reset_v`, `q25`, `reset_driver`, and `set_base` are never read\n  --> tools\\..\\references-local\\newton-reuse-inputs01\\reuse_profile.rs:14:82\n   |\n14 | ...ct Parameters {pub controls:Controls,chain:Chain,pub sources:[f64;5],pub c2_v:f64,pub reset_v:f64,pub q25:f64,pub reset_driver:f64,pub final_decay:bool,pub keyboard:f64,pub short:bool,pub set_base:f64}\n   |       ---------- fields in this struct                                      ^^^^         ^^^^^^^         ^^^         ^^^^^^^^^^^^                                                              ^^^^^^^^\n   |\n   = note: `Parameters` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis\n\nwarning: method `chain` is never used\n  --> tools\\..\\references-local\\newton-reuse-inputs01\\reuse_profile.rs:22:9\n   |\n15 | impl Parameters {\n   | --------------- method in this implementation\n...\n22 |  pub fn chain(self)->Chain {self.chain}\n   |         ^^^^^\n\nwarning: associated items `lift` and `chain` are never used\n  --> tools\\..\\references-local\\newton-reuse-inputs01\\reuse_profile.rs:32:9\n   |\n26 | impl State {\n   | ---------- associated items in this implementation\n...\n32 |  pub fn lift(vco_high:[f64;134],vco_low:[f64;134],chain:chain_charge::State)->Self {\n   |         ^^^^\n...\n37 |  fn chain(self)->chain_charge::State {chain_charge::State{high:std::array::from_fn(|k|self.high[chain_index(k)]),low:std::array::fro...\n   |     ^^^^^\n\nwarning: function `solve_linear` is never used\n   --> tools\\..\\references-local\\newton-reuse-inputs01\\reuse_profile.rs:109:8\n    |\n109 | pub fn solve_linear<const M: usize>(\n    |        ^^^^^^^^^^^^\n\nwarning: 21 warnings emitted\n\n",
+      "wall_s": 0.9982326000463217
+    },
+    {
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\newton-reuse-bench01\\bench.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\newton-reuse-inputs01\\pairs.bin"
+      ],
+      "exit_code": 0,
+      "stdout": "CASE,0,1,0,1.95312499999999991e-9,3,2\nCASE,1,1,0,9.76562499999999956e-10,3,2\nCASE,2,1,0,9.76562499999999956e-10,3,2\nCASE,3,1,0,1.95312499999999991e-9,3,2\nCASE,4,1,0,9.76562499999999956e-10,3,2\nCASE,5,1,0,9.76562499999999956e-10,3,2\nCASE,6,1,1,4.88281249999999978e-10,17,32\nCASE,7,1,1,2.44140624999999989e-10,17,32\nCASE,8,1,1,2.44140624999999989e-10,4,3\nCASE,9,1,1,9.76562499999999956e-10,4,3\nCASE,10,1,1,4.88281249999999978e-10,4,3\nCASE,11,1,1,4.88281249999999978e-10,4,3\nCASE,12,1,1,3.05175781249999986e-11,2,1\nCASE,13,1,1,1.52587890624999993e-11,2,1\nCASE,14,1,1,1.52587890624999993e-11,2,1\nCASE,15,1,2,6.10351562499999972e-11,7,6\nCASE,16,1,2,3.05175781249999986e-11,7,6\nCASE,17,1,2,3.05175781249999986e-11,3,2\nCASE,18,1,2,2.44140624999999989e-10,2,1\nCASE,19,1,2,1.22070312499999994e-10,2,1\nCASE,20,1,2,1.22070312499999994e-10,2,1\nCASE,21,1,0,1.95312499999999991e-9,3,2\nCASE,22,1,0,9.76562499999999956e-10,3,2\nCASE,23,1,0,9.76562499999999956e-10,3,2\nCASE,24,1,0,1.95312499999999991e-9,3,2\nCASE,25,1,0,9.76562499999999956e-10,3,2\nCASE,26,1,0,9.76562499999999956e-10,3,2\nCASE,27,1,1,4.88281249999999978e-10,17,32\nCASE,28,1,1,2.44140624999999989e-10,17,32\nCASE,29,1,1,2.44140624999999989e-10,4,3\nCASE,30,1,1,9.76562499999999956e-10,4,3\nCASE,31,1,1,4.88281249999999978e-10,4,3\nCASE,32,1,1,4.88281249999999978e-10,4,3\nCASE,33,1,1,3.05175781249999986e-11,2,1\nCASE,34,1,1,1.52587890624999993e-11,2,1\nCASE,35,1,1,1.52587890624999993e-11,2,1\nCASE,36,1,2,6.10351562499999972e-11,7,6\nCASE,37,1,2,3.05175781249999986e-11,7,6\nCASE,38,1,2,3.05175781249999986e-11,3,2\nCASE,39,1,2,2.44140624999999989e-10,2,1\nCASE,40,1,2,1.22070312499999994e-10,2,1\nCASE,41,1,2,1.22070312499999994e-10,2,1\nCASE,42,0,0,1.95312499999999991e-9,3,2\nCASE,43,0,0,9.76562499999999956e-10,3,2\nCASE,44,0,0,9.76562499999999956e-10,3,2\nCASE,45,0,0,1.95312499999999991e-9,3,2\nCASE,46,0,0,9.76562499999999956e-10,3,2\nCASE,47,0,0,9.76562499999999956e-10,3,2\nCASE,48,0,1,4.88281249999999978e-10,16,18\nCASE,49,0,1,2.44140624999999989e-10,16,18\nCASE,50,0,1,2.44140624999999989e-10,4,3\nCASE,51,0,1,9.76562499999999956e-10,4,3\nCASE,52,0,1,4.88281249999999978e-10,4,3\nCASE,53,0,1,4.88281249999999978e-10,4,3\nCASE,54,0,1,3.05175781249999986e-11,2,1\nCASE,55,0,1,1.52587890624999993e-11,2,1\nCASE,56,0,1,1.52587890624999993e-11,2,1\nCASE,57,0,2,6.10351562499999972e-11,7,6\nCASE,58,0,2,3.05175781249999986e-11,7,6\nCASE,59,0,2,3.05175781249999986e-11,3,2\nCASE,60,0,2,2.44140624999999989e-10,2,1\nCASE,61,0,2,1.22070312499999994e-10,2,1\nCASE,62,0,2,1.22070312499999994e-10,2,1\nCASE,63,0,0,1.95312499999999991e-9,3,2\nCASE,64,0,0,9.76562499999999956e-10,3,2\nCASE,65,0,0,9.76562499999999956e-10,3,2\nCASE,66,0,0,1.95312499999999991e-9,3,2\nCASE,67,0,0,9.76562499999999956e-10,3,2\nCASE,68,0,0,9.76562499999999956e-10,3,2\nCASE,69,0,1,4.88281249999999978e-10,16,18\nCASE,70,0,1,2.44140624999999989e-10,16,18\nCASE,71,0,1,2.44140624999999989e-10,4,3\nCASE,72,0,1,9.76562499999999956e-10,4,3\nCASE,73,0,1,4.88281249999999978e-10,4,3\nCASE,74,0,1,4.88281249999999978e-10,4,3\nCASE,75,0,1,3.05175781249999986e-11,2,1\nCASE,76,0,1,1.52587890624999993e-11,2,1\nCASE,77,0,1,1.52587890624999993e-11,2,1\nCASE,78,0,2,6.10351562499999972e-11,7,6\nCASE,79,0,2,3.05175781249999986e-11,7,6\nCASE,80,0,2,3.05175781249999986e-11,3,2\nCASE,81,0,2,2.44140624999999989e-10,2,1\nCASE,82,0,2,1.22070312499999994e-10,2,1\nCASE,83,0,2,1.22070312499999994e-10,2,1\nROUND,0,2425357200,1452882600,760,696,1203339100,921602100,460,396,684320900,521052400\nROUND,1,2422056800,1496665600,760,696,1199931900,917209400,460,396,717101700,522244900\nROUND,2,2410097800,1440427600,760,696,1192153500,913414800,460,396,677730700,512393900\nROUND,3,2385259000,1420230900,760,696,1179843100,899087200,460,396,666455300,504166300\nROUND,4,2403733600,1487047700,760,696,1189301800,909351200,460,396,705407300,524233400\nPASSED,84,5,stored_and_candidate_bits\n",
+      "stderr": "",
+      "wall_s": 23.065050599980168
+    }
+  ],
+  "source_sha256_after": {
+    "tools/run_newton_reuse_bench.py": "c9279aa4bb651bcaa015c6e32042d48ee3607f80c02453340abe19f249ce18a7",
+    "tools/newton_reuse_bench.rs": "ed98cb7f7f618f9f1eb757143dd284f8d961a6f59943d8720c74a81e40633de2",
+    "tools/prepare_newton_reuse.py": "8944577bed1ac913a51f8548ea5dd735c61814d84b7e1010e4d280b17f1a6f3a",
+    "evidence/newton_reuse_inputs01.json": "edfd47af9fd022ff82cdf792eec23670a9cd96b7e346e81bc907a13ce9f2a053",
+    "docs/NEWTON_REUSO_PROTOCOLO.md": "3f60c758e50ebd685cd050971f3c879526273697c032517327347a2af41d547f"
+  },
+  "private_used_sha256_after": {
+    "references-local/contour-cycle02/1-1048576/selected.txt": "a3beeab4a6a81f3a4c551cb29d51f28392f11b7597576fcc1143a8d63c2635c4",
+    "references-local/contour-cycle02/1-524288/selected.txt": "4d8e9b40a14e0aa335cb0569dc7921fa4e718ee6b761954845bdcd368d05aa22",
+    "references-local/contour-cycle02/0-1048576/selected.txt": "6ca6502bbd2be11bdc62e80ca41361a8def596c045ca1c7cba3db7a8f78c7582",
+    "references-local/contour-cycle02/0-524288/selected.txt": "a63870e8bc244a601188fdcec7139376efddf14283079f04b4141a558018a271",
+    "references-local/newton-reuse-inputs01/pairs.bin": "6631f4b5830ebb78be119beea52d4bd7df2cca0f01624f1065431ce45280843f",
+    "references-local/newton-reuse-inputs01/reference_profile.rs": "519198140a5ab570cf69b431c2a64cbaee0c9a5993fb1cbfae441de8c04c52fa",
+    "references-local/newton-reuse-inputs01/reuse_profile.rs": "2b56a007068419bab9a2754031021e32edd1a90f2b84280d1a423c9346291e47",
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd"
+  },
+  "outputs": [
+    {
+      "path": "references-local/newton-reuse-bench01/bench.exe",
+      "sha256": "8ac998489bfeded43b2773b51c8f99f544dec9f39fc570f8324d8d47266519dd",
+      "bytes": 1384960
+    }
+  ]
+}

@@ -480,3 +480,16 @@ Siguiente: medir y acelerar el solve contra esta referencia para alcanzar
 un contorno de duración musical. Contorno desde silencio, otras cargas
 de placa2, contorno de filtro, fidelidad física y RT pendientes.
 [QA](../evidence/voice_contour_cycle_tests01.json).
+
+
+## Reuso del trial de Newton — 2026-10-12
+
+[Cache local exacta](NEWTON_REUSO_RESULTADOS.md) conserva stamp y corrección
+del trial ya aceptado. Benchmark de84 pares: mediana pareada
+1.6693×, 760→460 ensamblados y696→396 solves.
+Cuatro trayectorias completas coinciden por bytes con la referencia:
+26770 finos, 24 restores, 368 avances repetidos, mismos gates y cargas.
+Sin nueva duración o audio; 38472 ecuaciones heredadas por identidad.
+Siguiente: reducir costo del sistema lineal contra esta referencia exacta.
+Deadlines, contorno desde silencio y duración musical siguen pendientes.
+[QA](../evidence/newton_reuse_tests01.json).
