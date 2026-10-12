@@ -1,0 +1,346 @@
+{
+  "passed": true,
+  "source_sha256": {
+    "tools/run_contour_reset.py": "1ce31d578d30fd3c4d039f4adc7795169efcc937ee22d3df97a7cdfa70266b78",
+    "tools/prepare_contour_reset.py": "348d7f9b4f00a18c2b4f30b57b069c4f6a1e3c34f72105e538dcfe8ce0cb14db",
+    "tools/contour_reset_engine.rs": "8e34429f60eedddb1175915c3b312e26da889a428023eb81922ba25400756275",
+    "tools/joint_contour_reset_body.rs": "0effb6ddf6bccecfe7d20a906d020ef1a7153fbe602e588865f199397278f4eb",
+    "tools/joint_contour_reset_runner.rs": "0be9f935499f4ea5ecf81ec6252e20d4044dc7db7814917ee491c242637097eb",
+    "tools/joint_latch_kernel.rs": "4af602c49d191b150c02c6ed87e3a8b3aa539513b17859ef8b73da4596cfeb78",
+    "tools/latch_charge_driver.rs": "84af1a316124aa950c023aa19885a2f1b55db699446a0ec8ff75db7da34cc901",
+    "tools/contour_closed_driver.rs": "326423fe5be49fb8d8b595d90a6517524aeffa217210bb54846bc23fc2781eb2",
+    "crates/rf-d-circuit/src/joint_engine.rs": "dacd5fe5c2b30f48acc336f5c45ebfb60a6ae3d7a24de0e3a4fb0aa1496df5d1",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+    "evidence/voice_contour_reset_inputs01.json": "94c96b3cfccba969a9fca1842148407b9910e0e43b7a13c841e223b4e74bc99a",
+    "docs/VOZ_CONTORNO_RESET_PROTOCOLO.md": "1da441ba81d222ec8cae1d4b2de783df6e51b6192bffdd53a3b89fcb07bca62d"
+  },
+  "private_used_sha256": {
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd",
+    "references-local/contour-reset-inputs01/1-1048576.ckp": "38256e6f9321abab32a1e54197534bad4a006ea0855751983d60dc8f29a80333",
+    "references-local/contour-reset-inputs01/1-524288.ckp": "0140a46a202a0f256618965d1c3a14fa0312550696f4b8fead2d1e4a277a9366",
+    "references-local/contour-reset-inputs01/0-1048576.ckp": "b9e1c35f51e97368409e017e08a52d56dba04882a2173e7ce82aab95ca0d0abb",
+    "references-local/contour-reset-inputs01/0-524288.ckp": "f27c17b3e20a6c7e4cd0163eeb146ee33e1922d4acd6388444c67fab2f382c20",
+    "references-local/contour-engine01/1-65536/final.ckp": "c2b38089d33c76784122d3e08d22fc9dd19ee569736a3652aa6dd67e60f586bd",
+    "references-local/contour-engine01/0-65536/final.ckp": "48e4e391bfdf2edfb87ef8dbace2fa955c43dc6f7ed2e83b1016b5e96a42626e"
+  },
+  "compiler": {
+    "path": "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+    "sha256": "fd6232f90a981e28472ce6900232946a1f1bcad8ec8270cd5ae6a3a357208b98",
+    "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+  },
+  "commands": [
+    {
+      "command": [
+        "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+        "--edition=2021",
+        "-C",
+        "opt-level=2",
+        "-C",
+        "strip=symbols",
+        "-C",
+        "link-arg=-Wl,--stack,33554432",
+        "tools/joint_contour_reset_runner.rs",
+        "--extern",
+        "rf_d_circuit=C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-startup01\\librf_d_circuit.rlib",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-reset01\\run.exe"
+      ],
+      "exit_code": 0,
+      "wall_s": 1.1785074999788776,
+      "stdout": "",
+      "stderr": "warning: unused imports: `Mode` and `self`\n --> tools\\joint_latch_kernel.rs:5:33\n  |\n5 | use rf_d_circuit::{vco1_stamp::{self,Controls,Mode},chain_charge::{self,Parameters as Chain},mixer_on::OnMixer,StepError};\n  |                                 ^^^^          ^^^^\n  |\n  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default\n\nwarning: unused imports: `SolverBudget`, `loudness_follower as follower`, and `self`\n --> tools/joint_contour_reset_runner.rs:3:35\n  |\n3 | ...n_charge::{self,Parameters as Chain},mixer_on::OnMixer,vco1_stamp::Controls,loudness_follower as follower,SolverBudget};\n  |               ^^^^                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ^^^^^^^^^^^^\n\nwarning: unused import: `std::time::Instant`\n --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:3:5\n  |\n3 | use std::time::Instant;\n  |     ^^^^^^^^^^^^^^^^^^\n\nwarning: unused imports: `Parameters`, `initial_state`, `step_with_emphasis`, and `step`\n --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:8:5\n  |\n8 |     initial_state, step, step_with_emphasis, Boundary, Parameters,\n  |     ^^^^^^^^^^^^^  ^^^^  ^^^^^^^^^^^^^^^^^^            ^^^^^^^^^^\n\nwarning: unused import: `SolverBudget`\n  --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:16:55\n   |\n16 | use rf_d_circuit::{Parameters as HeadphoneParameters, SolverBudget};\n   |                                                       ^^^^^^^^^^^^\n\nwarning: constant `MIN_DT_S` is never used\n --> tools\\joint_latch_kernel.rs:9:11\n  |\n9 | pub const MIN_DT_S:f64=chain_charge::MIN_DT_S;\n  |           ^^^^^^^^\n  |\n  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: function `vco_index` is never used\n  --> tools\\joint_latch_kernel.rs:11:14\n   |\n11 | pub const fn vco_index(k:usize)->Option<usize> {if k==108 {None} else if k<108 {Some(k)} else {Some(k-1)}}\n   |              ^^^^^^^^^\n\nwarning: fields `c2_v`, `reset_v`, `q25`, `reset_driver`, and `set_base` are never read\n  --> tools\\joint_latch_kernel.rs:14:82\n   |\n14 | ...ct Parameters {pub controls:Controls,chain:Chain,pub sources:[f64;5],pub c2_v:f64,pub reset_v:f64,pub q25:f64,pub reset_driver:f64,pub final_decay:bool,pub keyboard:f64,pub short:bool,pub set_base:f64}\n   |       ---------- fields in this struct                                      ^^^^         ^^^^^^^         ^^^         ^^^^^^^^^^^^                                                              ^^^^^^^^\n   |\n   = note: `Parameters` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis\n\nwarning: associated items `lift` and `chain` are never used\n  --> tools\\joint_latch_kernel.rs:32:9\n   |\n26 | impl State {\n   | ---------- associated items in this implementation\n...\n32 |  pub fn lift(vco_high:[f64;134],vco_low:[f64;134],chain:chain_charge::State)->Self {\n   |         ^^^^\n...\n37 |  fn chain(self)->chain_charge::State {chain_charge::State{high:std::array::from_fn(|k|self.high[chain_index(k)]),low:std::array::fro...\n   |     ^^^^^\n\nwarning: function `solve_linear` is never used\n   --> tools\\joint_latch_kernel.rs:108:8\n    |\n108 | pub fn solve_linear<const M: usize>(\n    |        ^^^^^^^^^^^^\n\nwarning: associated function `from_conditioned` is never used\n  --> tools\\contour_reset_engine.rs:37:9\n   |\n35 | impl Engine {\n   | ----------- associated function in this implementation\n36 |  /// Takes an explicit conditioned history; does not establish joint DC startup.\n37 |  pub fn from_conditioned(parameters:joint::Parameters,state:State,settings:Settings)->Result<Self,Error> {\n   |         ^^^^^^^^^^^^^^^^\n\nwarning: 11 warnings emitted\n\n"
+    }
+  ],
+  "profiles": [
+    {
+      "final_decay": true,
+      "maximum_half_ticks": 1048576,
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-reset01\\run.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-reset-inputs01\\1-1048576.ckp",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-reset01\\1-1048576"
+      ],
+      "exit_code": 0,
+      "wall_s": 248.68880780006293,
+      "stdout": "",
+      "stderr": "COMPLETED,on=1,max=1048576,accepted=2793,restores=6,replays=81,corruptions=4,rollbacks=2,crossings=1,wall_s=248.5740499\n"
+    },
+    {
+      "final_decay": true,
+      "maximum_half_ticks": 524288,
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-reset01\\run.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-reset-inputs01\\1-524288.ckp",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-reset01\\1-524288"
+      ],
+      "exit_code": 0,
+      "wall_s": 342.9244441000046,
+      "stdout": "",
+      "stderr": "COMPLETED,on=1,max=524288,accepted=3500,restores=6,replays=82,corruptions=4,rollbacks=2,crossings=1,wall_s=342.8799923\n"
+    },
+    {
+      "final_decay": false,
+      "maximum_half_ticks": 1048576,
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-reset01\\run.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-reset-inputs01\\0-1048576.ckp",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-reset01\\0-1048576"
+      ],
+      "exit_code": 0,
+      "wall_s": 290.3741088999668,
+      "stdout": "",
+      "stderr": "COMPLETED,on=0,max=1048576,accepted=2788,restores=6,replays=81,corruptions=4,rollbacks=2,crossings=1,wall_s=290.329483\n"
+    },
+    {
+      "final_decay": false,
+      "maximum_half_ticks": 524288,
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-reset01\\run.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-reset-inputs01\\0-524288.ckp",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-reset01\\0-524288"
+      ],
+      "exit_code": 0,
+      "wall_s": 312.04956670000684,
+      "stdout": "",
+      "stderr": "COMPLETED,on=0,max=524288,accepted=3495,restores=6,replays=82,corruptions=4,rollbacks=2,crossings=1,wall_s=311.9967781\n"
+    }
+  ],
+  "replays": [],
+  "outputs": [
+    {
+      "path": "references-local/contour-reset01/0-1048576/attempt-rollback.ckp",
+      "sha256": "856e392b1652451a063dc041bb534badd5ac4aa0cde62b7d8013bec73a51e4b4",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/contour-reset01/0-1048576/checkpoints.bin",
+      "sha256": "ede2ab7fd336653e5e50302ae007d832e870e6cee2ac8c9c2e87c4ccd426a690",
+      "bytes": 55800
+    },
+    {
+      "path": "references-local/contour-reset01/0-1048576/final.ckp",
+      "sha256": "997bb4a9c0161a0fbdabffd822d2ab27430164126d6f0e33e60ae6bce10194fe",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/contour-reset01/0-1048576/phase0-start.ckp",
+      "sha256": "b9e1c35f51e97368409e017e08a52d56dba04882a2173e7ce82aab95ca0d0abb",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/contour-reset01/0-1048576/phase1-inside.ckp",
+      "sha256": "83fe33be2491095b9d4427d2bee9e9e612141e56858b8562a1070f3eb2ad5cc6",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/contour-reset01/0-1048576/phase1-start.ckp",
+      "sha256": "c5ea08800488be19942096c0a98eaa036e129dc624ebc90d38c2d61d7dcde528",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/contour-reset01/0-1048576/phase2-inside.ckp",
+      "sha256": "9b2a03e83996dd170251d01f1e12294a96bea5ee82d589217a365ec4d337a28c",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/contour-reset01/0-1048576/phase2-reset0.ckp",
+      "sha256": "7ffc816cb93716b56353f4c793dd6f2a29183d986c51a9c6f3b7aba5c3962bad",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/contour-reset01/0-1048576/phase2-start.ckp",
+      "sha256": "9e3157f659be8d9e626d9d54f5e631a2e4418fbe756adca34e99cc2c6b10af12",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/contour-reset01/0-1048576/selected.txt",
+      "sha256": "8dac938aec5efda04f9d802c9f0504c948b798ee6430ebbb4e438de85f6c480e",
+      "bytes": 4296571
+    },
+    {
+      "path": "references-local/contour-reset01/0-524288/attempt-rollback.ckp",
+      "sha256": "f9aec7239028be3aa92fbbd54131918f8746ee1e2d96808a46c5053a9e3be666",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/contour-reset01/0-524288/checkpoints.bin",
+      "sha256": "d6309f63925c8d2f7d229c62e8ae431d46d8cb7ab322679e3bc96b717a96ba45",
+      "bytes": 55800
+    },
+    {
+      "path": "references-local/contour-reset01/0-524288/final.ckp",
+      "sha256": "a7b9392a3ef74bfba2765a0cb535936245fb503bb3090f19ebde7c9d005ecceb",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/contour-reset01/0-524288/phase0-start.ckp",
+      "sha256": "f27c17b3e20a6c7e4cd0163eeb146ee33e1922d4acd6388444c67fab2f382c20",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/contour-reset01/0-524288/phase1-inside.ckp",
+      "sha256": "856bf8b4a6b025d731cbebded8d7a3c258103f2b7eda16aacb136ebbf10ea707",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/contour-reset01/0-524288/phase1-start.ckp",
+      "sha256": "e3738511c530a0a93e90dbc85b07b0923e2169814a7da7e90bbd4398e8eb8586",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/contour-reset01/0-524288/phase2-inside.ckp",
+      "sha256": "32d1baef9a573a62cb5673bf539885b366aaadbfa21852f1c570e6d55ee43bd8",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/contour-reset01/0-524288/phase2-reset0.ckp",
+      "sha256": "1cc803da25a46a91955eca8ba2a83a48362e8b08a96f23ac72084b1186524a8a",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/contour-reset01/0-524288/phase2-start.ckp",
+      "sha256": "81f8693408b9a6cda7cc6d18d6973bf6c2c7eafadbbda750aa2bcb105cf25b50",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/contour-reset01/0-524288/selected.txt",
+      "sha256": "8c193cf7a3d09d9dc86081cc1558e53684c5296953846c668206dcb0db0cdbc2",
+      "bytes": 5248781
+    },
+    {
+      "path": "references-local/contour-reset01/1-1048576/attempt-rollback.ckp",
+      "sha256": "ac89af3beda18f80be646c32227db897bb887b4528367400c9f9005f9df4b09f",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/contour-reset01/1-1048576/checkpoints.bin",
+      "sha256": "0a453d7fd0e23b41a12bb19f5e2d81a13650cba6662bb8d379a62abcd20d2bc5",
+      "bytes": 55800
+    },
+    {
+      "path": "references-local/contour-reset01/1-1048576/final.ckp",
+      "sha256": "b531b445e39bcf4d66657cf6841916021496eeacc2a1f08810af719b0020be94",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/contour-reset01/1-1048576/phase0-start.ckp",
+      "sha256": "38256e6f9321abab32a1e54197534bad4a006ea0855751983d60dc8f29a80333",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/contour-reset01/1-1048576/phase1-inside.ckp",
+      "sha256": "c96376e9ee1242165f1a5d89fa8e8e3ed77aa034aa09613a37a414664ada0aa0",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/contour-reset01/1-1048576/phase1-start.ckp",
+      "sha256": "52a34de1199687d06ccc9fa5f866fb6725e95fcaa70ccbe3a646001cd4788409",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/contour-reset01/1-1048576/phase2-inside.ckp",
+      "sha256": "71c6604e69de19009be722fd9358b3883cc07a367521c3031aedf9d643b001c5",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/contour-reset01/1-1048576/phase2-reset0.ckp",
+      "sha256": "b7d8c5dc31b6a39e3acf5947f463abc84a7f3c77a5782bedb48cdc75217b4c6f",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/contour-reset01/1-1048576/phase2-start.ckp",
+      "sha256": "1ec66e1465b0d663d00587e9c63d8198235cddcbc20e8f16a3e14849ed840716",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/contour-reset01/1-1048576/selected.txt",
+      "sha256": "99b9707897c78c52dce04458105a3ed0e8bf9a458cfcae97b0b173f3481add75",
+      "bytes": 4302473
+    },
+    {
+      "path": "references-local/contour-reset01/1-524288/attempt-rollback.ckp",
+      "sha256": "dd0e4e202356f3536a15587f3364224956e12879d816f346cc1ab3046b270786",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/contour-reset01/1-524288/checkpoints.bin",
+      "sha256": "45fe4d85a5ec3d41f885475e46d2eb6880d226eef915d48eefb68f0cec9b85c5",
+      "bytes": 55800
+    },
+    {
+      "path": "references-local/contour-reset01/1-524288/final.ckp",
+      "sha256": "526c4dff2a1d1ae7fa9d7f5fecd7cf7d46c6eb96a672445110fca08d597c4ef6",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/contour-reset01/1-524288/phase0-start.ckp",
+      "sha256": "0140a46a202a0f256618965d1c3a14fa0312550696f4b8fead2d1e4a277a9366",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/contour-reset01/1-524288/phase1-inside.ckp",
+      "sha256": "403cea642dad96c6295097925d408b5d44a36c0105955eaa70f9403a9b369cfa",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/contour-reset01/1-524288/phase1-start.ckp",
+      "sha256": "661cccd5799d009e9ad8cebee94c444fbdce735ff1bdd328ad4b009cd8c7ac3f",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/contour-reset01/1-524288/phase2-inside.ckp",
+      "sha256": "84ce95d5100123bf84b147f0845baa35aa0e32df020b905e49a399bfd01d86ad",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/contour-reset01/1-524288/phase2-reset0.ckp",
+      "sha256": "2a2081b8f593717ff0a842be091ac1a50c3a16defbe0a09103c6d80d0595ea98",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/contour-reset01/1-524288/phase2-start.ckp",
+      "sha256": "0d7aad807372c3137ec6c3e13e02ecae25e43eb8400308a4e3f31127e48d11e6",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/contour-reset01/1-524288/selected.txt",
+      "sha256": "923ee4dca8005450e83ec2adf2071ca4d02a899601234c0a29d3e0f839fc1555",
+      "bytes": 5254578
+    },
+    {
+      "path": "references-local/contour-reset01/run.exe",
+      "sha256": "8ec36b9d4ce126d2012f3012b815d88af5b5c6de201fd5bdf82f2f1628dae8b6",
+      "bytes": 1398272
+    }
+  ],
+  "available_free_bytes": 123876556800,
+  "reserve_bytes": 1073741824,
+  "estimated_output_bytes": 67108864,
+  "lab_stack_bytes": 33554432,
+  "new_library_compile": false,
+  "source_sha256_after": {
+    "tools/run_contour_reset.py": "1ce31d578d30fd3c4d039f4adc7795169efcc937ee22d3df97a7cdfa70266b78",
+    "tools/prepare_contour_reset.py": "348d7f9b4f00a18c2b4f30b57b069c4f6a1e3c34f72105e538dcfe8ce0cb14db",
+    "tools/contour_reset_engine.rs": "8e34429f60eedddb1175915c3b312e26da889a428023eb81922ba25400756275",
+    "tools/joint_contour_reset_body.rs": "0effb6ddf6bccecfe7d20a906d020ef1a7153fbe602e588865f199397278f4eb",
+    "tools/joint_contour_reset_runner.rs": "0be9f935499f4ea5ecf81ec6252e20d4044dc7db7814917ee491c242637097eb",
+    "tools/joint_latch_kernel.rs": "4af602c49d191b150c02c6ed87e3a8b3aa539513b17859ef8b73da4596cfeb78",
+    "tools/latch_charge_driver.rs": "84af1a316124aa950c023aa19885a2f1b55db699446a0ec8ff75db7da34cc901",
+    "tools/contour_closed_driver.rs": "326423fe5be49fb8d8b595d90a6517524aeffa217210bb54846bc23fc2781eb2",
+    "crates/rf-d-circuit/src/joint_engine.rs": "dacd5fe5c2b30f48acc336f5c45ebfb60a6ae3d7a24de0e3a4fb0aa1496df5d1",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+    "evidence/voice_contour_reset_inputs01.json": "94c96b3cfccba969a9fca1842148407b9910e0e43b7a13c841e223b4e74bc99a",
+    "docs/VOZ_CONTORNO_RESET_PROTOCOLO.md": "1da441ba81d222ec8cae1d4b2de783df6e51b6192bffdd53a3b89fcb07bca62d"
+  },
+  "private_used_sha256_after": {
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd",
+    "references-local/contour-reset-inputs01/1-1048576.ckp": "38256e6f9321abab32a1e54197534bad4a006ea0855751983d60dc8f29a80333",
+    "references-local/contour-reset-inputs01/1-524288.ckp": "0140a46a202a0f256618965d1c3a14fa0312550696f4b8fead2d1e4a277a9366",
+    "references-local/contour-reset-inputs01/0-1048576.ckp": "b9e1c35f51e97368409e017e08a52d56dba04882a2173e7ce82aab95ca0d0abb",
+    "references-local/contour-reset-inputs01/0-524288.ckp": "f27c17b3e20a6c7e4cd0163eeb146ee33e1922d4acd6388444c67fab2f382c20",
+    "references-local/contour-engine01/1-65536/final.ckp": "c2b38089d33c76784122d3e08d22fc9dd19ee569736a3652aa6dd67e60f586bd",
+    "references-local/contour-engine01/0-65536/final.ckp": "48e4e391bfdf2edfb87ef8dbace2fa955c43dc6f7ed2e83b1016b5e96a42626e"
+  },
+  "wall_s": 1195.2307122000493,
+  "minimum_free_bytes": 123442327552
+}

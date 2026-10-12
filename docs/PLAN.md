@@ -466,3 +466,16 @@ relojes por escena. No se modifican dispositivos o memoria entrante.
 Siguiente: milisegundos y resets del VCO antes de una nota completa.
 Sin Note On completo por KEY, ADSR asentado, audio nuevo, hardware o RT.
 [QA](../evidence/voice_contour_engine_tests01.json).
+
+
+## Milisegundos de contorno229 y reset — 2026-10-12
+
+[Ventana cargada](VOZ_CONTORNO_RESET_RESULTADOS.md) de3.004 ms por perfil:
+reposo4 µs, S sostenido1.5 ms, liberación1.5 ms; ON/OFF y límites2/1 µs.
+Un reset del VCO por perfil con contorno/cadena activos;35724 ecuaciones,
+12576 accepted/25152 finos,24 restores de prefijos de hasta16 accepted.
+Balances y cortes al mismo reloj pasan, sin cambiar dispositivos/gates.
+Siguiente: ciclo entre dos resets y extensión de la carga/liberación.
+Sin replay completo de estos tramos nuevos, contorno desde silencio,
+periodicidad asintótica, audio nuevo, identificación física o RT.
+[QA](../evidence/voice_contour_reset_tests01.json).
