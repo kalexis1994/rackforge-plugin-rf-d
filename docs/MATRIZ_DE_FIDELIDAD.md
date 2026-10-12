@@ -365,3 +365,10 @@ ocho resets/seis intervalos, estados al mismo reloj, balances de carga,
 14400 ecuaciones y seis restores por bits. Persistencia del criterio de
 mejora: True. Sin cota asintótica, audio o RT.
 [QA vigente](../evidence/voice_candidate_cycles_tests01.json).
+
+## Diagnóstico de nivel y control del panel — 2026-10-12
+
+[Tres puntos DC y AC de68 nodos](VOZ_APERTURA_CUTOFF_RESULTADOS.md),
+G por FD a1/2 µV, C por incidencias, 48 solves/24 transferencias.
+BUS ideal y pequeña señal; no acredita el nivel de una nota no lineal
+ni trayectoria/audio nuevos. [QA vigente](../evidence/voice_cutoff_opening_tests01.json).

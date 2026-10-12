@@ -52,7 +52,7 @@ alcanzan≈265 ms. Los [ciclos de esta nueva raíz](docs/VOZ_CICLOS_CONDICIONADO
 completan dos perfiles de5,25 ms con refinamiento y cargas observadas;
 la periodicidad aún queda abierta. El ciclo anterior conserva su historia.
 
-La [QA vigente](evidence/voice_candidate_cycles_tests01.json) conserva
+La [QA vigente](evidence/voice_cutoff_opening_tests01.json) conserva
 248 tests Rust heredados por identidad y el nuevo banco de trayectorias. La
 [cadena con cargas explícitas](docs/CADENA_CARGA_RADAU_RESULTADOS.md) pasa
 72 etapas y 180 corrientes, con medios pasos de7,629 ps; fuentes impuestas.
@@ -211,3 +211,9 @@ dos perfiles de10,25 ms, cuatro resets y tres retornos por perfil;
 por bits. Persistencia de la mejora bajo criterio previo: True.
 No acredita periodicidad asintótica; siguiente bloque: controles/cargas.
 [QA vigente](evidence/voice_candidate_cycles_tests01.json).
+
+[Apertura del cutoff de la cadena](docs/VOZ_APERTURA_CUTOFF_RESULTADOS.md):
+tres DC archivados, G/C contrastadas y cuatro armónicos con BUS ideal.
+Abrir0,5→1 eleva |J7/BUS| unas 53.75 veces en la fundamental.
+Diagnóstico de pequeña señal; siguiente: control temporal con carga propia.
+[QA vigente](evidence/voice_cutoff_opening_tests01.json).

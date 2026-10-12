@@ -376,3 +376,11 @@ Persistencia de mejora en esta duración: True.
 Siguiente: avanzar controles/cargas funcionales; no exigir una cota global
 de asentamiento para iniciar un banco corto de otra frontera identificada.
 [QA actual](../evidence/voice_candidate_cycles_tests01.json).
+
+## Apertura del cutoff — 2026-10-12
+
+[Diagnóstico de nivel DC/AC](VOZ_APERTURA_CUTOFF_RESULTADOS.md): el panel
+puede abrir la transferencia sin cambiar componentes. Próximo bloque:
+control temporal corto con cargas entrantes, caso nominal por bits y
+refinamiento; después ampliar a una escena audible con nivel observado.
+[QA actual](../evidence/voice_cutoff_opening_tests01.json).
