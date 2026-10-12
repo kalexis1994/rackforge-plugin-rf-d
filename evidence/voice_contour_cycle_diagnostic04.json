@@ -1,0 +1,139 @@
+{
+  "passed": true,
+  "source_sha256": {
+    "tools/joint_contour_cycle_runner.rs": "db04c0c94d4e90e2fa0fad088b5e9235b38d7be8b0b0c76ef859ccfcc7128db2",
+    "tools/joint_latch_kernel.rs": "4af602c49d191b150c02c6ed87e3a8b3aa539513b17859ef8b73da4596cfeb78",
+    "tools/contour_reset_engine.rs": "8e34429f60eedddb1175915c3b312e26da889a428023eb81922ba25400756275",
+    "tools/diagnose_contour_cycle.py": "89e1caa478199bd542048c7492ab89b4a527c4c6388dc9222ce46506910aadc8"
+  },
+  "source_sha256_after": {
+    "tools/joint_contour_cycle_runner.rs": "db04c0c94d4e90e2fa0fad088b5e9235b38d7be8b0b0c76ef859ccfcc7128db2",
+    "tools/joint_latch_kernel.rs": "4af602c49d191b150c02c6ed87e3a8b3aa539513b17859ef8b73da4596cfeb78",
+    "tools/contour_reset_engine.rs": "8e34429f60eedddb1175915c3b312e26da889a428023eb81922ba25400756275",
+    "tools/diagnose_contour_cycle.py": "89e1caa478199bd542048c7492ab89b4a527c4c6388dc9222ce46506910aadc8"
+  },
+  "private_used_sha256": {
+    "references-local/contour-cycle01/1-1048576/rejected.ckp": "1b78cb6398ed8f8df24711d3aee4e643f53a64e087d0e14d58cb5141356ecc03",
+    "references-local/contour-cycle01/1-1048576/rejected-target.bin": "0b1eab9570d4b0b6097bbc4d6f099da5b84681863e96213b85823de378a49eb4",
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd"
+  },
+  "private_used_sha256_after": {
+    "references-local/contour-cycle01/1-1048576/rejected.ckp": "1b78cb6398ed8f8df24711d3aee4e643f53a64e087d0e14d58cb5141356ecc03",
+    "references-local/contour-cycle01/1-1048576/rejected-target.bin": "0b1eab9570d4b0b6097bbc4d6f099da5b84681863e96213b85823de378a49eb4",
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd"
+  },
+  "compiler": {
+    "path": "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+    "sha256": "fd6232f90a981e28472ce6900232946a1f1bcad8ec8270cd5ae6a3a357208b98",
+    "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+  },
+  "commands": [
+    {
+      "command": [
+        "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+        "--edition=2021",
+        "-C",
+        "opt-level=2",
+        "-C",
+        "strip=symbols",
+        "-C",
+        "link-arg=-Wl,--stack,33554432",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-diagnostic04\\frozen.rs",
+        "--extern",
+        "rf_d_circuit=C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-startup01\\librf_d_circuit.rlib",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-diagnostic04\\frozen.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "warning: unused imports: `Mode` and `self`\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_latch_kernel.rs:5:33\n  |\n5 | use rf_d_circuit::{vco1_stamp::{self,Controls,Mode},chain_charge::{self,Parameters as Chain},mixer_on::OnMixer,StepError};\n  |                                 ^^^^          ^^^^\n  |\n  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default\n\nwarning: unused imports: `SolverBudget`, `loudness_follower as follower`, and `self`\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-diagnostic04\\frozen.rs:3:35\n  |\n3 | ...n_charge::{self,Parameters as Chain},mixer_on::OnMixer,vco1_stamp::Controls,loudness_follower as follower,SolverBudget};\n  |               ^^^^                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ^^^^^^^^^^^^\n\nwarning: unused import: `std::time::Instant`\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:3:5\n  |\n3 | use std::time::Instant;\n  |     ^^^^^^^^^^^^^^^^^^\n\nwarning: unused imports: `Parameters`, `initial_state`, `step_with_emphasis`, and `step`\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:8:5\n  |\n8 |     initial_state, step, step_with_emphasis, Boundary, Parameters,\n  |     ^^^^^^^^^^^^^  ^^^^  ^^^^^^^^^^^^^^^^^^            ^^^^^^^^^^\n\nwarning: unused import: `SolverBudget`\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:16:55\n   |\n16 | use rf_d_circuit::{Parameters as HeadphoneParameters, SolverBudget};\n   |                                                       ^^^^^^^^^^^^\n\nwarning: unused import: `time::Instant`\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-diagnostic04\\frozen.rs:5:24\n  |\n5 | use std::{fs,io::Write,time::Instant};\n  |                        ^^^^^^^^^^^^^\n\nwarning: function `write_state` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-diagnostic04\\frozen.rs:12:4\n   |\n12 | fn write_state(w:&mut impl Write,s:joint::State) {write!(w,\"JOINT_STATE\").unwrap();for v in s.high.into_iter().chain(s.low) {write!(...\n   |    ^^^^^^^^^^^\n   |\n   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: function `same` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-diagnostic04\\frozen.rs:13:4\n   |\n13 | fn same(a:&joint::Pair,b:&joint::Pair)->bool {\n   |    ^^^^\n\nwarning: constant `CUT` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-diagnostic04\\frozen.rs:17:85\n   |\n17 | const START:u64=4423942144;const REL:[u64;4]=[0,2097152,788529152,1574961152];const CUT:u64=157286400;const SIZE:usize=3720;\n   |                                                                                     ^^^\n\nwarning: function `observations` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-diagnostic04\\frozen.rs:29:4\n   |\n29 | fn observations(s:joint::State,p:joint::Parameters)->Result<[f64;13],String>{\n   |    ^^^^^^^^^^^^\n\nwarning: function `motor` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-diagnostic04\\frozen.rs:32:4\n   |\n32 | fn motor(o:temporal::Observations)->[f64;9]{[o.saw_v,o.ramp_v,o.bus_v,o.cursor_v,o.j7_v,o.panel_current_a,o.series_current_a,o.c27_c...\n   |    ^^^^^\n\nwarning: function `same_accepted` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-diagnostic04\\frozen.rs:33:4\n   |\n33 | fn same_accepted(a:&temporal::Accepted,b:&temporal::Accepted)->bool{\n   |    ^^^^^^^^^^^^^\n\nwarning: struct `Sum` is never constructed\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-diagnostic04\\frozen.rs:36:26\n   |\n36 | #[derive(Default)]struct Sum{value:f64,low:f64}impl Sum{fn add(&mut self,v:f64){let y=v-self.low;let t=self.value+y;self.low=(t-self...\n   |                          ^^^\n\nwarning: method `add` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-diagnostic04\\frozen.rs:36:60\n   |\n36 | #[derive(Default)]struct Sum{value:f64,low:f64}impl Sum{fn add(&mut self,v:f64){let y=v-self.low;let t=self.value+y;self.low=(t-self...\n   |                                                --------    ^^^\n   |                                                |\n   |                                                method in this implementation\n\nwarning: function `selected` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-diagnostic04\\frozen.rs:37:4\n   |\n37 | fn selected(w:&mut impl Write,old:joint::State,pair:&joint::Pair,h:f64){writeln!(w,\"JOINT_ROOT,0,{h:.17e},{:.17e},{:.17e}\",pair.resi...\n   |    ^^^^^^^^\n\nwarning: constant `MIN_DT_S` is never used\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_latch_kernel.rs:9:11\n  |\n9 | pub const MIN_DT_S:f64=chain_charge::MIN_DT_S;\n  |           ^^^^^^^^\n\nwarning: function `vco_index` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_latch_kernel.rs:11:14\n   |\n11 | pub const fn vco_index(k:usize)->Option<usize> {if k==108 {None} else if k<108 {Some(k)} else {Some(k-1)}}\n   |              ^^^^^^^^^\n\nwarning: fields `c2_v`, `reset_v`, `q25`, `reset_driver`, and `set_base` are never read\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_latch_kernel.rs:14:82\n   |\n14 | ...ct Parameters {pub controls:Controls,chain:Chain,pub sources:[f64;5],pub c2_v:f64,pub reset_v:f64,pub q25:f64,pub reset_driver:f64,pub final_decay:bool,pub keyboard:f64,pub short:bool,pub set_base:f64}\n   |       ---------- fields in this struct                                      ^^^^         ^^^^^^^         ^^^         ^^^^^^^^^^^^                                                              ^^^^^^^^\n   |\n   = note: `Parameters` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis\n\nwarning: associated items `lift` and `chain` are never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_latch_kernel.rs:32:9\n   |\n26 | impl State {\n   | ---------- associated items in this implementation\n...\n32 |  pub fn lift(vco_high:[f64;134],vco_low:[f64;134],chain:chain_charge::State)->Self {\n   |         ^^^^\n...\n37 |  fn chain(self)->chain_charge::State {chain_charge::State{high:std::array::from_fn(|k|self.high[chain_index(k)]),low:std::array::fro...\n   |     ^^^^^\n\nwarning: fields `residual_ratio`, `correction_ratio`, `iterations`, and `trials` are never read\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_latch_kernel.rs:77:72\n   |\n77 | ...ct Pair {pub candidates:[State;2],pub increments:[State;2],pub residual_ratio:f64,pub correction_ratio:f64,pub iterations:usize,pub trials:us...\n   |       ---- fields in this struct                                  ^^^^^^^^^^^^^^         ^^^^^^^^^^^^^^^^         ^^^^^^^^^^           ^^^^^^\n\nwarning: function `solve_linear` is never used\n   --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_latch_kernel.rs:108:8\n    |\n108 | pub fn solve_linear<const M: usize>(\n    |        ^^^^^^^^^^^^\n\nwarning: fields `elapsed_ticks`, `pair`, and `observations` are never read\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\contour_reset_engine.rs:20:26\n   |\n20 | pub struct Endpoint {pub elapsed_ticks:u64,pub pair:joint::Pair,pub observations:Observations}\n   |            --------      ^^^^^^^^^^^^^         ^^^^                 ^^^^^^^^^^^^\n   |            |\n   |            fields in this struct\n\nwarning: fields `coarse` and `endpoints` are never read\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\contour_reset_engine.rs:21:26\n   |\n21 | pub struct Accepted {pub coarse:joint::Pair,pub endpoints:[Endpoint;2],pub half_ticks:u32,pub error_ratio:f64,pub attempts:u32}\n   |            --------      ^^^^^^                 ^^^^^^^^^\n   |            |\n   |            fields in this struct\n\nwarning: associated items `from_conditioned` and `trigger` are never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\contour_reset_engine.rs:37:9\n   |\n35 | impl Engine {\n   | ----------- associated items in this implementation\n36 |  /// Takes an explicit conditioned history; does not establish joint DC startup.\n37 |  pub fn from_conditioned(parameters:joint::Parameters,state:State,settings:Settings)->Result<Self,Error> {\n   |         ^^^^^^^^^^^^^^^^\n...\n50 |  pub fn trigger(&mut self,key:f64,short:bool)->Result<(),Error>{\n   |         ^^^^^^^\n\nwarning: 24 warnings emitted\n\n",
+      "wall_s": 0.7192440000362694
+    },
+    {
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-diagnostic04\\frozen.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle01\\1-1048576\\rejected.ckp",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle01\\1-1048576\\rejected-target.bin"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "REJECT,PrecisionLimit(Nonlinear(IterationBudget)),unchanged=true\n",
+      "wall_s": 5.134302799939178
+    },
+    {
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-diagnostic04\\frozen.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle01\\1-1048576\\rejected.ckp",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle01\\1-1048576\\rejected-target.bin"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "REJECT,PrecisionLimit(Nonlinear(IterationBudget)),unchanged=true\n",
+      "wall_s": 5.334138799924403
+    },
+    {
+      "command": [
+        "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+        "--edition=2021",
+        "-C",
+        "opt-level=2",
+        "-C",
+        "strip=symbols",
+        "-C",
+        "link-arg=-Wl,--stack,33554432",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-diagnostic04\\proposed.rs",
+        "--extern",
+        "rf_d_circuit=C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-startup01\\librf_d_circuit.rlib",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-diagnostic04\\proposed.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "warning: unused imports: `Mode` and `self`\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-diagnostic04\\proposed_kernel.rs:5:33\n  |\n5 | use rf_d_circuit::{vco1_stamp::{self,Controls,Mode},chain_charge::{self,Parameters as Chain},mixer_on::OnMixer,StepError};\n  |                                 ^^^^          ^^^^\n  |\n  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default\n\nwarning: unused imports: `SolverBudget`, `loudness_follower as follower`, and `self`\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-diagnostic04\\proposed.rs:3:35\n  |\n3 | ...n_charge::{self,Parameters as Chain},mixer_on::OnMixer,vco1_stamp::Controls,loudness_follower as follower,SolverBudget};\n  |               ^^^^                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ^^^^^^^^^^^^\n\nwarning: unused import: `std::time::Instant`\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:3:5\n  |\n3 | use std::time::Instant;\n  |     ^^^^^^^^^^^^^^^^^^\n\nwarning: unused imports: `Parameters`, `initial_state`, `step_with_emphasis`, and `step`\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:8:5\n  |\n8 |     initial_state, step, step_with_emphasis, Boundary, Parameters,\n  |     ^^^^^^^^^^^^^  ^^^^  ^^^^^^^^^^^^^^^^^^            ^^^^^^^^^^\n\nwarning: unused import: `SolverBudget`\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:16:55\n   |\n16 | use rf_d_circuit::{Parameters as HeadphoneParameters, SolverBudget};\n   |                                                       ^^^^^^^^^^^^\n\nwarning: unused import: `time::Instant`\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-diagnostic04\\proposed.rs:5:24\n  |\n5 | use std::{fs,io::Write,time::Instant};\n  |                        ^^^^^^^^^^^^^\n\nwarning: function `write_state` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-diagnostic04\\proposed.rs:12:4\n   |\n12 | fn write_state(w:&mut impl Write,s:joint::State) {write!(w,\"JOINT_STATE\").unwrap();for v in s.high.into_iter().chain(s.low) {write!(...\n   |    ^^^^^^^^^^^\n   |\n   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: function `same` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-diagnostic04\\proposed.rs:13:4\n   |\n13 | fn same(a:&joint::Pair,b:&joint::Pair)->bool {\n   |    ^^^^\n\nwarning: constant `CUT` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-diagnostic04\\proposed.rs:17:85\n   |\n17 | const START:u64=4423942144;const REL:[u64;4]=[0,2097152,788529152,1574961152];const CUT:u64=157286400;const SIZE:usize=3720;\n   |                                                                                     ^^^\n\nwarning: function `observations` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-diagnostic04\\proposed.rs:29:4\n   |\n29 | fn observations(s:joint::State,p:joint::Parameters)->Result<[f64;13],String>{\n   |    ^^^^^^^^^^^^\n\nwarning: function `motor` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-diagnostic04\\proposed.rs:32:4\n   |\n32 | fn motor(o:temporal::Observations)->[f64;9]{[o.saw_v,o.ramp_v,o.bus_v,o.cursor_v,o.j7_v,o.panel_current_a,o.series_current_a,o.c27_c...\n   |    ^^^^^\n\nwarning: function `same_accepted` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-diagnostic04\\proposed.rs:33:4\n   |\n33 | fn same_accepted(a:&temporal::Accepted,b:&temporal::Accepted)->bool{\n   |    ^^^^^^^^^^^^^\n\nwarning: struct `Sum` is never constructed\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-diagnostic04\\proposed.rs:36:26\n   |\n36 | #[derive(Default)]struct Sum{value:f64,low:f64}impl Sum{fn add(&mut self,v:f64){let y=v-self.low;let t=self.value+y;self.low=(t-self...\n   |                          ^^^\n\nwarning: method `add` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-diagnostic04\\proposed.rs:36:60\n   |\n36 | #[derive(Default)]struct Sum{value:f64,low:f64}impl Sum{fn add(&mut self,v:f64){let y=v-self.low;let t=self.value+y;self.low=(t-self...\n   |                                                --------    ^^^\n   |                                                |\n   |                                                method in this implementation\n\nwarning: function `selected` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-diagnostic04\\proposed.rs:37:4\n   |\n37 | fn selected(w:&mut impl Write,old:joint::State,pair:&joint::Pair,h:f64){writeln!(w,\"JOINT_ROOT,0,{h:.17e},{:.17e},{:.17e}\",pair.resi...\n   |    ^^^^^^^^\n\nwarning: constant `MIN_DT_S` is never used\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-diagnostic04\\proposed_kernel.rs:9:11\n  |\n9 | pub const MIN_DT_S:f64=chain_charge::MIN_DT_S;\n  |           ^^^^^^^^\n\nwarning: function `vco_index` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-diagnostic04\\proposed_kernel.rs:11:14\n   |\n11 | pub const fn vco_index(k:usize)->Option<usize> {if k==108 {None} else if k<108 {Some(k)} else {Some(k-1)}}\n   |              ^^^^^^^^^\n\nwarning: fields `c2_v`, `reset_v`, `q25`, `reset_driver`, and `set_base` are never read\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-diagnostic04\\proposed_kernel.rs:14:82\n   |\n14 | ...ct Parameters {pub controls:Controls,chain:Chain,pub sources:[f64;5],pub c2_v:f64,pub reset_v:f64,pub q25:f64,pub reset_driver:f64,pub final_decay:bool,pub keyboard:f64,pub short:bool,pub set_base:f64}\n   |       ---------- fields in this struct                                      ^^^^         ^^^^^^^         ^^^         ^^^^^^^^^^^^                                                              ^^^^^^^^\n   |\n   = note: `Parameters` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis\n\nwarning: associated items `lift` and `chain` are never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-diagnostic04\\proposed_kernel.rs:32:9\n   |\n26 | impl State {\n   | ---------- associated items in this implementation\n...\n32 |  pub fn lift(vco_high:[f64;134],vco_low:[f64;134],chain:chain_charge::State)->Self {\n   |         ^^^^\n...\n37 |  fn chain(self)->chain_charge::State {chain_charge::State{high:std::array::from_fn(|k|self.high[chain_index(k)]),low:std::array::fro...\n   |     ^^^^^\n\nwarning: fields `residual_ratio`, `correction_ratio`, `iterations`, and `trials` are never read\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-diagnostic04\\proposed_kernel.rs:77:72\n   |\n77 | ...ct Pair {pub candidates:[State;2],pub increments:[State;2],pub residual_ratio:f64,pub correction_ratio:f64,pub iterations:usize,pub trials:us...\n   |       ---- fields in this struct                                  ^^^^^^^^^^^^^^         ^^^^^^^^^^^^^^^^         ^^^^^^^^^^           ^^^^^^\n\nwarning: function `solve_linear` is never used\n   --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-diagnostic04\\proposed_kernel.rs:108:8\n    |\n108 | pub fn solve_linear<const M: usize>(\n    |        ^^^^^^^^^^^^\n\nwarning: fields `elapsed_ticks`, `pair`, and `observations` are never read\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\contour_reset_engine.rs:20:26\n   |\n20 | pub struct Endpoint {pub elapsed_ticks:u64,pub pair:joint::Pair,pub observations:Observations}\n   |            --------      ^^^^^^^^^^^^^         ^^^^                 ^^^^^^^^^^^^\n   |            |\n   |            fields in this struct\n\nwarning: fields `coarse` and `endpoints` are never read\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\contour_reset_engine.rs:21:26\n   |\n21 | pub struct Accepted {pub coarse:joint::Pair,pub endpoints:[Endpoint;2],pub half_ticks:u32,pub error_ratio:f64,pub attempts:u32}\n   |            --------      ^^^^^^                 ^^^^^^^^^\n   |            |\n   |            fields in this struct\n\nwarning: associated items `from_conditioned` and `trigger` are never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\contour_reset_engine.rs:37:9\n   |\n35 | impl Engine {\n   | ----------- associated items in this implementation\n36 |  /// Takes an explicit conditioned history; does not establish joint DC startup.\n37 |  pub fn from_conditioned(parameters:joint::Parameters,state:State,settings:Settings)->Result<Self,Error> {\n   |         ^^^^^^^^^^^^^^^^\n...\n50 |  pub fn trigger(&mut self,key:f64,short:bool)->Result<(),Error>{\n   |         ^^^^^^^\n\nwarning: 24 warnings emitted\n\n",
+      "wall_s": 0.779982200008817
+    },
+    {
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-diagnostic04\\proposed.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle01\\1-1048576\\rejected.ckp",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle01\\1-1048576\\rejected-target.bin"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "ACCEPT,half=16,lte=3.88213798247925663e-7,attempts=1,ticks=5212471328\n",
+      "wall_s": 0.22327890002634376
+    }
+  ],
+  "outputs": [
+    {
+      "path": "references-local/contour-cycle-diagnostic04/frozen.exe",
+      "sha256": "954ae8f7ea5d46357f92830938dafadc7c7b9ecc12eca43fb2165d7cf598bd78",
+      "bytes": 1364992
+    },
+    {
+      "path": "references-local/contour-cycle-diagnostic04/frozen.rs",
+      "sha256": "349660565117b7c26cc07a78f828111bba192599b8f4c7673d99fe659023ae64",
+      "bytes": 5924
+    },
+    {
+      "path": "references-local/contour-cycle-diagnostic04/proposed.exe",
+      "sha256": "fcd34853e72f4450e7f604a34afed70d6efd1e018a960ac3cead910642e648d9",
+      "bytes": 1365504
+    },
+    {
+      "path": "references-local/contour-cycle-diagnostic04/proposed.rs",
+      "sha256": "50ff58e2e6e60f38767964f64e71555fc621d79313ca0b4248bb974d2af56417",
+      "bytes": 5959
+    },
+    {
+      "path": "references-local/contour-cycle-diagnostic04/proposed_kernel.rs",
+      "sha256": "b3fd0a3a238c93deba6713ccc393b0fdae03cd4dc7dc77d0c921554b68e98a36",
+      "bytes": 10460
+    }
+  ],
+  "substitution_old": "} else if !p.short && old.high[218]+old.low[218]<1. {",
+  "substitution_new": "} else if !p.short && old.high[218]+old.low[218]<1. && old.high[221]+old.low[221]<0.1 {",
+  "only_newton_guess_changed": true,
+  "numerical_gates_changed": false,
+  "complete_trajectory_admitted": false
+}

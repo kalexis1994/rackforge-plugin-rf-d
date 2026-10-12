@@ -479,3 +479,18 @@ Siguiente: ciclo entre dos resets y extensión de la carga/liberación.
 Sin replay completo de estos tramos nuevos, contorno desde silencio,
 periodicidad asintótica, audio nuevo, identificación física o RT.
 [QA](../evidence/voice_contour_reset_tests01.json).
+
+
+## Ciclo del VCO con contorno229 y C7 cargado — 2026-10-12
+
+[Continuación hasta11.442 ms](VOZ_CONTORNO_CICLO_RESULTADOS.md) conserva
+cada historia propia y completa un ciclo transitorio entre dos resets
+con VCO/BUS/filtro/VCAs/J7 y contorno activos. La apertura con C7 cargado
+refuta el predictor anterior: fallo/replay preservados, una condición
+numérica reparada sin modificar ecuaciones ni gates. Cuatro perfiles
+admitidos, 26770 finos y 38472 ecuaciones;
+unión exacta, refinamiento y balances pasan.
+Siguiente: medir y acelerar el solve contra esta referencia para alcanzar
+un contorno de duración musical. Contorno desde silencio, otras cargas
+de placa2, contorno de filtro, fidelidad física y RT pendientes.
+[QA](../evidence/voice_contour_cycle_tests01.json).
