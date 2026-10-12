@@ -52,7 +52,7 @@ alcanzan≈265 ms. Los [ciclos de esta nueva raíz](docs/VOZ_CICLOS_CONDICIONADO
 completan dos perfiles de5,25 ms con refinamiento y cargas observadas;
 la periodicidad aún queda abierta. El ciclo anterior conserva su historia.
 
-La [QA vigente](evidence/voice_conditioned_return_utf8_tests01.json) conserva
+La [QA vigente](evidence/voice_dynamic_direction_tests01.json) conserva
 248 tests Rust heredados por identidad y el nuevo banco de trayectorias. La
 [cadena con cargas explícitas](docs/CADENA_CARGA_RADAU_RESULTADOS.md) pasa
 72 etapas y 180 corrientes, con medios pasos de7,629 ps; fuentes impuestas.
@@ -197,3 +197,10 @@ frente a la inyección aislada de C27. Falta el retorno completo desde estas ra�
 raíces. Ambos tiempos de reset, periodo y deriva en fase contrastados;
 20 operadores independientes para las 18 columnas. FD completa sólo C27.
 [QA vigente](evidence/voice_conditioned_return_utf8_tests01.json).
+
+[Primera corrección dinámica de memoria](docs/VOZ_CORRECCION_DINAMICA_RESULTADOS.md):
+una dirección combinada contrastada con cuatro FD completas y un candidato
+propio. Ratio L2 de deriva 0.00218670557; ratio máximo 0.00199744081.
+Rango 16, 212720 solves, 40000 ecuaciones y prefijos seriales por bits.
+Admisión del candidato en este dominio: True.
+[QA vigente](evidence/voice_dynamic_direction_tests01.json).

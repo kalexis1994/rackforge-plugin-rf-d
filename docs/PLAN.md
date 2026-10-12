@@ -358,3 +358,12 @@ raíces auditadas y 20 operadores independientes. Siguiente: admitir las
 direcciones necesarias mediante FD completa antes de corregir la deriva
 dinámica y contrastar perfiles. Memoria periódica y adaptación pendientes.
 [QA actual](../evidence/voice_conditioned_return_tests01.json).
+
+## Primera dirección dinámica — 2026-10-12
+
+[FD completa y candidato propio](VOZ_CORRECCION_DINAMICA_RESULTADOS.md):
+rango 16, seis raíces, 212720 solves y 40000 ecuaciones independientes.
+Ratio L2 0.00218670557; máximo 0.00199744081.
+Siguiente: ciclos posteriores, calendario propio adaptativo y contraste
+de perfil antes de adoptar una inicialización estable de la voz.
+[QA actual](../evidence/voice_dynamic_direction_tests01.json).

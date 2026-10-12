@@ -348,3 +348,12 @@ FD completa sólo objetivo 5, memoria 0/calendario 125 ns. Falta admitir
 las demás direcciones y la corrección dinámica. No admite Poincaré,
 asentamiento, adaptación, fidelidad física o RT; 248 tests heredados.
 [QA vigente](../evidence/voice_conditioned_return_tests01.json).
+
+## Dirección dinámica y resultado no lineal — 2026-10-12
+
+[Una combinación de objetivos](VOZ_CORRECCION_DINAMICA_RESULTADOS.md)
+admitida por FD completa a dos tamaños. Cinco historias propias y seis
+raíces, 40000 ecuaciones y 640000 coordenadas de prefijos por bits.
+Mejora del candidato a=1 en este dominio: True.
+No acredita todas las columnas, periodicidad, adaptación, fidelidad o RT.
+[QA vigente](../evidence/voice_dynamic_direction_tests01.json).
