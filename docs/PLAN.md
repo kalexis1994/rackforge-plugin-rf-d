@@ -453,3 +453,16 @@ Siguiente: trayectoria de ataque/sustain/liberación con el circuito cerrado.
 Cargas omitidas de otros dispositivos explícitas; sin ADSR completo,
 contorno de filtro, audio nuevo, identificación física o RT.
 [QA](../evidence/voice_latch_charge_tests01.json).
+
+
+## Control temporal229 y S sostenido — 2026-10-12
+
+[Motor adaptativo](VOZ_CONTORNO_ADAPTATIVO_RESULTADOS.md) continúa el
+contorno cerrado: reposo2 µs, S sostenido50 µs, liberación50 µs.
+Cuatro perfiles ON/OFF y máximos250/125 ns, misma semilla por escena.
+32976 ecuaciones,3226 accepted/6452 finos,20 restores y8 rollbacks.
+C2 carga y descarga desde el circuito, con balances y comparación en12
+relojes por escena. No se modifican dispositivos o memoria entrante.
+Siguiente: milisegundos y resets del VCO antes de una nota completa.
+Sin Note On completo por KEY, ADSR asentado, audio nuevo, hardware o RT.
+[QA](../evidence/voice_contour_engine_tests01.json).

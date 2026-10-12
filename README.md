@@ -52,7 +52,7 @@ alcanzan≈265 ms. Los [ciclos de esta nueva raíz](docs/VOZ_CICLOS_CONDICIONADO
 completan dos perfiles de5,25 ms con refinamiento y cargas observadas;
 la periodicidad aún queda abierta. El ciclo anterior conserva su historia.
 
-La [QA vigente](evidence/voice_latch_charge_tests01.json) conserva
+La [QA vigente](evidence/voice_contour_engine_tests01.json) conserva
 248 tests Rust heredados por identidad y el nuevo banco de trayectorias. La
 [cadena con cargas explícitas](docs/CADENA_CARGA_RADAU_RESULTADOS.md) pasa
 72 etapas y 180 corrientes, con medios pasos de7,629 ps; fuentes impuestas.
@@ -253,7 +253,7 @@ dos perfiles hasta5,25 ms desde el prefijo propio, dos resets por perfil,
 55200 ecuaciones y balances de carga/medias. Escucha de inspección admitida:
 True; réplica de un intervalo, escala explícita80×.
 No acredita voz completa, periodo asintótico o RT.
-[QA vigente](evidence/voice_latch_charge_tests01.json).
+[QA vigente](evidence/voice_contour_engine_tests01.json).
 
 
 ## Q25/Q15 cargados en la voz — 2026-10-12
@@ -265,4 +265,15 @@ Cuatro perfiles de10 µs,18320 ecuaciones,3840 pasos y40 restores completos.
 La malla inicial se rechaza;15.625/7.8125 ns pasan el gate2 µV con1.553 µV
 máximo en los finales comparados. Hipótesis de dispositivos explícitas,
 ventana local; ADSR completo, contorno de filtro y RT siguen pendientes.
-[QA](evidence/voice_latch_charge_tests01.json).
+[QA](evidence/voice_contour_engine_tests01.json).
+
+
+## Contorno229 con contacto sostenido — 2026-10-12
+
+[Control temporal adaptativo](docs/VOZ_CONTORNO_ADAPTATIVO_RESULTADOS.md)
+para el circuito cerrado: cuatro perfiles de102 µs, S sostenido50 µs y
+liberación50 µs.3226 avances/6452 finos,32976 ecuaciones independientes,
+20 restores completos y8 rollbacks. Dos límites de paso coinciden en
+los12 cortes con≈.154 nV máximo; C2 responde desde las corrientes reales.
+Ventana corta con historia precargada; nota/ADSR completo y RT pendientes.
+[QA](evidence/voice_contour_engine_tests01.json).
