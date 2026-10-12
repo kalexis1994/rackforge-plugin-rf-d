@@ -1,0 +1,88 @@
+{
+  "passed": true,
+  "source_sha256": {
+    "tools/run_joint_loudness.py": "e6f82965bc312ce278f0fde8f5ee4474a3bfd4ec19db909bc0b38460c0fc71ac",
+    "tools/prepare_joint_loudness.py": "8ca9baf93ca9dc67ba3d58904c93be749ef147a656d2646a5a7806dfec2ca470",
+    "tools/joint_loudness_kernel.rs": "7400b5b1854c15c22ad668376964bff75e67c802d190f5b42f91984b2db95932",
+    "tools/joint_loudness_runner.rs": "13f88061273ff4092e6448e105ce575406a43c2cf73ddcd18126892c6fa77b72",
+    "docs/VOZ_SEGUIDOR_PROTOCOLO.md": "aafdab4604a2197cd27c9b463db7797ee0a87131e46e7107ed31ad2d11290418",
+    "evidence/voice_loudness_inputs02.json": "2de212c93fab23589681fe49184a0df2c02ef32e9d468d24f0cd92592a05b496",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99"
+  },
+  "private_used_sha256": {
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd",
+    "references-local/cutoff-cycles01/32768/final.ckp": "415ea03b5b641769d836820f1100f1492e7cb6d932fa69aba0f21cd12a614d9d"
+  },
+  "compiler": {
+    "path": "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+    "sha256": "fd6232f90a981e28472ce6900232946a1f1bcad8ec8270cd5ae6a3a357208b98",
+    "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+  },
+  "commands": [
+    {
+      "command": [
+        "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+        "--edition=2021",
+        "-C",
+        "opt-level=2",
+        "-C",
+        "strip=symbols",
+        "-C",
+        "link-arg=-Wl,--stack,33554432",
+        "tools/joint_loudness_runner.rs",
+        "--extern",
+        "rf_d_circuit=C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-startup01\\librf_d_circuit.rlib",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-loudness02\\run.exe"
+      ],
+      "exit_code": 0,
+      "wall_s": 0.6232323000440374,
+      "stdout": "",
+      "stderr": "warning: unused imports: `Mode` and `self`\n --> tools\\joint_loudness_kernel.rs:3:33\n  |\n3 | use rf_d_circuit::{vco1_stamp::{self,Controls,Mode},chain_charge::{self,Parameters as Chain},mixer_on::OnMixer,StepError};\n  |                                 ^^^^          ^^^^\n  |\n  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default\n\nwarning: unused import: `self`\n --> tools/joint_loudness_runner.rs:3:35\n  |\n3 | use rf_d_circuit::{chain_charge::{self,Parameters as Chain},mixer_on::OnMixer,vco1_stamp::Controls,loudness_follower as follower,Solv...\n  |                                   ^^^^\n\nwarning: unused import: `std::time::Instant`\n --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:3:5\n  |\n3 | use std::time::Instant;\n  |     ^^^^^^^^^^^^^^^^^^\n\nwarning: unused imports: `Parameters`, `initial_state`, `step_with_emphasis`, and `step`\n --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:8:5\n  |\n8 |     initial_state, step, step_with_emphasis, Boundary, Parameters,\n  |     ^^^^^^^^^^^^^  ^^^^  ^^^^^^^^^^^^^^^^^^            ^^^^^^^^^^\n\nwarning: unused import: `SolverBudget`\n  --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:16:55\n   |\n16 | use rf_d_circuit::{Parameters as HeadphoneParameters, SolverBudget};\n   |                                                       ^^^^^^^^^^^^\n\nwarning: constant `BUS` is never used\n --> tools\\joint_loudness_kernel.rs:6:11\n  |\n6 | pub const BUS:usize=12;\n  |           ^^^\n  |\n  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: constant `MIN_DT_S` is never used\n --> tools\\joint_loudness_kernel.rs:7:11\n  |\n7 | pub const MIN_DT_S:f64=chain_charge::MIN_DT_S;\n  |           ^^^^^^^^\n\nwarning: function `vco_index` is never used\n --> tools\\joint_loudness_kernel.rs:9:14\n  |\n9 | pub const fn vco_index(k:usize)->Option<usize> {if k==108 {None} else if k<108 {Some(k)} else {Some(k-1)}}\n  |              ^^^^^^^^^\n\nwarning: function `chain_index` is never used\n  --> tools\\joint_loudness_kernel.rs:10:14\n   |\n10 | pub const fn chain_index(k:usize)->usize {if k==66 {BUS} else if k==67 {199} else {133+k}}\n   |              ^^^^^^^^^^^\n\nwarning: method `chain` is never used\n  --> tools\\joint_loudness_kernel.rs:20:9\n   |\n13 | impl Parameters {\n   | --------------- method in this implementation\n...\n20 |  pub fn chain(self)->Chain {self.chain}\n   |         ^^^^^\n\nwarning: associated items `lift` and `chain` are never used\n  --> tools\\joint_loudness_kernel.rs:30:9\n   |\n24 | impl State {\n   | ---------- associated items in this implementation\n...\n30 |  pub fn lift(vco_high:[f64;134],vco_low:[f64;134],chain:chain_charge::State)->Self {\n   |         ^^^^\n...\n35 |  fn chain(self)->chain_charge::State {chain_charge::State{high:std::array::from_fn(|k|self.high[chain_index(k)]),low:std::array::fro...\n   |     ^^^^^\n\nwarning: function `solve_linear` is never used\n  --> tools\\joint_loudness_kernel.rs:94:8\n   |\n94 | pub fn solve_linear<const M: usize>(\n   |        ^^^^^^^^^^^^\n\nwarning: 12 warnings emitted\n\n"
+    },
+    {
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-loudness02\\run.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\cutoff-cycles01\\32768\\final.ckp",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-loudness02\\selected.txt"
+      ],
+      "exit_code": 0,
+      "wall_s": 4.020375499967486,
+      "stdout": "",
+      "stderr": "COMPLETED,profiles=12,steps=288,bit_replays=12,wall_s=3.9302737\n"
+    }
+  ],
+  "replays": [],
+  "outputs": [
+    {
+      "path": "references-local/joint-loudness02/run.exe",
+      "sha256": "a0d1e73428954c91a0e968bf4bddffe2fc3e4cf3230954d93432fb8932a3ad3e",
+      "bytes": 1359360
+    },
+    {
+      "path": "references-local/joint-loudness02/selected.txt",
+      "sha256": "bb90f0eb4d6165bdc314fd7b7993f942b99396340625536f3bd3d942ccf0ea82",
+      "bytes": 1447607
+    }
+  ],
+  "available_free_bytes": 127092477952,
+  "reserve_bytes": 1073741824,
+  "estimated_output_bytes": 16777216,
+  "lab_stack_bytes": 33554432,
+  "new_library_compile": false,
+  "source_sha256_after": {
+    "tools/run_joint_loudness.py": "e6f82965bc312ce278f0fde8f5ee4474a3bfd4ec19db909bc0b38460c0fc71ac",
+    "tools/prepare_joint_loudness.py": "8ca9baf93ca9dc67ba3d58904c93be749ef147a656d2646a5a7806dfec2ca470",
+    "tools/joint_loudness_kernel.rs": "7400b5b1854c15c22ad668376964bff75e67c802d190f5b42f91984b2db95932",
+    "tools/joint_loudness_runner.rs": "13f88061273ff4092e6448e105ce575406a43c2cf73ddcd18126892c6fa77b72",
+    "docs/VOZ_SEGUIDOR_PROTOCOLO.md": "aafdab4604a2197cd27c9b463db7797ee0a87131e46e7107ed31ad2d11290418",
+    "evidence/voice_loudness_inputs02.json": "2de212c93fab23589681fe49184a0df2c02ef32e9d468d24f0cd92592a05b496",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99"
+  },
+  "private_used_sha256_after": {
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd",
+    "references-local/cutoff-cycles01/32768/final.ckp": "415ea03b5b641769d836820f1100f1492e7cb6d932fa69aba0f21cd12a614d9d"
+  },
+  "minimum_free_bytes": 127089659904,
+  "wall_s": 4.651663700002246
+}

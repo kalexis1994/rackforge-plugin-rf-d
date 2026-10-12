@@ -387,3 +387,12 @@ sin reintegración,55200 ecuaciones, cargas/control/medias y estados al mismo re
 Escucha de inspección: True; réplica de un intervalo y80×
 de adaptación explícita. Sin voz completa, periodicidad asintótica o RT.
 [QA vigente](../evidence/voice_cutoff_cycles_tests01.json).
+
+## Seguidor de volumen en la voz — 2026-10-12
+
+[Cierre205 de laboratorio](VOZ_SEGUIDOR_RESULTADOS.md): Q3/Q2/CR6→R59→Q18
+con VCO1 real, doce trayectorias de2 µs, refinamiento y9840 ecuaciones.
+Conserva por bits400 coordenadas entrantes;72 corrientes de endpoints
+contrastadas. Siguiente: cambios temporales C2/reset con memoria y restore,
+luego contorno causal completo. No admite ADSR, adaptación205, hardware,
+RT o nuevo audio. [QA](../evidence/voice_loudness_tests01.json).

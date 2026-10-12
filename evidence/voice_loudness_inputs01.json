@@ -1,0 +1,53 @@
+{
+  "passed": true,
+  "seed_path": "references-local/cutoff-cycles01/32768/final.ckp",
+  "seed_sha256": "415ea03b5b641769d836820f1100f1492e7cb6d932fa69aba0f21cd12a614d9d",
+  "start_ticks": 2752512000,
+  "c2_values": [
+    0.8469345758149237,
+    3.2,
+    6.0
+  ],
+  "reset_values": [
+    0.01,
+    0.7
+  ],
+  "step_s": [
+    1.25e-07,
+    6.25e-08
+  ],
+  "duration_s": 2e-06,
+  "kernel_substitutions": [
+    [
+      "crate::",
+      "rf_d_circuit::"
+    ],
+    [
+      "pub const N:usize=200;",
+      "pub const N:usize=205;"
+    ],
+    [
+      "pub controls:Controls,chain:Chain,pub sources:[f64;5]",
+      "pub controls:Controls,chain:Chain,pub sources:[f64;5],pub c2_v:f64,pub reset_v:f64"
+    ],
+    [
+      "Ok(Self{controls,chain,sources})",
+      "chain.boundary.recovery.vca.loudness_v=0.;Ok(Self{controls,chain,sources,c2_v:3.2,reset_v:0.01})"
+    ],
+    [
+      " if s.dc.iter()",
+      "\n let now=old.advanced(delta.high).advanced(delta.low);\n let fp=rf_d_circuit::loudness_follower::Parameters::default();\n let fb=rf_d_circuit::loudness_follower::Boundary{c2_v:p.c2_v,reset_base_v:p.reset_v,supply_v:9.3,load_conductance_s:1./68000.,load_reference_v:now.high[165]};\n let (fr,fj)=rf_d_circuit::loudness_follower::linearize(std::array::from_fn(|k|now.high[200+k]),fp,fb)?;\n s.dc[165]-=(now.high[203]+now.low[203])/68000.;s.dc_jacobian[165][203]-=1./68000.;\n for a in 0..5 {\n  s.candidate.high[200+a]=now.high[200+a];s.candidate.low[200+a]=now.low[200+a];\n  s.dc[200+a]=fr[a]+(0..5).map(|k|fj[a][k]*now.low[200+k]).sum::<f64>();\n  for b in 0..5 {s.dc_jacobian[200+a][200+b]=fj[a][b];}\n }\n s.dc[203]-=now.low[165]/68000.;s.dc_jacobian[203][165]=-1./68000.;\n if s.dc.iter()"
+    ],
+    [
+      "(k>=133&&chain_charge::constraint_row",
+      "(k>=133&&k<200&&chain_charge::constraint_row"
+    ]
+  ],
+  "source_sha256": {
+    "tools/prepare_joint_loudness.py": "8ca9baf93ca9dc67ba3d58904c93be749ef147a656d2646a5a7806dfec2ca470",
+    "tools/joint_loudness_kernel.rs": "6183eef2c9758b113a1b4d295002932258f4c52d4cd61147c47122f2dfb22ed6",
+    "tools/joint_loudness_runner.rs": "13f88061273ff4092e6448e105ce575406a43c2cf73ddcd18126892c6fa77b72",
+    "crates/rf-d-circuit/src/joint_voice.rs": "9c43e1bd6bc62302911b7c6529ddc9e3a5be77a792818d1d71a452b735b3c4f0",
+    "docs/VOZ_SEGUIDOR_PROTOCOLO.md": "aafdab4604a2197cd27c9b463db7797ee0a87131e46e7107ed31ad2d11290418"
+  }
+}

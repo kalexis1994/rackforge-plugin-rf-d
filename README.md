@@ -6,7 +6,7 @@ nominal documentada; [revisiÃ³n y alcance](docs/OBJETIVO.md). No hay ni habrÃ
 un instrumento fÃ­sico de referencia. La equivalencia numÃ©rica de un modelo
 no acredita identidad sonora con una unidad vintage.
 
-## Estado actual — 2026-10-10
+## Estado actual — 2026-10-12
 
 | Ruta | Resultado disponible | Alcance pendiente |
 |---|---|---|
@@ -52,7 +52,7 @@ alcanzan≈265 ms. Los [ciclos de esta nueva raíz](docs/VOZ_CICLOS_CONDICIONADO
 completan dos perfiles de5,25 ms con refinamiento y cargas observadas;
 la periodicidad aún queda abierta. El ciclo anterior conserva su historia.
 
-La [QA vigente](evidence/voice_cutoff_cycles_tests01.json) conserva
+La [QA vigente](evidence/voice_loudness_tests01.json) conserva
 248 tests Rust heredados por identidad y el nuevo banco de trayectorias. La
 [cadena con cargas explícitas](docs/CADENA_CARGA_RADAU_RESULTADOS.md) pasa
 72 etapas y 180 corrientes, con medios pasos de7,629 ps; fuentes impuestas.
@@ -71,6 +71,12 @@ se detuvieron a 136,630269 y 150,293268 ms; Trap125 a 15,940421 ms.
 Gear125 completÃ³ 350 ms. Los cuatro exports quedaron archivados y auditados;
 las tres parejas no se midieron por falta de escenas completas. El
 [banco largo queda rechazado](docs/VOZ_SERIAL_CAMPANA_RESULTADOS.md). No hay audio nuevo.
+
+El [seguidor de volumen cargado](docs/VOZ_SEGUIDOR_RESULTADOS.md) ya
+sustituye la fuente de2 V por Q3/Q2/CR6 dentro de la voz VCO1→J7:
+205 incógnitas, doce perfiles de2 µs,9840 ecuaciones contrastadas y
+corrientes C2/reset explícitas. C2 y reset siguen impuestos; contorno
+completo, integración adaptativa205 y filtro-contour pendientes.
 
 ## Siguiente trabajo
 
@@ -229,4 +235,4 @@ dos perfiles hasta5,25 ms desde el prefijo propio, dos resets por perfil,
 55200 ecuaciones y balances de carga/medias. Escucha de inspección admitida:
 True; réplica de un intervalo, escala explícita80×.
 No acredita voz completa, periodo asintótico o RT.
-[QA vigente](evidence/voice_cutoff_cycles_tests01.json).
+[QA vigente](evidence/voice_loudness_tests01.json).
