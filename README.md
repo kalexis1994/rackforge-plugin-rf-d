@@ -52,7 +52,7 @@ alcanzan≈265 ms. Los [ciclos de esta nueva raíz](docs/VOZ_CICLOS_CONDICIONADO
 completan dos perfiles de5,25 ms con refinamiento y cargas observadas;
 la periodicidad aún queda abierta. El ciclo anterior conserva su historia.
 
-La [QA vigente](evidence/voice_cutoff_temporal_tests01.json) conserva
+La [QA vigente](evidence/voice_cutoff_cycles_tests01.json) conserva
 248 tests Rust heredados por identidad y el nuevo banco de trayectorias. La
 [cadena con cargas explícitas](docs/CADENA_CARGA_RADAU_RESULTADOS.md) pasa
 72 etapas y 180 corrientes, con medios pasos de7,629 ps; fuentes impuestas.
@@ -223,3 +223,10 @@ cuatro perfiles de250 µs, C18/cola/J7, 28800 ecuaciones y ocho restores.
 J7 cambia≈2,7 mV, cargas entrantes intactas y caso nominal por bits a2 µs.
 Siguiente: continuar los perfiles abiertos hasta resets completos.
 [QA vigente](evidence/voice_cutoff_temporal_tests01.json).
+
+[Cutoff abierto con ciclos propios de VCO/filtro/VCA](docs/VOZ_CUTOFF_CICLOS_RESULTADOS.md):
+dos perfiles hasta5,25 ms desde el prefijo propio, dos resets por perfil,
+55200 ecuaciones y balances de carga/medias. Escucha de inspección admitida:
+True; réplica de un intervalo, escala explícita80×.
+No acredita voz completa, periodo asintótico o RT.
+[QA vigente](evidence/voice_cutoff_cycles_tests01.json).

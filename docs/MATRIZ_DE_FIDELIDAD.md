@@ -379,3 +379,11 @@ ni trayectoria/audio nuevos. [QA vigente](../evidence/voice_cutoff_opening_tests
 VCO/BUS reales, cuatro perfiles de250 µs y nominal por bits a2 µs.
 Admisión numérica/control eléctrico, sin ciclos completos, audio o RT.
 [QA vigente](../evidence/voice_cutoff_temporal_tests01.json).
+
+## Cadena abierta con VCO real y ciclos finitos — 2026-10-12
+
+[Dos perfiles/5,25 ms](VOZ_CUTOFF_CICLOS_RESULTADOS.md), herencia de prefijo
+sin reintegración,55200 ecuaciones, cargas/control/medias y estados al mismo reloj.
+Escucha de inspección: True; réplica de un intervalo y80×
+de adaptación explícita. Sin voz completa, periodicidad asintótica o RT.
+[QA vigente](../evidence/voice_cutoff_cycles_tests01.json).

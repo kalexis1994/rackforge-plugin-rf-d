@@ -392,3 +392,12 @@ conjunta. C18/cola y J7 responden; 28800 ecuaciones, balances y refinamiento.
 Continuar desde los dos checkpoints abiertos propios hasta resets completos;
 no recondicionar las memorias para sustituir la respuesta al cambio de panel.
 [QA actual](../evidence/voice_cutoff_temporal_tests01.json).
+
+## Cutoff abierto hasta resets completos — 2026-10-12
+
+[Dos continuaciones propias](VOZ_CUTOFF_CICLOS_RESULTADOS.md) completan5,25 ms
+totales, con prefijo heredado por bytes, dos resets y55200 ecuaciones.
+Admisión de escucha de inspección del intervalo: True.
+Continuar controles/contornos y otras fuentes sobre esta referencia;
+conservar niveles físicos y separar adaptación de escucha, fidelidad y RT.
+[QA actual](../evidence/voice_cutoff_cycles_tests01.json).

@@ -1,0 +1,206 @@
+{
+  "schema": "rf-d/cutoff-cycles-native/v1",
+  "passed": true,
+  "source_sha256": {
+    "tools/run_cutoff_cycles.py": "2fd4965847b6e126b43304ef247350fd187e2a3f9b11fd25ada4958e15f62911",
+    "tools/prepare_cutoff_cycles.py": "f2b2aca789f5412474fd1aac50eb71f05313b12de1bb5414b455dbf8b1546283",
+    "tools/joint_cutoff_cycles_runner.rs": "c8566405bee72b33557fc74d2b3de923bdbfaaecfc4f326795e05229d67d7d8f",
+    "tools/joint_cutoff_temporal_runner.rs": "68db1089e1d56537d2dba10949ae5eb80280f1200884a7f7f1c83f43e26d19c9",
+    "docs/VOZ_CUTOFF_CICLOS_PROTOCOLO.md": "45c4267e9ba373418da68e958de4839ffc3389bd4be86dd627ef314246e2ccca",
+    "evidence/voice_cutoff_cycles_inputs01.json": "6f84f97f9f974c536a5f0882520be17b1373fcc55238fa050ecd7c4817183ef9",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+    "evidence/voice_chain_charge_vectors06.txt": "0facf3c5346e8609e35820273cdfc4bd9a7cca5bb1f76b9f8021fb482084bf1c"
+  },
+  "private_used_sha256": {
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd",
+    "references-local/cutoff-temporal01/1.0-65536/final.ckp": "b4cf40be2ffc7c5983a4afd2a383ed361c77112a434e686ca8d08da17b6aff05",
+    "references-local/cutoff-temporal01/1.0-32768/final.ckp": "25173b9dc79b01d3f0179d294a59bef027af3c9d69976fc3dfef6b8749bdeb22"
+  },
+  "compiler": {
+    "path": "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+    "sha256": "fd6232f90a981e28472ce6900232946a1f1bcad8ec8270cd5ae6a3a357208b98",
+    "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+  },
+  "commands": [
+    {
+      "command": [
+        "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+        "--edition=2021",
+        "-C",
+        "opt-level=2",
+        "-C",
+        "strip=symbols",
+        "-C",
+        "link-arg=-Wl,--stack,33554432",
+        "tools/joint_cutoff_cycles_runner.rs",
+        "--extern",
+        "rf_d_circuit=C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-startup01\\librf_d_circuit.rlib",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\cutoff-cycles01\\run.exe"
+      ],
+      "exit_code": 0,
+      "wall_s": 1.0474858999950811,
+      "stdout": "",
+      "stderr": "warning: unused import: `vco1_startup`\n --> tools/joint_cutoff_cycles_runner.rs:2:184\n  |\n2 | ...chain_charge::{self,Parameters as Chain},mixer_on::OnMixer,vco1_startup,vco1_stamp::Controls};\n  |                                                               ^^^^^^^^^^^^\n  |\n  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default\n\nwarning: unused import: `std::time::Instant`\n --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:3:5\n  |\n3 | use std::time::Instant;\n  |     ^^^^^^^^^^^^^^^^^^\n\nwarning: unused imports: `Parameters`, `initial_state`, `step_with_emphasis`, and `step`\n --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:8:5\n  |\n8 |     initial_state, step, step_with_emphasis, Boundary, Parameters,\n  |     ^^^^^^^^^^^^^  ^^^^  ^^^^^^^^^^^^^^^^^^            ^^^^^^^^^^\n\nwarning: unused import: `SolverBudget`\n  --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:16:55\n   |\n16 | use rf_d_circuit::{Parameters as HeadphoneParameters, SolverBudget};\n   |                                                       ^^^^^^^^^^^^\n\nwarning: constant `ANCHOR` is never used\n --> tools/joint_cutoff_cycles_runner.rs:5:7\n  |\n5 | const ANCHOR:u64=131072000;const GOAL:u64=2752512000;const MARKS:[u64;20]=[262144000,393216000,524288000,655360000,786432000,91750400...\n  |       ^^^^^^\n  |\n  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: 5 warnings emitted\n\n"
+    }
+  ],
+  "profiles": [
+    {
+      "maximum_half_ticks": 65536,
+      "initial_checkpoint": "references-local/cutoff-temporal01/1.0-65536/final.ckp",
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\cutoff-cycles01\\run.exe",
+        "run",
+        "65536",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\cutoff-cycles01\\65536",
+        "60000",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\cutoff-temporal01\\1.0-65536\\final.ckp",
+        "1.0"
+      ],
+      "exit_code": 0,
+      "wall_s": 998.288358299993,
+      "administrative_stop": false,
+      "stop_reason": null,
+      "stderr": "PROGRESS,intervals=2000,ticks=393216000,wall_s=64.729\nPROGRESS,intervals=4000,ticks=641230848,wall_s=134.498\nPROGRESS,intervals=6000,ticks=901898240,wall_s=199.269\nPROGRESS,intervals=8000,ticks=1163362304,wall_s=274.135\nRESET,crossing=1,ticks=1276366016\nPROGRESS,intervals=10000,ticks=1276566624,wall_s=394.146\nPROGRESS,intervals=12000,ticks=1519255424,wall_s=498.793\nPROGRESS,intervals=14000,ticks=1779170816,wall_s=583.557\nPROGRESS,intervals=16000,ticks=2024798208,wall_s=669.775\nPROGRESS,intervals=18000,ticks=2285756416,wall_s=756.162\nPROGRESS,intervals=20000,ticks=2547220480,wall_s=843.634\nRESET,crossing=2,ticks=2552621440\nPROGRESS,intervals=22000,ticks=2642673632,wall_s=963.296\nSUMMARY,intervals=22839,ticks=2752512000,crossings=2,restore_replays=2,max_lte=9.98893384912572624e-1,max_bus=1.52465930505774061e-19,max_c1=9.97257831869546862e-14,charge=2.15488129582051807e-9,absolute=1.61946827433486682e-7,delta_ramp=-2.15488129582037780e-1,balance=8.65760176038785114e-16\nMEAN_LEDGER,-1.86502217818866335e-4,-1.85866070414001777e-4,9.80296051959169204e-3,2.35961685361958271e-9,9.26149615045686228e-5\n",
+      "stdout": ""
+    },
+    {
+      "maximum_half_ticks": 32768,
+      "initial_checkpoint": "references-local/cutoff-temporal01/1.0-32768/final.ckp",
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\cutoff-cycles01\\run.exe",
+        "run",
+        "32768",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\cutoff-cycles01\\32768",
+        "60000",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\cutoff-temporal01\\1.0-32768\\final.ckp",
+        "1.0"
+      ],
+      "exit_code": 0,
+      "wall_s": 1685.6544350999175,
+      "administrative_stop": false,
+      "stop_reason": null,
+      "stderr": "PROGRESS,intervals=2000,ticks=262144000,wall_s=63.572\nPROGRESS,intervals=4000,ticks=393216000,wall_s=127.549\nPROGRESS,intervals=6000,ticks=524288000,wall_s=189.876\nPROGRESS,intervals=8000,ticks=649947136,wall_s=262.260\nPROGRESS,intervals=10000,ticks=780660736,wall_s=342.944\nPROGRESS,intervals=12000,ticks=911532032,wall_s=427.073\nPROGRESS,intervals=14000,ticks=1042464768,wall_s=523.557\nPROGRESS,intervals=16000,ticks=1173454848,wall_s=602.748\nRESET,crossing=1,ticks=1276366016\nPROGRESS,intervals=18000,ticks=1276397744,wall_s=694.945\nPROGRESS,intervals=20000,ticks=1353711584,wall_s=802.238\nPROGRESS,intervals=22000,ticks=1484128192,wall_s=886.770\nPROGRESS,intervals=24000,ticks=1614610304,wall_s=966.231\nPROGRESS,intervals=26000,ticks=1745157888,wall_s=1036.203\nPROGRESS,intervals=28000,ticks=1875770880,wall_s=1100.064\nPROGRESS,intervals=30000,ticks=2000747520,wall_s=1167.430\nPROGRESS,intervals=32000,ticks=2131490816,wall_s=1227.668\nPROGRESS,intervals=34000,ticks=2262298624,wall_s=1291.072\nPROGRESS,intervals=36000,ticks=2393169920,wall_s=1353.266\nPROGRESS,intervals=38000,ticks=2524102656,wall_s=1416.610\nRESET,crossing=2,ticks=2552621440\nPROGRESS,intervals=40000,ticks=2574469392,wall_s=1552.095\nPROGRESS,intervals=42000,ticks=2704343008,wall_s=1643.008\nSUMMARY,intervals=42736,ticks=2752512000,crossings=2,restore_replays=2,max_lte=9.97840505541727762e-1,max_bus=1.54159996400282662e-19,max_c1=9.90318937965639634e-14,charge=2.15488100303133717e-9,absolute=1.61946827978035985e-7,delta_ramp=-2.15488100303119018e-1,balance=9.06622010207421076e-16\nMEAN_LEDGER,-1.86502272700871823e-4,-1.85866070802472852e-4,9.80296051926625618e-3,2.35961616438310684e-9,9.26149344520369399e-5\n",
+      "stdout": ""
+    }
+  ],
+  "replays": [],
+  "outputs": [
+    {
+      "path": "references-local/cutoff-cycles01/32768/checkpoints.bin",
+      "sha256": "874df436b38629bd20af3601df2985bd0a0a652debf39f3adcd05f0d93529060",
+      "bytes": 67712
+    },
+    {
+      "path": "references-local/cutoff-cycles01/32768/control.bin",
+      "sha256": "112c42bb1819d910e0fd3afdcb355a32dcf4b89d26ceec929dfdc40d316237e2",
+      "bytes": 3418888
+    },
+    {
+      "path": "references-local/cutoff-cycles01/32768/events.txt",
+      "sha256": "a5946fec7d340e454d47f1ddda7fd6093c1b0a4fc3c8476bf01fd9dd9244a7d3",
+      "bytes": 38284
+    },
+    {
+      "path": "references-local/cutoff-cycles01/32768/final.ckp",
+      "sha256": "415ea03b5b641769d836820f1100f1492e7cb6d932fa69aba0f21cd12a614d9d",
+      "bytes": 3224
+    },
+    {
+      "path": "references-local/cutoff-cycles01/32768/selected.txt",
+      "sha256": "748e9b7a54f3a03f6a021074f8033a67adefbcd0c8734d006807af0d883a3352",
+      "bytes": 3262246
+    },
+    {
+      "path": "references-local/cutoff-cycles01/32768/stderr.txt",
+      "sha256": "6b50928eda9e54b8b3ab245285a162c2647bb1912b09edc3f0502e9a98484601",
+      "bytes": 1686
+    },
+    {
+      "path": "references-local/cutoff-cycles01/32768/stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "references-local/cutoff-cycles01/32768/trace.bin",
+      "sha256": "7d49190e1a730ff65086721b0c7e584c95f40c3cb9d9eef41126c114177923d4",
+      "bytes": 13675528
+    },
+    {
+      "path": "references-local/cutoff-cycles01/65536/checkpoints.bin",
+      "sha256": "47115787800e9e593b4e03cecb8aecd125e2225d6516a8f3c02154ec01b6d68f",
+      "bytes": 67712
+    },
+    {
+      "path": "references-local/cutoff-cycles01/65536/control.bin",
+      "sha256": "4e00653ee038eb42ebb03b828744922a9fb2da4de0343a8d01288aa5b4381c22",
+      "bytes": 1827128
+    },
+    {
+      "path": "references-local/cutoff-cycles01/65536/events.txt",
+      "sha256": "7ae2b58a142293a9efdb912f368c3376a2b14bcbe76afd7ce2d757746fd1f29f",
+      "bytes": 38241
+    },
+    {
+      "path": "references-local/cutoff-cycles01/65536/final.ckp",
+      "sha256": "e26153066d0de84a38eddc00d19239f93752e90d51320b4dbe3c171cef941ad8",
+      "bytes": 3224
+    },
+    {
+      "path": "references-local/cutoff-cycles01/65536/selected.txt",
+      "sha256": "ee4628e2af45726d5b9ec0dd78b3224fcb12c88ea7b093571b25021699f15881",
+      "bytes": 3265122
+    },
+    {
+      "path": "references-local/cutoff-cycles01/65536/stderr.txt",
+      "sha256": "98d37bd1f650847b6babae1530d8660dc48213f24279579cd4a50cd30a0119b5",
+      "bytes": 1110
+    },
+    {
+      "path": "references-local/cutoff-cycles01/65536/stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "references-local/cutoff-cycles01/65536/trace.bin",
+      "sha256": "39407cf7c2320f08ebe9c7288ba4c1f0911327fc71eba6884b4dcc55d68132ff",
+      "bytes": 7308488
+    },
+    {
+      "path": "references-local/cutoff-cycles01/run.exe",
+      "sha256": "aca78940fd3f20ed047020537fb41c545529afa467b1a88a91cb1b0aee3bc9ee",
+      "bytes": 1518080
+    }
+  ],
+  "workers": 2,
+  "processor_count": 12,
+  "initial_available_memory_bytes": 32722837504,
+  "lab_stack_bytes": 33554432,
+  "reserve_bytes": 1073741824,
+  "estimated_output_bytes": 67108864,
+  "available_free_bytes": 127795830784,
+  "goal_ticks": 2752512000,
+  "profile_budget_s": 2400,
+  "success_budget_s": 2600,
+  "administrative_budget_s": 3200,
+  "new_library_compile": false,
+  "new_audio": false,
+  "new_spice_processes": 0,
+  "minimum_free_bytes": 127269924864,
+  "wall_s": 1687.0326489999425,
+  "source_sha256_after": {
+    "tools/run_cutoff_cycles.py": "2fd4965847b6e126b43304ef247350fd187e2a3f9b11fd25ada4958e15f62911",
+    "tools/prepare_cutoff_cycles.py": "f2b2aca789f5412474fd1aac50eb71f05313b12de1bb5414b455dbf8b1546283",
+    "tools/joint_cutoff_cycles_runner.rs": "c8566405bee72b33557fc74d2b3de923bdbfaaecfc4f326795e05229d67d7d8f",
+    "tools/joint_cutoff_temporal_runner.rs": "68db1089e1d56537d2dba10949ae5eb80280f1200884a7f7f1c83f43e26d19c9",
+    "docs/VOZ_CUTOFF_CICLOS_PROTOCOLO.md": "45c4267e9ba373418da68e958de4839ffc3389bd4be86dd627ef314246e2ccca",
+    "evidence/voice_cutoff_cycles_inputs01.json": "6f84f97f9f974c536a5f0882520be17b1373fcc55238fa050ecd7c4817183ef9",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+    "evidence/voice_chain_charge_vectors06.txt": "0facf3c5346e8609e35820273cdfc4bd9a7cca5bb1f76b9f8021fb482084bf1c"
+  },
+  "private_used_sha256_after": {
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd",
+    "references-local/cutoff-temporal01/1.0-65536/final.ckp": "b4cf40be2ffc7c5983a4afd2a383ed361c77112a434e686ca8d08da17b6aff05",
+    "references-local/cutoff-temporal01/1.0-32768/final.ckp": "25173b9dc79b01d3f0179d294a59bef027af3c9d69976fc3dfef6b8749bdeb22"
+  }
+}

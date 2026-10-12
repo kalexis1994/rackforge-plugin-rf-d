@@ -1,0 +1,150 @@
+{
+  "passed": true,
+  "outputs": [
+    {
+      "path": "references-local/cutoff-temporal01/1.0-65536/final.ckp",
+      "sha256": "b4cf40be2ffc7c5983a4afd2a383ed361c77112a434e686ca8d08da17b6aff05",
+      "maximum_half_ticks": 65536
+    },
+    {
+      "path": "references-local/cutoff-temporal01/1.0-32768/final.ckp",
+      "sha256": "25173b9dc79b01d3f0179d294a59bef027af3c9d69976fc3dfef6b8749bdeb22",
+      "maximum_half_ticks": 32768
+    }
+  ],
+  "candidate_path": "references-local/cutoff-temporal01/1.0-65536/final.ckp",
+  "candidate_sha256": "b4cf40be2ffc7c5983a4afd2a383ed361c77112a434e686ca8d08da17b6aff05",
+  "start_ticks": 131072000,
+  "goal_ticks": 2752512000,
+  "marks": [
+    262144000,
+    393216000,
+    524288000,
+    655360000,
+    786432000,
+    917504000,
+    1048576000,
+    1179648000,
+    1310720000,
+    1441792000,
+    1572864000,
+    1703936000,
+    1835008000,
+    1966080000,
+    2097152000,
+    2228224000,
+    2359296000,
+    2490368000,
+    2621440000,
+    2752512000
+  ],
+  "cutoff_fraction": 1.0,
+  "caller_substitutions": [
+    [
+      "const GOAL:u64=131072000;const MARKS:[u64;5]=[1048576,8388608,33554432,65536000,131072000];",
+      "const GOAL:u64=2752512000;const MARKS:[u64;20]=[262144000,393216000,524288000,655360000,786432000,917504000,1048576000,1179648000,1310720000,1441792000,1572864000,1703936000,1835008000,1966080000,2097152000,2228224000,2359296000,2490368000,2621440000,2752512000];"
+    ],
+    [
+      "let v=vco1_startup::startup(controls).map_err(|e|format!(\"startup:{e:?}\"))?.nodes;",
+      "let v=[0.;134];"
+    ],
+    [
+      "q.elapsed_ticks!=0",
+      "q.elapsed_ticks!=131072000"
+    ],
+    [
+      "as_secs_f64()>900.",
+      "as_secs_f64()>2400."
+    ],
+    [
+      "before.elapsed_ticks==0||before.elapsed_ticks==33554432",
+      "before.elapsed_ticks==131072000||before.elapsed_ticks==1310720000"
+    ],
+    [
+      "if crossings!=0||restores!=2||balance>0.002",
+      "if crossings!=2||restores!=2||balance>0.002"
+    ]
+  ],
+  "wrapper_substitutions": [
+    [
+      "voice_candidate_cycles_native01",
+      "voice_cutoff_cycles_native01"
+    ],
+    [
+      "candidate-cycles01",
+      "cutoff-cycles01"
+    ],
+    [
+      "voice_dynamic_direction_tests01",
+      "voice_cutoff_temporal_tests01"
+    ],
+    [
+      "voice_candidate_cycles_inputs01",
+      "voice_cutoff_cycles_inputs01"
+    ],
+    [
+      "run_candidate_cycles.py",
+      "run_cutoff_cycles.py"
+    ],
+    [
+      "prepare_candidate_cycles.py",
+      "prepare_cutoff_cycles.py"
+    ],
+    [
+      "joint_candidate_cycles_runner.rs",
+      "joint_cutoff_cycles_runner.rs"
+    ],
+    [
+      "joint_corrected_cycles_runner.rs",
+      "joint_cutoff_temporal_runner.rs"
+    ],
+    [
+      "VOZ_CANDIDATO_CICLOS_PROTOCOLO",
+      "VOZ_CUTOFF_CICLOS_PROTOCOLO"
+    ],
+    [
+      "5373952000",
+      "2752512000"
+    ],
+    [
+      "7200",
+      "2400"
+    ],
+    [
+      "7400",
+      "2600"
+    ],
+    [
+      "9000",
+      "3200"
+    ],
+    [
+      "str(65000 if maximum==65536 else 100000),str(ROOT/seed['path'])]",
+      "str(60000),str(ROOT/seed['path']),'1.0']"
+    ],
+    [
+      "str(Path(profile['command'][3])/'final.ckp'),match[1]]",
+      "str(Path(profile['command'][3])/'final.ckp'),match[1],'1.0']"
+    ],
+    [
+      "CANDIDATE_PROFILE",
+      "CUTOFF_CYCLES_PROFILE"
+    ],
+    [
+      "CANDIDATE_NATIVE",
+      "CUTOFF_CYCLES_NATIVE"
+    ],
+    [
+      "rf-d/candidate-cycles-native/v1",
+      "rf-d/cutoff-cycles-native/v1"
+    ]
+  ],
+  "source_sha256": {
+    "tools/prepare_cutoff_cycles.py": "f2b2aca789f5412474fd1aac50eb71f05313b12de1bb5414b455dbf8b1546283",
+    "tools/joint_cutoff_temporal_runner.rs": "68db1089e1d56537d2dba10949ae5eb80280f1200884a7f7f1c83f43e26d19c9",
+    "tools/run_candidate_cycles.py": "96a2d49c5e09c033504eb2598d6a16cca2c053b248529cc96bbc557058a804e3",
+    "tools/joint_cutoff_cycles_runner.rs": "c8566405bee72b33557fc74d2b3de923bdbfaaecfc4f326795e05229d67d7d8f",
+    "tools/run_cutoff_cycles.py": "2fd4965847b6e126b43304ef247350fd187e2a3f9b11fd25ada4958e15f62911",
+    "docs/VOZ_CUTOFF_CICLOS_PROTOCOLO.md": "45c4267e9ba373418da68e958de4839ffc3389bd4be86dd627ef314246e2ccca"
+  }
+}
