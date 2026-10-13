@@ -597,3 +597,18 @@ Admisión limitada al ciclo condicionado de 3.004 ms, sin duración/audio
 nuevos, contorno desde silencio, identificación física o RT.
 Siguiente: cadena con BUS/base Q18 retenidos, exterior potencial 140;
 soporte inspeccionado, invertibilidad y utilidad pendientes. [QA](../evidence/voice_schur_contour_tests01.json).
+
+
+## Cadena filtro/VCA condensada — 2026-10-13
+
+[Partición cargada](SCHUR_CADENA_RESULTADOS.md) retiene BUS/base Q18 en ambas etapas y reduce
+exterior272→140. Reconstruye458 correcciones y conserva229 estados
+HIGH/LOW, masas, cargas y puertos compartidos con el contorno.
+Medianas1.0299×/1.0265× frente al Schur con contorno;
+181.368 filas lineales,38.472 ecuaciones de banco y otras38.472 temporales
+nuevas pasan Decimal100;45 regresiones/replay. Cuatro recorridos con
+26770 finos conservan balances, eventos y restores. Admisión condicionada
+a3.004 ms, sin duración/audio nuevos o RT. Perfil privado por bits:
+linearize≈50.3% del step, solve≈27.3%.
+Siguiente: ensamblaje Radau en ubicación final, con J/b/raíces por identidad.
+[QA](../evidence/voice_schur_chain_tests01.json).

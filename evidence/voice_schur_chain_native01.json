@@ -1,0 +1,362 @@
+{
+  "passed": true,
+  "source_sha256": {
+    "tools/run_schur_chain.py": "3260ef10a9af96924409fa4fadc9698940df361adc52f69ed70176d7a7d846aa",
+    "tools/prepare_schur_chain.py": "dd04ed55298fca7d720cae54e5d62458c9676ba84924d19b35e31a9bd89a798f",
+    "tools/dynamic_schur_chain_solver.rs": "01506ad0a0b79178f4ab4474828120ae4ff03181eacbb6209c203ec4cbd73cfd",
+    "tools/joint_schur_chain_kernel.rs": "51359647c16537fe8c0cda4b61b6989ef2793b7e291a36ef45d523fe27f9cb11",
+    "tools/joint_schur_chain_runner.rs": "04ed37e256e0a6b4aea0334e46729b1d2b5f919e5438c98dd6dc7e7a3a23b54b",
+    "tools/joint_newton_reuse_kernel.rs": "67836356d926d77475ad6ed4bd853a1b91d09787e9c75e9b497883d9e64d296b",
+    "tools/contour_reset_engine.rs": "8e34429f60eedddb1175915c3b312e26da889a428023eb81922ba25400756275",
+    "tools/latch_charge_driver.rs": "84af1a316124aa950c023aa19885a2f1b55db699446a0ec8ff75db7da34cc901",
+    "tools/contour_closed_driver.rs": "326423fe5be49fb8d8b595d90a6517524aeffa217210bb54846bc23fc2781eb2",
+    "crates/rf-d-circuit/src/joint_engine.rs": "dacd5fe5c2b30f48acc336f5c45ebfb60a6ae3d7a24de0e3a4fb0aa1496df5d1",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+    "evidence/voice_schur_chain_inputs01.json": "0079335792874814898d2f2758f02a1c6f5a15fc219dec2469307cb2ef17e6c3",
+    "docs/SCHUR_CADENA_TRAYECTORIA.md": "bc29edd46b527d97140bf9bd0d00c774b3bf5c80d5bd41b71a2210556d66f98f",
+    "evidence/voice_schur_refined_chainbench01.json": "e14b10f2fc2dce5efbda4691be05acb3e9df1a28026e8d783034d5e8a6ebbea9",
+    "evidence/voice_schur_refined_chainconfirm01.json": "bd5d5c71538e58c4d8c83bc203958b1cc09437efdcc0a7cb67ecc813c15629b9",
+    "evidence/voice_schur_refined_chainbank01.json": "e7b3fb9943d205a4dd709aa549c5f359c4757fdcd6c4b979ad690f4240a11b7b",
+    "evidence/voice_schur_refined_chainstructure02.json": "c2dc5f359d69e0d04d62b245158c4d86d2a9f8aecfe15bd5324bf7dd70cab548",
+    "evidence/voice_schur_chain_roots01.json": "3e6c6442460d85ebdd2b16d99e20fba4ca8787d1eebdaf6fa916bfe1c8c24bfd"
+  },
+  "private_used_sha256": {
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd",
+    "references-local/contour-cycle-inputs01/1-1048576.ckp": "0987ea7eb8154779d538a2355d564269edaa63b66e77e4f66069253caf05dd2f",
+    "references-local/contour-cycle-inputs01/1-524288.ckp": "2b12913e0f1c113a670a21fd741ea144cc5aa3980ebf276bc2aa7cb426f6d7c5",
+    "references-local/contour-cycle-inputs01/0-1048576.ckp": "594fbd7768143adaa894813665a1671e34e8a9373d233179e729a0f43e8aa8ce",
+    "references-local/contour-cycle-inputs01/0-524288.ckp": "db1712bb5f894aa41515193f82349919074cb0e925d236f60763c1e2f9be1835",
+    "references-local/contour-reset01/1-1048576/final.ckp": "b531b445e39bcf4d66657cf6841916021496eeacc2a1f08810af719b0020be94",
+    "references-local/contour-reset01/1-524288/final.ckp": "526c4dff2a1d1ae7fa9d7f5fecd7cf7d46c6eb96a672445110fca08d597c4ef6",
+    "references-local/contour-reset01/0-1048576/final.ckp": "997bb4a9c0161a0fbdabffd822d2ab27430164126d6f0e33e60ae6bce10194fe",
+    "references-local/contour-reset01/0-524288/final.ckp": "a7b9392a3ef74bfba2765a0cb535936245fb503bb3090f19ebde7c9d005ecceb"
+  },
+  "compiler": {
+    "path": "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+    "sha256": "fd6232f90a981e28472ce6900232946a1f1bcad8ec8270cd5ae6a3a357208b98",
+    "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+  },
+  "commands": [
+    {
+      "command": [
+        "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+        "--edition=2021",
+        "-C",
+        "opt-level=2",
+        "-C",
+        "strip=symbols",
+        "-C",
+        "link-arg=-Wl,--stack,33554432",
+        "tools/joint_schur_chain_runner.rs",
+        "--extern",
+        "rf_d_circuit=C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-startup01\\librf_d_circuit.rlib",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\schur-chain01\\run.exe"
+      ],
+      "exit_code": 0,
+      "wall_s": 1.1267591000068933,
+      "stdout": "",
+      "stderr": "warning: unused imports: `Mode` and `self`\n --> tools\\joint_schur_chain_kernel.rs:6:33\n  |\n6 | use rf_d_circuit::{vco1_stamp::{self,Controls,Mode},chain_charge::{self,Parameters as Chain},mixer_on::OnMixer,StepError};\n  |                                 ^^^^          ^^^^\n  |\n  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default\n\nwarning: unused imports: `SolverBudget`, `loudness_follower as follower`, and `self`\n --> tools/joint_schur_chain_runner.rs:3:35\n  |\n3 | ...n_charge::{self,Parameters as Chain},mixer_on::OnMixer,vco1_stamp::Controls,loudness_follower as follower,SolverBudget};\n  |               ^^^^                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ^^^^^^^^^^^^\n\nwarning: unused import: `std::time::Instant`\n --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:3:5\n  |\n3 | use std::time::Instant;\n  |     ^^^^^^^^^^^^^^^^^^\n\nwarning: unused imports: `Parameters`, `initial_state`, `step_with_emphasis`, and `step`\n --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:8:5\n  |\n8 |     initial_state, step, step_with_emphasis, Boundary, Parameters,\n  |     ^^^^^^^^^^^^^  ^^^^  ^^^^^^^^^^^^^^^^^^            ^^^^^^^^^^\n\nwarning: unused import: `SolverBudget`\n  --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:16:55\n   |\n16 | use rf_d_circuit::{Parameters as HeadphoneParameters, SolverBudget};\n   |                                                       ^^^^^^^^^^^^\n\nwarning: constant `MIN_DT_S` is never used\n  --> tools\\joint_schur_chain_kernel.rs:10:11\n   |\n10 | pub const MIN_DT_S:f64=chain_charge::MIN_DT_S;\n   |           ^^^^^^^^\n   |\n   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: function `vco_index` is never used\n  --> tools\\joint_schur_chain_kernel.rs:12:14\n   |\n12 | pub const fn vco_index(k:usize)->Option<usize> {if k==108 {None} else if k<108 {Some(k)} else {Some(k-1)}}\n   |              ^^^^^^^^^\n\nwarning: fields `c2_v`, `reset_v`, `q25`, `reset_driver`, and `set_base` are never read\n  --> tools\\joint_schur_chain_kernel.rs:15:82\n   |\n15 | ...ct Parameters {pub controls:Controls,chain:Chain,pub sources:[f64;5],pub c2_v:f64,pub reset_v:f64,pub q25:f64,pub reset_driver:f64,pub final_decay:bool,pub keyboard:f64,pub short:bool,pub set_base:f64}\n   |       ---------- fields in this struct                                      ^^^^         ^^^^^^^         ^^^         ^^^^^^^^^^^^                                                              ^^^^^^^^\n   |\n   = note: `Parameters` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis\n\nwarning: associated items `lift` and `chain` are never used\n  --> tools\\joint_schur_chain_kernel.rs:33:9\n   |\n27 | impl State {\n   | ---------- associated items in this implementation\n...\n33 |  pub fn lift(vco_high:[f64;134],vco_low:[f64;134],chain:chain_charge::State)->Self {\n   |         ^^^^\n...\n38 |  fn chain(self)->chain_charge::State {chain_charge::State{high:std::array::from_fn(|k|self.high[chain_index(k)]),low:std::array::fro...\n   |     ^^^^^\n\nwarning: function `max_abs` is never used\n   --> tools\\joint_schur_chain_kernel.rs:106:8\n    |\n106 | pub fn max_abs<const M: usize>(x: &[f64; M]) -> f64 {\n    |        ^^^^^^^\n\nwarning: function `solve_linear` is never used\n   --> tools\\joint_schur_chain_kernel.rs:110:8\n    |\n110 | pub fn solve_linear<const M: usize>(\n    |        ^^^^^^^^^^^^\n\nwarning: function `solve_linear_sparse` is never used\n   --> tools\\joint_schur_chain_kernel.rs:119:8\n    |\n119 | pub fn solve_linear_sparse<const M: usize>(\n    |        ^^^^^^^^^^^^^^^^^^^\n\nwarning: function `solve_linear_internal` is never used\n   --> tools\\joint_schur_chain_kernel.rs:126:4\n    |\n126 | fn solve_linear_internal<const M: usize, const SKIP_ZERO: bool>(\n    |    ^^^^^^^^^^^^^^^^^^^^^\n\nwarning: function `solve_linear_extent` is never used\n   --> tools\\joint_schur_chain_kernel.rs:185:8\n    |\n185 | pub fn solve_linear_extent<const M:usize>(mut j:[[f64;M];M],mut rhs:[f64;M])->Result<[f64;M],StepError>{\n    |        ^^^^^^^^^^^^^^^^^^^\n\nwarning: fields `refinements`, `initial_backward`, and `final_backward` are never read\n  --> tools\\dynamic_schur_chain_solver.rs:75:53\n   |\n75 | pub struct Observation{pub correction:[f64;458],pub refinements:usize,pub initial_backward:f64,pub final_backward:f64}\n   |            ----------- fields in this struct        ^^^^^^^^^^^           ^^^^^^^^^^^^^^^^         ^^^^^^^^^^^^^^\n\nwarning: associated function `from_conditioned` is never used\n  --> tools\\contour_reset_engine.rs:37:9\n   |\n35 | impl Engine {\n   | ----------- associated function in this implementation\n36 |  /// Takes an explicit conditioned history; does not establish joint DC startup.\n37 |  pub fn from_conditioned(parameters:joint::Parameters,state:State,settings:Settings)->Result<Self,Error> {\n   |         ^^^^^^^^^^^^^^^^\n\nwarning: 16 warnings emitted\n\n"
+    }
+  ],
+  "profiles": [
+    {
+      "final_decay": true,
+      "maximum_half_ticks": 1048576,
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\schur-chain01\\run.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-inputs01\\1-1048576.ckp",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\schur-chain01\\1-1048576"
+      ],
+      "exit_code": 0,
+      "wall_s": 106.13793950004037,
+      "stdout": "",
+      "stderr": "COMPLETED,on=1,max=1048576,accepted=3020,restores=6,replays=92,corruptions=4,rollbacks=2,crossings=1,wall_s=106.0474843\n"
+    },
+    {
+      "final_decay": true,
+      "maximum_half_ticks": 524288,
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\schur-chain01\\run.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-inputs01\\1-524288.ckp",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\schur-chain01\\1-524288"
+      ],
+      "exit_code": 0,
+      "wall_s": 120.88007909990847,
+      "stdout": "",
+      "stderr": "COMPLETED,on=1,max=524288,accepted=3704,restores=6,replays=92,corruptions=4,rollbacks=2,crossings=1,wall_s=120.8457558\n"
+    },
+    {
+      "final_decay": false,
+      "maximum_half_ticks": 1048576,
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\schur-chain01\\run.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-inputs01\\0-1048576.ckp",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\schur-chain01\\0-1048576"
+      ],
+      "exit_code": 0,
+      "wall_s": 104.8857760000974,
+      "stdout": "",
+      "stderr": "COMPLETED,on=0,max=1048576,accepted=2987,restores=6,replays=92,corruptions=4,rollbacks=2,crossings=1,wall_s=104.850824\n"
+    },
+    {
+      "final_decay": false,
+      "maximum_half_ticks": 524288,
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\schur-chain01\\run.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-inputs01\\0-524288.ckp",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\schur-chain01\\0-524288"
+      ],
+      "exit_code": 0,
+      "wall_s": 118.30074870004319,
+      "stdout": "",
+      "stderr": "COMPLETED,on=0,max=524288,accepted=3674,restores=6,replays=92,corruptions=4,rollbacks=2,crossings=1,wall_s=118.2671199\n"
+    }
+  ],
+  "replays": [],
+  "outputs": [
+    {
+      "path": "references-local/schur-chain01/0-1048576/attempt-rollback.ckp",
+      "sha256": "e523a9f98c75d76d623f02577cc2f57ca68e770dcd83537cf69ef34a60602d37",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-chain01/0-1048576/checkpoints.bin",
+      "sha256": "ee61658ce711c28465e11c35a39fec097a2d47798c66b7dcfa0b5abaff886153",
+      "bytes": 55800
+    },
+    {
+      "path": "references-local/schur-chain01/0-1048576/final.ckp",
+      "sha256": "f86017865cad92c5c6c028821351792d705af8256dfe00e6fb99b11238b03541",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-chain01/0-1048576/phase0-start.ckp",
+      "sha256": "594fbd7768143adaa894813665a1671e34e8a9373d233179e729a0f43e8aa8ce",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-chain01/0-1048576/phase1-inside.ckp",
+      "sha256": "4ba213ea28ab74fa1c32d8999a63672936dd746c5ef0029e1bc989e05ca7f89e",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-chain01/0-1048576/phase1-reset0.ckp",
+      "sha256": "d58335f04cd85472ff386f9f1f3774ec7c720a452df7b6520d429833c8642b09",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-chain01/0-1048576/phase1-start.ckp",
+      "sha256": "1b8f0688eff27be8990c0384848a0845bfc11e7e0d0ac3e8d25033ca5176c69a",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-chain01/0-1048576/phase2-inside.ckp",
+      "sha256": "2c11b8999ead3ec285378c790aa51322d04193b393172c97bb45866c5c8e9477",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-chain01/0-1048576/phase2-start.ckp",
+      "sha256": "cc2fa168fb538da8da5001e5cda175b79784cb827f0400c6d96bc4e8282bbb2e",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-chain01/0-1048576/selected.txt",
+      "sha256": "e262365427163ebdb3013560cb344600aba5dfc30eac87fd9d41896d0b99e571",
+      "bytes": 4670421
+    },
+    {
+      "path": "references-local/schur-chain01/0-524288/attempt-rollback.ckp",
+      "sha256": "f2cc416362dcc17d873bcaf7934f36533a3da4d8d607bde8e5834760e6f5443d",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-chain01/0-524288/checkpoints.bin",
+      "sha256": "6aa3dc40549f7179fc11d28c4af0916b55040deb707dec2b5054ccc7850cc02e",
+      "bytes": 55800
+    },
+    {
+      "path": "references-local/schur-chain01/0-524288/final.ckp",
+      "sha256": "548fe642d5e6dbc65658f13556627e6d82c8e23d938eb5a3f094f98866623478",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-chain01/0-524288/phase0-start.ckp",
+      "sha256": "db1712bb5f894aa41515193f82349919074cb0e925d236f60763c1e2f9be1835",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-chain01/0-524288/phase1-inside.ckp",
+      "sha256": "3314d1acdb8c75fe51215cf9f0135fd9e6dd92d09453e8d4767afd7bfba29639",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-chain01/0-524288/phase1-reset0.ckp",
+      "sha256": "3cfbbe34e923f5ffa0c593ec135d315241e4afca0897299778a18ba65652a6d2",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-chain01/0-524288/phase1-start.ckp",
+      "sha256": "541311f06c55278da11284e6c21b141f6770132a600735740606c044aa9120a3",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-chain01/0-524288/phase2-inside.ckp",
+      "sha256": "d766fcd93999ed0fded9b254ad764ec190682827a8548800337e15d702051ec2",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-chain01/0-524288/phase2-start.ckp",
+      "sha256": "694557cf1b371acf2119a02b0da10796030618e03b6b31aae0b556c811899b80",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-chain01/0-524288/selected.txt",
+      "sha256": "ba8971250221c054077a7e2bf126049a44351fa39634f06ae0394d068fe66481",
+      "bytes": 5437030
+    },
+    {
+      "path": "references-local/schur-chain01/1-1048576/attempt-rollback.ckp",
+      "sha256": "37a834fdc17ba8578210ab7e1c4abb32c483f7f63640549e92944c9fae90cacf",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-chain01/1-1048576/checkpoints.bin",
+      "sha256": "5d4d0b388a522e187f3e8dae20292f4a1ed64b1d05f6dfbb61dbba06bdf4dc26",
+      "bytes": 55800
+    },
+    {
+      "path": "references-local/schur-chain01/1-1048576/final.ckp",
+      "sha256": "caa06db6eb186fde52fe26d503da410d6d101df066a6289b4eb98a6d64015dd8",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-chain01/1-1048576/phase0-start.ckp",
+      "sha256": "0987ea7eb8154779d538a2355d564269edaa63b66e77e4f66069253caf05dd2f",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-chain01/1-1048576/phase1-inside.ckp",
+      "sha256": "8c2830fc0ebabda0e626b92ba4d7b6a20a2c3defcd107acd3b6c173bc22711ba",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-chain01/1-1048576/phase1-reset0.ckp",
+      "sha256": "dc08c54ee728305839ad67060e7e99961dc4db5f9c3f489ee48432435dcc0699",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-chain01/1-1048576/phase1-start.ckp",
+      "sha256": "5b0759d1efa4d280513e54983516c6176fc86144b1dcaba2bae8880960551eb9",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-chain01/1-1048576/phase2-inside.ckp",
+      "sha256": "586f12eaa2517131957199b7c5f2fbdc04eb0e970092d566bd82aace3aa8c9b7",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-chain01/1-1048576/phase2-start.ckp",
+      "sha256": "d7fb3fd45963bf679b15cba7facc3d9234c8cd919bf61a6fdd2ad4a2b31d6bd6",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-chain01/1-1048576/selected.txt",
+      "sha256": "9eaa4c84f9bdfcceba9fdab3de3184c6a977d4e01dfb087ed45bb357368f6bf2",
+      "bytes": 4707890
+    },
+    {
+      "path": "references-local/schur-chain01/1-524288/attempt-rollback.ckp",
+      "sha256": "ed387955e520864052604ea1c8f21b11ae58590394b7ae2caaf21eeb29cdc3b4",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-chain01/1-524288/checkpoints.bin",
+      "sha256": "99075866715bf80accec3ceded3924f129f5ae805da4abbcd6457133786a4918",
+      "bytes": 55800
+    },
+    {
+      "path": "references-local/schur-chain01/1-524288/final.ckp",
+      "sha256": "2e54e681135bc83fc89f3a27103e4934ba7ed11325ed0d3f223077772682027c",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-chain01/1-524288/phase0-start.ckp",
+      "sha256": "2b12913e0f1c113a670a21fd741ea144cc5aa3980ebf276bc2aa7cb426f6d7c5",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-chain01/1-524288/phase1-inside.ckp",
+      "sha256": "79430bd19d16ae9177dd9dccfe0f45c34bfe65fe34fa473cb14cb72e70a3b51a",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-chain01/1-524288/phase1-reset0.ckp",
+      "sha256": "af6d6496d6ded673d6027b70920eef387c8de296b460d90b73977983d89f6cda",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-chain01/1-524288/phase1-start.ckp",
+      "sha256": "efac2bd1b91024d2d19283a5fba0633c89ec5021bdb6547d45daac39a1178810",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-chain01/1-524288/phase2-inside.ckp",
+      "sha256": "ce0acc0a01c044f961759cb5130c4fc0625935a1bf93f562d39654dd5c43ac80",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-chain01/1-524288/phase2-start.ckp",
+      "sha256": "c3f412a0147821e2392d4cbc7b2d85dd096e776cd133e5cb8b98f2842bd5ea6c",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-chain01/1-524288/selected.txt",
+      "sha256": "8555d5e0a49c18ca2a896552608c21686063bbf69ee743db5a7e15119deb7ceb",
+      "bytes": 5471407
+    },
+    {
+      "path": "references-local/schur-chain01/run.exe",
+      "sha256": "3e614a6bca96d2dff5a569a95ef714d7e7656fd83639ab167126be20e7d06bf7",
+      "bytes": 1427968
+    }
+  ],
+  "available_free_bytes": 126704521216,
+  "reserve_bytes": 1073741824,
+  "estimated_output_bytes": 67108864,
+  "lab_stack_bytes": 33554432,
+  "new_library_compile": false,
+  "source_sha256_after": {
+    "tools/run_schur_chain.py": "3260ef10a9af96924409fa4fadc9698940df361adc52f69ed70176d7a7d846aa",
+    "tools/prepare_schur_chain.py": "dd04ed55298fca7d720cae54e5d62458c9676ba84924d19b35e31a9bd89a798f",
+    "tools/dynamic_schur_chain_solver.rs": "01506ad0a0b79178f4ab4474828120ae4ff03181eacbb6209c203ec4cbd73cfd",
+    "tools/joint_schur_chain_kernel.rs": "51359647c16537fe8c0cda4b61b6989ef2793b7e291a36ef45d523fe27f9cb11",
+    "tools/joint_schur_chain_runner.rs": "04ed37e256e0a6b4aea0334e46729b1d2b5f919e5438c98dd6dc7e7a3a23b54b",
+    "tools/joint_newton_reuse_kernel.rs": "67836356d926d77475ad6ed4bd853a1b91d09787e9c75e9b497883d9e64d296b",
+    "tools/contour_reset_engine.rs": "8e34429f60eedddb1175915c3b312e26da889a428023eb81922ba25400756275",
+    "tools/latch_charge_driver.rs": "84af1a316124aa950c023aa19885a2f1b55db699446a0ec8ff75db7da34cc901",
+    "tools/contour_closed_driver.rs": "326423fe5be49fb8d8b595d90a6517524aeffa217210bb54846bc23fc2781eb2",
+    "crates/rf-d-circuit/src/joint_engine.rs": "dacd5fe5c2b30f48acc336f5c45ebfb60a6ae3d7a24de0e3a4fb0aa1496df5d1",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+    "evidence/voice_schur_chain_inputs01.json": "0079335792874814898d2f2758f02a1c6f5a15fc219dec2469307cb2ef17e6c3",
+    "docs/SCHUR_CADENA_TRAYECTORIA.md": "bc29edd46b527d97140bf9bd0d00c774b3bf5c80d5bd41b71a2210556d66f98f",
+    "evidence/voice_schur_refined_chainbench01.json": "e14b10f2fc2dce5efbda4691be05acb3e9df1a28026e8d783034d5e8a6ebbea9",
+    "evidence/voice_schur_refined_chainconfirm01.json": "bd5d5c71538e58c4d8c83bc203958b1cc09437efdcc0a7cb67ecc813c15629b9",
+    "evidence/voice_schur_refined_chainbank01.json": "e7b3fb9943d205a4dd709aa549c5f359c4757fdcd6c4b979ad690f4240a11b7b",
+    "evidence/voice_schur_refined_chainstructure02.json": "c2dc5f359d69e0d04d62b245158c4d86d2a9f8aecfe15bd5324bf7dd70cab548",
+    "evidence/voice_schur_chain_roots01.json": "3e6c6442460d85ebdd2b16d99e20fba4ca8787d1eebdaf6fa916bfe1c8c24bfd"
+  },
+  "private_used_sha256_after": {
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd",
+    "references-local/contour-cycle-inputs01/1-1048576.ckp": "0987ea7eb8154779d538a2355d564269edaa63b66e77e4f66069253caf05dd2f",
+    "references-local/contour-cycle-inputs01/1-524288.ckp": "2b12913e0f1c113a670a21fd741ea144cc5aa3980ebf276bc2aa7cb426f6d7c5",
+    "references-local/contour-cycle-inputs01/0-1048576.ckp": "594fbd7768143adaa894813665a1671e34e8a9373d233179e729a0f43e8aa8ce",
+    "references-local/contour-cycle-inputs01/0-524288.ckp": "db1712bb5f894aa41515193f82349919074cb0e925d236f60763c1e2f9be1835",
+    "references-local/contour-reset01/1-1048576/final.ckp": "b531b445e39bcf4d66657cf6841916021496eeacc2a1f08810af719b0020be94",
+    "references-local/contour-reset01/1-524288/final.ckp": "526c4dff2a1d1ae7fa9d7f5fecd7cf7d46c6eb96a672445110fca08d597c4ef6",
+    "references-local/contour-reset01/0-1048576/final.ckp": "997bb4a9c0161a0fbdabffd822d2ab27430164126d6f0e33e60ae6bce10194fe",
+    "references-local/contour-reset01/0-524288/final.ckp": "a7b9392a3ef74bfba2765a0cb535936245fb503bb3090f19ebde7c9d005ecceb"
+  },
+  "wall_s": 451.3491882000817,
+  "minimum_free_bytes": 126684385280
+}
