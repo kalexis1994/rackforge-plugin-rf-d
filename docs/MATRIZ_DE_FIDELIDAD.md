@@ -493,3 +493,16 @@ Sin nueva duración o audio; 38472 ecuaciones heredadas por identidad.
 Siguiente: reducir costo del sistema lineal contra esta referencia exacta.
 Deadlines, contorno desde silencio y duración musical siguen pendientes.
 [QA](../evidence/newton_reuse_tests01.json).
+
+
+## LU con extensión contigua — 2026-10-13
+
+[Reducción de trabajo](LU_EXTENSION_RESULTADOS.md) de eliminación con
+pivotes/criterios originales. Lista indexada conservada como hipótesis
+no elegida; extensión contigua confirmada con mediana pareada
+1.0908× y37.72% menos actualizaciones.
+84 pares y8 regresiones del solver; cuatro perfiles conservan40 archivos
+por bytes,26770 finos y24 restores.38472 ecuaciones heredadas, sin
+reejecutarlas. Sin duración o audio nuevos, ni admisión RT.
+Siguiente: condensación de bloques dinámicos preservando puertos y masa.
+[QA](../evidence/voice_lu_extent_tests01.json).

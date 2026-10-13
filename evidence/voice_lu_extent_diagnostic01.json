@@ -1,0 +1,85 @@
+{
+  "passed": true,
+  "source_sha256": {
+    "tools/run_lu_extent_diagnostic.py": "3a7903ce81bbd5abf7a50d8350a3e3a6f20d6624850f2d4f2b09c074104d569d",
+    "tools/joint_newton_reuse_kernel.rs": "67836356d926d77475ad6ed4bd853a1b91d09787e9c75e9b497883d9e64d296b",
+    "tools/joint_lu_extent_kernel.rs": "d117a1ef7b07d5712f6ef07971953c4fe298311e1b7ae0bb1f300cd9a1d38cc8",
+    "tools/lu_extent_bench.rs": "deaa52ad86280fa722a5dc04f79645beacd1755795acf3667933080fa45e5534",
+    "docs/LU_EXTENSION_PROTOCOLO.md": "52f276453a8a50bdcdaa4c085f5f11d2b16e8f012c0193e44c380d612d0bdaa2"
+  },
+  "private_used_sha256": {
+    "references-local/newton-reuse-inputs01/pairs.bin": "6631f4b5830ebb78be119beea52d4bd7df2cca0f01624f1065431ce45280843f",
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd"
+  },
+  "compiler": {
+    "path": "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+    "sha256": "fd6232f90a981e28472ce6900232946a1f1bcad8ec8270cd5ae6a3a357208b98",
+    "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+  },
+  "commands": [
+    {
+      "command": [
+        "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+        "--edition=2021",
+        "-C",
+        "opt-level=2",
+        "-C",
+        "strip=symbols",
+        "-C",
+        "link-arg=-Wl,--stack,33554432",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\lu-extent-diagnostic01\\diagnostic.rs",
+        "--extern",
+        "rf_d_circuit=C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-startup01\\librf_d_circuit.rlib",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\lu-extent-diagnostic01\\diagnostic.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "warning: unused imports: `Mode` and `self`\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\lu-extent-diagnostic01\\reference.rs:5:33\n  |\n5 | use rf_d_circuit::{vco1_stamp::{self,Controls,Mode},chain_charge::{self,Parameters as Chain},mixer_on::OnMixer,StepError};\n  |                                 ^^^^          ^^^^\n  |\n  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default\n\nwarning: unused imports: `Mode` and `self`\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\lu-extent-diagnostic01\\extent.rs:5:33\n  |\n5 | use rf_d_circuit::{vco1_stamp::{self,Controls,Mode},chain_charge::{self,Parameters as Chain},mixer_on::OnMixer,StepError};\n  |                                 ^^^^          ^^^^\n\nwarning: unused import: `std::time::Instant`\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:3:5\n  |\n3 | use std::time::Instant;\n  |     ^^^^^^^^^^^^^^^^^^\n\nwarning: unused imports: `Parameters`, `initial_state`, `step_with_emphasis`, and `step`\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:8:5\n  |\n8 |     initial_state, step, step_with_emphasis, Boundary, Parameters,\n  |     ^^^^^^^^^^^^^  ^^^^  ^^^^^^^^^^^^^^^^^^            ^^^^^^^^^^\n\nwarning: unused import: `SolverBudget`\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:16:55\n   |\n16 | use rf_d_circuit::{Parameters as HeadphoneParameters, SolverBudget};\n   |                                                       ^^^^^^^^^^^^\n\nwarning: function `batch` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\lu-extent-diagnostic01\\diagnostic.rs:18:4\n   |\n18 | fn batch(cs:&[Case],expected:&[(Vec<u64>,usize,usize)],run:fn(&Case)->(Vec<u64>,usize,usize))->u128{let t=Instant::now();for(c,e)in ...\n   |    ^^^^^\n   |\n   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: constant `BUS` is never used\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\lu-extent-diagnostic01\\reference.rs:8:11\n  |\n8 | pub const BUS:usize=12;\n  |           ^^^\n\nwarning: constant `MIN_DT_S` is never used\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\lu-extent-diagnostic01\\reference.rs:9:11\n  |\n9 | pub const MIN_DT_S:f64=chain_charge::MIN_DT_S;\n  |           ^^^^^^^^\n\nwarning: function `vco_index` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\lu-extent-diagnostic01\\reference.rs:11:14\n   |\n11 | pub const fn vco_index(k:usize)->Option<usize> {if k==108 {None} else if k<108 {Some(k)} else {Some(k-1)}}\n   |              ^^^^^^^^^\n\nwarning: function `chain_index` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\lu-extent-diagnostic01\\reference.rs:12:14\n   |\n12 | pub const fn chain_index(k:usize)->usize {if k==66 {BUS} else if k==67 {199} else {133+k}}\n   |              ^^^^^^^^^^^\n\nwarning: fields `c2_v`, `reset_v`, `q25`, `reset_driver`, and `set_base` are never read\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\lu-extent-diagnostic01\\reference.rs:14:82\n   |\n14 | ...ct Parameters {pub controls:Controls,chain:Chain,pub sources:[f64;5],pub c2_v:f64,pub reset_v:f64,pub q25:f64,pub reset_driver:f64,pub final_decay:bool,pub keyboard:f64,pub short:bool,pub set_base:f64}\n   |       ---------- fields in this struct                                      ^^^^         ^^^^^^^         ^^^         ^^^^^^^^^^^^                                                              ^^^^^^^^\n   |\n   = note: `Parameters` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis\n\nwarning: method `chain` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\lu-extent-diagnostic01\\reference.rs:22:9\n   |\n15 | impl Parameters {\n   | --------------- method in this implementation\n...\n22 |  pub fn chain(self)->Chain {self.chain}\n   |         ^^^^^\n\nwarning: associated items `lift` and `chain` are never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\lu-extent-diagnostic01\\reference.rs:32:9\n   |\n26 | impl State {\n   | ---------- associated items in this implementation\n...\n32 |  pub fn lift(vco_high:[f64;134],vco_low:[f64;134],chain:chain_charge::State)->Self {\n   |         ^^^^\n...\n37 |  fn chain(self)->chain_charge::State {chain_charge::State{high:std::array::from_fn(|k|self.high[chain_index(k)]),low:std::array::fro...\n   |     ^^^^^\n\nwarning: function `solve_linear` is never used\n   --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\lu-extent-diagnostic01\\reference.rs:109:8\n    |\n109 | pub fn solve_linear<const M: usize>(\n    |        ^^^^^^^^^^^^\n\nwarning: constant `BUS` is never used\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\lu-extent-diagnostic01\\extent.rs:8:11\n  |\n8 | pub const BUS:usize=12;\n  |           ^^^\n\nwarning: constant `MIN_DT_S` is never used\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\lu-extent-diagnostic01\\extent.rs:9:11\n  |\n9 | pub const MIN_DT_S:f64=chain_charge::MIN_DT_S;\n  |           ^^^^^^^^\n\nwarning: function `vco_index` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\lu-extent-diagnostic01\\extent.rs:11:14\n   |\n11 | pub const fn vco_index(k:usize)->Option<usize> {if k==108 {None} else if k<108 {Some(k)} else {Some(k-1)}}\n   |              ^^^^^^^^^\n\nwarning: function `chain_index` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\lu-extent-diagnostic01\\extent.rs:12:14\n   |\n12 | pub const fn chain_index(k:usize)->usize {if k==66 {BUS} else if k==67 {199} else {133+k}}\n   |              ^^^^^^^^^^^\n\nwarning: fields `c2_v`, `reset_v`, `q25`, `reset_driver`, and `set_base` are never read\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\lu-extent-diagnostic01\\extent.rs:14:82\n   |\n14 | ...ct Parameters {pub controls:Controls,chain:Chain,pub sources:[f64;5],pub c2_v:f64,pub reset_v:f64,pub q25:f64,pub reset_driver:f64,pub final_decay:bool,pub keyboard:f64,pub short:bool,pub set_base:f64}\n   |       ---------- fields in this struct                                      ^^^^         ^^^^^^^         ^^^         ^^^^^^^^^^^^                                                              ^^^^^^^^\n   |\n   = note: `Parameters` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis\n\nwarning: method `chain` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\lu-extent-diagnostic01\\extent.rs:22:9\n   |\n15 | impl Parameters {\n   | --------------- method in this implementation\n...\n22 |  pub fn chain(self)->Chain {self.chain}\n   |         ^^^^^\n\nwarning: associated items `lift` and `chain` are never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\lu-extent-diagnostic01\\extent.rs:32:9\n   |\n26 | impl State {\n   | ---------- associated items in this implementation\n...\n32 |  pub fn lift(vco_high:[f64;134],vco_low:[f64;134],chain:chain_charge::State)->Self {\n   |         ^^^^\n...\n37 |  fn chain(self)->chain_charge::State {chain_charge::State{high:std::array::from_fn(|k|self.high[chain_index(k)]),low:std::array::fro...\n   |     ^^^^^\n\nwarning: function `solve_linear` is never used\n   --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\lu-extent-diagnostic01\\extent.rs:109:8\n    |\n109 | pub fn solve_linear<const M: usize>(\n    |        ^^^^^^^^^^^^\n\nwarning: function `solve_linear_sparse` is never used\n   --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\lu-extent-diagnostic01\\extent.rs:118:8\n    |\n118 | pub fn solve_linear_sparse<const M: usize>(\n    |        ^^^^^^^^^^^^^^^^^^^\n\nwarning: function `solve_linear_internal` is never used\n   --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\lu-extent-diagnostic01\\extent.rs:125:4\n    |\n125 | fn solve_linear_internal<const M: usize, const SKIP_ZERO: bool>(\n    |    ^^^^^^^^^^^^^^^^^^^^^\n\nwarning: 24 warnings emitted\n\n",
+      "wall_s": 0.9572062999941409
+    },
+    {
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\lu-extent-diagnostic01\\diagnostic.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\newton-reuse-inputs01\\pairs.bin"
+      ],
+      "exit_code": 0,
+      "stdout": "REGRESSION,0,Ok([4607182418800017408, 4611686018427387904, 4613937818241073152, 4616189618054758400, 4617315517961601024, 4618441417868443648, 4619567317775286272, 4620693217682128896])\nREGRESSION,1,Ok([4620693217682128896, 4607182418800017408, 4611686018427387904, 4613937818241073152, 4616189618054758400, 4617315517961601024, 4618441417868443648, 4619567317775286272])\nREGRESSION,2,Ok([4594736179898894513, 4603669860004344753, 4607081207878563853, 4608780725160436573, 4610419529690386373, 4611876057955075266, 4612642654985508531, 4614097257667426590])\nREGRESSION,3,Ok([4607182418800017408, 4611686018427387904, 4613937818241073152, 4616189618054758400, 4617315517961601024, 4618441417868443648, 4619567317775286272, 4620693217682128896])\nREGRESSION,4,Err(\"SingularJacobian\")\nREGRESSION,5,Err(\"SingularJacobian\")\nREGRESSION,6,Ok([0, 4611686018427387904, 4613937818241073152, 4616189618054758400, 4617315517961601024, 4618441417868443648, 4619567317775286272, 4620693217682128896])\nREGRESSION,7,Err(\"SingularJacobian\")\nUPDATES,1056568152,658065345,84\nDIAGNOSTIC_PASSED,8,84\n",
+      "stderr": "",
+      "wall_s": 2.508760299999267
+    }
+  ],
+  "source_sha256_after": {
+    "tools/run_lu_extent_diagnostic.py": "3a7903ce81bbd5abf7a50d8350a3e3a6f20d6624850f2d4f2b09c074104d569d",
+    "tools/joint_newton_reuse_kernel.rs": "67836356d926d77475ad6ed4bd853a1b91d09787e9c75e9b497883d9e64d296b",
+    "tools/joint_lu_extent_kernel.rs": "d117a1ef7b07d5712f6ef07971953c4fe298311e1b7ae0bb1f300cd9a1d38cc8",
+    "tools/lu_extent_bench.rs": "deaa52ad86280fa722a5dc04f79645beacd1755795acf3667933080fa45e5534",
+    "docs/LU_EXTENSION_PROTOCOLO.md": "52f276453a8a50bdcdaa4c085f5f11d2b16e8f012c0193e44c380d612d0bdaa2"
+  },
+  "private_used_sha256_after": {
+    "references-local/newton-reuse-inputs01/pairs.bin": "6631f4b5830ebb78be119beea52d4bd7df2cca0f01624f1065431ce45280843f",
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd"
+  },
+  "outputs": [
+    {
+      "path": "references-local/lu-extent-diagnostic01/diagnostic.exe",
+      "sha256": "8245338e3d58b83e54e0d76feb4fb60dee66ff4e860fc070b9d6d1f5bea5a2fc",
+      "bytes": 1390080
+    },
+    {
+      "path": "references-local/lu-extent-diagnostic01/diagnostic.rs",
+      "sha256": "ac372619b9c8f0fc04d155fa7752e0b171f75a69fd4de173fe7f64c1632b0392",
+      "bytes": 3789
+    },
+    {
+      "path": "references-local/lu-extent-diagnostic01/extent.rs",
+      "sha256": "32f3450bcd02f0d49418868d2ec0d6c2e337ae458c624dfa6bc31e06ab25faa3",
+      "bytes": 12067
+    },
+    {
+      "path": "references-local/lu-extent-diagnostic01/reference.rs",
+      "sha256": "881c2f1515bf0b61f0ff079b415812b1d91eeed5a134c1d31dae6382d7e43e39",
+      "bytes": 10853
+    }
+  ]
+}

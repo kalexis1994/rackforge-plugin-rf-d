@@ -52,7 +52,7 @@ alcanzan≈265 ms. Los [ciclos de esta nueva raíz](docs/VOZ_CICLOS_CONDICIONADO
 completan dos perfiles de5,25 ms con refinamiento y cargas observadas;
 la periodicidad aún queda abierta. El ciclo anterior conserva su historia.
 
-La [QA vigente](evidence/newton_reuse_tests01.json) conserva
+La [QA vigente](evidence/voice_lu_extent_tests01.json) conserva
 248 tests Rust heredados por identidad y el nuevo banco de trayectorias. La
 [cadena con cargas explícitas](docs/CADENA_CARGA_RADAU_RESULTADOS.md) pasa
 72 etapas y 180 corrientes, con medios pasos de7,629 ps; fuentes impuestas.
@@ -253,7 +253,7 @@ dos perfiles hasta5,25 ms desde el prefijo propio, dos resets por perfil,
 55200 ecuaciones y balances de carga/medias. Escucha de inspección admitida:
 True; réplica de un intervalo, escala explícita80×.
 No acredita voz completa, periodo asintótico o RT.
-[QA vigente](evidence/newton_reuse_tests01.json).
+[QA vigente](evidence/voice_lu_extent_tests01.json).
 
 
 ## Q25/Q15 cargados en la voz — 2026-10-12
@@ -265,7 +265,7 @@ Cuatro perfiles de10 µs,18320 ecuaciones,3840 pasos y40 restores completos.
 La malla inicial se rechaza;15.625/7.8125 ns pasan el gate2 µV con1.553 µV
 máximo en los finales comparados. Hipótesis de dispositivos explícitas,
 ventana local; ADSR completo, contorno de filtro y RT siguen pendientes.
-[QA](evidence/newton_reuse_tests01.json).
+[QA](evidence/voice_lu_extent_tests01.json).
 
 
 ## Contorno229 con contacto sostenido — 2026-10-12
@@ -276,7 +276,7 @@ liberación50 µs.3226 avances/6452 finos,32976 ecuaciones independientes,
 20 restores completos y8 rollbacks. Dos límites de paso coinciden en
 los12 cortes con≈.154 nV máximo; C2 responde desde las corrientes reales.
 Ventana corta con historia precargada; nota/ADSR completo y RT pendientes.
-[QA](evidence/newton_reuse_tests01.json).
+[QA](evidence/voice_lu_extent_tests01.json).
 
 
 ## Contorno cargado durante el reset del VCO — 2026-10-12
@@ -287,7 +287,7 @@ con VCO/BUS/filtro/VCAs/J7 y contorno en el mismo solve.35724 ecuaciones,
 25152 finos,24 restores de prefijo y balances de carga; diferencia máxima
 .1404 µV en los cortes comparados. Historia entrante conservada por bits.
 Ciclo completo entre dos resets, contorno desde silencio y RT pendientes.
-[QA](evidence/newton_reuse_tests01.json).
+[QA](evidence/voice_lu_extent_tests01.json).
 
 
 ## Ciclo del VCO con contorno229 y C7 cargado — 2026-10-12
@@ -302,7 +302,7 @@ unión exacta, refinamiento y balances pasan.
 Siguiente: medir y acelerar el solve contra esta referencia para alcanzar
 un contorno de duración musical. Contorno desde silencio, otras cargas
 de placa2, contorno de filtro, fidelidad física y RT pendientes.
-[QA](evidence/newton_reuse_tests01.json).
+[QA](evidence/voice_lu_extent_tests01.json).
 
 
 ## Reuso del trial de Newton — 2026-10-12
@@ -315,4 +315,17 @@ Cuatro trayectorias completas coinciden por bytes con la referencia:
 Sin nueva duración o audio; 38472 ecuaciones heredadas por identidad.
 Siguiente: reducir costo del sistema lineal contra esta referencia exacta.
 Deadlines, contorno desde silencio y duración musical siguen pendientes.
-[QA](evidence/newton_reuse_tests01.json).
+[QA](evidence/voice_lu_extent_tests01.json).
+
+
+## LU con extensión contigua — 2026-10-13
+
+[Reducción de trabajo](docs/LU_EXTENSION_RESULTADOS.md) de eliminación con
+pivotes/criterios originales. Lista indexada conservada como hipótesis
+no elegida; extensión contigua confirmada con mediana pareada
+1.0908× y37.72% menos actualizaciones.
+84 pares y8 regresiones del solver; cuatro perfiles conservan40 archivos
+por bytes,26770 finos y24 restores.38472 ecuaciones heredadas, sin
+reejecutarlas. Sin duración o audio nuevos, ni admisión RT.
+Siguiente: condensación de bloques dinámicos preservando puertos y masa.
+[QA](evidence/voice_lu_extent_tests01.json).
