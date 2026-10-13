@@ -1,0 +1,362 @@
+{
+  "passed": true,
+  "source_sha256": {
+    "tools/run_schur_contour.py": "238f6ebaac4a50963851f679605b937b6bc37c91f58c1b7ca2559199f8cad6e6",
+    "tools/prepare_schur_contour.py": "e61cb89dc88efd910e7bed508fa5a43662368606a87f8cf15c9f2d47b3fd3772",
+    "tools/dynamic_schur_contour_solver.rs": "95732a8db78469197966f15a4248b9db2ccd363f035d738d6f893a79bbc39884",
+    "tools/joint_schur_contour_kernel.rs": "5c57c64353664db7795369a8695e0b22166ea0813e6b251dc6297658c7abc531",
+    "tools/joint_schur_contour_runner.rs": "05318e9d559e35b75931eda274931b05916531bdeb8364c3133a767d3090c0e8",
+    "tools/joint_newton_reuse_kernel.rs": "67836356d926d77475ad6ed4bd853a1b91d09787e9c75e9b497883d9e64d296b",
+    "tools/contour_reset_engine.rs": "8e34429f60eedddb1175915c3b312e26da889a428023eb81922ba25400756275",
+    "tools/latch_charge_driver.rs": "84af1a316124aa950c023aa19885a2f1b55db699446a0ec8ff75db7da34cc901",
+    "tools/contour_closed_driver.rs": "326423fe5be49fb8d8b595d90a6517524aeffa217210bb54846bc23fc2781eb2",
+    "crates/rf-d-circuit/src/joint_engine.rs": "dacd5fe5c2b30f48acc336f5c45ebfb60a6ae3d7a24de0e3a4fb0aa1496df5d1",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+    "evidence/voice_schur_contour_inputs01.json": "e11e8d9624f812963fb5ce73553bc45994be7cbd62d712874a443bdce96a39c5",
+    "docs/SCHUR_CONTORNO_TRAYECTORIA.md": "28023ec227b4e8f0040001bd99358898ca2c3b0f5e490f80deef8c160832c454",
+    "evidence/voice_schur_refined_contourbench01.json": "f7c1c94ddccb7672fe9bde4429bee4527bde64dad3ca033ecc454da7523fae74",
+    "evidence/voice_schur_refined_contourconfirm01.json": "94bd46d97b34e2a480077d841ce4fd3e41f0e2ebfdd8086010ed401f627f09e8",
+    "evidence/voice_schur_refined_contourbank01.json": "96ad154b4a07d7e61685f73c0d4391bd6f77e19687dc237ffc39b2e0aa0d125d",
+    "evidence/voice_schur_refined_contourstructure01.json": "94787548437ee5331ca69381a3d99f7243681055093fa6b53feb57e2d53ceec7",
+    "evidence/voice_schur_contour_roots01.json": "0f5012aa6c2ec588ae3e744d92866daad21f1dc21705a121c27612bf136ae174"
+  },
+  "private_used_sha256": {
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd",
+    "references-local/contour-cycle-inputs01/1-1048576.ckp": "0987ea7eb8154779d538a2355d564269edaa63b66e77e4f66069253caf05dd2f",
+    "references-local/contour-cycle-inputs01/1-524288.ckp": "2b12913e0f1c113a670a21fd741ea144cc5aa3980ebf276bc2aa7cb426f6d7c5",
+    "references-local/contour-cycle-inputs01/0-1048576.ckp": "594fbd7768143adaa894813665a1671e34e8a9373d233179e729a0f43e8aa8ce",
+    "references-local/contour-cycle-inputs01/0-524288.ckp": "db1712bb5f894aa41515193f82349919074cb0e925d236f60763c1e2f9be1835",
+    "references-local/contour-reset01/1-1048576/final.ckp": "b531b445e39bcf4d66657cf6841916021496eeacc2a1f08810af719b0020be94",
+    "references-local/contour-reset01/1-524288/final.ckp": "526c4dff2a1d1ae7fa9d7f5fecd7cf7d46c6eb96a672445110fca08d597c4ef6",
+    "references-local/contour-reset01/0-1048576/final.ckp": "997bb4a9c0161a0fbdabffd822d2ab27430164126d6f0e33e60ae6bce10194fe",
+    "references-local/contour-reset01/0-524288/final.ckp": "a7b9392a3ef74bfba2765a0cb535936245fb503bb3090f19ebde7c9d005ecceb"
+  },
+  "compiler": {
+    "path": "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+    "sha256": "fd6232f90a981e28472ce6900232946a1f1bcad8ec8270cd5ae6a3a357208b98",
+    "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+  },
+  "commands": [
+    {
+      "command": [
+        "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+        "--edition=2021",
+        "-C",
+        "opt-level=2",
+        "-C",
+        "strip=symbols",
+        "-C",
+        "link-arg=-Wl,--stack,33554432",
+        "tools/joint_schur_contour_runner.rs",
+        "--extern",
+        "rf_d_circuit=C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-startup01\\librf_d_circuit.rlib",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\schur-contour01\\run.exe"
+      ],
+      "exit_code": 0,
+      "wall_s": 1.0512718999525532,
+      "stdout": "",
+      "stderr": "warning: unused imports: `Mode` and `self`\n --> tools\\joint_schur_contour_kernel.rs:6:33\n  |\n6 | use rf_d_circuit::{vco1_stamp::{self,Controls,Mode},chain_charge::{self,Parameters as Chain},mixer_on::OnMixer,StepError};\n  |                                 ^^^^          ^^^^\n  |\n  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default\n\nwarning: unused imports: `SolverBudget`, `loudness_follower as follower`, and `self`\n --> tools/joint_schur_contour_runner.rs:3:35\n  |\n3 | ...n_charge::{self,Parameters as Chain},mixer_on::OnMixer,vco1_stamp::Controls,loudness_follower as follower,SolverBudget};\n  |               ^^^^                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ^^^^^^^^^^^^\n\nwarning: unused import: `std::time::Instant`\n --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:3:5\n  |\n3 | use std::time::Instant;\n  |     ^^^^^^^^^^^^^^^^^^\n\nwarning: unused imports: `Parameters`, `initial_state`, `step_with_emphasis`, and `step`\n --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:8:5\n  |\n8 |     initial_state, step, step_with_emphasis, Boundary, Parameters,\n  |     ^^^^^^^^^^^^^  ^^^^  ^^^^^^^^^^^^^^^^^^            ^^^^^^^^^^\n\nwarning: unused import: `SolverBudget`\n  --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:16:55\n   |\n16 | use rf_d_circuit::{Parameters as HeadphoneParameters, SolverBudget};\n   |                                                       ^^^^^^^^^^^^\n\nwarning: constant `MIN_DT_S` is never used\n  --> tools\\joint_schur_contour_kernel.rs:10:11\n   |\n10 | pub const MIN_DT_S:f64=chain_charge::MIN_DT_S;\n   |           ^^^^^^^^\n   |\n   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: function `vco_index` is never used\n  --> tools\\joint_schur_contour_kernel.rs:12:14\n   |\n12 | pub const fn vco_index(k:usize)->Option<usize> {if k==108 {None} else if k<108 {Some(k)} else {Some(k-1)}}\n   |              ^^^^^^^^^\n\nwarning: fields `c2_v`, `reset_v`, `q25`, `reset_driver`, and `set_base` are never read\n  --> tools\\joint_schur_contour_kernel.rs:15:82\n   |\n15 | ...ct Parameters {pub controls:Controls,chain:Chain,pub sources:[f64;5],pub c2_v:f64,pub reset_v:f64,pub q25:f64,pub reset_driver:f64,pub final_decay:bool,pub keyboard:f64,pub short:bool,pub set_base:f64}\n   |       ---------- fields in this struct                                      ^^^^         ^^^^^^^         ^^^         ^^^^^^^^^^^^                                                              ^^^^^^^^\n   |\n   = note: `Parameters` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis\n\nwarning: associated items `lift` and `chain` are never used\n  --> tools\\joint_schur_contour_kernel.rs:33:9\n   |\n27 | impl State {\n   | ---------- associated items in this implementation\n...\n33 |  pub fn lift(vco_high:[f64;134],vco_low:[f64;134],chain:chain_charge::State)->Self {\n   |         ^^^^\n...\n38 |  fn chain(self)->chain_charge::State {chain_charge::State{high:std::array::from_fn(|k|self.high[chain_index(k)]),low:std::array::fro...\n   |     ^^^^^\n\nwarning: function `max_abs` is never used\n   --> tools\\joint_schur_contour_kernel.rs:106:8\n    |\n106 | pub fn max_abs<const M: usize>(x: &[f64; M]) -> f64 {\n    |        ^^^^^^^\n\nwarning: function `solve_linear` is never used\n   --> tools\\joint_schur_contour_kernel.rs:110:8\n    |\n110 | pub fn solve_linear<const M: usize>(\n    |        ^^^^^^^^^^^^\n\nwarning: function `solve_linear_sparse` is never used\n   --> tools\\joint_schur_contour_kernel.rs:119:8\n    |\n119 | pub fn solve_linear_sparse<const M: usize>(\n    |        ^^^^^^^^^^^^^^^^^^^\n\nwarning: function `solve_linear_internal` is never used\n   --> tools\\joint_schur_contour_kernel.rs:126:4\n    |\n126 | fn solve_linear_internal<const M: usize, const SKIP_ZERO: bool>(\n    |    ^^^^^^^^^^^^^^^^^^^^^\n\nwarning: function `solve_linear_extent` is never used\n   --> tools\\joint_schur_contour_kernel.rs:185:8\n    |\n185 | pub fn solve_linear_extent<const M:usize>(mut j:[[f64;M];M],mut rhs:[f64;M])->Result<[f64;M],StepError>{\n    |        ^^^^^^^^^^^^^^^^^^^\n\nwarning: fields `refinements`, `initial_backward`, and `final_backward` are never read\n  --> tools\\dynamic_schur_contour_solver.rs:67:53\n   |\n67 | pub struct Observation{pub correction:[f64;458],pub refinements:usize,pub initial_backward:f64,pub final_backward:f64}\n   |            ----------- fields in this struct        ^^^^^^^^^^^           ^^^^^^^^^^^^^^^^         ^^^^^^^^^^^^^^\n\nwarning: associated function `from_conditioned` is never used\n  --> tools\\contour_reset_engine.rs:37:9\n   |\n35 | impl Engine {\n   | ----------- associated function in this implementation\n36 |  /// Takes an explicit conditioned history; does not establish joint DC startup.\n37 |  pub fn from_conditioned(parameters:joint::Parameters,state:State,settings:Settings)->Result<Self,Error> {\n   |         ^^^^^^^^^^^^^^^^\n\nwarning: 16 warnings emitted\n\n"
+    }
+  ],
+  "profiles": [
+    {
+      "final_decay": true,
+      "maximum_half_ticks": 1048576,
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\schur-contour01\\run.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-inputs01\\1-1048576.ckp",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\schur-contour01\\1-1048576"
+      ],
+      "exit_code": 0,
+      "wall_s": 108.91732339991722,
+      "stdout": "",
+      "stderr": "COMPLETED,on=1,max=1048576,accepted=3020,restores=6,replays=92,corruptions=4,rollbacks=2,crossings=1,wall_s=108.827865\n"
+    },
+    {
+      "final_decay": true,
+      "maximum_half_ticks": 524288,
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\schur-contour01\\run.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-inputs01\\1-524288.ckp",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\schur-contour01\\1-524288"
+      ],
+      "exit_code": 0,
+      "wall_s": 124.84516629995778,
+      "stdout": "",
+      "stderr": "COMPLETED,on=1,max=524288,accepted=3704,restores=6,replays=92,corruptions=4,rollbacks=2,crossings=1,wall_s=124.8106218\n"
+    },
+    {
+      "final_decay": false,
+      "maximum_half_ticks": 1048576,
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\schur-contour01\\run.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-inputs01\\0-1048576.ckp",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\schur-contour01\\0-1048576"
+      ],
+      "exit_code": 0,
+      "wall_s": 107.03262419998646,
+      "stdout": "",
+      "stderr": "COMPLETED,on=0,max=1048576,accepted=2987,restores=6,replays=92,corruptions=4,rollbacks=2,crossings=1,wall_s=106.9979565\n"
+    },
+    {
+      "final_decay": false,
+      "maximum_half_ticks": 524288,
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\schur-contour01\\run.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\contour-cycle-inputs01\\0-524288.ckp",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\schur-contour01\\0-524288"
+      ],
+      "exit_code": 0,
+      "wall_s": 122.63995730003808,
+      "stdout": "",
+      "stderr": "COMPLETED,on=0,max=524288,accepted=3674,restores=6,replays=92,corruptions=4,rollbacks=2,crossings=1,wall_s=122.6069597\n"
+    }
+  ],
+  "replays": [],
+  "outputs": [
+    {
+      "path": "references-local/schur-contour01/0-1048576/attempt-rollback.ckp",
+      "sha256": "c6698cd277c065ad1a74b663a25b1a2a17b84cb5481e07e000ed4c614c872cd6",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-contour01/0-1048576/checkpoints.bin",
+      "sha256": "cd616016c62ada67773808e53d16da3dba35e4f2c003a097d2aabda951ea92b4",
+      "bytes": 55800
+    },
+    {
+      "path": "references-local/schur-contour01/0-1048576/final.ckp",
+      "sha256": "db5576bef3a6d2ed4278b9eaef71f855688483db050900708a8a65e066e46cf6",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-contour01/0-1048576/phase0-start.ckp",
+      "sha256": "594fbd7768143adaa894813665a1671e34e8a9373d233179e729a0f43e8aa8ce",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-contour01/0-1048576/phase1-inside.ckp",
+      "sha256": "e314e31ef68fa8184053e337adb495b3fbdf4b321b3058c7486e6b8e30c96c69",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-contour01/0-1048576/phase1-reset0.ckp",
+      "sha256": "105e33260d56c376afaaad2f2d54ad1119c3c2bd786b4423ecb9b26de6c33fa3",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-contour01/0-1048576/phase1-start.ckp",
+      "sha256": "0fac27d2a5443111e6f89338b9ca5e192d0f33ef76472f39d284447144bd5890",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-contour01/0-1048576/phase2-inside.ckp",
+      "sha256": "7d5d590cca24435275c318822a241f8bbdabd2a4b62b4e7294d2fbc0742bc9d4",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-contour01/0-1048576/phase2-start.ckp",
+      "sha256": "27d61530e83c19843c6e69259fdf2d8b0edfedc287168c0472b09e85d6b54359",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-contour01/0-1048576/selected.txt",
+      "sha256": "39840d2fc18cba2a76debcb82ecb24aeb9935788d318707ca99d21bfdc9dc30f",
+      "bytes": 4670241
+    },
+    {
+      "path": "references-local/schur-contour01/0-524288/attempt-rollback.ckp",
+      "sha256": "565dbab677f85135fa249a987ec0307c1ac20a9da683180de2c81c0c75a67bbb",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-contour01/0-524288/checkpoints.bin",
+      "sha256": "b35cd4ec4d05220260865708023ecf2c87294f10a3037a685cf7d3703c68e3a4",
+      "bytes": 55800
+    },
+    {
+      "path": "references-local/schur-contour01/0-524288/final.ckp",
+      "sha256": "c50afcc10dfd6b4e92a985a69a4ebcea8a42c0bbe3bec72290ed2662bc2a4280",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-contour01/0-524288/phase0-start.ckp",
+      "sha256": "db1712bb5f894aa41515193f82349919074cb0e925d236f60763c1e2f9be1835",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-contour01/0-524288/phase1-inside.ckp",
+      "sha256": "fd25897c470cf9496daa6612934bcd371dda23b4379be259bbafac024c963598",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-contour01/0-524288/phase1-reset0.ckp",
+      "sha256": "221f9ab8c633d8e57813e1d9ce2cad2bb2406d5730e31fd80ef578c3f8454c78",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-contour01/0-524288/phase1-start.ckp",
+      "sha256": "728bb1ef2f5e58b756db63680d14e54228fee733e56c69254fb911b085b602b7",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-contour01/0-524288/phase2-inside.ckp",
+      "sha256": "c4cc478f9af15435187b56fb9ca853628b0e35f142ac686ef67b5b83ec7ac666",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-contour01/0-524288/phase2-start.ckp",
+      "sha256": "19ad5f4abedce6503407cf637b93d9e8bfd391f84f7ca6f35f5a271761542649",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-contour01/0-524288/selected.txt",
+      "sha256": "4e423c57cabd6727942031f9448b132ef4ee2e282a78c51f095c0be26b792979",
+      "bytes": 5437161
+    },
+    {
+      "path": "references-local/schur-contour01/1-1048576/attempt-rollback.ckp",
+      "sha256": "7a3b579948ea222faf87383c3be43c885e52a88e51747653ece0eaa1cb7dc823",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-contour01/1-1048576/checkpoints.bin",
+      "sha256": "8852b7285e703574294dacbccacb5377c94f317d0e95297f3d5c7127ffdd6970",
+      "bytes": 55800
+    },
+    {
+      "path": "references-local/schur-contour01/1-1048576/final.ckp",
+      "sha256": "d68b07d134e1b5eab03d29e1f2fa6122acfea34e9534db73f7aeca4fbfd2bce2",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-contour01/1-1048576/phase0-start.ckp",
+      "sha256": "0987ea7eb8154779d538a2355d564269edaa63b66e77e4f66069253caf05dd2f",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-contour01/1-1048576/phase1-inside.ckp",
+      "sha256": "58667e7b5e3df93f2ce1e8e3406862990f56ef603d5199034402b6ecb15fd422",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-contour01/1-1048576/phase1-reset0.ckp",
+      "sha256": "a3da9ba799559b1a3678004b0b37250d62939ac86345b72b5f4821b77b9cbd06",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-contour01/1-1048576/phase1-start.ckp",
+      "sha256": "92d86efcf315616ccdd82da550c8e804d0bbb89557c0e68bf96a50283b064790",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-contour01/1-1048576/phase2-inside.ckp",
+      "sha256": "64ae15d9df2eb1410c8081effe9ef9642990bce6268cbe2d41ac23a2d1d2164e",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-contour01/1-1048576/phase2-start.ckp",
+      "sha256": "5873efbddfc42f4fcf3a6b65e9264f37db4b2720ab6ec96525d24e38db25c095",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-contour01/1-1048576/selected.txt",
+      "sha256": "2d8aae5cee8d4bc1071f3c2216a5bc32ccabb2b2f560b049f8ecce4f5043572e",
+      "bytes": 4708155
+    },
+    {
+      "path": "references-local/schur-contour01/1-524288/attempt-rollback.ckp",
+      "sha256": "a469211da31b261046e903939b703d8f20cda070239d898558df52748afad953",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-contour01/1-524288/checkpoints.bin",
+      "sha256": "7d1d4d3d3ed812e6b693f9e579a150a2e779e39591821ccae3498a1a0d3387f1",
+      "bytes": 55800
+    },
+    {
+      "path": "references-local/schur-contour01/1-524288/final.ckp",
+      "sha256": "9214f9a52bafde44a4953b546a880bf201ff7fd3a3e15809413a78e272d5c4b2",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-contour01/1-524288/phase0-start.ckp",
+      "sha256": "2b12913e0f1c113a670a21fd741ea144cc5aa3980ebf276bc2aa7cb426f6d7c5",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-contour01/1-524288/phase1-inside.ckp",
+      "sha256": "45918fae9e5b33a58b7dd1de36c1542816c05f78c28357ec28c4ec07801837af",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-contour01/1-524288/phase1-reset0.ckp",
+      "sha256": "231fdbb22b0eab3fc9fc97d67173c64bba0d25a915c01ed057f35fd4728c96d9",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-contour01/1-524288/phase1-start.ckp",
+      "sha256": "5643c0f49d25b1d4ada81fdcfdbaa3152b6d95371059b16f1bfd60572919b66c",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-contour01/1-524288/phase2-inside.ckp",
+      "sha256": "c6f860998281520eb4b3e694ef3663d27ed9200cb338e4e3dfcdc98a31a6634f",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-contour01/1-524288/phase2-start.ckp",
+      "sha256": "25f1c94c837072ef52ea37a09ba9116ed43d13b980220c464630464dd9a188f2",
+      "bytes": 3720
+    },
+    {
+      "path": "references-local/schur-contour01/1-524288/selected.txt",
+      "sha256": "daecff90a89e1394040e7e46924f5567f5ad7cd15f50c3bbabde6132a61b93b6",
+      "bytes": 5471471
+    },
+    {
+      "path": "references-local/schur-contour01/run.exe",
+      "sha256": "30e9b955c03a06c143f840b00003a0ed80f62235dd23ca80c1be7160f0a3f83c",
+      "bytes": 1421824
+    }
+  ],
+  "available_free_bytes": 126842228736,
+  "reserve_bytes": 1073741824,
+  "estimated_output_bytes": 67108864,
+  "lab_stack_bytes": 33554432,
+  "new_library_compile": false,
+  "source_sha256_after": {
+    "tools/run_schur_contour.py": "238f6ebaac4a50963851f679605b937b6bc37c91f58c1b7ca2559199f8cad6e6",
+    "tools/prepare_schur_contour.py": "e61cb89dc88efd910e7bed508fa5a43662368606a87f8cf15c9f2d47b3fd3772",
+    "tools/dynamic_schur_contour_solver.rs": "95732a8db78469197966f15a4248b9db2ccd363f035d738d6f893a79bbc39884",
+    "tools/joint_schur_contour_kernel.rs": "5c57c64353664db7795369a8695e0b22166ea0813e6b251dc6297658c7abc531",
+    "tools/joint_schur_contour_runner.rs": "05318e9d559e35b75931eda274931b05916531bdeb8364c3133a767d3090c0e8",
+    "tools/joint_newton_reuse_kernel.rs": "67836356d926d77475ad6ed4bd853a1b91d09787e9c75e9b497883d9e64d296b",
+    "tools/contour_reset_engine.rs": "8e34429f60eedddb1175915c3b312e26da889a428023eb81922ba25400756275",
+    "tools/latch_charge_driver.rs": "84af1a316124aa950c023aa19885a2f1b55db699446a0ec8ff75db7da34cc901",
+    "tools/contour_closed_driver.rs": "326423fe5be49fb8d8b595d90a6517524aeffa217210bb54846bc23fc2781eb2",
+    "crates/rf-d-circuit/src/joint_engine.rs": "dacd5fe5c2b30f48acc336f5c45ebfb60a6ae3d7a24de0e3a4fb0aa1496df5d1",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+    "evidence/voice_schur_contour_inputs01.json": "e11e8d9624f812963fb5ce73553bc45994be7cbd62d712874a443bdce96a39c5",
+    "docs/SCHUR_CONTORNO_TRAYECTORIA.md": "28023ec227b4e8f0040001bd99358898ca2c3b0f5e490f80deef8c160832c454",
+    "evidence/voice_schur_refined_contourbench01.json": "f7c1c94ddccb7672fe9bde4429bee4527bde64dad3ca033ecc454da7523fae74",
+    "evidence/voice_schur_refined_contourconfirm01.json": "94bd46d97b34e2a480077d841ce4fd3e41f0e2ebfdd8086010ed401f627f09e8",
+    "evidence/voice_schur_refined_contourbank01.json": "96ad154b4a07d7e61685f73c0d4391bd6f77e19687dc237ffc39b2e0aa0d125d",
+    "evidence/voice_schur_refined_contourstructure01.json": "94787548437ee5331ca69381a3d99f7243681055093fa6b53feb57e2d53ceec7",
+    "evidence/voice_schur_contour_roots01.json": "0f5012aa6c2ec588ae3e744d92866daad21f1dc21705a121c27612bf136ae174"
+  },
+  "private_used_sha256_after": {
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd",
+    "references-local/contour-cycle-inputs01/1-1048576.ckp": "0987ea7eb8154779d538a2355d564269edaa63b66e77e4f66069253caf05dd2f",
+    "references-local/contour-cycle-inputs01/1-524288.ckp": "2b12913e0f1c113a670a21fd741ea144cc5aa3980ebf276bc2aa7cb426f6d7c5",
+    "references-local/contour-cycle-inputs01/0-1048576.ckp": "594fbd7768143adaa894813665a1671e34e8a9373d233179e729a0f43e8aa8ce",
+    "references-local/contour-cycle-inputs01/0-524288.ckp": "db1712bb5f894aa41515193f82349919074cb0e925d236f60763c1e2f9be1835",
+    "references-local/contour-reset01/1-1048576/final.ckp": "b531b445e39bcf4d66657cf6841916021496eeacc2a1f08810af719b0020be94",
+    "references-local/contour-reset01/1-524288/final.ckp": "526c4dff2a1d1ae7fa9d7f5fecd7cf7d46c6eb96a672445110fca08d597c4ef6",
+    "references-local/contour-reset01/0-1048576/final.ckp": "997bb4a9c0161a0fbdabffd822d2ab27430164126d6f0e33e60ae6bce10194fe",
+    "references-local/contour-reset01/0-524288/final.ckp": "a7b9392a3ef74bfba2765a0cb535936245fb503bb3090f19ebde7c9d005ecceb"
+  },
+  "wall_s": 464.50407200003974,
+  "minimum_free_bytes": 126802169856
+}

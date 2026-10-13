@@ -582,3 +582,18 @@ Admitido para la ventana condicionada3.004 ms; sin duración/audio nuevos,
 contorno desde silencio, identificación física o RT. Siguiente: otra
 reducción estructural conservando puertos/cargas para duración musical.
 [QA](../evidence/voice_schur_inplace_tests01.json).
+
+
+## Contorno cargado condensado — 2026-10-13
+
+[Reducción estructural](SCHUR_CONTORNO_RESULTADOS.md) incorpora 58 correcciones de contorno a los
+128 interiores LM741: exterior 330→272 y reconstrucción completa de 458,
+con 229 estados HIGH/LOW, R59/Q18, masas e historia conservados.
+Costo pareado 1.0229× y confirmación 1.0251× frente al Schur admitido.
+181.368 filas lineales nuevas, 38.472 ecuaciones de banco y otras 38.472
+temporales pasan Decimal100; 35 regresiones con replay pasan.
+Cuatro perfiles/26770 finos conservan restores, eventos y balances.
+Admisión limitada al ciclo condicionado de 3.004 ms, sin duración/audio
+nuevos, contorno desde silencio, identificación física o RT.
+Siguiente: cadena con BUS/base Q18 retenidos, exterior potencial 140;
+soporte inspeccionado, invertibilidad y utilidad pendientes. [QA](../evidence/voice_schur_contour_tests01.json).
