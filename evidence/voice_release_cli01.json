@@ -1,0 +1,105 @@
+{
+  "passed": true,
+  "source_sha256": {
+    "tools/check_release_cli.py": "c5f4a792a563a7b46da96472ea0f3e37ea0b505811d79acf4aa7797a3c6368ee",
+    "tools/release_render_cli.py": "56c1e5bd78f6d9c481649ea6697b57e2143d236256e0a8027b455c59fc0ae600",
+    "tools/render_release_voice.py": "de0126ed1594fff30a7f88e35a7313f722ee9643058154eacb3b185620c38448",
+    "tools/render_sustained_voice.py": "8fb8da2f81a2cbb86c7a65d0cf6e41675c3110af2d41453371e93a90fb3d339f",
+    "tools/render_conditioned_recipe.py": "fdfbf9feae8bc96644f03482b620e227b929f045933c63bec816742f14024ce2",
+    "evidence/voice_release_listening01.json": "998360ab3dba32f7f5c9e164af4804c1bd9263158719e468fca2db6780036ca3"
+  },
+  "private_used_sha256": {
+    "references-local/sustained-voice01/524288/selected.txt": "935928bc87f07e72b2132e265009de83f0480055a220857ec0af4f8bd709a597",
+    "references-local/release-voice01/524288/selected.txt": "5b2b701044e25085cd1b2fa2c76fadf16c1efa19af5bf7c3ba59d12e7a907972",
+    "artifacts/release-voice01/rf-d-j7-gatillo-liberacion-524288-nativo.wav": "9eb982d2040ba8ed05c842f344b0c8beb997a07e8d04465273623772705821ec"
+  },
+  "user_cli_wav_identical": true,
+  "sidecar_verified": true,
+  "existing_output_rejected_without_mutation": true,
+  "mismatched_seam_rejected_before_publication": true,
+  "new_unit_test_definitions": 0,
+  "integration_checks": 3,
+  "commands": [
+    {
+      "command": [
+        "C:\\Users\\kalex\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "-B",
+        "tools/release_render_cli.py",
+        "--parent",
+        "references-local/sustained-voice01/524288/selected.txt",
+        "--continuation",
+        "references-local/release-voice01/524288/selected.txt",
+        "--output",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\release-cli01\\j7.wav"
+      ],
+      "exit_code": 0,
+      "stdout": "RELEASE_WAV C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\release-cli01\\j7.wav 960 0.02\n",
+      "stderr": "",
+      "wall_s": 3.297724400064908
+    },
+    {
+      "command": [
+        "C:\\Users\\kalex\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "-B",
+        "tools/release_render_cli.py",
+        "--parent",
+        "references-local/sustained-voice01/524288/selected.txt",
+        "--continuation",
+        "references-local/release-voice01/524288/selected.txt",
+        "--output",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\release-cli01\\j7.wav"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\release_render_cli.py\", line 16, in <module>\n    if __name__=='__main__':main()\n                            ^^^^^^\n  File \"C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\release_render_cli.py\", line 11, in main\n    require(args.output.suffix.lower()=='.wav' and args.output.parent.exists(),'existing output directory/WAV suffix');require(not args.output.exists() and not sidecar.exists(),'preserve existing WAV and sidecar')\n                                                                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_cycles_analysis.py\", line 10, in require\n    if not ok:raise ValueError(msg)\n              ^^^^^^^^^^^^^^^^^^^^^\nValueError: preserve existing WAV and sidecar\n",
+      "wall_s": 0.2717358999652788
+    },
+    {
+      "command": [
+        "C:\\Users\\kalex\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "-B",
+        "tools/release_render_cli.py",
+        "--parent",
+        "references-local/sustained-voice01/524288/selected.txt",
+        "--continuation",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\release-cli01\\mismatched-seam.txt",
+        "--output",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\release-cli01\\rejected.wav"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\release_render_cli.py\", line 16, in <module>\n    if __name__=='__main__':main()\n                            ^^^^^^\n  File \"C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\release_render_cli.py\", line 12, in main\n    inputs={str(p.resolve()):sha(p) for p in [args.parent,args.continuation]};t,v=joined_trace(args.parent,args.continuation);pcm,meta=adapt(t,v,1);require(inputs=={str(p.resolve()):sha(p) for p in [args.parent,args.continuation]},'stable input traces');save(args.output,pcm)\n                                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\render_release_voice.py\", line 14, in joined_trace\n    old=list(map(float,before[-1].split(',')[1:]));new=list(map(float,after[1].split(',')[1:]));require(after[1].startswith('JOINT_STATE,') and len(old)==len(new)==458 and struct.pack('<458d',*old)==struct.pack('<458d',*new),'full inherited state at audio seam')\n                                                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_cycles_analysis.py\", line 10, in require\n    if not ok:raise ValueError(msg)\n              ^^^^^^^^^^^^^^^^^^^^^\nValueError: full inherited state at audio seam\n",
+      "wall_s": 0.5906162000028417
+    }
+  ],
+  "source_sha256_after": {
+    "tools/check_release_cli.py": "c5f4a792a563a7b46da96472ea0f3e37ea0b505811d79acf4aa7797a3c6368ee",
+    "tools/release_render_cli.py": "56c1e5bd78f6d9c481649ea6697b57e2143d236256e0a8027b455c59fc0ae600",
+    "tools/render_release_voice.py": "de0126ed1594fff30a7f88e35a7313f722ee9643058154eacb3b185620c38448",
+    "tools/render_sustained_voice.py": "8fb8da2f81a2cbb86c7a65d0cf6e41675c3110af2d41453371e93a90fb3d339f",
+    "tools/render_conditioned_recipe.py": "fdfbf9feae8bc96644f03482b620e227b929f045933c63bec816742f14024ce2",
+    "evidence/voice_release_listening01.json": "998360ab3dba32f7f5c9e164af4804c1bd9263158719e468fca2db6780036ca3"
+  },
+  "private_used_sha256_after": {
+    "references-local/sustained-voice01/524288/selected.txt": "935928bc87f07e72b2132e265009de83f0480055a220857ec0af4f8bd709a597",
+    "references-local/release-voice01/524288/selected.txt": "5b2b701044e25085cd1b2fa2c76fadf16c1efa19af5bf7c3ba59d12e7a907972",
+    "artifacts/release-voice01/rf-d-j7-gatillo-liberacion-524288-nativo.wav": "9eb982d2040ba8ed05c842f344b0c8beb997a07e8d04465273623772705821ec"
+  },
+  "outputs": [
+    {
+      "path": "references-local/release-cli01/j7.json",
+      "sha256": "80035a465cbed7efd2915d172e436b955b00417cd70d7d95f85c3b3728314729",
+      "bytes": 1471
+    },
+    {
+      "path": "references-local/release-cli01/j7.wav",
+      "sha256": "9eb982d2040ba8ed05c842f344b0c8beb997a07e8d04465273623772705821ec",
+      "bytes": 1964
+    },
+    {
+      "path": "references-local/release-cli01/mismatched-seam.txt",
+      "sha256": "2e31aeb33dee9bca00ad5ead35f7c6005eaa3c2057b3ab4591bf14ce10d3506d",
+      "bytes": 11621644
+    }
+  ]
+}

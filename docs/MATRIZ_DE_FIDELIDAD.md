@@ -662,3 +662,20 @@ es una observación del modelo, sin causa física adjudicada. Siguiente:
 seguir la liberación propia, observar conmutación/descarga y revisar su
 recorrido de control.255 tests Rust heredados, sin reejecución o deadline.
 [QA](../evidence/voice_sustained_tests01.json).
+
+
+## Liberación restaurada: alcance finito de las transiciones
+
+| Evidencia | Resultado | Alcance |
+| --- | --- | --- |
+| Own checkpoint1/2 µs | 458 valores HIGH/LOW por bits, reloj y propuesta idénticos | Seam sin nuevo gatillo o condicionamiento |
+| Q25/Q15 y dC2/dt | Cruces aproximadamente4.0906/4.0907 ms tras KEY0 | Tiempos del modelo condicionado, no vintage medidos |
+| C2 corriente de ramas | Balance en32434 registros;30 endpoints independientes | Origen eléctrico del signo, no calibración física |
+| Grafo original/FD/Decimal100 | 19236 ecuaciones/84 candidatas;28 relojes229 | Nueva ventana8 ms seleccionada, no todos los solves independientes |
+| Memorias y puertos | Nueve balances y unión20.004 ms;6 resets | Cargas y retornos conservados; descarga incompleta |
+| WAV/CLI | 960 frames/20 ms,0.200599 µV/1 LSB; tres checks | Tiempo nativo finito; sin loop, fidelidad o RT |
+| Revisión de esquemas | Figure9-7/página impresa9-5, conflictos conservados | Localizador corregido; semiconductores no identificados |
+
+[Resultados](VOZ_LIBERACION_RESULTADOS.md),
+[revisión](VOZ_LIBERACION_REVISION.md),
+[QA](../evidence/voice_release_tests01.json).

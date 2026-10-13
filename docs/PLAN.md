@@ -676,3 +676,18 @@ es una observación del modelo, sin causa física adjudicada. Siguiente:
 seguir la liberación propia, observar conmutación/descarga y revisar su
 recorrido de control.255 tests Rust heredados, sin reejecución o deadline.
 [QA](../evidence/voice_sustained_tests01.json).
+
+
+## Liberación restaurada y conmutación observada
+
+Continuación ON desde20.442 ms por8 ms, propios1/2 µs; sin nuevo evento.
+458 valores HIGH/LOW y propuesta4096 ticks conservados por bits. Q25/Q15
+cruzan y dC2/dt pasa negativa; corriente de ataque/decay/seguidor explica
+el signo.19236 ecuaciones independientes,28 estados229 comunes y6 resets;
+balances9 por fase/total/unión20.004 ms.14 restores/224 accepted reproducidos.
+WAV960 frames/20 ms y CLI con tres comprobaciones ejecutadas. Sin rlib/cache
+Cargo/SPICE nuevos;255 tests Rust heredados. Revisión de PDF originales y
+errata Figure9-7/página9-5; no cambios de tarjetas, topología o tolerancias.
+Ver [resultados y reproducción](VOZ_LIBERACION_RESULTADOS.md).
+Siguiente: extender descarga y explorar su control decay con historias propias,
+manteniendo puertos/cargas; obtener duración útil sin inventar un loop.
