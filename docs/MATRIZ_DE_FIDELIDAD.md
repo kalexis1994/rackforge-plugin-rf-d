@@ -538,3 +538,18 @@ Sin campaña temporal, duración/audio nuevos o RT.
 Siguiente: perfilar preparación, sustituciones y residuo antes de otra
 variante; abrir trayectoria sólo después de pasar precisión y costo.
 [QA](../evidence/voice_schur_refined_tests01.json).
+
+
+## Perfil de costo y variantes no elegidas — 2026-10-13
+
+[Medición por fase](SCHUR_COSTO_RESULTADOS.md) conserva84 pares por bits en una copia
+privada: preparación82.47%, residuo0.70% del solve observado.
+Tres hipótesis pasan candidatos pero fallan utilidad: medianas
+0.8535×/0.9149×/0.9392×. Preservar todas; no elegir por el mejor intento.
+Las dos últimas conservan396 trazas J/b/correcciones por bytes;
+181368 filas y38472 ecuaciones independientes heredadas, sin reauditar.
+21 regresiones incluyen ceros con signo, subnormales y no finitos.
+Fallo de compilación/replay y reparación de tipo explícita conservados.
+Sin campaña temporal, duración/audio nuevos o RT. Siguiente: construcción
+y factorización en ubicación final, con precisión y costo antes de promover.
+[QA](../evidence/voice_schur_cost_tests01.json).
