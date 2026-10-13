@@ -536,3 +536,19 @@ para trayectorias, duración/audio nuevos o RT.
 Siguiente: refinamiento acotado sobre el sistema fallido, conservando
 factores, puertos y gate; después banco y recorrido si pasan.
 [QA de alcance](../evidence/voice_dynamic_schur_tests01.json).
+
+
+## Schur refinado con residuo compensado — 2026-10-13
+
+[Refinamiento acotado](SCHUR_REFINADO_RESULTADOS.md) conserva factores del mismo J, reconstruye
+458 correcciones y mantiene puertos, masa e historia. Tres refinamientos
+como máximo, sin fallback ni tolerancias nuevas; sólo20 de396 solves
+requieren una corrección adicional.181368 filas lineales únicas y38472
+ecuaciones nuevas pasan Decimal100, junto con memorias y corrientes.
+Doce regresiones cubren estructura, no finitos, capacidad y presupuesto.
+El soporte exacto reproduce toda la traza y raíces por bytes.
+Precisión pasa; utilidad de costo pendiente (medianas0.9083×/0.9496×).
+Sin campaña temporal, duración/audio nuevos o RT.
+Siguiente: perfilar preparación, sustituciones y residuo antes de otra
+variante; abrir trayectoria sólo después de pasar precisión y costo.
+[QA](../evidence/voice_schur_refined_tests01.json).

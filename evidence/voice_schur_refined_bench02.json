@@ -1,0 +1,127 @@
+{
+  "passed": true,
+  "source_sha256": {
+    "docs/SCHUR_REFINADO_SOPORTE.md": "ba657806cfe714b9ba9b48bbaea130ef4c73cd0dc64254cfd93065078fdc1a3f",
+    "evidence/voice_schur_refined_inputs02.json": "40bd8a054251532b878460249e8dc2f774c1634b126edb85733531e0e9b059cd",
+    "tools/dynamic_schur_refined_sparse_solver.rs": "af40e74cf2eccb070373a7e643d3f6f471323ab79619e7dab8be12633eabd1fc",
+    "tools/joint_lu_extent_kernel.rs": "d117a1ef7b07d5712f6ef07971953c4fe298311e1b7ae0bb1f300cd9a1d38cc8",
+    "tools/joint_schur_refined_sparse_kernel.rs": "0ce7da5280f0fc21ba42729b65bfcff93e35adea7cb2779d8bcff8f07057f9d6",
+    "tools/run_schur_refined_sparse_bench.py": "8112c472b2d83bda0d445de747a8da3d0db8142655d144f3cad0c90c8d773e11",
+    "tools/schur_refined_native.py": "3e4e826b03b770a29bed4a4fbc8deba1099c800ce0f87e8f3a3bc426ef0ba2ad",
+    "tools/schur_refined_sparse_bench.rs": "92750f1b38a2409a052abeb340267589dcbceac231212c1991174c1a93015940"
+  },
+  "private_used_sha256": {
+    "references-local/newton-reuse-inputs01/pairs.bin": "6631f4b5830ebb78be119beea52d4bd7df2cca0f01624f1065431ce45280843f",
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd"
+  },
+  "compiler": {
+    "path": "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+    "sha256": "fd6232f90a981e28472ce6900232946a1f1bcad8ec8270cd5ae6a3a357208b98",
+    "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+  },
+  "selected_pairs": 84,
+  "rounds": [
+    [
+      0,
+      1016801100,
+      1031658300
+    ],
+    [
+      1,
+      980154700,
+      1024081400
+    ],
+    [
+      2,
+      969712000,
+      1085747700
+    ],
+    [
+      3,
+      982020700,
+      1034134100
+    ],
+    [
+      4,
+      959016900,
+      1020973300
+    ]
+  ],
+  "speedups": [
+    0.985598720041316,
+    0.9571062417499234,
+    0.8931283022750128,
+    0.9496067289532373,
+    0.9393163366759933
+  ],
+  "median_paired_speedup": 0.9496067289532373,
+  "utility_passed": false,
+  "max_candidate_gate_ratio": 8.529290022935858e-09,
+  "full_trajectory_admitted": false,
+  "commands": [
+    {
+      "command": [
+        "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+        "--edition=2021",
+        "-C",
+        "opt-level=2",
+        "-C",
+        "strip=symbols",
+        "-C",
+        "link-arg=-Wl,--stack,33554432",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\schur-refined-bench02\\main.rs",
+        "--extern",
+        "rf_d_circuit=C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-startup01\\librf_d_circuit.rlib",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\schur-refined-bench02\\run.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "warning: unused imports: `Mode` and `self`\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_lu_extent_kernel.rs:5:33\n  |\n5 | use rf_d_circuit::{vco1_stamp::{self,Controls,Mode},chain_charge::{self,Parameters as Chain},mixer_on::OnMixer,StepError};\n  |                                 ^^^^          ^^^^\n  |\n  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default\n\nwarning: unused imports: `Mode` and `self`\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_sparse_kernel.rs:6:33\n  |\n6 | use rf_d_circuit::{vco1_stamp::{self,Controls,Mode},chain_charge::{self,Parameters as Chain},mixer_on::OnMixer,StepError};\n  |                                 ^^^^          ^^^^\n\nwarning: unused import: `std::time::Instant`\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:3:5\n  |\n3 | use std::time::Instant;\n  |     ^^^^^^^^^^^^^^^^^^\n\nwarning: unused imports: `Parameters`, `initial_state`, `step_with_emphasis`, and `step`\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:8:5\n  |\n8 |     initial_state, step, step_with_emphasis, Boundary, Parameters,\n  |     ^^^^^^^^^^^^^  ^^^^  ^^^^^^^^^^^^^^^^^^            ^^^^^^^^^^\n\nwarning: unused import: `SolverBudget`\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:16:55\n   |\n16 | use rf_d_circuit::{Parameters as HeadphoneParameters, SolverBudget};\n   |                                                       ^^^^^^^^^^^^\n\nwarning: function `batch` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\schur-refined-bench02\\main.rs:18:4\n   |\n18 | fn batch(cs:&[Case],expected:&[(Vec<u64>,usize,usize)],run:fn(&Case)->(Vec<u64>,usize,usize))->u128{let t=Instant::now();for(c,e)in ...\n   |    ^^^^^\n   |\n   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: constant `BUS` is never used\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_lu_extent_kernel.rs:8:11\n  |\n8 | pub const BUS:usize=12;\n  |           ^^^\n\nwarning: constant `MIN_DT_S` is never used\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_lu_extent_kernel.rs:9:11\n  |\n9 | pub const MIN_DT_S:f64=chain_charge::MIN_DT_S;\n  |           ^^^^^^^^\n\nwarning: function `vco_index` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_lu_extent_kernel.rs:11:14\n   |\n11 | pub const fn vco_index(k:usize)->Option<usize> {if k==108 {None} else if k<108 {Some(k)} else {Some(k-1)}}\n   |              ^^^^^^^^^\n\nwarning: function `chain_index` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_lu_extent_kernel.rs:12:14\n   |\n12 | pub const fn chain_index(k:usize)->usize {if k==66 {BUS} else if k==67 {199} else {133+k}}\n   |              ^^^^^^^^^^^\n\nwarning: fields `c2_v`, `reset_v`, `q25`, `reset_driver`, and `set_base` are never read\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_lu_extent_kernel.rs:14:82\n   |\n14 | ...ct Parameters {pub controls:Controls,chain:Chain,pub sources:[f64;5],pub c2_v:f64,pub reset_v:f64,pub q25:f64,pub reset_driver:f64,pub final_decay:bool,pub keyboard:f64,pub short:bool,pub set_base:f64}\n   |       ---------- fields in this struct                                      ^^^^         ^^^^^^^         ^^^         ^^^^^^^^^^^^                                                              ^^^^^^^^\n   |\n   = note: `Parameters` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis\n\nwarning: method `chain` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_lu_extent_kernel.rs:22:9\n   |\n15 | impl Parameters {\n   | --------------- method in this implementation\n...\n22 |  pub fn chain(self)->Chain {self.chain}\n   |         ^^^^^\n\nwarning: associated items `lift` and `chain` are never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_lu_extent_kernel.rs:32:9\n   |\n26 | impl State {\n   | ---------- associated items in this implementation\n...\n32 |  pub fn lift(vco_high:[f64;134],vco_low:[f64;134],chain:chain_charge::State)->Self {\n   |         ^^^^\n...\n37 |  fn chain(self)->chain_charge::State {chain_charge::State{high:std::array::from_fn(|k|self.high[chain_index(k)]),low:std::array::fro...\n   |     ^^^^^\n\nwarning: function `solve_linear` is never used\n   --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_lu_extent_kernel.rs:109:8\n    |\n109 | pub fn solve_linear<const M: usize>(\n    |        ^^^^^^^^^^^^\n\nwarning: function `solve_linear_sparse` is never used\n   --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_lu_extent_kernel.rs:118:8\n    |\n118 | pub fn solve_linear_sparse<const M: usize>(\n    |        ^^^^^^^^^^^^^^^^^^^\n\nwarning: function `solve_linear_internal` is never used\n   --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_lu_extent_kernel.rs:125:4\n    |\n125 | fn solve_linear_internal<const M: usize, const SKIP_ZERO: bool>(\n    |    ^^^^^^^^^^^^^^^^^^^^^\n\nwarning: constant `BUS` is never used\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_sparse_kernel.rs:9:11\n  |\n9 | pub const BUS:usize=12;\n  |           ^^^\n\nwarning: constant `MIN_DT_S` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_sparse_kernel.rs:10:11\n   |\n10 | pub const MIN_DT_S:f64=chain_charge::MIN_DT_S;\n   |           ^^^^^^^^\n\nwarning: function `vco_index` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_sparse_kernel.rs:12:14\n   |\n12 | pub const fn vco_index(k:usize)->Option<usize> {if k==108 {None} else if k<108 {Some(k)} else {Some(k-1)}}\n   |              ^^^^^^^^^\n\nwarning: function `chain_index` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_sparse_kernel.rs:13:14\n   |\n13 | pub const fn chain_index(k:usize)->usize {if k==66 {BUS} else if k==67 {199} else {133+k}}\n   |              ^^^^^^^^^^^\n\nwarning: fields `c2_v`, `reset_v`, `q25`, `reset_driver`, and `set_base` are never read\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_sparse_kernel.rs:15:82\n   |\n15 | ...ct Parameters {pub controls:Controls,chain:Chain,pub sources:[f64;5],pub c2_v:f64,pub reset_v:f64,pub q25:f64,pub reset_driver:f64,pub final_decay:bool,pub keyboard:f64,pub short:bool,pub set_base:f64}\n   |       ---------- fields in this struct                                      ^^^^         ^^^^^^^         ^^^         ^^^^^^^^^^^^                                                              ^^^^^^^^\n   |\n   = note: `Parameters` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis\n\nwarning: method `chain` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_sparse_kernel.rs:23:9\n   |\n16 | impl Parameters {\n   | --------------- method in this implementation\n...\n23 |  pub fn chain(self)->Chain {self.chain}\n   |         ^^^^^\n\nwarning: associated items `lift` and `chain` are never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_sparse_kernel.rs:33:9\n   |\n27 | impl State {\n   | ---------- associated items in this implementation\n...\n33 |  pub fn lift(vco_high:[f64;134],vco_low:[f64;134],chain:chain_charge::State)->Self {\n   |         ^^^^\n...\n38 |  fn chain(self)->chain_charge::State {chain_charge::State{high:std::array::from_fn(|k|self.high[chain_index(k)]),low:std::array::fro...\n   |     ^^^^^\n\nwarning: function `max_abs` is never used\n   --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_sparse_kernel.rs:106:8\n    |\n106 | pub fn max_abs<const M: usize>(x: &[f64; M]) -> f64 {\n    |        ^^^^^^^\n\nwarning: function `solve_linear` is never used\n   --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_sparse_kernel.rs:110:8\n    |\n110 | pub fn solve_linear<const M: usize>(\n    |        ^^^^^^^^^^^^\n\nwarning: function `solve_linear_sparse` is never used\n   --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_sparse_kernel.rs:119:8\n    |\n119 | pub fn solve_linear_sparse<const M: usize>(\n    |        ^^^^^^^^^^^^^^^^^^^\n\nwarning: function `solve_linear_internal` is never used\n   --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_sparse_kernel.rs:126:4\n    |\n126 | fn solve_linear_internal<const M: usize, const SKIP_ZERO: bool>(\n    |    ^^^^^^^^^^^^^^^^^^^^^\n\nwarning: function `solve_linear_extent` is never used\n   --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_sparse_kernel.rs:185:8\n    |\n185 | pub fn solve_linear_extent<const M:usize>(mut j:[[f64;M];M],mut rhs:[f64;M])->Result<[f64;M],StepError>{\n    |        ^^^^^^^^^^^^^^^^^^^\n\nwarning: fields `refinements`, `initial_backward`, and `final_backward` are never read\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\dynamic_schur_refined_sparse_solver.rs:59:53\n   |\n59 | pub struct Observation{pub correction:[f64;458],pub refinements:usize,pub initial_backward:f64,pub final_backward:f64}\n   |            ----------- fields in this struct        ^^^^^^^^^^^           ^^^^^^^^^^^^^^^^         ^^^^^^^^^^^^^^\n\nwarning: 29 warnings emitted\n\n",
+      "wall_s": 1.0609201000770554
+    },
+    {
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\schur-refined-bench02\\run.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\newton-reuse-inputs01\\pairs.bin",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\schur-refined-bench02/roots.txt"
+      ],
+      "exit_code": 0,
+      "stdout": "CASE,0,1,0,1.95312499999999991e-9,3,2,3,2,4.51221741854803647e-10\nCASE,1,1,0,9.76562499999999956e-10,3,2,3,2,1.70309652330712364e-11\nCASE,2,1,0,9.76562499999999956e-10,3,2,3,2,7.33425588905312403e-11\nCASE,3,1,0,1.95312499999999991e-9,3,2,3,2,1.16121512134100404e-10\nCASE,4,1,0,9.76562499999999956e-10,3,2,3,2,5.17000867245412643e-12\nCASE,5,1,0,9.76562499999999956e-10,3,2,3,2,1.75502324966051143e-10\nCASE,6,1,1,4.88281249999999978e-10,17,32,17,32,1.07673822454409494e-12\nCASE,7,1,1,2.44140624999999989e-10,17,32,17,32,2.75616964903811916e-12\nCASE,8,1,1,2.44140624999999989e-10,4,3,4,3,2.25829047556242963e-10\nCASE,9,1,1,9.76562499999999956e-10,4,3,4,3,3.88275545459753740e-9\nCASE,10,1,1,4.88281249999999978e-10,4,3,4,3,3.93055926430387112e-10\nCASE,11,1,1,4.88281249999999978e-10,4,3,4,3,1.05381432912782796e-9\nCASE,12,1,1,3.05175781249999986e-11,2,1,2,1,1.47451495458028603e-9\nCASE,13,1,1,1.52587890624999993e-11,2,1,2,1,8.84708972748171618e-10\nCASE,14,1,1,1.52587890624999993e-11,2,1,2,1,2.73085738465937700e-9\nCASE,15,1,2,6.10351562499999972e-11,7,6,7,6,2.28150479260558850e-11\nCASE,16,1,2,3.05175781249999986e-11,7,6,7,6,4.64555837716595758e-10\nCASE,17,1,2,3.05175781249999986e-11,3,2,3,2,4.59496777798923357e-10\nCASE,18,1,2,2.44140624999999989e-10,2,1,2,1,1.70642132588218274e-10\nCASE,19,1,2,1.22070312499999994e-10,2,1,2,1,2.21177243187042905e-10\nCASE,20,1,2,1.22070312499999994e-10,2,1,2,1,4.99239774647539949e-11\nCASE,21,1,0,1.95312499999999991e-9,3,2,3,2,9.52689785985797917e-12\nCASE,22,1,0,9.76562499999999956e-10,3,2,3,2,2.27581387387611365e-9\nCASE,23,1,0,9.76562499999999956e-10,3,2,3,2,1.42061325492397853e-10\nCASE,24,1,0,1.95312499999999991e-9,3,2,3,2,7.91091202963537215e-13\nCASE,25,1,0,9.76562499999999956e-10,3,2,3,2,9.54448604709158288e-12\nCASE,26,1,0,9.76562499999999956e-10,3,2,3,2,9.20016304586630705e-13\nCASE,27,1,1,4.88281249999999978e-10,17,32,17,32,1.12127324098934870e-12\nCASE,28,1,1,2.44140624999999989e-10,17,32,17,32,5.78014375827986042e-11\nCASE,29,1,1,2.44140624999999989e-10,4,3,4,3,2.23452114853384409e-10\nCASE,30,1,1,9.76562499999999956e-10,4,3,4,3,5.27926923465161315e-10\nCASE,31,1,1,4.88281249999999978e-10,4,3,4,3,3.63363674107888778e-9\nCASE,32,1,1,4.88281249999999978e-10,4,3,4,3,8.52929002293585849e-9\nCASE,33,1,1,3.05175781249999986e-11,2,1,2,1,2.94902990916057206e-10\nCASE,34,1,1,1.52587890624999993e-11,2,1,2,1,5.45804884050153945e-9\nCASE,35,1,1,1.52587890624999993e-11,2,1,2,1,2.06432093641240044e-9\nCASE,36,1,2,6.10351562499999972e-11,7,6,7,6,4.17434930878902474e-10\nCASE,37,1,2,3.05175781249999986e-11,7,6,7,6,1.77632202970802744e-10\nCASE,38,1,2,3.05175781249999986e-11,3,2,3,2,1.59575988903681973e-9\nCASE,39,1,2,2.44140624999999989e-10,2,1,2,1,1.70105765517981740e-10\nCASE,40,1,2,1.22070312499999994e-10,2,1,2,1,1.71168083800181541e-10\nCASE,41,1,2,1.22070312499999994e-10,2,1,2,1,1.18881437072634810e-11\nCASE,42,0,0,1.95312499999999991e-9,3,2,3,2,7.04377381699689470e-11\nCASE,43,0,0,9.76562499999999956e-10,3,2,3,2,7.59650000425074218e-11\nCASE,44,0,0,9.76562499999999956e-10,3,2,3,2,7.09571768358311685e-11\nCASE,45,0,0,1.95312499999999991e-9,3,2,3,2,4.37424440613026083e-12\nCASE,46,0,0,9.76562499999999956e-10,3,2,3,2,1.25119790252792171e-11\nCASE,47,0,0,9.76562499999999956e-10,3,2,3,2,7.06088370891198153e-11\nCASE,48,0,1,4.88281249999999978e-10,16,18,16,18,2.65988458512725139e-12\nCASE,49,0,1,2.44140624999999989e-10,16,18,16,18,7.32098781595876897e-11\nCASE,50,0,1,2.44140624999999989e-10,4,3,4,3,5.68310208344957131e-11\nCASE,51,0,1,9.76562499999999956e-10,4,3,4,3,1.47887206641836316e-9\nCASE,52,0,1,4.88281249999999978e-10,4,3,4,3,2.78271161721736316e-9\nCASE,53,0,1,4.88281249999999978e-10,4,3,4,3,3.38865954083445875e-9\nCASE,54,0,1,3.05175781249999986e-11,2,1,2,1,3.38998003362307160e-12\nCASE,55,0,1,1.52587890624999993e-11,2,1,2,1,2.94902990916057206e-10\nCASE,56,0,1,1.52587890624999993e-11,2,1,2,1,2.73169060203604044e-9\nCASE,57,0,2,6.10351562499999972e-11,7,6,7,6,1.59548006141563458e-11\nCASE,58,0,2,3.05175781249999986e-11,7,6,7,6,1.74827383040287683e-11\nCASE,59,0,2,3.05175781249999986e-11,3,2,3,2,1.56404915686916135e-12\nCASE,60,0,2,2.44140624999999989e-10,2,1,2,1,1.71787766156075642e-10\nCASE,61,0,2,1.22070312499999994e-10,2,1,2,1,1.21509555314838290e-11\nCASE,62,0,2,1.22070312499999994e-10,2,1,2,1,1.71162875871044907e-10\nCASE,63,0,0,1.95312499999999991e-9,3,2,3,2,3.43383979271283175e-12\nCASE,64,0,0,9.76562499999999956e-10,3,2,3,2,7.51648862184596972e-11\nCASE,65,0,0,9.76562499999999956e-10,3,2,3,2,2.21227033902298856e-10\nCASE,66,0,0,1.95312499999999991e-9,3,2,3,2,6.97959196838549345e-11\nCASE,67,0,0,9.76562499999999956e-10,3,2,3,2,7.07697159634431365e-11\nCASE,68,0,0,9.76562499999999956e-10,3,2,3,2,6.86060735831948351e-11\nCASE,69,0,1,4.88281249999999978e-10,16,18,16,18,1.48138572538192012e-12\nCASE,70,0,1,2.44140624999999989e-10,16,18,16,18,6.99603907757551511e-13\nCASE,71,0,1,2.44140624999999989e-10,4,3,4,3,2.78379120792244357e-12\nCASE,72,0,1,9.76562499999999956e-10,4,3,4,3,5.17054153006191137e-9\nCASE,73,0,1,4.88281249999999978e-10,4,3,4,3,5.70897035587633211e-9\nCASE,74,0,1,4.88281249999999978e-10,4,3,4,3,3.00566981107413808e-9\nCASE,75,0,1,3.05175781249999986e-11,2,1,2,1,1.33308799491827648e-11\nCASE,76,0,1,1.52587890624999993e-11,2,1,2,1,2.72802457064842993e-9\nCASE,77,0,1,1.52587890624999993e-11,2,1,2,1,6.76217245703788838e-10\nCASE,78,0,2,6.10351562499999972e-11,7,6,7,6,1.73431467866664712e-11\nCASE,79,0,2,3.05175781249999986e-11,7,6,7,6,1.38536437499025293e-11\nCASE,80,0,2,3.05175781249999986e-11,3,2,3,2,5.45280451396437719e-13\nCASE,81,0,2,2.44140624999999989e-10,2,1,2,1,1.72058552001401001e-10\nCASE,82,0,2,1.22070312499999994e-10,2,1,2,1,4.11826285717601627e-11\nCASE,83,0,2,1.22070312499999994e-10,2,1,2,1,1.69397558292932214e-10\nROUND,0,1016801100,1031658300\nROUND,1,980154700,1024081400\nROUND,2,969712000,1085747700\nROUND,3,982020700,1034134100\nROUND,4,959016900,1020973300\nPASSED,84,5,reconstructed_candidate_gates\n",
+      "stderr": "",
+      "wall_s": 15.059539299923927
+    }
+  ],
+  "source_sha256_after": {
+    "docs/SCHUR_REFINADO_SOPORTE.md": "ba657806cfe714b9ba9b48bbaea130ef4c73cd0dc64254cfd93065078fdc1a3f",
+    "evidence/voice_schur_refined_inputs02.json": "40bd8a054251532b878460249e8dc2f774c1634b126edb85733531e0e9b059cd",
+    "tools/dynamic_schur_refined_sparse_solver.rs": "af40e74cf2eccb070373a7e643d3f6f471323ab79619e7dab8be12633eabd1fc",
+    "tools/joint_lu_extent_kernel.rs": "d117a1ef7b07d5712f6ef07971953c4fe298311e1b7ae0bb1f300cd9a1d38cc8",
+    "tools/joint_schur_refined_sparse_kernel.rs": "0ce7da5280f0fc21ba42729b65bfcff93e35adea7cb2779d8bcff8f07057f9d6",
+    "tools/run_schur_refined_sparse_bench.py": "8112c472b2d83bda0d445de747a8da3d0db8142655d144f3cad0c90c8d773e11",
+    "tools/schur_refined_native.py": "3e4e826b03b770a29bed4a4fbc8deba1099c800ce0f87e8f3a3bc426ef0ba2ad",
+    "tools/schur_refined_sparse_bench.rs": "92750f1b38a2409a052abeb340267589dcbceac231212c1991174c1a93015940"
+  },
+  "private_used_sha256_after": {
+    "references-local/newton-reuse-inputs01/pairs.bin": "6631f4b5830ebb78be119beea52d4bd7df2cca0f01624f1065431ce45280843f",
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd"
+  },
+  "outputs": [
+    {
+      "path": "references-local/schur-refined-bench02/main.rs",
+      "sha256": "96579792fbbc8e687276280228059cd65b638803551794ed9993d6f88c92b3b3",
+      "bytes": 4620
+    },
+    {
+      "path": "references-local/schur-refined-bench02/roots.txt",
+      "sha256": "a524eaa6b4359df1df2347ad8c86cf4759ea9b2fdce10ae00a0eb2518f9b1ec0",
+      "bytes": 4567964
+    },
+    {
+      "path": "references-local/schur-refined-bench02/run.exe",
+      "sha256": "b2044e86652a25139f3e07eda68c717ef9e0d4a6c357bf046c2abd6a47b2f94e",
+      "bytes": 1411072
+    }
+  ],
+  "wall_s": 16.13551010005176
+}

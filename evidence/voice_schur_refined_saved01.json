@@ -1,0 +1,105 @@
+{
+  "passed": true,
+  "source_sha256": {
+    "docs/SCHUR_REFINADO_PROTOCOLO.md": "cd0bd03491c2c6b0c40ff70f0a0f7aac6dfe767b6b9a82277285fc01d18b4000",
+    "evidence/voice_schur_refined_inputs01.json": "c1bc5119b8c0b3bcaffb273ddc5737174884bf3049de02839962bae007c2ceef",
+    "tools/check_schur_refined_saved.py": "0b1edb803ded460bdec41f8331cd6124a9e52160d774bc78b4f68b56a3f8ea72",
+    "tools/dynamic_schur_refined_solver.rs": "1b930b1863aef54368b53707ace380c667aa0de5608e1ecb0c4a273ee9e2b2c4",
+    "tools/joint_schur_refined_kernel.rs": "5ad415bd63500826d4725454d32c63efe0dde413b3da529f895a5a0e9649e155",
+    "tools/schur_refined_native.py": "3e4e826b03b770a29bed4a4fbc8deba1099c800ce0f87e8f3a3bc426ef0ba2ad"
+  },
+  "private_used_sha256": {
+    "references-local/dynamic-schur-scaled-inspection01/failed-system.bin": "639bf83e6f74f280343a8c749a4abec5e3915032f24437573808921081b37a89",
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd"
+  },
+  "compiler": {
+    "path": "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+    "sha256": "fd6232f90a981e28472ce6900232946a1f1bcad8ec8270cd5ae6a3a357208b98",
+    "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+  },
+  "identical_replay": true,
+  "precision": 100,
+  "independent_linear_rows": 458,
+  "decimal_mixed_backward_max": "7.057190790146849974102191402279999846506434425178525250274079198961827525210908727505954941036887108E-17",
+  "decimal_worst_row": 450,
+  "decimal_correction_max_ratio": "0.0009906699111495320752286757660448770971469025457536548389991333633243314081705361276965989819230878220",
+  "refinements": 1,
+  "initial_backward": 1.2834486225223704e-10,
+  "final_backward": 7.057190790146848e-17,
+  "full_trajectory_admitted": false,
+  "commands": [
+    {
+      "command": [
+        "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+        "--edition=2021",
+        "-C",
+        "opt-level=2",
+        "-C",
+        "strip=symbols",
+        "-C",
+        "link-arg=-Wl,--stack,33554432",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\schur-refined-saved01\\main.rs",
+        "--extern",
+        "rf_d_circuit=C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-startup01\\librf_d_circuit.rlib",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\schur-refined-saved01\\run.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "warning: unused imports: `Mode` and `self`\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_kernel.rs:6:33\n  |\n6 | use rf_d_circuit::{vco1_stamp::{self,Controls,Mode},chain_charge::{self,Parameters as Chain},mixer_on::OnMixer,StepError};\n  |                                 ^^^^          ^^^^\n  |\n  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default\n\nwarning: constant `N` is never used\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_kernel.rs:7:11\n  |\n7 | pub const N:usize=229;\n  |           ^\n  |\n  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: constant `M` is never used\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_kernel.rs:8:11\n  |\n8 | pub const M:usize=2*N;\n  |           ^\n\nwarning: constant `BUS` is never used\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_kernel.rs:9:11\n  |\n9 | pub const BUS:usize=12;\n  |           ^^^\n\nwarning: constant `MIN_DT_S` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_kernel.rs:10:11\n   |\n10 | pub const MIN_DT_S:f64=chain_charge::MIN_DT_S;\n   |           ^^^^^^^^\n\nwarning: constant `B` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_kernel.rs:11:11\n   |\n11 | pub const B:[[f64;2];2]=rf_d_circuit::vco1_radau::B;\n   |           ^\n\nwarning: function `vco_index` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_kernel.rs:12:14\n   |\n12 | pub const fn vco_index(k:usize)->Option<usize> {if k==108 {None} else if k<108 {Some(k)} else {Some(k-1)}}\n   |              ^^^^^^^^^\n\nwarning: function `chain_index` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_kernel.rs:13:14\n   |\n13 | pub const fn chain_index(k:usize)->usize {if k==66 {BUS} else if k==67 {199} else {133+k}}\n   |              ^^^^^^^^^^^\n\nwarning: struct `Parameters` is never constructed\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_kernel.rs:15:12\n   |\n15 | pub struct Parameters {pub controls:Controls,chain:Chain,pub sources:[f64;5],pub c2_v:f64,pub reset_v:f64,pub q25:f64,pub reset_driv...\n   |            ^^^^^^^^^^\n\nwarning: associated items `new` and `chain` are never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_kernel.rs:18:9\n   |\n16 | impl Parameters {\n   | --------------- associated items in this implementation\n17 |  /// OSC1 always belongs to the VCO panel; other branches retain imposed sources.\n18 |  pub fn new(controls:Controls,mut chain:Chain,other_on:[bool;4],alpha:[f64;4],sources:[f64;5])->Result<Self,StepError> {\n   |         ^^^\n...\n23 |  pub fn chain(self)->Chain {self.chain}\n   |         ^^^^^\n\nwarning: struct `State` is never constructed\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_kernel.rs:26:12\n   |\n26 | pub struct State {pub high:[f64;N],pub low:[f64;N]}\n   |            ^^^^^\n\nwarning: associated items `from_nodes`, `advanced`, `lift`, and `chain` are never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_kernel.rs:28:9\n   |\n27 | impl State {\n   | ---------- associated items in this implementation\n28 |  pub fn from_nodes(high:[f64;N])->Self {Self{high,low:[0.;N]}}\n   |         ^^^^^^^^^^\n29 |  pub fn advanced(self,d:[f64;N])->Self {\n   |         ^^^^^^^^\n...\n33 |  pub fn lift(vco_high:[f64;134],vco_low:[f64;134],chain:chain_charge::State)->Self {\n   |         ^^^^\n...\n38 |  fn chain(self)->chain_charge::State {chain_charge::State{high:std::array::from_fn(|k|self.high[chain_index(k)]),low:std::array::fro...\n   |     ^^^^^\n\nwarning: struct `Parts` is never constructed\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_kernel.rs:40:12\n   |\n40 | pub struct Parts {pub dc:[f64;N],pub charge_over_h:[f64;N],pub dc_jacobian:[[f64;N];N],pub mass_over_h:[[f64;N];N],pub candidate:State}\n   |            ^^^^^\n\nwarning: function `parts` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_kernel.rs:41:8\n   |\n41 | pub fn parts(p:Parameters,old:State,delta:State,h:f64)->Result<Parts,StepError> {\n   |        ^^^^^\n\nwarning: function `constraint_row` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_kernel.rs:68:8\n   |\n68 | pub fn constraint_row(p:Parameters,k:usize)->bool { (98..133).contains(&k) || (k>=133&&k<200&&chain_charge::constraint_row(p.chain,i...\n   |        ^^^^^^^^^^^^^^\n\nwarning: function `current_unknown` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_kernel.rs:69:4\n   |\n69 | fn current_unknown(k:usize)->bool {(98..133).contains(&k)}\n   |    ^^^^^^^^^^^^^^^\n\nwarning: struct `Stamp` is never constructed\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_kernel.rs:70:12\n   |\n70 | pub struct Stamp {pub residual:[f64;M],pub jacobian:[[f64;M];M],pub candidates:[State;2]}\n   |            ^^^^^\n\nwarning: function `linearize` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_kernel.rs:71:8\n   |\n71 | pub fn linearize(p:Parameters,old:State,delta:[State;2],h:f64)->Result<Stamp,StepError> {\n   |        ^^^^^^^^^\n\nwarning: function `merit` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_kernel.rs:76:4\n   |\n76 | fn merit(p:Parameters,r:&[f64;M])->f64 {r.iter().enumerate().fold(0_f64,|a,(k,v)|a.max(v.abs()/if constraint_row(p,k%N) {1e-11} else...\n   |    ^^^^^\n\nwarning: function `correction` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_kernel.rs:77:4\n   |\n77 | fn correction(d:&[f64;M])->f64 {d.iter().enumerate().fold(0_f64,|a,(k,v)|a.max(v.abs()/if current_unknown(k%N) {2e-12} else {2e-9}))}\n   |    ^^^^^^^^^^\n\nwarning: struct `Pair` is never constructed\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_kernel.rs:78:12\n   |\n78 | pub struct Pair {pub candidates:[State;2],pub increments:[State;2],pub residual_ratio:f64,pub correction_ratio:f64,pub iterations:us...\n   |            ^^^^\n\nwarning: function `step` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_kernel.rs:80:8\n   |\n80 | pub fn step(p:Parameters,old:State,h:f64)->Result<Pair,StepError> {\n   |        ^^^^\n\nwarning: function `max_abs` is never used\n   --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_kernel.rs:106:8\n    |\n106 | pub fn max_abs<const M: usize>(x: &[f64; M]) -> f64 {\n    |        ^^^^^^^\n\nwarning: function `solve_linear` is never used\n   --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_kernel.rs:110:8\n    |\n110 | pub fn solve_linear<const M: usize>(\n    |        ^^^^^^^^^^^^\n\nwarning: function `solve_linear_sparse` is never used\n   --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_kernel.rs:119:8\n    |\n119 | pub fn solve_linear_sparse<const M: usize>(\n    |        ^^^^^^^^^^^^^^^^^^^\n\nwarning: function `solve_linear_internal` is never used\n   --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_kernel.rs:126:4\n    |\n126 | fn solve_linear_internal<const M: usize, const SKIP_ZERO: bool>(\n    |    ^^^^^^^^^^^^^^^^^^^^^\n\nwarning: function `solve_linear_extent` is never used\n   --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_kernel.rs:185:8\n    |\n185 | pub fn solve_linear_extent<const M:usize>(mut j:[[f64;M];M],mut rhs:[f64;M])->Result<[f64;M],StepError>{\n    |        ^^^^^^^^^^^^^^^^^^^\n\nwarning: function `solve` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\dynamic_schur_refined_solver.rs:57:8\n   |\n57 | pub fn solve(j:[[f64;458];458],b:[f64;458])->Result<[f64;458],StepError>{Ok(solve_observed(j,b)?.correction)}\n   |        ^^^^^\n\nwarning: constant `VT` is never used\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\latch_charge_driver.rs:4:11\n  |\n4 | pub const VT:f64=1.380649e-23*298.15/1.602176634e-19;\n  |           ^^\n\nwarning: constant `BE` is never used\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\latch_charge_driver.rs:5:11\n  |\n5 | pub const BE:Depletion=Depletion{zero_bias_capacitance_f:7e-12,potential_v:0.75,grading:0.5,forward_fraction:0.4};\n  |           ^^\n\nwarning: constant `BC` is never used\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\latch_charge_driver.rs:6:11\n  |\n6 | pub const BC:Depletion=Depletion{zero_bias_capacitance_f:5e-12,potential_v:0.7,grading:0.33,forward_fraction:0.4};\n  |           ^^\n\nwarning: function `junction` is never used\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\latch_charge_driver.rs:8:8\n  |\n8 | pub fn junction(law:Depletion,t:f64,old:(f64,f64),now:(f64,f64))->Result<(f64,f64),StepError>{\n  |        ^^^^^^^^\n\nwarning: function `terminal` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\latch_charge_driver.rs:16:8\n   |\n16 | pub fn terminal(old:[(f64,f64);2],now:[(f64,f64);2])->Result<([f64;2],[[f64;2];2]),StepError>{\n   |        ^^^^^^^^\n\nwarning: constant `N` is never used\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\contour_closed_driver.rs:3:11\n  |\n3 | pub const N:usize=30;\n  |           ^\n\nwarning: struct `Stamp` is never constructed\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\contour_closed_driver.rs:4:12\n  |\n4 | pub struct Stamp{pub dc:[f64;N],pub jacobian:[[f64;N];N],pub ports:[f64;5]}\n  |            ^^^^^\n\nwarning: function `v` is never used\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\contour_closed_driver.rs:5:4\n  |\n5 | fn v(x:&[f64;N],key:f64,k:usize)->f64{if k<N{x[k]}else{[0.,9.3,-10.,10.,key][k-N]}}\n  |    ^\n\nwarning: function `row` is never used\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\contour_closed_driver.rs:6:4\n  |\n6 | fn row(s:&mut Stamp,k:usize,i:f64,d:&[(usize,f64)]){if k<N{s.dc[k]+=i;for &(j,g)in d{if j<N{s.jacobian[k][j]+=g;}}}else{s.ports[k-N]+...\n  |    ^^^\n\nwarning: function `r` is never used\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\contour_closed_driver.rs:7:4\n  |\n7 | fn r(s:&mut Stamp,x:&[f64;N],key:f64,a:usize,b:usize,ohm:f64){let g=1./ohm;let i=(v(x,key,a)-v(x,key,b))*g;row(s,a,i,&[(a,g),(b,-g)])...\n  |    ^\n\nwarning: function `diode` is never used\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\contour_closed_driver.rs:8:4\n  |\n8 | fn diode(s:&mut Stamp,x:&[f64;N],key:f64,a:usize,b:usize,is:f64)->Result<(),StepError>{let vt=1.5*super::latch_charge_driver::VT;let ...\n  |    ^^^^^\n\nwarning: function `bjt` is never used\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\contour_closed_driver.rs:9:4\n  |\n9 | fn bjt(s:&mut Stamp,x:&[f64;N],key:f64,sign:f64,b:usize,c:usize,e:usize)->Result<(),StepError>{let vt=super::latch_charge_driver::VT;...\n  |    ^^^\n\nwarning: function `linearize` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\contour_closed_driver.rs:10:8\n   |\n10 | pub fn linearize(x:[f64;N],key:f64,on:bool,short:bool)->Result<Stamp,StepError>{\n   |        ^^^^^^^^^\n\nwarning: function `two_sum` is never used\n   --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_schur_refined_kernel.rs:105:19\n    |\n105 | mod fine { pub fn two_sum(a:f64,b:f64)->(f64,f64) {let s=a+b;let v=s-a;let e=(a-(s-v))+(b-v);(s,e)} }\n    |                   ^^^^^^^\n\nwarning: 42 warnings emitted\n\n",
+      "wall_s": 0.7416053999913856
+    },
+    {
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\schur-refined-saved01\\run.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\dynamic-schur-scaled-inspection01\\failed-system.bin",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\schur-refined-saved01/correction.bin"
+      ],
+      "exit_code": 0,
+      "stdout": "REFINED,1,1.28344862252237039e-10,7.05719079014684799e-17,9.90669911149532137e-4\n",
+      "stderr": "",
+      "wall_s": 0.0806267000734806
+    },
+    {
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\schur-refined-saved01\\run.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\dynamic-schur-scaled-inspection01\\failed-system.bin",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\schur-refined-saved01/correction.bin"
+      ],
+      "exit_code": 0,
+      "stdout": "REFINED,1,1.28344862252237039e-10,7.05719079014684799e-17,9.90669911149532137e-4\n",
+      "stderr": "",
+      "wall_s": 0.03078620007727295
+    }
+  ],
+  "source_sha256_after": {
+    "docs/SCHUR_REFINADO_PROTOCOLO.md": "cd0bd03491c2c6b0c40ff70f0a0f7aac6dfe767b6b9a82277285fc01d18b4000",
+    "evidence/voice_schur_refined_inputs01.json": "c1bc5119b8c0b3bcaffb273ddc5737174884bf3049de02839962bae007c2ceef",
+    "tools/check_schur_refined_saved.py": "0b1edb803ded460bdec41f8331cd6124a9e52160d774bc78b4f68b56a3f8ea72",
+    "tools/dynamic_schur_refined_solver.rs": "1b930b1863aef54368b53707ace380c667aa0de5608e1ecb0c4a273ee9e2b2c4",
+    "tools/joint_schur_refined_kernel.rs": "5ad415bd63500826d4725454d32c63efe0dde413b3da529f895a5a0e9649e155",
+    "tools/schur_refined_native.py": "3e4e826b03b770a29bed4a4fbc8deba1099c800ce0f87e8f3a3bc426ef0ba2ad"
+  },
+  "private_used_sha256_after": {
+    "references-local/dynamic-schur-scaled-inspection01/failed-system.bin": "639bf83e6f74f280343a8c749a4abec5e3915032f24437573808921081b37a89",
+    "references-local/joint-startup01/librf_d_circuit.rlib": "3b7af86ae48f613cd4cafa09fc8c1c49ae169a93d44a0f40bce7bbb63b91d5bd"
+  },
+  "outputs": [
+    {
+      "path": "references-local/schur-refined-saved01/correction.bin",
+      "sha256": "eeae17923de0fc3a94ed8d392a5cac88b97042d9eab126f5b583381bb08ed52d",
+      "bytes": 3672
+    },
+    {
+      "path": "references-local/schur-refined-saved01/main.rs",
+      "sha256": "fde492c374219f1c6a42f45921bee202ad27de5cafc737f9658a2d75d5676d3d",
+      "bytes": 946
+    },
+    {
+      "path": "references-local/schur-refined-saved01/run.exe",
+      "sha256": "fd35edd6af171949563e787eb37c3107e0fe70d0916def5402fd046aa1e88e5e",
+      "bytes": 863744
+    }
+  ],
+  "wall_s": 1.0208367999875918
+}
