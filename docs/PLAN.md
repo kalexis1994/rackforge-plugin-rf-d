@@ -706,3 +706,17 @@ Compilación rechazada/replay conservados; falta de argumento del observador
 reparada sin gates nuevos. [Resultados y reproducción](DECAY_CONTROL_RESULTADOS.md).
 Siguiente: duración de escucha útil y costo del motor de la voz, manteniendo
 puertos/cargas y contraste contra esta referencia antes de optimizar.
+
+
+## Ensamblaje por cuadrantes y política estructural por CSR
+
+Familia block_decay_voice/engine, nominales anteriores intactos. Pivotes
+nulos no mejoran y cuadrantes públicos1 no pasan costo; ambos conservados.
+Cuadrantes+CSR real pasan mediana0.800968 y política209764
+posiciones.16.468.764 campos de stamp por bits;8721 Accepted
+pareados en público,12 estados458 y9 balances Decimal100. Prefijo4 ms propio
+identico;8244 ecuaciones independientes heredadas, ninguna reejecutada.
+255 tests Rust heredados; sin Cargo/cache/SPICE/audio/duración nuevos.
+[Resultados y reproducción](VOZ_COSTO_BLOQUES_RESULTADOS.md).
+Siguiente: más duración real y señales observables, con esta familia y el
+contraste de cargas/control. No ampliar certificados sin necesidad de señal.

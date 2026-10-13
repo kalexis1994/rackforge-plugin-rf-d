@@ -633,3 +633,6 @@ pub mod conditioned_recipe;
 
 pub mod decay_voice;
 pub mod decay_engine;
+
+pub mod block_decay_voice;
+pub mod block_decay_engine;

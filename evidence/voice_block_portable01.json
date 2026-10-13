@@ -1,0 +1,176 @@
+{
+  "passed": true,
+  "source_sha256": {
+    "tools/run_voice_public.py": "20a2e8294fc00e5488fb7bc1edf6f0a9b0f50bded2fd53d020a33eea8a9f1f6e",
+    "evidence/voice_block_library02.json": "5b2983f97dfbd8bad8b345c95f7ecba9c37aa7a901fca3ca8dda6cb9ca77988b",
+    "crates/rf-d-circuit/examples/block_decay_verify.rs": "bbe21986618aaefb67e184200b50aae136d667f351b51eff367e18457759daa1",
+    "tools/run_voice_paired.py": "6a96bb55a7ce3837c86cea9870d2f3fa8a621f9895a14390d95d35b682ddedcd",
+    "tools/prepare_voice_paired.py": "98a2f9ef7e5023965b858b5191bb99cd9b2a5e7e7cc6aa38376af1424e4274d7",
+    "tools/prepare_voice_block.py": "1a75ad765444ab12a9c2aa9ffb7b01555da4a6900c0da40b5db92ae602152462",
+    "tools/voice_block_kernel.rs": "518e6a68c1df04659331ee2c0b1215a6e4eb6ce3af2103634ab8f3704669f9ec",
+    "tools/voice_block_engine.rs": "2e8b33b744f9be966e062bb871471c66eaa28c58983c3451a85fa920a0668646",
+    "docs/VOZ_COSTO_PIVOTE_PROTOCOLO.md": "83155eac633cdd6e0554f2014b194717a5bc7657c61317bcc2645087056cdef3",
+    "docs/VOZ_COSTO_BLOQUES_PROTOCOLO.md": "f26df6007588f78de8aa1f7668f2d43e5b9d59019bda83a64a31b7fc2d4b3222",
+    "evidence/voice_block_bench01.json": "c7c8e4ad9b9bdbaa98e4470de95a11dde7c6d5c327f39156a012661ae92de273"
+  },
+  "private_used_sha256": {
+    "references-local/voice-block-library02/librf_d_circuit.rlib": "cf290b02e69e703c479597a36a7853d2cb024f8357154ff98b2dda22d984ea3c",
+    "references-local/decay-voice02/1048576/phase0-start.ckp": "ab5bcc4fe4791147fc3c08b7e9640ee0a68102c12efc23d54ede3dc3d5f14d21",
+    "references-local/decay-voice02/524288/phase0-start.ckp": "3ba397f464114693dd819a9659337e3d44024e14c419fc07af57b6a827711ccb"
+  },
+  "compiler": {
+    "path": "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+    "sha256": "fd6232f90a981e28472ce6900232946a1f1bcad8ec8270cd5ae6a3a357208b98",
+    "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+  },
+  "new_library_compile": false,
+  "new_cargo_cache": false,
+  "lab_stack_bytes": 33554432,
+  "public": true,
+  "commands": [
+    {
+      "command": [
+        "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+        "--edition=2021",
+        "-C",
+        "opt-level=2",
+        "-C",
+        "strip=symbols",
+        "-C",
+        "link-arg=-Wl,--stack,33554432",
+        "crates/rf-d-circuit/examples/block_decay_verify.rs",
+        "--extern",
+        "rf_d_circuit=C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-block-library02\\librf_d_circuit.rlib",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-block-portable01\\paired.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "warning: function `same` is never used\n  --> crates/rf-d-circuit/examples/block_decay_verify.rs:10:4\n   |\n10 | fn same(a:&joint::Pair,b:&joint::Pair)->bool {\n   |    ^^^^\n   |\n   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: constant `DECAY` is never used\n  --> crates/rf-d-circuit/examples/block_decay_verify.rs:14:114\n   |\n14 | const START:u64=14911799296;const REL:[u64;2]=[0,8388608000];const CUT:u64=419430400;const SIZE:usize=3728;const DECAY:f64=1000.;\n   |                                                                                                                  ^^^^^\n\nwarning: function `same_accepted` is never used\n  --> crates/rf-d-circuit/examples/block_decay_verify.rs:30:4\n   |\n30 | fn same_accepted(a:&temporal::Accepted,b:&temporal::Accepted)->bool{\n   |    ^^^^^^^^^^^^^\n\nwarning: function `selected` is never used\n  --> crates/rf-d-circuit/examples/block_decay_verify.rs:34:4\n   |\n34 | fn selected(w:&mut impl Write,old:joint::State,pair:&joint::Pair,h:f64){writeln!(w,\"JOINT_ROOT,0,{h:.17e},{:.17e},{:.17e}\",pair.resi...\n   |    ^^^^^^^^\n\nwarning: 4 warnings emitted\n\n",
+      "wall_s": 0.7177426000125706
+    }
+  ],
+  "profiles": [
+    {
+      "maximum_half_ticks": 1048576,
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-block-portable01\\paired.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\decay-voice02\\1048576\\phase0-start.ckp",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-block-portable01\\1048576"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "PAIRED_PASSED,1048576,count=3879,baseline_ns=78783103900,candidate_ns=65408581000,wall_s=153.4530194\n",
+      "wall_s": 153.55480300006457
+    },
+    {
+      "maximum_half_ticks": 524288,
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-block-portable01\\paired.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\decay-voice02\\524288\\phase0-start.ckp",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-block-portable01\\524288"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "PAIRED_PASSED,524288,count=4842,baseline_ns=90318499500,candidate_ns=74614072800,wall_s=176.158772\n",
+      "wall_s": 176.1970228999853
+    }
+  ],
+  "replays": [],
+  "wall_s": 330.4787945999997,
+  "source_sha256_after": {
+    "tools/run_voice_public.py": "20a2e8294fc00e5488fb7bc1edf6f0a9b0f50bded2fd53d020a33eea8a9f1f6e",
+    "evidence/voice_block_library02.json": "5b2983f97dfbd8bad8b345c95f7ecba9c37aa7a901fca3ca8dda6cb9ca77988b",
+    "crates/rf-d-circuit/examples/block_decay_verify.rs": "bbe21986618aaefb67e184200b50aae136d667f351b51eff367e18457759daa1",
+    "tools/run_voice_paired.py": "6a96bb55a7ce3837c86cea9870d2f3fa8a621f9895a14390d95d35b682ddedcd",
+    "tools/prepare_voice_paired.py": "98a2f9ef7e5023965b858b5191bb99cd9b2a5e7e7cc6aa38376af1424e4274d7",
+    "tools/prepare_voice_block.py": "1a75ad765444ab12a9c2aa9ffb7b01555da4a6900c0da40b5db92ae602152462",
+    "tools/voice_block_kernel.rs": "518e6a68c1df04659331ee2c0b1215a6e4eb6ce3af2103634ab8f3704669f9ec",
+    "tools/voice_block_engine.rs": "2e8b33b744f9be966e062bb871471c66eaa28c58983c3451a85fa920a0668646",
+    "docs/VOZ_COSTO_PIVOTE_PROTOCOLO.md": "83155eac633cdd6e0554f2014b194717a5bc7657c61317bcc2645087056cdef3",
+    "docs/VOZ_COSTO_BLOQUES_PROTOCOLO.md": "f26df6007588f78de8aa1f7668f2d43e5b9d59019bda83a64a31b7fc2d4b3222",
+    "evidence/voice_block_bench01.json": "c7c8e4ad9b9bdbaa98e4470de95a11dde7c6d5c327f39156a012661ae92de273"
+  },
+  "private_used_sha256_after": {
+    "references-local/voice-block-library02/librf_d_circuit.rlib": "cf290b02e69e703c479597a36a7853d2cb024f8357154ff98b2dda22d984ea3c",
+    "references-local/decay-voice02/1048576/phase0-start.ckp": "ab5bcc4fe4791147fc3c08b7e9640ee0a68102c12efc23d54ede3dc3d5f14d21",
+    "references-local/decay-voice02/524288/phase0-start.ckp": "3ba397f464114693dd819a9659337e3d44024e14c419fc07af57b6a827711ccb"
+  },
+  "outputs": [
+    {
+      "path": "references-local/voice-block-portable01/1048576/baseline.txt",
+      "sha256": "dde03bb691d92d6b8d56fa446fe0d95f8107f0cf8f82b68422d10a48ad518969",
+      "bytes": 4406336
+    },
+    {
+      "path": "references-local/voice-block-portable01/1048576/candidate-final.ckp",
+      "sha256": "4d50d862e9d81e7da54c435fbdf1d91564351073349c37881e44c5d10422ff57",
+      "bytes": 3728
+    },
+    {
+      "path": "references-local/voice-block-portable01/1048576/candidate.txt",
+      "sha256": "dde03bb691d92d6b8d56fa446fe0d95f8107f0cf8f82b68422d10a48ad518969",
+      "bytes": 4406336
+    },
+    {
+      "path": "references-local/voice-block-portable01/1048576/entry.ckp",
+      "sha256": "ab5bcc4fe4791147fc3c08b7e9640ee0a68102c12efc23d54ede3dc3d5f14d21",
+      "bytes": 3728
+    },
+    {
+      "path": "references-local/voice-block-portable01/1048576/final.ckp",
+      "sha256": "4d50d862e9d81e7da54c435fbdf1d91564351073349c37881e44c5d10422ff57",
+      "bytes": 3728
+    },
+    {
+      "path": "references-local/voice-block-portable01/1048576/grids.bin",
+      "sha256": "165239f1a9d7d00bb19a3ffa7f5cb14517353fb4c4790501e02d11eb5a627f5c",
+      "bytes": 22368
+    },
+    {
+      "path": "references-local/voice-block-portable01/1048576/integrals.bin",
+      "sha256": "330500b2bc84ec9636be192bce0ee49e9383052d896ece62ce7279ba8b80eb9a",
+      "bytes": 72
+    },
+    {
+      "path": "references-local/voice-block-portable01/524288/baseline.txt",
+      "sha256": "823cf2d14fca797a5ff9349907a6e45019ab39920232a57c2219274eef30b4ad",
+      "bytes": 5489105
+    },
+    {
+      "path": "references-local/voice-block-portable01/524288/candidate-final.ckp",
+      "sha256": "a90c27f0c17283c5c5773b3fb1db7e062a200696961f95aa662654d8eacde0a8",
+      "bytes": 3728
+    },
+    {
+      "path": "references-local/voice-block-portable01/524288/candidate.txt",
+      "sha256": "823cf2d14fca797a5ff9349907a6e45019ab39920232a57c2219274eef30b4ad",
+      "bytes": 5489105
+    },
+    {
+      "path": "references-local/voice-block-portable01/524288/entry.ckp",
+      "sha256": "3ba397f464114693dd819a9659337e3d44024e14c419fc07af57b6a827711ccb",
+      "bytes": 3728
+    },
+    {
+      "path": "references-local/voice-block-portable01/524288/final.ckp",
+      "sha256": "a90c27f0c17283c5c5773b3fb1db7e062a200696961f95aa662654d8eacde0a8",
+      "bytes": 3728
+    },
+    {
+      "path": "references-local/voice-block-portable01/524288/grids.bin",
+      "sha256": "471e2cc5ce7c7e2b3e46b3ca6e89082c886136c0d195935b48a84ab650da2328",
+      "bytes": 22368
+    },
+    {
+      "path": "references-local/voice-block-portable01/524288/integrals.bin",
+      "sha256": "490d94dad438c0e2368bf9d49357d5f359adfadbc6e558b5846aecdaa2b6baea",
+      "bytes": 72
+    },
+    {
+      "path": "references-local/voice-block-portable01/paired.exe",
+      "sha256": "1f7ffcde785d6a0026b6b91a2d665a093711898cd5504d72ae89f1212160ff2d",
+      "bytes": 1560064
+    }
+  ]
+}

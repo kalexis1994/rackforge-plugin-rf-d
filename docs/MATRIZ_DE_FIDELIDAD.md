@@ -694,3 +694,18 @@ recorrido de control.255 tests Rust heredados, sin reejecución o deadline.
 
 [Protocolo](DECAY_CONTROL_PROTOCOLO.md),[resultados](DECAY_CONTROL_RESULTADOS.md),
 [QA](../evidence/voice_decay_tests01.json).
+
+
+## Costo reducido, sin cambios a ecuaciones o cargas
+
+| Prueba | Resultado | Alcance |
+| --- | --- | --- |
+| Cuadrantes del Jacobiano | 16468764 f64 por bits | Entrada completa de78 pares; no nuevo grafo |
+| Política de puertos | 209764 posiciones equivalentes | Ambas incidencias CSR; sin umbral o patrón de preset |
+| Costo público | Mediana0.800968 y peor0.812226 | Banco5 rondas alternadas; no deadline |
+| Cada Accepted público | 8721 avances,12 estados y9 balances | Prefijo4 ms por resolución idéntico |
+| Grafo independiente | 8244 ecuaciones heredadas,0 nuevas | Selecciones del prefijo anterior, no todos los solves |
+| Escucha | WAV36 ms anterior intacto | Sin WAV o duración nuevos del candidato |
+
+[Resultados](VOZ_COSTO_BLOQUES_RESULTADOS.md),
+[QA](../evidence/voice_block_tests01.json). Fidelidad física y RT pendientes.
