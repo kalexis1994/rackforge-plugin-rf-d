@@ -625,3 +625,6 @@ pub mod joint_engine;
 pub mod joint_currents;
 
 pub mod joint_startup;
+
+pub mod conditioned_voice;
+pub mod conditioned_engine;

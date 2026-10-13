@@ -626,3 +626,17 @@ sin reauditar.11 regresiones, cuatro recorridos propios y26770 finos pasan.
 Admisión limitada al ciclo condicionado3.004 ms; sin duración/audio nuevos
 o RT. Siguiente: integración portable229 y contrato de ownership/memoria.
 [QA](../evidence/voice_radau_inplace_tests01.json).
+
+
+## Conjunto229 público y workspace propio — 2026-10-13
+
+[Biblioteca Rust](CONJUNTO_PORTABLE_RESULTADOS.md) exporta conditioned_voice/conditioned_engine:
+229 estados HIGH/LOW, puertos/cargas y controlador originales. Caller dueño
+del Workspace, checkpoint separado de scratch y confirmación atómica.
+Workspace3.378.208 bytes; Engine/Checkpoint4.800. Cero asignaciones en9
+llamadas aceptadas y3 rechazadas;4 tests nuevos,248 heredados (252 cubiertos).
+84 raíces y40 exports temporales por bytes;396 matrices guardadas reproducidas,
+sin presentarlas como solves activos observados. Filas y ecuaciones heredadas
+por identidad. Cuatro recorridos públicos/26770 finos admitidos para3.004 ms.
+Biblioteca nueva, sin cache Cargo, duración/audio nuevos o RT. Siguiente:
+receta pública de historia/controles y render offline condicionado. [QA](../evidence/voice_conditioned_portable_tests01.json).

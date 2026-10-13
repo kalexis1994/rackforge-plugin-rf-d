@@ -1,0 +1,84 @@
+{
+  "passed": true,
+  "source_sha256": {
+    "tools/test_conditioned_portable.py": "68586a72bf39b5d3f6de88923d412fbbddc3f0269e7d68fff22706cda9935c3f",
+    "crates/rf-d-circuit/tests/conditioned_portable.rs": "66da6d51aad995373fa5b2e6f75612dd5553c841ac46a37dd41d2f5ef594dbee",
+    "crates/rf-d-circuit/tests/support/conditioned_seed.rs": "bd3e600e5cb20e5ff25f6a2d54283e6c74246e44a9842030cb28ef058bfa18a7",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+    "docs/CONJUNTO_PORTABLE_PROTOCOLO.md": "f8ac799dea4a23fd6b893db63d55d6cd980b58e8fdd5f9cbb0e84dbf6b24eb8d",
+    "evidence/voice_conditioned_portable_library01.json": "998b3449e436eff854170cd91494ba444074cfe92168231d68c0fc89bbb61cdc"
+  },
+  "private_used_sha256": {
+    "references-local/conditioned-portable-library01/librf_d_circuit.rlib": "0a152c9bd6a65226447afc25952ce4acb63e3e504e8da0caab6e97d9cc0c97a6"
+  },
+  "compiler": {
+    "path": "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+    "sha256": "fd6232f90a981e28472ce6900232946a1f1bcad8ec8270cd5ae6a3a357208b98",
+    "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+  },
+  "lab_stack_bytes": 33554432,
+  "native_test_count": 4,
+  "stamp_bytes": 1689104,
+  "workspace_bytes": 3378208,
+  "engine_bytes": 4800,
+  "checkpoint_bytes": 4800,
+  "heap_measured": true,
+  "measured_successful_processing_calls": 9,
+  "measured_rejected_processing_calls": 3,
+  "processing_allocations": 0,
+  "deadline_measured": false,
+  "real_time": false,
+  "commands": [
+    {
+      "command": [
+        "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+        "--edition=2021",
+        "--test",
+        "-C",
+        "opt-level=2",
+        "-C",
+        "strip=symbols",
+        "-C",
+        "link-arg=-Wl,--stack,33554432",
+        "crates/rf-d-circuit/tests/conditioned_portable.rs",
+        "--extern",
+        "rf_d_circuit=C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\conditioned-portable-library01\\librf_d_circuit.rlib",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\conditioned-portable-tests01\\tests.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "warning: unused import: `std::time::Instant`\n --> crates/rf-d-circuit/tests\\support\\mixer_chain_lab.rs:3:5\n  |\n3 | use std::time::Instant;\n  |     ^^^^^^^^^^^^^^^^^^\n  |\n  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default\n\nwarning: unused imports: `Parameters`, `initial_state`, `step_with_emphasis`, and `step`\n --> crates/rf-d-circuit/tests\\support\\mixer_chain_lab.rs:8:5\n  |\n8 |     initial_state, step, step_with_emphasis, Boundary, Parameters,\n  |     ^^^^^^^^^^^^^  ^^^^  ^^^^^^^^^^^^^^^^^^            ^^^^^^^^^^\n\nwarning: unused import: `SolverBudget`\n  --> crates/rf-d-circuit/tests\\support\\mixer_chain_lab.rs:16:55\n   |\n16 | use rf_d_circuit::{Parameters as HeadphoneParameters, SolverBudget};\n   |                                                       ^^^^^^^^^^^^\n\nwarning: constant `B_STATE` is never used\n --> crates/rf-d-circuit/tests\\support\\conditioned_seed.rs:4:11\n  |\n4 | pub const B_STATE:[u64;458]=[13835283235263532237,13835283235263532237,4621459827125030507,13836835105561052664,13831210318024094735,...\n  |           ^^^^^^^\n  |\n  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: constant `B_METADATA` is never used\n --> crates/rf-d-circuit/tests\\support\\conditioned_seed.rs:5:11\n  |\n5 | pub const B_METADATA:(u64,u32,u32,u32,f64,bool,bool)=(5998903296,1048576,20,256,0.0,false,false);\n  |           ^^^^^^^^^^\n\nwarning: 5 warnings emitted\n\n",
+      "wall_s": 0.4774887999519706
+    },
+    {
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\conditioned-portable-tests01\\tests.exe",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "exit_code": 0,
+      "stdout": "\nrunning 4 tests\ntest memory_contract ... PORTABLE_MEMORY,stamp=1689104,workspace=3378208,engine=4800,checkpoint=4800\nok\ntest reusable_workspace_survives_other_history_and_rejection_without_heap ... PORTABLE_HEAP,workspace_successes=4,workspace_rejections=1,allocations=0\nok\ntest temporal_acceptance_budget_rollback_and_recovery_without_heap ... PORTABLE_HEAP,temporal_successes=2,temporal_rejections=2,allocations=0\nok\ntest two_temporal_engines_share_scratch_serially_and_match_fresh_history ... PORTABLE_SHARED_SCRATCH,successes=3,restore_matches=1,allocations=0\nok\n\ntest result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.48s\n\n",
+      "stderr": "",
+      "wall_s": 0.5776473999721929
+    }
+  ],
+  "source_sha256_after": {
+    "tools/test_conditioned_portable.py": "68586a72bf39b5d3f6de88923d412fbbddc3f0269e7d68fff22706cda9935c3f",
+    "crates/rf-d-circuit/tests/conditioned_portable.rs": "66da6d51aad995373fa5b2e6f75612dd5553c841ac46a37dd41d2f5ef594dbee",
+    "crates/rf-d-circuit/tests/support/conditioned_seed.rs": "bd3e600e5cb20e5ff25f6a2d54283e6c74246e44a9842030cb28ef058bfa18a7",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+    "docs/CONJUNTO_PORTABLE_PROTOCOLO.md": "f8ac799dea4a23fd6b893db63d55d6cd980b58e8fdd5f9cbb0e84dbf6b24eb8d",
+    "evidence/voice_conditioned_portable_library01.json": "998b3449e436eff854170cd91494ba444074cfe92168231d68c0fc89bbb61cdc"
+  },
+  "private_used_sha256_after": {
+    "references-local/conditioned-portable-library01/librf_d_circuit.rlib": "0a152c9bd6a65226447afc25952ce4acb63e3e504e8da0caab6e97d9cc0c97a6"
+  },
+  "outputs": [
+    {
+      "path": "references-local/conditioned-portable-tests01/tests.exe",
+      "sha256": "75d42c1cbf3cc822fd4b4535a76c467824bc247e87c57ccbd44efaf61bcb55c0",
+      "bytes": 1775104
+    }
+  ]
+}
