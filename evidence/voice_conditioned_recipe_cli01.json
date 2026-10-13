@@ -1,0 +1,90 @@
+{
+  "passed": true,
+  "source_sha256": {
+    "tools/check_conditioned_render_cli.py": "40b85b8223c8b75b41924fb52a7adc08a270e703e1bdc117dd9ccc4369ac4c4c",
+    "tools/conditioned_render_cli.py": "d03aec2956cea6e229ee344b3427ae94e963d018bb57b0f693f9f57004ce30ac",
+    "tools/render_conditioned_recipe.py": "fdfbf9feae8bc96644f03482b620e227b929f045933c63bec816742f14024ce2",
+    "tests/test_conditioned_render.py": "0a6671ac2a2c87e25ac466f76f73a55eff249f1ee88b8bccb37924ec005061b6",
+    "evidence/voice_conditioned_recipe_listening01.json": "d421443f87886d608bdac52de8a11423144da8906e4f972e428d0bf2fb9ae794"
+  },
+  "private_used_sha256": {
+    "references-local/conditioned-recipe-render02/1-524288/j7.bin": "46b34d0e77f80f60c810b313a7bb1e61c6a61425bb77120cb924d1208e1cb4f6",
+    "artifacts/conditioned-recipe01/rf-d-j7-on-nativo.wav": "046ee3d5769b8390ad4cab722cfa2f7b0f79089ae96301ffab367bd3bda91292"
+  },
+  "native_python_test_count": 2,
+  "user_cli_wav_identical": true,
+  "existing_output_rejected_without_mutation": true,
+  "commands": [
+    {
+      "command": [
+        "C:\\Users\\kalex\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_conditioned_render.py",
+        "-v"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "test_constant_signal_preserves_voltage_at_both_edges_and_inside (test_conditioned_render.FiniteTransientAdapter.test_constant_signal_preserves_voltage_at_both_edges_and_inside) ... ok\ntest_invalid_clocks_and_clipping_reject_before_pcm (test_conditioned_render.FiniteTransientAdapter.test_invalid_clocks_and_clipping_reject_before_pcm) ... ok\n\n----------------------------------------------------------------------\nRan 2 tests in 0.012s\n\nOK\n",
+      "wall_s": 0.28439399995841086
+    },
+    {
+      "command": [
+        "C:\\Users\\kalex\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "-B",
+        "tools/conditioned_render_cli.py",
+        "--trace",
+        "references-local/conditioned-recipe-render02/1-524288/j7.bin",
+        "--output",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\conditioned-recipe-cli01\\j7.wav"
+      ],
+      "exit_code": 0,
+      "stdout": "CONDITIONED_WAV C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\conditioned-recipe-cli01\\j7.wav 144 0.003\n",
+      "stderr": "",
+      "wall_s": 0.7998995999805629
+    },
+    {
+      "command": [
+        "C:\\Users\\kalex\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "-B",
+        "tools/conditioned_render_cli.py",
+        "--trace",
+        "references-local/conditioned-recipe-render02/1-524288/j7.bin",
+        "--output",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\conditioned-recipe-cli01\\j7.wav"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\conditioned_render_cli.py\", line 31, in <module>\n    if __name__=='__main__':main()\n                            ^^^^^^\n  File \"C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\conditioned_render_cli.py\", line 16, in main\n    require(not args.output.exists() and not sidecar.exists(),'preserve existing WAV and sidecar')\n  File \"C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_cycles_analysis.py\", line 10, in require\n    if not ok:raise ValueError(msg)\n              ^^^^^^^^^^^^^^^^^^^^^\nValueError: preserve existing WAV and sidecar\n",
+      "wall_s": 0.24022579996380955
+    }
+  ],
+  "source_sha256_after": {
+    "tools/check_conditioned_render_cli.py": "40b85b8223c8b75b41924fb52a7adc08a270e703e1bdc117dd9ccc4369ac4c4c",
+    "tools/conditioned_render_cli.py": "d03aec2956cea6e229ee344b3427ae94e963d018bb57b0f693f9f57004ce30ac",
+    "tools/render_conditioned_recipe.py": "fdfbf9feae8bc96644f03482b620e227b929f045933c63bec816742f14024ce2",
+    "tests/test_conditioned_render.py": "0a6671ac2a2c87e25ac466f76f73a55eff249f1ee88b8bccb37924ec005061b6",
+    "evidence/voice_conditioned_recipe_listening01.json": "d421443f87886d608bdac52de8a11423144da8906e4f972e428d0bf2fb9ae794"
+  },
+  "private_used_sha256_after": {
+    "references-local/conditioned-recipe-render02/1-524288/j7.bin": "46b34d0e77f80f60c810b313a7bb1e61c6a61425bb77120cb924d1208e1cb4f6",
+    "artifacts/conditioned-recipe01/rf-d-j7-on-nativo.wav": "046ee3d5769b8390ad4cab722cfa2f7b0f79089ae96301ffab367bd3bda91292"
+  },
+  "outputs": [
+    {
+      "path": "references-local/conditioned-recipe-cli01/j7.json",
+      "sha256": "03237b6dbd38d00eb986b873ab142ab9f3100f314cb5f266297c572864f53ac3",
+      "bytes": 1378
+    },
+    {
+      "path": "references-local/conditioned-recipe-cli01/j7.wav",
+      "sha256": "046ee3d5769b8390ad4cab722cfa2f7b0f79089ae96301ffab367bd3bda91292",
+      "bytes": 332
+    }
+  ]
+}

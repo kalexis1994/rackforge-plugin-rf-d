@@ -640,3 +640,22 @@ sin presentarlas como solves activos observados. Filas y ecuaciones heredadas
 por identidad. Cuatro recorridos públicos/26770 finos admitidos para3.004 ms.
 Biblioteca nueva, sin cache Cargo, duración/audio nuevos o RT. Siguiente:
 receta pública de historia/controles y render offline condicionado. [QA](../evidence/voice_conditioned_portable_tests01.json).
+
+
+## Receta propia y render offline condicionado — 2026-10-13
+
+[Receta ejecutable](RECETA_CONDICIONADA_RESULTADOS.md): cuatro historias
+propias ON/OFF por resolución1/2 µs, controles/cargas explícitos y ejemplo
+Rust sin referencias privadas. Exporta J7 en voltios usando biblioteca y
+Workspace públicos. Cuatro calendarios,26770 endpoints y48 estados completos
+coinciden por bits; replay ON a 1 µs. Se ejecutan 7 tests Rust (3 nuevos/4 previos),
+248 heredados y2 tests Python. CLI WAV y sidecar reproducibles; cero heap
+medido nuevamente en las rutas del harness, sin admisión de deadline.
+
+Cuatro WAV de ventana3.004 ms: tiempo nativo3 ms y microscopio100×,
+300.396 ms mapeados. Sin repetición, normalización o circuito adicional;
+el microscopio altera tiempo/frecuencia. Rechazo de historia2 µs aplicada
+a1 µs conservado con replay, corregido con sus estados propios ya públicos.
+Siguiente: gatillo sostenido/liberación en una ventana propia más larga
+y escucha útil a tiempo nativo, con contraste temporal.
+[QA](../evidence/voice_conditioned_recipe_tests01.json).

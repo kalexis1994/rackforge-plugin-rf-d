@@ -628,3 +628,5 @@ pub mod joint_startup;
 
 pub mod conditioned_voice;
 pub mod conditioned_engine;
+
+pub mod conditioned_recipe;
