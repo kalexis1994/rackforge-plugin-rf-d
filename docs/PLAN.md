@@ -659,3 +659,20 @@ a1 µs conservado con replay, corregido con sus estados propios ya públicos.
 Siguiente: gatillo sostenido/liberación en una ventana propia más larga
 y escucha útil a tiempo nativo, con contraste temporal.
 [QA](../evidence/voice_conditioned_recipe_tests01.json).
+
+
+## Gatillo sostenido y liberación: 12.004 ms propios — 2026-10-13
+
+[Trayectoria ON](VOZ_SOSTENIDA_RESULTADOS.md) conserva historias propias
+1/2 µs,229 estados, puertos y cargas.8 ms de gatillo y4 ms después de
+liberarlo;25109 accepted/50218 finos.32976 ecuaciones nuevas y43 relojes
+comunes pasan; prefijo hasta9.942 ms por bytes.312 accepted reproducidos
+desde20 checkpoints, con hasta3 motores sombra y sin acumular Accepted.
+
+Dos WAV nativos12 ms y microscopio100× de1.2 s, sin circuito adicional.
+El gate de repetición rechaza la deriva de J7 (0.338 mV); no se genera un loop.
+C2 todavía crece durante4 ms después de KEY0, con C7/C4/biestable en evolución;
+es una observación del modelo, sin causa física adjudicada. Siguiente:
+seguir la liberación propia, observar conmutación/descarga y revisar su
+recorrido de control.255 tests Rust heredados, sin reejecución o deadline.
+[QA](../evidence/voice_sustained_tests01.json).

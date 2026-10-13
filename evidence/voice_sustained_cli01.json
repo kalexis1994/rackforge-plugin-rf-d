@@ -1,0 +1,74 @@
+{
+  "passed": true,
+  "source_sha256": {
+    "tools/check_sustained_cli.py": "19b1c93620e68ceaf9239fa63d3ea4727030eea1ad7537b555fb28cf77b414b3",
+    "tools/sustained_render_cli.py": "626e6cb1a698a1eb7d90fd106f5a73ee6100ec83317ad9e0232b104f3b8208b8",
+    "tools/render_sustained_voice.py": "8fb8da2f81a2cbb86c7a65d0cf6e41675c3110af2d41453371e93a90fb3d339f",
+    "tools/render_conditioned_recipe.py": "fdfbf9feae8bc96644f03482b620e227b929f045933c63bec816742f14024ce2",
+    "evidence/voice_sustained_listening01.json": "23caf6945b0701da753d38ee424647b3ef7b3071da121d03a52d7e141a1a76a9"
+  },
+  "private_used_sha256": {
+    "references-local/sustained-voice01/524288/selected.txt": "935928bc87f07e72b2132e265009de83f0480055a220857ec0af4f8bd709a597",
+    "artifacts/sustained-voice01/rf-d-j7-sostenido-524288-nativo.wav": "afc254a82fbdee738f6d652aa97c029afaf433639ccb59d0696f8d6df52408bc"
+  },
+  "user_cli_wav_identical": true,
+  "sidecar_verified": true,
+  "existing_output_rejected_without_mutation": true,
+  "new_unit_test_definitions": 0,
+  "integration_checks": 2,
+  "commands": [
+    {
+      "command": [
+        "C:\\Users\\kalex\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "-B",
+        "tools/sustained_render_cli.py",
+        "--source",
+        "references-local/sustained-voice01/524288/selected.txt",
+        "--output",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\sustained-cli01\\j7.wav"
+      ],
+      "exit_code": 0,
+      "stdout": "SUSTAINED_WAV C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\sustained-cli01\\j7.wav 576 0.012\n",
+      "stderr": "",
+      "wall_s": 2.2416667999932542
+    },
+    {
+      "command": [
+        "C:\\Users\\kalex\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "-B",
+        "tools/sustained_render_cli.py",
+        "--source",
+        "references-local/sustained-voice01/524288/selected.txt",
+        "--output",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\sustained-cli01\\j7.wav"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\sustained_render_cli.py\", line 19, in <module>\n    if __name__=='__main__':main()\n                            ^^^^^^\n  File \"C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\sustained_render_cli.py\", line 12, in main\n    sidecar=args.output.with_suffix('.json');require(args.output.suffix.lower()=='.wav' and args.output.parent.exists(),'existing output directory and WAV suffix');require(not args.output.exists() and not sidecar.exists(),'preserve existing WAV and sidecar')\n                                                                                                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_cycles_analysis.py\", line 10, in require\n    if not ok:raise ValueError(msg)\n              ^^^^^^^^^^^^^^^^^^^^^\nValueError: preserve existing WAV and sidecar\n",
+      "wall_s": 0.26409280009102076
+    }
+  ],
+  "source_sha256_after": {
+    "tools/check_sustained_cli.py": "19b1c93620e68ceaf9239fa63d3ea4727030eea1ad7537b555fb28cf77b414b3",
+    "tools/sustained_render_cli.py": "626e6cb1a698a1eb7d90fd106f5a73ee6100ec83317ad9e0232b104f3b8208b8",
+    "tools/render_sustained_voice.py": "8fb8da2f81a2cbb86c7a65d0cf6e41675c3110af2d41453371e93a90fb3d339f",
+    "tools/render_conditioned_recipe.py": "fdfbf9feae8bc96644f03482b620e227b929f045933c63bec816742f14024ce2",
+    "evidence/voice_sustained_listening01.json": "23caf6945b0701da753d38ee424647b3ef7b3071da121d03a52d7e141a1a76a9"
+  },
+  "private_used_sha256_after": {
+    "references-local/sustained-voice01/524288/selected.txt": "935928bc87f07e72b2132e265009de83f0480055a220857ec0af4f8bd709a597",
+    "artifacts/sustained-voice01/rf-d-j7-sostenido-524288-nativo.wav": "afc254a82fbdee738f6d652aa97c029afaf433639ccb59d0696f8d6df52408bc"
+  },
+  "outputs": [
+    {
+      "path": "references-local/sustained-cli01/j7.json",
+      "sha256": "332fb9185eae45863cc09026400ec6d26eb3c26aeb9bcf13e426c3bd054d9e5f",
+      "bytes": 1460
+    },
+    {
+      "path": "references-local/sustained-cli01/j7.wav",
+      "sha256": "afc254a82fbdee738f6d652aa97c029afaf433639ccb59d0696f8d6df52408bc",
+      "bytes": 1196
+    }
+  ]
+}
