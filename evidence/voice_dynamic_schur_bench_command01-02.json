@@ -1,0 +1,21 @@
+{
+  "command": [
+    "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+    "--edition=2021",
+    "-C",
+    "opt-level=2",
+    "-C",
+    "strip=symbols",
+    "-C",
+    "link-arg=-Wl,--stack,33554432",
+    "tools/dynamic_schur_bench.rs",
+    "--extern",
+    "rf_d_circuit=C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\joint-startup01\\librf_d_circuit.rlib",
+    "-o",
+    "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\dynamic-schur-bench01\\bench.exe"
+  ],
+  "exit_code": 1,
+  "stdout": "",
+  "stderr": "error[E0753]: expected outer doc comment\n --> tools\\joint_dynamic_schur_kernel.rs:2:1\n  |\n2 | //! Conditional CA3046 VCO1 -> shared BUS -> ladder/VCAs/J7.\n  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  |\n  = note: inner doc comments like this (starting with `//!` or `/*!`) can only appear before items\nhelp: you might have meant to write a regular comment\n  |\n2 - //! Conditional CA3046 VCO1 -> shared BUS -> ladder/VCAs/J7.\n2 + // Conditional CA3046 VCO1 -> shared BUS -> ladder/VCAs/J7.\n  |\n\nerror[E0753]: expected outer doc comment\n --> tools\\joint_dynamic_schur_kernel.rs:3:1\n  |\n3 | //! Explicit OSC1 panel remains in VCO. See VOZ_BUS_CONJUNTO_PROTOCOLO.\n  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n4 | #[path=\"latch_charge_driver.rs\"] pub mod latch_charge_driver;\n  |                                  ---------------------------- the inner doc comment doesn't annotate this module\n  |\nhelp: to annotate the module, change the doc comment from inner to outer style\n  |\n3 - //! Explicit OSC1 panel remains in VCO. See VOZ_BUS_CONJUNTO_PROTOCOLO.\n3 + /// Explicit OSC1 panel remains in VCO. See VOZ_BUS_CONJUNTO_PROTOCOLO.\n  |\n\nwarning: unused imports: `Mode` and `self`\n --> tools\\joint_lu_extent_kernel.rs:5:33\n  |\n5 | use rf_d_circuit::{vco1_stamp::{self,Controls,Mode},chain_charge::{self,Parameters as Chain},mixer_on::OnMixer,StepError};\n  |                                 ^^^^          ^^^^\n  |\n  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default\n\nwarning: unused imports: `Mode` and `self`\n --> tools\\joint_dynamic_schur_kernel.rs:6:33\n  |\n6 | use rf_d_circuit::{vco1_stamp::{self,Controls,Mode},chain_charge::{self,Parameters as Chain},mixer_on::OnMixer,StepError};\n  |                                 ^^^^          ^^^^\n\nwarning: unused import: `std::time::Instant`\n --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:3:5\n  |\n3 | use std::time::Instant;\n  |     ^^^^^^^^^^^^^^^^^^\n\nwarning: unused imports: `Parameters`, `initial_state`, `step_with_emphasis`, and `step`\n --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:8:5\n  |\n8 |     initial_state, step, step_with_emphasis, Boundary, Parameters,\n  |     ^^^^^^^^^^^^^  ^^^^  ^^^^^^^^^^^^^^^^^^            ^^^^^^^^^^\n\nwarning: unused import: `SolverBudget`\n  --> tools\\..\\crates\\rf-d-circuit\\tests\\support\\mixer_chain_lab.rs:16:55\n   |\n16 | use rf_d_circuit::{Parameters as HeadphoneParameters, SolverBudget};\n   |                                                       ^^^^^^^^^^^^\n\nerror: aborting due to 2 previous errors; 5 warnings emitted\n\nFor more information about this error, try `rustc --explain E0753`.\n",
+  "wall_s": 0.2925618999870494
+}

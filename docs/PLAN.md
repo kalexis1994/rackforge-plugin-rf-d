@@ -520,3 +520,19 @@ por bytes,26770 finos y24 restores.38472 ecuaciones heredadas, sin
 reejecutarlas. Sin duración o audio nuevos, ni admisión RT.
 Siguiente: condensación de bloques dinámicos preservando puertos y masa.
 [QA](../evidence/voice_lu_extent_tests01.json).
+
+
+## Condensación dinámica de LM741 — 2026-10-13
+
+[Prototipo de Schur](SCHUR_DINAMICO_RESULTADOS.md) elimina128
+correcciones interiores y resuelve330 exteriores, conservando las458
+coordenadas de las dos etapas, puertos, masa e historia HIGH/LOW.
+84 pares/38472 ecuaciones nuevas pasan el grafo independiente;
+396 correcciones,1680 memorias y2016 corrientes pasan sus comparaciones.
+Mediana pareada1.1342×; nueve regresiones de estructura/rechazo.
+El gate residual mixto sigue rechazado en20 solves Schur y24 de referencia:
+sistema J/b completo, fuentes y replay exacto preservados. Sin admisión
+para trayectorias, duración/audio nuevos o RT.
+Siguiente: refinamiento acotado sobre el sistema fallido, conservando
+factores, puertos y gate; después banco y recorrido si pasan.
+[QA de alcance](../evidence/voice_dynamic_schur_tests01.json).
