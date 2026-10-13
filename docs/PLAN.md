@@ -612,3 +612,17 @@ a3.004 ms, sin duración/audio nuevos o RT. Perfil privado por bits:
 linearize≈50.3% del step, solve≈27.3%.
 Siguiente: ensamblaje Radau en ubicación final, con J/b/raíces por identidad.
 [QA](../evidence/voice_schur_chain_tests01.json).
+
+
+## Ensamblaje Radau en ubicación final — 2026-10-13
+
+[Dos buffers de Stamp](RADAU_EN_SITIO_RESULTADOS.md) se llenan por &mut y permutan referencias
+después de aceptar, conservando J, masa, puertos, rechazos y estado229
+HIGH/LOW.84 raíces/1834 campos por bits e iteraciones/trials idénticos.
+Mediana pareada1.4004×:≈28.6% menos tiempo en el banco,
+sin confirmación adicional según contrato.396 trazas lineales y40 exports
+temporales por bytes;181.368 filas y dos bancos de38.472 ecuaciones heredados,
+sin reauditar.11 regresiones, cuatro recorridos propios y26770 finos pasan.
+Admisión limitada al ciclo condicionado3.004 ms; sin duración/audio nuevos
+o RT. Siguiente: integración portable229 y contrato de ownership/memoria.
+[QA](../evidence/voice_radau_inplace_tests01.json).
