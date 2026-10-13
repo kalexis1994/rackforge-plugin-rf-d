@@ -709,3 +709,12 @@ recorrido de control.255 tests Rust heredados, sin reejecución o deadline.
 
 [Resultados](VOZ_COSTO_BLOQUES_RESULTADOS.md),
 [QA](../evidence/voice_block_tests01.json). Fidelidad física y RT pendientes.
+
+
+La [liberación extendida con el motor público](VOZ_LIBERACION_EXTENDIDA_RESULTADOS.md)
+añade32 ms reales: historia unida68.004 ms y dos WAV nativos68 ms, sin loop.
+KEY/S/R heredados, unión completa3728 bytes;8 avances completos coinciden
+con el ensamblado original. 41220 ecuaciones nuevas,
+41 relojes229, balances y replay acotado pasan. C2 final0.880011 V,
+no silencio completo admitido. CLI reproducible y cuatro checks.
+Sin biblioteca/cache nuevas, fidelidad física, heap/deadline nuevos o RT.

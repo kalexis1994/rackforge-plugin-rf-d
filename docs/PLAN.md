@@ -720,3 +720,12 @@ identico;8244 ecuaciones independientes heredadas, ninguna reejecutada.
 [Resultados y reproducción](VOZ_COSTO_BLOQUES_RESULTADOS.md).
 Siguiente: más duración real y señales observables, con esta familia y el
 contraste de cargas/control. No ampliar certificados sin necesidad de señal.
+
+
+La [liberación extendida con el motor público](VOZ_LIBERACION_EXTENDIDA_RESULTADOS.md)
+añade32 ms reales: historia unida68.004 ms y dos WAV nativos68 ms, sin loop.
+KEY/S/R heredados, unión completa3728 bytes;8 avances completos coinciden
+con el ensamblado original. 41220 ecuaciones nuevas,
+41 relojes229, balances y replay acotado pasan. C2 final0.880011 V,
+no silencio completo admitido. CLI reproducible y cuatro checks.
+Sin biblioteca/cache nuevas, fidelidad física, heap/deadline nuevos o RT.
