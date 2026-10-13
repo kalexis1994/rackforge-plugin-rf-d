@@ -52,7 +52,7 @@ alcanzan≈265 ms. Los [ciclos de esta nueva raíz](docs/VOZ_CICLOS_CONDICIONADO
 completan dos perfiles de5,25 ms con refinamiento y cargas observadas;
 la periodicidad aún queda abierta. El ciclo anterior conserva su historia.
 
-La [QA vigente](evidence/voice_schur_cost_tests01.json) conserva
+La [QA vigente](evidence/voice_schur_inplace_tests01.json) conserva
 248 tests Rust heredados por identidad y el nuevo banco de trayectorias. La
 [cadena con cargas explícitas](docs/CADENA_CARGA_RADAU_RESULTADOS.md) pasa
 72 etapas y 180 corrientes, con medios pasos de7,629 ps; fuentes impuestas.
@@ -253,7 +253,7 @@ dos perfiles hasta5,25 ms desde el prefijo propio, dos resets por perfil,
 55200 ecuaciones y balances de carga/medias. Escucha de inspección admitida:
 True; réplica de un intervalo, escala explícita80×.
 No acredita voz completa, periodo asintótico o RT.
-[QA vigente](evidence/voice_schur_cost_tests01.json).
+[QA vigente](evidence/voice_schur_inplace_tests01.json).
 
 
 ## Q25/Q15 cargados en la voz — 2026-10-12
@@ -265,7 +265,7 @@ Cuatro perfiles de10 µs,18320 ecuaciones,3840 pasos y40 restores completos.
 La malla inicial se rechaza;15.625/7.8125 ns pasan el gate2 µV con1.553 µV
 máximo en los finales comparados. Hipótesis de dispositivos explícitas,
 ventana local; ADSR completo, contorno de filtro y RT siguen pendientes.
-[QA](evidence/voice_schur_cost_tests01.json).
+[QA](evidence/voice_schur_inplace_tests01.json).
 
 
 ## Contorno229 con contacto sostenido — 2026-10-12
@@ -276,7 +276,7 @@ liberación50 µs.3226 avances/6452 finos,32976 ecuaciones independientes,
 20 restores completos y8 rollbacks. Dos límites de paso coinciden en
 los12 cortes con≈.154 nV máximo; C2 responde desde las corrientes reales.
 Ventana corta con historia precargada; nota/ADSR completo y RT pendientes.
-[QA](evidence/voice_schur_cost_tests01.json).
+[QA](evidence/voice_schur_inplace_tests01.json).
 
 
 ## Contorno cargado durante el reset del VCO — 2026-10-12
@@ -287,7 +287,7 @@ con VCO/BUS/filtro/VCAs/J7 y contorno en el mismo solve.35724 ecuaciones,
 25152 finos,24 restores de prefijo y balances de carga; diferencia máxima
 .1404 µV en los cortes comparados. Historia entrante conservada por bits.
 Ciclo completo entre dos resets, contorno desde silencio y RT pendientes.
-[QA](evidence/voice_schur_cost_tests01.json).
+[QA](evidence/voice_schur_inplace_tests01.json).
 
 
 ## Ciclo del VCO con contorno229 y C7 cargado — 2026-10-12
@@ -302,7 +302,7 @@ unión exacta, refinamiento y balances pasan.
 Siguiente: medir y acelerar el solve contra esta referencia para alcanzar
 un contorno de duración musical. Contorno desde silencio, otras cargas
 de placa2, contorno de filtro, fidelidad física y RT pendientes.
-[QA](evidence/voice_schur_cost_tests01.json).
+[QA](evidence/voice_schur_inplace_tests01.json).
 
 
 ## Reuso del trial de Newton — 2026-10-12
@@ -315,7 +315,7 @@ Cuatro trayectorias completas coinciden por bytes con la referencia:
 Sin nueva duración o audio; 38472 ecuaciones heredadas por identidad.
 Siguiente: reducir costo del sistema lineal contra esta referencia exacta.
 Deadlines, contorno desde silencio y duración musical siguen pendientes.
-[QA](evidence/voice_schur_cost_tests01.json).
+[QA](evidence/voice_schur_inplace_tests01.json).
 
 
 ## LU con extensión contigua — 2026-10-13
@@ -328,7 +328,7 @@ no elegida; extensión contigua confirmada con mediana pareada
 por bytes,26770 finos y24 restores.38472 ecuaciones heredadas, sin
 reejecutarlas. Sin duración o audio nuevos, ni admisión RT.
 Siguiente: condensación de bloques dinámicos preservando puertos y masa.
-[QA](evidence/voice_schur_cost_tests01.json).
+[QA](evidence/voice_schur_inplace_tests01.json).
 
 
 ## Condensación dinámica de LM741 — 2026-10-13
@@ -344,7 +344,7 @@ sistema J/b completo, fuentes y replay exacto preservados. Sin admisión
 para trayectorias, duración/audio nuevos o RT.
 Siguiente: refinamiento acotado sobre el sistema fallido, conservando
 factores, puertos y gate; después banco y recorrido si pasan.
-[QA de alcance](evidence/voice_schur_cost_tests01.json).
+[QA de alcance](evidence/voice_schur_inplace_tests01.json).
 
 
 ## Schur refinado con residuo compensado — 2026-10-13
@@ -360,7 +360,7 @@ Precisión pasa; utilidad de costo pendiente (medianas0.9083×/0.9496×).
 Sin campaña temporal, duración/audio nuevos o RT.
 Siguiente: perfilar preparación, sustituciones y residuo antes de otra
 variante; abrir trayectoria sólo después de pasar precisión y costo.
-[QA](evidence/voice_schur_cost_tests01.json).
+[QA](evidence/voice_schur_inplace_tests01.json).
 
 
 ## Perfil de costo y variantes no elegidas — 2026-10-13
@@ -375,4 +375,19 @@ Las dos últimas conservan396 trazas J/b/correcciones por bytes;
 Fallo de compilación/replay y reparación de tipo explícita conservados.
 Sin campaña temporal, duración/audio nuevos o RT. Siguiente: construcción
 y factorización en ubicación final, con precisión y costo antes de promover.
-[QA](evidence/voice_schur_cost_tests01.json).
+[QA](evidence/voice_schur_inplace_tests01.json).
+
+
+## Schur en sitio y ciclo condicionado admitido — 2026-10-13
+
+[Workspace local](docs/SCHUR_EN_SITIO_RESULTADOS.md) llena/factoriza interiores64 y exterior330
+en sus destinos, conservando458 correcciones, puertos, masa e historia.
+Banco1.0086× y confirmación única1.0133× con el mismo ejecutable;
+396 trazas por bits,26 regresiones incluyendo recuperación del workspace.
+Cuatro recorridos propios pasan38472 ecuaciones nuevas y comparaciones
+de229 coordenadas al mismo reloj frente a LU (máximo8.52e-13 V).
+26770 finos,24 restores,368 avances repetidos,16 corrupciones y8 rollbacks.
+Admitido para la ventana condicionada3.004 ms; sin duración/audio nuevos,
+contorno desde silencio, identificación física o RT. Siguiente: otra
+reducción estructural conservando puertos/cargas para duración musical.
+[QA](evidence/voice_schur_inplace_tests01.json).

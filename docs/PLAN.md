@@ -567,3 +567,18 @@ Fallo de compilación/replay y reparación de tipo explícita conservados.
 Sin campaña temporal, duración/audio nuevos o RT. Siguiente: construcción
 y factorización en ubicación final, con precisión y costo antes de promover.
 [QA](../evidence/voice_schur_cost_tests01.json).
+
+
+## Schur en sitio y ciclo condicionado admitido — 2026-10-13
+
+[Workspace local](SCHUR_EN_SITIO_RESULTADOS.md) llena/factoriza interiores64 y exterior330
+en sus destinos, conservando458 correcciones, puertos, masa e historia.
+Banco1.0086× y confirmación única1.0133× con el mismo ejecutable;
+396 trazas por bits,26 regresiones incluyendo recuperación del workspace.
+Cuatro recorridos propios pasan38472 ecuaciones nuevas y comparaciones
+de229 coordenadas al mismo reloj frente a LU (máximo8.52e-13 V).
+26770 finos,24 restores,368 avances repetidos,16 corrupciones y8 rollbacks.
+Admitido para la ventana condicionada3.004 ms; sin duración/audio nuevos,
+contorno desde silencio, identificación física o RT. Siguiente: otra
+reducción estructural conservando puertos/cargas para duración musical.
+[QA](../evidence/voice_schur_inplace_tests01.json).
