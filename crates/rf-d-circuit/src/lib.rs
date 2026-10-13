@@ -630,3 +630,6 @@ pub mod conditioned_voice;
 pub mod conditioned_engine;
 
 pub mod conditioned_recipe;
+
+pub mod decay_voice;
+pub mod decay_engine;

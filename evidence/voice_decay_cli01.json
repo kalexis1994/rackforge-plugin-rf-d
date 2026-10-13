@@ -1,0 +1,121 @@
+{
+  "passed": true,
+  "source_sha256": {
+    "tools/check_decay_cli.py": "51551daf531d1ecc263c333704f95cf70641e88a9509cdfd037ab4b6abb2a1b2",
+    "tools/decay_render_cli.py": "ad40e0f13401c3b88f0aa546e41f2e9115947fa822715bac193aa66d65bbd45e",
+    "tools/render_decay_control.py": "a90427d4c47199efcc3ab377510cb81774210a1f1c24ca0345d66e8a72e09692",
+    "tools/render_release_voice.py": "de0126ed1594fff30a7f88e35a7313f722ee9643058154eacb3b185620c38448",
+    "tools/render_sustained_voice.py": "8fb8da2f81a2cbb86c7a65d0cf6e41675c3110af2d41453371e93a90fb3d339f",
+    "tools/render_conditioned_recipe.py": "fdfbf9feae8bc96644f03482b620e227b929f045933c63bec816742f14024ce2",
+    "evidence/voice_decay_listening01.json": "158d2c8eb0857e0ae8b0909103207989c3d2d36e1747c6a39309dc30668dc664"
+  },
+  "private_used_sha256": {
+    "references-local/sustained-voice01/524288/selected.txt": "935928bc87f07e72b2132e265009de83f0480055a220857ec0af4f8bd709a597",
+    "references-local/release-voice01/524288/selected.txt": "5b2b701044e25085cd1b2fa2c76fadf16c1efa19af5bf7c3ba59d12e7a907972",
+    "references-local/decay-voice02/524288/selected.txt": "b393960b0d3af1c2ac937b9d7af17028c863c5580268e91fb5de8cc5b4ad0357",
+    "references-local/decay-voice02/524288/control-event.txt": "fac69a7202f72b6779828f8d29e2a3c2efb7e402a6ebb76a657156aa69be3cd6",
+    "artifacts/decay-voice01/rf-d-j7-decay-1k-524288-nativo.wav": "225a3f264d657f47569f29603026cc85e7ca82ab8bb7f50b64c578cea59328b4"
+  },
+  "user_cli_wav_identical": true,
+  "sidecar_verified": true,
+  "existing_output_rejected_without_mutation": true,
+  "mismatched_seam_rejected_before_publication": true,
+  "integration_checks": 3,
+  "commands": [
+    {
+      "command": [
+        "C:\\Users\\kalex\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "-B",
+        "tools/decay_render_cli.py",
+        "--held",
+        "references-local/sustained-voice01/524288/selected.txt",
+        "--release",
+        "references-local/release-voice01/524288/selected.txt",
+        "--controlled",
+        "references-local/decay-voice02/524288/selected.txt",
+        "--output",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\decay-cli01\\j7.wav"
+      ],
+      "exit_code": 0,
+      "stdout": "DECAY_WAV C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\decay-cli01\\j7.wav 1728 0.036\n",
+      "stderr": "",
+      "wall_s": 5.622010000050068
+    },
+    {
+      "command": [
+        "C:\\Users\\kalex\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "-B",
+        "tools/decay_render_cli.py",
+        "--held",
+        "references-local/sustained-voice01/524288/selected.txt",
+        "--release",
+        "references-local/release-voice01/524288/selected.txt",
+        "--controlled",
+        "references-local/decay-voice02/524288/selected.txt",
+        "--output",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\decay-cli01\\j7.wav"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\decay_render_cli.py\", line 15, in <module>\n    if __name__=='__main__':main()\n                            ^^^^^^\n  File \"C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\decay_render_cli.py\", line 12, in main\n    args=parser.parse_args();sidecar=args.output.with_suffix('.json');require(args.output.suffix.lower()=='.wav' and args.output.parent.exists(),'existing output directory and WAV suffix');require(not args.output.exists() and not sidecar.exists(),'preserve existing WAV and sidecar')\n                                                                                                                                                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_cycles_analysis.py\", line 10, in require\n    if not ok:raise ValueError(msg)\n              ^^^^^^^^^^^^^^^^^^^^^\nValueError: preserve existing WAV and sidecar\n",
+      "wall_s": 0.2956172999693081
+    },
+    {
+      "command": [
+        "C:\\Users\\kalex\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "-B",
+        "tools/decay_render_cli.py",
+        "--held",
+        "references-local/sustained-voice01/524288/selected.txt",
+        "--release",
+        "references-local/release-voice01/524288/selected.txt",
+        "--controlled",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\decay-cli01\\mismatched-seam.txt",
+        "--output",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\decay-cli01\\rejected.wav"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\decay_render_cli.py\", line 15, in <module>\n    if __name__=='__main__':main()\n                            ^^^^^^\n  File \"C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\decay_render_cli.py\", line 13, in main\n    paths=[args.held,args.release,args.controlled,args.controlled.with_name('control-event.txt')];inputs={str(p.resolve()):sha(p) for p in paths};t,v=joined_trace(args.held,args.release,args.controlled);pcm,meta=adapt(t,v,1);require(inputs=={str(p.resolve()):sha(p) for p in paths},'stable input traces');save(args.output,pcm)\n                                                                                                                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\render_decay_control.py\", line 11, in joined_trace\n    t,v=release_trace(held,release);a=release.read_text(encoding='utf8').splitlines();b=controlled.read_text(encoding='utf8').splitlines();require(a[0]==b[0],'controlled resolution profile');old=list(map(float,a[-1].split(',')[1:]));new=list(map(float,b[1].split(',')[1:]));require(b[1].startswith('JOINT_STATE,') and len(old)==len(new)==458 and struct.pack('<458d',*old)==struct.pack('<458d',*new),'full controlled seam state')\n                                                                                                                                                                                                                                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_cycles_analysis.py\", line 10, in require\n    if not ok:raise ValueError(msg)\n              ^^^^^^^^^^^^^^^^^^^^^\nValueError: full controlled seam state\n",
+      "wall_s": 0.7549965000944212
+    }
+  ],
+  "source_sha256_after": {
+    "tools/check_decay_cli.py": "51551daf531d1ecc263c333704f95cf70641e88a9509cdfd037ab4b6abb2a1b2",
+    "tools/decay_render_cli.py": "ad40e0f13401c3b88f0aa546e41f2e9115947fa822715bac193aa66d65bbd45e",
+    "tools/render_decay_control.py": "a90427d4c47199efcc3ab377510cb81774210a1f1c24ca0345d66e8a72e09692",
+    "tools/render_release_voice.py": "de0126ed1594fff30a7f88e35a7313f722ee9643058154eacb3b185620c38448",
+    "tools/render_sustained_voice.py": "8fb8da2f81a2cbb86c7a65d0cf6e41675c3110af2d41453371e93a90fb3d339f",
+    "tools/render_conditioned_recipe.py": "fdfbf9feae8bc96644f03482b620e227b929f045933c63bec816742f14024ce2",
+    "evidence/voice_decay_listening01.json": "158d2c8eb0857e0ae8b0909103207989c3d2d36e1747c6a39309dc30668dc664"
+  },
+  "private_used_sha256_after": {
+    "references-local/sustained-voice01/524288/selected.txt": "935928bc87f07e72b2132e265009de83f0480055a220857ec0af4f8bd709a597",
+    "references-local/release-voice01/524288/selected.txt": "5b2b701044e25085cd1b2fa2c76fadf16c1efa19af5bf7c3ba59d12e7a907972",
+    "references-local/decay-voice02/524288/selected.txt": "b393960b0d3af1c2ac937b9d7af17028c863c5580268e91fb5de8cc5b4ad0357",
+    "references-local/decay-voice02/524288/control-event.txt": "fac69a7202f72b6779828f8d29e2a3c2efb7e402a6ebb76a657156aa69be3cd6",
+    "artifacts/decay-voice01/rf-d-j7-decay-1k-524288-nativo.wav": "225a3f264d657f47569f29603026cc85e7ca82ab8bb7f50b64c578cea59328b4"
+  },
+  "outputs": [
+    {
+      "path": "references-local/decay-cli01/control-event.txt",
+      "sha256": "fac69a7202f72b6779828f8d29e2a3c2efb7e402a6ebb76a657156aa69be3cd6",
+      "bytes": 38
+    },
+    {
+      "path": "references-local/decay-cli01/j7.json",
+      "sha256": "857c81ccc95b3eb0e4637a6d99b8b2290a78346c090d36acdb8265109f972b61",
+      "bytes": 1938
+    },
+    {
+      "path": "references-local/decay-cli01/j7.wav",
+      "sha256": "225a3f264d657f47569f29603026cc85e7ca82ab8bb7f50b64c578cea59328b4",
+      "bytes": 3500
+    },
+    {
+      "path": "references-local/decay-cli01/mismatched-seam.txt",
+      "sha256": "216846267c4ac85c4a7f7e6d3bed07f7b969a62cc164501b15b01f2934cc8d23",
+      "bytes": 10875
+    }
+  ]
+}

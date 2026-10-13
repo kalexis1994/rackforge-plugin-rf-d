@@ -691,3 +691,18 @@ errata Figure9-7/página9-5; no cambios de tarjetas, topología o tolerancias.
 Ver [resultados y reproducción](VOZ_LIBERACION_RESULTADOS.md).
 Siguiente: extender descarga y explorar su control decay con historias propias,
 manteniendo puertos/cargas; obtener duración útil sin inventar un loop.
+
+
+## Control eléctrico de decay, admitido en una escena cargada
+
+Familia pública decay_voice/decay_engine: resistor de panel ensamblado
+directamente, sin cambios a fuentes nominales. Ocho accepted de tres motores/
+bibliotecas coinciden por bytes a100 kΩ. API set_decay_ohm cambia sólo R;
+12 inválidos/2 restores inválidos rechazados.28.442→44.442 ms a1 kΩ desde
+cada checkpoint propio;24732 ecuaciones/21 relojes229,
+14 resets y9 balances de carga pasan.36.004 ms reales unidos, WAV36 ms;
+CLI/PCM/sidecar y dos seams.255 tests Rust heredados, no reejecutados.
+Compilación rechazada/replay conservados; falta de argumento del observador
+reparada sin gates nuevos. [Resultados y reproducción](DECAY_CONTROL_RESULTADOS.md).
+Siguiente: duración de escucha útil y costo del motor de la voz, manteniendo
+puertos/cargas y contraste contra esta referencia antes de optimizar.

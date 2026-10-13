@@ -679,3 +679,18 @@ recorrido de control.255 tests Rust heredados, sin reejecución o deadline.
 [Resultados](VOZ_LIBERACION_RESULTADOS.md),
 [revisión](VOZ_LIBERACION_REVISION.md),
 [QA](../evidence/voice_release_tests01.json).
+
+
+## Resistencia de decay explícita en la voz cargada
+
+| Evidencia | Resultado | Alcance |
+| --- | --- | --- |
+| PANEL_R16 directo | R finita0<R≤1 MΩ, default100 kΩ | Ohmios eléctricos; sin ley o posición de perilla |
+| Regresión nominal | 8 accepted por bytes en tres motores/rlibs | Escena finita; fuentes nominales intactas |
+| Evento100 kΩ→1 kΩ | 458 HIGH/LOW y metadata conservados salvo R | Cargas propias; sin nueva raíz o KEY/S-trigger |
+| Nuevo recorrido | 16 ms,24732 ecuaciones,21 estados229 | Grafo/FD/carga seleccionados; no todos los solves |
+| C2 y carga VCA | Final1.499697 V; balances9 y unión36.004 ms | Descarga del modelo, sin calibración física |
+| WAV/CLI | 1728 frames/36 ms, evento y dos seams | Tiempo nativo finito; sin loop o RT |
+
+[Protocolo](DECAY_CONTROL_PROTOCOLO.md),[resultados](DECAY_CONTROL_RESULTADOS.md),
+[QA](../evidence/voice_decay_tests01.json).
