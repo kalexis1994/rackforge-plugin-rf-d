@@ -601,3 +601,13 @@ refinamiento; el puerto local no acredita contorno completo o voz integrada.
 Módulo de laboratorio compilado contra biblioteca congelada, fuera de lib.rs.
 [QA actual](evidence/filter_contour_port_tests01.json). Próximo cierre: C5
 continuo, biestable y carga del gatillo compartido. Sin audio nuevo o RT.
+
+
+[C5 y gatillo compartido](docs/C5_GATILLO_COMPARTIDO_RESULTADOS.md) cierran
+ambos contornos en 54 nodos con carga real de Amount/Q26/Q28. Ocho recorridos
+de 36 ms, liberación/retrigger, 86228 Accepted; 40920 filas originales,
+576 clocks y balances pasan. C5/C2 conservan memoria; 40 restores locales
+y 320 rechazos del checkpoint. Escena fija de panel, rieles/VCA/TAIL impuestos,
+sin nuevo audio o plugin tocable. Próximo cierre: placa 4 y voz funcional,
+con el circuito detallado como referencia para reducir costo.
+[QA actual](evidence/c5_trigger_tests01.json).

@@ -806,3 +806,19 @@ C12 opcional y alimentación. Resolver ataque/decay continuo antes de
 refinamiento a gran señal y unión TAIL/ladder.
 [Resultados](CONTORNO_FILTRO_PUERTO_RESULTADOS.md),
 [QA](../evidence/filter_contour_port_tests01.json).
+
+
+## 2026-10-14 — C5 continuo y gatillo de ambos contornos
+
+C5/Q1/Q4 dejan de ser fuentes impuestas; Q12/Q20 reciben las cargas de
+ambos contornos, con R32/R37/C1/CR1/CR2. 54 nodos, dos recetas opcionales,
+teclado/S separados y máximos 8/4 µs: ocho trayectorias de 36 ms,
+liberación y retrigger, memoria conservada y refinamiento admitido.
+Escena eléctrica fija de panel; no extender la cobertura a todos los controles.
+La dinámica de KEY depende de R60/C7; no asumir fase instantánea desde
+el evento de fuente. Preservados fallo/replay y reparación del auditor.
+Conectar ahora TAIL y volumen con placa 4 para medir una voz funcional.
+Usar este núcleo como referencia y derivar un motor viable por bloques,
+con error/cargas medidos; prioridad a señal audible antes de más certificados
+locales. [Resultados](C5_GATILLO_COMPARTIDO_RESULTADOS.md),
+[QA](../evidence/c5_trigger_tests01.json).

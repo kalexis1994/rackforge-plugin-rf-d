@@ -795,3 +795,18 @@ Sin Hz calibrados, contorno de filtro completo, fidelidad física o RT.
 [Resultados](CONTORNO_FILTRO_PUERTO_RESULTADOS.md) y
 [QA](../evidence/filter_contour_port_tests01.json). La admisión local no
 sustituye el recorrido grande rechazado ni prolonga la historia audible previa.
+
+
+## C5 y gatillo de ambos contornos — 2026-10-14
+
+| Nivel | Evidencia | Límite |
+|---|---|---|
+| Topología | R32/Q12, R37/Q20, R26/C1, Q1/Q4, ataque/decay/sustain y retorno CR2; C12 en paralelo con R50 | Nominal documental; R60 y otros conflictos previos siguen abiertos |
+| Función | Ocho escenas de 36 ms, KEY/S, liberación/retrigger; C5/C2 continuos y ambos contornos cargan el gatillo | Controles eléctricos fijos; VCA/TAIL/rieles impuestos |
+| Equivalencia | 40920 filas originales, 1469664 entradas FD, 576 clocks y balances admitidos | Selección de etapas y observaciones finitas; no cota continua |
+| Restore | 40 avances locales por bits y 320 corrupciones; 904 bytes RFDC5011 | Propuesta explícita; no prolongan las trazas originales |
+| Producto | Núcleo conjunto de laboratorio disponible | Fuera de lib.rs/voz; sin nuevo audio, calibración física o RT |
+
+[Resultados](C5_GATILLO_COMPARTIDO_RESULTADOS.md) y
+[QA](../evidence/c5_trigger_tests01.json). El estrés antiguo de C5 impuesto
+no cambia de resultado por admitir esta evolución continua del circuito.
