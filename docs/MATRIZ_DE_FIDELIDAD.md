@@ -843,3 +843,17 @@ Accepted, 12550 filas originales, 192 clocks y prefix anterior admitidos.
 Ráfaga J7 de 24 ms con adaptación explícita, sin loops o normalización.
 No prolonga 164 ms históricos ni acredita nota sostenida, panel general,
 MIDI, fidelidad física o tiempo real.
+
+
+## Paso observable y nota corta — 2026-10-14
+
+| Objeto | Alcance nuevo | Límite |
+|---|---|---|
+| Circuito/cargas | 250 incógnitas y ambos contornos, mismas ecuaciones/parametrización/Newton | Hipótesis nominales, panel fijo y arranque condicionado |
+| Temporal | 24 ms contra estricto y dos notas de 100 ms a dos resoluciones | Precisión interna 741 excluida del estimador; referencia estricta de nota sólo en 6 ms compartidos |
+| Puertos | BUS, R59/R60, memorias C2/C5 y salida J7 admitidos en clocks definidos | Sin cota continua ni cobertura general de controles |
+| Audio | Dos WAV reales de 100 ms, PCM idéntico, monitor fijo y banda 2.8 kHz | Ventana corta con memoria activa; sin hardware/MIDI/RT |
+| Costo | ~4× menor tiempo del banco de 24 ms, mediciones separadas | Nota nueva aún 553/555 s; reducción espacial pendiente |
+
+[Resultados](VOZ_NOTA_OBSERVABLE_RESULTADOS.md),
+[QA](../evidence/observed_note_tests01.json).

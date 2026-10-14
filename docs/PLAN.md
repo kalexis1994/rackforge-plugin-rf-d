@@ -851,3 +851,17 @@ trayectoria ampliada a 24 ms en dos resoluciones y prefix antiguo contrastado.
 Export local breve de J7 sin repetir ciclos. Prioridad siguiente: reducción
 mayor del modelo contra esta referencia, con error musical/de puertos
 medido, para una nota sostenida y un motor utilizable. RT sigue pendiente.
+
+
+## 2026-10-14 — Nota corta y presupuesto temporal observable
+
+[Completado](VOZ_NOTA_OBSERVABLE_RESULTADOS.md): primera política temporal
+con circuito completo conserva gates Newton y reduce ~4× el costo del
+banco de 24 ms. Nota propia de 100 ms, gatillo 1–75 ms, ambas memorias
+y cargas hasta J7; 801 clocks y audio de duración real pasan. El prefijo
+estricto compartido cubre 6 ms; refinamiento completo cubre 100 ms.
+No se extiende la precisión estricta a interiores excluidos del estimador.
+Prioridad: reducción espacial de VCO/741 y cadena con puerto/cargas y
+error musical medidos. 553/555 s por 100 ms todavía exige esa reducción
+para un motor utilizable. No agregar más certificados locales como
+condición previa a esa implementación.

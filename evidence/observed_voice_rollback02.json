@@ -1,0 +1,53 @@
+{
+  "passed": true,
+  "source_sha256": {
+    "tools/run_observed_rollback.py": "fd45f231bf58ae92ae18e7b2d03725c6633ffb93a1b78985709d5b3d0981dbf9",
+    "tools/observed_voice_rollback.rs": "d803499264b3fa4f68f4e4c18f9522773fab32216d0bb89cff1bea808c484dce",
+    "crates/rf-d-circuit/src/observed_voice.rs": "4d540fda8443c6d3a3d974e087d7b329990e241de79b25dfd135f7f1fc0337ca",
+    "crates/rf-d-circuit/src/sparse_ordered_voice.rs": "b56fc39aa0ffa039b96151d74d607d3986436ed59c3309559ceb7beb75eab119",
+    "crates/rf-d-circuit/src/sparse_ordered_voice_solver.rs": "7392421afb174c76aee99dc2d10b7c3b1160f2c03ca1c87ec7fef68ec164aa34",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99"
+  },
+  "private_used_sha256": {
+    "references-local/observed-voice02/profile-8388608.stdout": "0666dd91d8218db1a067da1e321d90108c49b482720674c4023bc4085069fa74"
+  },
+  "compiler_sha256": "fd6232f90a981e28472ce6900232946a1f1bcad8ec8270cd5ae6a3a357208b98",
+  "library_sha256": "9dbada9779f30c4972b057befe092524d091d3444ea777206b618d701236385d",
+  "commands": [
+    [
+      "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+      "--edition=2021",
+      "-C",
+      "opt-level=2",
+      "-C",
+      "strip=symbols",
+      "-C",
+      "link-arg=-Wl,--stack,33554432",
+      "-A",
+      "unused_imports",
+      "-A",
+      "dead_code",
+      "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\observed_voice_rollback.rs",
+      "--extern",
+      "rf_d_circuit=C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-assembly-public01\\librf_d_circuit.rlib",
+      "-o",
+      "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\observed-rollback02\\probe.exe"
+    ],
+    [
+      "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\observed-rollback02\\probe.exe",
+      "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\observed-rollback02\\seed.bin"
+    ]
+  ],
+  "compile_exit_code": 0,
+  "probe_exit_code": 0,
+  "domain_atomic_rejections": 2,
+  "exact_valid_candidate_replays": 1,
+  "private_sha256": {
+    "references-local/observed-rollback02/compile.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "references-local/observed-rollback02/compile.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "references-local/observed-rollback02/probe.exe": "4c919244b32dec10b72a6f39a775a141cc9fd47b3f9bc7d79937223eb82028c8",
+    "references-local/observed-rollback02/probe.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "references-local/observed-rollback02/probe.stdout": "dd6a6c90a57710941457b5fff1103812fcd87b747215fa937c77424768223fc0",
+    "references-local/observed-rollback02/seed.bin": "5be333bd0c2687308a2ed0b316fe6ae5ca87ff5f3e2ba92f42908a80b2c9d062"
+  }
+}

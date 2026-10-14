@@ -640,3 +640,15 @@ y reduce ~37 % el costo del solver en el banco. Dos trayectorias nuevas de
 de J7 de 24 ms, sin repetir ciclos; es corta y tenue, no una nota sostenida.
 La siguiente prioridad sigue siendo una reducción mayor y duración útil.
 [QA](evidence/voice_cost_tests01.json).
+
+
+## 2026-10-14 — Primera nota corta con ambos contornos
+
+[Paso observable y nota de 100 ms](docs/VOZ_NOTA_OBSERVABLE_RESULTADOS.md):
+KEY sostenido 74 ms, retirada y evolución hasta 100 ms; circuito completo
+y cargas intactas. 801 clocks, refinamiento y ecuaciones originales
+seleccionadas pasan. Dos WAV privados de 4800 frames con PCM idéntico,
+sin ciclos repetidos. En 24 ms el banco observable cuesta aproximadamente
+una cuarta parte de la referencia estricta, con error RMS J7 <0.001 %.
+La nota sigue siendo offline (553/555 s por perfil); siguiente prioridad:
+reducción de bloques frente a este oráculo. [QA](evidence/observed_note_tests01.json).
