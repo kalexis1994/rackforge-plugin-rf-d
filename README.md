@@ -620,3 +620,13 @@ TAIL y Q26/Q28 con ambos contornos, ladder, dos VCA y J7. Dos trayectorias
 de 36 ms, 21250 Accepted, 14518 filas originales y 139240 entradas FD
 pasan. Entrada eléctrica sinusoidal impuesta; VCO real y tiempo real
 siguen pendientes. [QA](evidence/dual_chain_tests01.json).
+
+
+## Voz con VCO real y ambos contornos
+
+[La unión de 250 incógnitas](docs/VOZ_DOS_CONTORNOS_RESULTADOS.md) ya resuelve
+VCO1, BUS cargado, ambos contornos, ladder, dos VCA y J7. Dos escenas
+de 8 ms pasan con 251 nodos originales; no hay onda de entrada impuesta.
+Motor detallado de laboratorio, sin nueva escucha o RT. Prioridad: reducir
+costo contra esta referencia y extender a una nota audible.
+[QA](evidence/dual_voice_tests01.json).

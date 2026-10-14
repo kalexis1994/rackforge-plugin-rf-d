@@ -831,3 +831,13 @@ Completada la [unión de ambos contornos con cadena](CONTORNOS_CADENA_RESULTADOS
 de 36 ms y referencia original de 119 nodos admitidas. Prioridad siguiente:
 unir el VCO real al BUS de esta red, obtener una trayectoria audible y
 medir reducción del circuito frente a la referencia. Panel general y RT abiertos.
+
+
+## VCO real con ambos contornos — 2026-10-14
+
+Completada la [voz de 250 incógnitas](VOZ_DOS_CONTORNOS_RESULTADOS.md):
+BUS único, VCO real, ambos contornos cargados y J7; 8 ms en dos resoluciones
+y original de 251 nodos admitidos. Ya no se impone una onda al filtro.
+Prioridad siguiente: reducción del costo con puertos/cargas conservados y
+error respecto de esta voz, duración suficiente para escuchar una nota.
+No agregar certificados locales como condición previa a ese avance.

@@ -820,3 +820,14 @@ R59/R60 reales y Q26/Q28/C18 únicos; 119 nodos originales admitidos en DC y
 144 clocks comunes y dos trayectorias completas de 36 ms. Excitación
 sinusoidal impuesta, panel fijo y C11/C12 OFF. No prolonga historias o audio
 anteriores; sin VCO real integrado, nuevo audio, calibración física o RT.
+
+
+## Voz completa de un VCO y ambos contornos — 2026-10-14
+
+[Resultados](VOZ_DOS_CONTORNOS_RESULTADOS.md): VCO1/BUS/contornos/ladder/dos
+VCA/J7, 250 incógnitas y 251 originales con Amount explícito. Dos escenas
+de 8 ms, 21389 Accepted, 12550 filas originales y 500000 entradas de
+tangente efectiva comparadas. 64 clocks y balance BUS admitidos. DC
+condicionado nuevo; no prolonga historia antigua. Panel fijo, otras ramas
+omitidas del subgrafo ON y segundo VCA impuesto; sin nuevo audio, MIDI,
+fidelidad física o RT. Duración y costo son ahora el siguiente objetivo.
