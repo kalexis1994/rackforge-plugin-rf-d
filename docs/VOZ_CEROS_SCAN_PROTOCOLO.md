@@ -1,0 +1,7 @@
+# Variante CSR por bloques de bits
+
+La variante combinada `voice_zero_bench01.json` pasa identidad y fallos pero falla utilidad (ratio mediano 1,0000296); no se promueve y se conserva íntegra. Esta segunda variante mantiene LU y sustituciones triangulares originales. Solo cambia el detector de bloques exactamente nulos del CSR; mantiene los gates previos de mediana ≤0,95/peor ≤1,05, banco propio de 168 pares, seis errores, 1280 fixtures LU, puerta pública y recorrido pareado definidos en [protocolo previo](VOZ_CEROS_PROTOCOLO.md).
+
+Cada bloque de ocho f64 combina sus representaciones u64 por OR y enmascara exclusivamente el bit de signo. El resultado es cero si y solo si todos sus elementos son ±0. No usa tolerancia, no convierte números ni cambia un coeficiente. NaN/Inf tienen bits de exponente/mantisa no nulos, no se omiten y conservan la comprobación escalar y su rechazo. El bloque final puede tener dos elementos; el mismo predicado aplica a su longitud real. Recorrido y suma de coeficientes presentes siguen en orden original. Soporte se reconstruye en cada Jacobiano real.
+
+No se modifica ninguna fuente ejecutada de la variante anterior. Memoria fija esperada igual a referencia, sin almacenamiento LU nuevo. Biblioteca anterior congelada para el laboratorio. Presupuesto y límites de recursos iguales al protocolo previo; sin duración, audio o admisión RT nuevos. Esta es una decisión previa a la nueva medición, no una reparación de un resultado numérico fallido.

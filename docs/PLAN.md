@@ -729,3 +729,13 @@ con el ensamblado original. 41220 ecuaciones nuevas,
 41 relojes229, balances y replay acotado pasan. C2 final0.880011 V,
 no silencio completo admitido. CLI reproducible y cuatro checks.
 Sin biblioteca/cache nuevas, fidelidad física, heap/deadline nuevos o RT.
+
+
+El [banco ampliado y perfil actual](VOZ_CEROS_RESULTADOS.md) contrasta
+168 pares y35471184 campos de stamp. Dos recorridos de ceros conservan
+bits,1280 fixtures LU y seis errores, pero fallan utilidad5 %:
+ratio1.000029624 con104488 bytes extra y0.977922929 sin
+scratch extra. No se promueven. Perfil actual exacto: initialize55.13 %
+incluye parts42.37 %, solve37.09 %; relojes anidados, sin ganancia inferida.
+La voz pública y audio68 ms permanecen idénticos. Siguiente: ensamblado y
+parts/copia de estados, conservando puertos, cargas y contraste completo.

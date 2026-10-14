@@ -1,0 +1,184 @@
+{
+  "passed": true,
+  "source_sha256": {
+    "tools/zero_current_profile_solver.rs": "c93fe845ed8b6edd1d22167b6896e8dc5a16fa5117aa264a4f87d2bbd4c918f7",
+    "tools/zero_current_profile_kernel.rs": "c7f3aba2a52b352315d3070e13eb0c16c3752f01bae420e082943e4ba4fd2268",
+    "tools/zero_baseline_solver.rs": "d04238ee85f88f77381b9f3381a65b7d8c880f18ee2368b87567d9f67c37de59",
+    "tools/zero_baseline_kernel.rs": "b47a1ad74030af703733bafadad0aa33dd5c2baa7f300c9b4732fbbf9b951039",
+    "tools/zero_current_profile_bench.rs": "4ce00d7174b36c18da938c465b37bf0c55e94883035f0e2cfab022db463339a8",
+    "tools/prepare_zero_profile.py": "b4e507a1e199b0918a43734117235a7d050ede5448672b2bcb6abf299ff90c6b",
+    "tools/run_zero_profile.py": "7f9ca563b88272e84963dd4d15005ccb598a53f1fa4403d4429220e610e9e4f5",
+    "tools/prepare_voice_pivot.py": "9bd674b9e9ef1de091c0260dd8959e0eb73e38244217ee376db2003e3a3259b8",
+    "tools/prepare_zero_voice.py": "6db8238d1eec49df4b3630aab28a812773de15033ef8747fe30669c2306563e8",
+    "evidence/voice_zero_inputs01.json": "fb25dd0c17862c4eb8e4cd2289698d78dc8311a994e7ffbf7df188b3d648ec29"
+  },
+  "private_used_sha256": {
+    "references-local/voice-zero-inputs01/pairs.bin": "c0afc08c56cd731a986ba1fc2cc77ff890ba85495462ce6f87a47a451fcd287b",
+    "references-local/voice-block-library02/librf_d_circuit.rlib": "cf290b02e69e703c479597a36a7853d2cb024f8357154ff98b2dda22d984ea3c"
+  },
+  "compiler": {
+    "path": "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+    "sha256": "fd6232f90a981e28472ce6900232946a1f1bcad8ec8270cd5ae6a3a357208b98",
+    "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+  },
+  "new_library_compile": false,
+  "new_cargo_cache": false,
+  "timing_is_nested": true,
+  "timing_overhead_not_subtracted": true,
+  "production_promoted": false,
+  "real_time": false,
+  "physical_fidelity": false,
+  "pairs": 168,
+  "all_1834_f64_and_counters_identical": true,
+  "phases": [
+    {
+      "name": "step",
+      "time_ns": 783361000,
+      "calls": 168
+    },
+    {
+      "name": "initialize",
+      "time_ns": 431863300,
+      "calls": 618
+    },
+    {
+      "name": "parts",
+      "time_ns": 331908500,
+      "calls": 1236
+    },
+    {
+      "name": "joint_parts",
+      "time_ns": 253587800,
+      "calls": 1236
+    },
+    {
+      "name": "unused",
+      "time_ns": 0,
+      "calls": 0
+    },
+    {
+      "name": "prepare",
+      "time_ns": 259103300,
+      "calls": 618
+    },
+    {
+      "name": "factor64",
+      "time_ns": 11422800,
+      "calls": 1236
+    },
+    {
+      "name": "factor58",
+      "time_ns": 5383800,
+      "calls": 618
+    },
+    {
+      "name": "factor132",
+      "time_ns": 29664900,
+      "calls": 618
+    },
+    {
+      "name": "factor140",
+      "time_ns": 44697700,
+      "calls": 618
+    },
+    {
+      "name": "rhs64",
+      "time_ns": 34207600,
+      "calls": 13818
+    },
+    {
+      "name": "rhs58",
+      "time_ns": 4123000,
+      "calls": 1965
+    },
+    {
+      "name": "rhs132",
+      "time_ns": 32751000,
+      "calls": 3201
+    },
+    {
+      "name": "rhs140",
+      "time_ns": 8687500,
+      "calls": 729
+    },
+    {
+      "name": "support",
+      "time_ns": 77735200,
+      "calls": 618
+    },
+    {
+      "name": "residual",
+      "time_ns": 4261800,
+      "calls": 729
+    },
+    {
+      "name": "correction",
+      "time_ns": 23810400,
+      "calls": 729
+    },
+    {
+      "name": "solve",
+      "time_ns": 290574400,
+      "calls": 618
+    }
+  ],
+  "baseline_bank_ns": 876418200,
+  "profiled_bank_ns": 783686300,
+  "commands": [
+    {
+      "command": [
+        "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+        "--edition=2021",
+        "-C",
+        "opt-level=2",
+        "-C",
+        "strip=symbols",
+        "-C",
+        "link-arg=-Wl,--stack,33554432",
+        "tools/zero_current_profile_bench.rs",
+        "--extern",
+        "rf_d_circuit=C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-block-library02\\librf_d_circuit.rlib",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-zero-profile01\\profile.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "warning: unused imports: `Mode` and `self`\n --> tools\\zero_baseline_kernel.rs:6:26\n  |\n6 | use crate::{vco1_stamp::{self,Controls,Mode},chain_charge::{self,Parameters as Chain},mixer_on::OnMixer,StepError};\n  |                          ^^^^          ^^^^\n  |\n  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default\n\nwarning: unused imports: `Mode` and `self`\n --> tools\\zero_current_profile_kernel.rs:6:26\n  |\n6 | use crate::{vco1_stamp::{self,Controls,Mode},chain_charge::{self,Parameters as Chain},mixer_on::OnMixer,StepError};\n  |                          ^^^^          ^^^^\n\nwarning: function `ieee` is never used\n  --> tools/zero_current_profile_bench.rs:13:4\n   |\n13 | fn ieee(){\n   |    ^^^^\n   |\n   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: function `errors` is never used\n  --> tools/zero_current_profile_bench.rs:19:4\n   |\n19 | fn errors(){for kind in 0..6{let mut j=[[0.;458];458];let mut b=[0.;458];for k in 0..458{j[k][k]=1.;b[k]=1.;}match kind{0=>j.fill([0...\n   |    ^^^^^^\n\nwarning: function `stamps` is never used\n  --> tools/zero_current_profile_bench.rs:20:4\n   |\n20 | fn stamps(cs:&[Case]){for c in cs{let mut p=baseline::Parameters::from_nominal(scene());p.decay_ohm=c.ohm;let mut q=candidate::Param...\n   |    ^^^^^^\n\nwarning: constant `BUS` is never used\n --> tools\\zero_baseline_kernel.rs:9:11\n  |\n9 | pub const BUS:usize=12;\n  |           ^^^\n\nwarning: constant `MIN_DT_S` is never used\n  --> tools\\zero_baseline_kernel.rs:10:11\n   |\n10 | pub const MIN_DT_S:f64=chain_charge::MIN_DT_S;\n   |           ^^^^^^^^\n\nwarning: function `vco_index` is never used\n  --> tools\\zero_baseline_kernel.rs:12:14\n   |\n12 | pub const fn vco_index(k:usize)->Option<usize> {if k==108 {None} else if k<108 {Some(k)} else {Some(k-1)}}\n   |              ^^^^^^^^^\n\nwarning: function `chain_index` is never used\n  --> tools\\zero_baseline_kernel.rs:13:14\n   |\n13 | pub const fn chain_index(k:usize)->usize {if k==66 {BUS} else if k==67 {199} else {133+k}}\n   |              ^^^^^^^^^^^\n\nwarning: fields `c2_v`, `reset_v`, `q25`, `reset_driver`, and `set_base` are never read\n  --> tools\\zero_baseline_kernel.rs:15:82\n   |\n15 | ...ct Parameters {pub controls:Controls,chain:Chain,pub sources:[f64;5],pub c2_v:f64,pub reset_v:f64,pub q25:f64,pub reset_driver:f64,pub final_decay:bool,pub keyboard:f64,pub short:bool,pub set_base:f6...\n   |       ---------- fields in this struct                                      ^^^^         ^^^^^^^         ^^^         ^^^^^^^^^^^^                                                              ^^^^^^^^\n   |\n   = note: `Parameters` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis\n\nwarning: associated items `new` and `chain` are never used\n  --> tools\\zero_baseline_kernel.rs:18:9\n   |\n16 | impl Parameters {\n   | --------------- associated items in this implementation\n17 |  /// OSC1 always belongs to the VCO panel; other branches retain imposed sources.\n18 |  pub fn new(controls:Controls,mut chain:Chain,other_on:[bool;4],alpha:[f64;4],sources:[f64;5])->Result<Self,StepError> {\n   |         ^^^\n...\n26 |  pub fn chain(self)->Chain {self.chain}\n   |         ^^^^^\n\nwarning: associated items `lift` and `chain` are never used\n  --> tools\\zero_baseline_kernel.rs:36:9\n   |\n30 | impl State {\n   | ---------- associated items in this implementation\n...\n36 |  pub fn lift(vco_high:[f64;134],vco_low:[f64;134],chain:chain_charge::State)->Self {\n   |         ^^^^\n...\n41 |  fn chain(self)->chain_charge::State {chain_charge::State{high:std::array::from_fn(|k|self.high[chain_index(k)]),low:std::array::fro...\n   |     ^^^^^\n\nwarning: function `linearize` is never used\n  --> tools\\zero_baseline_kernel.rs:83:8\n   |\n83 | pub fn linearize(p:Parameters,old:State,delta:[State;2],h:f64)->Result<Stamp,StepError>{let mut s=Stamp::blank();s.initialize(p,old,...\n   |        ^^^^^^^^^\n\nwarning: associated function `storage_bytes` is never used\n  --> tools\\zero_baseline_kernel.rs:94:15\n   |\n92 | impl Workspace{\n   | -------------- associated function in this implementation\n93 |  pub const fn new()->Self{Self{first:Stamp::blank(),second:Stamp::blank()}}\n94 |  pub const fn storage_bytes()->usize{std::mem::size_of::<Self>()}\n   |               ^^^^^^^^^^^^^\n\nwarning: function `step` is never used\n   --> tools\\zero_baseline_kernel.rs:123:8\n    |\n123 | pub fn step(p:Parameters,old:State,h:f64)->Result<Pair,StepError>{Workspace::new().step(p,old,h)}\n    |        ^^^^\n\nwarning: function `max_abs` is never used\n   --> tools\\zero_baseline_kernel.rs:126:8\n    |\n126 | pub fn max_abs<const M: usize>(x: &[f64; M]) -> f64 {\n    |        ^^^^^^^\n\nwarning: function `solve_linear` is never used\n   --> tools\\zero_baseline_kernel.rs:130:8\n    |\n130 | pub fn solve_linear<const M: usize>(\n    |        ^^^^^^^^^^^^\n\nwarning: function `solve_linear_sparse` is never used\n   --> tools\\zero_baseline_kernel.rs:139:8\n    |\n139 | pub fn solve_linear_sparse<const M: usize>(\n    |        ^^^^^^^^^^^^^^^^^^^\n\nwarning: function `solve_linear_internal` is never used\n   --> tools\\zero_baseline_kernel.rs:146:4\n    |\n146 | fn solve_linear_internal<const M: usize, const SKIP_ZERO: bool>(\n    |    ^^^^^^^^^^^^^^^^^^^^^\n\nwarning: function `solve_linear_extent` is never used\n   --> tools\\zero_baseline_kernel.rs:205:8\n    |\n205 | pub fn solve_linear_extent<const M:usize>(mut j:[[f64;M];M],mut rhs:[f64;M])->Result<[f64;M],StepError>{\n    |        ^^^^^^^^^^^^^^^^^^^\n\nwarning: fields `refinements`, `initial_backward`, and `final_backward` are never read\n  --> tools\\zero_baseline_solver.rs:73:53\n   |\n73 | pub struct Observation{pub correction:[f64;458],pub refinements:usize,pub initial_backward:f64,pub final_backward:f64}\n   |            ----------- fields in this struct        ^^^^^^^^^^^           ^^^^^^^^^^^^^^^^         ^^^^^^^^^^^^^^\n\nwarning: function `structural_policy_audit` is never used\n  --> tools\\zero_baseline_solver.rs:84:8\n   |\n84 | pub fn structural_policy_audit()->usize{let mut count=0;for i in 0..458{for k in 0..458{let mut original=true;for group in 0..2{if I...\n   |        ^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: function `rhs_probe` is never used\n  --> tools\\zero_baseline_solver.rs:87:8\n   |\n87 | pub fn rhs_probe(j:[[f64;4];4],b:[f64;4])->Result<[u64;4],StepError>{let mut lu=Lu{a:j,perm:[0;4]};lu.factor_in_place()?;Ok(lu.solve...\n   |        ^^^^^^^^^\n\nwarning: function `scratch_bytes` is never used\n  --> tools\\zero_baseline_solver.rs:88:8\n   |\n88 | pub fn scratch_bytes()->usize{std::mem::size_of::<Prepared>()}\n   |        ^^^^^^^^^^^^^\n\nwarning: constant `BUS` is never used\n --> tools\\zero_current_profile_kernel.rs:9:11\n  |\n9 | pub const BUS:usize=12;\n  |           ^^^\n\nwarning: constant `MIN_DT_S` is never used\n  --> tools\\zero_current_profile_kernel.rs:10:11\n   |\n10 | pub const MIN_DT_S:f64=chain_charge::MIN_DT_S;\n   |           ^^^^^^^^\n\nwarning: function `vco_index` is never used\n  --> tools\\zero_current_profile_kernel.rs:12:14\n   |\n12 | pub const fn vco_index(k:usize)->Option<usize> {if k==108 {None} else if k<108 {Some(k)} else {Some(k-1)}}\n   |              ^^^^^^^^^\n\nwarning: function `chain_index` is never used\n  --> tools\\zero_current_profile_kernel.rs:13:14\n   |\n13 | pub const fn chain_index(k:usize)->usize {if k==66 {BUS} else if k==67 {199} else {133+k}}\n   |              ^^^^^^^^^^^\n\nwarning: fields `c2_v`, `reset_v`, `q25`, `reset_driver`, and `set_base` are never read\n  --> tools\\zero_current_profile_kernel.rs:15:82\n   |\n15 | ...ct Parameters {pub controls:Controls,chain:Chain,pub sources:[f64;5],pub c2_v:f64,pub reset_v:f64,pub q25:f64,pub reset_driver:f64,pub final_decay:bool,pub keyboard:f64,pub short:bool,pub set_base:f6...\n   |       ---------- fields in this struct                                      ^^^^         ^^^^^^^         ^^^         ^^^^^^^^^^^^                                                              ^^^^^^^^\n   |\n   = note: `Parameters` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis\n\nwarning: associated items `new` and `chain` are never used\n  --> tools\\zero_current_profile_kernel.rs:18:9\n   |\n16 | impl Parameters {\n   | --------------- associated items in this implementation\n17 |  /// OSC1 always belongs to the VCO panel; other branches retain imposed sources.\n18 |  pub fn new(controls:Controls,mut chain:Chain,other_on:[bool;4],alpha:[f64;4],sources:[f64;5])->Result<Self,StepError> {\n   |         ^^^\n...\n26 |  pub fn chain(self)->Chain {self.chain}\n   |         ^^^^^\n\nwarning: associated items `lift` and `chain` are never used\n  --> tools\\zero_current_profile_kernel.rs:36:9\n   |\n30 | impl State {\n   | ---------- associated items in this implementation\n...\n36 |  pub fn lift(vco_high:[f64;134],vco_low:[f64;134],chain:chain_charge::State)->Self {\n   |         ^^^^\n...\n41 |  fn chain(self)->chain_charge::State {chain_charge::State{high:std::array::from_fn(|k|self.high[chain_index(k)]),low:std::array::fro...\n   |     ^^^^^\n\nwarning: function `linearize` is never used\n  --> tools\\zero_current_profile_kernel.rs:83:8\n   |\n83 | pub fn linearize(p:Parameters,old:State,delta:[State;2],h:f64)->Result<Stamp,StepError>{let mut s=Stamp::blank();s.initialize(p,old,...\n   |        ^^^^^^^^^\n\nwarning: associated function `storage_bytes` is never used\n  --> tools\\zero_current_profile_kernel.rs:94:15\n   |\n92 | impl Workspace{\n   | -------------- associated function in this implementation\n93 |  pub const fn new()->Self{Self{first:Stamp::blank(),second:Stamp::blank()}}\n94 |  pub const fn storage_bytes()->usize{std::mem::size_of::<Self>()}\n   |               ^^^^^^^^^^^^^\n\nwarning: function `step` is never used\n   --> tools\\zero_current_profile_kernel.rs:123:8\n    |\n123 | pub fn step(p:Parameters,old:State,h:f64)->Result<Pair,StepError>{Workspace::new().step(p,old,h)}\n    |        ^^^^\n\nwarning: function `max_abs` is never used\n   --> tools\\zero_current_profile_kernel.rs:126:8\n    |\n126 | pub fn max_abs<const M: usize>(x: &[f64; M]) -> f64 {\n    |        ^^^^^^^\n\nwarning: function `solve_linear` is never used\n   --> tools\\zero_current_profile_kernel.rs:130:8\n    |\n130 | pub fn solve_linear<const M: usize>(\n    |        ^^^^^^^^^^^^\n\nwarning: function `solve_linear_sparse` is never used\n   --> tools\\zero_current_profile_kernel.rs:139:8\n    |\n139 | pub fn solve_linear_sparse<const M: usize>(\n    |        ^^^^^^^^^^^^^^^^^^^\n\nwarning: function `solve_linear_internal` is never used\n   --> tools\\zero_current_profile_kernel.rs:146:4\n    |\n146 | fn solve_linear_internal<const M: usize, const SKIP_ZERO: bool>(\n    |    ^^^^^^^^^^^^^^^^^^^^^\n\nwarning: function `solve_linear_extent` is never used\n   --> tools\\zero_current_profile_kernel.rs:205:8\n    |\n205 | pub fn solve_linear_extent<const M:usize>(mut j:[[f64;M];M],mut rhs:[f64;M])->Result<[f64;M],StepError>{\n    |        ^^^^^^^^^^^^^^^^^^^\n\nwarning: fields `refinements`, `initial_backward`, and `final_backward` are never read\n  --> tools\\zero_current_profile_solver.rs:73:53\n   |\n73 | pub struct Observation{pub correction:[f64;458],pub refinements:usize,pub initial_backward:f64,pub final_backward:f64}\n   |            ----------- fields in this struct        ^^^^^^^^^^^           ^^^^^^^^^^^^^^^^         ^^^^^^^^^^^^^^\n\nwarning: function `structural_policy_audit` is never used\n  --> tools\\zero_current_profile_solver.rs:84:8\n   |\n84 | pub fn structural_policy_audit()->usize{let mut count=0;for i in 0..458{for k in 0..458{let mut original=true;for group in 0..2{if I...\n   |        ^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: function `rhs_probe` is never used\n  --> tools\\zero_current_profile_solver.rs:99:8\n   |\n99 | pub fn rhs_probe(j:[[f64;4];4],b:[f64;4])->Result<[u64;4],StepError>{let mut lu=Lu{a:j,perm:[0;4]};lu.factor_in_place()?;Ok(lu.solve...\n   |        ^^^^^^^^^\n\nwarning: function `scratch_bytes` is never used\n   --> tools\\zero_current_profile_solver.rs:100:8\n    |\n100 | pub fn scratch_bytes()->usize{std::mem::size_of::<Prepared>()}\n    |        ^^^^^^^^^^^^^\n\nwarning: 43 warnings emitted\n\n",
+      "wall_s": 1.4356727999984287
+    },
+    {
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-zero-profile01\\profile.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-zero-inputs01\\pairs.bin"
+      ],
+      "exit_code": 0,
+      "stdout": "PROFILE,0,783361000,168\nPROFILE,1,431863300,618\nPROFILE,2,331908500,1236\nPROFILE,3,253587800,1236\nPROFILE,4,0,0\nPROFILE,5,259103300,618\nPROFILE,6,11422800,1236\nPROFILE,7,5383800,618\nPROFILE,8,29664900,618\nPROFILE,9,44697700,618\nPROFILE,10,34207600,13818\nPROFILE,11,4123000,1965\nPROFILE,12,32751000,3201\nPROFILE,13,8687500,729\nPROFILE,14,77735200,618\nPROFILE,15,4261800,729\nPROFILE,16,23810400,729\nPROFILE,17,290574400,618\nCURRENT_PROFILE_PASSED,168,876418200,783686300\n",
+      "stderr": "",
+      "wall_s": 1.7953085999979521
+    }
+  ],
+  "replays": [],
+  "source_sha256_after": {
+    "tools/zero_current_profile_solver.rs": "c93fe845ed8b6edd1d22167b6896e8dc5a16fa5117aa264a4f87d2bbd4c918f7",
+    "tools/zero_current_profile_kernel.rs": "c7f3aba2a52b352315d3070e13eb0c16c3752f01bae420e082943e4ba4fd2268",
+    "tools/zero_baseline_solver.rs": "d04238ee85f88f77381b9f3381a65b7d8c880f18ee2368b87567d9f67c37de59",
+    "tools/zero_baseline_kernel.rs": "b47a1ad74030af703733bafadad0aa33dd5c2baa7f300c9b4732fbbf9b951039",
+    "tools/zero_current_profile_bench.rs": "4ce00d7174b36c18da938c465b37bf0c55e94883035f0e2cfab022db463339a8",
+    "tools/prepare_zero_profile.py": "b4e507a1e199b0918a43734117235a7d050ede5448672b2bcb6abf299ff90c6b",
+    "tools/run_zero_profile.py": "7f9ca563b88272e84963dd4d15005ccb598a53f1fa4403d4429220e610e9e4f5",
+    "tools/prepare_voice_pivot.py": "9bd674b9e9ef1de091c0260dd8959e0eb73e38244217ee376db2003e3a3259b8",
+    "tools/prepare_zero_voice.py": "6db8238d1eec49df4b3630aab28a812773de15033ef8747fe30669c2306563e8",
+    "evidence/voice_zero_inputs01.json": "fb25dd0c17862c4eb8e4cd2289698d78dc8311a994e7ffbf7df188b3d648ec29"
+  },
+  "private_used_sha256_after": {
+    "references-local/voice-zero-inputs01/pairs.bin": "c0afc08c56cd731a986ba1fc2cc77ff890ba85495462ce6f87a47a451fcd287b",
+    "references-local/voice-block-library02/librf_d_circuit.rlib": "cf290b02e69e703c479597a36a7853d2cb024f8357154ff98b2dda22d984ea3c"
+  },
+  "outputs": [
+    {
+      "path": "references-local/voice-zero-profile01/profile.exe",
+      "sha256": "e32fa942e70ee44df99ce262f2f3a2baac65a0f339d22e0ab64546afe592f0b0",
+      "bytes": 1648128
+    }
+  ]
+}
