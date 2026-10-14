@@ -630,3 +630,13 @@ de 8 ms pasan con 251 nodos originales; no hay onda de entrada impuesta.
 Motor detallado de laboratorio, sin nueva escucha o RT. Prioridad: reducir
 costo contra esta referencia y extender a una nota audible.
 [QA](evidence/dual_voice_tests01.json).
+
+
+## Costo menor y voz de 24 ms
+
+[La variante optimizada](docs/VOZ_COSTO_RESULTADOS.md) conserva el circuito
+y reduce ~37 % el costo del solver en el banco. Dos trayectorias nuevas de
+24 ms pasan con referencia original, sin reset a 8 ms. Hay una ráfaga local
+de J7 de 24 ms, sin repetir ciclos; es corta y tenue, no una nota sostenida.
+La siguiente prioridad sigue siendo una reducción mayor y duración útil.
+[QA](evidence/voice_cost_tests01.json).

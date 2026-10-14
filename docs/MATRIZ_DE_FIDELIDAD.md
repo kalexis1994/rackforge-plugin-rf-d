@@ -831,3 +831,15 @@ tangente efectiva comparadas. 64 clocks y balance BUS admitidos. DC
 condicionado nuevo; no prolonga historia antigua. Panel fijo, otras ramas
 omitidas del subgrafo ON y segundo VCA impuesto; sin nuevo audio, MIDI,
 fidelidad física o RT. Duración y costo son ahora el siguiente objetivo.
+
+
+## Solver optimizado y trayectoria de 24 ms — 2026-10-14
+
+[Resultados](VOZ_COSTO_RESULTADOS.md): orden de eliminación, memoria
+reutilizada y sustituciones triangulares de ceros exactos, sin cambiar el
+circuito o gates. Ratio mediano 0,63424 del solve en el banco; no atribuirlo
+a toda la voz o a deadlines. Dos escenas completas de 24 ms, 58585
+Accepted, 12550 filas originales, 192 clocks y prefix anterior admitidos.
+Ráfaga J7 de 24 ms con adaptación explícita, sin loops o normalización.
+No prolonga 164 ms históricos ni acredita nota sostenida, panel general,
+MIDI, fidelidad física o tiempo real.

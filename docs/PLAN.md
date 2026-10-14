@@ -841,3 +841,13 @@ y original de 251 nodos admitidos. Ya no se impone una onda al filtro.
 Prioridad siguiente: reducción del costo con puertos/cargas conservados y
 error respecto de esta voz, duración suficiente para escuchar una nota.
 No agregar certificados locales como condición previa a ese avance.
+
+
+## Costo y duración de voz — 2026-10-14
+
+[Orden y memoria del solver](VOZ_COSTO_RESULTADOS.md) admitidos en la voz
+cargada: ~37 % menos costo lineal en el banco, Parts conservados por bits,
+trayectoria ampliada a 24 ms en dos resoluciones y prefix antiguo contrastado.
+Export local breve de J7 sin repetir ciclos. Prioridad siguiente: reducción
+mayor del modelo contra esta referencia, con error musical/de puertos
+medido, para una nota sostenida y un motor utilizable. RT sigue pendiente.
