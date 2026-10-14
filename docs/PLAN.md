@@ -770,3 +770,13 @@ Dos eventos por resolución conservan 458 HIGH/LOW, resistencia, clock y propues
 229 estados y nueve balances por fase/total/unión pasan. Dos WAV reales de 148 ms,
 17 entradas/código identificados y cuatro integraciones CLI. Sin fidelidad física
 o RT; la historia inicial sigue condicionada. [QA](../evidence/voice_retrigger_tests01.json).
+
+
+El [cutoff cargado de panel](VOZ_CUTOFF_RESULTADOS.md) añade 16,004 ms:
+α1→0,5→1 sin modificar KEY/CV ni borrar cargas. Codec completo RFCTF001 de
+3736 bytes; 16 Accepted tras eventos y ocho de unión coinciden con block.
+32976 ecuaciones seleccionadas nuevas con el panel
+de cada fase, 22 relojes de 229 estados y nueve balances por fase/total/unión.
+Dos WAV reales de 164 ms, 24 entradas identificadas y cuatro checks CLI.
+Contorno de filtro pin16 sigue impuesto; sin Hz calibrados, fidelidad física o RT.
+[QA](../evidence/voice_cutoff_tests01.json).
