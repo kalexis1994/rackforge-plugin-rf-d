@@ -739,3 +739,14 @@ scratch extra. No se promueven. Perfil actual exacto: initialize55.13 %
 incluye parts42.37 %, solve37.09 %; relojes anidados, sin ganancia inferida.
 La voz pública y audio68 ms permanecen idénticos. Siguiente: ensamblado y
 parts/copia de estados, conservando puertos, cargas y contraste completo.
+
+
+El [ensamblado directo público](VOZ_ENSAMBLADO_RESULTADOS.md) evita
+el contenedor200 y su copia a229, conservando constructor, validaciones,
+sumas, masa, contorno y puertos.71019312 campos Parts/stamp por bits en168
+pares; API pública ratio0.895860583 y workspace3378208 igual.
+6464 Accepted completos/12 rejillas y nueve balances
+coinciden en4 ms propios por resolución,68.442→72.442 ms; kernel ratio
+0.920475855. 2748 ecuaciones originales
+heredadas por identidad,0 nuevas. Fallos de binding/replays conservados.
+Sin duración/WAV nuevos, heap/deadline o RT. Siguiente duración útil propia.

@@ -1,0 +1,172 @@
+{
+  "passed": true,
+  "source_sha256": {
+    "tools/assembly_voice_paired.rs": "863bdc9e757df18f60ce1b6d17c28a63a529359b8d4f09c2486f15efe78e2523",
+    "tools/run_assembly_paired.py": "1e1649e96db731be1d4761731eb6aeb664c7f0b94547f88006f89c9559383429",
+    "tools/promote_assembly_voice.py": "250aa1d2b5018d98192ce199945790366331f6545bdc3c07543c8a31bff6973b",
+    "evidence/voice_assembly_public01.json": "a602e26181592c34bedeaaca1b7cb4847dec3de05f76eb94fde77e8cebebca29",
+    "evidence/voice_assembly_promotion01.json": "c88d51d4164460b33070a8bf525a657e3ab7a3b7c1147a9fb4cf793fcdcbf220",
+    "docs/VOZ_ENSAMBLADO_PROTOCOLO.md": "971e61602c079aab475283d96355d6c5da6158c64825c033dc6390318abbb60d"
+  },
+  "private_used_sha256": {
+    "references-local/voice-assembly-public01/librf_d_circuit.rlib": "9dbada9779f30c4972b057befe092524d091d3444ea777206b618d701236385d",
+    "references-local/voice-assembly-seeds01/1048576.ckp": "3cc5e9e51998283ca01cca613fcf6de452638fafb011735934401a334506181c",
+    "references-local/voice-assembly-seeds01/524288.ckp": "7178b7d1dcc805c6d97d8336f2e0d3f4d3615626c18ad3b1c71b9e10d71ad393"
+  },
+  "compiler": {
+    "path": "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+    "sha256": "fd6232f90a981e28472ce6900232946a1f1bcad8ec8270cd5ae6a3a357208b98",
+    "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+  },
+  "new_library_compile": false,
+  "new_cargo_cache": false,
+  "lab_stack_bytes": 33554432,
+  "output_budget_bytes": 100663296,
+  "every_accepted_bits_identical": true,
+  "public_family": true,
+  "new_circuit_duration_s": 0,
+  "new_audio": false,
+  "physical_fidelity": false,
+  "real_time": false,
+  "commands": [
+    {
+      "command": [
+        "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+        "--edition=2021",
+        "-C",
+        "opt-level=2",
+        "-C",
+        "strip=symbols",
+        "-C",
+        "link-arg=-Wl,--stack,33554432",
+        "tools/assembly_voice_paired.rs",
+        "--extern",
+        "rf_d_circuit=C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-assembly-public01\\librf_d_circuit.rlib",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-assembly-paired01\\paired.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "warning: function `same` is never used\n  --> tools/assembly_voice_paired.rs:10:4\n   |\n10 | fn same(a:&joint::Pair,b:&joint::Pair)->bool {\n   |    ^^^^\n   |\n   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: constant `DECAY` is never used\n  --> tools/assembly_voice_paired.rs:14:114\n   |\n14 | const START:u64=35883319296;const REL:[u64;2]=[0,2097152000];const CUT:u64=419430400;const SIZE:usize=3728;const DECAY:f64=1000.;\n   |                                                                                                                  ^^^^^\n\nwarning: function `same_accepted` is never used\n  --> tools/assembly_voice_paired.rs:30:4\n   |\n30 | fn same_accepted(a:&temporal::Accepted,b:&temporal::Accepted)->bool{\n   |    ^^^^^^^^^^^^^\n\nwarning: function `selected` is never used\n  --> tools/assembly_voice_paired.rs:34:4\n   |\n34 | fn selected(w:&mut impl Write,old:joint::State,pair:&joint::Pair,h:f64){writeln!(w,\"JOINT_ROOT,0,{h:.17e},{:.17e},{:.17e}\",pair.resi...\n   |    ^^^^^^^^\n\nwarning: 4 warnings emitted\n\n",
+      "wall_s": 0.6949655999997049
+    }
+  ],
+  "profiles": [
+    {
+      "maximum_half_ticks": 1048576,
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-assembly-paired01\\paired.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-assembly-seeds01\\1048576.ckp",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-assembly-paired01\\1048576"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "PAIRED_PASSED,1048576,count=2759,baseline_ns=46562822400,candidate_ns=42891907600,wall_s=95.4393062\n",
+      "wall_s": 95.55057329999909
+    },
+    {
+      "maximum_half_ticks": 524288,
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-assembly-paired01\\paired.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-assembly-seeds01\\524288.ckp",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-assembly-paired01\\524288"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "PAIRED_PASSED,524288,count=3705,baseline_ns=57394502400,candidate_ns=52798299800,wall_s=118.3224055\n",
+      "wall_s": 118.35486279999895
+    }
+  ],
+  "replays": [],
+  "wall_s": 214.60065549999854,
+  "source_sha256_after": {
+    "tools/assembly_voice_paired.rs": "863bdc9e757df18f60ce1b6d17c28a63a529359b8d4f09c2486f15efe78e2523",
+    "tools/run_assembly_paired.py": "1e1649e96db731be1d4761731eb6aeb664c7f0b94547f88006f89c9559383429",
+    "tools/promote_assembly_voice.py": "250aa1d2b5018d98192ce199945790366331f6545bdc3c07543c8a31bff6973b",
+    "evidence/voice_assembly_public01.json": "a602e26181592c34bedeaaca1b7cb4847dec3de05f76eb94fde77e8cebebca29",
+    "evidence/voice_assembly_promotion01.json": "c88d51d4164460b33070a8bf525a657e3ab7a3b7c1147a9fb4cf793fcdcbf220",
+    "docs/VOZ_ENSAMBLADO_PROTOCOLO.md": "971e61602c079aab475283d96355d6c5da6158c64825c033dc6390318abbb60d"
+  },
+  "private_used_sha256_after": {
+    "references-local/voice-assembly-public01/librf_d_circuit.rlib": "9dbada9779f30c4972b057befe092524d091d3444ea777206b618d701236385d",
+    "references-local/voice-assembly-seeds01/1048576.ckp": "3cc5e9e51998283ca01cca613fcf6de452638fafb011735934401a334506181c",
+    "references-local/voice-assembly-seeds01/524288.ckp": "7178b7d1dcc805c6d97d8336f2e0d3f4d3615626c18ad3b1c71b9e10d71ad393"
+  },
+  "outputs": [
+    {
+      "path": "references-local/voice-assembly-paired01/1048576/baseline.txt",
+      "sha256": "91075c888ce85d41a3804b5f79fbc19f822d65f86bf0007dae57155c1fb39914",
+      "bytes": 3183793
+    },
+    {
+      "path": "references-local/voice-assembly-paired01/1048576/candidate-final.ckp",
+      "sha256": "fd74c37568d8d51050c07cee233739e5be8e52a4815408ae1c477cf919604af5",
+      "bytes": 3728
+    },
+    {
+      "path": "references-local/voice-assembly-paired01/1048576/candidate.txt",
+      "sha256": "91075c888ce85d41a3804b5f79fbc19f822d65f86bf0007dae57155c1fb39914",
+      "bytes": 3183793
+    },
+    {
+      "path": "references-local/voice-assembly-paired01/1048576/entry.ckp",
+      "sha256": "3cc5e9e51998283ca01cca613fcf6de452638fafb011735934401a334506181c",
+      "bytes": 3728
+    },
+    {
+      "path": "references-local/voice-assembly-paired01/1048576/final.ckp",
+      "sha256": "fd74c37568d8d51050c07cee233739e5be8e52a4815408ae1c477cf919604af5",
+      "bytes": 3728
+    },
+    {
+      "path": "references-local/voice-assembly-paired01/1048576/grids.bin",
+      "sha256": "6bd6608ee4a7acff58dcc2b781eb8aeaea8f035f1bbfd926499ce125078dfca5",
+      "bytes": 22368
+    },
+    {
+      "path": "references-local/voice-assembly-paired01/1048576/integrals.bin",
+      "sha256": "2bc3318cfabfad4decf5c239b5d1f7da8f49ab3f3b23fcd8411d90473d7c9486",
+      "bytes": 72
+    },
+    {
+      "path": "references-local/voice-assembly-paired01/524288/baseline.txt",
+      "sha256": "9c94e07448f169926e60a11fa183f5be97990614ae5be0a2f228a7ce137767ce",
+      "bytes": 4259039
+    },
+    {
+      "path": "references-local/voice-assembly-paired01/524288/candidate-final.ckp",
+      "sha256": "f8c62b4fb64cf4344af532f117f831c085576e34bebec96f4d00076144105244",
+      "bytes": 3728
+    },
+    {
+      "path": "references-local/voice-assembly-paired01/524288/candidate.txt",
+      "sha256": "9c94e07448f169926e60a11fa183f5be97990614ae5be0a2f228a7ce137767ce",
+      "bytes": 4259039
+    },
+    {
+      "path": "references-local/voice-assembly-paired01/524288/entry.ckp",
+      "sha256": "7178b7d1dcc805c6d97d8336f2e0d3f4d3615626c18ad3b1c71b9e10d71ad393",
+      "bytes": 3728
+    },
+    {
+      "path": "references-local/voice-assembly-paired01/524288/final.ckp",
+      "sha256": "f8c62b4fb64cf4344af532f117f831c085576e34bebec96f4d00076144105244",
+      "bytes": 3728
+    },
+    {
+      "path": "references-local/voice-assembly-paired01/524288/grids.bin",
+      "sha256": "d65aa9a488c0a262f5ec1fe303bd4d28aebb21bd3776437ec5e26184e281d44c",
+      "bytes": 22368
+    },
+    {
+      "path": "references-local/voice-assembly-paired01/524288/integrals.bin",
+      "sha256": "2fe4f7d5642afc64c749d78e6cfd6adb557dcba5bbe1b2df4a64e8171b870b35",
+      "bytes": 72
+    },
+    {
+      "path": "references-local/voice-assembly-paired01/paired.exe",
+      "sha256": "23278d55ccc6e37023bc33852587371976f2654a5a6db8fc0493435a1bc07d68",
+      "bytes": 1622528
+    }
+  ]
+}

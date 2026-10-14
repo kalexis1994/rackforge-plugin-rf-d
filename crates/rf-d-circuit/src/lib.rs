@@ -636,3 +636,6 @@ pub mod decay_engine;
 
 pub mod block_decay_voice;
 pub mod block_decay_engine;
+
+pub mod assembly_decay_voice;
+pub mod assembly_decay_engine;

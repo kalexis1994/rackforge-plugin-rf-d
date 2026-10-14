@@ -1,0 +1,120 @@
+{
+  "passed": true,
+  "public": false,
+  "source_sha256": {
+    "tools/assembly_voice_bench.rs": "1e81d8e51e6834bf503a896e4a14555276fbfb4a1843d8566e10106124263f93",
+    "tools/assembly_voice_kernel.rs": "85e92871c2715627b6d670ae35fd14d2d6547e9b5db101bce1d6e3c7f4a7dd10",
+    "tools/assembly_vco_helper.rs": "968a04347fb735e57e676b65cbcf39737cc978c8ebc560ea43f50dfc091533ff",
+    "evidence/voice_assembly_inputs03.json": "94c117d1f2a7d9a90e2cbfb58dd3938a3ff659c347cc0604a3926b0249b98768",
+    "tools/prepare_assembly_voice.py": "e1399382020376339b54ab5fa925c38f79f4066ead386c9e72f1374dd76f8e62",
+    "tools/run_assembly_voice.py": "b4a73dc423bdb4a210120a3bc39244d9465243ac6723a89905367769833fc1b7",
+    "docs/VOZ_ENSAMBLADO_PROTOCOLO.md": "971e61602c079aab475283d96355d6c5da6158c64825c033dc6390318abbb60d"
+  },
+  "private_used_sha256": {
+    "references-local/voice-zero-inputs01/pairs.bin": "c0afc08c56cd731a986ba1fc2cc77ff890ba85495462ce6f87a47a451fcd287b",
+    "references-local/voice-block-library02/librf_d_circuit.rlib": "cf290b02e69e703c479597a36a7853d2cb024f8357154ff98b2dda22d984ea3c"
+  },
+  "compiler": {
+    "path": "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+    "sha256": "fd6232f90a981e28472ce6900232946a1f1bcad8ec8270cd5ae6a3a357208b98",
+    "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+  },
+  "new_library_compile": false,
+  "new_cargo_cache": false,
+  "lab_stack_bytes": 33554432,
+  "numeric_bank_exact": true,
+  "parts_bit_fields": 35548128,
+  "complete_stamp_bit_fields": 35471184,
+  "invalid_parts_cases": 12,
+  "error_policy_checks": 6,
+  "rounds": [
+    [
+      0,
+      768949200,
+      686278500
+    ],
+    [
+      1,
+      823812900,
+      697113400
+    ],
+    [
+      2,
+      776192500,
+      733813300
+    ],
+    [
+      3,
+      758269200,
+      684346500
+    ],
+    [
+      4,
+      766299200,
+      687892500
+    ]
+  ],
+  "median_ratio": 0.8945877048834956,
+  "worst_round_ratio": 0.9454011730337513,
+  "cost_utility_passed": true,
+  "workspace_bytes": [
+    3378208,
+    3378208
+  ],
+  "physical_fidelity": false,
+  "real_time": false,
+  "commands": [
+    {
+      "command": [
+        "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+        "--edition=2021",
+        "-C",
+        "opt-level=2",
+        "-C",
+        "strip=symbols",
+        "-C",
+        "link-arg=-Wl,--stack,33554432",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\assembly_voice_bench.rs",
+        "--extern",
+        "rf_d_circuit=C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-block-library02\\librf_d_circuit.rlib",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-assembly-lab03\\bench.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "warning: constant `MIN_DT_S` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\assembly_voice_kernel.rs:11:11\n   |\n11 | pub const MIN_DT_S:f64=chain_charge::MIN_DT_S;\n   |           ^^^^^^^^\n   |\n   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: fields `c2_v`, `reset_v`, `q25`, `reset_driver`, and `set_base` are never read\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\assembly_voice_kernel.rs:16:82\n   |\n16 | ...ct Parameters {pub controls:Controls,chain:Chain,pub sources:[f64;5],pub c2_v:f64,pub reset_v:f64,pub q25:f64,pub reset_driver:f64,pub final_decay:bool,pub keyboard:f64,pub short:bool,pub set_base:f6...\n   |       ---------- fields in this struct                                      ^^^^         ^^^^^^^         ^^^         ^^^^^^^^^^^^                                                              ^^^^^^^^\n   |\n   = note: `Parameters` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis\n\nwarning: associated items `new` and `chain` are never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\assembly_voice_kernel.rs:19:9\n   |\n17 | impl Parameters {\n   | --------------- associated items in this implementation\n18 |  /// OSC1 always belongs to the VCO panel; other branches retain imposed sources.\n19 |  pub fn new(controls:Controls,mut chain:Chain,other_on:[bool;4],alpha:[f64;4],sources:[f64;5])->Result<Self,StepError> {\n   |         ^^^\n...\n27 |  pub fn chain(self)->Chain {self.chain}\n   |         ^^^^^\n\nwarning: associated function `lift` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\assembly_voice_kernel.rs:37:9\n   |\n31 | impl State {\n   | ---------- associated function in this implementation\n...\n37 |  pub fn lift(vco_high:[f64;134],vco_low:[f64;134],chain:chain_charge::State)->Self {\n   |         ^^^^\n\nwarning: function `step` is never used\n   --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\assembly_voice_kernel.rs:132:8\n    |\n132 | pub fn step(p:Parameters,old:State,h:f64)->Result<Pair,StepError>{Workspace::new().step(p,old,h)}\n    |        ^^^^\n\nwarning: function `max_abs` is never used\n   --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\assembly_voice_kernel.rs:135:8\n    |\n135 | pub fn max_abs<const M: usize>(x: &[f64; M]) -> f64 {\n    |        ^^^^^^^\n\nwarning: function `solve_linear` is never used\n   --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\assembly_voice_kernel.rs:139:8\n    |\n139 | pub fn solve_linear<const M: usize>(\n    |        ^^^^^^^^^^^^\n\nwarning: function `solve_linear_sparse` is never used\n   --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\assembly_voice_kernel.rs:148:8\n    |\n148 | pub fn solve_linear_sparse<const M: usize>(\n    |        ^^^^^^^^^^^^^^^^^^^\n\nwarning: function `solve_linear_internal` is never used\n   --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\assembly_voice_kernel.rs:155:4\n    |\n155 | fn solve_linear_internal<const M: usize, const SKIP_ZERO: bool>(\n    |    ^^^^^^^^^^^^^^^^^^^^^\n\nwarning: function `solve_linear_extent` is never used\n   --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\assembly_voice_kernel.rs:214:8\n    |\n214 | pub fn solve_linear_extent<const M:usize>(mut j:[[f64;M];M],mut rhs:[f64;M])->Result<[f64;M],StepError>{\n    |        ^^^^^^^^^^^^^^^^^^^\n\nwarning: fields `refinements`, `initial_backward`, and `final_backward` are never read\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\..\\crates\\rf-d-circuit\\src\\block_decay_solver.rs:73:53\n   |\n73 | pub struct Observation{pub correction:[f64;458],pub refinements:usize,pub initial_backward:f64,pub final_backward:f64}\n   |            ----------- fields in this struct        ^^^^^^^^^^^           ^^^^^^^^^^^^^^^^         ^^^^^^^^^^^^^^\n\nwarning: function `structural_policy_audit` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\..\\crates\\rf-d-circuit\\src\\block_decay_solver.rs:84:8\n   |\n84 | pub fn structural_policy_audit()->usize{let mut count=0;for i in 0..458{for k in 0..458{let mut original=true;for group in 0..2{if I...\n   |        ^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: associated items `from_nodes` and `difference` are never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\assembly_vco_helper.rs:13:9\n   |\n12 | impl State {\n   | ---------- associated items in this implementation\n13 |  pub fn from_nodes(high:[f64;N])->Self {Self{high,low:[0.;N]}}\n   |         ^^^^^^^^^^\n14 |  pub fn advanced(self,delta:[f64;N])->Self {let mut q=self;for k in 0..N {(q.high[k],q.low[k])=add_pair(self.high[k],self.low[k],del...\n15 |  pub fn difference(self,other:Self)->[f64;N] {std::array::from_fn(|k|{let(h,l)=add_pair(self.high[k],self.low[k],-other.high[k]);let...\n   |         ^^^^^^^^^^\n\nwarning: struct `Solution` is never constructed\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\assembly_vco_helper.rs:21:12\n   |\n21 | pub struct Solution {pub candidate:State,pub delta:[f64;N],pub iterations:usize,pub trials:usize,pub residual_ratio:f64,pub correcti...\n   |            ^^^^^^^^\n\nwarning: function `linearize` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\assembly_vco_helper.rs:51:8\n   |\n51 | pub fn linearize(previous:State,delta:[f64;N],c:Controls,dt:f64)->Result<Stamp,vco1_stamp::Error> {\n   |        ^^^^^^^^^\n\nwarning: function `merit` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\assembly_vco_helper.rs:68:4\n   |\n68 | fn merit(r:&[f64;N])->f64 {r.iter().enumerate().fold(0_f64,|a,(i,v)|a.max(v.abs()/if i<NV {1e-13} else {1e-11}))}\n   |    ^^^^^\n\nwarning: function `correction` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\assembly_vco_helper.rs:69:4\n   |\n69 | fn correction(d:&[f64;N])->f64 {d.iter().enumerate().fold(0_f64,|a,(i,v)|a.max(v.abs()/if i<NV {2e-9} else {2e-12}))}\n   |    ^^^^^^^^^^\n\nwarning: function `solve` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\assembly_vco_helper.rs:70:8\n   |\n70 | pub fn solve(c:Controls,previous:State,dt:f64,budget:Budget)->Result<Solution,Error> {\n   |        ^^^^^\n\nwarning: function `observed_currents` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\assembly_vco_helper.rs:88:8\n   |\n88 | pub fn observed_currents(now:State,old:State,dt:f64)->Result<[f64;3],vco1_stamp::Error> {\n   |        ^^^^^^^^^^^^^^^^^\n\nwarning: constant `NV` is never used\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\..\\crates\\rf-d-circuit\\src\\vco1_stamp_data.rs:2:11\n  |\n2 | pub const NV: usize = 98;\n  |           ^^\n\nwarning: constant `N` is never used\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\..\\crates\\rf-d-circuit\\src\\vco1_stamp_data.rs:3:11\n  |\n3 | pub const N: usize = 134;\n  |           ^\n\nwarning: constant `GROUND` is never used\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\..\\crates\\rf-d-circuit\\src\\vco1_stamp_data.rs:4:11\n  |\n4 | pub const GROUND: usize = N;\n  |           ^^^^^^\n\nwarning: constant `NAMES` is never used\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\..\\crates\\rf-d-circuit\\src\\vco1_stamp_data.rs:5:11\n  |\n5 | pub const NAMES: [&str;N] = [\"BEND\",\"EXT\",\"FET_C3_LEFT\",\"FET_C4_LEFT\",\"FET_COMMON_SOURCE\",\"FET_LEFT_DRAIN\",\"FET_RIGHT_DRAIN\",\"IC1_OUT...\n  |           ^^^^^\n\nwarning: constant `RESISTORS` is never used\n --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\..\\crates\\rf-d-circuit\\src\\vco1_stamp_data.rs:6:18\n  |\n6 | pub(crate) const RESISTORS: [(usize,usize,f64);61] = [(20,22,43000.0),(22,25,910000.0),(19,27,10700.0),(19,3,33200.0),(19,6,5600.0),(...\n  |                  ^^^^^^^^^\n\nwarning: constant `VOLTAGES` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\..\\crates\\rf-d-circuit\\src\\vco1_stamp_data.rs:10:18\n   |\n10 | pub(crate) const VOLTAGES: [(usize,usize,f64);11] = [(14,134,-10.0),(19,134,10.0),(16,134,-5.0),(0,134,-2.1),(55,134,-2.1),(11,134,-...\n   |                  ^^^^^^^^\n\nwarning: constant `TRIMS` is never used\n  --> C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\..\\crates\\rf-d-circuit\\src\\vco1_stamp_data.rs:11:18\n   |\n11 | pub(crate) const TRIMS: [(usize,usize);3] = [(42,34),(34,41),(9,38)];\n   |                  ^^^^^\n\nwarning: 26 warnings emitted\n\n",
+      "wall_s": 1.114537500001461
+    },
+    {
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-assembly-lab03\\bench.exe",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-zero-inputs01\\pairs.bin"
+      ],
+      "exit_code": 0,
+      "stdout": "PARTS_PASSED,336,105798\nSTAMPS_PASSED,168,211138\nINVALID_PARTS_PASSED,12\nERRORS_PASSED,6\nSTORAGE,3378208,3378208\nROUND,0,768949200,686278500\nROUND,1,823812900,697113400\nROUND,2,776192500,733813300\nROUND,3,758269200,684346500\nROUND,4,766299200,687892500\nASSEMBLY_BENCH_PASSED,168,1834,5\n",
+      "stderr": "",
+      "wall_s": 8.93730730000243
+    }
+  ],
+  "replays": [],
+  "source_sha256_after": {
+    "tools/assembly_voice_bench.rs": "1e81d8e51e6834bf503a896e4a14555276fbfb4a1843d8566e10106124263f93",
+    "tools/assembly_voice_kernel.rs": "85e92871c2715627b6d670ae35fd14d2d6547e9b5db101bce1d6e3c7f4a7dd10",
+    "tools/assembly_vco_helper.rs": "968a04347fb735e57e676b65cbcf39737cc978c8ebc560ea43f50dfc091533ff",
+    "evidence/voice_assembly_inputs03.json": "94c117d1f2a7d9a90e2cbfb58dd3938a3ff659c347cc0604a3926b0249b98768",
+    "tools/prepare_assembly_voice.py": "e1399382020376339b54ab5fa925c38f79f4066ead386c9e72f1374dd76f8e62",
+    "tools/run_assembly_voice.py": "b4a73dc423bdb4a210120a3bc39244d9465243ac6723a89905367769833fc1b7",
+    "docs/VOZ_ENSAMBLADO_PROTOCOLO.md": "971e61602c079aab475283d96355d6c5da6158c64825c033dc6390318abbb60d"
+  },
+  "private_used_sha256_after": {
+    "references-local/voice-zero-inputs01/pairs.bin": "c0afc08c56cd731a986ba1fc2cc77ff890ba85495462ce6f87a47a451fcd287b",
+    "references-local/voice-block-library02/librf_d_circuit.rlib": "cf290b02e69e703c479597a36a7853d2cb024f8357154ff98b2dda22d984ea3c"
+  },
+  "outputs": [
+    {
+      "path": "references-local/voice-assembly-lab03/bench.exe",
+      "sha256": "188f02ec751546aaf6ec25ea9e606246ccb2f321ec2bb863e8a47a087b676e21",
+      "bytes": 1625088
+    }
+  ]
+}
