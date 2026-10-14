@@ -896,3 +896,16 @@ bytes de los exports borrados no se recuperan desde su inventario.
 
 [Resultados](HYBRID_VOZ_RESULTADOS.md),
 [QA](../evidence/hybrid_voice_tests01.json).
+
+
+## Condensación dinámica de la voz híbrida — 2026-10-14
+
+| Nivel | Alcance admitido | Límite |
+|---|---|---|
+| Solve | Radau 236 filas, interiores 108/124 y exterior 4; LU con frontera | Reducción lineal exacta, no menos memorias físicas |
+| Estado | 118 incógnitas HIGH/LOW y cargas reconstruidas; rechazo de enlaces inesperados | Misma escena nominal 40–100 ms; sin arranque/CV generales |
+| Contraste | 192 RHS, 962 relojes de salida, estados finales y 5712 filas originales | Candidatos nativos auditados; sin nueva trayectoria original independiente |
+| Costo | 23,7608 s frente a 28,1617 s fresco; 15,63 % menos, heap cero | Una escena/plataforma, todavía offline y sin deadline RT |
+
+[Resultados](HYBRID_SCHUR_RESULTADOS.md),
+[QA](../evidence/hybrid_schur_tests01.json).

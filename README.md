@@ -688,3 +688,15 @@ pasan. 5712 ecuaciones originales contrastadas y heap cero medido.
 28,5 s por 60 ms simulados; aún sin RT, arranque/CV generales o nuevo
 WAV. Sin carpetas de muestras; área temporal vacía.
 [QA](evidence/hybrid_voice_tests01.json).
+
+
+## 2026-10-14 — Condensación dinámica de la voz híbrida
+
+[Schur de cadena](docs/HYBRID_SCHUR_RESULTADOS.md): 236 filas Radau
+a dos interiores de 108/124 y cuatro incógnitas exteriores VCA_BASE/TAIL.
+Se reconstruyen las 118 incógnitas HIGH/LOW y todas las cargas. J7 y
+estados coinciden con el híbrido previo dentro de precisión numérica;
+5712 filas originales pasan. Control fresco 28,1617 s frente a 23,7608 s
+para 60 ms: 15,63 % menos costo, heap cero, todavía offline. Tres
+rechazos conservados, sin WAV/cache/muestras nuevas.
+[QA](evidence/hybrid_schur_tests01.json).

@@ -905,3 +905,16 @@ J7 RMS 1,0672 %, pico 2,608 %, 5712 filas originales pasan. Heap cero;
 28,5 s por 60 ms, sin RT ni nuevo WAV. Próximo bloque: reducir dinámica
 de cadena sobre esta unión y contrastar J7/cargas/costo; luego arranque,
 ataque y CV. Evitar volver a certificados aislados antes de esa función.
+
+
+## 2026-10-14 — Frontera dinámica de cadena condensada
+
+[Resultado](HYBRID_SCHUR_RESULTADOS.md): contornos y audio separados
+por VCA_BASE/TAIL en ambas etapas Radau. Interiores 108/124, exterior
+cuatro, estado físico completo de 118 incógnitas reconstruido. Misma
+señal/cargas, 5712 filas originales y costo 0,843728 del control fresco.
+El primer Schur correcto fue más lento; la versión final usa LU con
+frontera y evita Jacobiano completo en trials de residual. Gates intactos.
+Siguiente: reducir evaluación eléctrica de cadena sobre esta frontera
+verificada, con cargas/J7/costo; luego ampliar arranque/ataque y CV.
+La frontera pequeña no elimina por sí sola el costo de los stamps.
