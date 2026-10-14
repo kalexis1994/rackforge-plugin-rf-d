@@ -878,3 +878,18 @@ conservados, 70 estrellas y 1602 observaciones de voz pasan. El VCO
 completo aún genera la sierra de referencia. Próximo: núcleo de fase con
 forma/curva CV derivadas y contraste de reacción a la carga en este puerto.
 No presentar el puerto resistivo como reducción ya completa del VCO/741.
+
+
+## 2026-10-14 — VCO nominal de fase implementado
+
+[Prototipo](VCO_FASE_NOMINAL_RESULTADOS.md): fuente periódica derivada de
+circuito y red de salida de cuatro puertos. Frecuencia/fase, DC/armónicos
+1–8 y reacción diferencial local al BUS pasan contra datos reservados.
+~0.18 µs/muestra, cero heap medido en el núcleo; sin nuevo WAV/cache.
+Siguiente bloque funcional: integrar este generador con el BUS real de
+ambos contornos/ladder/VCAs y medir J7, C2/C5 y R59/R60. No ampliar
+certificados del VCO nominal antes de esa unión. Curva CV, rangos,
+modulación, otros selectores y arranque necesitan cobertura posterior.
+La voz actual conserva su circuito de referencia y no obtiene aún este
+ahorro; ni la fase periódica ni su tangente admiten fidelidad física o RT
+de todo el instrumento.

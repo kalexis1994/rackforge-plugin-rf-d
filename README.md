@@ -664,3 +664,15 @@ temporal, recibos compactos y retiro de ejecutables/exports tras cada banco.
 sierra, BUS y masa; contactos extremos, Jacobiano y 1602 estados de la
 voz actual pasan. Preparado para conectar el futuro VCO reducido.
 [QA](evidence/lab_retention_tests01.json).
+
+
+## 2026-10-14 — VCO reducido nominal con puerto cargado
+
+[Núcleo de fase](docs/VCO_FASE_NOMINAL_RESULTADOS.md): 52 armónicos y DC
+derivados del circuito, cuatro terminales de salida con BUS libre.
+962 observaciones reservadas, frecuencia/fase y 72 tangentes pasan;
+error de armónicos 1–8 0.797 % sierra y 0.085 % triángulo.
+Tres millones de muestras: ~0.18 µs por muestra y cero heap en este
+callback. La voz completa aún usa su VCO anterior; unir ahora este puerto
+a la cadena y comparar J7. Sin WAV ni nuevos directorios de muestras.
+[QA](evidence/vco_phase_tests01.json).

@@ -870,3 +870,16 @@ No cambia el audio ni elimina memorias. [Resultados](VCO_PUERTO_PANEL_RESULTADOS
 [Limpieza local](ALMACENAMIENTO_LABORATORIO.md) retira datos regenerables
 fuera del catálogo admitido. Las 8769 entradas de QA permanecen; los
 bytes de los exports borrados no se recuperan desde su inventario.
+
+
+## VCO nominal reducido — 2026-10-14
+
+| Nivel | Alcance nuevo | Límite |
+|---|---|---|
+| Perfil periódico | DC/52 armónicos del circuito y frecuencia/época de la voz nominal | Memorias VCO/741 aproximadas; sin CV general, arranque o modulación |
+| Puerto de salida | Red resistiva original, cuatro corrientes y Jacobiano, contactos y potencia | Drivers activos reconstruidos; reacción de fase a gran señal no admitida |
+| Contraste reservado | 962 estados, fase y DC/armónicos 1–8; 72 tangentes BUS | Datos de 8 kHz no acotan reset/armónicos altos; tangente no es trayectoria |
+| Ejecución | Tres millones de muestras, ~0.18 µs/muestra y heap cero en el callback nominal | Sin unión nueva a la voz, deadline completo, MIDI o hardware |
+
+[Resultados](VCO_FASE_NOMINAL_RESULTADOS.md),
+[QA](../evidence/vco_phase_tests01.json).
