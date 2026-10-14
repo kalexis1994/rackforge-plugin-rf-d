@@ -810,3 +810,13 @@ sustituye el recorrido grande rechazado ni prolonga la historia audible previa.
 [Resultados](C5_GATILLO_COMPARTIDO_RESULTADOS.md) y
 [QA](../evidence/c5_trigger_tests01.json). El estrés antiguo de C5 impuesto
 no cambia de resultado por admitir esta evolución continua del circuito.
+
+
+## Ambos contornos con cargas vecinas — 2026-10-14
+
+[Resultados](CONTORNOS_CADENA_RESULTADOS.md): unión simultánea de 118 nodos,
+R59/R60 reales y Q26/Q28/C18 únicos; 119 nodos originales admitidos en DC y
+60 parejas seleccionadas. 14518 filas originales, 139240 entradas FD,
+144 clocks comunes y dos trayectorias completas de 36 ms. Excitación
+sinusoidal impuesta, panel fijo y C11/C12 OFF. No prolonga historias o audio
+anteriores; sin VCO real integrado, nuevo audio, calibración física o RT.

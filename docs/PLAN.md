@@ -822,3 +822,12 @@ Usar este núcleo como referencia y derivar un motor viable por bloques,
 con error/cargas medidos; prioridad a señal audible antes de más certificados
 locales. [Resultados](C5_GATILLO_COMPARTIDO_RESULTADOS.md),
 [QA](../evidence/c5_trigger_tests01.json).
+
+
+## Cierre de cargas de ambos contornos — 2026-10-14
+
+Completada la [unión de ambos contornos con cadena](CONTORNOS_CADENA_RESULTADOS.md):
+118 nodos, Q26/Q28 y C18 compartidos, VCA_BASE/TAIL internos, dos escenas
+de 36 ms y referencia original de 119 nodos admitidas. Prioridad siguiente:
+unir el VCO real al BUS de esta red, obtener una trayectoria audible y
+medir reducción del circuito frente a la referencia. Panel general y RT abiertos.

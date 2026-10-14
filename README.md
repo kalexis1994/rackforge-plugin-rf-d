@@ -611,3 +611,12 @@ y 320 rechazos del checkpoint. Escena fija de panel, rieles/VCA/TAIL impuestos,
 sin nuevo audio o plugin tocable. Próximo cierre: placa 4 y voz funcional,
 con el circuito detallado como referencia para reducir costo.
 [QA actual](evidence/c5_trigger_tests01.json).
+
+
+## Ambos contornos con cargas de filtro y VCA
+
+[La unión de 118 nodos](docs/CONTORNOS_CADENA_RESULTADOS.md) cierra R59,
+TAIL y Q26/Q28 con ambos contornos, ladder, dos VCA y J7. Dos trayectorias
+de 36 ms, 21250 Accepted, 14518 filas originales y 139240 entradas FD
+pasan. Entrada eléctrica sinusoidal impuesta; VCO real y tiempo real
+siguen pendientes. [QA](evidence/dual_chain_tests01.json).
