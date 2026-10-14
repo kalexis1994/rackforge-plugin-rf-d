@@ -865,3 +865,16 @@ Prioridad: reducción espacial de VCO/741 y cadena con puerto/cargas y
 error musical medidos. 553/555 s por 100 ms todavía exige esa reducción
 para un motor utilizable. No agregar más certificados locales como
 condición previa a esa implementación.
+
+
+## 2026-10-14 — Retiro de datos y puerto R6/R45
+
+[Limpieza](ALMACENAMIENTO_LABORATORIO.md): 22.34 GB regenerables, 110705
+archivos y 10325 carpetas vacías retirados; ningún input admitido borrado.
+Un área de ensayo nuevo queda vacía tras medir; no agregar clones/builds
+o WAV por cada bloque. [Puerto exacto](VCO_PUERTO_PANEL_RESULTADOS.md):
+cursor de R6 eliminado, corrientes de sierra/masa/BUS y gradientes completos
+conservados, 70 estrellas y 1602 observaciones de voz pasan. El VCO
+completo aún genera la sierra de referencia. Próximo: núcleo de fase con
+forma/curva CV derivadas y contraste de reacción a la carga en este puerto.
+No presentar el puerto resistivo como reducción ya completa del VCO/741.

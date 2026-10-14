@@ -857,3 +857,16 @@ MIDI, fidelidad física o tiempo real.
 
 [Resultados](VOZ_NOTA_OBSERVABLE_RESULTADOS.md),
 [QA](../evidence/observed_note_tests01.json).
+
+
+## Puerto resistivo VCO — 2026-10-14
+
+R6/R45 ON: reducción exacta del cursor con tres terminales y carga de
+25 kΩ sobre sierra. 70 puntos con extremos, 210 columnas FD y 1602 estados
+de la voz admitida; corrientes, Jacobiano y disipación pasan. Fuente SVC-9
+pp.5/19; α general, formas/controles del VCO completo aún sin reducir.
+No cambia el audio ni elimina memorias. [Resultados](VCO_PUERTO_PANEL_RESULTADOS.md).
+
+[Limpieza local](ALMACENAMIENTO_LABORATORIO.md) retira datos regenerables
+fuera del catálogo admitido. Las 8769 entradas de QA permanecen; los
+bytes de los exports borrados no se recuperan desde su inventario.

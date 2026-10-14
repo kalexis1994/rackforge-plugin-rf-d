@@ -652,3 +652,15 @@ sin ciclos repetidos. En 24 ms el banco observable cuesta aproximadamente
 una cuarta parte de la referencia estricta, con error RMS J7 <0.001 %.
 La nota sigue siendo offline (553/555 s por perfil); siguiente prioridad:
 reducción de bloques frente a este oráculo. [QA](evidence/observed_note_tests01.json).
+
+
+## 2026-10-14 — Limpieza y puerto resistivo para VCO reducido
+
+Retirados 110705 archivos regenerables y 10325 carpetas vacías: 22.34 GB
+lógicos; las 8769 entradas admitidas siguen disponibles. Nueva
+[política de laboratorio](docs/ALMACENAMIENTO_LABORATORIO.md): un área
+temporal, recibos compactos y retiro de ejecutables/exports tras cada banco.
+[Puerto R6/R45](docs/VCO_PUERTO_PANEL_RESULTADOS.md) conserva carga de
+sierra, BUS y masa; contactos extremos, Jacobiano y 1602 estados de la
+voz actual pasan. Preparado para conectar el futuro VCO reducido.
+[QA](evidence/lab_retention_tests01.json).
