@@ -893,3 +893,15 @@ modulación, otros selectores y arranque necesitan cobertura posterior.
 La voz actual conserva su circuito de referencia y no obtiene aún este
 ahorro; ni la fase periódica ni su tangente admiten fidelidad física o RT
 de todo el instrumento.
+
+
+## 2026-10-14 — Unión funcional del VCO periódico con la voz
+
+[Resultados](HYBRID_VOZ_RESULTADOS.md): rama 40–100 ms con memorias
+reales de ambos contornos/filtro/VCAs/J7. Se reemplaza sólo el VCO por
+perfil periódico con carga de BUS; el reset obliga a corregir el perfil
+52-armónicos por 901 nudos del ciclo nativo. Gates exteriores intactos;
+J7 RMS 1,0672 %, pico 2,608 %, 5712 filas originales pasan. Heap cero;
+28,5 s por 60 ms, sin RT ni nuevo WAV. Próximo bloque: reducir dinámica
+de cadena sobre esta unión y contrastar J7/cargas/costo; luego arranque,
+ataque y CV. Evitar volver a certificados aislados antes de esa función.

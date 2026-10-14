@@ -676,3 +676,15 @@ Tres millones de muestras: ~0.18 µs por muestra y cero heap en este
 callback. La voz completa aún usa su VCO anterior; unir ahora este puerto
 a la cadena y comparar J7. Sin WAV ni nuevos directorios de muestras.
 [QA](evidence/vco_phase_tests01.json).
+
+
+## 2026-10-14 — VCO periódico unido a la cadena real
+
+[Unión nominal](docs/HYBRID_VOZ_RESULTADOS.md): dos ramas propias de
+40–100 ms con 118 incógnitas de contornos/ladder/VCAs/J7 y puerto VCO
+cargado. El reset compacto de circuito supera el rechazo inicial del
+BUS sin cambiar gates: J7 RMS 1,0672 %, pico 2,608 %, cargas y C2/C5
+pasan. 5712 ecuaciones originales contrastadas y heap cero medido.
+28,5 s por 60 ms simulados; aún sin RT, arranque/CV generales o nuevo
+WAV. Sin carpetas de muestras; área temporal vacía.
+[QA](evidence/hybrid_voice_tests01.json).

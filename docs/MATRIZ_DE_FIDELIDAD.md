@@ -883,3 +883,16 @@ bytes de los exports borrados no se recuperan desde su inventario.
 
 [Resultados](VCO_FASE_NOMINAL_RESULTADOS.md),
 [QA](../evidence/vco_phase_tests01.json).
+
+
+## Voz híbrida nominal — 2026-10-14
+
+| Nivel | Alcance admitido | Límite |
+|---|---|---|
+| Generación | Ciclo DRIVE/TRI nativo, 901 nudos, error de compacción ≤50 µV | VCO periódico sin reacción de fase a gran señal; perfil sin bandlimit |
+| Unión | BUS libre y red R6/R45 una sola vez; cadena completa de 118 incógnitas | Rama desde estado heredado a 40 ms; sin arranque autónomo |
+| Contraste | 962 estados J7/C2/C5/BUS/cargas y 5712 filas originales | Candidatos nativos auditados; sin trayectoria original independiente nueva |
+| Ejecución | 28,5 s/60 ms, cero heap medido, rechazos/replays exactos | No es RT ni plugin tocable, no admite CV o panel generales |
+
+[Resultados](HYBRID_VOZ_RESULTADOS.md),
+[QA](../evidence/hybrid_voice_tests01.json).
