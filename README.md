@@ -52,7 +52,7 @@ alcanzan≈265 ms. Los [ciclos de esta nueva raíz](docs/VOZ_CICLOS_CONDICIONADO
 completan dos perfiles de5,25 ms con refinamiento y cargas observadas;
 la periodicidad aún queda abierta. El ciclo anterior conserva su historia.
 
-La [QA vigente](evidence/voice_cutoff_tests01.json) conserva
+La [QA vigente](evidence/cutoff_ab_tests01.json) conserva
 248 tests Rust heredados por identidad y el nuevo banco de trayectorias. La
 [cadena con cargas explícitas](docs/CADENA_CARGA_RADAU_RESULTADOS.md) pasa
 72 etapas y 180 corrientes, con medios pasos de7,629 ps; fuentes impuestas.
@@ -253,7 +253,7 @@ dos perfiles hasta5,25 ms desde el prefijo propio, dos resets por perfil,
 55200 ecuaciones y balances de carga/medias. Escucha de inspección admitida:
 True; réplica de un intervalo, escala explícita80×.
 No acredita voz completa, periodo asintótico o RT.
-[QA vigente](evidence/voice_cutoff_tests01.json).
+[QA vigente](evidence/cutoff_ab_tests01.json).
 
 
 ## Q25/Q15 cargados en la voz — 2026-10-12
@@ -265,7 +265,7 @@ Cuatro perfiles de10 µs,18320 ecuaciones,3840 pasos y40 restores completos.
 La malla inicial se rechaza;15.625/7.8125 ns pasan el gate2 µV con1.553 µV
 máximo en los finales comparados. Hipótesis de dispositivos explícitas,
 ventana local; ADSR completo, contorno de filtro y RT siguen pendientes.
-[QA](evidence/voice_cutoff_tests01.json).
+[QA](evidence/cutoff_ab_tests01.json).
 
 
 ## Contorno229 con contacto sostenido — 2026-10-12
@@ -276,7 +276,7 @@ liberación50 µs.3226 avances/6452 finos,32976 ecuaciones independientes,
 20 restores completos y8 rollbacks. Dos límites de paso coinciden en
 los12 cortes con≈.154 nV máximo; C2 responde desde las corrientes reales.
 Ventana corta con historia precargada; nota/ADSR completo y RT pendientes.
-[QA](evidence/voice_cutoff_tests01.json).
+[QA](evidence/cutoff_ab_tests01.json).
 
 
 ## Contorno cargado durante el reset del VCO — 2026-10-12
@@ -287,7 +287,7 @@ con VCO/BUS/filtro/VCAs/J7 y contorno en el mismo solve.35724 ecuaciones,
 25152 finos,24 restores de prefijo y balances de carga; diferencia máxima
 .1404 µV en los cortes comparados. Historia entrante conservada por bits.
 Ciclo completo entre dos resets, contorno desde silencio y RT pendientes.
-[QA](evidence/voice_cutoff_tests01.json).
+[QA](evidence/cutoff_ab_tests01.json).
 
 
 ## Ciclo del VCO con contorno229 y C7 cargado — 2026-10-12
@@ -302,7 +302,7 @@ unión exacta, refinamiento y balances pasan.
 Siguiente: medir y acelerar el solve contra esta referencia para alcanzar
 un contorno de duración musical. Contorno desde silencio, otras cargas
 de placa2, contorno de filtro, fidelidad física y RT pendientes.
-[QA](evidence/voice_cutoff_tests01.json).
+[QA](evidence/cutoff_ab_tests01.json).
 
 
 ## Reuso del trial de Newton — 2026-10-12
@@ -315,7 +315,7 @@ Cuatro trayectorias completas coinciden por bytes con la referencia:
 Sin nueva duración o audio; 38472 ecuaciones heredadas por identidad.
 Siguiente: reducir costo del sistema lineal contra esta referencia exacta.
 Deadlines, contorno desde silencio y duración musical siguen pendientes.
-[QA](evidence/voice_cutoff_tests01.json).
+[QA](evidence/cutoff_ab_tests01.json).
 
 
 ## LU con extensión contigua — 2026-10-13
@@ -328,7 +328,7 @@ no elegida; extensión contigua confirmada con mediana pareada
 por bytes,26770 finos y24 restores.38472 ecuaciones heredadas, sin
 reejecutarlas. Sin duración o audio nuevos, ni admisión RT.
 Siguiente: condensación de bloques dinámicos preservando puertos y masa.
-[QA](evidence/voice_cutoff_tests01.json).
+[QA](evidence/cutoff_ab_tests01.json).
 
 
 ## Condensación dinámica de LM741 — 2026-10-13
@@ -344,7 +344,7 @@ sistema J/b completo, fuentes y replay exacto preservados. Sin admisión
 para trayectorias, duración/audio nuevos o RT.
 Siguiente: refinamiento acotado sobre el sistema fallido, conservando
 factores, puertos y gate; después banco y recorrido si pasan.
-[QA de alcance](evidence/voice_cutoff_tests01.json).
+[QA de alcance](evidence/cutoff_ab_tests01.json).
 
 
 ## Schur refinado con residuo compensado — 2026-10-13
@@ -360,7 +360,7 @@ Precisión pasa; utilidad de costo pendiente (medianas0.9083×/0.9496×).
 Sin campaña temporal, duración/audio nuevos o RT.
 Siguiente: perfilar preparación, sustituciones y residuo antes de otra
 variante; abrir trayectoria sólo después de pasar precisión y costo.
-[QA](evidence/voice_cutoff_tests01.json).
+[QA](evidence/cutoff_ab_tests01.json).
 
 
 ## Perfil de costo y variantes no elegidas — 2026-10-13
@@ -375,7 +375,7 @@ Las dos últimas conservan396 trazas J/b/correcciones por bytes;
 Fallo de compilación/replay y reparación de tipo explícita conservados.
 Sin campaña temporal, duración/audio nuevos o RT. Siguiente: construcción
 y factorización en ubicación final, con precisión y costo antes de promover.
-[QA](evidence/voice_cutoff_tests01.json).
+[QA](evidence/cutoff_ab_tests01.json).
 
 
 ## Schur en sitio y ciclo condicionado admitido — 2026-10-13
@@ -390,7 +390,7 @@ de229 coordenadas al mismo reloj frente a LU (máximo8.52e-13 V).
 Admitido para la ventana condicionada3.004 ms; sin duración/audio nuevos,
 contorno desde silencio, identificación física o RT. Siguiente: otra
 reducción estructural conservando puertos/cargas para duración musical.
-[QA](evidence/voice_cutoff_tests01.json).
+[QA](evidence/cutoff_ab_tests01.json).
 
 
 ## Contorno cargado condensado — 2026-10-13
@@ -405,7 +405,7 @@ Cuatro perfiles/26770 finos conservan restores, eventos y balances.
 Admisión limitada al ciclo condicionado de 3.004 ms, sin duración/audio
 nuevos, contorno desde silencio, identificación física o RT.
 Siguiente: cadena con BUS/base Q18 retenidos, exterior potencial 140;
-soporte inspeccionado, invertibilidad y utilidad pendientes. [QA](evidence/voice_cutoff_tests01.json).
+soporte inspeccionado, invertibilidad y utilidad pendientes. [QA](evidence/cutoff_ab_tests01.json).
 
 
 ## Cadena filtro/VCA condensada — 2026-10-13
@@ -420,7 +420,7 @@ nuevas pasan Decimal100;45 regresiones/replay. Cuatro recorridos con
 a3.004 ms, sin duración/audio nuevos o RT. Perfil privado por bits:
 linearize≈50.3% del step, solve≈27.3%.
 Siguiente: ensamblaje Radau en ubicación final, con J/b/raíces por identidad.
-[QA](evidence/voice_cutoff_tests01.json).
+[QA](evidence/cutoff_ab_tests01.json).
 
 
 ## Ensamblaje Radau en ubicación final — 2026-10-13
@@ -434,7 +434,7 @@ temporales por bytes;181.368 filas y dos bancos de38.472 ecuaciones heredados,
 sin reauditar.11 regresiones, cuatro recorridos propios y26770 finos pasan.
 Admisión limitada al ciclo condicionado3.004 ms; sin duración/audio nuevos
 o RT. Siguiente: integración portable229 y contrato de ownership/memoria.
-[QA](evidence/voice_cutoff_tests01.json).
+[QA](evidence/cutoff_ab_tests01.json).
 
 
 ## Conjunto229 público y workspace propio — 2026-10-13
@@ -448,7 +448,7 @@ llamadas aceptadas y3 rechazadas;4 tests nuevos,248 heredados (252 cubiertos).
 sin presentarlas como solves activos observados. Filas y ecuaciones heredadas
 por identidad. Cuatro recorridos públicos/26770 finos admitidos para3.004 ms.
 Biblioteca nueva, sin cache Cargo, duración/audio nuevos o RT. Siguiente:
-receta pública de historia/controles y render offline condicionado. [QA](evidence/voice_cutoff_tests01.json).
+receta pública de historia/controles y render offline condicionado. [QA](evidence/cutoff_ab_tests01.json).
 
 
 ## Receta propia y render offline condicionado — 2026-10-13
@@ -467,7 +467,7 @@ el microscopio altera tiempo/frecuencia. Rechazo de historia2 µs aplicada
 a1 µs conservado con replay, corregido con sus estados propios ya públicos.
 Siguiente: gatillo sostenido/liberación en una ventana propia más larga
 y escucha útil a tiempo nativo, con contraste temporal.
-[QA](evidence/voice_cutoff_tests01.json).
+[QA](evidence/cutoff_ab_tests01.json).
 
 
 ## Gatillo sostenido y liberación: 12.004 ms propios — 2026-10-13
@@ -484,7 +484,7 @@ C2 todavía crece durante4 ms después de KEY0, con C7/C4/biestable en evolució
 es una observación del modelo, sin causa física adjudicada. Siguiente:
 seguir la liberación propia, observar conmutación/descarga y revisar su
 recorrido de control.255 tests Rust heredados, sin reejecución o deadline.
-[QA](evidence/voice_cutoff_tests01.json).
+[QA](evidence/cutoff_ab_tests01.json).
 
 
 La [liberación restaurada](docs/VOZ_LIBERACION_RESULTADOS.md) añade8 ms propios
@@ -568,7 +568,7 @@ Dos eventos por resolución conservan 458 HIGH/LOW, resistencia, clock y propues
 43968 ecuaciones seleccionadas nuevas, 22 relojes de
 229 estados y nueve balances por fase/total/unión pasan. Dos WAV reales de 148 ms,
 17 entradas/código identificados y cuatro integraciones CLI. Sin fidelidad física
-o RT; la historia inicial sigue condicionada. [QA](evidence/voice_cutoff_tests01.json).
+o RT; la historia inicial sigue condicionada. [QA](evidence/cutoff_ab_tests01.json).
 
 
 El [cutoff cargado de panel](docs/VOZ_CUTOFF_RESULTADOS.md) añade 16,004 ms:
@@ -578,4 +578,15 @@ El [cutoff cargado de panel](docs/VOZ_CUTOFF_RESULTADOS.md) añade 16,004 ms:
 de cada fase, 22 relojes de 229 estados y nueve balances por fase/total/unión.
 Dos WAV reales de 164 ms, 24 entradas identificadas y cuatro checks CLI.
 Contorno de filtro pin16 sigue impuesto; sin Hz calibrados, fidelidad física o RT.
-[QA](evidence/voice_cutoff_tests01.json).
+[QA](evidence/cutoff_ab_tests01.json).
+
+
+El [A/B de cutoff desde el mismo estado](docs/VOZ_CUTOFF_AB_RESULTADOS.md)
+compara α1/0,5 durante 8 ms con 458 HIGH/LOW, clock/propuesta y controles comunes.
+Rama abierta nueva: 13740 ecuaciones seleccionadas;
+cerrada: 13740 heredadas, sin reejecución. Once clocks229, balances/replay
+pasan; cuatro WAV de 8 ms sin concatenación o normalización. RMS cerrado/abierto
+1.02668585 (0.228751 dB), ventana con DC/transitorios. Siete entradas/código y
+cuatro checks CLI. La historia/WAV continuo de 164 ms sigue sin prolongarse.
+Sin Hz calibrados, contorno de filtro completo, fidelidad física o RT.
+[QA](evidence/cutoff_ab_tests01.json).

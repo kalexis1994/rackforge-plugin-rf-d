@@ -1,0 +1,5 @@
+"""Compute two open branches using the frozen library, retaining the closed reference."""
+from prepare_vco1_portable import ROOT
+def main():
+ s=(ROOT/'tools/run_extended_release.py').read_text(encoding='utf8').replace('from prepare_extended_release import EXAMPLE','from prepare_cutoff_ab import EXAMPLE').replace('extended-release{attempt:02d}','cutoff-ab{attempt:02d}').replace('voice_extended_native','cutoff_ab_native').replace('voice_extended_inputs01','cutoff_ab_inputs01').replace('voice_block_tests01','voice_cutoff_tests01').replace('voice_block_library02','voice_assembly_public01').replace('references-local/voice-block-library02/librf_d_circuit.rlib','references-local/voice-assembly-public01/librf_d_circuit.rlib').replace('tools/run_extended_release.py','tools/run_cutoff_ab.py').replace('128*1024**2','64*1024**2');s=s.replace("names=set(inp['source_sha256'])|", "names={'tools/run_extended_release.py'}|set(inp['source_sha256'])|");ns={'__name__':'cutoff_ab_harness'};exec(compile(s,'<frozen-open-harness>','exec'),ns);ns['main']()
+if __name__=='__main__':main()

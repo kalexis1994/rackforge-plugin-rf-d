@@ -780,3 +780,14 @@ de cada fase, 22 relojes de 229 estados y nueve balances por fase/total/unión.
 Dos WAV reales de 164 ms, 24 entradas identificadas y cuatro checks CLI.
 Contorno de filtro pin16 sigue impuesto; sin Hz calibrados, fidelidad física o RT.
 [QA](../evidence/voice_cutoff_tests01.json).
+
+
+El [A/B de cutoff desde el mismo estado](VOZ_CUTOFF_AB_RESULTADOS.md)
+compara α1/0,5 durante 8 ms con 458 HIGH/LOW, clock/propuesta y controles comunes.
+Rama abierta nueva: 13740 ecuaciones seleccionadas;
+cerrada: 13740 heredadas, sin reejecución. Once clocks229, balances/replay
+pasan; cuatro WAV de 8 ms sin concatenación o normalización. RMS cerrado/abierto
+1.02668585 (0.228751 dB), ventana con DC/transitorios. Siete entradas/código y
+cuatro checks CLI. La historia/WAV continuo de 164 ms sigue sin prolongarse.
+Sin Hz calibrados, contorno de filtro completo, fidelidad física o RT.
+[QA](../evidence/cutoff_ab_tests01.json).

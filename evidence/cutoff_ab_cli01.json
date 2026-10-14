@@ -1,0 +1,150 @@
+{
+  "passed": true,
+  "source_sha256": {
+    "tools/check_cutoff_ab_cli.py": "6c450ebaa03790fbf62cf83895507a072479e7316344863d0073ab6884de2974",
+    "tools/cutoff_ab_cli.py": "3583b8f0c4e0eccfbf853f2f67ef9d0a155430620f9df7b05b2d1a2ed14e4138",
+    "tools/render_cutoff_ab.py": "49b66d669418bc0d5e6a6dc3e20edf718e4cfa6fc7bdff10093e0a2f4fcff818",
+    "evidence/cutoff_ab_listening01.json": "3cdaee0a8df7e4d256debfe8e74b7aed8c5b143552b098de8fe372df209f793d"
+  },
+  "private_used_sha256": {
+    "references-local/cutoff-ab01/524288/selected.txt": "876a0243bdb67d2b91ffce863746335ddb9e2ca80f1188e47640b6be96427f8e",
+    "references-local/cutoff-ab01/524288/incoming-original.ckp": "58284bdb687e071664094621bf43aab5582afc7eacf5b922af0f8b7129785ef4",
+    "references-local/cutoff-ab01/524288/final.ckp": "e3dbbccad19ccacefd3b7fdaf458c377643912d997f533d016f3aaed91f3cb03",
+    "references-local/voice-cutoff01/524288/selected.txt": "a8f6120f55685d80d62acf1db5de0531f467a4a6c97691c1d750f197f3f7e04e",
+    "references-local/voice-cutoff01/524288/event1-before.ckp": "58284bdb687e071664094621bf43aab5582afc7eacf5b922af0f8b7129785ef4",
+    "references-local/voice-cutoff01/524288/event1-after.ckp": "9093a67470387938634cc6c89515371067f78e6d1183777451d61665d2bec385",
+    "references-local/voice-cutoff01/524288/event2-before.ckp": "971bbdf0da5333c6a41e6ffcd7fca0388b9746860ca658c58a896ef57f2b5987",
+    "artifacts/cutoff-ab01/rf-d-cutoff-ab-open-8ms-524288.wav": "d61dd2f1d08a07e3269232231fa7a22ff7596439055b4487e2d64fda543cbc79",
+    "artifacts/cutoff-ab01/rf-d-cutoff-ab-closed-8ms-524288.wav": "f2051a8dd93f677441d2935c66a58b415bcde18a24d5d08456b4fe6574ec8b44"
+  },
+  "integration_checks": 4,
+  "paired_wavs_identical": true,
+  "sidecar_verified": true,
+  "existing_output_rejected_without_mutation": true,
+  "mismatched_state_rejected_before_publication": true,
+  "incomplete_trace_rejected_before_publication": true,
+  "commands": [
+    {
+      "command": [
+        "C:\\Users\\kalex\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "-B",
+        "tools/cutoff_ab_cli.py",
+        "--open",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\cutoff-ab01\\524288\\selected.txt",
+        "--closed",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-cutoff01\\524288\\selected.txt",
+        "--output",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\cutoff-ab-cli01\\pair.json"
+      ],
+      "exit_code": 0,
+      "stdout": "CUTOFF_AB_PAIR 524288 384\n",
+      "stderr": "",
+      "wall_s": 3.856243699992774
+    },
+    {
+      "command": [
+        "C:\\Users\\kalex\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "-B",
+        "tools/cutoff_ab_cli.py",
+        "--open",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\cutoff-ab01\\524288\\selected.txt",
+        "--closed",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-cutoff01\\524288\\selected.txt",
+        "--output",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\cutoff-ab-cli01\\pair.json"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\cutoff_ab_cli.py\", line 13, in <module>\n    if __name__=='__main__':main()\n                            ^^^^^^\n  File \"C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\cutoff_ab_cli.py\", line 10, in main\n    p=argparse.ArgumentParser();p.add_argument('--open',type=Path,required=True);p.add_argument('--closed',type=Path,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args();side=a.output.resolve().with_suffix('.json');paths=[side.with_name(side.stem+'-'+branch+'.wav') for branch in ['open','closed']];require(side.parent.is_dir(),'output directory exists');require(not any(f.exists() for f in [side,*paths]),'preserve existing WAVs and sidecar');before={str(f.resolve()):sha(f) for f in inputs(a.open,a.closed)};m,pcm,meta,_,metrics=pair_audio(a.open,a.closed);require(before=={str(f.resolve()):sha(f) for f in inputs(a.open,a.closed)},'stable CLI branch inputs')\n                                                                                                                                                                                                                                                                                                                                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_cycles_analysis.py\", line 10, in require\n    if not ok:raise ValueError(msg)\n              ^^^^^^^^^^^^^^^^^^^^^\nValueError: preserve existing WAVs and sidecar\n",
+      "wall_s": 0.24825219999911496
+    },
+    {
+      "command": [
+        "C:\\Users\\kalex\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "-B",
+        "tools/cutoff_ab_cli.py",
+        "--open",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\cutoff-ab-cli01\\mismatched.txt",
+        "--closed",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-cutoff01\\524288\\selected.txt",
+        "--output",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\cutoff-ab-cli01\\rejected.json"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\cutoff_ab_cli.py\", line 13, in <module>\n    if __name__=='__main__':main()\n                            ^^^^^^\n  File \"C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\cutoff_ab_cli.py\", line 10, in main\n    p=argparse.ArgumentParser();p.add_argument('--open',type=Path,required=True);p.add_argument('--closed',type=Path,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args();side=a.output.resolve().with_suffix('.json');paths=[side.with_name(side.stem+'-'+branch+'.wav') for branch in ['open','closed']];require(side.parent.is_dir(),'output directory exists');require(not any(f.exists() for f in [side,*paths]),'preserve existing WAVs and sidecar');before={str(f.resolve()):sha(f) for f in inputs(a.open,a.closed)};m,pcm,meta,_,metrics=pair_audio(a.open,a.closed);require(before=={str(f.resolve()):sha(f) for f in inputs(a.open,a.closed)},'stable CLI branch inputs')\n                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\render_cutoff_ab.py\", line 31, in pair_audio\n    m,traces=read_pair(opened,closed);pcm=[];signals=[];metadata=[]\n             ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\render_cutoff_ab.py\", line 16, in read_pair\n    a=opened.read_text(encoding='utf8').splitlines();b=closed.read_text(encoding='utf8').splitlines();require(a[0]==b[0],'A/B matching resolution');initial=state(a[1]);boundary=next(i for i,line in enumerate(b) if line.startswith('BOUNDARY,1,'));closed_initial=state(b[boundary+1]);require(struct.pack('<458d',*initial)==struct.pack('<458d',*closed_initial),'same initial A/B state');require(b[boundary].split(',')[1:]==['1',str(START),'0.00000000000000000e0','0'] and a[2].split(',')[1:]==['0',str(START),'0.00000000000000000e0','0'],'common A/B source clock')\n                                                                                                                                                                                                                                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_cycles_analysis.py\", line 10, in require\n    if not ok:raise ValueError(msg)\n              ^^^^^^^^^^^^^^^^^^^^^\nValueError: same initial A/B state\n",
+      "wall_s": 0.3263403000019025
+    },
+    {
+      "command": [
+        "C:\\Users\\kalex\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "-B",
+        "tools/cutoff_ab_cli.py",
+        "--open",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\cutoff-ab-cli01\\incomplete.txt",
+        "--closed",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-cutoff01\\524288\\selected.txt",
+        "--output",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\cutoff-ab-cli01\\incomplete.json"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\cutoff_ab_cli.py\", line 13, in <module>\n    if __name__=='__main__':main()\n                            ^^^^^^\n  File \"C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\cutoff_ab_cli.py\", line 10, in main\n    p=argparse.ArgumentParser();p.add_argument('--open',type=Path,required=True);p.add_argument('--closed',type=Path,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args();side=a.output.resolve().with_suffix('.json');paths=[side.with_name(side.stem+'-'+branch+'.wav') for branch in ['open','closed']];require(side.parent.is_dir(),'output directory exists');require(not any(f.exists() for f in [side,*paths]),'preserve existing WAVs and sidecar');before={str(f.resolve()):sha(f) for f in inputs(a.open,a.closed)};m,pcm,meta,_,metrics=pair_audio(a.open,a.closed);require(before=={str(f.resolve()):sha(f) for f in inputs(a.open,a.closed)},'stable CLI branch inputs')\n                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\render_cutoff_ab.py\", line 31, in pair_audio\n    m,traces=read_pair(opened,closed);pcm=[];signals=[];metadata=[]\n             ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\render_cutoff_ab.py\", line 17, in read_pair\n    ob=[list(map(float,line.split(',')[1:])) for line in a if line.startswith('OBS,')];cb=[list(map(float,line.split(',')[1:])) for line in b if line.startswith('OBS,') and int(line.split(',')[2])==1];require(ob and cb and all(len(row)==24 for row in ob+cb),'complete A/B observations');traces=[];final_open=state(a[-1]);end_boundary=next(i for i,line in enumerate(b) if line.startswith('BOUNDARY,2,'));final_closed=state(b[end_boundary-1]);require(a[-2].startswith('TOTAL,') and a[-1].startswith('JOINT_STATE,') and b[end_boundary-2].startswith('LEDGER,1,'),'complete A/B phase endpoints')\n                                                                                                                                                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\joint_cycles_analysis.py\", line 10, in require\n    if not ok:raise ValueError(msg)\n              ^^^^^^^^^^^^^^^^^^^^^\nValueError: complete A/B observations\n",
+      "wall_s": 0.4646435000031488
+    }
+  ],
+  "source_sha256_after": {
+    "tools/check_cutoff_ab_cli.py": "6c450ebaa03790fbf62cf83895507a072479e7316344863d0073ab6884de2974",
+    "tools/cutoff_ab_cli.py": "3583b8f0c4e0eccfbf853f2f67ef9d0a155430620f9df7b05b2d1a2ed14e4138",
+    "tools/render_cutoff_ab.py": "49b66d669418bc0d5e6a6dc3e20edf718e4cfa6fc7bdff10093e0a2f4fcff818",
+    "evidence/cutoff_ab_listening01.json": "3cdaee0a8df7e4d256debfe8e74b7aed8c5b143552b098de8fe372df209f793d"
+  },
+  "private_used_sha256_after": {
+    "references-local/cutoff-ab01/524288/selected.txt": "876a0243bdb67d2b91ffce863746335ddb9e2ca80f1188e47640b6be96427f8e",
+    "references-local/cutoff-ab01/524288/incoming-original.ckp": "58284bdb687e071664094621bf43aab5582afc7eacf5b922af0f8b7129785ef4",
+    "references-local/cutoff-ab01/524288/final.ckp": "e3dbbccad19ccacefd3b7fdaf458c377643912d997f533d016f3aaed91f3cb03",
+    "references-local/voice-cutoff01/524288/selected.txt": "a8f6120f55685d80d62acf1db5de0531f467a4a6c97691c1d750f197f3f7e04e",
+    "references-local/voice-cutoff01/524288/event1-before.ckp": "58284bdb687e071664094621bf43aab5582afc7eacf5b922af0f8b7129785ef4",
+    "references-local/voice-cutoff01/524288/event1-after.ckp": "9093a67470387938634cc6c89515371067f78e6d1183777451d61665d2bec385",
+    "references-local/voice-cutoff01/524288/event2-before.ckp": "971bbdf0da5333c6a41e6ffcd7fca0388b9746860ca658c58a896ef57f2b5987",
+    "artifacts/cutoff-ab01/rf-d-cutoff-ab-open-8ms-524288.wav": "d61dd2f1d08a07e3269232231fa7a22ff7596439055b4487e2d64fda543cbc79",
+    "artifacts/cutoff-ab01/rf-d-cutoff-ab-closed-8ms-524288.wav": "f2051a8dd93f677441d2935c66a58b415bcde18a24d5d08456b4fe6574ec8b44"
+  },
+  "outputs": [
+    {
+      "path": "references-local/cutoff-ab-cli01/final.ckp",
+      "sha256": "e3dbbccad19ccacefd3b7fdaf458c377643912d997f533d016f3aaed91f3cb03",
+      "bytes": 3736
+    },
+    {
+      "path": "references-local/cutoff-ab-cli01/incoming-original.ckp",
+      "sha256": "58284bdb687e071664094621bf43aab5582afc7eacf5b922af0f8b7129785ef4",
+      "bytes": 3736
+    },
+    {
+      "path": "references-local/cutoff-ab-cli01/incomplete.txt",
+      "sha256": "b96e4c00bf37bedd0c018990e996aaeb81c2a1cbddaa85989edad0aea59213ed",
+      "bytes": 10882
+    },
+    {
+      "path": "references-local/cutoff-ab-cli01/mismatched.txt",
+      "sha256": "fab9145c859e701fc1803ecadc9d98a2d2768c337c0441b8d942a87f3f433354",
+      "bytes": 10836
+    },
+    {
+      "path": "references-local/cutoff-ab-cli01/pair-closed.wav",
+      "sha256": "f2051a8dd93f677441d2935c66a58b415bcde18a24d5d08456b4fe6574ec8b44",
+      "bytes": 812
+    },
+    {
+      "path": "references-local/cutoff-ab-cli01/pair-open.wav",
+      "sha256": "d61dd2f1d08a07e3269232231fa7a22ff7596439055b4487e2d64fda543cbc79",
+      "bytes": 812
+    },
+    {
+      "path": "references-local/cutoff-ab-cli01/pair.json",
+      "sha256": "29aec20759270f0b9d8b3225cdea00e875a0cafed77a53a6f3e99c7cbfb739d9",
+      "bytes": 4201
+    }
+  ]
+}
