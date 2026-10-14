@@ -791,3 +791,18 @@ pasan; cuatro WAV de 8 ms sin concatenación o normalización. RMS cerrado/abier
 cuatro checks CLI. La historia/WAV continuo de 164 ms sigue sin prolongarse.
 Sin Hz calibrados, contorno de filtro completo, fidelidad física o RT.
 [QA](../evidence/cutoff_ab_tests01.json).
+
+
+## 2026-10-14 — Seguidor del contorno de filtro cargado
+
+Q22/Q21 complementario y R17/R74 con Q26/Q28 en un puerto de nueve nodos
+y ocho terminales. 60 DC y 96 pasos locales de 1 mV admitidos, 32 clocks
+comunes, 1520 filas originales y Jacobiano completo. El estrés de 2,15 V
+queda rechazado por refinamiento a 8/4 µs, con fuentes/replay preservados.
+La receta C11 se vincula al estado; 24 rechazos y 96 candidatos/replays pasan.
+No integrar aún en la voz. Cerrar después temporizador C5, biestable y Q4
+con la corriente de entrada de este puerto y el gatillo compartido; revisar
+C12 opcional y alimentación. Resolver ataque/decay continuo antes de
+refinamiento a gran señal y unión TAIL/ladder.
+[Resultados](CONTORNO_FILTRO_PUERTO_RESULTADOS.md),
+[QA](../evidence/filter_contour_port_tests01.json).

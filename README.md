@@ -590,3 +590,14 @@ pasan; cuatro WAV de 8 ms sin concatenación o normalización. RMS cerrado/abier
 cuatro checks CLI. La historia/WAV continuo de 164 ms sigue sin prolongarse.
 Sin Hz calibrados, contorno de filtro completo, fidelidad física o RT.
 [QA](evidence/cutoff_ab_tests01.json).
+
+
+El [puerto del contorno de filtro](docs/CONTORNO_FILTRO_PUERTO_RESULTADOS.md)
+cierra Q22/Q21, Amount cargado y Q26/Q28: nueve nodos/ocho terminales,
+60 DC y 96 pasos locales de 1 mV; 1520 filas originales, 45084 entradas
+FD y 9984 tangentes. Conserva C11/C18, topes exactos, masa y 24 rechazos
+atómicos. La gran discontinuidad C5 0,85→3 V sigue rechazada por
+refinamiento; el puerto local no acredita contorno completo o voz integrada.
+Módulo de laboratorio compilado contra biblioteca congelada, fuera de lib.rs.
+[QA actual](evidence/filter_contour_port_tests01.json). Próximo cierre: C5
+continuo, biestable y carga del gatillo compartido. Sin audio nuevo o RT.

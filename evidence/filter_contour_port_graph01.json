@@ -1,0 +1,190 @@
+{
+  "schema": "rf-d/filter-contour-port/graph-v1",
+  "nodes": [
+    "Q22_B",
+    "Q22_C_Q21_B",
+    "Q21_E",
+    "FILTER_OUT",
+    "FEEDBACK",
+    "Q26_B",
+    "Q26_E_Q28_B",
+    "Q26_C",
+    "Q28_C"
+  ],
+  "ports": [
+    "TIMING_C5",
+    "RESET_Q4",
+    "TAIL",
+    "SUPPLY",
+    "MINUS10",
+    "CUTOFF_TH",
+    "RANGE_TH",
+    "GROUND"
+  ],
+  "transistors": [
+    {
+      "name": "Q22",
+      "type": "NPN",
+      "base": "Q22_B",
+      "collector": "Q22_C_Q21_B",
+      "emitter": "FILTER_OUT",
+      "is_a": 1e-14,
+      "beta_forward": 100,
+      "beta_reverse": 5,
+      "temperature_k": 298.15
+    },
+    {
+      "name": "Q21",
+      "type": "PNP",
+      "base": "Q22_C_Q21_B",
+      "collector": "FILTER_OUT",
+      "emitter": "Q21_E",
+      "is_a": 1e-14,
+      "beta_forward": 100,
+      "beta_reverse": 5,
+      "temperature_k": 298.15
+    },
+    {
+      "name": "Q26",
+      "type": "PNP",
+      "base": "Q26_B",
+      "collector": "Q26_C",
+      "emitter": "Q26_E_Q28_B",
+      "is_a": 1e-14,
+      "beta_forward": 100,
+      "beta_reverse": 5,
+      "temperature_k": 298.15
+    },
+    {
+      "name": "Q28",
+      "type": "NPN",
+      "base": "Q26_E_Q28_B",
+      "collector": "Q28_C",
+      "emitter": "GROUND",
+      "is_a": 1e-14,
+      "beta_forward": 100,
+      "beta_reverse": 5,
+      "temperature_k": 298.15
+    }
+  ],
+  "branches": [
+    {
+      "name": "R48",
+      "a": "TIMING_C5",
+      "b": "Q22_B",
+      "ohm": 10000
+    },
+    {
+      "name": "R50",
+      "a": "SUPPLY",
+      "b": "Q21_E",
+      "ohm": 560
+    },
+    {
+      "name": "R33",
+      "a": "FILTER_OUT",
+      "b": "FEEDBACK",
+      "ohm": 5600
+    },
+    {
+      "name": "R29",
+      "a": "FEEDBACK",
+      "b": "MINUS10",
+      "ohm": 16900
+    },
+    {
+      "name": "R74",
+      "a": "AMOUNT_CURSOR",
+      "b": "Q26_B",
+      "ohm": 47000
+    },
+    {
+      "name": "R70+SCALE",
+      "a": "Q26_B",
+      "b": "GROUND",
+      "ohm": 2050
+    },
+    {
+      "name": "R51/no-plug",
+      "a": "Q26_B",
+      "b": "GROUND",
+      "ohm": 100000
+    },
+    {
+      "name": "R52/mod-off",
+      "a": "Q26_B",
+      "b": "GROUND",
+      "ohm": 33000
+    },
+    {
+      "name": "knob_th",
+      "a": "Q26_B",
+      "b": "CUTOFF_TH",
+      "ohm": "200000+5000*cutoff*(1-cutoff)"
+    },
+    {
+      "name": "range_th",
+      "a": "Q26_E_Q28_B",
+      "b": "RANGE_TH",
+      "ohm": 68900
+    },
+    {
+      "name": "R45",
+      "a": "Q26_C",
+      "b": "MINUS10",
+      "ohm": 330
+    },
+    {
+      "name": "R60",
+      "a": "Q28_C",
+      "b": "TAIL",
+      "ohm": 680
+    }
+  ],
+  "potentiometer": {
+    "name": "R17",
+    "ohm": 50000,
+    "high": "FILTER_OUT",
+    "low": "GROUND",
+    "cursor": "AMOUNT_CURSOR",
+    "coordinate": "electrical fraction from low, no angle calibration",
+    "endpoint_contacts_exact": true
+  },
+  "diode": {
+    "name": "CR3",
+    "type": "1N34A",
+    "anode": "FEEDBACK",
+    "cathode": "RESET_Q4",
+    "is_a": 1e-08,
+    "ideality": 1.5,
+    "parameters": "laboratory hypothesis"
+  },
+  "capacitors": [
+    {
+      "name": "C11",
+      "a": "Q22_C_Q21_B",
+      "b": "Q21_E",
+      "variants_f": [
+        0,
+        4.7e-11
+      ]
+    },
+    {
+      "name": "C18",
+      "a": "Q26_B",
+      "b": "GROUND",
+      "farad": 1e-10
+    }
+  ],
+  "omitted": [
+    "C12 500 pF and complete timer/C5",
+    "Q4 and complete latch/trigger",
+    "junction charge/Early/breakdown",
+    "supply impedance",
+    "closed ladder TAIL",
+    "voice/audio/real-time promotion"
+  ],
+  "r74_count": 1,
+  "old_imposed_v16_removed": true,
+  "reference_original_cursor": true
+}

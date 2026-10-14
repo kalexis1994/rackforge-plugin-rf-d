@@ -780,3 +780,18 @@ pasan; cuatro WAV de 8 ms sin concatenación o normalización. RMS cerrado/abier
 cuatro checks CLI. La historia/WAV continuo de 164 ms sigue sin prolongarse.
 Sin Hz calibrados, contorno de filtro completo, fidelidad física o RT.
 [QA](../evidence/cutoff_ab_tests01.json).
+
+
+## Puerto del contorno de filtro — 2026-10-14
+
+| Nivel | Evidencia | Límite |
+|---|---|---|
+| Topología | SVC-9 p9/p13/p19 y SVC-204D p65; Q22E/Q21C OUT, cursor R17 cargado por R74 | Perfil documental nominal; no hardware |
+| Red original | 60 DC y 96 pasos locales, cursor explícito, 1520 filas, 45084 derivadas/9984 tangentes | Ebers–Moll nominal, reset/C5/TAIL/alimentación impuestos |
+| Memoria | C11/C18, historia fija, receta C11 vinculada; 96 provisionales/replays y 24 rechazos | C12 y temporizador/gatillo completos pendientes |
+| Refinamiento | 0,311092 µV/0,094695 nA en estímulo local de 1 mV, 32 clocks | Salto 2,15 V rechazado: 668,677 µV/622,610 nA |
+| Integración/sonido | Puerto de laboratorio con carga y retorno del panel | Fuera de lib.rs/voz; sin audio, calibración, fidelidad física o RT nuevos |
+
+[Resultados](CONTORNO_FILTRO_PUERTO_RESULTADOS.md) y
+[QA](../evidence/filter_contour_port_tests01.json). La admisión local no
+sustituye el recorrido grande rechazado ni prolonga la historia audible previa.

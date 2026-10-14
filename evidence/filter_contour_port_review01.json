@@ -1,0 +1,40 @@
+{
+  "schema": "rf-d/filter-contour-port/review-v1",
+  "date": "2026-10-14",
+  "sources": {
+    "SVC-9": {
+      "path": "references-local/pdf/service_204d_synthfool.pdf",
+      "sha256": "0edd35f3f9ab1eba346693545f0dcbe374bdcf6f37f9b1a34ecbdeb8ae682b4a",
+      "pages": [
+        9,
+        13,
+        19
+      ]
+    },
+    "SVC-204D": {
+      "path": "references-local/pdf/service_204d_full_fdiskc.pdf",
+      "sha256": "d1f96fa26d9e25dda9d1cb0bbe9a5e0b017f7e463ec5b268c380b58d44f5b6fe",
+      "pages": [
+        65
+      ]
+    }
+  },
+  "private_sha256": {
+    "references-local/filter-contour-review01/amount-contour.png": "fcb8225fbf42db83b782be378531f79e5ef0ca5de11591184800daade4bdc28f",
+    "references-local/filter-contour-review01/filter-section.png": "dbf52e483e24e0d9a85d758eea14c0c7436e1615d2eb403d82af29c261fc2ba9",
+    "references-local/filter-contour-review01/q22-q21.png": "f741935302e95c1ef5dd6cd4317bd6b77aea5ec573f5a91e8289eb26a314220f",
+    "references-local/filter-contour-review01/svc204d-65-upright.png": "13072242b9ce13fe8447547d5962e8c542df8c1a8245b9fe076e3543132fe80f",
+    "references-local/filter-contour-review01/svc204d-65.png": "2b8bd81f6e09fa248f6836fc607bae8b268fd347776460f4f382902420980d6e",
+    "references-local/filter-contour-review01/svc9-09.png": "42bd307a8059cabf7962c90612cfd615f9fd74b3c6278218b51e6b8354a1dcf6",
+    "references-local/filter-contour-review01/svc9-13.png": "17e0538c00a5803396c66ae45f2ffe6444f07415ed47ec10765b7bdb72232f0d",
+    "references-local/filter-contour-review01/svc9-19.png": "ab3e9bf4e26e4331d7682e5f6e3f22a6d863d3824a954de5441e0bb3f38a76f6"
+  },
+  "visual_review": true,
+  "findings": [
+    "Q22 NPN emitter and Q21 PNP collector share OUT; Q22 collector drives Q21 base, not a two-emitter cascade.",
+    "C11 bridges Q21 base/emitter; C12 involves timer outside this closure.",
+    "R17 OUT-ground 50 kohm; cursor via R74 47 kohm to Q26 base.",
+    "CR3 anode feedback/cathode Q4 reset; Q26 PNP/Q28 NPN."
+  ],
+  "uncertainty": "Nominal documentary CA3046 target, generic Ebers-Moll parameters unmeasured; no physical unit."
+}
