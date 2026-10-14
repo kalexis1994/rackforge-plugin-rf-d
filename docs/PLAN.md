@@ -750,3 +750,13 @@ coinciden en4 ms propios por resolución,68.442→72.442 ms; kernel ratio
 0.920475855. 2748 ecuaciones originales
 heredadas por identidad,0 nuevas. Fallos de binding/replays conservados.
 Sin duración/WAV nuevos, heap/deadline o RT. Siguiente duración útil propia.
+
+
+La [cola propia con ensamblado directo](VOZ_COLA_LARGA_RESULTADOS.md)
+añade 64 ms eléctricos: historia de 132.004 ms y dos WAV de 132 ms, 6336 muestras.
+Receta y 3728 bytes de unión idénticos; ocho avances comparados por bits.
+76944 ecuaciones originales seleccionadas nuevas,
+81 relojes de 229 estados, balances de carga y replay acotado pasan. C2 final
+0.850987312 V; no silencio asintótico inferido.
+CLI con diez entradas/código identificados y cuatro integraciones.
+Sin biblioteca/cache nuevas, fidelidad física o RT. Siguiente escena útil de voz.

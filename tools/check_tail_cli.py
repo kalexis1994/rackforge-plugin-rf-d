@@ -1,0 +1,7 @@
+"""Adapt the admitted four CLI checks to the five real trajectory segments."""
+from prepare_vco1_portable import ROOT
+def main():
+ s=(ROOT/'tools/check_extended_cli.py').read_text(encoding='utf8');s=s.replace('from render_extended_release import inputs','from render_long_tail import inputs').replace('tools/check_extended_cli.py','tools/check_tail_cli.py').replace('tools/extended_render_cli.py','tools/tail_render_cli.py').replace('tools/render_extended_release.py','tools/render_long_tail.py').replace('evidence/voice_extended_listening01.json','evidence/voice_tail_listening01.json').replace("'extended-release01']","'extended-release01','long-tail01']").replace('references-local/extended-cli01','references-local/tail-cli01').replace("['held','release','controlled','extended']","['held','release','controlled','extended','tail']").replace("meta['frames']==3264","meta['frames']==6336").replace('full extended seam state','full tail seam state').replace('BOUNDARY,0,23300407296','BOUNDARY,0,40077623296').replace('complete extended observations','complete tail observations').replace('evidence/voice_extended_cli01.json','evidence/voice_tail_cli01.json')
+ s=s.replace("names=['tools/check_tail_cli.py'","names=['tools/check_extended_cli.py','tools/render_extended_release.py','tools/check_tail_cli.py'")
+ scope={'__name__':'tail_cli_harness'};exec(compile(s,'<admitted-cli-checks-long-tail>','exec'),scope);scope['main']()
+if __name__=='__main__':main()
