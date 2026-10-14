@@ -749,3 +749,13 @@ Receta y 3728 bytes de unión idénticos; ocho avances comparados por bits.
 0.850987312 V; no silencio asintótico inferido.
 CLI con diez entradas/código identificados y cuatro integraciones.
 Sin biblioteca/cache nuevas, fidelidad física o RT. Siguiente escena útil de voz.
+
+
+El [retrigger con memoria propia](VOZ_RETRIGGER_RESULTADOS.md)
+añade 16,004 ms: segundo gatillo de 8 ms y liberación de 8 ms sin borrar cargas.
+Dos eventos por resolución conservan 458 HIGH/LOW, resistencia, clock y propuesta;
+16 Accepted posteriores pareados por bits con block, además de ocho de unión.
+43968 ecuaciones seleccionadas nuevas, 22 relojes de
+229 estados y nueve balances por fase/total/unión pasan. Dos WAV reales de 148 ms,
+17 entradas/código identificados y cuatro integraciones CLI. Sin fidelidad física
+o RT; la historia inicial sigue condicionada. [QA](../evidence/voice_retrigger_tests01.json).

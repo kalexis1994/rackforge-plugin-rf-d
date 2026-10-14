@@ -1,0 +1,51 @@
+{
+  "passed": true,
+  "scope": "unchanged failing fixture replay; no circuit or renderer repair",
+  "command": [
+    "C:\\Users\\kalex\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+    "-B",
+    "tools/retrigger_render_cli.py",
+    "--held",
+    "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\sustained-voice01\\524288\\selected.txt",
+    "--release",
+    "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\release-voice01\\524288\\selected.txt",
+    "--controlled",
+    "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\decay-voice02\\524288\\selected.txt",
+    "--extended",
+    "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\extended-release01\\524288\\selected.txt",
+    "--tail",
+    "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\long-tail01\\524288\\selected.txt",
+    "--retrigger",
+    "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\retrigger-cli01\\mismatched-seam.txt",
+    "--output",
+    "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\retrigger-cli01\\rejected.wav"
+  ],
+  "exit_code": 1,
+  "stderr": "Traceback (most recent call last):\n  File \"C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\retrigger_render_cli.py\", line 16, in <module>\n    if __name__=='__main__':main()\n                            ^^^^^^\n  File \"C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\retrigger_render_cli.py\", line 14, in main\n    p.add_argument('--output',type=Path,required=True);a=p.parse_args();paths=[getattr(a,n) for n in ['held','release','controlled','extended','tail','retrigger']];output=a.output.resolve();sidecar=output.with_suffix('.json');require(output.parent.is_dir(),'output directory exists');require(not output.exists() and not sidecar.exists(),'preserve existing WAV and sidecar');sources={str(p.resolve()):sha(p) for p in inputs(*paths)};code=code_hashes();t,v=joined_trace(*paths);pcm,meta=adapt(t,v,1);require(sources=={str(p.resolve()):sha(p) for p in inputs(*paths)},'stable CLI inputs');save(output,pcm)\n                                                                                                                                                                                                                                                                                                                                                                                                                ^^^^^^\n  File \"C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\prepare_vco1_portable.py\", line 8, in sha\n    with p.open('rb') as f:\n         ^^^^^^^^^^^^\n  File \"C:\\Users\\kalex\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\pathlib.py\", line 1013, in open\n    return io.open(self, mode, buffering, encoding, errors, newline)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nFileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\kalex\\\\OneDrive\\\\Documents\\\\rackforge-plugin-rf-d\\\\references-local\\\\retrigger-cli01\\\\event1-before.ckp'\n",
+  "stdout": "",
+  "wall_s": 0.41069019999849843,
+  "source_sha256": {
+    "tools/check_extended_cli.py": "0d52732ea26cd774f64555dde733265f6be9cd64c28baaa44e425f2df25ce1da",
+    "tools/render_extended_release.py": "05b929768bf8c2a94647a8ad6b83cfac744f9f2ad13ceb1ed06da1665fc1a453",
+    "tools/render_long_tail.py": "cccabeac9360941f2cf2c36c581bc1bb7d89d747995c10db6648cdbe8fa28db3",
+    "tools/check_retrigger_cli.py": "05f014d6251ada55655ee2e2732e616c0303ad305498a6dede9727615234b27b",
+    "tools/retrigger_render_cli.py": "d464542b1d06070f55188db937b1e2fe761d7902e321eb6cd9b4a0e2ab66e846",
+    "tools/render_voice_retrigger.py": "0ffe1241ff4f51dfb35a88f52cca33636ee33bec0e9ef77f0faa451766130de8",
+    "tools/render_decay_control.py": "a90427d4c47199efcc3ab377510cb81774210a1f1c24ca0345d66e8a72e09692",
+    "tools/render_release_voice.py": "de0126ed1594fff30a7f88e35a7313f722ee9643058154eacb3b185620c38448",
+    "tools/render_sustained_voice.py": "8fb8da2f81a2cbb86c7a65d0cf6e41675c3110af2d41453371e93a90fb3d339f",
+    "tools/render_conditioned_recipe.py": "fdfbf9feae8bc96644f03482b620e227b929f045933c63bec816742f14024ce2",
+    "evidence/voice_retrigger_listening01.json": "42469e1d98ec69dba31632251fb72e8e01391a71c01600edfbef9e2a368b87bc"
+  },
+  "private_input_sha256": {
+    "references-local/retrigger-cli01/failure-replay.json": "c7d431d95c43c941337a3c64e80f0119359a779ec3f3e72f1fbef59fdfa73123",
+    "references-local/retrigger-cli01/failure-replay.wav": "03f04331aa2e5b0a5694f6612518bde1411e4031a81ef4fa0b90b8381c1756e6",
+    "references-local/retrigger-cli01/final.ckp": "0fb55e53611a7b00c9bd6d544e77e87a5833490d674bceba90163b0695e92c78",
+    "references-local/retrigger-cli01/incoming-original.ckp": "2d8a0e040f632f45cbf5c77bdbc204e96b4ac2ee0d54ea732462c007861046d4",
+    "references-local/retrigger-cli01/j7.json": "c7d431d95c43c941337a3c64e80f0119359a779ec3f3e72f1fbef59fdfa73123",
+    "references-local/retrigger-cli01/j7.wav": "03f04331aa2e5b0a5694f6612518bde1411e4031a81ef4fa0b90b8381c1756e6",
+    "references-local/retrigger-cli01/mismatched-seam.txt": "09debf5fd0039d44e7d3ccb38d5ac5203458792cb5b3ab1e2e3d63f37dbc0b55"
+  },
+  "unchanged_failure_identical": true,
+  "no_output_publication": true
+}
