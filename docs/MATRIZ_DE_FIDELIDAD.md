@@ -1070,3 +1070,15 @@ esta escena. No se modifican leyes, memorias, cargas o ganancias. El fallo
 32/8 también aparece en la grilla común 125 us; pasividad, Newton y dos
 propuestas adaptativas casi equivalentes no bastan para acreditar audio.
 Antialias, parecido físico y RT siguen sin admitirse para esta salida.
+
+
+## Nota más larga, FIR y alias previo a la lectura
+
+[Escena](LONG_NOTE_AA_RESULTADOS.md): un VCO nominal, KEY 1–200 ms,
+300 ms de salida y 1 ms de futuro integrado. El FIR digital de lectura
+no pertenece al circuito histórico: sinc/Kaiser, paso 20 kHz, transición
+hasta 24 kHz, escala DC unitaria y retardo causal 1 ms compensado offline.
+Contrastar 2/1 us y 192/384 kHz como dos ejes independientes, sin cambiar
+leyes o nivel de J7. La respuesta del FIR no elimina alias ya plegado;
+los controles negativos y la convergencia de esta escena no demuestran
+alias universalmente nulo ni parecido físico. Ver QA y auditoría originales.

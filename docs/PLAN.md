@@ -1092,3 +1092,15 @@ originales; máximo nominal de 2 us. No demuestra RT o banda limitada.
 Prioridad: nota offline de duración útil y conversión/antialias verificados,
 luego una única exportación para escucha, conservando nivel absoluto.
 Evitar otra cadena de microoptimizaciones y nuevas carpetas de muestras.
+
+
+## Nota extendida y salida con antialias
+
+[Contrato](LONG_NOTE_AA_PROTOCOLO.md), [auditoría](LONG_NOTE_AA_AUDITORIA.md)
+y [resultados](LONG_NOTE_AA_RESULTADOS.md): nota 300 ms, KEY OFF 200 ms y
+futuro físico hasta 301 ms para completar el FIR. Separar refinamiento
+eléctrico 2/1 us de lectura 192/384 kHz, con gates por ataque/sostenido/
+liberación. Conservar prefijo y memorias; comprobar respuesta, convolución,
+controles negativos y ecuaciones originales. Una sola escucha regenerable
+en voltios, sin carpetas de variantes. Esta referencia servirá para futuras
+extensiones funcionales; no ampliar sus claims a CV general, tres VCO o RT.

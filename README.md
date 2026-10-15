@@ -863,3 +863,13 @@ modificar la trayectoria eléctrica. 32/8 y 4/2 us fallan y quedan archivados;
 Máximo nominal admitido de 2 us para esta escena. Sin normalización,
 WAVs nuevos, antialias admitido o tiempo real. Siguiente: nota útil y
 conversión/antialias verificados antes de la exportación de escucha.
+
+
+## Nota nominal extendida y antialias
+
+El [bloque de 300 ms](docs/LONG_NOTE_AA_RESULTADOS.md) mantiene KEY hasta
+200 ms y calcula un milisegundo adicional para el FIR. Lectura pasiva de
+J7 a 384 kHz, conversión centrada a 48 kHz y contraste separado de tasa
+e integración. Un solo WAV local regenerable, con convención 1 V=1 FS,
+sin normalizar la receta. Ver resultados y QA para su alcance; la escena
+sigue siendo un VCO nominal offline, sin admisión RT o parecido físico.
