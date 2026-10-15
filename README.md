@@ -723,3 +723,15 @@ direcciones y 5712 filas originales pasan. Trayectorias observadas iguales
 al preparado. Control fresco 21,1010 s frente a 18,7063 s/60 ms: 11,35 %
 menos costo en este ensayo, todavía offline. Sin muestras/cache nuevas.
 [QA](evidence/hybrid_stage_tests01.json).
+
+
+## 2026-10-15 — Radau directo a Schur y CSR
+
+[Ensamblado directo](docs/HYBRID_DIRECT_RESULTADOS.md): evita la matriz
+intermedia 236×236, inspecciona los términos reales y prepara escalas
+interiores, conservando puertos, cargas y estados HIGH/LOW. 1.336.704
+coeficientes/192 direcciones bit a bit, 33 rechazos/retries, 24 enlaces
+legales y 5712 filas originales pasan. Trayectorias observadas iguales
+al contiguo. Costo 16,5512 frente a 18,4484 s/60 ms: 10,28 % menos en
+este ensayo, margen pequeño y todavía offline. Dos rechazos conservados;
+sin muestras/cache nuevas. [QA](evidence/hybrid_direct_tests01.json).

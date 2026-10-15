@@ -934,3 +934,16 @@ y estados observados iguales al preparado; no se modifica el error frente
 a voz completa ni se acredita fidelidad física. Costo 0,886515 del control
 fresco (11,35 % menos), sin inferencia estadística/deadline. Sin audio,
 cache o inputs privados nuevos. [QA](../evidence/hybrid_stage_tests01.json).
+
+
+## 2026-10-15 — Schur/CSR sin matriz intermedia
+
+[Resultado](HYBRID_DIRECT_RESULTADOS.md): 24 matrices/1.336.704
+coeficientes y 192 direcciones bit a bit; 33 rechazos/retries exactos,
+24 enlaces legales restaurados y probe de cancelación entre etapas.
+962 observaciones/estados finales iguales al contiguo, 5712 filas
+originales pasan. Cargas/leyes físicas intactas. Costo 0,897164 del
+control fresco: 10,28 % menos en este ensayo, con margen pequeño y
+sin inferencia estadística/deadline. No añade fidelidad física. Dos
+rechazos de costo conservados; sin audio/cache/inputs privados nuevos.
+[QA](../evidence/hybrid_direct_tests01.json).

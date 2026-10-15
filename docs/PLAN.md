@@ -942,3 +942,14 @@ y 4,43 s a factorización; instrumentación y benchmark se distinguen.
 Siguiente: reducir materialización/inspección densa sin omitir entradas
 reales, conservando puertos, backward, historia y cargas. No volver a
 certificados aislados. Cadena nominal offline, sin ampliar arranque/CV/RT.
+
+
+## 2026-10-15 — Representación directa del sistema temporal
+
+Admitido [Radau directo](HYBRID_DIRECT_RESULTADOS.md), con cargas,
+coeficientes, direcciones y trayectorias observadas conservados. Dos
+candidatos correctos no alcanzaron el gate de costo; el conjunto final
+lo pasa con 10,28 % menos costo y margen pequeño. Sin nuevo dominio
+físico/RT. Continuar perfilando evaluación eléctrica/factores sobre la
+unión funcional antes de elegir otra reducción; conservar historia,
+puertos y cargas, sin otra secuencia de certificados aislados.
