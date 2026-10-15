@@ -922,3 +922,15 @@ bytes de los exports borrados no se recuperan desde su inventario.
 
 [Resultados](HYBRID_STAMP_RESULTADOS.md),
 [QA](../evidence/hybrid_stamp_tests01.json).
+
+
+## 2026-10-15 — Matriz Radau contigua
+
+[Resultado](HYBRID_STAGE_RESULTADOS.md): misma fórmula por coeficiente
+y solver admitido. 24 matrices/1.336.704 entradas bit a bit, 192 direcciones
+contra monolítico refinado; 27 rechazos lineales/retries exactos. Dos
+trayectorias, 962 observaciones y 5712 filas originales pasan. J7, cargas
+y estados observados iguales al preparado; no se modifica el error frente
+a voz completa ni se acredita fidelidad física. Costo 0,886515 del control
+fresco (11,35 % menos), sin inferencia estadística/deadline. Sin audio,
+cache o inputs privados nuevos. [QA](../evidence/hybrid_stage_tests01.json).

@@ -931,3 +931,14 @@ debilitar gates tras siete rechazos de costo. Margen temporal pequeño;
 no implica deadline o RT. Próximo: perfilar y mejorar la representación
 del sistema lineal con esta evaluación, conservando incidencias/cargas;
 arranque/ataque y controles requieren bloques posteriores.
+
+
+## 2026-10-15 — Recorrido contiguo de la matriz Radau
+
+Admitido el [ensamblado por etapas](HYBRID_STAGE_RESULTADOS.md), con
+11,35 % menos costo contra preparado fresco y trayectorias observadas
+exactas. El perfil atribuye 3,62 s al ensamblado anterior, 1,86 s a CSR
+y 4,43 s a factorización; instrumentación y benchmark se distinguen.
+Siguiente: reducir materialización/inspección densa sin omitir entradas
+reales, conservando puertos, backward, historia y cargas. No volver a
+certificados aislados. Cadena nominal offline, sin ampliar arranque/CV/RT.

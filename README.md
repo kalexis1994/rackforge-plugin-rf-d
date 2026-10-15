@@ -712,3 +712,14 @@ del Schur previo dentro de precisión numérica. Control fresco 23,5213 s
 frente a 21,1354 s/60 ms: 10,14 % menos costo en este ensayo, margen
 pequeño respecto del gate, todavía offline. Sin nuevas muestras/cache.
 [QA](evidence/hybrid_stamp_tests01.json).
+
+
+## 2026-10-15 — Ensamblado Radau contiguo
+
+[Radau por etapas](docs/HYBRID_STAGE_RESULTADOS.md): perfil del sistema
+lineal y recorrido contiguo de matrices, conservando fórmula, solver,
+118 estados HIGH/LOW y cargas. 1.336.704 coeficientes bit a bit, 192
+direcciones y 5712 filas originales pasan. Trayectorias observadas iguales
+al preparado. Control fresco 21,1010 s frente a 18,7063 s/60 ms: 11,35 %
+menos costo en este ensayo, todavía offline. Sin muestras/cache nuevas.
+[QA](evidence/hybrid_stage_tests01.json).
