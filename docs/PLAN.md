@@ -918,3 +918,16 @@ frontera y evita Jacobiano completo en trials de residual. Gates intactos.
 Siguiente: reducir evaluación eléctrica de cadena sobre esta frontera
 verificada, con cargas/J7/costo; luego ampliar arranque/ataque y CV.
 La frontera pequeña no elimina por sí sola el costo de los stamps.
+
+
+## 2026-10-15 — Evaluación de cadena preparada y compensada
+
+[Resultados](HYBRID_STAMP_RESULTADOS.md): preparación inmutable y rutas
+completo/residual, sin omitir LOW. Se conserva Jacobiano/masa y se evita
+J·LOW denso usando las derivadas de dispositivos y puertos. El candidato
+se valida una vez en 118 nodos antes de proyectar a los bloques. 5712
+filas originales pasan; costo final 0,898562 del Schur fresco, sin
+debilitar gates tras siete rechazos de costo. Margen temporal pequeño;
+no implica deadline o RT. Próximo: perfilar y mejorar la representación
+del sistema lineal con esta evaluación, conservando incidencias/cargas;
+arranque/ataque y controles requieren bloques posteriores.

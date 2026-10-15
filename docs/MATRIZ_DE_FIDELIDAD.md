@@ -909,3 +909,16 @@ bytes de los exports borrados no se recuperan desde su inventario.
 
 [Resultados](HYBRID_SCHUR_RESULTADOS.md),
 [QA](../evidence/hybrid_schur_tests01.json).
+
+
+## Evaluación eléctrica preparada — 2026-10-15
+
+| Nivel | Alcance admitido | Límite |
+|---|---|---|
+| Evaluación | Metadatos preparados, frontera duplicada retirada, J·LOW por incidencias | Misma escena nominal; suma f64 reorganizada, sin nuevas leyes físicas |
+| Estado | 118 HIGH/LOW; candidato validado antes de proyectar; cargas preservadas | Helpers internos prevalidados, sin extensión al API genérico |
+| Contraste | 48 etapas, 472 columnas FD, 26 guardas/retries y 5712 filas originales | Candidatos nativos auditados, sin nueva trayectoria original |
+| Costo | 21,1354 s frente a 23,5213 s fresco/60 ms, heap cero | 10,14 % en una medición, margen pequeño, todavía offline |
+
+[Resultados](HYBRID_STAMP_RESULTADOS.md),
+[QA](../evidence/hybrid_stamp_tests01.json).

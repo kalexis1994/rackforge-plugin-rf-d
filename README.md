@@ -700,3 +700,15 @@ estados coinciden con el híbrido previo dentro de precisión numérica;
 para 60 ms: 15,63 % menos costo, heap cero, todavía offline. Tres
 rechazos conservados, sin WAV/cache/muestras nuevas.
 [QA](evidence/hybrid_schur_tests01.json).
+
+
+## 2026-10-15 — Evaluación eléctrica preparada
+
+[Stamp preparado](docs/HYBRID_STAMP_RESULTADOS.md): metadatos inmutables,
+frontera duplicada retirada y residual/J·LOW por dispositivos, conservando
+cargas, matrices y 118 estados HIGH/LOW. 48 etapas, 472 columnas FD,
+26 guardas/retries y 5712 filas originales pasan. J7 conserva la señal
+del Schur previo dentro de precisión numérica. Control fresco 23,5213 s
+frente a 21,1354 s/60 ms: 10,14 % menos costo en este ensayo, margen
+pequeño respecto del gate, todavía offline. Sin nuevas muestras/cache.
+[QA](evidence/hybrid_stamp_tests01.json).
