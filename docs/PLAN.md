@@ -989,3 +989,16 @@ coordenadas en ambas etapas de la voz y reconstruir sus 118 nodos para
 la auditoría original. Conservar cargas cruzadas, historial HIGH/LOW y
 TAIL/VCA_BASE; validar trayectoria 40–100 ms antes del costo fresco.
 El directo sigue activo; no hay admisión global o RT del kernel nuevo.
+
+
+## 2026-10-15 — Unión del ladder verificada; retirar trabajo duplicado
+
+El [candidato global](LADDER_VOZ_RESULTADOS.md) reconstruye la álgebra en
+ambas etapas, conserva memorias y puertos y pasa trayectoria/auditoría
+original. La salida comprueba 118 filas físicas y corrección original,
+no sólo 111 coordenadas retenidas. Costo ratio 1,542441: rechazado, directo
+activo. Siguiente: evaluar reacciones condensadas y padre sin estampar el
+ladder dos veces ni materializar toda su proyección, preservando esta unión
+como control funcional. No añadir otra secuencia de certificados locales;
+volver a trayectoria, filas originales y costo fresco con los mismos gates.
+Sin ampliar arranque/CV/fidelidad física/RT ni generar nuevas muestras.

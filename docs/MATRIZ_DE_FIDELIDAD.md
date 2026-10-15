@@ -984,3 +984,16 @@ capacitores locales/padre verificadas en las 48 etapas; heap cero y 178
 rechazos/retries. No acredita aún integración global, aceleración, arranque,
 CV general o fidelidad de una unidad física. Directo previo activo.
 [Cierre local](../evidence/ladder_algebraic_tests01.json).
+
+
+## 2026-10-15 — Unión global del ladder: precisión pasa, costo no
+
+[Resultado](LADDER_VOZ_RESULTADOS.md): ambas etapas con 111 coordenadas y
+118 nodos reconstruidos, todas las cargas/historia/puertos conservados.
+Dos trayectorias 40–100 ms y auditoría de 5712 filas originales pasan;
+222 columnas FD, 144 direcciones, 83 rechazos/retries del solver y 36
+rechazos del wrapper. Heap cero, ocho replays y diez rechazos atómicos.
+Gates de corrección con margen pequeño: máximo Newton 1,996897 nV frente
+a 2 nV. Costo 54,24 % mayor al directo fresco: reducción no promovida,
+directo previo activo. Sin nueva fidelidad física/RT, arranque o CV general.
+[Cierre del ensayo](../evidence/ladder_voice_tests01.json).

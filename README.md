@@ -772,3 +772,16 @@ locales y del padre verificadas, incluidos C10 y cancelación HIGH/LOW;
 178 rechazos con recuperación exacta, heap cero. [QA](evidence/ladder_algebraic_tests01.json).
 Admisión local; siguen pendientes unión global y costo. Directo activo.
 Sin nuevos WAV, inputs privados de sonido o caches de build.
+
+
+## 2026-10-15 — Ladder reconstruido en ambas etapas de la voz
+
+[Unión funcional](docs/LADDER_VOZ_RESULTADOS.md): 111 coordenadas por etapa,
+118 nodos físicos reconstruidos, cargas/puertos/historia conservados. Dos
+trayectorias propias, 222 columnas FD, 144 direcciones, guardas y auditoría
+de 5712 filas originales pasan. Ocho replays, diez rechazos atómicos y heap
+cero. Costo 25,5442 frente a 16,5609 s del directo fresco: ratio 1,542441,
+rechazado frente a 0,90. El directo sigue activo. La próxima transformación
+retira la evaluación duplicada del ladder dentro del padre, conservando
+esta unión y los gates. [QA](evidence/ladder_voice_tests01.json). Sin nuevos
+WAV, inputs privados de sonido, Cargo o rlib; temporales vacíos.
