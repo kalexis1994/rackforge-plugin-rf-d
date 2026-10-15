@@ -1002,3 +1002,16 @@ ladder dos veces ni materializar toda su proyección, preservando esta unión
 como control funcional. No añadir otra secuencia de certificados locales;
 volver a trayectoria, filas originales y costo fresco con los mismos gates.
 Sin ampliar arranque/CV/fidelidad física/RT ni generar nuevas muestras.
+
+
+## 2026-10-15 — Separación verificada; condensar la corrección física
+
+[Resultado](SPLIT_LADDER_RESULTADOS.md): se retira el segundo stamp DC del
+ladder conservando cargas y sellos del punto actual; precisión y auditoría
+original pasan. El perfil del primer candidato localiza 8,648849 s en el
+tramo del padre; el segundo retira su adaptador de tipos. Ambos fallan
+costo frente al directo fresco, que sigue activo. Siguiente: perfilar los
+solves reducido/original y preparar una sola vez el Newton actual, derivando
+la corrección física completa mediante Schur con residual algebraico
+remanente. Compararla con el solve original y conservar 1 pA/2 nV, estimador,
+trayectorias, auditoría y costo fresco. Sin más ensayos aislados de adaptadores.

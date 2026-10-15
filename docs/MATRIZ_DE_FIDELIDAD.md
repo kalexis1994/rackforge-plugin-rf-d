@@ -997,3 +997,17 @@ Gates de corrección con margen pequeño: máximo Newton 1,996897 nV frente
 a 2 nV. Costo 54,24 % mayor al directo fresco: reducción no promovida,
 directo previo activo. Sin nueva fidelidad física/RT, arranque o CV general.
 [Cierre del ensayo](../evidence/ladder_voice_tests01.json).
+
+
+## 2026-10-15 — Separación DC/carga del ladder, sin promoción por costo
+
+[Resultado](SPLIT_LADDER_RESULTADOS.md): DC/J/masa/cargas conservados en 48
+etapas, 96 semillas locales y 2048 entradas de congruencia. 222 columnas
+FD/144 direcciones pasan; prefijos GRID/ROOT/SOLVER de cuatro trayectorias
+iguales a la unión anterior y 5712 filas originales pasan. 48 rechazos de
+pertenencia/transferencia y 30 adicionales de metadatos/overflow, con
+recuperación exacta; estado ligado a HIGH/LOW actual. Dos rechazos de costo:
+ratios 1,924343/1,574082 frente al directo fresco. Directo previo activo;
+menos costo frente a un candidato rechazado no lo promueve. Heap cero,
+sin nueva fidelidad física/RT, arranque/CV general, audio o inputs privados.
+[Cierre](../evidence/split_ladder_tests01.json).

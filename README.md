@@ -785,3 +785,17 @@ rechazado frente a 0,90. El directo sigue activo. La próxima transformación
 retira la evaluación duplicada del ladder dentro del padre, conservando
 esta unión y los gates. [QA](evidence/ladder_voice_tests01.json). Sin nuevos
 WAV, inputs privados de sonido, Cargo o rlib; temporales vacíos.
+
+
+## 2026-10-15 — Padre sin segundo stamp DC del ladder
+
+[Separación y resultados](docs/SPLIT_LADDER_RESULTADOS.md): el padre conserva
+todas las cargas y el kernel aporta una sola vez DC/J/reacciones. 48 etapas
+con error físico 0 A/0 S, 591.408 coeficientes reducidos iguales y cuatro
+trayectorias observadas idénticas a la unión anterior; 5712 filas originales
+pasan. Transferencia ligada al punto HIGH/LOW, con rechazo atómico de
+metadatos/overflow. Dos candidatos fallan costo: ratios 1,924343 y 1,574082
+frente al directo fresco. El segundo cuesta 8,18 % menos que la unión
+reconstruida anterior en su control fresco, aún 57,41 % más que el directo.
+Directo activo. [QA](evidence/split_ladder_tests01.json). Sin WAV/cache nuevos;
+continuar sobre la preparación duplicada del solve físico de convergencia.
