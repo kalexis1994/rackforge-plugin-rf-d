@@ -1047,3 +1047,20 @@ aristas nuevas preservados; evitar matrices intermedias y scans repetidos.
 Fijar contrato antes de cambiar el ensamblaje, contrastar coeficientes y
 volver a voz completa/auditoría/costo ≤0,90. El perfil no prueba ahorro
 futuro ni RT. Sin ampliar controles, arranque o muestras.
+
+
+## 2026-10-15 — Incidencias admitidas; arranque propio de la cadena
+
+[Resultado](INCIDENCE_VOICE_RESULTADOS.md): 192 direcciones y trayectorias
+idénticas, 5712 filas originales pasan. Ensamblaje desde componentes actuales,
+sin J/M globales de etapa. Candidato y fachada pasan costo con controles
+frescos: ratios 0,758772/0,788476. Motor nominal seleccionado mediante
+active_nominal_voice.rs; el directo anterior queda como control histórico.
+No atribuir el ahorro a un único cambio o afirmar RT: sigue offline.
+Siguiente: fijar condiciones iniciales propias de la cadena con la fuente
+periódica nominal actual, conservando cargas/trigger y sin proyectar el
+estado de 40 ms de una referencia. Contrastar DC, estados y etapas con las
+ecuaciones originales; luego recorrer ataque/nota completa a dos pasos.
+Esto no sería arranque del VCO físico ni CV general. Mantener gates de
+precisión y memoria; priorizar unión funcional antes de otra microoptimización
+local o generación de muestras.

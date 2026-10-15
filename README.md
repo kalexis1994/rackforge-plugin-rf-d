@@ -825,3 +825,17 @@ Costo 17,541832 frente a 16,639246 s: ratio 1,054244, rechazado. Directo
 anterior activo. [QA](evidence/execution_cost_tests01.json). Siguiente:
 ensamblaje desde incidencias actuales para reducir recorridos/materialización,
 con coeficientes y voz completa como gates; sin nuevas muestras/cache.
+
+
+## 2026-10-15 — Motor nominal por incidencias seleccionado
+
+[Resultados](docs/INCIDENCE_VOICE_RESULTADOS.md): se retiran J/M globales
+intermedios por etapa, conservando coeficientes, cargas, puertos e historial.
+192 direcciones y cuatro trayectorias de candidato/fachada idénticas a sus
+controles; 5712 filas originales pasan y heap cero. Dos controles frescos:
+ratios 0,758772/0,788476, ambos bajo 0,90 (24,12 %/21,15 % menos costo).
+Entrada seleccionada: [active_nominal_voice.rs](crates/rf-d-circuit/src/active_nominal_voice.rs).
+[QA](evidence/incidence_voice_tests01.json). Sigue siendo laboratorio offline,
+rama 40–100 ms y fuente VCO de fase; sin plugin/RT/fidelidad física nueva.
+Siguiente: arranque propio y ataque de la cadena nominal, con condiciones
+de carga/trigger verificadas antes de una nota completa. Temporales vacíos.

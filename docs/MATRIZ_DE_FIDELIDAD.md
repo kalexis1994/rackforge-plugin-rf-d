@@ -1033,3 +1033,16 @@ pasan, 24 enlaces nuevos, fill/swap, cancelación y 33 rechazos/retries.
 Dos trayectorias idénticas, ocho replays, diez rechazos, heap cero y 5712
 filas originales pasan. Costo ratio 1,054244: no promovido, directo anterior
 activo. Sin nueva fidelidad física, RT o dominio. [Cierre](../evidence/execution_cost_tests01.json).
+
+
+## 2026-10-15 — Ensamblaje por incidencias admitido y seleccionado
+
+[Resultado](INCIDENCE_VOICE_RESULTADOS.md): DC/cargas/HIGH/LOW iguales,
+1.336.704 valores físicos y 1.336.704 coeficientes temporales contrastados;
+192 direcciones idénticas, 33 rechazos con recuperación, 24 enlaces nuevos,
+37 guardas del paquete y siete contratos de orden/acumulación. Candidato y
+fachada conservan cuatro trayectorias, 5712 filas originales y heap cero.
+Dos controles frescos: costo ratios 0,758772/0,788476, gate 0,90. Entrada
+nominal activa active_nominal_voice.rs. Alcance 40–100 ms, fuente de fase
+aproximada; sin nuevo arranque/CV, parecido físico, deadline RT o plugin.
+[Cierre](../evidence/incidence_voice_tests01.json).
