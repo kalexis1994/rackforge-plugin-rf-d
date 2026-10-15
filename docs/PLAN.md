@@ -1031,3 +1031,19 @@ local sigue costando más, priorizar el directo como base de ejecución y
 conservar la variante condensada como referencia funcional. Mantener
 cargas, puertos, precisión, auditoría y costo ≤0,90. Sin más certificados
 locales aislados ni nuevas muestras.
+
+
+## 2026-10-15 — Perfil medido; priorizar ensamblaje del directo
+
+[Resultado](EXECUTION_COST_RESULTADOS.md): se perfilan directo y afín con
+trayectorias idénticas a sus controles. Preparación 6,232122/12,179957 s;
+solve/refinamiento después de preparar ocupan mucho menos. El candidato
+de soporte actual del pivote conserva precisión exacta y falla costo:
+ratio 1,054244. Descartado, directo anterior activo. No seguir variando
+listados de pivote ni volver a otra condensación local sin evidencia.
+Siguiente: construir el sistema directo desde incidencias del stamp actual,
+con orden de acumulación DC/masa, puertos, cancelaciones y detección de
+aristas nuevas preservados; evitar matrices intermedias y scans repetidos.
+Fijar contrato antes de cambiar el ensamblaje, contrastar coeficientes y
+volver a voz completa/auditoría/costo ≤0,90. El perfil no prueba ahorro
+futuro ni RT. Sin ampliar controles, arranque o muestras.

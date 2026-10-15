@@ -1022,3 +1022,14 @@ remanente y verifica cada dirección reconstruida con el operador físico.
 atómicos, heap cero; Newton máximo 1,996898 nV frente a 2 nV. Costo ratio
 1,607968 frente al directo fresco; candidato no promovido, directo activo.
 Sin nueva fidelidad física, RT, arranque/CV general o audio. [Cierre](../evidence/affine_newton_tests01.json).
+
+
+## 2026-10-15 — Soporte pivote equivalente, costo rechazado
+
+[Resultado](EXECUTION_COST_RESULTADOS.md): perfil de ambos motores conserva
+GRID/ROOT/SOLVER/AFFINE y estados finales. Candidato sobre el directo con
+soporte real tras cada pivote: 1.336.704 coeficientes y 192 direcciones
+pasan, 24 enlaces nuevos, fill/swap, cancelación y 33 rechazos/retries.
+Dos trayectorias idénticas, ocho replays, diez rechazos, heap cero y 5712
+filas originales pasan. Costo ratio 1,054244: no promovido, directo anterior
+activo. Sin nueva fidelidad física, RT o dominio. [Cierre](../evidence/execution_cost_tests01.json).

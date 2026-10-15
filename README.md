@@ -812,3 +812,16 @@ El perfil anterior mide 7,005680 s en dirección reducida y 2,706435 s en
 original, incluyendo replays; no es el benchmark de admisión. [QA](evidence/affine_newton_tests01.json).
 Sin WAV/cache nuevos. Siguiente: perfilar evaluación y preparación actuales
 antes de otra transformación; mantener la voz completa como gate.
+
+
+## 2026-10-15 — Perfil actual y soporte pivote medido
+
+[Resultados](docs/EXECUTION_COST_RESULTADOS.md): el perfil conserva las
+trayectorias y separa evaluación, preparación y solve. Preparación del
+directo 6,232122 s, afín 12,179957 s, incluyendo replays; no es admisión.
+Ensayo sobre el directo con soporte real de cada fila pivote: 192 direcciones
+y dos trayectorias idénticas, 5712 filas originales pasan, heap cero.
+Costo 17,541832 frente a 16,639246 s: ratio 1,054244, rechazado. Directo
+anterior activo. [QA](evidence/execution_cost_tests01.json). Siguiente:
+ensamblaje desde incidencias actuales para reducir recorridos/materialización,
+con coeficientes y voz completa como gates; sin nuevas muestras/cache.
