@@ -965,3 +965,15 @@ fixtures de fill-in/swaps/overflow. Siguiente: perfilar contribuciones
 de evaluación eléctrica vigente (6,708 s en el perfil, sección mayor)
 antes de elegir otra transformación. Conservar unión, puertos, historia
 y cargas; sin ampliar arranque/CV/RT ni reiniciar certificados aislados.
+
+
+## 2026-10-15 — Pasar de interfaces a reducción algebraica
+
+Los [cuatro ensayos de interfaz](HYBRID_COMPACT_RESULTADOS.md) conservan
+precisión y fallan el gate previo de costo. El directo sigue activo; no
+se promueve el mejor 8,27 % retroactivamente. El [siguiente bloque](LADDER_REDUCCION_ALGEBRAICA_PLAN.md)
+fija nodos 0–15 del ladder, cuatro cargas diferenciales y puertos de
+entrada, TAIL y salidas con sus acoplamientos al padre. Derivar variables
+algebraicas desde las mismas ecuaciones, con beta finita y reacción de
+cargas; reconstruir estados y medir en la voz funcional. Sin nueva
+admisión, ampliación de arranque/CV/RT o repetición de certificados aislados.

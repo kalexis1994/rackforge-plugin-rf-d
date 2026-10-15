@@ -959,3 +959,15 @@ cancelación, pivoteo y puertos, más overflow finito rechazado y retry
 exacto. Auditoría del segundo: 5712 filas originales pasan. No demuestra
 nueva fidelidad física ni aceleración/RT. [Cierre](../evidence/hybrid_support_tests01.json)
 conserva admisión activa y registra los dos rechazos por separado.
+
+
+## 2026-10-15 — Interfaces eléctricas rechazadas
+
+[Resultado](HYBRID_COMPACT_RESULTADOS.md): inline, transferencia contigua
+y dos compactos DC/masa conservan precisión y fallan costo. Ratios
+1,005726; 0,972211; 0,917327; 0,989474, con fuente/replay. Directo previo
+activo. 48 etapas/472 columnas FD, 26 guardas, 1.336.704 coeficientes/192
+direcciones y 5712 filas originales pasan según el candidato. Ceros de
+matrices compactas se reconstruyen +0; entradas no nulas bit a bit.
+Límites de etapa y capacidad global tienen rechazos/retries explícitos.
+Sin nueva fidelidad física/RT, audio o inputs privados. [Cierre](../evidence/hybrid_compact_tests01.json).

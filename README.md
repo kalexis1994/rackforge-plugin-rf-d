@@ -746,3 +746,16 @@ y 1,031722 del control fresco: ambos rechazados; sigue activo el directo
 admitido. Añade 16 fixtures RHS de fill-in/cancelación/swaps/puertos y
 un rechazo de overflow con retry exacto. 5712 filas originales pasan.
 Sin WAV/cache/inputs privados nuevos. [Cierre](evidence/hybrid_support_tests01.json).
+
+
+## 2026-10-15 — Evaluación eléctrica y filas compactas
+
+[Perfil y ensayos](docs/HYBRID_COMPACT_RESULTADOS.md): separa audio,
+contorno y transferencia en FULL/residual. Cuatro variantes conservan
+matrices, direcciones y trayectorias observadas, pero fallan costo; mejor
+ahorro 8,27 %, inferior al gate previo de 10 %. Se mantiene el directo
+admitido. Regresiones de metadatos compactos, finitud y capacidad de etapa/
+global, 48 etapas, 472 columnas FD y 5712 filas originales pasan.
+[Siguiente bloque](docs/LADDER_REDUCCION_ALGEBRAICA_PLAN.md): coordenadas
+de carga y reducción algebraica del ladder con puertos/cargas conservados.
+[Cierre QA](evidence/hybrid_compact_tests01.json). Sin nuevos WAV/cache.
