@@ -839,3 +839,16 @@ Entrada seleccionada: [active_nominal_voice.rs](crates/rf-d-circuit/src/active_n
 rama 40–100 ms y fuente VCO de fase; sin plugin/RT/fidelidad física nueva.
 Siguiente: arranque propio y ataque de la cadena nominal, con condiciones
 de carga/trigger verificadas antes de una nota completa. Temporales vacíos.
+
+
+## 2026-10-15 — Arranque propio y ataque de la cadena nominal
+
+[Resultado](docs/CHAIN_STARTUP_RESULTADOS.md): cold_start construye su
+aproximación y resuelve DC sin archivos o estado de referencia a 40 ms.
+Dos semillas, memoria de 24 capacitores y doce cargas de juntura; 22
+rechazos/reintentos de API. Completa 0–100 ms a 64/32 µs, con KEY ON 1 ms
+y OFF 75 ms, 801 observaciones, heap cero y control histórico idéntico.
+Auditoría de 8806 filas originales pasa. [QA](evidence/chain_startup_tests01.json).
+Sigue offline y con fuente VCO periódica; no es arranque del VCO físico.
+Siguiente: lectura J7 a reloj de audio con error temporal contrastado.
+Sin WAV/cache nuevos; temporales vacíos.

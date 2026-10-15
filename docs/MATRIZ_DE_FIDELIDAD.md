@@ -1046,3 +1046,15 @@ Dos controles frescos: costo ratios 0,758772/0,788476, gate 0,90. Entrada
 nominal activa active_nominal_voice.rs. Alcance 40–100 ms, fuente de fase
 aproximada; sin nuevo arranque/CV, parecido físico, deadline RT o plugin.
 [Cierre](../evidence/incidence_voice_tests01.json).
+
+
+## 2026-10-15 — Arranque de cadena y 0–100 ms admitidos
+
+[Resultado](CHAIN_STARTUP_RESULTADOS.md): DC propio con fuente periódica
+congelada en t=0, dos semillas y ledger de 24 capacitores/doce junturas.
+API autónoma sin semilla del llamador o checkpoint a 40 ms; 22 guardas con
+retry exacto y heap cero. Perfiles 64/32 µs completan ataque/KEY OFF y
+100 ms, control histórico idéntico, 8806 filas originales pasan. Memoria
+idéntica por bits en DC→primer paso y eventos de KEY. El arranque de la
+cadena no modela el encendido/arranque del VCO real. Sin CV general, RT,
+plugin, fidelidad física o audio nuevos. [Cierre](../evidence/chain_startup_tests01.json).

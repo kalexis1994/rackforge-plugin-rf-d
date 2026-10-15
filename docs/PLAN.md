@@ -1064,3 +1064,20 @@ ecuaciones originales; luego recorrer ataque/nota completa a dos pasos.
 Esto no sería arranque del VCO físico ni CV general. Mantener gates de
 precisión y memoria; priorizar unión funcional antes de otra microoptimización
 local o generación de muestras.
+
+
+## 2026-10-15 — DC y ataque propios admitidos; lectura a reloj de audio
+
+[Resultado](CHAIN_STARTUP_RESULTADOS.md): cold_start autónomo resuelve el
+DC conjunto sin proyectar la memoria de 40 ms. Conserva cargas/trigger y
+completa dos perfiles propios 0–100 ms, 8806 filas originales y control
+histórico pasan; heap cero. La API repite las etapas del prototipo por bits.
+Motor por incidencias activo; no se cambia factor/estimador ni se amplía
+la fuente periódica a VCO físico/CV general. Dos condiciones de Newton
+no prueban unicidad global de los latches.
+Siguiente: definir lectura offline de J7 a un reloj de audio y contrastar
+su error temporal con una referencia fina. Conservar nivel absoluto,
+eventos y memoria; preparar un buffer acotado antes de exportar audio.
+No confundir grilla de observación de 125 µs con audio de producción,
+ni forzar pasos bajo MIN_DT para alinear muestras. Sin otra secuencia de
+microoptimizaciones o acumulación de muestras.
