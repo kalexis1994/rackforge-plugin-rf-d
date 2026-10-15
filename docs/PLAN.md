@@ -977,3 +977,15 @@ entrada, TAIL y salidas con sus acoplamientos al padre. Derivar variables
 algebraicas desde las mismas ecuaciones, con beta finita y reacción de
 cargas; reconstruir estados y medir en la voz funcional. Sin nueva
 admisión, ampliación de arranque/CV/RT o repetición de certificados aislados.
+
+
+## 2026-10-15 — Ladder local reconstruido; integrar en la voz
+
+El [bloque local](LADDER_ALGEBRAICO_RESULTADOS.md) pasa 48 etapas y sus
+gates de reconstrucción, derivadas, conservación, cargas/rechazos. El bias
+incluye su capacitor de 220 µF: cuatro memorias internas, siete algebraicas
+y cinco puertos; ninguna memoria descartada. Siguiente: insertar esas
+coordenadas en ambas etapas de la voz y reconstruir sus 118 nodos para
+la auditoría original. Conservar cargas cruzadas, historial HIGH/LOW y
+TAIL/VCA_BASE; validar trayectoria 40–100 ms antes del costo fresco.
+El directo sigue activo; no hay admisión global o RT del kernel nuevo.

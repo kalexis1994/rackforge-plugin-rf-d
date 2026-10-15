@@ -56,3 +56,18 @@ Si una relación sólo resulta aproximada, declarar antes de medir su error,
 unidades y dominio en otro protocolo; esta primera etapa busca eliminación
 algebraica de ecuaciones vigentes. Evitar nuevas muestras/builds permanentes;
 usar el área temporal única y recibos acotados.
+
+
+## 2026-10-15 — Corrección del inventario y primer resultado
+
+El inventario ejecutado encuentra además el capacitor (4,masa) de 220 µF,
+visible en el grafo admitido. El plan anterior no lo enumeraba: se retiene
+su voltaje como memoria. La partición correcta conserva tres diferencias
+internas, V4 y los cinco puertos; reconstruye siete variables algebraicas.
+El capacitor (11,15) continúa como incidencia entre las salidas. Esta nota
+corrige el inventario sin reescribir el plan original ni eliminar cargas.
+
+El [protocolo ejecutado](LADDER_ALGEBRAICO_PROTOCOLO.md) fija ledger y
+transformación; el [resultado local](LADDER_ALGEBRAICO_RESULTADOS.md) pasa
+48 etapas, reconstrucción, derivadas y cargas de frontera. Sigue pendiente
+la inserción global y el costo de los puntos 4/5. El directo permanece activo.

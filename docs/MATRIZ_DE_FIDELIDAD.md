@@ -971,3 +971,16 @@ direcciones y 5712 filas originales pasan según el candidato. Ceros de
 matrices compactas se reconstruyen +0; entradas no nulas bit a bit.
 Límites de etapa y capacidad global tienen rechazos/retries explícitos.
 Sin nueva fidelidad física/RT, audio o inputs privados. [Cierre](../evidence/hybrid_compact_tests01.json).
+
+
+## 2026-10-15 — Ladder algebraico local
+
+[Resultado](LADDER_ALGEBRAICO_RESULTADOS.md): admisión numérica local en
+48 etapas nominales, con cuatro memorias internas y cinco puertos. Bias
+220 µF retenido; siete variables algebraicas reconstruidas, mayor error
+0,221229 nV. DC/J del stamp local iguales al original, 72 FD implícitas y
+128 FD del Jacobiano transformado pasan. Conservación y pertenencia de
+capacitores locales/padre verificadas en las 48 etapas; heap cero y 178
+rechazos/retries. No acredita aún integración global, aceleración, arranque,
+CV general o fidelidad de una unidad física. Directo previo activo.
+[Cierre local](../evidence/ladder_algebraic_tests01.json).

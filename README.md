@@ -759,3 +759,16 @@ global, 48 etapas, 472 columnas FD y 5712 filas originales pasan.
 [Siguiente bloque](docs/LADDER_REDUCCION_ALGEBRAICA_PLAN.md): coordenadas
 de carga y reducción algebraica del ladder con puertos/cargas conservados.
 [Cierre QA](evidence/hybrid_compact_tests01.json). Sin nuevos WAV/cache.
+
+
+## 2026-10-15 — Reconstrucción local del ladder
+
+[Kernel y resultados](docs/LADDER_ALGEBRAICO_RESULTADOS.md): siete variables
+algebraicas reconstruidas con beta finita, cuatro memorias internas y cinco
+puertos conservados. Corrige la memoria de bias de 220 µF omitida en el plan.
+48 etapas, 384 solves contrastados, 72 columnas FD implícitas y 128 del
+Jacobiano transformado; mayor error de reconstrucción 0,221229 nV. Cargas
+locales y del padre verificadas, incluidos C10 y cancelación HIGH/LOW;
+178 rechazos con recuperación exacta, heap cero. [QA](evidence/ladder_algebraic_tests01.json).
+Admisión local; siguen pendientes unión global y costo. Directo activo.
+Sin nuevos WAV, inputs privados de sonido o caches de build.
