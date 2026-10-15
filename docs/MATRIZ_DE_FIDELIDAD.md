@@ -1058,3 +1058,15 @@ retry exacto y heap cero. Perfiles 64/32 µs completan ataque/KEY OFF y
 idéntica por bits en DC→primer paso y eventos de KEY. El arranque de la
 cadena no modela el encendido/arranque del VCO real. Sin CV general, RT,
 plugin, fidelidad física o audio nuevos. [Cierre](../evidence/chain_startup_tests01.json).
+
+
+## J7: lectura pasiva y precisión temporal diferenciadas
+
+[Contrato](J7_READOUT_PROTOCOLO.md) y [resultado](J7_READOUT_RESULTADOS.md):
+lector a 48 kHz en voltios, con estado eléctrico previo idéntico a 32 us.
+32/8 y 4/2 us fallan precisión; 2/1 us pasa los gates sin modificarlos:
+0,06499 % RMS y 0,14513 % máximo/pico. Máximo nominal full 2 us para
+esta escena. No se modifican leyes, memorias, cargas o ganancias. El fallo
+32/8 también aparece en la grilla común 125 us; pasividad, Newton y dos
+propuestas adaptativas casi equivalentes no bastan para acreditar audio.
+Antialias, parecido físico y RT siguen sin admitirse para esta salida.

@@ -852,3 +852,14 @@ Auditoría de 8806 filas originales pasa. [QA](evidence/chain_startup_tests01.js
 Sigue offline y con fuente VCO periódica; no es arranque del VCO físico.
 Siguiente: lectura J7 a reloj de audio con error temporal contrastado.
 Sin WAV/cache nuevos; temporales vacíos.
+
+
+## J7 a reloj de audio
+
+El [búfer offline de J7](docs/J7_READOUT_RESULTADOS.md) publica 4801 puntos
+en voltios entre 0 y 100 ms inclusive, con reloj racional de 48 kHz y sin
+modificar la trayectoria eléctrica. 32/8 y 4/2 us fallan y quedan archivados;
+2/1 us pasa los mismos gates: 0,06499 % RMS, 0,14513 % máximo/pico.
+Máximo nominal admitido de 2 us para esta escena. Sin normalización,
+WAVs nuevos, antialias admitido o tiempo real. Siguiente: nota útil y
+conversión/antialias verificados antes de la exportación de escucha.

@@ -1081,3 +1081,14 @@ eventos y memoria; preparar un buffer acotado antes de exportar audio.
 No confundir grilla de observación de 125 µs con audio de producción,
 ni forzar pasos bajo MIN_DT para alinear muestras. Sin otra secuencia de
 microoptimizaciones o acumulación de muestras.
+
+
+## Lectura de J7 a 48 kHz admitida para la escena nominal
+
+[Búfer y resultados](J7_READOUT_RESULTADOS.md): reloj racional, etapas
+fine, voltios y continuidad de KEY/memorias. Pasividad exacta a 32 us;
+32/8 y 4/2 us fallan precisión y conservan replays. 2/1 us pasa gates
+originales; máximo nominal de 2 us. No demuestra RT o banda limitada.
+Prioridad: nota offline de duración útil y conversión/antialias verificados,
+luego una única exportación para escucha, conservando nivel absoluto.
+Evitar otra cadena de microoptimizaciones y nuevas carpetas de muestras.
