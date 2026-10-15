@@ -947,3 +947,15 @@ control fresco: 10,28 % menos en este ensayo, con margen pequeño y
 sin inferencia estadística/deadline. No añade fidelidad física. Dos
 rechazos de costo conservados; sin audio/cache/inputs privados nuevos.
 [QA](../evidence/hybrid_direct_tests01.json).
+
+
+## 2026-10-15 — Ensayos de factores sin promoción
+
+[Resultado](HYBRID_SUPPORT_RESULTADOS.md): dos variantes pasan
+1.336.704 coeficientes, 192 direcciones y trayectorias observadas iguales
+al directo, pero fallan costo (1,068040 y 1,031722). No se admiten;
+solver directo previo intacto. Se añaden 16 RHS algebraicos de fill-in,
+cancelación, pivoteo y puertos, más overflow finito rechazado y retry
+exacto. Auditoría del segundo: 5712 filas originales pasan. No demuestra
+nueva fidelidad física ni aceleración/RT. [Cierre](../evidence/hybrid_support_tests01.json)
+conserva admisión activa y registra los dos rechazos por separado.

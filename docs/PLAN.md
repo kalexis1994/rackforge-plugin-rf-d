@@ -953,3 +953,15 @@ lo pasa con 10,28 % menos costo y margen pequeño. Sin nuevo dominio
 físico/RT. Continuar perfilando evaluación eléctrica/factores sobre la
 unión funcional antes de elegir otra reducción; conservar historia,
 puertos y cargas, sin otra secuencia de certificados aislados.
+
+
+## 2026-10-15 — Mantener directo tras rechazos de factores
+
+[Resultado](HYBRID_SUPPORT_RESULTADOS.md): reducir productos mediante
+soporte pivote disperso no aceleró; tampoco el recorrido contiguo con
+omisión de trabajo nulo. Ratios 1,068040 y 1,031722, ambos rechazados.
+El solver directo sigue activo y se conservan fuentes/replays y nuevos
+fixtures de fill-in/swaps/overflow. Siguiente: perfilar contribuciones
+de evaluación eléctrica vigente (6,708 s en el perfil, sección mayor)
+antes de elegir otra transformación. Conservar unión, puertos, historia
+y cargas; sin ampliar arranque/CV/RT ni reiniciar certificados aislados.

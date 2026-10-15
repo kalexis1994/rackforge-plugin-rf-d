@@ -735,3 +735,14 @@ legales y 5712 filas originales pasan. Trayectorias observadas iguales
 al contiguo. Costo 16,5512 frente a 18,4484 s/60 ms: 10,28 % menos en
 este ensayo, margen pequeño y todavía offline. Dos rechazos conservados;
 sin muestras/cache nuevas. [QA](evidence/hybrid_direct_tests01.json).
+
+
+## 2026-10-15 — Factores: dos optimizaciones rechazadas
+
+[Ensayo de factores](docs/HYBRID_SUPPORT_RESULTADOS.md): perfil del
+directo vigente y contadores de trabajo nulo. Dos candidatos conservan
+matrices, direcciones y trayectorias observadas, pero cuestan 1,068040
+y 1,031722 del control fresco: ambos rechazados; sigue activo el directo
+admitido. Añade 16 fixtures RHS de fill-in/cancelación/swaps/puertos y
+un rechazo de overflow con retry exacto. 5712 filas originales pasan.
+Sin WAV/cache/inputs privados nuevos. [Cierre](evidence/hybrid_support_tests01.json).
