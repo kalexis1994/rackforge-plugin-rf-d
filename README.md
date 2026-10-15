@@ -799,3 +799,16 @@ frente al directo fresco. El segundo cuesta 8,18 % menos que la unión
 reconstruida anterior en su control fresco, aún 57,41 % más que el directo.
 Directo activo. [QA](evidence/split_ladder_tests01.json). Sin WAV/cache nuevos;
 continuar sobre la preparación duplicada del solve físico de convergencia.
+
+
+## 2026-10-15 — Corrección física con una preparación reducida
+
+[Resultado](docs/AFFINE_NEWTON_RESULTADOS.md): Schur afín con residual
+algebraico no nulo, varios RHS y refinamiento sobre el operador físico.
+576 direcciones, dos trayectorias y 5712 filas originales pasan; heap cero.
+Se retira el segundo solve completo del candidato. Costo 27,403263 frente
+a 17,042172 s del directo fresco: ratio 1,607968, rechazado. Directo activo.
+El perfil anterior mide 7,005680 s en dirección reducida y 2,706435 s en
+original, incluyendo replays; no es el benchmark de admisión. [QA](evidence/affine_newton_tests01.json).
+Sin WAV/cache nuevos. Siguiente: perfilar evaluación y preparación actuales
+antes de otra transformación; mantener la voz completa como gate.

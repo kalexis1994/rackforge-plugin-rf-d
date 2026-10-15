@@ -1015,3 +1015,19 @@ solves reducido/original y preparar una sola vez el Newton actual, derivando
 la corrección física completa mediante Schur con residual algebraico
 remanente. Compararla con el solve original y conservar 1 pA/2 nV, estimador,
 trayectorias, auditoría y costo fresco. Sin más ensayos aislados de adaptadores.
+
+
+## 2026-10-15 — Corrección afín verificada; localizar costo actual
+
+[Resultado](AFFINE_NEWTON_RESULTADOS.md): 576 direcciones y 5712 filas
+originales pasan con una preparación reducida y residual algebraico real.
+Retirado el solve completo adicional; costo ratio 1,607968, rechazado.
+Directo activo. El perfil de llamadas anteriores mide reducido 7,005680 s
+original 2,706435 s, con replays; no separa factorización. La voz candidata
+usa algunos pasos de 0,25 µs y Newton sigue cerca del gate 2 nV.
+Siguiente: medir evaluación residual/J, preparación Schur/CSR y solve del
+candidato actual frente al directo antes de editar. Si la reconstrucción
+local sigue costando más, priorizar el directo como base de ejecución y
+conservar la variante condensada como referencia funcional. Mantener
+cargas, puertos, precisión, auditoría y costo ≤0,90. Sin más certificados
+locales aislados ni nuevas muestras.

@@ -1011,3 +1011,14 @@ ratios 1,924343/1,574082 frente al directo fresco. Directo previo activo;
 menos costo frente a un candidato rechazado no lo promueve. Heap cero,
 sin nueva fidelidad física/RT, arranque/CV general, audio o inputs privados.
 [Cierre](../evidence/split_ladder_tests01.json).
+
+
+## 2026-10-15 — Schur afín con corrección física, costo rechazado
+
+[Resultado](AFFINE_NEWTON_RESULTADOS.md): conserva el término algebraico
+remanente y verifica cada dirección reconstruida con el operador físico.
+576 direcciones contra solve completo, 1.336.704 coeficientes físicos y
+5712 filas originales pasan. Dos trayectorias, ocho replays, diez rechazos
+atómicos, heap cero; Newton máximo 1,996898 nV frente a 2 nV. Costo ratio
+1,607968 frente al directo fresco; candidato no promovido, directo activo.
+Sin nueva fidelidad física, RT, arranque/CV general o audio. [Cierre](../evidence/affine_newton_tests01.json).
