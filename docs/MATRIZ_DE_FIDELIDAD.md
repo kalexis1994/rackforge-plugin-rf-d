@@ -1082,3 +1082,14 @@ Contrastar 2/1 us y 192/384 kHz como dos ejes independientes, sin cambiar
 leyes o nivel de J7. La respuesta del FIR no elimina alias ya plegado;
 los controles negativos y la convergencia de esta escena no demuestran
 alias universalmente nulo ni parecido físico. Ver QA y auditoría originales.
+
+
+## Salida continua: representación, no nueva ley sonora
+
+[Contrato](STREAM_OUTPUT_PROTOCOLO.md) y [resultado](STREAM_OUTPUT_RESULTADOS.md):
+el lector y FIR de la escena nominal conservan sus muestras por bits con
+bloques escalares/irregulares y reanudación. La muestra n se entrega al
+recibir la entrada 8n+384; retardo de 1 ms explícito, sin mover KEY ni
+rellenar futuro. Nuevo estado fijo de 8080 bytes, sin cambiar puertos,
+cargas, ganancias o modelo VCO. Evidencia de integración/antialias previa
+heredada, sin nuevas filas originales o muestras. Sigue fuera de RT.

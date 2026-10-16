@@ -1104,3 +1104,14 @@ liberación. Conservar prefijo y memorias; comprobar respuesta, convolución,
 controles negativos y ecuaciones originales. Una sola escucha regenerable
 en voltios, sin carpetas de variantes. Esta referencia servirá para futuras
 extensiones funcionales; no ampliar sus claims a CV general, tres VCO o RT.
+
+
+## 2026-10-16 — Entrega continua con historia y latencia admitidas
+
+[Resultado](STREAM_OUTPUT_RESULTADOS.md): anillo FIR fijo y lectura de
+Accepted, índices de fuente/disponibilidad separados, rechazo por falta
+de capacidad y reintento del paso pendiente. Seis replays completos y
+uniones reales de 10 ms conservan muestras y estados por bits. Siguiente:
+productor/consumidor con presupuesto de trabajo offline, sin perder el
+Accepted pendiente cuando no hay espacio. Mantener el máximo 2 us y la
+referencia de nota/antialias; no tomar sizeof o heap cero como prueba RT.

@@ -873,3 +873,13 @@ J7 a 384 kHz, conversión centrada a 48 kHz y contraste separado de tasa
 e integración. Un solo WAV local regenerable, con convención 1 V=1 FS,
 sin normalizar la receta. Ver resultados y QA para su alcance; la escena
 sigue siendo un VCO nominal offline, sin admisión RT o parecido físico.
+
+
+## Salida continua por bloques
+
+La [salida con memoria fija](docs/STREAM_OUTPUT_RESULTADOS.md) conserva
+por bits los 14401 puntos de cada referencia de 301 ms al dividirla en
+bloques o reanudarla. Un camino real de 10 ms contrasta todas las etapas
+y estados con el lector anterior. Estado persistente de 8080 bytes,
+heap cero y latencia explícita de 1 ms; sigue siendo laboratorio offline.
+Se conserva el único WAV admitido, sin muestras o variantes nuevas.
