@@ -1105,3 +1105,16 @@ conservan 433 Frames y 236 memorias finales por bits, con control de todas
 las etapas en el primero. KEY OFF se comprueba sintéticamente, sin nuevo
 trayecto real de 200 ms. Cuota de invocaciones no equivale a deadline;
 no cambia circuito, ganancias, FIR o fidelidad física acreditada.
+
+
+## Render completo: identidad de perfil y publicación
+
+[Contrato](NOMINAL_RENDER_PROTOCOLO.md) y [resultado](NOMINAL_RENDER_RESULTADOS.md):
+la escucha usa máximo full 1 us, conservado al componer el productor.
+Un ciclo nuevo 0–301 ms conserva 236 HIGH/LOW finales y WAV por bits;
+no hay nueva auditoría original ni otro perfil sonoro. Cuerpo de 14400
+frames y ancla separados, soporte futuro real y nivel absoluto intacto.
+Cancelación/fallos preservan el destino; IO separado del pump y publicación
+tras validar fin/conteos/formato/SHA. Es evidencia de ciclo offline y
+representación; no de VCO físico completo, CV general, fidelidad vintage
+medida o deadlines. Sin variantes WAV retenidas.

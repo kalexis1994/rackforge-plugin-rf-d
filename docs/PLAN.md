@@ -1127,3 +1127,16 @@ distintas; control independiente compara todos los Accepted del primero.
 Siguiente: entrada de render offline desde cold_start, progreso/cancelación
 entre cuotas y único export regenerable, conservando escala/latencia y
 referencia. La cuota cuenta llamadas al integrador y no acredita RT.
+
+
+## 2026-10-16 — Entrada de render offline completa
+
+[Resultado](NOMINAL_RENDER_RESULTADOS.md): cold_start, productor fino,
+progreso/cancelación y escritor/públicación unidos. Se conserva el perfil
+1 us de la escucha; cuerpo/ancla/futuro diferenciados y único WAV exacto
+al previo. Prefijo con control independiente y fallo de conteo conservado;
+un ciclo largo nuevo verifica estado final, archivo y publicación.
+Siguiente: contrato de nota/frecuencia para la fuente VCO nominal,
+identificando dependencias físicas y conservando puertos/cargas/fase.
+Priorizar una secuencia audible verificable antes de más infraestructura
+de exportación; no extender el VCO nominal a un VCO físico sin contraste.

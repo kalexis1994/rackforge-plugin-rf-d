@@ -893,3 +893,13 @@ capacidad, admite pausas y entrega con cuota cero sin recalcular el paso.
 Tres recorridos reales conservan 5170 pasos, 433 Frames y memorias por
 bits; 115 reanudaciones, heap cero y tres tests nuevos. La cuota cuenta
 invocaciones adaptativas, no deadlines; sigue offline. Sin WAV nuevo.
+
+
+## Render offline desde el circuito hasta el WAV
+
+La [entrada de render](docs/NOMINAL_RENDER_RESULTADOS.md) une DC propio,
+perfil fino de 1 us, progreso/cancelación entre cuotas y publicación del
+único WAV actual. Desde la raíz: `python -B tools/render_nominal.py`.
+El ciclo completo conserva por bits estado final y archivo admitido;
+fallo/cancelación mantiene la escucha anterior. Core e IO separados,
+sin normalización ni muestras acumuladas. Sigue fuera de tiempo real.
