@@ -1115,3 +1115,15 @@ uniones reales de 10 ms conservan muestras y estados por bits. Siguiente:
 productor/consumidor con presupuesto de trabajo offline, sin perder el
 Accepted pendiente cuando no hay espacio. Mantener el máximo 2 us y la
 referencia de nota/antialias; no tomar sizeof o heap cero como prueba RT.
+
+
+## 2026-10-16 — Productor offline con cuota admitido
+
+[Resultado](OFFLINE_PRODUCER_RESULTADOS.md): productor, reloj, Pipeline
+y propiedad del Accepted pendiente unidos. Tres recorridos reales de
+10 ms conservan muestras/estados por bits con cuotas y capacidades
+distintas; control independiente compara todos los Accepted del primero.
+115 reanudaciones, cero heap. Sin nuevos exports ni leyes sonoras.
+Siguiente: entrada de render offline desde cold_start, progreso/cancelación
+entre cuotas y único export regenerable, conservando escala/latencia y
+referencia. La cuota cuenta llamadas al integrador y no acredita RT.

@@ -883,3 +883,13 @@ bloques o reanudarla. Un camino real de 10 ms contrasta todas las etapas
 y estados con el lector anterior. Estado persistente de 8080 bytes,
 heap cero y latencia explícita de 1 ms; sigue siendo laboratorio offline.
 Se conserva el único WAV admitido, sin muestras o variantes nuevas.
+
+
+## Productor offline con cuota de trabajo
+
+El [productor nominal](docs/OFFLINE_PRODUCER_RESULTADOS.md) une avance
+eléctrico y salida continua. Conserva un Accepted pendiente si falta
+capacidad, admite pausas y entrega con cuota cero sin recalcular el paso.
+Tres recorridos reales conservan 5170 pasos, 433 Frames y memorias por
+bits; 115 reanudaciones, heap cero y tres tests nuevos. La cuota cuenta
+invocaciones adaptativas, no deadlines; sigue offline. Sin WAV nuevo.

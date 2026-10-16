@@ -1093,3 +1093,15 @@ recibir la entrada 8n+384; retardo de 1 ms explícito, sin mover KEY ni
 rellenar futuro. Nuevo estado fijo de 8080 bytes, sin cambiar puertos,
 cargas, ganancias o modelo VCO. Evidencia de integración/antialias previa
 heredada, sin nuevas filas originales o muestras. Sigue fuera de RT.
+
+
+## Productor con cuota: propiedad y consumo del paso eléctrico
+
+[Contrato](OFFLINE_PRODUCER_PROTOCOLO.md) y [resultado](OFFLINE_PRODUCER_RESULTADOS.md):
+fronteras de cálculo/consumo separadas, un Accepted pendiente y cero
+nuevos solves bajo backpressure. Cuota cero puede drenar; fallo eléctrico
+terminal conserva progreso y diagnóstico. Tres recorridos reales 0–10 ms
+conservan 433 Frames y 236 memorias finales por bits, con control de todas
+las etapas en el primero. KEY OFF se comprueba sintéticamente, sin nuevo
+trayecto real de 200 ms. Cuota de invocaciones no equivale a deadline;
+no cambia circuito, ganancias, FIR o fidelidad física acreditada.
