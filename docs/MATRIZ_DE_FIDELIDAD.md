@@ -1118,3 +1118,16 @@ Cancelación/fallos preservan el destino; IO separado del pump y publicación
 tras validar fin/conteos/formato/SHA. Es evidencia de ciclo offline y
 representación; no de VCO físico completo, CV general, fidelidad vintage
 medida o deadlines. Sin variantes WAV retenidas.
+
+
+## Frecuencia por programa: aproximación y precisión separadas
+
+[Contrato](PITCH_PROGRAM_PROTOCOLO.md) y [resultado](PITCH_PROGRAM_RESULTADOS.md):
+la ley de fase nominal mantiene sus bits; retunes preservan fase y KEY
+puede mantenerse sin disparar contornos. Red de salida y carga BUS,
+memorias, solver y FIR conservados. Programa de 24 ms a f0/1.5f0/0.5f0
+pasa refinamiento 1/0.5 us; 2/1 us falla y se conserva. Esto califica el
+adaptador y la precisión numérica de esas escenas. No identifica las
+formas/respuesta del VCO físico ante otros CV, trims, modulación o carga.
+La fuente y la escucha nominales activas conservan su admisión anterior;
+sin nuevo WAV, filas originales, banda universal o tiempo real.

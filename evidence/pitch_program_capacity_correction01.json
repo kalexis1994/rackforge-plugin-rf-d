@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "failure": "evidence/pitch_program_native01.json",
+  "failure_sha256": "7c52a9fec2360c2ba89e1ae43d82f5a093be7a9607d0770d784940661617e24e",
+  "unchanged_replay_preserved": true,
+  "scope": "consumer test capacity only; reserve output up to the next forced boundary",
+  "changed_path": "tools/pitch_program_probe.rs",
+  "before_sha256": "783dd64e033d830704b80596706f7bf509b394fef5174e6d3a5e252418c1cf93",
+  "after_sha256": "fc1411ae9b3fdf71905613ebbfa542f298df9eb2ff50d2676c0174a70ea2ae55",
+  "replace_before": "let cap=if force{0}else{[1,3,0,16,7][calls%5]};let n=ALLOCS.load(Ordering::Relaxed);",
+  "replace_after": "let mut cap=if force{0}else{[1,3,0,16,7][calls%5]};for(k,target)in targets.iter().enumerate(){if !done[k]&&*target>p.output().produced(){cap=cap.min((*target-p.output().produced())as usize);}}let n=ALLOCS.load(Ordering::Relaxed);",
+  "numerical_gates_unchanged": true
+}

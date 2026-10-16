@@ -903,3 +903,13 @@ perfil fino de 1 us, progreso/cancelación entre cuotas y publicación del
 El ciclo completo conserva por bits estado final y archivo admitido;
 fallo/cancelación mantiene la escucha anterior. Core e IO separados,
 sin normalización ni muestras acumuladas. Sigue fuera de tiempo real.
+
+
+## Programa experimental de frecuencia y KEY
+
+El [programa en Hz](docs/PITCH_PROGRAM_RESULTADOS.md) añade retunes con
+fase continua y KEY independiente a la fuente nominal, conservando sus
+puertos/cargas y memorias de cadena. La identidad nominal pasa por bits;
+la secuencia de tres frecuencias requiere máximo 0.5 us tras rechazar el
+par 2/1 us. Cuatro tests nuevos y sin otro WAV. Es una transposición de
+laboratorio, con respuesta física a CV todavía fuera de su admisión.

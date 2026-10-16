@@ -1140,3 +1140,16 @@ Siguiente: contrato de nota/frecuencia para la fuente VCO nominal,
 identificando dependencias físicas y conservando puertos/cargas/fase.
 Priorizar una secuencia audible verificable antes de más infraestructura
 de exportación; no extender el VCO nominal a un VCO físico sin contraste.
+
+
+## 2026-10-16 — Programa en Hz con fase continua
+
+[Resultado](PITCH_PROGRAM_RESULTADOS.md): programa inmutable y evaluación
+de fase por segmento, KEY independiente, puertos/cargas y Accepted
+pendiente conservados. Identidad nominal por bits. El par 2/1 us falla
+RMS en un retune; el contraste 1/0.5 pasa sin relajar gates y selecciona
+0.5 us para la escena controlada. No ampliar al CV físico lo que sólo
+prueba una transposición del ciclo nominal.
+Siguiente: unión con render de duración musical y único export regenerable,
+con etiqueta experimental. Mantener aparte el contraste de formas/curvas
+CV/carga del VCO físico requerido para una emulación general.
