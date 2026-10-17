@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "failure": "evidence/pitch_render_native01.json",
+  "failure_sha256": "e421b20ff5c94ccb29527f784f01a3b3b896d38584a36aeb65830585faffeb92",
+  "changed_path": "tools/pitch_render_main.rs",
+  "before_sha256": "d842d99e1db8c59c253c7c43d971129b070bed333ff6f30e49f7bb9dd97d0340",
+  "after_sha256": "b14562a3a02d175432094ae5aff4661a0ef0357c30ee0cc6b214fdcacd39f566",
+  "replace_before": "assert_eq!(stream::reference_filter::convert(raw.samples(),&mut aa8,8).unwrap(),14401);assert_eq!(stream::reference_filter::convert(&half,&mut aa4,4).unwrap(),14401);",
+  "replace_after": "stream::reference_filter::convert(raw.samples(),&mut aa8,8).unwrap();stream::reference_filter::convert(&half,&mut aa4,4).unwrap();",
+  "reason": "The admitted batch converter returns Result<(),StepError>, not a sample count. Capacities and frame-count gates stay unchanged.",
+  "unchanged_compile_replay_preserved": true,
+  "numerical_gates_unchanged": true
+}

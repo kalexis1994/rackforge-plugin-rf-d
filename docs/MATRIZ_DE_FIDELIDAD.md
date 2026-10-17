@@ -1131,3 +1131,15 @@ adaptador y la precisión numérica de esas escenas. No identifica las
 formas/respuesta del VCO físico ante otros CV, trims, modulación o carga.
 La fuente y la escucha nominales activas conservan su admisión anterior;
 sin nuevo WAV, filas originales, banda universal o tiempo real.
+
+
+## Secuencia larga: representación musical experimental
+
+[Contrato](PITCH_RENDER_PROTOCOLO.md) y [resultado](PITCH_RENDER_RESULTADOS.md):
+la escena de 300 ms recibe su propio contraste 1/0.5 us, por conjunto y
+ventanas de retune/liberación; batch/stream conservados por bits. No ampliar
+los 24 ms anteriores por suposición. Un WAV actual sustituye la vista
+nominal fija, regenerable, con formato y publicación exactos. No se retiró
+ningún input privado; los recibos nominales siguen intactos. Esto admite
+la precisión y representación de estas frecuencias/tiempos experimentales,
+sin identificar las curvas físicas de CV, fidelidad vintage o deadlines.

@@ -1153,3 +1153,14 @@ prueba una transposición del ciclo nominal.
 Siguiente: unión con render de duración musical y único export regenerable,
 con etiqueta experimental. Mantener aparte el contraste de formas/curvas
 CV/carga del VCO físico requerido para una emulación general.
+
+
+## 2026-10-17 — Secuencia larga con retunes y escucha única
+
+[Resultado](PITCH_RENDER_RESULTADOS.md): ciclo de 300 ms con dos retunes
+legato, KEY 1–250 ms y soporte real hasta 301 ms. Dos historias completas
+1/0.5 us pasan sus ventanas y contraste de tasa; streaming=batch por bits.
+Un único WAV reemplaza la vista fija regenerable, sin retirar inputs
+privados. Publicación atómica y cancelación real verificadas; sigue offline.
+Siguiente: caracterizar frecuencia y forma del VCO físico ante CV/carga
+fuera del punto nominal antes de admitir un control musical general.

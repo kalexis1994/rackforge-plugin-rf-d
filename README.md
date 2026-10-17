@@ -913,3 +913,14 @@ puertos/cargas y memorias de cadena. La identidad nominal pasa por bits;
 la secuencia de tres frecuencias requiere máximo 0.5 us tras rechazar el
 par 2/1 us. Cuatro tests nuevos y sin otro WAV. Es una transposición de
 laboratorio, con respuesta física a CV todavía fuera de su admisión.
+
+
+## Secuencia experimental audible de 300 ms
+
+[Resultado](docs/PITCH_RENDER_RESULTADOS.md): tres frecuencias legato,
+fase y memorias conservadas, KEY independiente y liberación final.
+La escena completa pasa refinamiento 1/0.5 us y batch/stream por bits.
+`python -B tools/export_pitch_render.py` recupera el único WAV actual sin
+integrar; `python -B tools/render_pitch.py` vuelve a calcularlo offline.
+La vista reemplaza la nota fija anterior, que sigue regenerable desde
+sus recibos. Es transposición experimental; no acredita CV físico general.
