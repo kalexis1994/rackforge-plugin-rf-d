@@ -1177,3 +1177,8 @@ conservados; más presupuesto de iteración resuelve sin relajar tolerancias.
 Escucha actual intacta. Siguiente: familia estacionaria reducida con CV/BUS
 y puertos conservados, contrastada en puntos reservados; períodos nativos
 adicionales ante discrepancias concretas. CV temporal sigue separado.
+
+
+## 2026-10-17 — Familia estacionaria CV/BUS con reserva
+
+Cerrado el [kernel de laboratorio](VCO_FAMILIA_RESULTADOS.md): datos sólo de ocho entrenamientos, siete lugares reservados, corrientes CV/BUS contra fuentes y puerto R6/R45 exacto. Consulta/derivadas Rust contrastadas con Python y MNA. No cambia la escucha. Siguiente: evaluar acoplamiento al mezclador en escenas fijas contra el circuito completo; CV/BUS temporal requiere su propia respuesta con memoria.

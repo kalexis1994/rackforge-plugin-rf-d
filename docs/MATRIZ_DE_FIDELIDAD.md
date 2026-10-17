@@ -1156,3 +1156,8 @@ el error. El rango estático no acredita todos los períodos/transiciones.
 La ayuda nodeset/iteraciones del OP no demuestra unicidad o fidelidad de
 una unidad real. Modelos nominales y circuito documental siguen inciertos;
 el generador experimental actual conserva su dominio y escucha anteriores.
+
+
+## 2026-10-17 — Familia CV/BUS estacionaria calibrada
+
+[Resultado](VCO_FAMILIA_RESULTADOS.md): entrenamiento ocho ciclos; nueve contrastes en siete lugares reservados de frecuencia/forma/panel, tres lugares nuevos con corrientes CV; método/paso separados. Leyes terminales originales, MNA, derivadas y consulta Rust sin heap medido. Sólo kernel de laboratorio a fase fija en topología/trims declarados; no certificado continuo, CV/BUS temporal, RT, fidelidad vintage o integración audible.

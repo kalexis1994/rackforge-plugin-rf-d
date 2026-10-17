@@ -935,3 +935,8 @@ trims explícitos; contraste con Gear/Trap y refinamiento 250/125 ns.
 Un único pack conserva ventanas float64 por bytes, sin otra escucha o
 carpeta de muestras. El adaptador nominal y su WAV permanecen por hash.
 No acredita aún todo el rango dinámico de CV ni fidelidad a hardware.
+
+
+## Familia estacionaria CV/BUS calibrada
+
+[Resultado](docs/VCO_FAMILIA_RESULTADOS.md): ocho entrenamientos, siete lugares reservados y nueve comparaciones; peor frecuencia 0.0853243 cent. Consulta Rust con puertos CV/panel, derivadas, cero heap medido y rechazo de extrapolación. Fuente activa y escucha intactas; CV/BUS temporal y acoplamiento dinámico pendientes.
