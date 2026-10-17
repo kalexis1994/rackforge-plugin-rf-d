@@ -924,3 +924,14 @@ La escena completa pasa refinamiento 1/0.5 us y batch/stream por bits.
 integrar; `python -B tools/render_pitch.py` vuelve a calcularlo offline.
 La vista reemplaza la nota fija anterior, que sigue regenerable desde
 sus recibos. Es transposición experimental; no acredita CV físico general.
+
+
+## VCO calibrado: contraste de CV y carga
+
+[Resultado](docs/VCO_CV_CARGA_RESULTADOS.md): matriz de doce DC, raíces
+Radau independientes y dos historias completas de 30 ms en un punto
+reservado cargado. La frecuencia/forma salen del circuito CA3046 con
+trims explícitos; contraste con Gear/Trap y refinamiento 250/125 ns.
+Un único pack conserva ventanas float64 por bytes, sin otra escucha o
+carpeta de muestras. El adaptador nominal y su WAV permanecen por hash.
+No acredita aún todo el rango dinámico de CV ni fidelidad a hardware.

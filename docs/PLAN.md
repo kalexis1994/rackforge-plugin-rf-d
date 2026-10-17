@@ -1164,3 +1164,16 @@ Un único WAV reemplaza la vista fija regenerable, sin retirar inputs
 privados. Publicación atómica y cancelación real verificadas; sigue offline.
 Siguiente: caracterizar frecuencia y forma del VCO físico ante CV/carga
 fuera del punto nominal antes de admitir un control musical general.
+
+
+## 2026-10-17 — VCO calibrado ante CV/BUS
+
+[Resultado](VCO_CV_CARGA_RESULTADOS.md): doce arranques contrastados con OP
+y Decimal, 16 etapas locales y ocho comparaciones reales deduplicadas. Nueve
+transitorios SPICE y dos historias nativas completas en un punto cargado
+reservado, sin volver a ajustar trims. Error de método/refinamiento,
+respuesta a carga y dominio de admisión separados. Fallos OP y replays
+conservados; más presupuesto de iteración resuelve sin relajar tolerancias.
+Escucha actual intacta. Siguiente: familia estacionaria reducida con CV/BUS
+y puertos conservados, contrastada en puntos reservados; períodos nativos
+adicionales ante discrepancias concretas. CV temporal sigue separado.

@@ -1,0 +1,24 @@
+{
+  "passed": true,
+  "failure": "evidence/vco_cv_load_native03.json",
+  "failure_sha256": "bbef802884055be1187400d092f5faffeb7629ee68a755c9af327cdef3c5bb4f",
+  "reason": "DC continuation aborted at -0.725 V; refine continuation increment, not tolerance or physical laws",
+  "changed_path": "tools/check_vco_cv_load.py",
+  "before_sha256": "db31e94c5ffe4f9c24b57a4fa2a1f9c11e26a000fea38642bfc6959d84155386",
+  "after_sha256": "179208007e622daf99fbe787caf059568853bc268b2f5fa7860956fe67f4fdfd",
+  "replacements": [
+    [
+      "dc VKEYBOARD -1.1 -0.1 0.125",
+      "dc VKEYBOARD -1.1 -0.1 0.01"
+    ],
+    [
+      "9 if scene.keyboard_v==-.1 else 1",
+      "101 if scene.keyboard_v==-.1 else 1"
+    ]
+  ],
+  "previous_increment_v": 0.125,
+  "next_increment_v": 0.01,
+  "solver_tolerances_unchanged": true,
+  "numerical_gates_unchanged": true,
+  "unchanged_replay_preserved": true
+}

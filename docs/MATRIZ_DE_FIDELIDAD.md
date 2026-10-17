@@ -1143,3 +1143,16 @@ nominal fija, regenerable, con formato y publicación exactos. No se retiró
 ningún input privado; los recibos nominales siguen intactos. Esto admite
 la precisión y representación de estas frecuencias/tiempos experimentales,
 sin identificar las curvas físicas de CV, fidelidad vintage o deadlines.
+
+
+## VCO documental calibrado: CV y carga con dominio acotado
+
+[Contrato](VCO_CV_CARGA_PROTOCOLO.md) y [resultado](VCO_CV_CARGA_RESULTADOS.md):
+la matriz DC y etapas locales cubren cuatro CV/tres BUS con trims de la
+calibración archivada. La frecuencia y forma del VCO completo se contrastan
+en un punto reservado cargado, con dos resoluciones y Gear/Trap. No hay
+fuente de fase impuesta en esas historias ni cambio de trims para ocultar
+el error. El rango estático no acredita todos los períodos/transiciones.
+La ayuda nodeset/iteraciones del OP no demuestra unicidad o fidelidad de
+una unidad real. Modelos nominales y circuito documental siguen inciertos;
+el generador experimental actual conserva su dominio y escucha anteriores.
