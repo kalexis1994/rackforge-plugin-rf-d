@@ -1187,3 +1187,8 @@ Cerrado el [kernel de laboratorio](VCO_FAMILIA_RESULTADOS.md): datos sólo de oc
 ## 2026-10-24 — Familia, mezclador y memoria C27
 
 [Resultado](FAMILIA_MIXER_RESULTADOS.md): cerrado el puerto condicional con BASE_Q29 impuesta, seis escenas H128 y dos pasos. Coordenada C27 exacta resuelve el oráculo tras rechazos de método; H64 falla BUS DC y H128 pasa sin cambiar gates o reserva. Siguiente: conectar la entrada del filtro y contrastar memoria/carga devuelta antes de una nota integrada con esta familia.
+
+
+## 2026-10-24 — Entrada real del filtro y consistencia DAE
+
+[Resultado](FAMILIA_FILTRO_RESULTADOS.md): puerto H128 conectado a Q29/R54/C27, ladder, recuperación y dos VCA/J7. Doce DC y dieciséis raíces independientes; cuatro ciclos SDIRK desde DC medio. Trapezoidal pasa raíces pero falla restricciones instantáneas, conservado con replay. Siguiente: nota extendida de controles fijos, asentamiento y lectura antialias antes de cambiar la escucha.

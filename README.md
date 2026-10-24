@@ -945,3 +945,8 @@ No acredita aún todo el rango dinámico de CV ni fidelidad a hardware.
 ## Familia acoplada al puerto mezclador/C27
 
 [Resultado](docs/FAMILIA_MIXER_RESULTADOS.md): seis escenas con BUS libre y C27, BASE impuesta. H128 pasa doce continuaciones 500/250 ns; H64 conserva su rechazo de BUS. Corrientes, carga, raíces por bisección y MNA contrastadas. Voz/escucha actuales intactas; entrada de filtro real pendiente.
+
+
+## Familia H128 y entrada real del filtro
+
+[Resultado](docs/FAMILIA_FILTRO_RESULTADOS.md): BASE_Q29 libre en la cadena de68 nodos más fase. Doce DC/dieciséis raíces y cuatro primeros ciclos SDIRK500/250 ns; cargas y restricciones conservadas. Trapezoidal conserva su rechazo algebraico. Voz/escucha actuales intactas; nota extendida y antialias pendientes.

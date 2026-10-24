@@ -1166,3 +1166,8 @@ el generador experimental actual conserva su dominio y escucha anteriores.
 ## 2026-10-24 — Acoplamiento H128 condicionado al puerto C27
 
 [Resultado](FAMILIA_MIXER_RESULTADOS.md): tres CV/dos cargas ON, BASE fija, memoria C27 compartida al inicio. Doce continuaciones y 24 raíces reducidas por bisección; leyes terminales, derivadas y carga conservadas. Sin filtro completo, arranque reducido independiente, CV temporal general, RT o fidelidad vintage. Fuente audible anterior intacta.
+
+
+## 2026-10-24 — Familia y cadena de filtro real
+
+[Resultado](FAMILIA_FILTRO_RESULTADOS.md): BASE libre,69 incógnitas y cargas explícitas. DC/raíces y cuatro primeros ciclos contrastados; restricciones por etapa, carga C27 y publicación atómica por bits. No asentamiento, KEY/contornos en esta ruta, VCO independiente de contraste, RT o fidelidad vintage. La ruta audible anterior no cambia.
