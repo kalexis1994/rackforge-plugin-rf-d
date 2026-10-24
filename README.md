@@ -940,3 +940,8 @@ No acredita aún todo el rango dinámico de CV ni fidelidad a hardware.
 ## Familia estacionaria CV/BUS calibrada
 
 [Resultado](docs/VCO_FAMILIA_RESULTADOS.md): ocho entrenamientos, siete lugares reservados y nueve comparaciones; peor frecuencia 0.0853243 cent. Consulta Rust con puertos CV/panel, derivadas, cero heap medido y rechazo de extrapolación. Fuente activa y escucha intactas; CV/BUS temporal y acoplamiento dinámico pendientes.
+
+
+## Familia acoplada al puerto mezclador/C27
+
+[Resultado](docs/FAMILIA_MIXER_RESULTADOS.md): seis escenas con BUS libre y C27, BASE impuesta. H128 pasa doce continuaciones 500/250 ns; H64 conserva su rechazo de BUS. Corrientes, carga, raíces por bisección y MNA contrastadas. Voz/escucha actuales intactas; entrada de filtro real pendiente.

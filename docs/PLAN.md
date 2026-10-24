@@ -1182,3 +1182,8 @@ adicionales ante discrepancias concretas. CV temporal sigue separado.
 ## 2026-10-17 — Familia estacionaria CV/BUS con reserva
 
 Cerrado el [kernel de laboratorio](VCO_FAMILIA_RESULTADOS.md): datos sólo de ocho entrenamientos, siete lugares reservados, corrientes CV/BUS contra fuentes y puerto R6/R45 exacto. Consulta/derivadas Rust contrastadas con Python y MNA. No cambia la escucha. Siguiente: evaluar acoplamiento al mezclador en escenas fijas contra el circuito completo; CV/BUS temporal requiere su propia respuesta con memoria.
+
+
+## 2026-10-24 — Familia, mezclador y memoria C27
+
+[Resultado](FAMILIA_MIXER_RESULTADOS.md): cerrado el puerto condicional con BASE_Q29 impuesta, seis escenas H128 y dos pasos. Coordenada C27 exacta resuelve el oráculo tras rechazos de método; H64 falla BUS DC y H128 pasa sin cambiar gates o reserva. Siguiente: conectar la entrada del filtro y contrastar memoria/carga devuelta antes de una nota integrada con esta familia.

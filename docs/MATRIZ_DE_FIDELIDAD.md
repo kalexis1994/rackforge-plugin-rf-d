@@ -1161,3 +1161,8 @@ el generador experimental actual conserva su dominio y escucha anteriores.
 ## 2026-10-17 — Familia CV/BUS estacionaria calibrada
 
 [Resultado](VCO_FAMILIA_RESULTADOS.md): entrenamiento ocho ciclos; nueve contrastes en siete lugares reservados de frecuencia/forma/panel, tres lugares nuevos con corrientes CV; método/paso separados. Leyes terminales originales, MNA, derivadas y consulta Rust sin heap medido. Sólo kernel de laboratorio a fase fija en topología/trims declarados; no certificado continuo, CV/BUS temporal, RT, fidelidad vintage o integración audible.
+
+
+## 2026-10-24 — Acoplamiento H128 condicionado al puerto C27
+
+[Resultado](FAMILIA_MIXER_RESULTADOS.md): tres CV/dos cargas ON, BASE fija, memoria C27 compartida al inicio. Doce continuaciones y 24 raíces reducidas por bisección; leyes terminales, derivadas y carga conservadas. Sin filtro completo, arranque reducido independiente, CV temporal general, RT o fidelidad vintage. Fuente audible anterior intacta.
