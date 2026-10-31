@@ -961,3 +961,14 @@ refinamiento y productor previo; el gate nodal1 uV queda rechazado.
 En Ryzen5 5600X,10 ms requieren44.6–47.0 s a .5 us: RT rechazado,
 cero heap medido. No H128 integrado, plugin o escucha nuevos. Siguiente:
 núcleo de producción reducido frente a esta referencia completa.
+
+
+## Primer núcleo de cargas con coste bajo medido
+
+[Resultado](docs/CHARGE_REDUCED_RESULTADOS.md): cadena68 linealizada localmente,
+18 memorias conservadas y50 incógnitas algebraicas eliminadas. Dos escenas,
+66 frecuencias y ocho reservas no lineales de4 ms pasan. Núcleo384 kHz más
+FIR48 kHz: mediana .166 ms/bloque128, máximo .260 ms,2400 bloques sin
+deadlines perdidos. Son perturbaciones de pequeña señal y controles fijos;
+no incluye VCO/contornos o saturación grande ni admite RT de la voz.
+Export de43.25 MB retirado, pack compacto4.23 MB; escucha anterior intacta.

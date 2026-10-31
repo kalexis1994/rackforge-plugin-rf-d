@@ -1183,3 +1183,15 @@ Equivalencia estricta final de todos los nodos1 uV: rechazada (6.029 uV).
 RT: rechazado,≈4460–4700 veces la duración de audio en la máquina medida.
 Cuatro tests nuevos, sin pruebas físicas, nuevo WAV o paquete RackForge.
 La admisión del circuito anterior no se amplía por este wrapper.
+
+
+## 2026-10-31 — Cargas reducidas, pequeña señal y coste de bloque
+
+[Resultado](CHARGE_REDUCED_RESULTADOS.md): exactitud de reducción de la
+linealización local de68 nodos a18 memorias, sin truncar modos;50 variables
+algebraicas reconstruidas. Dos puntos fijos y ocho reservas4 ms pasan.
+En384 kHz se retienen puertos completos y nodos dispersos; no afirmar
+medición nodal de toda la rejilla a ese reloj. Núcleo+FIR pasa presupuesto
+observado en2400 bloques; VCO, contornos, señal grande, controles dinámicos
+y RT de la voz completos pendientes. Salidas son perturbaciones de DC,
+sin WAV nuevo, comparación con hardware o cambio de la voz anterior.

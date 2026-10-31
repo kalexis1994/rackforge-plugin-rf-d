@@ -1203,3 +1203,15 @@ audio pasa, estado estricto1 uV falla, deadline falla por≈4460–4700x.
 El arranque DC se mide aparte. No promover a audio callback. Priorizar
 reducción de la voz de producción y unión de H128 con contornos, manteniendo
 el circuito como oráculo offline, puertos/cargas y rechazos abiertos.
+
+
+## 2026-10-31 — Reducción local a18 cargas con presupuesto observado
+
+[Resultado](CHARGE_REDUCED_RESULTADOS.md): Schur de50 nodos algebraicos,
+18 capacitores sin truncar, transferencia y SDIRK contrastados frente a68.
+Reservas no lineales1e-5/1e-3 V en dos puntos pasan;384 kHz más FIR cuesta
+.166 ms/bloque128 de mediana, máximo .260 ms. No es coste de voz completa.
+Siguiente: medir dominio constitutivo no lineal ante nivel/cutoff/contornos
+y preparar extensión del núcleo con memoria/puertos antes de unir H128.
+No interpolar matrices sin contraste ni retirar el oráculo completo.
+El rechazo nodal1 uV del wrapper monofónico anterior sigue abierto.
