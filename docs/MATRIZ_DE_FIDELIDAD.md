@@ -1171,3 +1171,15 @@ el generador experimental actual conserva su dominio y escucha anteriores.
 ## 2026-10-24 — Familia y cadena de filtro real
 
 [Resultado](FAMILIA_FILTRO_RESULTADOS.md): BASE libre,69 incógnitas y cargas explícitas. DC/raíces y cuatro primeros ciclos contrastados; restricciones por etapa, carga C27 y publicación atómica por bits. No asentamiento, KEY/contornos en esta ruta, VCO independiente de contraste, RT o fidelidad vintage. La ruta audible anterior no cambia.
+
+
+## 2026-10-31 — Voz monofónica y deadline observado
+
+[Recibo](../evidence/mono_voice_tests01.json): control MIDI limitado56..79,
+prioridad grave, single trigger y salida48 kHz con latencia1 ms. Topología
+y contornos de la voz nominal anterior conservados; no nuevo VCO físico.
+Audio de escena10 ms pasa comparación64/128, .5/.25 us y productor previo.
+Equivalencia estricta final de todos los nodos1 uV: rechazada (6.029 uV).
+RT: rechazado,≈4460–4700 veces la duración de audio en la máquina medida.
+Cuatro tests nuevos, sin pruebas físicas, nuevo WAV o paquete RackForge.
+La admisión del circuito anterior no se amplía por este wrapper.

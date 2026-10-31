@@ -950,3 +950,14 @@ No acredita aún todo el rango dinámico de CV ni fidelidad a hardware.
 ## Familia H128 y entrada real del filtro
 
 [Resultado](docs/FAMILIA_FILTRO_RESULTADOS.md): BASE_Q29 libre en la cadena de68 nodos más fase. Doce DC/dieciséis raíces y cuatro primeros ciclos SDIRK500/250 ns; cargas y restricciones conservadas. Trapezoidal conserva su rechazo algebraico. Voz/escucha actuales intactas; nota extendida y antialias pendientes.
+
+
+## Voz monofónica por bloques y coste real
+
+[Resultado](docs/MONO_VOICE_RESULTADOS.md): voz experimental de un VCO nominal,
+notas MIDI, prioridad grave, legato, contornos físicos y FIR causal. Cuatro
+recorridos de10 ms y cuatro tests nuevos. Audio pasa contraste de bloques,
+refinamiento y productor previo; el gate nodal1 uV queda rechazado.
+En Ryzen5 5600X,10 ms requieren44.6–47.0 s a .5 us: RT rechazado,
+cero heap medido. No H128 integrado, plugin o escucha nuevos. Siguiente:
+núcleo de producción reducido frente a esta referencia completa.

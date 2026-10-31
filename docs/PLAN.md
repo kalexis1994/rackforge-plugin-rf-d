@@ -1192,3 +1192,14 @@ Cerrado el [kernel de laboratorio](VCO_FAMILIA_RESULTADOS.md): datos sólo de oc
 ## 2026-10-24 — Entrada real del filtro y consistencia DAE
 
 [Resultado](FAMILIA_FILTRO_RESULTADOS.md): puerto H128 conectado a Q29/R54/C27, ladder, recuperación y dos VCA/J7. Doce DC y dieciséis raíces independientes; cuatro ciclos SDIRK desde DC medio. Trapezoidal pasa raíces pero falla restricciones instantáneas, conservado con replay. Siguiente: nota extendida de controles fijos, asentamiento y lectura antialias antes de cambiar la escucha.
+
+
+## 2026-10-31 — Voz monofónica completa como referencia offline
+
+[Resultado](MONO_VOICE_RESULTADOS.md): API por bloques48 kHz con notas,
+prioridad grave, legato, release y FIR1 ms; VCO nominal experimental y
+patch fijo. Tres historias nativas y productor previo,10 ms cada una;
+audio pasa, estado estricto1 uV falla, deadline falla por≈4460–4700x.
+El arranque DC se mide aparte. No promover a audio callback. Priorizar
+reducción de la voz de producción y unión de H128 con contornos, manteniendo
+el circuito como oráculo offline, puertos/cargas y rechazos abiertos.
