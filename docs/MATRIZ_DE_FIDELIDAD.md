@@ -1195,3 +1195,14 @@ medición nodal de toda la rejilla a ese reloj. Núcleo+FIR pasa presupuesto
 observado en2400 bloques; VCO, contornos, señal grande, controles dinámicos
 y RT de la voz completos pendientes. Salidas son perturbaciones de DC,
 sin WAV nuevo, comparación con hardware o cambio de la voz anterior.
+
+
+## 2026-10-31 — Límites de nivel y cutoff conservando cargas
+
+[Resultado](CHARGE_CONTROL_RESULTADOS.md): modelo local R61=200/L1,
+cutoff .49/.50/.51, seis reservas .01 V admitidas. Doce reservas .1/1 V
+y dos dinámicas iniciales rechazadas, replay idéntico. Cargas continuas
+no garantizan la constitución. Exponencial FOH corrige sólo error temporal
+local y pasa coste observado; comparación dinámica fina aún rechaza1 uV
+y RMS .001. Dense output es auditoría de ODE, sin nueva admisión de FIR,
+voz RT, hardware, R61=200000 o sonido. Escucha anterior conservada.

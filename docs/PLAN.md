@@ -1215,3 +1215,14 @@ Siguiente: medir dominio constitutivo no lineal ante nivel/cutoff/contornos
 y preparar extensión del núcleo con memoria/puertos antes de unir H128.
 No interpolar matrices sin contraste ni retirar el oráculo completo.
 El rechazo nodal1 uV del wrapper monofónico anterior sigue abierto.
+
+
+## 2026-10-31 — Constitución y transición temporal separadas
+
+[Resultado](CHARGE_CONTROL_RESULTADOS.md): tres DC cutoff .49/.50/.51,
+reservas de nivel y memoria18 compensada. .01 V pasa, .1/1 V y dinámica
+fallan gates conservados. Referencia15.625/7.8125 ns converge. Exponencial
+FOH de la misma ODE corrige defecto temporal y banco local cabe en plazo;
+no corrige constitución4.66 uV/RMS .001319. Siguiente: leyes no lineales
+de recuperación y ladder/control con puertos/cargas, antes de H128 y
+contornos; no otra extensión de matrices sin resolver este rechazo.

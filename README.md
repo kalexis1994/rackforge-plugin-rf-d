@@ -972,3 +972,13 @@ FIR48 kHz: mediana .166 ms/bloque128, máximo .260 ms,2400 bloques sin
 deadlines perdidos. Son perturbaciones de pequeña señal y controles fijos;
 no incluye VCO/contornos o saturación grande ni admite RT de la voz.
 Export de43.25 MB retirado, pack compacto4.23 MB; escucha anterior intacta.
+
+
+## Nivel, cutoff y transición exponencial local
+
+[Resultado](docs/CHARGE_CONTROL_RESULTADOS.md): tres puntos cutoff con18 cargas
+compensadas. Seis reservas estáticas .01 V pasan; .1/1 V y cambio de cutoff
+rechazados. Referencia de transición refinada a7.8125 ns. La exponencial FOH
+reduce defecto temporal local717 uV a74 fV y pasa presupuesto observado
+(.464 ms/bloque128); queda error constitutivo4.66 uV. No admisión de cutoff
+dinámico, voz RT o escucha nueva. Sigue corregir ley no lineal física.
