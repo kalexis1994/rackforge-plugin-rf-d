@@ -1,9 +1,9 @@
 """Time the RackForge portable plugin path against the actual ASIO period."""
 
+import argparse
+import json
 import os
-import re
 import subprocess
-import sys
 import traceback
 from pathlib import Path
 
@@ -24,6 +24,8 @@ QA = "evidence/recovery_host128_tests01.json"
 GUEST = "tools/recovery_engine128_guest.rs"
 ENGINE_PROBE = "tools/recovery_engine128_probe.rs"
 DSP = "tools/recovery_host_dsp.rs"
+EXP_KERNEL = "tools/recovery_cost_exp_kernel.rs"
+COLUMNS_KERNEL = "tools/recovery_engine128_columns.rs"
 HOST_CORE = "librackforge_core-3896b480a6ff0d55.rlib"
 PACKAGE_ID = "org.rackforge.lab.rf-d-recovery"
 PLAN = [("control", 32), ("control", 1200), ("native", 1200), ("instance", 1200),
@@ -99,10 +101,41 @@ preset_catalog = "metadata/presets.json"
     ))
 
 
-def sources_for_build():
+def column_kernel():
+    source = (ROOT / EXP_KERNEL).read_text(encoding="utf8")
+    data = (ROOT / "tools/recovery_cost_exp_data.rs").as_posix()
+    columns = (ROOT / COLUMNS_KERNEL).as_posix()
+    source = replace_once(source, '#[path="recovery_cost_exp_data.rs"]mod data;',
+                          f'#[path="{data}"]mod data;\n#[path="{columns}"]mod columns;')
+    source = replace_once(source, """        for j in 0..18 {base[k]+=data::F[i][k][j]*s.q[j];}
+        for j in 0..12 {base[k]+=data::N0[i][k][j]*s.defects[j];}
+    }""", """    }
+    columns::accumulate::<18, 18, false>(&mut base, &columns::F[i], &s.q);
+    columns::accumulate::<18, 12, false>(&mut base, &columns::N0[i], &s.defects);""")
+    source = replace_once(source, """    let mut zp=[0.;12];
+    for k in 0..12 {
+        zp[k]=data::ZU[i][k]*u;
+        for j in 0..18 {zp[k]+=data::ZH[i][k][j]*base[j];}
+    }""", """    let mut zp=data::ZU[i].map(|coefficient| coefficient*u);
+    columns::accumulate::<12, 18, false>(&mut zp, &columns::ZH[i], &base);""")
+    source = replace_once(source, "    for k in 0..12 {for j in 0..12 {z[k]-=data::P[i][k][j]*s.defects[j];}}",
+                          "    columns::accumulate::<12, 12, true>(&mut z, &columns::P[i], &s.defects);")
+    source = replace_once(source, """        let mut r=[0.;12];let mut maximum=0_f64;
+        for k in 0..12 {r[k]=z[k]-zp[k];for j in 0..12 {r[k]+=data::P[i][k][j]*n[j];}maximum=maximum.max(r[k].abs());}""",
+                          """        let mut r=std::array::from_fn(|k| z[k]-zp[k]);
+        columns::accumulate::<12, 12, false>(&mut r, &columns::P[i], &n);
+        let maximum=r.iter().fold(0_f64, |maximum, value| maximum.max(value.abs()));""")
+    source = replace_once(source,
+                          "            for k in 0..18 {for j in 0..12 {q[k]+=data::N1[i][k][j]*n[j];}if !q[k].is_finite(){return Err(Error::Domain)}}",
+                          """            columns::accumulate::<18, 12, false>(&mut q, &columns::N1[i], &n);
+            if q.iter().any(|value| !value.is_finite()) {return Err(Error::Domain)}""")
+    return source.encode()
+
+
+def sources_for_build(kernel=ROOT / EXP_KERNEL):
     guest = (ROOT / DSP).read_text(encoding="utf8")
     for original, absolute in [
-        ("recovery_cost_exp_kernel.rs", ROOT / "tools/recovery_cost_exp_kernel.rs"),
+        ("recovery_cost_exp_kernel.rs", kernel),
         ("../crates/rf-d-circuit/src/j7_stream_output.rs", ROOT / "crates/rf-d-circuit/src/j7_stream_output.rs"),
     ]:
         guest = replace_once(guest, f'"{original}"', f'"{absolute.as_posix()}"')
@@ -137,11 +170,13 @@ def sources_for_build():
     return guest.encode(), probe.encode()
 
 
-def retire_lab():
-    # The caller starts with an empty lab and owns every generated artifact.
+def retire_lab(keep=()):
+    # The caller owns the lab; an optional Cargo build stays for the next pass.
     assert AREA.resolve() == (ROOT / "tmp/lab-current").resolve()
     entries = sorted(AREA.rglob("*"), key=lambda path: len(path.parts), reverse=True)
     for path in entries:
+        if AREA / path.relative_to(AREA).parts[0] in keep:
+            continue
         assert not path.is_symlink() and path.resolve().is_relative_to(AREA.resolve()), path
         if path.is_dir():
             path.rmdir()
@@ -149,8 +184,26 @@ def retire_lab():
             path.unlink()
 
 
-def run(report, destination, trace_allocation=False):
-    assert not list(AREA.iterdir()) and not destination.exists()
+def cargo_artifacts(build_log):
+    rows = [json.loads(line) for line in build_log.read_text(encoding="utf8").splitlines()]
+    assert rows[-1] == {"reason": "build-finished", "success": True}
+    artifacts = {}
+    for crate in ("rackforge_core", "rackforge_plugin_runtime", "wasmtime"):
+        paths = [Path(name) for row in rows if row["reason"] == "compiler-artifact"
+                 and row["target"]["name"] == crate for name in row["filenames"] if name.endswith(".rlib")]
+        path, = paths
+        # Cargo reports the hard-linked top-level output for the requested library.
+        if path.parent.name == "release":
+            path, = (path.parent / "deps").glob(f"{path.stem}-*.rlib")
+        assert path.is_file() and path.resolve().is_relative_to(AREA.resolve())
+        artifacts[crate] = path
+    return artifacts
+
+
+def run(report, destination, trace_allocation=False, host=HOST, host_build=None, wasm_opt=2,
+        column_simd=False):
+    keep = set(AREA.iterdir()) if host_build else set()
+    assert not destination.exists() and (host_build or not list(AREA.iterdir()))
     prior = read(QA)
     assert prior["passed"] and sha(Path(COMPILER)) == prior["compiler"]["sha256"]
     assert sha(LIB) == prior["private_input_sha256"][LIB.relative_to(ROOT).as_posix()]
@@ -162,34 +215,51 @@ def run(report, destination, trace_allocation=False):
     sdk = AREA / "librackforge_plugin_sdk.rlib"
     dsp_package, silent_package = AREA / "package-dsp", AREA / "package-control"
     cache = AREA / "engine-cache"
-    deps = HOST / "target/release/deps"
+    rows_path = AREA / "engine-rows.bin"
+    kernel = AREA / "engine_kernel_columns.rs" if column_simd else ROOT / EXP_KERNEL
+    assert not keep.intersection((exe, dll, guest, probe, circuit, sdk, dsp_package,
+                                  silent_package, cache, rows_path, kernel))
+    platform_deps = HOST / "target/release/deps"
     asio_dir = HOST / "target/release/build/asio-sys-bb9248db199c7ec7/out"
-    cpal, = deps.glob("libcpal-*.rlib")
-    windows = deps / "libwindows-30e5b7032d286333.rlib"
+    cpal, = platform_deps.glob("libcpal-*.rlib")
+    windows = platform_deps / "libwindows-30e5b7032d286333.rlib"
+    if host_build:
+        assert host_build.parent == AREA and host_build.is_file()
+        rebuilt = cargo_artifacts(host_build)
+        core = rebuilt["rackforge_core"]
+        deps = core.parent
+        runtime_dependencies = list(rebuilt.values())
+        report["host_build"] = dict(log=host_build.name, sha256=sha(host_build),
+                                    libraries={name: sha(path) for name, path in rebuilt.items()})
+    else:
+        deps = platform_deps
+        core = deps / HOST_CORE
+        runtime_dependencies = [core, *deps.glob("librackforge_plugin_runtime-*.rlib"),
+                                *deps.glob("libwasmtime-*.rlib")]
     registry = Path(COMPILER).parents[4] / ".cargo/registry/src"
     windows_imports = sorted(registry.glob("*/windows_x86_64_msvc-*/lib/*.lib"))
-    native_libs = sorted((HOST / "target/release/build").glob("*/out/*.lib"))
-    native_dirs = sorted({p.parent for p in [*native_libs, *windows_imports]})
+    native_libs = sorted((deps.parent / "build").glob("*/out/*.lib"))
+    platform_libs = sorted((HOST / "target/release/build").glob("*/out/*.lib"))
+    native_dirs = list(dict.fromkeys(p.parent for p in [*native_libs, *platform_libs, *windows_imports]))
     host_sources = [
         REALTIME, "crates/rackforge-plugin-sdk/src/lib.rs", "crates/rackforge-core/src/hosted.rs",
         "crates/rackforge-core/src/rack_voice.rs", "crates/rackforge-core/src/parallel_render.rs",
         "crates/rackforge-plugin-runtime/src/native.rs", "apps/rackforge-desktop/src/desktop_audio.rs",
     ]
-    host_head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=HOST, text=True).strip()
+    host_head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=host, text=True).strip()
     for name in host_sources:
-        frozen = subprocess.check_output(["git", "show", f"{host_head}:{name}"], cwd=HOST)
-        assert (HOST / name).read_bytes() in (frozen, frozen.replace(b"\n", b"\r\n")), name
+        frozen = subprocess.check_output(["git", "show", f"{host_head}:{name}"], cwd=host)
+        assert (host / name).read_bytes() in (frozen, frozen.replace(b"\n", b"\r\n")), name
+    assert (host / REALTIME).read_bytes() == (HOST / REALTIME).read_bytes()
     report.update(
-        previous_qa_sha256=sha(ROOT / QA), host_checkout=host_head,
-        host_checkout_source_sha256={name: sha(HOST / name) for name in host_sources},
+        previous_qa_sha256=sha(ROOT / QA), host_checkout=host_head, wasm_opt_level=wasm_opt,
+        column_simd=column_simd,
+        host_checkout_source_sha256={name: sha(host / name) for name in host_sources},
         dependencies={str(p): sha(p) for p in [
-            Path(COMPILER), HOST_COMPILER, LIB, cpal, windows, deps / HOST_CORE,
-            asio_dir / "asio.lib", asio_dir / "asio_bindings.rs",
-            *deps.glob("librackforge_plugin_runtime-*.rlib"), *deps.glob("libwasmtime-*.rlib"),
-            *native_libs, *windows_imports,
+            Path(COMPILER), HOST_COMPILER, LIB, cpal, windows, *runtime_dependencies,
+            asio_dir / "asio.lib", asio_dir / "asio_bindings.rs", *native_libs, *platform_libs, *windows_imports,
         ]},
     )
-    rows_path = AREA / "engine-rows.bin"
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"],
                RF_D_ENGINE_ROWS=str(rows_path))
     command, result = [], None
@@ -202,13 +272,17 @@ def run(report, destination, trace_allocation=False):
         return result
 
     try:
-        guest_bytes, probe_bytes = sources_for_build()
+        if column_simd:
+            kernel.write_bytes(column_kernel())
+        guest_bytes, probe_bytes = sources_for_build(kernel)
         guest.write_bytes(guest_bytes)
         probe.write_bytes(probe_bytes)
         make_package(dsp_package)
         make_package(silent_package)
         flags = ["-C", "opt-level=2", "-A", "dead_code", "-A", "unused_imports"]
-        wasm = ["--target", "wasm32-unknown-unknown", "-C", "target-feature=+simd128"]
+        wasm = ["--target", "wasm32-unknown-unknown", "-C", "target-feature=+simd128",
+                "-C", f"opt-level={wasm_opt}"]
+        dependency_dirs = list(dict.fromkeys((deps, platform_deps)))
         wasm_link = ["--crate-type", "cdylib", "-C", "link-arg=-zstack-size=8388608", "-C", "panic=abort"]
         trace_flags = ["--cfg", "engine_alloc_trace", "-C", "debuginfo=1"] if trace_allocation else []
         report["build"] = []
@@ -218,21 +292,23 @@ def run(report, destination, trace_allocation=False):
             [COMPILER, "--edition=2021", *flags, *wasm, "--crate-type", "rlib", "--crate-name", "rf_d_circuit",
              ROOT / "crates/rf-d-circuit/src/lib.rs", "-o", circuit],
             [COMPILER, "--edition=2024", *flags, *wasm, "--crate-type", "rlib", "--crate-name", "rackforge_plugin_sdk",
-             HOST / "crates/rackforge-plugin-sdk/src/lib.rs", "-o", sdk],
+             host / "crates/rackforge-plugin-sdk/src/lib.rs", "-o", sdk],
             *[[COMPILER, "--edition=2021", *flags, *wasm, *wasm_link, guest,
                "--extern", f"rf_d_circuit={circuit}", "--extern", f"rackforge_plugin_sdk={sdk}",
                *(["--cfg", "engine_silence"] if path == silent_package else []), "-o", path / "component.wasm"]
               for path in [dsp_package, silent_package]],
             [HOST_COMPILER, "--edition=2021", *flags, "--cfg", "asio128", *trace_flags,
-             "-L", f"dependency={deps}", *[arg for p in native_dirs for arg in ("-L", f"native={p}")],
+             *[arg for p in dependency_dirs for arg in ("-L", f"dependency={p}")],
+             *[arg for p in native_dirs for arg in ("-L", f"native={p}")],
              "-L", f"native={asio_dir}", "-l", "static=asio", probe,
              "--extern", f"cpal={cpal}", "--extern", f"windows={windows}",
-             "--extern", f"rackforge_core={deps / HOST_CORE}", "-o", exe],
+             "--extern", f"rackforge_core={core}", "-o", exe],
         ]:
             built = execute(args)
             report["build"].append(dict(command=command, stderr=packed(built.stderr)))
         report["artifact_sha256"] = {p.relative_to(AREA).as_posix(): sha(p) for p in [
             guest, probe, sdk, circuit, dll, exe, *dsp_package.rglob("*.*"), *silent_package.rglob("*.*"),
+            *([kernel] if column_simd else []),
         ]}
         if trace_allocation:
             traced = execute([exe, "engine-allocation", silent_package, cache])
@@ -312,25 +388,36 @@ def run(report, destination, trace_allocation=False):
                     stdout=packed(replay.stdout or b""), stderr=packed(replay.stderr or b""))
     finally:
         write(destination, report)
-        retire_lab()
+        retire_lab(keep)
         report["temporary_area_empty"] = not list(AREA.iterdir())
+        report["measurement_area_retired"] = set(AREA.iterdir()) == keep
         write(destination, report)
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--alloc-trace", action="store_true")
+    parser.add_argument("--host-checkout", type=Path, default=HOST)
+    parser.add_argument("--host-build", type=Path, help="successful Cargo JSON build log in tmp/lab-current")
+    parser.add_argument("--wasm-opt", type=int, choices=(2, 3), default=2)
+    parser.add_argument("--column-simd", action="store_true")
+    args = parser.parse_args()
     sources = Sources([
         "tools/check_recovery_engine128.py", DSP, GUEST, ENGINE_PROBE, ASIO_PROBE, PREVIOUS_PROBE, PROBE,
-        "tools/recovery_cost_exp_kernel.rs", "tools/recovery_cost_exp_data.rs",
+        EXP_KERNEL, "tools/recovery_cost_exp_data.rs",
         "crates/rf-d-circuit/src/j7_stream_output.rs", "docs/RECOVERY_ENGINE128_PROTOCOLO.md",
+        "docs/RECOVERY_ENGINE128_FUEL_PROTOCOLO.md",
+        *([COLUMNS_KERNEL] if args.column_simd else []),
     ])
-    assert sys.argv[1:] in ([], ["--alloc-trace"])
-    trace_allocation = sys.argv[1:] == ["--alloc-trace"]
-    kind = "alloc" if trace_allocation else "native"
+    kind = "alloc" if args.alloc_trace else "native"
     number = 1
     while (ROOT / f"evidence/recovery_engine128_{kind}{number:02d}.json").exists():
         number += 1
     report = dict(passed=False, **sources.fields())
-    run(report, ROOT / f"evidence/recovery_engine128_{kind}{number:02d}.json", trace_allocation)
+    run(report, ROOT / f"evidence/recovery_engine128_{kind}{number:02d}.json",
+        trace_allocation=args.alloc_trace, host=args.host_checkout.resolve(),
+        host_build=args.host_build.resolve() if args.host_build else None, wasm_opt=args.wasm_opt,
+        column_simd=args.column_simd)
     sources.unchanged()
     print("ENGINE128_FINAL", report["passed"], report.get("rack_128_admitted"), report.get("failure", ""), flush=True)
     if not report["passed"]:
