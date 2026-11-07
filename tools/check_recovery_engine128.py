@@ -28,6 +28,10 @@ EXP_KERNEL = "tools/recovery_cost_exp_kernel.rs"
 COLUMNS_KERNEL = "tools/recovery_engine128_columns.rs"
 BROADCAST_KERNEL = "tools/recovery_engine128_broadcast.rs"
 SPLIT_FIR = "tools/recovery_cost_split_fir.rs"
+HOT_KERNEL = "tools/recovery_engine128_hot.rs"
+MODEL_KERNEL = "tools/recovery_engine128_model.rs"
+ELIMINATE_KERNEL = "tools/recovery_engine128_eliminate.rs"
+REGISTER_KERNEL = "tools/recovery_engine128_registers.rs"
 HOST_CORE = "librackforge_core-3896b480a6ff0d55.rlib"
 PACKAGE_ID = "org.rackforge.lab.rf-d-recovery"
 PLAN = [("control", 32), ("control", 1200), ("native", 1200), ("instance", 1200),
@@ -103,7 +107,11 @@ preset_catalog = "metadata/presets.json"
     ))
 
 
-def column_kernel(broadcast=False):
+def column_kernel(broadcast=False, hot=False, specialize=False, column_solve=False, registers=False):
+    assert not hot or broadcast
+    assert not specialize or hot
+    assert not column_solve or specialize
+    assert not registers or specialize
     source = (ROOT / EXP_KERNEL).read_text(encoding="utf8")
     data = (ROOT / "tools/recovery_cost_exp_data.rs").as_posix()
     columns = (ROOT / COLUMNS_KERNEL).as_posix()
@@ -139,6 +147,54 @@ def column_kernel(broadcast=False):
             source = source.replace(f"columns::accumulate::<{rows}, {cols}, {subtract}>",
                                     f"broadcast::accumulate::<{rows}, {cols}, {rows // 2}, {subtract}>")
         assert "columns::accumulate" not in source and source.count("broadcast::accumulate") == 6
+    if hot:
+        module = (ROOT / HOT_KERNEL).as_posix()
+        start = source.index("pub fn law(")
+        end = source.index("// The physical state is q.")
+        source = (source[:start] + f'#[path="{module}"]mod hot;\npub use hot::law;\nuse hot::solve;\n\n'
+                  + source[end:])
+        source = replace_once(source,
+                              "let bus=node(&candidate,66);let input_base=node(&candidate,6);let j7=node(&candidate,61);",
+                              "let [bus, input_base, j7, _]=hot::ports(i,u,&base,&n);")
+    if specialize:
+        module = (ROOT / MODEL_KERNEL).as_posix()
+        source = replace_once(source, "use hot::solve;", f'use hot::solve;\n#[path="{module}"]mod model;')
+        start = source.index("pub fn step_with_budget(")
+        end = source.index("    if i>=3", start)
+        source = source[:start] + """pub fn step_with_budget(s: &mut State, u: f64, budget: usize) -> Result<Ports, Error> {
+    if s.index == 1 {
+        project::<1, _>(s, u, budget, |ports, _, _, _| ports)
+    } else {
+        project::<3, _>(s, u, budget, |ports, _, _, _| ports)
+    }
+}
+
+pub fn inspect(s: &mut State, u: f64, budget: usize) -> Result<(Ports, [f64; 12], usize, f64), Error> {
+    project::<3, _>(s, u, budget, |ports, z, iteration, residual| (ports, z, iteration, residual))
+}
+
+fn project<const MODEL: usize, T>(
+    s: &mut State,
+    u: f64,
+    budget: usize,
+    output: impl FnOnce(Ports, [f64; 12], usize, f64) -> T,
+) -> Result<T, Error> {
+    let i = if MODEL < 3 { MODEL } else { s.index };
+""" + source[end:]
+        source = replace_once(source, "s.q.iter().any(|v|!v.is_finite())", "!model::finite(&s.q)")
+        source = replace_once(source, "q.iter().any(|value| !value.is_finite())", "!model::finite(&q)")
+        source = replace_once(source, "return Ok((Ports{", "return Ok(output(Ports{")
+        source = replace_once(source,
+            "        for k in 0..6 {let mut odd=r[2*k+1];for j in 0..6 {odd-=data::P[i][2*k+1][2*j]*slope[2*j]*even[j];}z[2*k]-=even[k];z[2*k+1]-=odd;}",
+            "        model::update(i, &mut z, &r, &slope, &even);")
+    if column_solve:
+        module = (ROOT / ELIMINATE_KERNEL).as_posix()
+        source = replace_once(source, "use hot::solve;", f'#[path="{module}"]mod eliminate;')
+        start = source.index("        let a=std::array::from_fn(")
+        end = source.index("        model::update", start)
+        source = source[:start] + "        let even=eliminate::solve(i, &slope, &r)?;\n" + source[end:]
+    if registers:
+        source = replace_once(source, (ROOT / BROADCAST_KERNEL).as_posix(), (ROOT / REGISTER_KERNEL).as_posix())
     return source.encode()
 
 
@@ -212,9 +268,15 @@ def cargo_artifacts(build_log):
 
 
 def run(report, destination, trace_allocation=False, host=HOST, host_build=None, wasm_opt=2,
-        column_simd=False, broadcast_simd=False, split_fir=False):
+        column_simd=False, broadcast_simd=False, split_fir=False, hot_simd=False, specialize=False,
+        column_solve=False, lto=False, registers=False):
     assert not broadcast_simd or column_simd
     assert not split_fir or broadcast_simd
+    assert not hot_simd or split_fir
+    assert not specialize or hot_simd
+    assert not column_solve or specialize
+    assert not lto or specialize
+    assert not registers or specialize
     keep = set(AREA.iterdir()) if host_build else set()
     assert not destination.exists() and (host_build or not list(AREA.iterdir()))
     prior = read(QA)
@@ -266,7 +328,8 @@ def run(report, destination, trace_allocation=False, host=HOST, host_build=None,
     assert (host / REALTIME).read_bytes() == (HOST / REALTIME).read_bytes()
     report.update(
         previous_qa_sha256=sha(ROOT / QA), host_checkout=host_head, wasm_opt_level=wasm_opt,
-        column_simd=column_simd, broadcast_simd=broadcast_simd, split_fir=split_fir,
+        column_simd=column_simd, broadcast_simd=broadcast_simd, split_fir=split_fir, hot_simd=hot_simd,
+        specialize=specialize, column_solve=column_solve, wasm_lto=lto, registers=registers,
         host_checkout_source_sha256={name: sha(host / name) for name in host_sources},
         dependencies={str(p): sha(p) for p in [
             Path(COMPILER), HOST_COMPILER, LIB, cpal, windows, *runtime_dependencies,
@@ -286,7 +349,7 @@ def run(report, destination, trace_allocation=False, host=HOST, host_build=None,
 
     try:
         if column_simd:
-            kernel.write_bytes(column_kernel(broadcast_simd))
+            kernel.write_bytes(column_kernel(broadcast_simd, hot_simd, specialize, column_solve, registers))
         guest_bytes, probe_bytes = sources_for_build(kernel, split_fir)
         guest.write_bytes(guest_bytes)
         probe.write_bytes(probe_bytes)
@@ -297,6 +360,8 @@ def run(report, destination, trace_allocation=False, host=HOST, host_build=None,
                 "-C", f"opt-level={wasm_opt}"]
         dependency_dirs = list(dict.fromkeys((deps, platform_deps)))
         wasm_link = ["--crate-type", "cdylib", "-C", "link-arg=-zstack-size=8388608", "-C", "panic=abort"]
+        if lto:
+            wasm_link += ["-C", "lto=fat", "-C", "codegen-units=1"]
         trace_flags = ["--cfg", "engine_alloc_trace", "-C", "debuginfo=1"] if trace_allocation else []
         report["build"] = []
         for args in [
@@ -370,7 +435,7 @@ def run(report, destination, trace_allocation=False, host=HOST, host_build=None,
                           {k: m.get(k) for k in ["frames_128_confirmed", "deadline_misses", "margin_exceeded",
                                                   "wall_ns", "host_allocations", "slot_faults", "notices"]},
                           stream.strip() if not m else "", flush=True)
-                    if m.get("gate_passed"):
+                    if m.get("gate_passed") and not (hot_simd and blocks == 4800):
                         break
         finally:
             changed = read_override(profile)
@@ -380,8 +445,8 @@ def run(report, destination, trace_allocation=False, host=HOST, host_build=None,
             assert initial == final and read_override(profile) == original
         report["cached_artifacts"] = {p.relative_to(cache).as_posix(): sha(p)
                                       for p in cache.rglob("*") if p.is_file()}
-        report["rack_128_admitted"] = all(b["runs"][0].get("metrics", {}).get("gate_passed", False)
-                                          for b in report["banks"])
+        report["rack_128_admitted"] = all(run.get("metrics", {}).get("gate_passed", False)
+                                          for bank in report["banks"] for run in bank["runs"])
         report.update(passed=True, whole_voice_rt=False)
     except Exception as error:
         report["failure"] = traceback.format_exc()
@@ -416,20 +481,40 @@ if __name__ == "__main__":
     parser.add_argument("--column-simd", action="store_true")
     parser.add_argument("--broadcast-simd", action="store_true", help="share each input splat across all row pairs")
     parser.add_argument("--split-fir", action="store_true", help="use contiguous ring spans for the same FIR")
+    parser.add_argument("--hot-simd", action="store_true", help="vectorize independent laws, elimination and ports")
+    parser.add_argument("--specialize-model", action="store_true", help="specialize the nominal audio step and SIMD odd correction")
+    parser.add_argument("--column-solve", action="store_true", help="eliminate the even system in SIMD across rows")
+    parser.add_argument("--wasm-lto", action="store_true", help="use a single Wasm codegen unit and fat LTO")
+    parser.add_argument("--register-simd", action="store_true", help="use explicit accumulators in the matrix maps")
     args = parser.parse_args()
     if args.broadcast_simd and not args.column_simd:
         parser.error("--broadcast-simd requires --column-simd")
     if args.split_fir and not args.broadcast_simd:
         parser.error("--split-fir requires --broadcast-simd")
+    if args.hot_simd and not args.split_fir:
+        parser.error("--hot-simd requires --split-fir")
+    if args.specialize_model and not args.hot_simd:
+        parser.error("--specialize-model requires --hot-simd")
+    if args.column_solve and not args.specialize_model:
+        parser.error("--column-solve requires --specialize-model")
+    if args.wasm_lto and not args.specialize_model:
+        parser.error("--wasm-lto requires --specialize-model")
+    if args.register_simd and not args.specialize_model:
+        parser.error("--register-simd requires --specialize-model")
     sources = Sources([
         "tools/check_recovery_engine128.py", DSP, GUEST, ENGINE_PROBE, ASIO_PROBE, PREVIOUS_PROBE, PROBE,
         EXP_KERNEL, "tools/recovery_cost_exp_data.rs",
         "crates/rf-d-circuit/src/j7_stream_output.rs", "docs/RECOVERY_ENGINE128_PROTOCOLO.md",
         "docs/RECOVERY_ENGINE128_FUEL_PROTOCOLO.md",
         "docs/RECOVERY_ENGINE128_BROADCAST_PROTOCOLO.md",
+        "docs/RECOVERY_ENGINE128_HOT_PROTOCOLO.md",
         *([COLUMNS_KERNEL] if args.column_simd else []),
         *([BROADCAST_KERNEL] if args.broadcast_simd else []),
         *([SPLIT_FIR] if args.split_fir else []),
+        *([HOT_KERNEL] if args.hot_simd else []),
+        *([MODEL_KERNEL] if args.specialize_model else []),
+        *([ELIMINATE_KERNEL] if args.column_solve else []),
+        *([REGISTER_KERNEL] if args.register_simd else []),
     ])
     kind = "alloc" if args.alloc_trace else "native"
     number = 1
@@ -439,7 +524,9 @@ if __name__ == "__main__":
     run(report, ROOT / f"evidence/recovery_engine128_{kind}{number:02d}.json",
         trace_allocation=args.alloc_trace, host=args.host_checkout.resolve(),
         host_build=args.host_build.resolve() if args.host_build else None, wasm_opt=args.wasm_opt,
-        column_simd=args.column_simd, broadcast_simd=args.broadcast_simd, split_fir=args.split_fir)
+        column_simd=args.column_simd, broadcast_simd=args.broadcast_simd, split_fir=args.split_fir,
+        hot_simd=args.hot_simd, specialize=args.specialize_model, column_solve=args.column_solve,
+        lto=args.wasm_lto, registers=args.register_simd)
     sources.unchanged()
     print("ENGINE128_FINAL", report["passed"], report.get("rack_128_admitted"), report.get("failure", ""), flush=True)
     if not report["passed"]:

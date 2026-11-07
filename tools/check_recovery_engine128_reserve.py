@@ -14,7 +14,8 @@ from check_hybrid_voice import packed, unpack
 from check_recovery_cost import check_laws, decode, digest, read, store
 from check_recovery_cost_exp import compare, endpoints, physical
 from check_recovery_engine128 import (
-    AREA, BROADCAST_KERNEL, COLUMNS_KERNEL, COMPILER, EXP_KERNEL, SPLIT_FIR, column_kernel, replace_once, retire_lab,
+    AREA, BROADCAST_KERNEL, COLUMNS_KERNEL, COMPILER, ELIMINATE_KERNEL, EXP_KERNEL, HOT_KERNEL,
+    MODEL_KERNEL, REGISTER_KERNEL, SPLIT_FIR, column_kernel, replace_once, retire_lab,
 )
 from prepare_dual_chain import ROOT, sha, write
 
@@ -36,7 +37,7 @@ process.exitCode = wasi.start(instance);
 """
 
 
-def probe_source(kernel, table_paths):
+def probe_source(kernel, table_paths, verify_audio_step=False):
     probe = (ROOT / SOURCE).read_text(encoding="utf8")
     probe = replace_once(probe, '"recovery_cost_exp_kernel.rs"', f'"{kernel.as_posix()}"')
     stream = (ROOT / "crates/rf-d-circuit/src/j7_stream_output.rs").as_posix()
@@ -52,6 +53,14 @@ def probe_source(kernel, table_paths):
     probe = replace_once(probe, "let ports = core::step(&mut s, u).unwrap(); let x = core::nodes(s);",
                           "let (ports, z, iterations, residual) = core::inspect(&mut s, u, 12).unwrap();\n"
                           "            let x = core::nodes(s);")
+    if verify_audio_step:
+        probe = replace_once(probe, "            let (ports, z, iterations, residual)", """            let mut audio = s;
+            let (ports, z, iterations, residual)""")
+        probe = replace_once(probe, "            let x = core::nodes(s);", """            let observed = core::step(&mut audio, u).unwrap();
+            assert!(same(audio, s));
+            assert_eq!([observed.bus_v, observed.base_v, observed.j7_v, observed.panel_a].map(f64::to_bits),
+                       [ports.bus_v, ports.base_v, ports.j7_v, ports.panel_a].map(f64::to_bits));
+            let x = core::nodes(s);""")
     probe = replace_once(probe, ".chain(s.q).chain(x) { out.write_all",
                           ".chain(s.q).chain(x).chain(s.history).chain(s.defects).chain(z)\n"
                           "                .chain([iterations as f64, residual]) { out.write_all")
@@ -86,7 +95,8 @@ def summarize(data, reference):
     return results
 
 
-def run(report, destination, fir_only=False):
+def run(report, destination, fir_only=False, hot=False, specialize=False, column_solve=False, lto=False,
+        registers=False):
     keep = set(AREA.iterdir())
     paths = {name: AREA / f"reserve-{name}" for name in
              ("probe.rs", "kernel.rs", "circuit.rlib", "probe.wasm", "vectors.bin", "stress.bin")}
@@ -102,6 +112,10 @@ def run(report, destination, fir_only=False):
                   physical_sha256=sha(ROOT / PHYSICAL), variants={})
     rust = [COMPILER, "--edition=2021", "--target", "wasm32-wasip1",
             "-C", "opt-level=3", "-C", "target-feature=+simd128", "-A", "dead_code", "-A", "unused_imports"]
+    link = ["-C", "link-arg=-zstack-size=8388608"]
+    if lto:
+        link += ["-C", "lto=fat", "-C", "codegen-units=1"]
+    report["wasm_lto"] = lto
     env = dict(os.environ, OPENBLAS_NUM_THREADS="1")
     command, stdin, execution = [], None, None
 
@@ -118,9 +132,9 @@ def run(report, destination, fir_only=False):
         report["library_sha256"] = sha(paths["circuit.rlib"])
         if fir_only:
             kernel, probe, wasm = (paths[name] for name in ("kernel.rs", "probe.rs", "probe.wasm"))
-            kernel.write_bytes(column_kernel(True))
+            kernel.write_bytes(column_kernel(True, hot, specialize, column_solve, registers))
             probe.write_bytes(fir_source(kernel))
-            execute([*rust, "--cfg", "expfoh", "--cfg", "splitfir", "-C", "link-arg=-zstack-size=8388608",
+            execute([*rust, "--cfg", "expfoh", "--cfg", "splitfir", *link,
                      probe, "--extern", f"rf_d_circuit={paths['circuit.rlib']}", "-o", wasm])
             build = command
             raw = execute([node, "--no-warnings", "-e", WASI, wasm, "fircheck"])
@@ -137,16 +151,24 @@ def run(report, destination, fir_only=False):
             paths[mode + ".bin"].write_bytes(table[0].tobytes())
         report["input_sha256"] = {mode: sha(paths[mode + ".bin"]) for mode in ("vectors", "stress")}
         scalar = {}
-        for variant in VARIANTS:
+        # This branch extends the already captured scalar case, without duplicating its numeric payload.
+        candidate = "registers" if registers else "columns" if column_solve else "model"
+        variants = ("scalar", candidate) if column_solve or lto or registers else (
+            *VARIANTS, *(("hot",) if hot else ()), *(("model",) if specialize else ()),
+        )
+        for variant in variants:
             if variant == "scalar":
                 kernel = ROOT / EXP_KERNEL
             else:
                 kernel = paths["kernel.rs"]
-                kernel.write_bytes(column_kernel(variant == "broadcast"))
+                audio_step = variant in ("model", "columns", "registers")
+                kernel.write_bytes(column_kernel(variant != "pairs", variant == "hot" or audio_step,
+                                                 audio_step, column_solve, registers))
             probe = paths["probe.rs"]
-            probe.write_bytes(probe_source(kernel, (paths["vectors.bin"], paths["stress.bin"])))
+            probe.write_bytes(probe_source(kernel, (paths["vectors.bin"], paths["stress.bin"]),
+                                           variant in ("model", "columns", "registers")))
             wasm = paths["probe.wasm"]
-            execute([*rust, "--cfg", "expfoh", "-C", "link-arg=-zstack-size=8388608",
+            execute([*rust, "--cfg", "expfoh", *link,
                      probe, "--extern", f"rf_d_circuit={paths['circuit.rlib']}", "-o", wasm])
             item = dict(compile=command, kernel_sha256=sha(kernel), probe_sha256=sha(probe),
                         wasm_sha256=sha(wasm), modes={})
@@ -166,7 +188,13 @@ def run(report, destination, fir_only=False):
                                                             expected=int(expected[i]))
                     assert raw == scalar[mode], (variant, mode)
             print("RESERVE_BITWISE", variant, item["modes"], flush=True)
-        report["results"] = summarize(scalar, reference)
+        if column_solve or lto or registers:
+            prior_name = "evidence/recovery_engine128_reserve01.json"
+            prior = read(prior_name)
+            assert prior["passed"] and report["variants"]["scalar"]["modes"] == prior["variants"]["scalar"]["modes"]
+            report["physical_replay"] = dict(path=prior_name, sha256=sha(ROOT / prior_name))
+        else:
+            report["results"] = summarize(scalar, reference)
         report["passed"] = True
     except Exception:
         report["failure"] = traceback.format_exc()
@@ -191,17 +219,35 @@ def run(report, destination, fir_only=False):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--fir", action="store_true", help="recheck the contiguous FIR in WASI")
+    parser.add_argument("--hot", action="store_true", help="include the vectorized laws, elimination and ports")
+    parser.add_argument("--specialize", action="store_true", help="include and verify the nominal audio step")
+    parser.add_argument("--column-solve", action="store_true", help="verify SIMD elimination across rows")
+    parser.add_argument("--lto", action="store_true", help="use a single codegen unit and fat LTO")
+    parser.add_argument("--registers", action="store_true", help="verify explicit SIMD accumulator locals")
     args = parser.parse_args()
+    if args.specialize and not args.hot:
+        parser.error("--specialize requires --hot")
+    if args.column_solve and not args.specialize:
+        parser.error("--column-solve requires --specialize")
+    if args.lto and not args.specialize:
+        parser.error("--lto requires --specialize")
+    if args.registers and not args.specialize:
+        parser.error("--registers requires --specialize")
     sources = Sources([RUNNER, SOURCE, EXP_KERNEL, DATA, COLUMNS_KERNEL, BROADCAST_KERNEL, PROTOCOL,
                        "tools/check_recovery_engine128.py", "tools/check_recovery_cost_exp.py",
                        "tools/check_recovery_cost.py", "tools/recovery_cost_exp_model.py",
-                       "crates/rf-d-circuit/src/j7_stream_output.rs", *([SPLIT_FIR] if args.fir else [])])
+                       "crates/rf-d-circuit/src/j7_stream_output.rs", *([SPLIT_FIR] if args.fir else []),
+                       *([HOT_KERNEL, "docs/RECOVERY_ENGINE128_HOT_PROTOCOLO.md"] if args.hot else []),
+                       *([MODEL_KERNEL] if args.specialize else []), *([ELIMINATE_KERNEL] if args.column_solve else []),
+                       *([REGISTER_KERNEL] if args.registers else [])])
     kind = "broadcast_fir" if args.fir else "reserve"
     n = 1
     while (ROOT / f"evidence/recovery_engine128_{kind}{n:02d}.json").exists():
         n += 1
     report = dict(passed=False, **sources.fields())
-    run(report, ROOT / f"evidence/recovery_engine128_{kind}{n:02d}.json", fir_only=args.fir)
+    run(report, ROOT / f"evidence/recovery_engine128_{kind}{n:02d}.json", fir_only=args.fir,
+        hot=args.hot, specialize=args.specialize, column_solve=args.column_solve, lto=args.lto,
+        registers=args.registers)
     sources.unchanged()
     print("RESERVE_FINAL", report["passed"], report.get("failure", ""), flush=True)
     raise SystemExit(0 if report["passed"] else 1)
