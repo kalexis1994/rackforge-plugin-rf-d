@@ -992,3 +992,11 @@ reducción no lineal propia de recuperación y par de entrada,18 memorias y
 incluido384 kHz;1 V sigue rechazado. El solve compacto reduce mediana
 3.579 a1.872 ms/bloque128, pero pierde29/1200 deadlines: aún sin admisión
 RT. Sin código/tablas/calibración copiados de CA-72 ni nueva escucha.
+
+
+## Un solve por muestra para las doce leyes
+
+[Coste y contraste](docs/RECOVERY_COST_RESULTADOS.md): transición exponencial
+con FOH de corrientes,18 memorias y el mismo residual. Tres reservas pasan;
+error temporal del mismo híbrido <=9.02 nV. Mediana1.865→.743 ms, banco corto
+pasa y confirmación4800 conserva un deadline perdido. Sin admisión RT.

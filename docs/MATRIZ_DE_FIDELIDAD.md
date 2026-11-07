@@ -1217,3 +1217,13 @@ sin afirmar nodos entre filas retiradas.1 V rechazado, cutoff dinámico y
 resto de controles no admitidos. Variante compacta conserva residual12 y
 reduce coste mediano48%, pero29/1200 deadlines perdidos. Sin admisión RT
 de bloque/voz, antialias nuevo ni hardware. Escucha anterior protegida.
+
+
+## 2026-11-06 — Error temporal de un solve y coste
+
+[Resultados](RECOVERY_COST_RESULTADOS.md): Schur y transición exponencial
+con corriente FOH;12 leyes y18 memorias. Reservas .1 V a384 kHz pasan
+los mismos puertos y estados retenidos. Error temporal <=9.02 nV contra
+el híbrido a250 ns, no otra evidencia física. Banco inicial1200 pasa;
+confirmación4800 falla1 plazo. Sin nueva admisión de voz, cutoff, nivel
+grande, FIR, hardware o escucha.

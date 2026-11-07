@@ -1238,3 +1238,13 @@ con residual12 completo baja coste48%, pero29/1200 deadlines fallan.
 Siguiente: reducir trabajo temporal con esta constitución como control y
 cerrar los pares restantes del ladder/convertidor. No integrar la voz RT
 ni ampliar matrices ignorando estos rechazos. Reutilizar corpus existente.
+
+
+## 2026-11-06 — Integración de un solve y cola de coste
+
+[Resultados](RECOVERY_COST_RESULTADOS.md): mismas12 leyes/18 memorias y
+puertos. Tres reservas estáticas .1 V pasan; la exponencial con FOH de
+corrientes reduce mediana60%. Confirmación4800 pierde1 plazo, sin
+admisión RT. FIR por tramos idéntico por bits pero rechazado en coste.
+Siguiente: separar coste del DSP y colas observadas en el host antes
+de agregar VCO/contornos; no ampliar constitución con ese banco.
