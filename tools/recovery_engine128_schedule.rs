@@ -26,7 +26,7 @@ struct CoreInfo {
     data: [u64; 2],
 }
 
-fn schedule_topology() -> HostResult<()> {
+fn schedule_cores() -> HostResult<(usize, Vec<usize>)> {
     if unsafe { GetActiveProcessorGroupCount() } != 1 {
         return Err("The lab requires one Windows processor group".into());
     }
@@ -48,6 +48,11 @@ fn schedule_topology() -> HostResult<()> {
         .filter(|record| record.relationship == 0)
         .map(|record| record.mask & allowed).filter(|mask| *mask != 0).collect();
     cores.sort_unstable();
+    Ok((allowed, cores))
+}
+
+fn schedule_topology() -> HostResult<()> {
+    let (allowed, cores) = schedule_cores()?;
     println!("SCHED_TOPOLOGY\t{allowed}\t{cores:?}");
     Ok(())
 }

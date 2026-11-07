@@ -34,6 +34,8 @@ ELIMINATE_KERNEL = "tools/recovery_engine128_eliminate.rs"
 REGISTER_KERNEL = "tools/recovery_engine128_registers.rs"
 SCHEDULE_PROBE = "tools/recovery_engine128_schedule.rs"
 SCHEDULE_DRIVER = "tools/check_recovery_engine128_schedule.py"
+SMT_PROBE = "tools/recovery_engine128_smt.rs"
+SMT_DRIVER = "tools/check_recovery_engine128_smt.py"
 HOST_CORE = "librackforge_core-3896b480a6ff0d55.rlib"
 PACKAGE_ID = "org.rackforge.lab.rf-d-recovery"
 PLAN = [("control", 32), ("control", 1200), ("native", 1200), ("instance", 1200),
@@ -200,7 +202,8 @@ fn project<const MODEL: usize, T>(
     return source.encode()
 
 
-def sources_for_build(kernel=ROOT / EXP_KERNEL, split_fir=False, schedule=False):
+def sources_for_build(kernel=ROOT / EXP_KERNEL, split_fir=False, schedule=False, smt=False):
+    assert not smt or schedule
     guest = (ROOT / DSP).read_text(encoding="utf8")
     for original, absolute in [
         ("recovery_cost_exp_kernel.rs", kernel),
@@ -269,11 +272,63 @@ def sources_for_build(kernel=ROOT / EXP_KERNEL, split_fir=False, schedule=False)
                             "        session.capture.publish(index, row);")
         asio = replace_once(asio, "row.into_iter().chain(extra)", """row.into_iter().chain(extra)
             .chain(unsafe { *session.schedule.markers[index].get() })""")
+    if smt:
+        entry = replace_once(entry, '        Some("schedule-topology") => return schedule_topology(),',
+                             '        Some("schedule-topology") => return schedule_topology(),\n'
+                             '        Some("smt-endpoints") => return smt_endpoints(&args[1]),')
+        asio = replace_once(asio, "    schedule: ScheduleCapture,", "    schedule: ScheduleCapture,\n    smt: Option<SmtCapture>,")
+        asio = replace_once(asio, "    let mut session = Box::new(AsioSession {",
+                            "    let (mut planner, smt) = smt_prepare(blocks)?;\n    let mut session = Box::new(AsioSession {")
+        asio = replace_once(asio, "        schedule: ScheduleCapture::new(blocks)?,",
+                            "        schedule: ScheduleCapture::new(blocks)?,\n        smt,")
+        asio = replace_once(asio, """    let cpu_before = unsafe { GetCurrentProcessorNumber() };
+    let before = cycles();""", """    let before = cycles();
+    if recording {
+        if let Some(smt) = &session.smt {
+            if smt.apply(index).is_err() {
+                ASIO_ERRORS.fetch_add(1, Ordering::Relaxed);
+                return;
+            }
+        }
+    }
+    let cpu_before = unsafe { GetCurrentProcessorNumber() };""")
+        asio = replace_once(asio, """    if start_result == 0 {
+        while session.capture.completed.load(Ordering::Acquire) < blocks && Instant::now() < expires {
+            std::thread::sleep(Duration::from_millis(5));
+        }
+    }""", """    let mut smt_error = None;
+    if start_result == 0 {
+        loop {
+            let completed = session.capture.completed.load(Ordering::Acquire);
+            if completed >= blocks || Instant::now() >= expires || ASIO_ERRORS.load(Ordering::Relaxed) != 0 {
+                break;
+            }
+            if let (Some(planner), Some(capture)) = (&mut planner, &session.smt) {
+                if let Err(error) = planner.tick(completed, capture, &session.capture, session.origin) {
+                    smt_error = Some(error);
+                    break;
+                }
+            } else {
+                std::thread::sleep(Duration::from_millis(5));
+            }
+        }
+    }""")
+        asio = replace_once(asio, "    let session = unsafe { Box::from_raw(raw) };",
+                            "    let session = unsafe { Box::from_raw(raw) };\n"
+                            "    if let Some(planner) = &mut planner { planner.report(); }")
+        asio = replace_once(asio, "            .chain(unsafe { *session.schedule.markers[index].get() })",
+                            """            .chain(unsafe { *session.schedule.markers[index].get() })
+            .chain(session.smt.as_ref().map_or([u64::MAX, 0], |smt| unsafe { *smt.rows[index].get() }))""")
+        asio = replace_once(asio, '    asio_ok("ASIOStart", start_result)?;',
+                            '    if let Some(error) = smt_error { return Err(error); }\n'
+                            '    asio_ok("ASIOStart", start_result)?;')
     asio_dir = HOST / "target/release/build/asio-sys-bb9248db199c7ec7/out"
     probe += "\n" + entry + f'\n#[path = "{(asio_dir / "asio_bindings.rs").as_posix()}"]\nmod asio_ffi;\n'
     probe += asio + "\n" + (ROOT / ENGINE_PROBE).read_text(encoding="utf8")
     if schedule:
         probe += "\n" + (ROOT / SCHEDULE_PROBE).read_text(encoding="utf8")
+    if smt:
+        probe += "\n" + (ROOT / SMT_PROBE).read_text(encoding="utf8")
     return guest.encode(), probe.encode()
 
 
@@ -310,7 +365,7 @@ def cargo_artifacts(build_log):
 def run(report, destination, trace_allocation=False, host=HOST, host_build=None, wasm_opt=2,
         column_simd=False, broadcast_simd=False, split_fir=False, hot_simd=False, specialize=False,
         column_solve=False, lto=False, registers=False, schedule=False, schedule_survey=False,
-        schedule_confirm=None):
+        schedule_confirm=None, smt=False, smt_background=False, smt_qualified=False):
     assert not broadcast_simd or column_simd
     assert not split_fir or broadcast_simd
     assert not hot_simd or split_fir
@@ -319,9 +374,12 @@ def run(report, destination, trace_allocation=False, host=HOST, host_build=None,
     assert not lto or specialize
     assert not registers or specialize
     assert not schedule or (registers and lto and not column_solve and host_build)
-    assert not schedule or wasm_opt == (3 if schedule_confirm is None else 2)
+    assert not schedule or wasm_opt == (2 if smt or schedule_confirm is not None else 3)
     assert not schedule_survey or schedule
     assert schedule_confirm is None or (schedule and not schedule_survey)
+    assert not smt or (schedule and not schedule_survey and schedule_confirm is None and not trace_allocation)
+    assert not smt_background or smt
+    assert not smt_qualified or (smt and not smt_background)
     keep = set(AREA.iterdir()) if host_build else set()
     assert not destination.exists() and (host_build or not list(AREA.iterdir()))
     prior = read(QA)
@@ -395,7 +453,7 @@ def run(report, destination, trace_allocation=False, host=HOST, host_build=None,
     try:
         if column_simd:
             kernel.write_bytes(column_kernel(broadcast_simd, hot_simd, specialize, column_solve, registers))
-        guest_bytes, probe_bytes = sources_for_build(kernel, split_fir, schedule)
+        guest_bytes, probe_bytes = sources_for_build(kernel, split_fir, schedule, smt)
         guest.write_bytes(guest_bytes)
         probe.write_bytes(probe_bytes)
         make_package(dsp_package)
@@ -446,6 +504,12 @@ def run(report, destination, trace_allocation=False, host=HOST, host_build=None,
                                   metrics=engine_fixture(fixture_raw), stream=fixture.stderr.decode(),
                                   log=fixture.stdout.decode(errors="replace"))
         print("ENGINE128_FIXTURE", report["fixtures"]["metrics"], flush=True)
+        if smt:
+            from check_recovery_engine128_smt import campaign
+            campaign(report, exe, env, dsp_package, silent_package, cache, rows_path, analyze, execute,
+                     background=smt_background, qualified=smt_qualified)
+            report.update(passed=True, whole_voice_rt=False, rack_128_admitted=False)
+            return
         if schedule:
             from check_recovery_engine128_schedule import campaign
             campaign(report, exe, env, dsp_package, silent_package, cache, rows_path, analyze, execute,
@@ -540,6 +604,9 @@ if __name__ == "__main__":
     parser.add_argument("--schedule-study", action="store_true", help="compare the frozen package with and without ASIO")
     parser.add_argument("--schedule-survey", action="store_true", help="select one CPU before independent long passes")
     parser.add_argument("--schedule-confirm", type=int, help="repeat the selected placement with Wasm O2")
+    parser.add_argument("--smt-study", action="store_true", help="control and confirm idle-aware ASIO affinity")
+    parser.add_argument("--smt-background", action="store_true", help="apply adaptive affinity between callbacks")
+    parser.add_argument("--smt-qualified", action="store_true", help="confirm fixed placement after a quiet-host preflight")
     args = parser.parse_args()
     if args.broadcast_simd and not args.column_simd:
         parser.error("--broadcast-simd requires --column-simd")
@@ -559,6 +626,12 @@ if __name__ == "__main__":
         parser.error("--schedule-survey requires --schedule-study")
     if args.schedule_confirm is not None and (not args.schedule_study or args.schedule_survey):
         parser.error("--schedule-confirm requires --schedule-study without --schedule-survey")
+    if args.smt_study and (not args.schedule_study or args.schedule_survey or args.schedule_confirm is not None):
+        parser.error("--smt-study requires --schedule-study without a survey or fixed confirmation")
+    if args.smt_background and not args.smt_study:
+        parser.error("--smt-background requires --smt-study")
+    if args.smt_qualified and (not args.smt_study or args.smt_background):
+        parser.error("--smt-qualified requires --smt-study without --smt-background")
     sources = Sources([
         "tools/check_recovery_engine128.py", DSP, GUEST, ENGINE_PROBE, ASIO_PROBE, PREVIOUS_PROBE, PROBE,
         EXP_KERNEL, "tools/recovery_cost_exp_data.rs",
@@ -575,8 +648,9 @@ if __name__ == "__main__":
         *([REGISTER_KERNEL] if args.register_simd else []),
         *([SCHEDULE_PROBE, SCHEDULE_DRIVER, "docs/RECOVERY_ENGINE128_SCHED_PROTOCOLO.md"]
           if args.schedule_study else []),
+        *([SMT_PROBE, SMT_DRIVER, "docs/RECOVERY_ENGINE128_SMT_PROTOCOLO.md"] if args.smt_study else []),
     ])
-    kind = "schedule" if args.schedule_study else "alloc" if args.alloc_trace else "native"
+    kind = "smt" if args.smt_study else "schedule" if args.schedule_study else "alloc" if args.alloc_trace else "native"
     number = 1
     while (ROOT / f"evidence/recovery_engine128_{kind}{number:02d}.json").exists():
         number += 1
@@ -587,7 +661,8 @@ if __name__ == "__main__":
         column_simd=args.column_simd, broadcast_simd=args.broadcast_simd, split_fir=args.split_fir,
         hot_simd=args.hot_simd, specialize=args.specialize_model, column_solve=args.column_solve,
         lto=args.wasm_lto, registers=args.register_simd, schedule=args.schedule_study,
-        schedule_survey=args.schedule_survey, schedule_confirm=args.schedule_confirm)
+        schedule_survey=args.schedule_survey, schedule_confirm=args.schedule_confirm, smt=args.smt_study,
+        smt_background=args.smt_background, smt_qualified=args.smt_qualified)
     sources.unchanged()
     print("ENGINE128_FINAL", report["passed"], report.get("rack_128_admitted"), report.get("failure", ""), flush=True)
     if not report["passed"]:
