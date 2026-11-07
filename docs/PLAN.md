@@ -1226,3 +1226,15 @@ FOH de la misma ODE corrige defecto temporal y banco local cabe en plazo;
 no corrige constitución4.66 uV/RMS .001319. Siguiente: leyes no lineales
 de recuperación y ladder/control con puertos/cargas, antes de H128 y
 contornos; no otra extensión de matrices sin resolver este rechazo.
+
+
+## 2026-11-06 — Leyes no lineales compactas orientadas por CA-72
+
+[Resultado](RECOVERY_PORT_RESULTADOS.md): recuperación8 como control y
+recuperación+entrada12, derivadas del stamp propio;18 memorias y cargas
+intactas. Reservas .1 V pasan nodos retenidos y puertos en tres cutoff,
+también384 kHz.1 V y controles generales pendientes. Newton modificado
+con residual12 completo baja coste48%, pero29/1200 deadlines fallan.
+Siguiente: reducir trabajo temporal con esta constitución como control y
+cerrar los pares restantes del ladder/convertidor. No integrar la voz RT
+ni ampliar matrices ignorando estos rechazos. Reutilizar corpus existente.

@@ -982,3 +982,13 @@ rechazados. Referencia de transición refinada a7.8125 ns. La exponencial FOH
 reduce defecto temporal local717 uV a74 fV y pasa presupuesto observado
 (.464 ms/bloque128); queda error constitutivo4.66 uV. No admisión de cutoff
 dinámico, voz RT o escucha nueva. Sigue corregir ley no lineal física.
+
+
+## CA-72 como referencia de arquitectura
+
+[Adopción](docs/CA72_ADOPCION.md) y [resultado](docs/RECOVERY_PORT_RESULTADOS.md):
+reducción no lineal propia de recuperación y par de entrada,18 memorias y
+12 uniones. Las reservas conservadas .1 V pasan en tres cutoff fijos,
+incluido384 kHz;1 V sigue rechazado. El solve compacto reduce mediana
+3.579 a1.872 ms/bloque128, pero pierde29/1200 deadlines: aún sin admisión
+RT. Sin código/tablas/calibración copiados de CA-72 ni nueva escucha.

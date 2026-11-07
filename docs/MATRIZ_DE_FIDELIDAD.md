@@ -1206,3 +1206,14 @@ no garantizan la constitución. Exponencial FOH corrige sólo error temporal
 local y pasa coste observado; comparación dinámica fina aún rechaza1 uV
 y RMS .001. Dense output es auditoría de ODE, sin nueva admisión de FIR,
 voz RT, hardware, R61=200000 o sonido. Escucha anterior conservada.
+
+
+## 2026-11-06 — Recuperación y entrada no lineales condensadas
+
+[Resultado](RECOVERY_PORT_RESULTADOS.md): seis BJT con leyes Ebers–Moll
+propias y18 memorias. .01/.1 V pasan reservas250 ns; .1 V pasa comparación
+384 kHz en tres cutoff fijos. Cobertura nodal dispersa y puertos completos,
+sin afirmar nodos entre filas retiradas.1 V rechazado, cutoff dinámico y
+resto de controles no admitidos. Variante compacta conserva residual12 y
+reduce coste mediano48%, pero29/1200 deadlines perdidos. Sin admisión RT
+de bloque/voz, antialias nuevo ni hardware. Escucha anterior protegida.
