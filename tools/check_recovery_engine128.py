@@ -26,6 +26,8 @@ ENGINE_PROBE = "tools/recovery_engine128_probe.rs"
 DSP = "tools/recovery_host_dsp.rs"
 EXP_KERNEL = "tools/recovery_cost_exp_kernel.rs"
 COLUMNS_KERNEL = "tools/recovery_engine128_columns.rs"
+BROADCAST_KERNEL = "tools/recovery_engine128_broadcast.rs"
+SPLIT_FIR = "tools/recovery_cost_split_fir.rs"
 HOST_CORE = "librackforge_core-3896b480a6ff0d55.rlib"
 PACKAGE_ID = "org.rackforge.lab.rf-d-recovery"
 PLAN = [("control", 32), ("control", 1200), ("native", 1200), ("instance", 1200),
@@ -101,7 +103,7 @@ preset_catalog = "metadata/presets.json"
     ))
 
 
-def column_kernel():
+def column_kernel(broadcast=False):
     source = (ROOT / EXP_KERNEL).read_text(encoding="utf8")
     data = (ROOT / "tools/recovery_cost_exp_data.rs").as_posix()
     columns = (ROOT / COLUMNS_KERNEL).as_posix()
@@ -129,14 +131,23 @@ def column_kernel():
                           "            for k in 0..18 {for j in 0..12 {q[k]+=data::N1[i][k][j]*n[j];}if !q[k].is_finite(){return Err(Error::Domain)}}",
                           """            columns::accumulate::<18, 12, false>(&mut q, &columns::N1[i], &n);
             if q.iter().any(|value| !value.is_finite()) {return Err(Error::Domain)}""")
+    if broadcast:
+        module = (ROOT / BROADCAST_KERNEL).as_posix()
+        source = replace_once(source, "mod columns;", f'mod columns;\n#[path="{module}"]mod broadcast;')
+        for rows, cols, subtract in [(18, 18, "false"), (18, 12, "false"), (12, 18, "false"),
+                                     (12, 12, "true"), (12, 12, "false")]:
+            source = source.replace(f"columns::accumulate::<{rows}, {cols}, {subtract}>",
+                                    f"broadcast::accumulate::<{rows}, {cols}, {rows // 2}, {subtract}>")
+        assert "columns::accumulate" not in source and source.count("broadcast::accumulate") == 6
     return source.encode()
 
 
-def sources_for_build(kernel=ROOT / EXP_KERNEL):
+def sources_for_build(kernel=ROOT / EXP_KERNEL, split_fir=False):
     guest = (ROOT / DSP).read_text(encoding="utf8")
     for original, absolute in [
         ("recovery_cost_exp_kernel.rs", kernel),
-        ("../crates/rf-d-circuit/src/j7_stream_output.rs", ROOT / "crates/rf-d-circuit/src/j7_stream_output.rs"),
+        ("../crates/rf-d-circuit/src/j7_stream_output.rs",
+         ROOT / (SPLIT_FIR if split_fir else "crates/rf-d-circuit/src/j7_stream_output.rs")),
     ]:
         guest = replace_once(guest, f'"{original}"', f'"{absolute.as_posix()}"')
     guest += "\n" + (ROOT / GUEST).read_text(encoding="utf8")
@@ -201,7 +212,9 @@ def cargo_artifacts(build_log):
 
 
 def run(report, destination, trace_allocation=False, host=HOST, host_build=None, wasm_opt=2,
-        column_simd=False):
+        column_simd=False, broadcast_simd=False, split_fir=False):
+    assert not broadcast_simd or column_simd
+    assert not split_fir or broadcast_simd
     keep = set(AREA.iterdir()) if host_build else set()
     assert not destination.exists() and (host_build or not list(AREA.iterdir()))
     prior = read(QA)
@@ -253,7 +266,7 @@ def run(report, destination, trace_allocation=False, host=HOST, host_build=None,
     assert (host / REALTIME).read_bytes() == (HOST / REALTIME).read_bytes()
     report.update(
         previous_qa_sha256=sha(ROOT / QA), host_checkout=host_head, wasm_opt_level=wasm_opt,
-        column_simd=column_simd,
+        column_simd=column_simd, broadcast_simd=broadcast_simd, split_fir=split_fir,
         host_checkout_source_sha256={name: sha(host / name) for name in host_sources},
         dependencies={str(p): sha(p) for p in [
             Path(COMPILER), HOST_COMPILER, LIB, cpal, windows, *runtime_dependencies,
@@ -273,8 +286,8 @@ def run(report, destination, trace_allocation=False, host=HOST, host_build=None,
 
     try:
         if column_simd:
-            kernel.write_bytes(column_kernel())
-        guest_bytes, probe_bytes = sources_for_build(kernel)
+            kernel.write_bytes(column_kernel(broadcast_simd))
+        guest_bytes, probe_bytes = sources_for_build(kernel, split_fir)
         guest.write_bytes(guest_bytes)
         probe.write_bytes(probe_bytes)
         make_package(dsp_package)
@@ -401,13 +414,22 @@ if __name__ == "__main__":
     parser.add_argument("--host-build", type=Path, help="successful Cargo JSON build log in tmp/lab-current")
     parser.add_argument("--wasm-opt", type=int, choices=(2, 3), default=2)
     parser.add_argument("--column-simd", action="store_true")
+    parser.add_argument("--broadcast-simd", action="store_true", help="share each input splat across all row pairs")
+    parser.add_argument("--split-fir", action="store_true", help="use contiguous ring spans for the same FIR")
     args = parser.parse_args()
+    if args.broadcast_simd and not args.column_simd:
+        parser.error("--broadcast-simd requires --column-simd")
+    if args.split_fir and not args.broadcast_simd:
+        parser.error("--split-fir requires --broadcast-simd")
     sources = Sources([
         "tools/check_recovery_engine128.py", DSP, GUEST, ENGINE_PROBE, ASIO_PROBE, PREVIOUS_PROBE, PROBE,
         EXP_KERNEL, "tools/recovery_cost_exp_data.rs",
         "crates/rf-d-circuit/src/j7_stream_output.rs", "docs/RECOVERY_ENGINE128_PROTOCOLO.md",
         "docs/RECOVERY_ENGINE128_FUEL_PROTOCOLO.md",
+        "docs/RECOVERY_ENGINE128_BROADCAST_PROTOCOLO.md",
         *([COLUMNS_KERNEL] if args.column_simd else []),
+        *([BROADCAST_KERNEL] if args.broadcast_simd else []),
+        *([SPLIT_FIR] if args.split_fir else []),
     ])
     kind = "alloc" if args.alloc_trace else "native"
     number = 1
@@ -417,7 +439,7 @@ if __name__ == "__main__":
     run(report, ROOT / f"evidence/recovery_engine128_{kind}{number:02d}.json",
         trace_allocation=args.alloc_trace, host=args.host_checkout.resolve(),
         host_build=args.host_build.resolve() if args.host_build else None, wasm_opt=args.wasm_opt,
-        column_simd=args.column_simd)
+        column_simd=args.column_simd, broadcast_simd=args.broadcast_simd, split_fir=args.split_fir)
     sources.unchanged()
     print("ENGINE128_FINAL", report["passed"], report.get("rack_128_admitted"), report.get("failure", ""), flush=True)
     if not report["passed"]:
