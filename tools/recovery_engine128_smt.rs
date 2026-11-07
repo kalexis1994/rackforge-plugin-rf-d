@@ -54,7 +54,7 @@ struct SmtQualification {
     total_windows: usize,
 }
 
-fn smt_qualify(pacer: &Pacer, pairs: &[(u32, u32)]) -> HostResult<SmtQualification> {
+fn smt_qualify(pacer: &Pacer, pairs: &[(u32, u32)], system_floor: u64) -> HostResult<SmtQualification> {
     let mut previous_idle = smt_idle()?;
     let mut previous_system = smt_system_times()?;
     let mut windows: Vec<Vec<u64>> = Vec::with_capacity(4);
@@ -77,7 +77,7 @@ fn smt_qualify(pacer: &Pacer, pairs: &[(u32, u32)]) -> HostResult<SmtQualificati
         let window: Vec<_> = std::iter::once(system_ratio).chain(scores).collect();
         previous_idle = idle;
         previous_system = system;
-        if system_ratio < 7000 {
+        if system_ratio < system_floor {
             windows.clear();
             continue;
         }
@@ -122,6 +122,7 @@ impl SmtCapture {
 
 struct SmtPlanner {
     adaptive: bool,
+    observe: bool,
     background: bool,
     supervisor: Option<u32>,
     pairs: Vec<(u32, u32)>,
@@ -156,7 +157,7 @@ fn smt_prepare(blocks: usize) -> HostResult<(Option<SmtPlanner>, Option<SmtCaptu
     };
     let adaptive = match mode.as_str() {
         "adaptive" | "background" => true,
-        "hold" | "qualified" => false,
+        "hold" | "qualified" | "quiet-hold" => false,
         _ => return Err("Unknown SMT placement policy".into()),
     };
     let (_, cores) = schedule_cores()?;
@@ -174,7 +175,11 @@ fn smt_prepare(blocks: usize) -> HostResult<(Option<SmtPlanner>, Option<SmtCaptu
     }).collect();
     if pairs.len() < 2 { return Err("Need two eligible SMT cores".into()); }
     let pacer = Pacer::new()?;
-    let qualification = if mode == "qualified" { Some(smt_qualify(&pacer, &pairs)?) } else { None };
+    let qualification = match mode.as_str() {
+        "qualified" => Some(smt_qualify(&pacer, &pairs, 7000)?),
+        "quiet-hold" => Some(smt_qualify(&pacer, &pairs, 8500)?),
+        _ => None,
+    };
     let before = smt_idle()?;
     pacer.wait(Duration::from_millis(64))?;
     let after = smt_idle()?;
@@ -197,7 +202,8 @@ fn smt_prepare(blocks: usize) -> HostResult<(Option<SmtPlanner>, Option<SmtCaptu
         background,
     };
     let planner = SmtPlanner {
-        adaptive, background, supervisor, pairs, startup, initial, selected: initial, stress: seed.map(|_| sibling),
+        adaptive, observe: mode != "quiet-hold", background, supervisor, pairs, startup, initial,
+        selected: initial, stress: seed.map(|_| sibling),
         load: None, load_at: None, pacer, history: [after; SMT_WINDOW], sample: 0, low: 0, last_move: 0,
         informative: 0, events: Vec::with_capacity(blocks / SMT_COOLDOWN + 1),
         background_events: Vec::with_capacity(blocks / SMT_COOLDOWN + 1), callback: None, qualification,
@@ -207,6 +213,10 @@ fn smt_prepare(blocks: usize) -> HostResult<(Option<SmtPlanner>, Option<SmtCaptu
 
 impl SmtPlanner {
     fn tick(&mut self, completed: usize, capture: &SmtCapture, progress: &Capture, origin: Instant) -> HostResult<()> {
+        if !self.observe {
+            self.pacer.wait(Duration::from_millis(5))?;
+            return Ok(());
+        }
         if completed >= SMT_LOAD_BLOCK && self.load_at.is_none() && self.stress.is_some() {
             self.load = Some(ScheduleLoad::start(self.stress)?);
             self.load_at = Some(completed);

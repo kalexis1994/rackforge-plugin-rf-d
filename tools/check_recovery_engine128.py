@@ -202,8 +202,9 @@ fn project<const MODEL: usize, T>(
     return source.encode()
 
 
-def sources_for_build(kernel=ROOT / EXP_KERNEL, split_fir=False, schedule=False, smt=False):
+def sources_for_build(kernel=ROOT / EXP_KERNEL, split_fir=False, schedule=False, smt=False, smt_lean=False):
     assert not smt or schedule
+    assert not smt_lean or smt
     guest = (ROOT / DSP).read_text(encoding="utf8")
     for original, absolute in [
         ("recovery_cost_exp_kernel.rs", kernel),
@@ -322,6 +323,9 @@ def sources_for_build(kernel=ROOT / EXP_KERNEL, split_fir=False, schedule=False,
         asio = replace_once(asio, '    asio_ok("ASIOStart", start_result)?;',
                             '    if let Some(error) = smt_error { return Err(error); }\n'
                             '    asio_ok("ASIOStart", start_result)?;')
+    if smt_lean:
+        assert asio.count("thread_cpu_ns()") == 4
+        asio = asio.replace("thread_cpu_ns()", "0_u64")
     asio_dir = HOST / "target/release/build/asio-sys-bb9248db199c7ec7/out"
     probe += "\n" + entry + f'\n#[path = "{(asio_dir / "asio_bindings.rs").as_posix()}"]\nmod asio_ffi;\n'
     probe += asio + "\n" + (ROOT / ENGINE_PROBE).read_text(encoding="utf8")
@@ -365,7 +369,7 @@ def cargo_artifacts(build_log):
 def run(report, destination, trace_allocation=False, host=HOST, host_build=None, wasm_opt=2,
         column_simd=False, broadcast_simd=False, split_fir=False, hot_simd=False, specialize=False,
         column_solve=False, lto=False, registers=False, schedule=False, schedule_survey=False,
-        schedule_confirm=None, smt=False, smt_background=False, smt_qualified=False):
+        schedule_confirm=None, smt=False, smt_background=False, smt_qualified=False, smt_lean=False, smt_nvidia=False):
     assert not broadcast_simd or column_simd
     assert not split_fir or broadcast_simd
     assert not hot_simd or split_fir
@@ -374,12 +378,14 @@ def run(report, destination, trace_allocation=False, host=HOST, host_build=None,
     assert not lto or specialize
     assert not registers or specialize
     assert not schedule or (registers and lto and not column_solve and host_build)
-    assert not schedule or wasm_opt == (2 if smt or schedule_confirm is not None else 3)
+    assert not schedule or wasm_opt == (2 if smt or schedule_confirm is not None else 3) or (smt_lean and wasm_opt == 3)
     assert not schedule_survey or schedule
     assert schedule_confirm is None or (schedule and not schedule_survey)
     assert not smt or (schedule and not schedule_survey and schedule_confirm is None and not trace_allocation)
     assert not smt_background or smt
     assert not smt_qualified or (smt and not smt_background)
+    assert not smt_lean or smt_qualified
+    assert not smt_nvidia or smt_lean
     keep = set(AREA.iterdir()) if host_build else set()
     assert not destination.exists() and (host_build or not list(AREA.iterdir()))
     prior = read(QA)
@@ -453,7 +459,7 @@ def run(report, destination, trace_allocation=False, host=HOST, host_build=None,
     try:
         if column_simd:
             kernel.write_bytes(column_kernel(broadcast_simd, hot_simd, specialize, column_solve, registers))
-        guest_bytes, probe_bytes = sources_for_build(kernel, split_fir, schedule, smt)
+        guest_bytes, probe_bytes = sources_for_build(kernel, split_fir, schedule, smt, smt_lean)
         guest.write_bytes(guest_bytes)
         probe.write_bytes(probe_bytes)
         make_package(dsp_package)
@@ -505,9 +511,10 @@ def run(report, destination, trace_allocation=False, host=HOST, host_build=None,
                                   log=fixture.stdout.decode(errors="replace"))
         print("ENGINE128_FIXTURE", report["fixtures"]["metrics"], flush=True)
         if smt:
-            from check_recovery_engine128_smt import campaign
+            from check_recovery_engine128_smt import ENDPOINT, NVIDIA_ENDPOINT, campaign
             campaign(report, exe, env, dsp_package, silent_package, cache, rows_path, analyze, execute,
-                     background=smt_background, qualified=smt_qualified)
+                     background=smt_background, qualified=smt_qualified, lean=smt_lean,
+                     endpoint=NVIDIA_ENDPOINT if smt_nvidia else ENDPOINT)
             report.update(passed=True, whole_voice_rt=False, rack_128_admitted=False)
             return
         if schedule:
@@ -607,6 +614,8 @@ if __name__ == "__main__":
     parser.add_argument("--smt-study", action="store_true", help="control and confirm idle-aware ASIO affinity")
     parser.add_argument("--smt-background", action="store_true", help="apply adaptive affinity between callbacks")
     parser.add_argument("--smt-qualified", action="store_true", help="confirm fixed placement after a quiet-host preflight")
+    parser.add_argument("--smt-lean", action="store_true", help="omit coarse CPU and idle counters during fixed placement")
+    parser.add_argument("--smt-nvidia", action="store_true", help="require the NVIDIA HD Audio stereo pair")
     args = parser.parse_args()
     if args.broadcast_simd and not args.column_simd:
         parser.error("--broadcast-simd requires --column-simd")
@@ -632,6 +641,10 @@ if __name__ == "__main__":
         parser.error("--smt-background requires --smt-study")
     if args.smt_qualified and (not args.smt_study or args.smt_background):
         parser.error("--smt-qualified requires --smt-study without --smt-background")
+    if args.smt_lean and not args.smt_qualified:
+        parser.error("--smt-lean requires --smt-qualified")
+    if args.smt_nvidia and not args.smt_lean:
+        parser.error("--smt-nvidia requires --smt-lean")
     sources = Sources([
         "tools/check_recovery_engine128.py", DSP, GUEST, ENGINE_PROBE, ASIO_PROBE, PREVIOUS_PROBE, PROBE,
         EXP_KERNEL, "tools/recovery_cost_exp_data.rs",
@@ -649,6 +662,7 @@ if __name__ == "__main__":
         *([SCHEDULE_PROBE, SCHEDULE_DRIVER, "docs/RECOVERY_ENGINE128_SCHED_PROTOCOLO.md"]
           if args.schedule_study else []),
         *([SMT_PROBE, SMT_DRIVER, "docs/RECOVERY_ENGINE128_SMT_PROTOCOLO.md"] if args.smt_study else []),
+        *(["docs/RECOVERY_ENGINE128_PHYSICAL_PROTOCOLO.md"] if args.smt_nvidia else []),
     ])
     kind = "smt" if args.smt_study else "schedule" if args.schedule_study else "alloc" if args.alloc_trace else "native"
     number = 1
@@ -662,7 +676,8 @@ if __name__ == "__main__":
         hot_simd=args.hot_simd, specialize=args.specialize_model, column_solve=args.column_solve,
         lto=args.wasm_lto, registers=args.register_simd, schedule=args.schedule_study,
         schedule_survey=args.schedule_survey, schedule_confirm=args.schedule_confirm, smt=args.smt_study,
-        smt_background=args.smt_background, smt_qualified=args.smt_qualified)
+        smt_background=args.smt_background, smt_qualified=args.smt_qualified, smt_lean=args.smt_lean,
+        smt_nvidia=args.smt_nvidia)
     sources.unchanged()
     print("ENGINE128_FINAL", report["passed"], report.get("rack_128_admitted"), report.get("failure", ""), flush=True)
     if not report["passed"]:

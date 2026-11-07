@@ -18,19 +18,25 @@ from prepare_dual_chain import ROOT, sha
 REFERENCE = "evidence/recovery_engine128_schedule05.json"
 RESERVE = "evidence/recovery_engine128_reserve08.json"
 FIR = "evidence/recovery_engine128_broadcast_fir08.json"
+O3_INPUTS = (
+    "evidence/recovery_engine128_schedule04.json",
+    "evidence/recovery_engine128_reserve07.json",
+    "evidence/recovery_engine128_broadcast_fir07.json",
+)
 PROTOCOL = "docs/RECOVERY_ENGINE128_SMT_PROTOCOLO.md"
 SEED = 8
 ARTIFACTS = ("engine_kernel_columns.rs", "engine_guest.rs", "package-dsp/component.wasm",
              "package-control/component.wasm")
 ENDPOINT = "ASIO_CHANNELS\tHD Audio output 1\tHD Audio output 2\t4\t4"
+NVIDIA_ENDPOINT = "ASIO_CHANNELS\tHigh Definition Audio 1\tHigh Definition Audio 2\t4\t4"
 
 
-def analyze_smt(raw, stream, blocks, policy, seed, top, analyze_asio, silent=False):
+def analyze_smt(raw, stream, blocks, policy, seed, top, analyze_asio, silent=False, endpoint=ENDPOINT):
     rows = np.frombuffer(raw, "<u8").reshape(blocks, len(COLUMNS) + 8)
     base = rows[:, :-2]
     metrics = analyze_markers(base.tobytes(), stream, blocks, "control" if silent or not policy else "rack",
                               None, None, analyze_asio)
-    metrics["physical_endpoint_verified"] = ENDPOINT in stream.splitlines()
+    metrics["physical_endpoint_verified"] = endpoint in stream.splitlines()
     cpus, elapsed = rows[:, -2:].T
     if not policy:
         assert np.all(cpus == np.iinfo(np.uint64).max) and np.all(elapsed == 0)
@@ -44,13 +50,15 @@ def analyze_smt(raw, stream, blocks, policy, seed, top, analyze_asio, silent=Fal
     assert [row[0] for row in startup] == placements(top)
     startup_pick = max(startup, key=lambda row: (min(row[1:]), -row[0]))[0]
     qualification = None
-    if policy == "qualified":
+    if policy in ("qualified", "quiet-hold"):
         line, = [line for line in stream.splitlines() if line.startswith("SMT_QUALIFIED\t")]
         _, count, windows = line.split("\t")
         windows = json.loads(windows)
         cpus_in_order = placements(top)
         assert len(windows) == 4 and int(count) >= 4
-        assert all(len(window) == len(cpus_in_order) + 1 and 7000 <= window[0] <= 10000 for window in windows)
+        minimum_system = 8500 if policy == "quiet-hold" else 7000
+        assert all(len(window) == len(cpus_in_order) + 1
+                   and minimum_system <= window[0] <= 10000 for window in windows)
         scores = [(min(window[i + 1] for window in windows), -cpu) for i, cpu in enumerate(cpus_in_order)]
         score, negative_cpu = max(scores)
         assert score >= 9000 and initial == -negative_cpu and seed is None
@@ -59,7 +67,11 @@ def analyze_smt(raw, stream, blocks, policy, seed, top, analyze_asio, silent=Fal
         assert initial == (startup_pick if seed is None else seed)
     assert cpus[0] == initial
     assert bool(int(adaptive)) == (policy in ("adaptive", "background"))
-    assert 0 < informative <= samples
+    if policy == "quiet-hold":
+        assert informative == samples == 0 and metrics["cpu_deltas_ns"] == [0]
+        metrics["cpu_deltas_ns"] = []
+    else:
+        assert 0 < informative <= samples
     assert (load_at == load_batches == 0) if seed is None else (load_at >= 128 and load_batches > 0)
     events = [json.loads(line.split("\t", 1)[1]) for line in stream.splitlines() if line.startswith("SMT_EVENT\t")]
     assert all(row[3] * 4 < row[5] * 3 <= row[4] * 4 for row in events)
@@ -108,17 +120,21 @@ def admitted(control, runs):
 
 
 def campaign(report, exe, env, dsp_package, silent_package, cache, rows_path, analyze_asio, execute,
-             background=False, qualified=False):
-    reference = read(REFERENCE)
+             background=False, qualified=False, lean=False, endpoint=ENDPOINT):
+    if endpoint != ENDPOINT:
+        report["expected_endpoint"] = endpoint
+    inputs = O3_INPUTS if lean and report["wasm_opt_level"] == 3 else (REFERENCE, RESERVE, FIR)
+    reference = read(inputs[0])
     for name in ARTIFACTS:
         assert report["artifact_sha256"][name] == reference["artifact_sha256"][name], name
     assert report["fixtures"]["sha256"] == reference["fixtures"]["sha256"]
-    report["reference_inputs"] = {path: sha(ROOT / path) for path in (REFERENCE, RESERVE, FIR)}
+    report["reference_inputs"] = {path: sha(ROOT / path) for path in inputs}
     top = topology(execute([exe, "schedule-topology"]).stdout.decode())
     assert SEED in placements(top)
     report["topology"] = top
     report["background_campaign"] = background
     report["qualification_campaign"] = qualified
+    report["lean_campaign"] = lean
 
     def capture(label, blocks, policy=None, seed=None):
         rows_path.unlink(missing_ok=True)
@@ -146,7 +162,7 @@ def campaign(report, exe, env, dsp_package, silent_package, cache, rows_path, an
         if code == 0:
             try:
                 item["metrics"] = analyze_smt(raw, stream, blocks, policy, seed, top, analyze_asio,
-                                              silent=label == "control")
+                                              silent=label == "control", endpoint=endpoint)
             except Exception:
                 item["analysis_failure"] = traceback.format_exc()
         m = item.get("metrics", {})
@@ -164,23 +180,24 @@ def campaign(report, exe, env, dsp_package, silent_package, cache, rows_path, an
         for attempt in range(6):
             probe = subprocess.run([str(exe), "smt-endpoints", ASIO_DRIVER], cwd=ROOT, env=env,
                                    capture_output=True, timeout=10)
-            endpoint = probe.stdout.decode(errors="replace").strip()
-            report["endpoint_checks"].append(dict(exit_code=probe.returncode, endpoint=endpoint,
+            found = probe.stdout.decode(errors="replace").strip()
+            report["endpoint_checks"].append(dict(exit_code=probe.returncode, endpoint=found,
                                                   stderr=probe.stderr.decode(errors="replace")))
-            if probe.returncode == 0 and endpoint == ENDPOINT:
+            if probe.returncode == 0 and found == endpoint:
                 break
             if attempt < 5:
                 time.sleep(5)
-        report["endpoint_available"] = probe.returncode == 0 and endpoint == ENDPOINT
+        report["endpoint_available"] = probe.returncode == 0 and found == endpoint
         if not report["endpoint_available"]:
             report["admitted_policy"] = None
             print("SMT128_ENDPOINT_UNAVAILABLE", report["endpoint_checks"], flush=True)
             return
-        report["control"] = capture("control", 1200, "qualified" if qualified else None)
+        fixed = "quiet-hold" if lean else "qualified"
+        report["control"] = capture("control", 1200, fixed if qualified else None)
         if qualified:
-            runs = [capture("confirmation-qualified", 4800, "qualified") for _ in range(2)]
-            report["confirmations"] = [dict(policy="qualified", runs=runs)]
-            report["admitted_policy"] = "qualified" if admitted(report["control"], runs) else None
+            runs = [capture("confirmation-" + fixed, 4800, fixed) for _ in range(2)]
+            report["confirmations"] = [dict(policy=fixed, runs=runs)]
+            report["admitted_policy"] = fixed if admitted(report["control"], runs) else None
             return
         report["pressure"] = []
         adaptive = "background" if background else "adaptive"
