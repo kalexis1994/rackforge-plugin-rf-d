@@ -96,7 +96,7 @@ def summarize(data, reference):
 
 
 def run(report, destination, fir_only=False, hot=False, specialize=False, column_solve=False, lto=False,
-        registers=False):
+        registers=False, wasm_opt=3):
     keep = set(AREA.iterdir())
     paths = {name: AREA / f"reserve-{name}" for name in
              ("probe.rs", "kernel.rs", "circuit.rlib", "probe.wasm", "vectors.bin", "stress.bin")}
@@ -111,11 +111,12 @@ def run(report, destination, fir_only=False, hot=False, specialize=False, column
                   compiler_sha256=sha(Path(COMPILER)), reference_sha256=sha(ROOT / REF),
                   physical_sha256=sha(ROOT / PHYSICAL), variants={})
     rust = [COMPILER, "--edition=2021", "--target", "wasm32-wasip1",
-            "-C", "opt-level=3", "-C", "target-feature=+simd128", "-A", "dead_code", "-A", "unused_imports"]
+            "-C", f"opt-level={wasm_opt}", "-C", "target-feature=+simd128", "-A", "dead_code", "-A", "unused_imports"]
     link = ["-C", "link-arg=-zstack-size=8388608"]
     if lto:
         link += ["-C", "lto=fat", "-C", "codegen-units=1"]
     report["wasm_lto"] = lto
+    report["wasm_opt_level"] = wasm_opt
     env = dict(os.environ, OPENBLAS_NUM_THREADS="1")
     command, stdin, execution = [], None, None
 
@@ -224,6 +225,7 @@ if __name__ == "__main__":
     parser.add_argument("--column-solve", action="store_true", help="verify SIMD elimination across rows")
     parser.add_argument("--lto", action="store_true", help="use a single codegen unit and fat LTO")
     parser.add_argument("--registers", action="store_true", help="verify explicit SIMD accumulator locals")
+    parser.add_argument("--wasm-opt", type=int, choices=(2, 3), default=3)
     args = parser.parse_args()
     if args.specialize and not args.hot:
         parser.error("--specialize requires --hot")
@@ -247,7 +249,7 @@ if __name__ == "__main__":
     report = dict(passed=False, **sources.fields())
     run(report, ROOT / f"evidence/recovery_engine128_{kind}{n:02d}.json", fir_only=args.fir,
         hot=args.hot, specialize=args.specialize, column_solve=args.column_solve, lto=args.lto,
-        registers=args.registers)
+        registers=args.registers, wasm_opt=args.wasm_opt)
     sources.unchanged()
     print("RESERVE_FINAL", report["passed"], report.get("failure", ""), flush=True)
     raise SystemExit(0 if report["passed"] else 1)
