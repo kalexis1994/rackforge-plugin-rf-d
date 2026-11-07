@@ -31,7 +31,12 @@ ENDPOINT = "ASIO_CHANNELS\tHD Audio output 1\tHD Audio output 2\t4\t4"
 NVIDIA_ENDPOINT = "ASIO_CHANNELS\tHigh Definition Audio 1\tHigh Definition Audio 2\t4\t4"
 
 
-def analyze_smt(raw, stream, blocks, policy, seed, top, analyze_asio, silent=False, endpoint=ENDPOINT):
+def fixed_pair_primary(top, cpu):
+    core, = [mask for mask in top["cores"][1:] if mask.bit_count() == 2 and mask & (1 << cpu)]
+    return (core & -core).bit_length() - 1
+
+
+def analyze_smt(raw, stream, blocks, policy, seed, top, analyze_asio, silent=False, endpoint=ENDPOINT, event_cpu=None, event_idle=None):
     rows = np.frombuffer(raw, "<u8").reshape(blocks, len(COLUMNS) + 8)
     base = rows[:, :-2]
     metrics = analyze_markers(base.tobytes(), stream, blocks, "control" if silent or not policy else "rack",
@@ -50,24 +55,34 @@ def analyze_smt(raw, stream, blocks, policy, seed, top, analyze_asio, silent=Fal
     assert [row[0] for row in startup] == placements(top)
     startup_pick = max(startup, key=lambda row: (min(row[1:]), -row[0]))[0]
     qualification = None
-    if policy in ("qualified", "quiet-hold"):
+    if policy in ("qualified", "quiet-hold", "quiet-event"):
         line, = [line for line in stream.splitlines() if line.startswith("SMT_QUALIFIED\t")]
         _, count, windows = line.split("\t")
         windows = json.loads(windows)
         cpus_in_order = placements(top)
         assert len(windows) == 4 and int(count) >= 4
-        minimum_system = 8500 if policy == "quiet-hold" else 7000
+        fixed = [line for line in stream.splitlines() if line.startswith("SMT_FIXED_CPU\t")]
+        assert fixed == ([] if event_cpu is None else [f"SMT_FIXED_CPU\t{event_cpu}"])
+        idle = [line for line in stream.splitlines() if line.startswith("SMT_FIXED_IDLE\t")]
+        assert idle == ([] if event_idle is None else [f"SMT_FIXED_IDLE\t{event_idle}"])
+        if event_cpu is not None:
+            minimum_system = 9000 if event_idle is None else event_idle
+        else:
+            minimum_system = 7000 if policy == "qualified" else 8500
         assert all(len(window) == len(cpus_in_order) + 1
                    and minimum_system <= window[0] <= 10000 for window in windows)
         scores = [(min(window[i + 1] for window in windows), -cpu) for i, cpu in enumerate(cpus_in_order)]
+        if event_cpu is not None:
+            primary = fixed_pair_primary(top, event_cpu)
+            scores = [(score, -event_cpu) for score, cpu in scores if cpu == -primary]
         score, negative_cpu = max(scores)
-        assert score >= 9000 and initial == -negative_cpu and seed is None
+        assert score >= (9500 if event_cpu is not None else 9000) and initial == -negative_cpu and seed is None
         qualification = dict(windows=windows, total_windows=int(count), winning_score=score)
     else:
         assert initial == (startup_pick if seed is None else seed)
     assert cpus[0] == initial
     assert bool(int(adaptive)) == (policy in ("adaptive", "background"))
-    if policy == "quiet-hold":
+    if policy in ("quiet-hold", "quiet-event"):
         assert informative == samples == 0 and metrics["cpu_deltas_ns"] == [0]
         metrics["cpu_deltas_ns"] = []
     else:
@@ -119,8 +134,25 @@ def admitted(control, runs):
             and len(runs) == 2 and all(item.get("metrics", {}).get("gate_passed", False) for item in runs))
 
 
+def valid_warmup(item):
+    metrics = item.get("metrics", {})
+    if not (metrics.get("physical_endpoint_verified") and metrics.get("frames_128_confirmed")
+            and metrics.get("placement_verified")):
+        return False
+    return all(metrics[key] == 0 for key in (
+        "deadline_misses", "gap_over_1_5_periods", "notices", "errors", "host_allocations", "slot_faults",
+        "rack_deadline_misses",
+    ))
+
+
 def campaign(report, exe, env, dsp_package, silent_package, cache, rows_path, analyze_asio, execute,
-             background=False, qualified=False, lean=False, endpoint=ENDPOINT):
+             background=False, qualified=False, lean=False, endpoint=ENDPOINT, event=False, event_cpu=None, event_idle=None, warmup=False):
+    assert not event or (qualified and lean and endpoint == NVIDIA_ENDPOINT)
+    if event:
+        report["event_campaign"] = True
+    if warmup:
+        assert event_cpu is not None and event_idle == 8500
+        report["warmup_campaign"] = True
     if endpoint != ENDPOINT:
         report["expected_endpoint"] = endpoint
     inputs = O3_INPUTS if lean and report["wasm_opt_level"] == 3 else (REFERENCE, RESERVE, FIR)
@@ -132,6 +164,12 @@ def campaign(report, exe, env, dsp_package, silent_package, cache, rows_path, an
     top = topology(execute([exe, "schedule-topology"]).stdout.decode())
     assert SEED in placements(top)
     report["topology"] = top
+    if event_cpu is not None:
+        assert event and fixed_pair_primary(top, event_cpu) in placements(top)
+        report["event_cpu"] = event_cpu
+    if event_idle is not None:
+        assert event_cpu is not None and event_idle == 8500
+        report["event_idle"] = event_idle
     report["background_campaign"] = background
     report["qualification_campaign"] = qualified
     report["lean_campaign"] = lean
@@ -141,8 +179,13 @@ def campaign(report, exe, env, dsp_package, silent_package, cache, rows_path, an
         bank_env = dict(env, RF_D_ENGINE_ROUTE="control" if label == "control" else "rack",
                         RF_D_ENGINE_PACKAGE=str(silent_package if label == "control" else dsp_package),
                         RF_D_ENGINE_CACHE=str(cache))
-        for variable in ("RF_D_SMT_MODE", "RF_D_SMT_SEED", "RF_D_SMT_SUPERVISOR", "RF_D_SCHED_CPU", "RF_D_SCHED_LOAD"):
+        for variable in ("RF_D_SMT_MODE", "RF_D_SMT_SEED", "RF_D_SMT_SUPERVISOR", "RF_D_SMT_FIXED_CPU",
+                         "RF_D_SMT_FIXED_IDLE", "RF_D_SCHED_CPU", "RF_D_SCHED_LOAD"):
             bank_env.pop(variable, None)
+        if event_cpu is not None:
+            bank_env["RF_D_SMT_FIXED_CPU"] = str(event_cpu)
+        if event_idle is not None:
+            bank_env["RF_D_SMT_FIXED_IDLE"] = str(event_idle)
         if policy is not None:
             bank_env["RF_D_SMT_MODE"] = policy
             if background or qualified:
@@ -162,7 +205,8 @@ def campaign(report, exe, env, dsp_package, silent_package, cache, rows_path, an
         if code == 0:
             try:
                 item["metrics"] = analyze_smt(raw, stream, blocks, policy, seed, top, analyze_asio,
-                                              silent=label == "control", endpoint=endpoint)
+                                              silent=label == "control", endpoint=endpoint,
+                                              event_cpu=event_cpu, event_idle=event_idle)
             except Exception:
                 item["analysis_failure"] = traceback.format_exc()
         m = item.get("metrics", {})
@@ -192,12 +236,18 @@ def campaign(report, exe, env, dsp_package, silent_package, cache, rows_path, an
             report["admitted_policy"] = None
             print("SMT128_ENDPOINT_UNAVAILABLE", report["endpoint_checks"], flush=True)
             return
-        fixed = "quiet-hold" if lean else "qualified"
+        fixed = "quiet-event" if event else "quiet-hold" if lean else "qualified"
         report["control"] = capture("control", 1200, fixed if qualified else None)
         if qualified:
+            if warmup:
+                report["warmup"] = capture("warmup-" + fixed, 4800, fixed)
             runs = [capture("confirmation-" + fixed, 4800, fixed) for _ in range(2)]
             report["confirmations"] = [dict(policy=fixed, runs=runs)]
-            report["admitted_policy"] = fixed if admitted(report["control"], runs) else None
+            ready = not warmup or valid_warmup(report["warmup"])
+            report["admitted_policy"] = fixed if ready and admitted(report["control"], runs) else None
+            if event:
+                from check_recovery_engine128_nvidia import compare_offline
+                compare_offline(report, exe, env, dsp_package, cache, rows_path, analyze_asio)
             return
         report["pressure"] = []
         adaptive = "background" if background else "adaptive"

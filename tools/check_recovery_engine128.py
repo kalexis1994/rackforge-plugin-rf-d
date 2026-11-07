@@ -314,6 +314,19 @@ def sources_for_build(kernel=ROOT / EXP_KERNEL, split_fir=False, schedule=False,
             }
         }
     }""")
+        asio = replace_once(asio, "    let after = cycles();", """    if recording && index + 1 == session.capture.rows.len() {
+        if let Some(done) = session.smt.as_ref().and_then(|smt| smt.completion.as_ref()) {
+            done.signal();
+        }
+    }
+    let after = cycles();""")
+        asio = replace_once(asio, "    if start_result == 0 {\n        loop {",
+                            """    if let Some(done) = session.smt.as_ref().and_then(|smt| smt.completion.as_ref()) {
+        if start_result == 0 {
+            smt_error = done.wait().err();
+        }
+    } else if start_result == 0 {
+        loop {""")
         asio = replace_once(asio, "    let session = unsafe { Box::from_raw(raw) };",
                             "    let session = unsafe { Box::from_raw(raw) };\n"
                             "    if let Some(planner) = &mut planner { planner.report(); }")
@@ -369,7 +382,8 @@ def cargo_artifacts(build_log):
 def run(report, destination, trace_allocation=False, host=HOST, host_build=None, wasm_opt=2,
         column_simd=False, broadcast_simd=False, split_fir=False, hot_simd=False, specialize=False,
         column_solve=False, lto=False, registers=False, schedule=False, schedule_survey=False,
-        schedule_confirm=None, smt=False, smt_background=False, smt_qualified=False, smt_lean=False, smt_nvidia=False):
+        schedule_confirm=None, smt=False, smt_background=False, smt_qualified=False, smt_lean=False,
+        smt_nvidia=False, smt_event=False, smt_event_cpu=None, smt_event_idle=None, smt_event_warmup=False):
     assert not broadcast_simd or column_simd
     assert not split_fir or broadcast_simd
     assert not hot_simd or split_fir
@@ -386,6 +400,10 @@ def run(report, destination, trace_allocation=False, host=HOST, host_build=None,
     assert not smt_qualified or (smt and not smt_background)
     assert not smt_lean or smt_qualified
     assert not smt_nvidia or smt_lean
+    assert not smt_event or (smt_nvidia and wasm_opt == 3)
+    assert smt_event_cpu is None or smt_event
+    assert smt_event_idle is None or smt_event_cpu is not None
+    assert not smt_event_warmup or smt_event_idle == 8500
     keep = set(AREA.iterdir()) if host_build else set()
     assert not destination.exists() and (host_build or not list(AREA.iterdir()))
     prior = read(QA)
@@ -514,7 +532,8 @@ def run(report, destination, trace_allocation=False, host=HOST, host_build=None,
             from check_recovery_engine128_smt import ENDPOINT, NVIDIA_ENDPOINT, campaign
             campaign(report, exe, env, dsp_package, silent_package, cache, rows_path, analyze, execute,
                      background=smt_background, qualified=smt_qualified, lean=smt_lean,
-                     endpoint=NVIDIA_ENDPOINT if smt_nvidia else ENDPOINT)
+                     endpoint=NVIDIA_ENDPOINT if smt_nvidia else ENDPOINT, event=smt_event,
+                     event_cpu=smt_event_cpu, event_idle=smt_event_idle, warmup=smt_event_warmup)
             report.update(passed=True, whole_voice_rt=False, rack_128_admitted=False)
             return
         if schedule:
@@ -616,6 +635,10 @@ if __name__ == "__main__":
     parser.add_argument("--smt-qualified", action="store_true", help="confirm fixed placement after a quiet-host preflight")
     parser.add_argument("--smt-lean", action="store_true", help="omit coarse CPU and idle counters during fixed placement")
     parser.add_argument("--smt-nvidia", action="store_true", help="require the NVIDIA HD Audio stereo pair")
+    parser.add_argument("--smt-event", action="store_true", help="wait for completion without supervisor polling")
+    parser.add_argument("--smt-event-cpu", type=int, help="hold one SMT pair with the tighter quiet preflight")
+    parser.add_argument("--smt-event-idle", type=int, choices=(85,), help="reuse the 85%% global preflight")
+    parser.add_argument("--smt-event-warmup", action="store_true", help="prime with a full physical DSP bank")
     args = parser.parse_args()
     if args.broadcast_simd and not args.column_simd:
         parser.error("--broadcast-simd requires --column-simd")
@@ -645,6 +668,14 @@ if __name__ == "__main__":
         parser.error("--smt-lean requires --smt-qualified")
     if args.smt_nvidia and not args.smt_lean:
         parser.error("--smt-nvidia requires --smt-lean")
+    if args.smt_event and (not args.smt_nvidia or args.wasm_opt != 3):
+        parser.error("--smt-event requires --smt-nvidia and --wasm-opt 3")
+    if args.smt_event_cpu is not None and not args.smt_event:
+        parser.error("--smt-event-cpu requires --smt-event")
+    if args.smt_event_idle is not None and args.smt_event_cpu is None:
+        parser.error("--smt-event-idle requires --smt-event-cpu")
+    if args.smt_event_warmup and args.smt_event_idle != 85:
+        parser.error("--smt-event-warmup requires --smt-event-idle 85")
     sources = Sources([
         "tools/check_recovery_engine128.py", DSP, GUEST, ENGINE_PROBE, ASIO_PROBE, PREVIOUS_PROBE, PROBE,
         EXP_KERNEL, "tools/recovery_cost_exp_data.rs",
@@ -663,6 +694,8 @@ if __name__ == "__main__":
           if args.schedule_study else []),
         *([SMT_PROBE, SMT_DRIVER, "docs/RECOVERY_ENGINE128_SMT_PROTOCOLO.md"] if args.smt_study else []),
         *(["docs/RECOVERY_ENGINE128_PHYSICAL_PROTOCOLO.md"] if args.smt_nvidia else []),
+        *(["docs/RECOVERY_ENGINE128_NVIDIA_PROTOCOLO.md", "tools/check_recovery_engine128_nvidia.py"]
+          if args.smt_event else []),
     ])
     kind = "smt" if args.smt_study else "schedule" if args.schedule_study else "alloc" if args.alloc_trace else "native"
     number = 1
@@ -677,7 +710,9 @@ if __name__ == "__main__":
         lto=args.wasm_lto, registers=args.register_simd, schedule=args.schedule_study,
         schedule_survey=args.schedule_survey, schedule_confirm=args.schedule_confirm, smt=args.smt_study,
         smt_background=args.smt_background, smt_qualified=args.smt_qualified, smt_lean=args.smt_lean,
-        smt_nvidia=args.smt_nvidia)
+        smt_nvidia=args.smt_nvidia, smt_event=args.smt_event, smt_event_cpu=args.smt_event_cpu,
+        smt_event_idle=100 * args.smt_event_idle if args.smt_event_idle is not None else None,
+        smt_event_warmup=args.smt_event_warmup)
     sources.unchanged()
     print("ENGINE128_FINAL", report["passed"], report.get("rack_128_admitted"), report.get("failure", ""), flush=True)
     if not report["passed"]:

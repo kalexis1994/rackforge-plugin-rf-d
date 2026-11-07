@@ -54,7 +54,9 @@ struct SmtQualification {
     total_windows: usize,
 }
 
-fn smt_qualify(pacer: &Pacer, pairs: &[(u32, u32)], system_floor: u64) -> HostResult<SmtQualification> {
+fn smt_qualify(pacer: &Pacer, pairs: &[(u32, u32)], system_floor: u64,
+               fixed: Option<u32>) -> HostResult<SmtQualification> {
+    let minimum_core = if fixed.is_some() { 9500 } else { 9000 };
     let mut previous_idle = smt_idle()?;
     let mut previous_system = smt_system_times()?;
     let mut windows: Vec<Vec<u64>> = Vec::with_capacity(4);
@@ -84,19 +86,49 @@ fn smt_qualify(pacer: &Pacer, pairs: &[(u32, u32)], system_floor: u64) -> HostRe
         if windows.len() == 4 { windows.remove(0); }
         windows.push(window);
         if windows.len() < 4 { continue; }
-        let best = pairs.iter().enumerate().map(|(i, &(cpu, _))| {
-            let minimum = windows.iter().map(|row| row[i + 1]).min().unwrap_or(0);
-            (minimum, std::cmp::Reverse(cpu))
-        }).max();
-        if let Some((9000..=10000, std::cmp::Reverse(cpu))) = best {
-            return Ok(SmtQualification { cpu, windows, total_windows });
+        let best = pairs.iter().enumerate().filter(|(_, pair)| fixed.is_none_or(|cpu| cpu == pair.0 || cpu == pair.1))
+            .map(|(i, &(cpu, _))| {
+                let minimum = windows.iter().map(|row| row[i + 1]).min().unwrap_or(0);
+                (minimum, std::cmp::Reverse(cpu))
+            }).max();
+        if let Some((score, std::cmp::Reverse(cpu))) = best {
+            if (minimum_core..=10000).contains(&score) {
+                return Ok(SmtQualification { cpu: fixed.unwrap_or(cpu), windows, total_windows });
+            }
         }
     }
     eprintln!("SMT_QUALIFY_REJECT\t{total_windows}\t{best_system}");
     Err("The preflight did not identify a quiet SMT core within 40 seconds".into())
 }
 
+struct SmtCompletion(HANDLE);
+
+impl SmtCompletion {
+    fn new() -> windows::core::Result<Self> {
+        unsafe { CreateEventW(None, false, false, PCWSTR::null()) }.map(Self)
+    }
+
+    fn wait(&self) -> HostResult<()> {
+        match unsafe { WaitForSingleObject(self.0, 25000) } {
+            WAIT_OBJECT_0 => Ok(()),
+            windows::Win32::Foundation::WAIT_TIMEOUT => Err("Timed out waiting for the last ASIO callback".into()),
+            _ => Err(io::Error::last_os_error().into()),
+        }
+    }
+
+    fn signal(&self) {
+        if unsafe { windows::Win32::System::Threading::SetEvent(self.0) }.is_err() {
+            ASIO_ERRORS.fetch_add(1, Ordering::Relaxed);
+        }
+    }
+}
+
+impl Drop for SmtCompletion {
+    fn drop(&mut self) { let _ = unsafe { CloseHandle(self.0) }; }
+}
+
 struct SmtCapture {
+    completion: Option<SmtCompletion>,
     requested: AtomicU32,
     applied: UnsafeCell<Option<u32>>,
     rows: Box<[UnsafeCell<[u64; 2]>]>,
@@ -157,7 +189,7 @@ fn smt_prepare(blocks: usize) -> HostResult<(Option<SmtPlanner>, Option<SmtCaptu
     };
     let adaptive = match mode.as_str() {
         "adaptive" | "background" => true,
-        "hold" | "qualified" | "quiet-hold" => false,
+        "hold" | "qualified" | "quiet-hold" | "quiet-event" => false,
         _ => return Err("Unknown SMT placement policy".into()),
     };
     let (_, cores) = schedule_cores()?;
@@ -174,10 +206,26 @@ fn smt_prepare(blocks: usize) -> HostResult<(Option<SmtPlanner>, Option<SmtCaptu
         (cpu, (mask & !(1 << cpu)).trailing_zeros())
     }).collect();
     if pairs.len() < 2 { return Err("Need two eligible SMT cores".into()); }
+    let fixed = schedule_cpu("RF_D_SMT_FIXED_CPU")?;
+    if fixed.is_some_and(|cpu| mode != "quiet-event" || !pairs.iter().any(|&(a, b)| a == cpu || b == cpu)) {
+        return Err("The fixed CPU must belong to an eligible SMT pair in quiet-event mode".into());
+    }
     let pacer = Pacer::new()?;
     let qualification = match mode.as_str() {
-        "qualified" => Some(smt_qualify(&pacer, &pairs, 7000)?),
-        "quiet-hold" => Some(smt_qualify(&pacer, &pairs, 8500)?),
+        "qualified" => Some(smt_qualify(&pacer, &pairs, 7000, None)?),
+        "quiet-hold" => Some(smt_qualify(&pacer, &pairs, 8500, None)?),
+        "quiet-event" => {
+            if let Some(cpu) = fixed { eprintln!("SMT_FIXED_CPU\t{cpu}"); }
+            let system_floor = match std::env::var("RF_D_SMT_FIXED_IDLE").as_deref() {
+                Ok("8500") if fixed.is_some() => {
+                    eprintln!("SMT_FIXED_IDLE\t8500");
+                    8500
+                }
+                Err(std::env::VarError::NotPresent) => if fixed.is_some() { 9000 } else { 8500 },
+                _ => return Err("Unknown SMT fixed idle requirement".into()),
+            };
+            Some(smt_qualify(&pacer, &pairs, system_floor, fixed)?)
+        }
         _ => None,
     };
     let before = smt_idle()?;
@@ -194,15 +242,18 @@ fn smt_prepare(blocks: usize) -> HostResult<(Option<SmtPlanner>, Option<SmtCaptu
     }
     let seed = schedule_cpu("RF_D_SMT_SEED")?;
     let initial = seed.unwrap_or_else(|| qualification.as_ref().map_or(preferred, |pass| pass.cpu));
-    let sibling = pairs.iter().find(|(cpu, _)| *cpu == initial).ok_or("Unknown placement seed")?.1;
+    let sibling = pairs.iter().find_map(|&(a, b)| {
+        if a == initial { Some(b) } else if fixed == Some(b) { Some(a) } else { None }
+    }).ok_or("Unknown placement seed")?;
     let capture = SmtCapture {
+        completion: (mode == "quiet-event").then(SmtCompletion::new).transpose()?,
         requested: AtomicU32::new(initial),
         applied: UnsafeCell::new(None),
         rows: (0..blocks).map(|_| UnsafeCell::new([0; 2])).collect(),
         background,
     };
     let planner = SmtPlanner {
-        adaptive, observe: mode != "quiet-hold", background, supervisor, pairs, startup, initial,
+        adaptive, observe: !matches!(mode.as_str(), "quiet-hold" | "quiet-event"), background, supervisor, pairs, startup, initial,
         selected: initial, stress: seed.map(|_| sibling),
         load: None, load_at: None, pacer, history: [after; SMT_WINDOW], sample: 0, low: 0, last_move: 0,
         informative: 0, events: Vec::with_capacity(blocks / SMT_COOLDOWN + 1),
