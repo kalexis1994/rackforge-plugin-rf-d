@@ -16,7 +16,7 @@ EXTRA=['v(ic1_sum)','i(vmixer)','i(vbend)','i(vtune)','i(vkeyboard)','i(vmod)','
 OWN=['tools/check_vco_family.py','tools/vco_family.py','docs/VCO_FAMILIA_PROTOCOLO.md','tools/vco1_circuit_reference.py','tools/vco1_circuit_probes.py','tools/render_vco1_circuit.py','tools/vco_cv_load_analysis.py','tools/vco_family_raw.py','docs/VCO_FAMILIA_EXPORT_BINARIO.md','evidence/vco_family_binary_control01.json']
 LAST=None
 
-def run(scene,sink):
+def run(scene,sink,pack=PACK):
     global LAST
     export=AREA/'family.raw';deck=AREA/'family.cir';text,meta=netlist(scene,export)
     text=text.replace('.save '+' '.join(VECTORS),'.save '+' '.join(VECTORS+EXTRA),1)
@@ -34,7 +34,7 @@ def run(scene,sink):
     m=r['measurements'];assert m['period_spread_relative']<=1e-5 and m['cycle_charge_check']['relative_imbalance']<=.002
     r['reduction'],edges=cycle(raw)
     first=max(0,int(np.searchsorted(raw[:,0],edges[-2]))-2);last=raw[first:].copy()
-    r['window']=encode_window(last,sink);r['window_pack']=PACK.relative_to(ROOT).as_posix();assert decode_window(r['window'],PACK).tobytes()==last.astype('<f8').tobytes()
+    r['window']=encode_window(last,sink);r['window_pack']=pack.relative_to(ROOT).as_posix();assert decode_window(r['window'],pack).tobytes()==last.astype('<f8').tobytes()
     controls=np.array([-2.1,-2.1,scene.keyboard_v,-2.1,-2.1,-2.1]);cv=(controls-last[:,17,None])/RESISTANCE
     bus=(scene.imposed_mixer_v-last[:,13])/33000.;w=(last[:,3]/12500.+scene.imposed_mixer_v/33000.)/(2/12500.+1/33000.)
     r['original_port_laws']=dict(cv_source_max_error_a=float(np.max(np.abs(cv+last[:,19:25]))),bus_source_max_error_a=float(np.max(np.abs(bus+last[:,18]))),wiper_max_error_v=float(np.max(np.abs(w-last[:,13]))))
