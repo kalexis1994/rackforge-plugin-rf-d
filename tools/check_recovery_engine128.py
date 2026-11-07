@@ -383,7 +383,7 @@ def run(report, destination, trace_allocation=False, host=HOST, host_build=None,
         column_simd=False, broadcast_simd=False, split_fir=False, hot_simd=False, specialize=False,
         column_solve=False, lto=False, registers=False, schedule=False, schedule_survey=False,
         schedule_confirm=None, smt=False, smt_background=False, smt_qualified=False, smt_lean=False,
-        smt_nvidia=False, smt_event=False, smt_event_cpu=None, smt_event_idle=None, smt_event_warmup=False):
+        smt_nvidia=False, smt_event=False, smt_event_cpu=None, smt_event_idle=None, smt_event_warmup=False, mono_voice=False):
     assert not broadcast_simd or column_simd
     assert not split_fir or broadcast_simd
     assert not hot_simd or split_fir
@@ -404,6 +404,7 @@ def run(report, destination, trace_allocation=False, host=HOST, host_build=None,
     assert smt_event_cpu is None or smt_event
     assert smt_event_idle is None or smt_event_cpu is not None
     assert not smt_event_warmup or smt_event_idle == 8500
+    assert not mono_voice or (smt_event and smt_event_cpu == 9 and smt_event_idle == 8500)
     keep = set(AREA.iterdir()) if host_build else set()
     assert not destination.exists() and (host_build or not list(AREA.iterdir()))
     prior = read(QA)
@@ -413,6 +414,7 @@ def run(report, destination, trace_allocation=False, host=HOST, host_build=None,
     dll = AREA / "recovery-host-dsp.dll"
     guest = AREA / "engine_guest.rs"
     probe = AREA / "engine_probe.rs"
+    mono_guest = AREA / "engine_mono_guest.rs"
     circuit = AREA / "librf_d_circuit.rlib"
     sdk = AREA / "librackforge_plugin_sdk.rlib"
     dsp_package, silent_package = AREA / "package-dsp", AREA / "package-control"
@@ -438,6 +440,12 @@ def run(report, destination, trace_allocation=False, host=HOST, host_build=None,
         core = deps / HOST_CORE
         runtime_dependencies = [core, *deps.glob("librackforge_plugin_runtime-*.rlib"),
                                 *deps.glob("libwasmtime-*.rlib")]
+    mono_dependencies = {}
+    if mono_voice:
+        for name in ("rackforge_midi_api", "rackforge_plugin_api"):
+            dependency, = deps.glob(f"lib{name}-*.rlib")
+            mono_dependencies[name] = dependency
+        runtime_dependencies.extend(mono_dependencies.values())
     registry = Path(COMPILER).parents[4] / ".cargo/registry/src"
     windows_imports = sorted(registry.glob("*/windows_x86_64_msvc-*/lib/*.lib"))
     native_libs = sorted((deps.parent / "build").glob("*/out/*.lib"))
@@ -479,6 +487,10 @@ def run(report, destination, trace_allocation=False, host=HOST, host_build=None,
             kernel.write_bytes(column_kernel(broadcast_simd, hot_simd, specialize, column_solve, registers))
         guest_bytes, probe_bytes = sources_for_build(kernel, split_fir, schedule, smt, smt_lean)
         guest.write_bytes(guest_bytes)
+        if mono_voice:
+            from check_recovery_engine128_mono import guest_source, host_source
+            mono_guest.write_bytes(guest_source())
+            probe_bytes = host_source(probe_bytes, replace_once)
         probe.write_bytes(probe_bytes)
         make_package(dsp_package)
         make_package(silent_package)
@@ -498,7 +510,8 @@ def run(report, destination, trace_allocation=False, host=HOST, host_build=None,
              ROOT / "crates/rf-d-circuit/src/lib.rs", "-o", circuit],
             [COMPILER, "--edition=2024", *flags, *wasm, "--crate-type", "rlib", "--crate-name", "rackforge_plugin_sdk",
              host / "crates/rackforge-plugin-sdk/src/lib.rs", "-o", sdk],
-            *[[COMPILER, "--edition=2021", *flags, *wasm, *wasm_link, guest,
+            *[[COMPILER, "--edition=2021", *flags, *wasm, *wasm_link,
+               mono_guest if mono_voice and path == dsp_package else guest,
                "--extern", f"rf_d_circuit={circuit}", "--extern", f"rackforge_plugin_sdk={sdk}",
                *(["--cfg", "engine_silence"] if path == silent_package else []), "-o", path / "component.wasm"]
               for path in [dsp_package, silent_package]],
@@ -507,13 +520,15 @@ def run(report, destination, trace_allocation=False, host=HOST, host_build=None,
              *[arg for p in native_dirs for arg in ("-L", f"native={p}")],
              "-L", f"native={asio_dir}", "-l", "static=asio", probe,
              "--extern", f"cpal={cpal}", "--extern", f"windows={windows}",
-             "--extern", f"rackforge_core={core}", "-o", exe],
+             "--extern", f"rackforge_core={core}",
+             *[arg for name, path in mono_dependencies.items() for arg in ("--extern", f"{name}={path}")],
+             "-o", exe],
         ]:
             built = execute(args)
             report["build"].append(dict(command=command, stderr=packed(built.stderr)))
         report["artifact_sha256"] = {p.relative_to(AREA).as_posix(): sha(p) for p in [
             guest, probe, sdk, circuit, dll, exe, *dsp_package.rglob("*.*"), *silent_package.rglob("*.*"),
-            *([kernel] if column_simd else []),
+            *([kernel] if column_simd else []), *([mono_guest] if mono_voice else []),
         ]}
         if trace_allocation:
             traced = execute([exe, "engine-allocation", silent_package, cache])
@@ -521,6 +536,11 @@ def run(report, destination, trace_allocation=False, host=HOST, host_build=None,
             assert "ENGINE_ALLOC " in stack
             report.update(passed=True, allocation_trace=stack, log=traced.stdout.decode(errors="replace"),
                           scope="offline silent PluginInstance, 128 frames, after four warm calls")
+            return
+        if mono_voice:
+            from check_recovery_engine128_mono import campaign
+            campaign(report, exe, env, dsp_package, cache, rows_path, execute)
+            report.update(passed=True, whole_voice_rt=False, rack_128_admitted=False)
             return
         fixture = execute([exe, "engine-fixtures", dsp_package, cache])
         fixture_raw = rows_path.read_bytes()
@@ -639,6 +659,7 @@ if __name__ == "__main__":
     parser.add_argument("--smt-event-cpu", type=int, help="hold one SMT pair with the tighter quiet preflight")
     parser.add_argument("--smt-event-idle", type=int, choices=(85,), help="reuse the 85%% global preflight")
     parser.add_argument("--smt-event-warmup", action="store_true", help="prime with a full physical DSP bank")
+    parser.add_argument("--mono-reference", action="store_true", help="verify the nominal full voice and its guarded physical cost")
     args = parser.parse_args()
     if args.broadcast_simd and not args.column_simd:
         parser.error("--broadcast-simd requires --column-simd")
@@ -676,6 +697,12 @@ if __name__ == "__main__":
         parser.error("--smt-event-idle requires --smt-event-cpu")
     if args.smt_event_warmup and args.smt_event_idle != 85:
         parser.error("--smt-event-warmup requires --smt-event-idle 85")
+    mono_sources = []
+    if args.mono_reference:
+        if not (args.smt_event and args.smt_event_cpu == 9 and args.smt_event_idle == 85):
+            parser.error("--mono-reference requires the NVIDIA CPU 9 event policy")
+        from check_recovery_engine128_mono import GUEST as MONO_GUEST, HOST as MONO_HOST, NODE, PATCH, PROTOCOL, RUNNER, VOICE
+        mono_sources = [MONO_GUEST, MONO_HOST, NODE, PATCH, PROTOCOL, RUNNER, VOICE]
     sources = Sources([
         "tools/check_recovery_engine128.py", DSP, GUEST, ENGINE_PROBE, ASIO_PROBE, PREVIOUS_PROBE, PROBE,
         EXP_KERNEL, "tools/recovery_cost_exp_data.rs",
@@ -696,8 +723,9 @@ if __name__ == "__main__":
         *(["docs/RECOVERY_ENGINE128_PHYSICAL_PROTOCOLO.md"] if args.smt_nvidia else []),
         *(["docs/RECOVERY_ENGINE128_NVIDIA_PROTOCOLO.md", "tools/check_recovery_engine128_nvidia.py"]
           if args.smt_event else []),
+        *mono_sources,
     ])
-    kind = "smt" if args.smt_study else "schedule" if args.schedule_study else "alloc" if args.alloc_trace else "native"
+    kind = "mono" if args.mono_reference else "smt" if args.smt_study else "schedule" if args.schedule_study else "alloc" if args.alloc_trace else "native"
     number = 1
     while (ROOT / f"evidence/recovery_engine128_{kind}{number:02d}.json").exists():
         number += 1
@@ -712,7 +740,7 @@ if __name__ == "__main__":
         smt_background=args.smt_background, smt_qualified=args.smt_qualified, smt_lean=args.smt_lean,
         smt_nvidia=args.smt_nvidia, smt_event=args.smt_event, smt_event_cpu=args.smt_event_cpu,
         smt_event_idle=100 * args.smt_event_idle if args.smt_event_idle is not None else None,
-        smt_event_warmup=args.smt_event_warmup)
+        smt_event_warmup=args.smt_event_warmup, mono_voice=args.mono_reference)
     sources.unchanged()
     print("ENGINE128_FINAL", report["passed"], report.get("rack_128_admitted"), report.get("failure", ""), flush=True)
     if not report["passed"]:
