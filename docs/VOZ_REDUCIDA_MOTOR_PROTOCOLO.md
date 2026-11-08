@@ -107,3 +107,16 @@ cero y volver a la semilla afín si falla la
 convergencia. Las 108 leyes, el Jacobiano y los
 límites permanecen. Publicar la semilla junto al
 estado sólo después de aceptar el paso y el bloque.
+
+Como segundo predictor, derivar la interpolación
+cuadrática de Radau en el extremo del paso
+anterior. En incrementos, la derivada por
+ancho es 2,5 veces el segundo incremento menos
+4,5 veces el primero. Proyectar sólo al mismo
+KEY y a un ancho nuevo de hasta el doble.
+El predictor afecta al contorno y al BUS.
+Volver a la semilla anterior sin extrapolar
+si el solve falla. Mantener los gates de
+residuo y corrección, el calendario y la
+partición 64/128. Ninguna etapa provisional
+altera la historia aceptada.

@@ -151,3 +151,17 @@ máximo siguió en 7,82 µV. La semilla acompaña
 el estado aceptado y el render registró cero
 asignaciones.
 [Reutilización contrastada](../evidence/rf_d_reduced_engine09.json)
+
+La extrapolación desde la última etapa aceptada
+redujo las iteraciones positivas de 33.236 a
+22.348 con los mismos 10.997 pasos. En los
+frames 74–82 redujo las direcciones calculadas
+de 7.093 a 4.811 y el tiempo de 2,518 s a 1,591 s.
+El banco sin instrumentar completó 128 frames
+en 7,244 s en la reserva positiva y 2,393 s
+en la negativa. Conservó los mismos ocho ticks
+de cruce, el error nodal de 7,82 µV, los límites
+de R59/R60 y J7 y la identidad 64/128. Ambos
+bloques exceden el presupuesto físico.
+[Perfil de la extrapolación](../evidence/rf_d_reduced_engine10.json),
+[banco sin instrumentar](../evidence/rf_d_reduced_engine11.json)

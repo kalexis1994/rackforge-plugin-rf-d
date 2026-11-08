@@ -101,6 +101,16 @@ struct Running {
     frame: usize,
     proposal: usize,
     junctions: [f64; audio::STAGE_LAWS],
+    continuation: Option<Continuation>,
+}
+
+#[derive(Clone, Copy)]
+struct Continuation {
+    // Endpoint derivative of the previous Radau interpolant times its width.
+    contour: [f64; C],
+    bus: f64,
+    width: usize,
+    key: f64,
 }
 
 pub struct Engine {
@@ -230,6 +240,7 @@ impl Engine {
         let ceiling = TICKS / cap;
         let initial = Running {
             state, phase, frame: 0, proposal: ceiling, junctions: [0.; audio::STAGE_LAWS],
+            continuation: None,
         };
         Ok(Self {
             maps, initial, running: initial, ceiling,
@@ -302,19 +313,45 @@ impl Engine {
         Ok(Evaluation { contour, response, shared, current, panel_j, phase: phases[1] })
     }
 
-    fn step(&self, old: Running, key: f64, width: usize, profile: &mut StepProfile) -> Result<Accepted, StepError> {
+    fn step(
+        &self, old: Running, key: f64, width: usize, profile: &mut StepProfile,
+    ) -> Result<Accepted, StepError> {
+        if let Some(prior) = old.continuation.as_ref().filter(|prior| {
+            prior.key == key && width <= 2 * prior.width
+        }) {
+            if let Ok(accepted) = self.solve_step(old, key, width, Some(prior), profile) {
+                return Ok(accepted);
+            }
+        }
+        self.solve_step(old, key, width, None, profile)
+    }
+
+    fn solve_step(
+        &self, old: Running, key: f64, width: usize,
+        prior: Option<&Continuation>, profile: &mut StepProfile,
+    ) -> Result<Accepted, StepError> {
         let h = width as f64 / (RATE * TICKS) as f64;
         let map = &self.maps[width.trailing_zeros() as usize];
         let offset = std::array::from_fn(|i| value(old.state, audio::NODE[i]) - self.audio_anchor[i]);
         let history = map.history(offset);
         let before = COLLECTORS.map(|k| value(old.state, k));
         let mut delta = [0.; 2 * C];
+        let mut bus = [offset[62]; 2];
+        if let Some(prior) = prior {
+            let ratio = width as f64 / prior.width as f64;
+            for (stage, fraction) in [1. / 3., 1.].into_iter().enumerate() {
+                let scale = fraction * ratio;
+                for (change, tangent) in delta[stage * C..(stage + 1) * C].iter_mut().zip(prior.contour) {
+                    *change = scale * tangent;
+                }
+                bus[stage] += scale * prior.bus;
+            }
+        }
         if key - value(old.state, 22) > 0.5 {
             let seed = key - 0.5 - old.state.high[22] - old.state.low[22];
             delta[22] = seed;
             delta[22 + C] = seed;
         }
-        let mut bus = [offset[62]; 2];
         let mut seed = std::array::from_fn(|i| old.junctions[i % audio::STAGE_LAWS]);
         for iterations in 1..=80 {
             let e = self.evaluate::<true>(old, map, &history, key, h, delta, bus, &seed, profile)?;
@@ -340,6 +377,11 @@ impl Engine {
                 running.state = state;
                 running.phase = e.phase;
                 running.junctions.copy_from_slice(&e.response.junctions[audio::STAGE_LAWS..]);
+                running.continuation = Some(Continuation {
+                    contour: std::array::from_fn(|k| 2.5 * delta[C + k] - 4.5 * delta[k]),
+                    bus: 2.5 * (bus[1] - offset[62]) - 4.5 * (bus[0] - offset[62]),
+                    width, key,
+                });
                 let stages = e.contour.each_ref().map(|s| {
                     COLLECTORS.map(|k| s.now.high[k] + s.now.low[k])
                 });
