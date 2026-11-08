@@ -57,3 +57,37 @@ fallos del slot ni plazos perdidos, y máximo de
 1,333333… ms. Usar un banco físico separado
 para comprobar el periodo efectivo y la
 variabilidad del callback.
+
+## Rango alrededor del cruce positivo
+
+Probar con el mismo mapa excursiones de ±120 mV
+en R59 y ±12 mV en el pin 16, conservando los
+límites de error de la primera etapa. La nueva
+banda en R59 abarca las tensiones observadas en
+torno al cruce positivo. El contraste conserva
+la polarización de 2 V y separa esta banda
+local de las excursiones completas del contorno.
+Registrar el rango de corrientes y medir el
+coste sobre una escena larga con ambos puertos
+cerca de los nuevos límites.
+
+El primer intento amplio conservó las corrientes
+de retorno dentro del límite y excedió el error
+RMS de J7 cuando sólo se excitó el filtro.
+Mantener también BE/BC de Q26 PNP y Q28 NPN
+en el mapa amplio, con las tarjetas nominales de
+cutoff. Mantener C18 y los mismos límites.
+
+Con Q26/Q28, las corrientes pasaron de nuevo y
+el filtro aislado conservó un error RMS fuera
+del límite a ±12 mV. Repetir el ensayo con una
+banda de ±3 mV, sin mover el límite de 0,3 %.
+Conservar ±120 mV en R59 y el mismo mapa con
+22 leyes. Medir la banda resultante con la
+misma campaña física a 128 frames efectivos.
+
+Comparar la banda de ±3 mV con el mapa de
+18 leyes y la tangente local de Q26/Q28. R60
+y C18 conservan sus incidencias. Esta variante
+debe repetir los tres estímulos, los límites
+de corriente y J7, y la campaña de RackForge.

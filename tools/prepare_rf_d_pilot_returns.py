@@ -13,6 +13,7 @@ BASE_NODES = (61, 66, 6, 32, 5, 65)
 # Q18 and the first VCA's signal pair, in circuit66 coordinates.
 FIRST_VCA = ((32, 28, 29), (25, 30, 27), (26, 31, 27))
 LAWS = 12 + 2 * len(FIRST_VCA)
+WIDE_LAWS = LAWS + 4
 
 
 def foh(a, b, h):
@@ -36,7 +37,7 @@ def foh(a, b, h):
     return exp[:n, :n], exp[:n, n:n + m] / scale - new, new
 
 
-def model(h):
+def model(h, wide=False):
     raw = build(cases()[1], h)
     a, g, c, d, e = (raw[key] for key in ("a", "g", "c", "d", "e"))
     n, charges = len(g), len(a)
@@ -51,6 +52,20 @@ def model(h):
     iexp = np.r_[raw["iexp"], 1e-14 * np.exp(sense @ raw["dc"])]
     d = np.column_stack((d, inject))
     e = np.vstack((e, sense))
+    if wide:
+        # PNP Q26 and NPN Q28, with the latter's emitter tied to ground.
+        sense = np.zeros((4, n))
+        inject = np.zeros((n, 4))
+        for j, base, collector, emitter, sign in ((0, 62, 64, 63, -1.), (2, 63, 65, None, 1.)):
+            sense[j:j + 2, base] = sign / VT
+            sense[j + 1, collector] = -sign / VT
+            if emitter is not None:
+                sense[j, emitter] = -sign / VT
+                inject[emitter, j:j + 2] = sign * np.array([-1.01, 1.])
+            inject[[base, collector], j:j + 2] = sign * np.array([[.01, .2], [1., -1.2]])
+        iexp = np.r_[iexp, 1e-14 * np.exp(sense @ raw["dc"])]
+        d = np.column_stack((d, inject))
+        e = np.vstack((e, sense))
     inputs = np.column_stack((raw["b"], np.eye(n)[:, 32] / R59, np.eye(n)[:, 62] / R16))
     lhs = np.block([[g, a.T * c], [a, np.zeros((charges, charges))]])
     forcing = np.column_stack((inputs, -d))
@@ -75,8 +90,8 @@ def model(h):
     return data, checks
 
 
-def emit_data(path, h):
-    data, checks = model(h)
+def emit_data(path, h, wide=False):
+    data, checks = model(h, wide)
 
     def rust(value):
         return "[" + ",".join(map(rust, value)) + "]" if isinstance(value, list) else f"{value:.17e}"

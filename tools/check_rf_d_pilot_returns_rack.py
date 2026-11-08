@@ -73,7 +73,11 @@ def metrics(raw, stderr):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--physical", action="store_true")
+    parser.add_argument("--physical-cpu", type=int, help="logical CPU for all three physical banks (default 9)")
     options = parser.parse_args()
+    if options.physical_cpu is not None and (not options.physical or not 0 <= options.physical_cpu < 64):
+        parser.error("--physical-cpu requires --physical and a logical CPU from 0 to 63")
+    cpu = 9 if options.physical_cpu is None else options.physical_cpu
     assert not list(AREA.iterdir())
     control, native = next((path, report) for path in sorted(
         (ROOT / "evidence").glob("rf_d_pilot_returns[0-9][0-9].json"), reverse=True)
@@ -82,7 +86,7 @@ def main():
     while (output := ROOT / f"evidence/rf_d_pilot_returns_rack{seq:02}.json").exists():
         seq += 1
     sources = Sources((*SOURCES, *ASIO_SOURCES) if options.physical else SOURCES)
-    report = dict(passed=False, physical_measured=False, audio_device_opened=False, **sources.fields(),
+    report = dict(passed=False, physical_measured=False, audio_device_opened=False, wide=native.get("wide", False), **sources.fields(),
                   native_sha256=sha(control), host_revision=HOST_REVISION, margin_ns=MARGIN,
                   builds={}, trials={})
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
@@ -105,7 +109,8 @@ def main():
         deps = HOST / "target/release/deps"
         core = deps / HOST_CORE
         report["core_sha256"] = sha(core)
-        code, report["maps"] = generate()
+        report["cutoff_laws"] = native.get("cutoff_laws", report["wide"])
+        code, report["maps"] = generate(report["cutoff_laws"])
         assert report["maps"] == native["maps"]
         report["affinity"] = pin()
         path = AREA / "reduced-rack-package"
@@ -113,7 +118,8 @@ def main():
         dll = path / "rf-d-loaded.dll"
         component = plugin(code)
         _, report["builds"]["plugin"] = run([COMPILER, "--edition=2021", "-C", "opt-level=3", "-C", "target-feature=+fma",
-            "-C", "panic=abort", "-A", "dead_code", "--cfg", "pilot_returns", "--crate-type", "cdylib",
+            "-C", "panic=abort", "-A", "dead_code", "--cfg", "pilot_returns",
+            *(["--cfg", "pilot_wide_returns"] if report["wide"] else []), "--crate-type", "cdylib",
             emit("pilot-native.rs", component), "-o", dll])
         report["component_sha256"] = sha(dll)
         imports = sorted((Path(COMPILER).parents[4] / ".cargo/registry/src").glob("*/windows_x86_64_msvc-*/lib/*.lib"))
@@ -141,7 +147,7 @@ def main():
             kernel.SetProcessAffinityMask.restype = wintypes.BOOL
             if not kernel.SetProcessAffinityMask(kernel.GetCurrentProcess(), report["affinity"]["original_mask"]):
                 raise ctypes.WinError(ctypes.get_last_error())
-            physical_campaign(path, component, report, env)
+            physical_campaign(path, component, report, env, cpu)
         sources.unchanged()
     except Exception:
         report["failure"] = traceback.format_exc()

@@ -1,5 +1,9 @@
 //! Repeatable pilot workload used only in the native and RackForge banks.
 use crate::{plant::Drive, score::SCENE, voice::{Error, Event, Frame, Message, Voice, MAX_BLOCK}};
+#[cfg(not(pilot_wide_returns))]
+const PEAK: [f64; 2] = [0.014, 0.0009];
+#[cfg(pilot_wide_returns)]
+const PEAK: [f64; 2] = [0.11, 0.0029];
 
 pub const LENGTH: usize = 48_128;
 
@@ -32,8 +36,8 @@ impl Scene {
         }
         if self.driven {
             let drives: [Drive; MAX_BLOCK] = std::array::from_fn(|i| Drive {
-                volume_delta_v: 0.014 * triangle(self.frame + i + 120, 480),
-                filter_delta_v: 0.0009 * triangle(self.frame + i + 73, 292),
+                volume_delta_v: PEAK[0] * triangle(self.frame + i + 120, 480),
+                filter_delta_v: PEAK[1] * triangle(self.frame + i + 73, 292),
             });
             self.voice.render_with_returns(&events[..count], frames, &drives[..frames.len()])?;
         } else {

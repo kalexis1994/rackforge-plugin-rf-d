@@ -1,7 +1,11 @@
 //! Pilot charge FOH with two explicit contour-voltage drives.
 use crate::{pilot_law::{law, solve}, return_maps as map};
 pub use crate::pilot_law::Error;
-const JUNCTIONS: usize = 18;
+const JUNCTIONS: usize = map::IEXP.len();
+#[cfg(not(pilot_wide_returns))]
+pub const DRIVE_RANGE: [f64; 2] = [0.015, 0.001];
+#[cfg(pilot_wide_returns)]
+pub const DRIVE_RANGE: [f64; 2] = [0.12, 0.003];
 
 #[derive(Clone, Copy, Default)]
 pub struct Drive {
@@ -11,7 +15,7 @@ pub struct Drive {
 
 impl Drive {
     pub fn valid(self) -> bool {
-        self.volume_delta_v.abs() <= 0.015 && self.filter_delta_v.abs() <= 0.001
+        self.volume_delta_v.abs() <= DRIVE_RANGE[0] && self.filter_delta_v.abs() <= DRIVE_RANGE[1]
     }
 
     pub fn interpolate(self, end: Self, fraction: f64) -> Self {

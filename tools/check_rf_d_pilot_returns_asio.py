@@ -8,7 +8,7 @@ from check_recovery_engine128 import (
     HOST_CORE, analyze, sources_for_build,
 )
 from check_recovery_engine128_schedule import topology
-from check_recovery_engine128_smt import NVIDIA_ENDPOINT, admitted, analyze_smt
+from check_recovery_engine128_smt import NVIDIA_ENDPOINT, admitted, analyze_smt, fixed_pair_primary
 from check_recovery_host128 import ASIO_DRIVER, asio_profile, read_override, restore_override
 from check_rf_d_pilot_returns import AREA, COMPILER, ROOT, emit
 from check_rf_d_reduced_engine_rack import HOST, HOST_COMPILER, package
@@ -20,9 +20,9 @@ SOURCES = (OWN, ASIO_PROBE, ENGINE_PROBE, PREVIOUS_PROBE, PROBE, SCHEDULE_PROBE,
            "tools/check_recovery_host128.py", "docs/RECOVERY_ENGINE128_NVIDIA_PROTOCOLO.md")
 
 
-def campaign(path, source, rack, env):
+def campaign(path, source, rack, env, cpu):
     env = env.copy()
-    report = rack["physical"] = dict(passed=False, physical_measured=False, builds={}, runs=[])
+    report = rack["physical"] = dict(passed=False, physical_measured=False, cpu=cpu, builds={}, runs=[])
     for key in tuple(env):
         if key.startswith(("RF_D_SMT_", "RF_D_SCHED_")):
             del env[key]
@@ -46,7 +46,8 @@ def campaign(path, source, rack, env):
     unsafe { slice::from_raw_parts_mut(block.output_interleaved, frames * 2) }.fill(0.);""" + source[end:]
     proc, report["builds"]["control"] = run([
         COMPILER, "--edition=2021", "-C", "opt-level=3", "-C", "target-feature=+fma",
-        "-C", "panic=abort", "-A", "dead_code", "--cfg", "pilot_returns", "--crate-type", "cdylib",
+        "-C", "panic=abort", "-A", "dead_code", "--cfg", "pilot_returns",
+        *(["--cfg", "pilot_wide_returns"] if rack["wide"] else []), "--crate-type", "cdylib",
         emit("pilot-silent.rs", source), "-o", paths["control"] / "rf-d-loaded.dll",
     ])
     assert proc.returncode == 0, proc.stderr.decode(errors="replace")
@@ -84,6 +85,7 @@ def campaign(path, source, rack, env):
         proc, report["topology_probe"] = run([exe, "schedule-topology"])
         assert proc.returncode == 0
         top = topology(proc.stdout.decode())
+        fixed_pair_primary(top, cpu)
         rows = AREA / "pilot-asio-rows.bin"
         for label, blocks in (("control", 1200), ("pilot", 4800), ("pilot", 4800)):
             rows.unlink(missing_ok=True)
@@ -91,14 +93,14 @@ def campaign(path, source, rack, env):
                             RF_D_ENGINE_PACKAGE=str(paths[label]),
                             RF_D_ENGINE_CACHE=str(AREA / "pilot-cache"), RF_D_ENGINE_ROWS=str(rows),
                             RF_D_SMT_MODE="quiet-event", RF_D_SMT_SUPERVISOR="1",
-                            RF_D_SMT_FIXED_CPU="9", RF_D_SMT_FIXED_IDLE="8500")
+                            RF_D_SMT_FIXED_CPU=str(cpu), RF_D_SMT_FIXED_IDLE="8500")
             proc, item = run([exe, "asio-bench", ASIO_DRIVER, blocks, "dsp"], controls)
             item.update(label=label, blocks=blocks, rows=packed(rows.read_bytes() if rows.exists() else b""))
             report["runs"].append(item)
             if proc.returncode == 0:
                 result = analyze_smt(rows.read_bytes(), proc.stderr.decode(), blocks, "quiet-event",
                                      None, top, analyze, silent=label == "control",
-                                     endpoint=NVIDIA_ENDPOINT, event_cpu=9, event_idle=8500)
+                                     endpoint=NVIDIA_ENDPOINT, event_cpu=cpu, event_idle=8500)
                 item["metrics"] = result
                 report["physical_measured"] |= result["frames_128_confirmed"]
                 print("PILOT_ASIO", label, result["wall_ns"], result["margin_exceeded"],

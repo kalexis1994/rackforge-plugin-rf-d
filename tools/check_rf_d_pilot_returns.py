@@ -1,4 +1,5 @@
 """Contrast the first staged pilot return ports and benchmark the same scene."""
+import argparse
 import math
 import os
 import re
@@ -18,7 +19,7 @@ from check_vco_family_voice_bus_model import materialize, read_oracle
 from check_vco_phase import COMPILER, LIB
 from prepare_dual_chain import ROOT, sha, write
 from prepare_hybrid_stamp import once
-from prepare_rf_d_pilot_returns import LAWS, OWN as MAP_TOOL, emit_data
+from prepare_rf_d_pilot_returns import LAWS, WIDE_LAWS, OWN as MAP_TOOL, emit_data
 from prepare_vco_family_voice_bus import prediction
 from recovery_port_input_model import cases
 from validate_vco_family_voice_bus import MODEL, read
@@ -38,7 +39,7 @@ LENGTH = 48_128
 RATE = 192_000
 
 
-def generate():
+def generate(cutoff_laws=False):
     table, logs, models, *_ = materialize(read_oracle())
     assert digest(table) == read(MODEL)["table_sha256"]
     z = prediction(logs, models, -1.6, 0.)["c"][0].copy()
@@ -47,14 +48,15 @@ def generate():
     wave = emit("pilot-wave.rs", "pub const SAW:[f64;4096]=[" +
                 ",".join(f"{v:.17e}" for v in cycle / max(abs(cycle))) + "];\n")
     bank = AREA / "pilot-return-maps.rs"
-    checks = emit_data(bank, 1. / RATE)
+    checks = emit_data(bank, 1. / RATE, cutoff_laws)
     old = (ROOT / PLANT).read_text(encoding="utf8")
     start, end = old.index("pub fn law("), old.index("// The physical state")
     law = once(old[start:end], "index:usize,", "")
     law = law.replace("data::IEXP[index]", "crate::return_maps::IEXP")
-    law = re.sub(r"\b12\b", str(LAWS), law)
+    laws = WIDE_LAWS if cutoff_laws else LAWS
+    law = re.sub(r"\b12\b", str(laws), law)
     solve = law.index("fn solve(")
-    law = law[:solve] + "pub " + re.sub(r"\b6\b", str(LAWS // 2), law[solve:])
+    law = law[:solve] + "pub " + re.sub(r"\b6\b", str(laws // 2), law[solve:])
     error = next(line for line in old.splitlines() if "pub enum Error" in line)
     law = emit("pilot-law.rs", error + "\n" + law)
     events = []
@@ -69,11 +71,14 @@ def generate():
     return code, dict(map_checks=checks, maps_sha256=sha(bank), wave_sha256=sha(wave), h128_sha256=digest(table))
 
 
-def drives(t, kind):
+def drives(t, kind, wide=False):
     w = 2. * math.pi * t
     audio = .055 * np.sin(211 * w) + .015 * np.sin(817 * w)
     volume = .009 * np.sin(331 * w) + .004 * np.sin(719 * w)
     cutoff = .00065 * np.sin(407 * w) - .00022 * np.sin(967 * w)
+    if wide:
+        volume *= 9.
+        cutoff *= 3.4
     if kind == "volume":
         cutoff *= 0.
     if kind == "filter":
@@ -95,12 +100,21 @@ def compare(candidate, reference):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--wide", action="store_true")
+    parser.add_argument("--linear-cutoff", action="store_true", help="keep the local Q26/Q28 tangent in the wide range")
+    options = parser.parse_args()
+    if options.linear_cutoff and not options.wide:
+        parser.error("--linear-cutoff requires --wide")
+    wide = options.wide
+    cutoff_laws = wide and not options.linear_cutoff
     assert not list(AREA.iterdir())
     seq = 1
     while (output := ROOT / f"evidence/rf_d_pilot_returns{seq:02}.json").exists():
         seq += 1
     sources = Sources(SOURCES)
-    report = dict(passed=False, full_contours_integrated=False, physical_measured=False, **sources.fields(),
+    report = dict(passed=False, wide=wide, cutoff_laws=cutoff_laws,
+                  full_contours_integrated=False, physical_measured=False, **sources.fields(),
                   compiler_sha256=sha(Path(COMPILER)), library_sha256=sha(LIB), builds={}, scenes={}, native={})
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
     last = None
@@ -116,20 +130,21 @@ def main():
         return proc.stdout, proc.stderr, receipt
 
     try:
-        code, report["maps"] = generate()
+        code, report["maps"] = generate(cutoff_laws)
         flags = [COMPILER, "--edition=2021", "-C", "opt-level=3", "-C", "target-feature=+fma",
                  "-A", "dead_code", "-C", "link-arg=-Wl,--stack,33554432"]
         report["affinity"] = pin()
         candidate = AREA / "pilot-returns.exe"
         root = emit("returns-probe.rs", code + f'\n#[path = "{(ROOT / PROBE).as_posix()}"] mod probe;\n'
                     "fn main() -> Result<(), Box<dyn std::error::Error>> { probe::main() }\n")
-        *_, report["builds"]["candidate"] = run([*flags, "--cfg", "pilot_returns", root, "-o", candidate])
+        wide_flags = ["--cfg", "pilot_wide_returns"] if wide else []
+        *_, report["builds"]["candidate"] = run([*flags, "--cfg", "pilot_returns", *wide_flags, root, "-o", candidate])
         oracle = AREA / "pilot-returns-oracle.exe"
         *_, report["builds"]["oracle"] = run([*flags, ROOT / ORACLE, "--extern", f"rf_d_circuit={LIB}", "-o", oracle])
         dc = np.asarray(cases()[1]["DC"], dtype="<f8")
         samples = 128 * 4
         for kind in ("volume", "filter", "both"):
-            sampled = drives(np.arange(1, samples + 1) / RATE, kind)
+            sampled = drives(np.arange(1, samples + 1) / RATE, kind, wide)
             data, _, run_record = run([candidate, "electrical"], sampled.astype("<f8").tobytes())
             trial = np.frombuffer(data, "<f8").reshape(samples, 6)
             entry = dict(candidate=run_record, reference={})
@@ -137,14 +152,17 @@ def main():
             fine = {}
             for factor in (2, 4):
                 ticks = np.arange(samples * factor)
-                stage = drives((ticks + 1. / 3.) / (RATE * factor), kind)
-                end = drives((ticks + 1.) / (RATE * factor), kind)
+                stage = drives((ticks + 1. / 3.) / (RATE * factor), kind, wide)
+                end = drives((ticks + 1.) / (RATE * factor), kind, wide)
                 payload = dc.tobytes() + np.column_stack((stage, end)).astype("<f8").tobytes()
                 data, _, record = run([oracle, RATE * factor], payload)
                 fine[factor] = np.frombuffer(data, "<f8").reshape(samples * factor, 6)[factor - 1::factor]
                 entry["reference"][str(factor)] = record
             entry["refinement"] = compare(fine[2], fine[4])
             entry["comparison"] = compare(trial, fine[4])
+            entry["drive_peak_v"] = np.max(abs(sampled), axis=0).tolist()
+            entry["reference_return_range_a"] = np.stack((fine[4][:, 4:].min(axis=0),
+                                                           fine[4][:, 4:].max(axis=0)), axis=1).tolist()
             print("PILOT_RETURNS_ELECTRICAL", kind, entry["refinement"], entry["comparison"], flush=True)
         # Preserve the previous published pilot as a separate build and control.
         from check_rf_d_reduced_voice import rate_maps
