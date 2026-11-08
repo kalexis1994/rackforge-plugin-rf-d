@@ -49,6 +49,7 @@ def capture_events(raw, start, frames):
 
 def assess(raw, start, frames, expected):
     lines = raw.decode().splitlines()
+    direction = float(lines.pop(0).split(",")[1]) if lines[0].startswith("DIRECTION,") else None
     tag, steps, current, charge, time = lines[0].split(",")
     assert tag == "CORE" and int(steps) == frames * 512
     errors, events = {}, []
@@ -63,7 +64,9 @@ def assess(raw, start, frames, expected):
             events.append([lo + start * 4096, hi + start * 4096, sign])
     assert tuple(errors) == CORE and all(np.isfinite(list(errors.values())))
     a, q, v = float(current), float(charge), max(errors.values())
-    return dict(passed=events == expected and a <= 2e-13 and q <= 2e-20 and v <= 20e-6,
+    direction_ok = direction is None or 0. <= direction <= 1.
+    return dict(passed=direction_ok and events == expected and a <= 2e-13 and q <= 2e-20 and v <= 20e-6,
+                direction_error_ratio=direction,
                 events=events, expected_events=expected, stamp_error_a=a, charge_error_c=q,
                 maximum_v=v, worst_node=max(errors, key=errors.get), maximum_by_node_v=errors,
                 elapsed_ns=int(time))
@@ -152,7 +155,10 @@ def main():
                 print("PILOT_TRIGGER_PORTS", item["minimum_fine_ports"], flush=True)
         report["admitted_modes"] = [f"{p}-{s}" for p, s in MODES if all(
             item["modes"][f"{p}-{s}"]["metrics"]["passed"] for item in report["windows"].values())]
-        report["passed"] = "1-1" in report["admitted_modes"]
+        report["passed"] = "1-1" in report["admitted_modes"] and all(
+            item["modes"]["1-1"]["metrics"].get("direction_error_ratio") is not None
+            for item in report["windows"].values()
+        )
         sources.unchanged()
     except Exception:
         report["failure"] = traceback.format_exc()

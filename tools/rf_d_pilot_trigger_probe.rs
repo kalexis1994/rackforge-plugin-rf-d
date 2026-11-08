@@ -111,7 +111,7 @@ pub fn replay(
         &rows[i..i + ROW]
     };
     let mut fine = initial;
-    let (mut dc_error, mut charge_error) = (0_f64, 0_f64);
+    let (mut dc_error, mut charge_error, mut direction_ratio) = (0_f64, 0_f64, 0_f64);
     for i in 0..count {
         for j in 0..2 {
             let row = get(i, j);
@@ -122,6 +122,13 @@ pub fn replay(
                 dc_error = dc_error.max((s.dc[k] - row[HEADER + k]).abs());
                 charge_error = charge_error.max((s.charge_c[k] - row[HEADER + N + k]).abs());
             }
+        }
+        if port_stride == 1 {
+            let candidates = std::array::from_fn(|j| State(get(i, j)[..N].try_into().unwrap()));
+            let u = std::array::from_fn(|j| boundary(&get(i, j)[N..HEADER], key));
+            let ratio = local::audit_direction(fine, candidates, u, H)
+                .map_err(|e| format!("direction audit {i}: {e:?}"))?;
+            direction_ratio = direction_ratio.max(ratio);
         }
         fine = State(get(i, 1)[..N].try_into()?);
     }
@@ -176,6 +183,9 @@ pub fn replay(
         for k in 0..N {
             maximum[k] = maximum[k].max((state.0[k] - reference[k]).abs());
         }
+    }
+    if port_stride == 1 {
+        println!("DIRECTION,{direction_ratio:.17e}");
     }
     println!(
         "CORE,{count},{dc_error:.17e},{charge_error:.17e},{}",

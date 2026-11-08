@@ -227,7 +227,90 @@ fn evaluate<const FULL: bool>(
     Ok((s, r))
 }
 
+const ALGEBRAIC: [usize; 4] = [pin(8), pin(22), pin(24), pin(53)];
+const KEPT: [usize; N - ALGEBRAIC.len()] = [
+    pin(6),
+    pin(7),
+    pin(9),
+    pin(10),
+    pin(11),
+    pin(17),
+    pin(18),
+    pin(19),
+    pin(20),
+    pin(21),
+    pin(23),
+    pin(25),
+    pin(26),
+    pin(27),
+    pin(28),
+];
+const K: usize = KEPT.len();
+
 fn direction(s: &[Stamp; 2], r: [f64; 2 * N], h: f64) -> Result<[f64; 2 * N], StepError> {
+    // These four algebraic rows have neither stored charge nor mutual
+    // coupling. Their exact Schur contribution stays within each stage.
+    let inv_diagonal: [[f64; 4]; 2] =
+        std::array::from_fn(|j| ALGEBRAIC.map(|a| 1. / s[j].conductance[a][a]));
+    if inv_diagonal
+        .iter()
+        .flatten()
+        .any(|x| !x.is_finite() || *x <= 0.)
+    {
+        return Err(StepError::SingularJacobian);
+    }
+    let lift: [[[f64; 4]; K]; 2] = std::array::from_fn(|j| {
+        KEPT.map(|a| {
+            std::array::from_fn(|g| s[j].conductance[a][ALGEBRAIC[g]] * inv_diagonal[j][g])
+        })
+    });
+    let jac: [[f64; 2 * K]; 2 * K] = std::array::from_fn(|i| {
+        let (stage, row) = (i / K, KEPT[i % K]);
+        std::array::from_fn(|j| {
+            let (other, col) = (j / K, KEPT[j % K]);
+            let mass = B[stage][other] * s[other].capacitance[row][col] / h;
+            if stage != other {
+                return mass;
+            }
+            let reaction: f64 = ALGEBRAIC
+                .iter()
+                .zip(&lift[stage][i % K])
+                .map(|(&a, weight)| weight * s[stage].conductance[a][col])
+                .sum();
+            mass + s[stage].conductance[row][col] - reaction
+        })
+    });
+    let rhs = std::array::from_fn(|i| {
+        let stage = i / K;
+        let load: f64 = ALGEBRAIC
+            .iter()
+            .zip(&lift[stage][i % K])
+            .map(|(&a, weight)| weight * r[stage * N + a])
+            .sum();
+        -r[stage * N + KEPT[i % K]] + load
+    });
+    let solution = Lu::factor(jac)?.solve(rhs)?;
+    let mut full = [0.; 2 * N];
+    for stage in 0..2 {
+        let base = stage * N;
+        for (i, &a) in KEPT.iter().enumerate() {
+            full[base + a] = solution[stage * K + i];
+        }
+        for (g, &a) in ALGEBRAIC.iter().enumerate() {
+            let feedback: f64 = KEPT
+                .iter()
+                .map(|&b| s[stage].conductance[a][b] * full[base + b])
+                .sum();
+            full[base + a] = (-r[base + a] - feedback) * inv_diagonal[stage][g];
+        }
+    }
+    if full.iter().any(|x| !x.is_finite()) {
+        return Err(StepError::SingularJacobian);
+    }
+    Ok(full)
+}
+
+fn full_direction(s: &[Stamp; 2], r: [f64; 2 * N], h: f64) -> Result<[f64; 2 * N], StepError> {
     let jac = std::array::from_fn(|k| {
         std::array::from_fn(|l| {
             let (i, a) = (k / N, k % N);
@@ -236,6 +319,32 @@ fn direction(s: &[Stamp; 2], r: [f64; 2 * N], h: f64) -> Result<[f64; 2 * N], St
         })
     });
     Lu::factor(jac)?.solve(r.map(|v| -v))
+}
+
+pub fn audit_direction(
+    old: State,
+    candidates: [State; 2],
+    u: [Boundary; 2],
+    h: f64,
+) -> Result<f64, StepError> {
+    let delta = std::array::from_fn(|i| candidates[i / N].0[i % N] - old.0[i % N]);
+    let (s, mut r) = evaluate::<true>(old, delta, u, h)?;
+    for stamp in &s {
+        for &a in &ALGEBRAIC {
+            assert!((0..N).all(|b| stamp.capacitance[a][b] == 0. && stamp.capacitance[b][a] == 0.));
+            assert!(ALGEBRAIC
+                .iter()
+                .all(|&b| a == b || stamp.conductance[a][b] == 0.));
+        }
+    }
+    for (k, value) in r.iter_mut().enumerate() {
+        *value += 1e-9 * (k as f64 + 0.5).sin();
+    }
+    let reduced = direction(&s, r, h)?;
+    let full = full_direction(&s, r, h)?;
+    Ok(reduced.iter().zip(full).fold(0_f64, |maximum, (&a, b)| {
+        maximum.max((a - b).abs() / (2e-9 + 2e-8 * b.abs()))
+    }))
 }
 
 pub fn step(

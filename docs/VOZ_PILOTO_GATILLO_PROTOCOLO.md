@@ -47,3 +47,23 @@ una raíz cerca del cruce se permiten subpasos
 como semilla. El paso original vuelve a resolver
 sus propias dos etapas y conserva sus límites de
 residuo (1 pA) y de corrección (2 nV).
+
+## Reducción algebraica del Jacobiano
+
+Eliminar del LU de cada etapa x8, x22, x24 y x53.
+Son filas sin carga y sin acoplamiento directo
+entre sí. El complemento de Schur incorpora sus
+reacciones a la matriz y al lado derecho.
+Recuperar las cuatro correcciones por etapa antes
+de aplicar Newton. Las ecuaciones completas,
+corrientes y memorias siguen presentes en el
+residuo y los límites de aceptación.
+
+En cada par de etapas de referencia verificar
+la estructura y contrastar la dirección
+reconstruida con el LU de 38 filas. Inyectar
+1 nA sinusoidal por fila para observar una
+dirección no trivial. Exigir una diferencia
+por coordenada de hasta 2 nV más 2e−8 veces
+la magnitud de la dirección completa. Repetir
+los gates de trayectoria y calendario.

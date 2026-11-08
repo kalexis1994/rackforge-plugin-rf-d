@@ -140,3 +140,15 @@ de 19 nodos es una validación eléctrica local.
 La voz del piloto todavía no genera esas
 cinco fronteras y no pasó a la prueba física.
 [Barrido de fronteras](../evidence/rf_d_pilot_trigger05.json)
+
+El complemento de Schur redujo el LU de 38
+a 30 filas sin retirar ninguna rama del residuo.
+En los 4.608 pares de etapas de referencia,
+la mayor diferencia de dirección normalizada
+fue 9,81e−10 respecto del límite unitario.
+Se conservó el mismo cruce y el máximo de
+0,118 µV. El reloj de 192 kHz siguió fuera del
+contrato. La reducción queda admitida para el
+núcleo de laboratorio y no acredita el margen
+físico de RackForge.
+[Reducción y contraste](../evidence/rf_d_pilot_trigger06.json)
