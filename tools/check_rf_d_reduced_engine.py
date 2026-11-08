@@ -90,7 +90,7 @@ def assess(raw, target, expected, size, bank_count=BANKS):
             switches.append(list(map(int, fields)))
         elif tag == "PROFILE":
             values = list(map(int, fields))
-            assert len(values) == 10 and values[0] in (0, 1, 2)
+            assert len(values) in (10, 11) and values[0] in (0, 1, 2)
             profile.append(values)
         else:
             assert tag == "BLOCK"
@@ -115,12 +115,15 @@ def assess(raw, target, expected, size, bank_count=BANKS):
     windows = []
     if profile:
         assert len(profile) == 3 * len(blocks)
+        field_count, = {len(row) for row in profile}
         for region, label in enumerate(("before", "crossing", "after")):
             rows = np.asarray([row[1:] for row in profile if row[0] == region], dtype=np.int64)
-            steps, fine, wall, nc, na, nd, tc, ta, td = map(int, rows.sum(axis=0))
-            assert 0 <= fine <= steps and tc + ta + td <= wall and nc >= na >= nd
+            steps, fine, wall, nc, na, nd, tc, ta, td, *extra = map(int, rows.sum(axis=0))
+            tangents = extra[0] if field_count == 11 else None
+            assert 0 <= fine <= steps and tc + ta + td <= wall and nc >= na
+            assert 0 <= (tangents or 0) <= na and nd <= na + (tangents or 0)
             windows.append(dict(region=label, steps=steps, fine_steps=fine, wall_ns=wall,
-                                calls=dict(contour=nc, audio=na, direction=nd),
+                                calls=dict(contour=nc, audio=na, direction=nd, audio_tangents=tangents),
                                 ns=dict(contour=tc, audio=ta, direction=td)))
         assert sum(row["steps"] for row in windows) == sum(sum(b["widths"]) for b in blocks)
     passed = (switches == expected and all(endpoint_passed(row) for row in endpoints)

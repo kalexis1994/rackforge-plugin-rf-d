@@ -69,10 +69,12 @@ pub struct StepProfile {
     pub calls: [usize; 3],
     #[cfg(profile_reduced)]
     pub ns: [u128; 3],
+    #[cfg(profile_reduced)]
+    pub audio_tangents: usize,
 }
 
 #[derive(Clone, Copy)]
-enum Work { Contour, Audio, Direction }
+enum Work { Contour, Audio, Direction, AudioTangent }
 
 impl StepProfile {
     #[inline]
@@ -81,8 +83,14 @@ impl StepProfile {
         {
             let start = std::time::Instant::now();
             let result = run();
-            self.calls[part as usize] += 1;
-            self.ns[part as usize] += start.elapsed().as_nanos();
+            let elapsed = start.elapsed().as_nanos();
+            if matches!(part, Work::AudioTangent) {
+                self.audio_tangents += 1;
+                self.ns[Work::Audio as usize] += elapsed;
+            } else {
+                self.calls[part as usize] += 1;
+                self.ns[part as usize] += elapsed;
+            }
             result
         }
         #[cfg(not(profile_reduced))]
@@ -111,6 +119,7 @@ struct Continuation {
     bus: f64,
     width: usize,
     key: f64,
+    audio_jacobian: audio::PortJacobian,
 }
 
 pub struct Engine {
@@ -170,7 +179,7 @@ fn coefficient(e: &Evaluation<true>, i: usize, j: usize) -> f64 {
         + if a == b { e.contour[a].j[r][c] } else { 0. }
 }
 
-fn direction(e: &Evaluation<true>) -> Result<([f64; 2 * C], [f64; 2]), StepError> {
+fn direction(e: &Evaluation<true>, mut jacobian: audio::PortJacobian) -> Result<([f64; 2 * C], [f64; 2]), StepError> {
     let lu = Lu::<INNER>::factor(std::array::from_fn(|i| std::array::from_fn(|j| {
         coefficient(e, inner_index(i), inner_index(j))
     })))?;
@@ -179,7 +188,6 @@ fn direction(e: &Evaluation<true>) -> Result<([f64; 2 * C], [f64; 2]), StepError
     for (p, &column) in PORT.iter().enumerate() {
         lift[p] = lu.solve(std::array::from_fn(|i| coefficient(e, inner_index(i), column)))?;
     }
-    let mut jacobian = e.response.jacobian;
     let mut current = e.response.current;
     for (p, &row) in PORT.iter().enumerate() {
         let feedback: [f64; INNER] = std::array::from_fn(|i| coefficient(e, row, inner_index(i)));
@@ -306,7 +314,7 @@ impl Engine {
             let row = i % C;
             contour[stage].dc[row] + B[stage][0] * contour[0].dq[row] + B[stage][1] * contour[1].dq[row]
         });
-        let mut response = profile.measure(Work::Audio, || map.response::<FULL>(history, &shared, seed))?;
+        let mut response = profile.measure(Work::Audio, || map.response(history, &shared, seed))?;
         for i in 0..2 {
             response.current[i + 4] += panel[i].currents_a[2];
         }
@@ -353,74 +361,95 @@ impl Engine {
             delta[22 + C] = seed;
         }
         let mut seed = std::array::from_fn(|i| old.junctions[i % audio::STAGE_LAWS]);
+        let mut cached_jacobian = prior.filter(|prior| prior.width == width)
+            .map(|prior| prior.audio_jacobian);
         for iterations in 1..=80 {
             let e = self.evaluate::<true>(old, map, &history, key, h, delta, bus, &seed, profile)?;
             let norm = e.norm();
-            let (dv, db) = profile.measure(Work::Direction, || direction(&e))?;
-            let correction = maximum(&dv).max(maximum(&db));
-            if correction <= 2e-9 && norm <= 1e-12 {
-                let end = map.endpoint(&history, &e.shared, &e.response);
-                let mut state = old.state;
-                state.high[..C].copy_from_slice(&e.contour[1].now.high);
-                state.low[..C].copy_from_slice(&e.contour[1].now.low);
-                let mut running = old;
-                // Publish the contour's compensated charge coordinates at shared nodes.
-                for (i, &k) in audio::NODE.iter().enumerate() {
-                    if k >= C {
-                        state.high[k] = self.audio_anchor[i] + end[i];
-                        state.low[k] = 0.;
-                    }
-                }
-                if !state.valid() {
-                    return Err(StepError::ExponentialDomain);
-                }
-                running.state = state;
-                running.phase = e.phase;
-                running.junctions.copy_from_slice(&e.response.junctions[audio::STAGE_LAWS..]);
-                running.continuation = Some(Continuation {
-                    contour: std::array::from_fn(|k| 2.5 * delta[C + k] - 4.5 * delta[k]),
-                    bus: 2.5 * (bus[1] - offset[62]) - 4.5 * (bus[0] - offset[62]),
-                    width, key,
-                });
-                let stages = e.contour.each_ref().map(|s| {
-                    COLLECTORS.map(|k| s.now.high[k] + s.now.low[k])
-                });
-                let movement = stages.iter().flat_map(|s| s.iter().zip(before))
-                    .fold(0_f64, |m, (v, base)| m.max((v - base).abs()));
-                let curvature = if cfg!(wide_clock_curvature) {
-                    INNER_ORDER[35..].iter().copied().chain([14]).map(|k| {
-                        let first = e.contour[0].now.high[k] + e.contour[0].now.low[k];
-                        let last = e.contour[1].now.high[k] + e.contour[1].now.low[k];
-                        ((first - value(old.state, k)) - (last - value(old.state, k)) / 3.).abs()
-                    }).fold(0_f64, f64::max)
-                } else {
-                    0.
+            let mut estimate = cached_jacobian.filter(|_| norm > 1e-12);
+            loop {
+                let reused = estimate.is_some();
+                let jacobian = match estimate.take() {
+                    Some(jacobian) => jacobian,
+                    None => profile.measure(Work::AudioTangent, || map.jacobian(&e.response))?,
                 };
-                return Ok(Accepted {
-                    running, stage_order: stages.map(order), movement, curvature, iterations,
-                    residual_a: norm, correction_v: correction,
-                });
-            }
-            let mut accepted = false;
-            let mut scale = 1.;
-            for _ in 0..24 {
-                let trial = std::array::from_fn(|i| delta[i] + scale * dv[i]);
-                let trial_bus = std::array::from_fn(|i| bus[i] + scale * db[i]);
-                if let Ok(candidate) = self.evaluate::<false>(
-                    old, map, &history, key, h, trial, trial_bus, &e.response.junctions, profile,
-                ) {
-                    if candidate.norm() < norm.max(1e-12) {
-                        delta = trial;
-                        bus = trial_bus;
-                        seed = candidate.response.junctions;
-                        accepted = true;
-                        break;
+                let (dv, db) = match profile.measure(Work::Direction, || direction(&e, jacobian)) {
+                    Ok(change) => change,
+                    Err(_) if reused => {
+                        cached_jacobian = None;
+                        continue;
                     }
+                    Err(error) => return Err(error),
+                };
+                let correction = maximum(&dv).max(maximum(&db));
+                if correction <= 2e-9 && norm <= 1e-12 {
+                    let end = map.endpoint(&history, &e.shared, &e.response);
+                    let mut state = old.state;
+                    state.high[..C].copy_from_slice(&e.contour[1].now.high);
+                    state.low[..C].copy_from_slice(&e.contour[1].now.low);
+                    let mut running = old;
+                    // Publish the contour's compensated charge coordinates at shared nodes.
+                    for (i, &k) in audio::NODE.iter().enumerate() {
+                        if k >= C {
+                            state.high[k] = self.audio_anchor[i] + end[i];
+                            state.low[k] = 0.;
+                        }
+                    }
+                    if !state.valid() {
+                        return Err(StepError::ExponentialDomain);
+                    }
+                    running.state = state;
+                    running.phase = e.phase;
+                    running.junctions.copy_from_slice(&e.response.junctions[audio::STAGE_LAWS..]);
+                    running.continuation = Some(Continuation {
+                        contour: std::array::from_fn(|k| 2.5 * delta[C + k] - 4.5 * delta[k]),
+                        bus: 2.5 * (bus[1] - offset[62]) - 4.5 * (bus[0] - offset[62]),
+                        width, key, audio_jacobian: jacobian,
+                    });
+                    let stages = e.contour.each_ref().map(|s| {
+                        COLLECTORS.map(|k| s.now.high[k] + s.now.low[k])
+                    });
+                    let movement = stages.iter().flat_map(|s| s.iter().zip(before))
+                        .fold(0_f64, |m, (v, base)| m.max((v - base).abs()));
+                    let curvature = if cfg!(wide_clock_curvature) {
+                        INNER_ORDER[35..].iter().copied().chain([14]).map(|k| {
+                            let first = e.contour[0].now.high[k] + e.contour[0].now.low[k];
+                            let last = e.contour[1].now.high[k] + e.contour[1].now.low[k];
+                            ((first - value(old.state, k)) - (last - value(old.state, k)) / 3.).abs()
+                        }).fold(0_f64, f64::max)
+                    } else {
+                        0.
+                    };
+                    return Ok(Accepted {
+                        running, stage_order: stages.map(order), movement, curvature, iterations,
+                        residual_a: norm, correction_v: correction,
+                    });
                 }
-                scale *= 0.5;
-            }
-            if !accepted {
-                return Err(StepError::NoDecrease);
+                let mut accepted = false;
+                let mut scale = 1.;
+                for _ in 0..24 {
+                    let trial = std::array::from_fn(|i| delta[i] + scale * dv[i]);
+                    let trial_bus = std::array::from_fn(|i| bus[i] + scale * db[i]);
+                    if let Ok(candidate) = self.evaluate::<false>(
+                        old, map, &history, key, h, trial, trial_bus, &e.response.junctions, profile,
+                    ) {
+                        if candidate.norm() < norm.max(1e-12) {
+                            delta = trial;
+                            bus = trial_bus;
+                            seed = candidate.response.junctions;
+                            accepted = true;
+                            break;
+                        }
+                    }
+                    scale *= 0.5;
+                }
+                if accepted {
+                    break;
+                }
+                if !reused {
+                    return Err(StepError::NoDecrease);
+                }
+                cached_jacobian = None;
             }
         }
         Err(StepError::IterationBudget)

@@ -120,3 +120,15 @@ si el solve falla. Mantener los gates de
 residuo y corrección, el calendario y la
 partición 64/128. Ninguna etapa provisional
 altera la historia aceptada.
+
+El Jacobiano de los seis puertos de audio del
+último paso aceptado puede dirigir una iteración
+con el mismo KEY y ancho. Sólo se usa mientras
+el residuo acoplado supera 1 pA. La búsqueda
+prueba la disminución con la respuesta no lineal
+actual. Si falla, la misma iteración se resuelve
+con la derivada de audio actual. La aceptación
+siempre vuelve a calcular esa derivada con las
+108 leyes y comprueba la corrección de 2 nV.
+El perfil separa las llamadas a la raíz y a
+su derivada y suma ambas duraciones como audio.

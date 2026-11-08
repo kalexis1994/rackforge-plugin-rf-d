@@ -165,3 +165,35 @@ de R59/R60 y J7 y la identidad 64/128. Ambos
 bloques exceden el presupuesto físico.
 [Perfil de la extrapolación](../evidence/rf_d_reduced_engine10.json),
 [banco sin instrumentar](../evidence/rf_d_reduced_engine11.json)
+
+## Jacobiano de audio reutilizado durante la búsqueda
+
+Recalcular la derivada de audio al aceptar
+cada paso conservó el calendario y los límites.
+En los frames 74–82 se calcularon 2.359
+derivadas de audio, frente a 4.811 en el banco
+anterior. El tiempo de la ventana bajó a
+1,282 s y el bloque positivo instrumentado a
+6,063 s. Se conservaron los 10.997 pasos y el
+cruce 319096–319104.
+
+El banco nativo sin instrumentar tardó
+6,697 s para 128 frames en la reserva positiva.
+Los máximos fueron 7,82 µV por nodo,
+2,82e−17 A en R59 y 2,52e−14 A en R60.
+La salida J7 y la partición 64/128
+pasaron sus gates. Se registraron cero
+asignaciones durante el render.
+[Perfil y derivadas](../evidence/rf_d_reduced_engine12.json),
+[reserva sin instrumentar](../evidence/rf_d_reduced_engine13.json)
+
+| Reserva | RackForge offline, pase 1 | RackForge offline, pase 2 |
+| --- | ---: | ---: |
+| Negativa | 2,248 s | 2,239 s |
+| Positiva | 6,814 s | 6,848 s |
+
+Cada bloque tuvo 128 frames y coincidió por
+bits con el banco nativo convertido a f32.
+El plazo de 1,333 ms sigue fuera del coste
+del bloque. La campaña física sigue pendiente.
+[Slot de RackForge](../evidence/rf_d_reduced_engine_rack04.json)

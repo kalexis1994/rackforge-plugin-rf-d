@@ -42,7 +42,6 @@ pub struct History {
 
 pub struct Response {
     pub current: [f64; SHARED],
-    pub jacobian: [[f64; SHARED]; SHARED],
     nonlinear: [f64; LAWS],
     pub junctions: Junctions,
 }
@@ -74,6 +73,7 @@ fn excess(z: f64, change: f64) -> f64 {
 pub type Junctions = [f64; LAWS];
 type LawVector = Junctions;
 type LawMatrix = [LawVector; LAWS];
+pub type PortJacobian = [[f64; SHARED]; SHARED];
 
 // The largest columns precondition the same full linear system. The
 // omitted columns still participate in the residual at each refinement.
@@ -218,18 +218,18 @@ impl Map {
         }
     }
 
-    pub fn response<const FULL: bool>(
+    pub fn response(
         &self,
         history: &History,
         ports: &[f64; SHARED],
         seed: &Junctions,
     ) -> Result<Response, StepError> {
         let drive = std::array::from_fn(|i| history.junction[i] + dot(&self.z_port[i], ports));
-        self.solve_response::<FULL>(history, ports, &drive, *seed)
-            .or_else(|_| self.solve_response::<FULL>(history, ports, &drive, drive))
+        self.solve_response(history, ports, &drive, *seed)
+            .or_else(|_| self.solve_response(history, ports, &drive, drive))
     }
 
-    fn solve_response<const FULL: bool>(
+    fn solve_response(
         &self,
         history: &History,
         ports: &[f64; SHARED],
@@ -247,30 +247,13 @@ impl Map {
             let nonlinear = std::array::from_fn(|i| self.iexp[i] * excess(z[i], change[i]));
             let residual: [f64; LAWS] =
                 std::array::from_fn(|i| z[i] - drive[i] + dot(&self.feedback[i], &nonlinear));
-            let converged = maximum(&residual) <= 2e-13;
-            let mut jacobian = self.i_port;
-            if !converged || FULL {
-                let slope: [f64; LAWS] = std::array::from_fn(|i| self.iexp[i] * change[i]);
-                if !converged {
-                    let [correction] = feedback_directions(&self.feedback, &slope, [residual])?;
-                    for i in 0..LAWS {
-                        z[i] -= correction[i];
-                    }
-                    continue;
+            if maximum(&residual) > 2e-13 {
+                let slope = std::array::from_fn(|i| self.iexp[i] * change[i]);
+                let [correction] = feedback_directions(&self.feedback, &slope, [residual])?;
+                for i in 0..LAWS {
+                    z[i] -= correction[i];
                 }
-                let derivatives: [LawVector; SHARED] = feedback_directions(
-                    &self.feedback,
-                    &slope,
-                    std::array::from_fn(|col| self.z_port.each_ref().map(|row| row[col])),
-                )?;
-                for (col, mut derivative) in derivatives.into_iter().enumerate() {
-                    for (d, s) in derivative.iter_mut().zip(slope) {
-                        *d *= s;
-                    }
-                    for (row, coefficient) in jacobian.iter_mut().zip(&self.i_law) {
-                        row[col] += dot(coefficient, &derivative);
-                    }
-                }
+                continue;
             }
             let current = std::array::from_fn(|i| {
                 history.current[i] + dot(&self.i_port[i], ports) + dot(&self.i_law[i], &nonlinear)
@@ -280,12 +263,30 @@ impl Map {
             }
             return Ok(Response {
                 current,
-                jacobian,
                 nonlinear,
                 junctions: z,
             });
         }
         Err(StepError::IterationBudget)
+    }
+
+    pub fn jacobian(&self, response: &Response) -> Result<PortJacobian, StepError> {
+        let slope = std::array::from_fn(|i| self.iexp[i] * response.junctions[i].exp_m1());
+        let derivatives: [LawVector; SHARED] = feedback_directions(
+            &self.feedback,
+            &slope,
+            std::array::from_fn(|col| self.z_port.each_ref().map(|row| row[col])),
+        )?;
+        let mut jacobian = self.i_port;
+        for (col, mut derivative) in derivatives.into_iter().enumerate() {
+            for (d, s) in derivative.iter_mut().zip(slope) {
+                *d *= s;
+            }
+            for (row, coefficient) in jacobian.iter_mut().zip(&self.i_law) {
+                row[col] += dot(coefficient, &derivative);
+            }
+        }
+        Ok(jacobian)
     }
 
     pub fn endpoint(
