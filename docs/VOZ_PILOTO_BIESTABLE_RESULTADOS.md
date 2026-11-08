@@ -112,3 +112,31 @@ excitadores del biestable y C2/C5
 antes de medir la voz con ambos contornos y
 el biestable integrados.
 [Contraste R36/CR8](../evidence/rf_d_pilot_latch04.json)
+
+## Resultados del núcleo compartido
+
+Con los seis puertos a paso fino, el cruce
+positivo coincidió en 319096–319104. El peor
+error nodal fue 0,118 µV en el colector Q25.
+El error máximo de los stamps fue 0,433 fA
+en corriente y 4,39e−23 C en carga. Los dos
+flancos negativos conservaron el orden de
+los colectores. Sin el predictor refinado,
+Newton agotó sus iteraciones después del
+cruce positivo.
+[Primer rechazo](../evidence/rf_d_pilot_trigger01.json),
+[búsqueda con residuo y corrección](../evidence/rf_d_pilot_trigger02.json),
+[predictor refinado](../evidence/rf_d_pilot_trigger04.json)
+
+Con los seis puertos interpolados desde
+192 kHz, el cruce se adelantó 80 ticks y el
+error nodal llegó a 8,03 V en la transición.
+En el barrido completo, x4 fue el único
+puerto que se pudo interpolar conservando
+los límites del cruce positivo. C2, ambos
+sustain y las dos cargas de reset del filtro
+siguen requiriendo frontera fina. El banco
+de 19 nodos es una validación eléctrica local.
+La voz del piloto todavía no genera esas
+cinco fronteras y no pasó a la prueba física.
+[Barrido de fronteras](../evidence/rf_d_pilot_trigger05.json)
