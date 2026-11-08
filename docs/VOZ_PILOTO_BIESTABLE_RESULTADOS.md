@@ -152,3 +152,8 @@ contrato. La reducción queda admitida para el
 núcleo de laboratorio y no acredita el margen
 físico de RackForge.
 [Reducción y contraste](../evidence/rf_d_pilot_trigger06.json)
+
+El cierre posterior de C2, ambos sustain y las
+cargas de reset del filtro se contrastó dentro
+del render acoplado. El resultado y sus límites
+de tiempo están en el [banco del motor](VOZ_REDUCIDA_MOTOR_RESULTADOS.md).

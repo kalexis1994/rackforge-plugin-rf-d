@@ -88,3 +88,41 @@ demostrable. Estos pases fueron offline. El
 presupuesto aún impide abrir la campaña física.
 [Banco acoplado](../evidence/rf_d_reduced_engine03.json),
 [dos pases por reserva](../evidence/rf_d_reduced_engine_rack02.json)
+
+## Precondicionador de audio y reloj ampliado
+
+La primera compilación del precondicionador
+conservó una llamada anterior y quedó registrada
+como fallo de integración. Tras corregirla, el
+precondicionador de 56 columnas y el residuo de
+108 conservaron ambos contrastes, el cruce de
+ocho ticks y la identidad por partición. En
+nativo, el bloque negativo bajó de 11,05 s a
+5,22 s y el positivo de 37,78 s a 21,81 s.
+Se conservaron los mismos 4.096 y 10.997 pasos
+aceptados.
+[Compilación rechazada](../evidence/rf_d_reduced_engine04.json),
+[precondicionador contrastado](../evidence/rf_d_reduced_engine05.json)
+
+El techo de 1.024 ticks completó la reserva
+negativa en 512 pasos y 0,686 s. En la positiva
+coincidió el cruce y se mantuvieron los límites
+de retornos y J7, con 40,95 µV de error en el
+nodo de reset x16 a la muestra 78. El criterio
+de curvatura tampoco pasó el límite nodal
+positivo. En el slot se mantuvieron los techos
+de 32 y 64 subpasos por muestra.
+[Reloj ampliado](../evidence/rf_d_reduced_engine06.json),
+[ensayo de curvatura](../evidence/rf_d_reduced_engine07.json)
+
+| Reserva acoplada | RackForge offline, pase 1 | RackForge offline, pase 2 |
+| --- | ---: | ---: |
+| Negativa | 4,591 s | 4,817 s |
+| Positiva | 19,382 s | 18,961 s |
+
+Los cuatro bloques de 128 frames devolvieron
+J7 idéntico al banco nativo en f32 y excedieron
+el plazo. El render incluye ambos biestables y
+sus cargas de contorno. El margen de 1,333 ms
+sigue pendiente y estos pases no abrieron ASIO.
+[Slot con precondicionador](../evidence/rf_d_reduced_engine_rack03.json)

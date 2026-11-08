@@ -72,58 +72,116 @@ fn excess(z: f64, change: f64) -> f64 {
 type LawVector = [f64; LAWS];
 type LawMatrix = [LawVector; LAWS];
 
-/// Solve (I + P diag(slope)) x = rhs with a certified short series when
-/// the feedback is contractive. Preserve the scaled-pivot route otherwise.
-struct Feedback {
-    weights: LawMatrix,
-    norm: f64,
+// The largest columns precondition the same full linear system. The
+// omitted columns still participate in the residual at each refinement.
+const SUPPORT: usize = 56;
+const COLUMN_FLOOR: f64 = 5e-4;
+
+struct Projection {
+    columns: [usize; SUPPORT],
+    count: usize,
+    factor: Lu<SUPPORT>,
 }
 
-impl Feedback {
-    fn new(port_map: &LawMatrix, slope: &LawVector) -> Self {
-        let weights = port_map.map(|row| std::array::from_fn(|j| row[j] * slope[j]));
-        let norm = weights
-            .iter()
-            .map(|row| row.iter().map(|v| v.abs()).sum::<f64>())
-            .fold(0., f64::max);
-        Self { weights, norm }
+impl Projection {
+    fn new(weights: &LawMatrix) -> Option<Self> {
+        let mut strengths = [0_f64; LAWS];
+        for row in weights {
+            for (strength, value) in strengths.iter_mut().zip(row) {
+                *strength = strength.max(value.abs());
+            }
+        }
+        let mut columns = [0; SUPPORT];
+        let mut count = 0;
+        for (col, strength) in strengths.into_iter().enumerate() {
+            if strength > COLUMN_FLOOR {
+                *columns.get_mut(count)? = col;
+                count += 1;
+            }
+        }
+        let factor = Lu::factor(std::array::from_fn(|i| {
+            std::array::from_fn(|j| {
+                f64::from(i == j)
+                    + if i < count && j < count {
+                        weights[columns[i]][columns[j]]
+                    } else {
+                        0.
+                    }
+            })
+        }))
+        .ok()?;
+        Some(Self {
+            columns,
+            count,
+            factor,
+        })
     }
 
-    fn series(&self, rhs: LawVector) -> Option<LawVector> {
-        if self.norm > 0.125 || !self.norm.is_finite() {
-            return None;
+    fn apply(&self, weights: &LawMatrix, rhs: LawVector) -> Option<LawVector> {
+        let strong = self
+            .factor
+            .solve(std::array::from_fn(|j| {
+                if j < self.count {
+                    rhs[self.columns[j]]
+                } else {
+                    0.
+                }
+            }))
+            .ok()?;
+        let mut x = std::array::from_fn(|i| {
+            rhs[i]
+                - self.columns[..self.count]
+                    .iter()
+                    .zip(strong)
+                    .map(|(&j, value)| weights[i][j] * value)
+                    .sum::<f64>()
+        });
+        for (&i, value) in self.columns[..self.count].iter().zip(strong) {
+            x[i] = value;
         }
-        let limit = (1. - self.norm) * (1e-14 + 2e-13 * maximum(&rhs));
-        let mut x = rhs;
-        for _ in 0..8 {
-            let next = std::array::from_fn(|i| rhs[i] - dot(&self.weights[i], &x));
-            if (0..LAWS).all(|i| next[i].is_finite() && (next[i] - x[i]).abs() <= limit) {
+        Some(x)
+    }
+
+    fn refine(&self, weights: &LawMatrix, rhs: LawVector) -> Option<LawVector> {
+        let limit = 1e-14 + 2e-13 * maximum(&rhs);
+        let mut x = self.apply(weights, rhs)?;
+        for _ in 0..5 {
+            let residual = std::array::from_fn(|i| rhs[i] - x[i] - dot(&weights[i], &x));
+            if residual.iter().all(|v| v.is_finite() && v.abs() <= limit) {
                 return Some(x);
             }
-            x = next;
+            let correction = self.apply(weights, residual)?;
+            for (value, delta) in x.iter_mut().zip(correction) {
+                *value += delta;
+            }
         }
         None
     }
+}
 
-    fn solve<const K: usize>(&self, rhs: [LawVector; K]) -> Result<[LawVector; K], StepError> {
-        let mut directions = [[0.; LAWS]; K];
-        for (i, column) in rhs.iter().copied().enumerate() {
-            if let Some(direction) = self.series(column) {
-                directions[i] = direction;
-                continue;
-            }
-            let mut matrix = self.weights;
-            for (j, row) in matrix.iter_mut().enumerate() {
-                row[j] += 1.;
-            }
-            let lu = Lu::factor(matrix)?;
-            for j in i..K {
-                directions[j] = lu.solve(rhs[j])?;
-            }
-            break;
+fn feedback_directions<const K: usize>(
+    port_map: &LawMatrix,
+    slope: &LawVector,
+    rhs: [LawVector; K],
+) -> Result<[LawVector; K], StepError> {
+    let mut weights = port_map.map(|row| std::array::from_fn(|j| row[j] * slope[j]));
+    let projection = Projection::new(&weights);
+    let mut directions = [[0.; LAWS]; K];
+    for (i, column) in rhs.iter().copied().enumerate() {
+        if let Some(direction) = projection.as_ref().and_then(|p| p.refine(&weights, column)) {
+            directions[i] = direction;
+            continue;
         }
-        Ok(directions)
+        for (j, row) in weights.iter_mut().enumerate() {
+            row[j] += 1.;
+        }
+        let lu = Lu::factor(weights)?;
+        for j in i..K {
+            directions[j] = lu.solve(rhs[j])?;
+        }
+        break;
     }
+    Ok(directions)
 }
 
 impl Map {
@@ -180,18 +238,18 @@ impl Map {
             let mut jacobian = self.i_port;
             if !converged || FULL {
                 let slope: [f64; LAWS] = std::array::from_fn(|i| self.iexp[i] * change[i]);
-                let feedback = Feedback::new(&self.feedback, &slope);
                 if !converged {
-                    let [correction] = feedback.solve([residual])?;
+                    let [correction] = feedback_directions(&self.feedback, &slope, [residual])?;
                     for i in 0..LAWS {
                         z[i] -= correction[i];
                     }
                     continue;
                 }
-                let derivatives: [LawVector; SHARED] =
-                    feedback.solve(std::array::from_fn(|col| {
-                        self.z_port.each_ref().map(|row| row[col])
-                    }))?;
+                let derivatives: [LawVector; SHARED] = feedback_directions(
+                    &self.feedback,
+                    &slope,
+                    std::array::from_fn(|col| self.z_port.each_ref().map(|row| row[col])),
+                )?;
                 for (col, mut derivative) in derivatives.into_iter().enumerate() {
                     for (d, s) in derivative.iter_mut().zip(slope) {
                         *d *= s;

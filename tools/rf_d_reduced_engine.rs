@@ -5,10 +5,11 @@ use crate::{family::Family, graph::{self, State, B, N}, reduced_audio as audio,
 pub const TICKS: usize = 4096;
 pub const RATE: usize = 48_000;
 pub const BLOCK: usize = 128;
-pub const BANKS: usize = 8;
+pub const BANKS: usize = if cfg!(wide_contour_clock) { 11 } else { 8 };
 const FINE: usize = 8;
 const VT: f64 = 1.380649e-23 * 298.15 / 1.602176634e-19;
 const MOTION: f64 = VT / 32.;
+const CURVATURE_LIMIT: f64 = 2e-6;
 const C: usize = 56;
 const INNER: usize = 108;
 const PORT: [usize; 4] = [54, 55, 54 + C, 55 + C];
@@ -84,6 +85,7 @@ struct Accepted {
     running: Running,
     stage_order: [[bool; 2]; 2],
     movement: f64,
+    curvature: f64,
     iterations: usize,
     residual_a: f64,
     correction_v: f64,
@@ -169,7 +171,7 @@ impl<const FULL: bool> Evaluation<FULL> {
 impl Engine {
     /// Load the fixed electrical anchor and dyadic maps outside the callback.
     pub fn prepare(mut bytes: &[u8], cap: usize) -> Result<Self, StepError> {
-        if !matches!(cap, 32 | 64 | 128 | 256 | 512)
+        if !cap.is_power_of_two() || !(TICKS >> (BANKS - 1)..=512).contains(&cap)
             || bytes.len() != (2 * N + 1) * 8 + BANKS * audio::Map::BYTES
         {
             return Err(StepError::InvalidInput);
@@ -299,8 +301,17 @@ impl Engine {
                 });
                 let movement = stages.iter().flat_map(|s| s.iter().zip(before))
                     .fold(0_f64, |m, (v, base)| m.max((v - base).abs()));
+                let curvature = if cfg!(wide_clock_curvature) {
+                    INNER_ORDER[35..].iter().copied().chain([14]).map(|k| {
+                        let first = e.contour[0].now.high[k] + e.contour[0].now.low[k];
+                        let last = e.contour[1].now.high[k] + e.contour[1].now.low[k];
+                        ((first - value(old.state, k)) - (last - value(old.state, k)) / 3.).abs()
+                    }).fold(0_f64, f64::max)
+                } else {
+                    0.
+                };
                 return Ok(Accepted {
-                    running, stage_order: stages.map(order), movement, iterations,
+                    running, stage_order: stages.map(order), movement, curvature, iterations,
                     residual_a: norm, correction_v: correction,
                 });
             }
@@ -350,7 +361,7 @@ impl Engine {
                 }
                 let q = loop {
                     match self.step(candidate, key, width) {
-                        Ok(q) if width > FINE && (q.movement > MOTION || q.stage_order.iter().any(|x| *x != initial)) => {
+                        Ok(q) if width > FINE && (q.movement > MOTION || q.curvature > CURVATURE_LIMIT || q.stage_order.iter().any(|x| *x != initial)) => {
                             stats.guard_retries += 1;
                             width /= 2;
                         }
@@ -373,7 +384,7 @@ impl Engine {
                     }
                 }
                 candidate = q.running;
-                candidate.proposal = if q.movement < MOTION / 4. { (2 * width).min(self.ceiling) } else { width };
+                candidate.proposal = if q.movement < MOTION / 4. && q.curvature < CURVATURE_LIMIT / 4. { (2 * width).min(self.ceiling) } else { width };
                 stats.widths[width.trailing_zeros() as usize] += 1;
                 stats.iterations += q.iterations;
                 stats.max_residual_a = stats.max_residual_a.max(q.residual_a);

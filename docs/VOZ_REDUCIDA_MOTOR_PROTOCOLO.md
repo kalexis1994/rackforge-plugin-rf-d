@@ -55,3 +55,35 @@ el tiempo de pared, telemetría, fallos y margen.
 Medir fuera de ASIO mientras el render supera
 el presupuesto. La sesión física requiere un
 motor capaz de sostener el periodo.
+
+## Dirección de audio y techo de reloj
+
+El precondicionador usa hasta 56 columnas del
+Jacobiano de audio. Cada columna se mide por
+su mayor magnitud en el producto entre mapa y
+pendiente. Tomar las que superan 5e−4. Comprobar
+cada dirección contra las 108 filas y columnas,
+con residuo de hasta 1e−14 + 2e−13 por la
+magnitud del lado derecho. Si la proyección o
+el refinamiento no cumplen, resolver el LU
+completo. Se aplican los mismos límites
+eléctricos y de partición al render.
+
+El banco nativo admite un ensayo aparte con
+techo de 1.024 ticks y once mapas diádicos.
+Se conservan el guard de colectores, los ocho
+ticks para el cruce y todos los límites. El
+slot de RackForge conserva por ahora el banco
+de ocho mapas. La opción experimental mide
+cuánto coste se puede evitar lejos de un
+cruce y si el reloj ampliado mantiene la
+trayectoria bajo los mismos límites.
+
+En una segunda variante del reloj ampliado,
+comparar la primera etapa con la interpolación
+lineal al tercio del paso. Medir la diferencia
+en cada nodo con carga y en el sustain de volumen.
+Subdividir por encima de 2 µV y crecer sólo por
+debajo de 0,5 µV y del límite de movimiento.
+Esta diferencia decide el reloj, y el contraste
+contra la referencia decide la admisión.

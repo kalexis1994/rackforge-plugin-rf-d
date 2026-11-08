@@ -14,7 +14,7 @@ from check_recovery_engine128 import HOST_CORE
 from check_recovery_host import HOST, HOST_COMPILER
 from check_rf_d_reduced_contour_ports import unpack_stamp
 from check_rf_d_reduced_engine import (
-    AREA, COMPILER, CONTOUR, DEADLINE_NS, KERNEL, LIB, MODEL, MODULES, N, PANEL, ROOT,
+    AREA, BANKS, COMPILER, CONTOUR, DEADLINE_NS, KERNEL, LIB, MODEL, MODULES, N, PANEL, ROOT,
     SOURCES as ENGINE_SOURCES, TABLE, emit, maps, materialize, pin, read, read_oracle, references, source, text,
 )
 from prepare_dual_chain import sha, write
@@ -106,7 +106,7 @@ def main():
     assert not list(AREA.iterdir())
     base, native = next((path, report) for path in sorted(
         (ROOT / "evidence").glob("rf_d_reduced_engine[0-9][0-9].json"), reverse=True)
-        if (report := read(path.relative_to(ROOT).as_posix()))["passed"])
+        if (report := read(path.relative_to(ROOT).as_posix()))["passed"] and report.get("clock_banks", BANKS) == BANKS)
     sequence = 1
     while (out := ROOT / f"evidence/rf_d_reduced_engine_rack{sequence:02}.json").exists():
         sequence += 1

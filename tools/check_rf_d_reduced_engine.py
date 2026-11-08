@@ -1,4 +1,5 @@
 """Build and contrast the Rust audio block engine and its collector-driven clock."""
+import argparse
 import os
 import subprocess
 import traceback
@@ -49,7 +50,7 @@ def source(kernel):
     return emit(probe.name, code)
 
 
-def maps(stamp, panel, state):
+def maps(stamp, panel, state, bank_count=BANKS):
     nodes, ports = NODES[1], LOCAL_PORTS[1]
     n = len(nodes)
     local_bus = int(np.flatnonzero(nodes == BUS)[0])
@@ -59,7 +60,7 @@ def maps(stamp, panel, state):
     f, g, m = (part.copy() for part in stamp)
     f[local_bus] -= panel[0]
     g[local_bus, local_bus] -= panel[1]
-    for power in range(BANKS):
+    for power in range(bank_count):
         h = (1 << power) / (48_000 * TICKS)
         audio = Interior(matrix((f, g, m), h, None), terminals)
         rhs = np.column_stack((history(m, h), -np.tile(f, 2)))
@@ -75,7 +76,7 @@ def maps(stamp, panel, state):
             yield np.asarray(array, dtype="<f8").tobytes()
 
 
-def assess(raw, target, expected, size):
+def assess(raw, target, expected, size, bank_count=BANKS):
     grid, switches, blocks = [], [], []
     for line in raw.decode().splitlines():
         tag, *fields = line.split(",")
@@ -92,7 +93,7 @@ def assess(raw, target, expected, size):
             frames, ns, allocs, guard, retries, iterations = map(int, fields[:6])
             residual, correction = map(float, fields[6:8])
             widths = list(map(int, fields[8:]))
-            assert frames == size and len(widths) == BANKS
+            assert frames == size and len(widths) == bank_count
             assert sum(n * (1 << k) for k, n in enumerate(widths)) == frames * TICKS
             assert 0 < ns and allocs == 0 and 0. <= residual <= 1e-12 and 0. <= correction <= 2e-9
             blocks.append(dict(frames=frames, elapsed_ns=ns, allocations=allocs, guard_retries=guard,
@@ -123,13 +124,20 @@ def electrical(raw):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--wide-clock", action="store_true", help="exercise the 1,024-tick ceiling in the native bank")
+    parser.add_argument("--curvature", action="store_true", help="refine wide steps from contour stage curvature")
+    options = parser.parse_args()
+    if options.curvature and not options.wide_clock:
+        parser.error("--curvature requires --wide-clock")
+    bank_count = 11 if options.wide_clock else BANKS
     assert not list(AREA.iterdir())
     sequence = 1
     while (output := ROOT / f"evidence/rf_d_reduced_engine{sequence:02}.json").exists():
         sequence += 1
     sources = Sources(SOURCES)
     report = dict(passed=False, rackforge_measured=False, native_deadline_ns=DEADLINE_NS,
-                  **sources.fields(), compiler_sha256=sha(Path(COMPILER)), library_sha256=sha(LIB),
+                  clock_banks=bank_count, curvature_guard=options.curvature, **sources.fields(), compiler_sha256=sha(Path(COMPILER)), library_sha256=sha(LIB),
                   control_sha256=sha(ROOT / PRIOR), clock_sha256=sha(ROOT / CLOCK), trials={})
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
 
@@ -145,6 +153,7 @@ def main():
         clock, previous = read(CLOCK), read(PRIOR)
         assert clock["passed"] and previous["continuous_128_passed"]
         plan = (("negative", 32), ("positive", 64))
+        report["caps"] = {name: 4 if options.wide_clock else cap for name, cap in plan}
         keys = [ref[name][1][0] for name, _ in plan]
         path = AREA / "reduced-anchors.bin"
         np.asarray([np.r_[key[3].ravel(), key[0], 0.] for key in keys], "<f8").tofile(path)
@@ -160,6 +169,8 @@ def main():
         exe = AREA / "reduced-engine.exe"
         proc, report["build"] = run([COMPILER, "--edition=2021", "-C", "opt-level=3", "-C", "target-feature=+fma",
                                      "-C", "link-arg=-Wl,--stack,33554432", "--cfg", "laboratory", "-A", "dead_code",
+                                     *(["--cfg", "wide_contour_clock"] if options.wide_clock else []),
+                                     *(["--cfg", "wide_clock_curvature"] if options.curvature else []),
                                      source(kernel), "--extern", f"rf_d_circuit={LIB}", "-o", exe])
         assert proc.returncode == 0, proc.stderr.decode(errors="replace")
         proc, report["stamps"] = run([exe, "contour-stamps", path], binary=True)
@@ -170,18 +181,18 @@ def main():
             bank = AREA / f"audio-{name}.bin"
             with bank.open("wb") as out:
                 out.write(np.asarray(np.r_[key[3].ravel(), key[0]], "<f8").tobytes())
-                for chunk in maps(blocks[1], phase, key[3]):
+                for chunk in maps(blocks[1], phase, key[3], bank_count):
                     out.write(chunk)
             entry = dict(bank_sha256=sha(bank), bank_bytes=bank.stat().st_size, stamp_errors=errors, runs={})
             report["trials"][name] = entry
             expected = clock["trials"][name][str(cap)]["expected_brackets"]
             full = None
             for size in (128, 64):
-                command = [exe, "reduced-engine", bank, name, cap, size]
+                command = [exe, "reduced-engine", bank, name, report["caps"][name], size]
                 proc, item = run(command)
                 entry["runs"][str(size)] = item
                 if proc.returncode == 0:
-                    item["metrics"] = assess(proc.stdout, ref[name], expected, size)
+                    item["metrics"] = assess(proc.stdout, ref[name], expected, size, bank_count)
                     print("REDUCED_ENGINE", name, size, item["metrics"], flush=True)
                 if proc.returncode != 0 or not item["metrics"]["passed"]:
                     replay, item["replay"] = run(command)
