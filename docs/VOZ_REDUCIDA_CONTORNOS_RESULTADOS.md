@@ -73,3 +73,52 @@ El híbrido sigue en el banco de laboratorio. Para
 medir 128 frames efectivos en RackForge queda cerrar
 la trayectoria positiva y llevar el acoplamiento al
 motor de audio con un reloj de coste acotado.
+
+## Junturas de salida
+
+Q16/Q11, Q10 y CR1/CR2 de placa 3 se sumaron
+como restos exponenciales al mapa afín. El
+contraste de cuatro perturbaciones contra el
+stamp completo dio errores máximos de 0,142 fA
+y 5,50 fS. En la ventana de inversión ampliada
+el error nodal bajó de 9,51 µV a 1,29 µV.
+
+Con esa variante, el bloque negativo volvió a
+pasar completo y el positivo avanzó hasta la
+muestra 64 dentro del límite. En la 65, el nodo
+101, a la salida de C2, alcanzó 25,41 µV de
+error y usó 1,00058 veces su tolerancia. Los
+retornos siguieron dentro del límite y el
+desvío en J7 quedó por debajo de 0,584 µV en
+las 65 muestras evaluadas.
+[Trayectoria con auriculares activos](../evidence/rf_d_reduced_contour_ports10.json)
+
+Al agregar las junturas de la conversión de
+placa 4, las ocho perturbaciones de salida
+dieron un máximo de 0,142 fA en el resto de
+corriente y 9,41 fS en el Jacobiano. Volvieron
+a pasar el cierre de puertos, los bordes de
+KEY y la ventana ampliada de recuperación.
+
+| Contraste continuo | Rama negativa | Rama positiva |
+| --- | ---: | ---: |
+| Muestras dentro del límite | 128/128 | 128/128 |
+| Error nodal máximo | 0,569 nV | 0,256 nV |
+| Error máximo de R59 | 1,09e−21 A | 8,05e−21 A |
+| Error máximo de R60 | 4,47e−19 A | 4,47e−19 A |
+| Error máximo en J7 | 6,03 fV | 3,01 pV |
+
+En el bloque positivo, la inversión de volumen
+conservó el intervalo 319096–319104 y su sentido.
+El biestable de filtro conservó su estado. J7 pasó
+los tres límites de audio con RMS relativo de
+7,31e−10, pico relativo de 7,72e−10 y desvío medio
+de 0,195 pV. El recorrido usó una sola linealización,
+29 dispositivos activos de audio y la misma malla
+fina que la referencia.
+[Bloques completos](../evidence/rf_d_reduced_contour_ports11.json)
+
+El contraste queda cerrado para la escena nominal
+del solver. La medición a 128 frames efectivos en
+RackForge requiere implementar el acoplamiento en
+el motor y validar el reloj de ejecución.

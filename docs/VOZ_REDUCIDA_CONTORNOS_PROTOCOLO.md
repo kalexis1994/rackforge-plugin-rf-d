@@ -103,3 +103,50 @@ en la primera violación eléctrica para acotar el
 dominio del mapa. Reservar para RackForge la voz
 que supere una trayectoria continua con un reloj
 viable para tiempo real.
+
+## Junturas de placa 3
+
+Conservar Q16 y Q11 PNP, Q10 NPN y CR1/CR2. El
+mapa afín mantiene los resistores, las cargas en
+J7 y la memoria de C15, C19 y C21. Agregar
+solamente los restos exponenciales a partir de
+sus tensiones de ancla. Los BJT nominales de esta
+rama tienen beta directa 160, inversa 5 e Is de
+10 fA. Q16 tiene el colector a −20 V. Los diodos
+usan idealidad 1,5 e Is de 1,293303751274349 nA.
+Todos usan 298,15 K. Son parámetros del oráculo
+nominal, con la incertidumbre de dispositivo
+descrita en el punto DC. [Topología de placa 3](TOPOLOGIA_AMP_AURICULARES.md),
+[punto DC](PUNTO_DC_AMP_AURICULARES.md)
+
+Aislar la contribución activa con cuatro
+perturbaciones de 8 y 40 mV alrededor de las
+muestras positivas 0 y 77. Contrastar el resto
+de corriente y su Jacobiano con el stamp Rust
+completo después de quitar su parte lineal. Los
+límites son 0,2 pA y 2 pS. Repetir las reservas
+de KEY y de conmutación y las dos trayectorias
+continuas de 128 muestras, sin alimentar estados
+del solver durante el avance. Se mantienen los
+límites de tensión y de R59/R60 y el intervalo
+de ocho ticks para el biestable.
+
+## Conversión PNP antes de C2
+
+La trayectoria con el amplificador de auriculares
+activo alcanzó la muestra 65 y el mayor error
+pasó al nodo de salida de C2. Conservar también
+Q1/Q12/Q17 y los limitadores CR1/CR2 de placa 4.
+Usar la tarjeta nominal a 298,15 K con beta
+directa 100, inversa 5 e Is de 10 fA, y los
+mismos parámetros de diodo del stamp para esa
+placa. Mantener las cargas y los capacitores de
+la conversión en el mapa de historia. Aplicar
+cuatro perturbaciones adicionales y los mismos
+límites de corriente y Jacobiano. [Conversión de salida](CONVERSION_SALIDA_DC.md)
+
+Para la rama positiva completa, contrastar J7
+además con los límites del banco de reloj
+cargado. Usar RMS relativo de 0,1 %, pico
+relativo de 0,3 % y error medio de 1 µV.
+[Voz con reloj variable](VCO_FAMILIA_BUS_VOZ_RELOJ_PROTOCOLO.md)

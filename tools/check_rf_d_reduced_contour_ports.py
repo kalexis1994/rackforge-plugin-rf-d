@@ -15,7 +15,10 @@ from check_vco_family_voice_bus_latch_lu import SOURCES as REFERENCE_SOURCES, em
 from check_vco_family_voice_bus_model import AREA, materialize, read_oracle
 from check_vco_phase import COMPILER, LIB
 from prepare_dual_chain import ROOT, sha, write
-from rf_d_reduced_contour_live import LADDER, RECOVERY, VCA, integrate, run as run_live
+from recovery_port_input_model import law
+from rf_d_reduced_contour_live import (
+    CONVERSION, HEADPHONE, LADDER, RECOVERY, VCA, integrate, junction_incidence, run as run_live,
+)
 from prepare_hybrid_stamp import once
 from prepare_vco_family_voice_bus import TABLE
 from validate_vco_family_voice_bus import BUS, J7, KERNEL, MODEL, N, PANEL, read
@@ -49,6 +52,44 @@ AUDIO_ROWS = np.r_[0:62, 66:68]
 AUDIO_EXCLUDED = np.arange(62, 66)
 NODES = (np.arange(56), np.array([chain_index(k) for k in AUDIO_ROWS]))
 LOCAL_PORTS = tuple(np.array([list(nodes).index(p) for p in PORTS]) for nodes in NODES)
+SIGNAL = LADDER + RECOVERY + VCA
+OUTPUT = SIGNAL + HEADPHONE + CONVERSION
+
+
+def output_inputs(labels, rows):
+    probes = []
+    for label, devices, nodes in (("headphone", HEADPHONE, np.arange(50, 60)),
+                                   ("conversion", CONVERSION, np.arange(40, 47))):
+        columns = NODES[1][nodes]
+        for frame in (0, 77):
+            anchor = rows[labels.index(("positive", frame))]
+            for scale in (.008, -.040):
+                point = anchor.copy()
+                point[columns] += scale * np.cos(nodes)
+                point[N + columns] = 0.
+                probes.append((label, devices, frame, anchor, point))
+    return probes
+
+
+def verify_output(probes, matrices, anchor_data):
+    checks = {}
+    for (label, devices, frame, anchor, point), row in zip(probes, matrices, strict=True):
+        new, _, _, _ = unpack_stamp(row)
+        audio = anchor_data[f"positive_{frame}"][0][1]
+        nodes = NODES[1]
+        v = anchor[nodes] + anchor[N + nodes]
+        delta = (point[nodes] - anchor[nodes]) + (point[N + nodes] - anchor[N + nodes])
+        d, e, bias, iexp = junction_incidence(devices, v)
+        z = e @ delta
+        assert max(bias + z) < 45.
+        current, slope = law(dict(iexp=iexp), z)
+        current_error = float(np.max(abs(new[1][0] - audio[0] - audio[1] @ delta - d @ current)))
+        jacobian_error = float(np.max(abs(new[1][1] - audio[1] - (d * slope) @ e)))
+        assert current_error <= 2e-13 and jacobian_error <= 2e-12
+        checks.setdefault(label, []).append(dict(
+            frame=frame, voltage_delta_v=float(np.max(abs(delta))),
+            current_error_a=current_error, jacobian_error_s=jacobian_error))
+    return checks
 
 
 def build(kernel):
@@ -269,11 +310,22 @@ def endpoint_errors(frame, nodes, target):
     load_gate = load / (2e-9 + 2e-5 * abs(np.asarray(target[1:3])))
     return dict(frame=frame, nodal_gate_fraction=float(np.max(gate)), worst_node=int(np.argmax(gate)),
                 max_nodal_error_v=float(np.max(error)), contour_return_gate_fraction=float(np.max(load_gate)),
-                r59_error_a=float(load[0]), r60_error_a=float(load[1]), j7_error_v=float(error[J7]))
+                r59_error_a=float(load[0]), r60_error_a=float(load[1]), j7_error_v=float(error[J7]),
+                j7_delta_v=float(nodes[J7] - ref[J7]))
 
 
 def endpoint_passed(errors):
     return errors["nodal_gate_fraction"] <= 1. and errors["contour_return_gate_fraction"] <= 1.
+
+
+def compare_audio(endpoints, reference):
+    target = np.array([reference[1][item["frame"]][3][:, J7].sum() for item in endpoints])
+    delta = np.array([item["j7_delta_v"] for item in endpoints])
+    rms = float(np.linalg.norm(delta) / np.linalg.norm(target))
+    peak = float(max(abs(delta)) / max(abs(target)))
+    mean = float(abs(np.mean(delta)))
+    return dict(rms_relative=rms, peak_relative=peak, mean_error_v=mean,
+                passed=rms <= .001 and peak <= .003 and mean <= 1e-6)
 
 
 def live_trajectory(exe, env, blocks, phase, reference, expected, devices, start, controls, bounded=False):
@@ -342,11 +394,12 @@ def main():
                       build(kernel), "--extern", f"rf_d_circuit={LIB}", "-o", exe])
         labels, rows = anchor_input(reference)
         state = AREA / "anchors.bin"
-        rows.tofile(state)
+        output_probes = output_inputs(labels, rows)
+        np.vstack((rows, [item[-1] for item in output_probes])).astype("<f8").tofile(state)
         report["anchor_sha256"] = sha(state)
         raw = run("stamps", [exe, "contour-stamps", state], binary=True)
         width = sum(n + 2 * n * n for n in (56, 68, N)) + 5
-        matrices = np.frombuffer(raw, dtype="<f8").reshape(len(labels), width)
+        matrices = np.frombuffer(raw, dtype="<f8").reshape(len(labels) + len(output_probes), width)
         inputs, checks, anchor_data = [], [], {}
         report["reserves"] = {}
         for (case, frame), row in zip(labels, matrices):
@@ -357,6 +410,8 @@ def main():
             inputs.append(reaction)
             checks.append(check)
             anchor_data[name] = (blocks, phase)
+        report["output_stamp_checks"] = verify_output(output_probes, matrices[len(labels):], anchor_data)
+        print("OUTPUT_STAMPS", {label: len(items) for label, items in report["output_stamp_checks"].items()}, flush=True)
         ports = AREA / "reactions.bin"
         np.asarray(inputs, dtype="<f8").tofile(ports)
         report["reactions_sha256"] = sha(ports)
@@ -367,7 +422,8 @@ def main():
         report["local_port_checks_passed"] = all(item["passed"] for item in report["reserves"].values())
         report["frozen_trajectory"] = frozen_trajectory(*anchor_data["positive_77"], reference["positive"], expected)
         report["live_contour_trajectory"] = {}
-        for name, devices in (("ladder", LADDER), ("ladder_recovery_vca", LADDER + RECOVERY + VCA)):
+        for name, devices in (("ladder", LADDER), ("ladder_recovery_vca", SIGNAL),
+                              ("headphone", SIGNAL + HEADPHONE), ("output", OUTPUT)):
             result = live_trajectory(exe, env, *anchor_data["positive_77"], reference["positive"], expected,
                                      devices, 77, (0., 0.))
             report["live_contour_trajectory"][name] = result
@@ -379,18 +435,25 @@ def main():
         )
         for name, branch, start, key, switches in windows:
             result = live_trajectory(exe, env, *anchor_data[f"{branch}_{start}"], reference[branch],
-                                     switches, LADDER + RECOVERY + VCA, start, key)
+                                     switches, OUTPUT, start, key)
             report["independent_windows"][name] = result
         report["continuous_128"] = {}
         for branch, switches in (("negative", windows[0][-1]), ("positive", expected)):
             keys = tuple(10. if branch == "negative" and 16 <= i < 96 else 0. for i in range(128))
+            print("CONTINUOUS_START", branch, flush=True)
             report["continuous_128"][branch] = live_trajectory(
                 exe, env, *anchor_data[f"{branch}_0"], reference[branch], switches,
-                LADDER + RECOVERY + VCA, 0, keys, bounded=True)
+                OUTPUT, 0, keys, bounded=True)
         report["passed"] = (report["local_port_checks_passed"]
                             and report["live_contour_trajectory"]["ladder_recovery_vca"]["passed"]
+                            and report["live_contour_trajectory"]["headphone"]["passed"]
+                            and report["live_contour_trajectory"]["output"]["passed"]
                             and all(item["passed"] for item in report["independent_windows"].values()))
-        report["continuous_128_passed"] = all(item["passed"] for item in report["continuous_128"].values())
+        positive = report["continuous_128"]["positive"]
+        if positive["completed"]:
+            positive["audio"] = compare_audio(positive["endpoints"], reference["positive"])
+        report["continuous_128_passed"] = (all(item["passed"] for item in report["continuous_128"].values())
+                                            and positive["audio"]["passed"])
         assert report["passed"]
         sources.unchanged()
     except Exception:

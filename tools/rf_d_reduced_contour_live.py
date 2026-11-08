@@ -1,37 +1,91 @@
 """Close the nonlinear RF-D contour and H128 loads on an affine audio arm."""
 import subprocess
+from typing import NamedTuple
 
 import numpy as np
 
-
 from recovery_port_input_model import VT, law
 
+
+class Transistor(NamedTuple):
+    base: int
+    collector: int | float
+    emitter: int
+    polarity: float = 1.
+    beta_forward: float = 100.
+
+
+class Diode(NamedTuple):
+    anode: int | float
+    cathode: int | float
+    saturation_a: float
+    ideality: float = 1.5
+
+
 # Raw audio nodes 0..61 retain order in the split arm.
-LADDER = ((6, 8, 5), (3, 9, 8), (2, 10, 9), (1, 11, 10), (0, None, 11),
-          (7, 12, 5), (3, 13, 12), (2, 14, 13), (1, 15, 14), (0, None, 15))
-RECOVERY = ((16, 21, 18), (17, None, 19), (18, 21, 20), (19, None, 20))
-VCA = ((25, 30, 27), (26, 31, 27), (32, 28, 29), (30, 37, 34), (31, 38, 34))
+LADDER = tuple(Transistor(*pins) for pins in (
+    (6, 8, 5), (3, 9, 8), (2, 10, 9), (1, 11, 10), (0, 10., 11),
+    (7, 12, 5), (3, 13, 12), (2, 14, 13), (1, 15, 14), (0, 10., 15),
+))
+RECOVERY = tuple(Transistor(*pins) for pins in ((16, 21, 18), (17, 10., 19), (18, 21, 20), (19, 10., 20)))
+VCA = tuple(Transistor(*pins) for pins in ((25, 30, 27), (26, 31, 27), (32, 28, 29), (30, 37, 34), (31, 38, 34)))
+HEADPHONE = (
+    Transistor(50, -20., 51, -1., 160.),
+    Transistor(54, 55, 56, -1., 160.),
+    Transistor(57, 58, 59, 1., 160.),
+    Diode(52, 51, 1.293_303_751_274_349e-9),
+    Diode(53, 52, 1.293_303_751_274_349e-9),
+)
+CONVERSION = (
+    Transistor(40, 42, 41, -1.),
+    Transistor(37, 45, 43, -1.),
+    Transistor(38, 46, 44, -1.),
+    Diode(46, 10., 1.293_303_751_274_349e-9),
+    Diode(0., 46, 1.293_303_751_274_349e-9),
+)
+
+
+def junction_incidence(devices, anchor):
+    count = sum(1 if isinstance(device, Diode) else 2 for device in devices)
+    inject = np.zeros((len(anchor), count))
+    sense = np.zeros((count, len(anchor)))
+    bias, saturation = [], []
+
+    def sense_branch(left, right, scale, is_a):
+        j = len(bias)
+        for node, sign in ((left, 1.), (right, -1.)):
+            if isinstance(node, int):
+                sense[j, node] += sign * scale
+        voltage = lambda node: anchor[node] if isinstance(node, int) else node
+        bias.append(scale * (voltage(left) - voltage(right)))
+        saturation.append(is_a)
+        return j
+
+    for device in devices:
+        if isinstance(device, Diode):
+            a, c, is_a, ideality = device
+            j = sense_branch(a, c, 1. / (ideality * VT), is_a)
+            for node, sign in ((a, 1.), (c, -1.)):
+                if isinstance(node, int):
+                    inject[node, j] += sign
+            continue
+        base, collector, emitter, polarity, beta = device
+        forward = sense_branch(base, emitter, polarity / VT, 1e-14)
+        reverse = sense_branch(base, collector, polarity / VT, 1e-14)
+        for node, be, bc in ((base, 1. / beta, .2), (collector, 1., -1.2), (emitter, -1. - 1. / beta, 1.)):
+            if isinstance(node, int):
+                inject[node, [forward, reverse]] += polarity * np.array([be, bc])
+    bias = np.asarray(bias)
+    return inject, sense, bias, np.asarray(saturation) * np.exp(bias)
 
 
 class Junctions:
-    """Inject only the exponential remainder of each retained BE and BC law."""
+    """Inject the exponential remainder of each retained transistor junction and diode."""
 
     def __init__(self, devices, audio, anchor):
-        n = len(anchor)
-        inject = np.zeros((n, 2 * len(devices)))
-        sense = np.zeros((2 * len(devices), n))
-        base_v = []
-        for k, (base, collector, emitter) in enumerate(devices):
-            for col, other in ((2 * k, emitter), (2 * k + 1, collector)):
-                sense[col, base] = 1. / VT
-                if other is not None:
-                    sense[col, other] = -1. / VT
-                base_v.append((anchor[base] - (10. if other is None else anchor[other])) / VT)
-            for node, forward, reverse in ((base, .01, .2), (collector, 1., -1.2), (emitter, -1.01, 1.)):
-                if node is not None:
-                    inject[node, 2 * k:2 * k + 2] = (forward, reverse)
-        self.base = np.tile(base_v, 2)
-        self.model = dict(iexp=1e-14 * np.exp(self.base))
+        inject, sense, bias, iexp = junction_incidence(devices, anchor)
+        self.base = np.tile(bias, 2)
+        self.model = dict(iexp=np.tile(iexp, 2))
         self.sense = np.kron(np.eye(2), sense)
         d = np.kron(np.eye(2), inject)
         particular, self.return_map = audio.response(-d)
