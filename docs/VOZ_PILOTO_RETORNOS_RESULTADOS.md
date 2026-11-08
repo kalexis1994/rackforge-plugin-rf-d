@@ -1,0 +1,96 @@
+# Primera etapa de retornos en el piloto rápido
+
+El piloto FOH admite la tensión que alimenta R59
+y la tensión del pin 16 que modula la rama de
+R60. R60 y C18 siguen en el circuito del filtro.
+El motor devuelve ambas corrientes y conserva
+el VCO del piloto, C27 y el FIR. El dominio
+actual es ±15 mV alrededor de 2 V en volumen
+y ±1 mV alrededor de 0 V en el pin 16.
+[Protocolo](VOZ_PILOTO_RETORNOS_PROTOCOLO.md)
+
+Con las 12 leyes iniciales, ambas corrientes
+pasaron y el error RMS de J7 llegó a 0,529 % con
+los dos controles frente al límite de 0,3 %.
+Al conservar también Q18 y el par de señal del
+primer VCA, pasaron los tres estímulos contra
+Radau a 768 kHz. El peor error RMS de J7 fue
+0,0660 %. El mayor error de R59 fue 0,0168 fA
+y el de R60, 4,66 pA, frente a 2 nA por retorno.
+[Primer contraste](../evidence/rf_d_pilot_returns02.json),
+[reserva corregida](../evidence/rf_d_pilot_returns04.json)
+
+El motor rechazó una entrada inválida sin
+publicar historia ni salida y reprodujo por bits
+el mismo render al usar bloques de 64 o 128. La
+escena con ambos controles tuvo máximo de 0,680 ms
+sobre 376 bloques, cero excedencias de 1,333 ms
+y cero asignaciones. La etapa conserva el piloto
+previo como control independiente.
+
+## Frontera de la conmutación
+
+La reserva positiva del solver tiene el extremo
+de R59 entre 0,935 V y 1,918 V. Estos valores
+quedan fuera del dominio del piloto actual.
+La interpolación lineal del diferencial de
+colectores a 48 kHz predice el cruce en el
+tick 316376,75. El intervalo de referencia es
+319096–319104. Esa interpolación adelantaría el
+evento alrededor de 13,8 µs. La siguiente etapa
+necesita un estado de carga y un detector de
+evento del biestable, además de ajustar el
+punto de operación de los retornos.
+[Reserva cargada](VCO_FAMILIA_BUS_VOZ_RELOJ_RESULTADOS.md)
+
+El banco actual excita las entradas con fuentes
+explícitas. La trayectoria propia de C2/C5 y el
+biestable quedan pendientes de integración.
+
+## Slot nativo de RackForge
+
+El núcleo RackForge `7a14c68a` cargó el piloto
+como paquete nativo. En todos los pases con
+retornos activos, sus 48.128 muestras de J7
+coincidieron por bits con el banco nativo.
+La primera campaña completa dio 1,072 ms y
+33,518 ms de máximos en los dos pases activos.
+La repetición dio 1,975 y 3,042 ms. En esa
+repetición el control a cero también excedió
+el margen, con máximo de 8,914 ms. Los picos
+se conservan en los recibos.
+[Primera campaña](../evidence/rf_d_pilot_returns_rack02.json),
+[repetición](../evidence/rf_d_pilot_returns_rack03.json)
+
+Otra campaña offline pasó completa con máximos
+de 1,103 y 0,983 ms en los dos pases activos.
+El bloque de control de esa campaña quedó en
+0,979 ms. Se conservaron los intentos de apertura
+física que corrigieron la selección de la
+biblioteca y la afinidad heredada del supervisor.
+[Campaña offline completa](../evidence/rf_d_pilot_returns_rack05.json)
+
+## Callback físico
+
+La campaña final usó el mismo binario que el
+slot offline. ASIO4ALL confirmó 48 kHz y 128
+frames efectivos en la salida NVIDIA, con
+CPU lógica 9, espera por evento y la condición
+previa del banco físico. El driver recibió
+silencio mientras RackForge procesaba el piloto.
+Se restauraron la frecuencia y la configuración
+de búfer al terminar.
+
+| Banco | Callbacks | Máximo de pared | Excedencias de 1,333 ms |
+| --- | ---: | ---: | ---: |
+| Control silencioso | 1.200 | 0,041 ms | 0 |
+| Retornos activos, pase 1 | 4.800 | 0,801 ms | 0 |
+| Retornos activos, pase 2 | 4.800 | 0,820 ms | 0 |
+
+Los primeros callbacks, incluida su preparación,
+también pasaron. El peor pase activo dejó
+0,514 ms respecto del margen. Se registraron
+cero plazos perdidos y cero fallos del slot.
+La admisión cubre esta etapa de retornos y
+la configuración física probada.
+[Campaña ASIO](../evidence/rf_d_pilot_returns_rack06.json)
