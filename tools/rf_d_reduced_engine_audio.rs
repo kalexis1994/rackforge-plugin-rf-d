@@ -7,7 +7,8 @@ use crate::{
 
 pub const NODES: usize = 64;
 pub const SHARED: usize = 6;
-const LAWS: usize = 108;
+pub const STAGE_LAWS: usize = 54;
+const LAWS: usize = 2 * STAGE_LAWS;
 const HISTORY: usize = NODES + 1;
 pub const NODE: [usize; NODES] = {
     let mut nodes = [0; NODES];
@@ -43,6 +44,7 @@ pub struct Response {
     pub current: [f64; SHARED],
     pub jacobian: [[f64; SHARED]; SHARED],
     nonlinear: [f64; LAWS],
+    pub junctions: Junctions,
 }
 
 pub fn read_array<const N: usize>(bytes: &mut &[u8]) -> [f64; N] {
@@ -69,7 +71,8 @@ fn excess(z: f64, change: f64) -> f64 {
                         + z * (1. / 720. + z * (1. / 5040. + z * (1. / 40320. + z / 362880.)))))))
 }
 
-type LawVector = [f64; LAWS];
+pub type Junctions = [f64; LAWS];
+type LawVector = Junctions;
 type LawMatrix = [LawVector; LAWS];
 
 // The largest columns precondition the same full linear system. The
@@ -219,10 +222,20 @@ impl Map {
         &self,
         history: &History,
         ports: &[f64; SHARED],
+        seed: &Junctions,
     ) -> Result<Response, StepError> {
-        let drive: [f64; LAWS] =
-            std::array::from_fn(|i| history.junction[i] + dot(&self.z_port[i], ports));
-        let mut z = drive;
+        let drive = std::array::from_fn(|i| history.junction[i] + dot(&self.z_port[i], ports));
+        self.solve_response::<FULL>(history, ports, &drive, *seed)
+            .or_else(|_| self.solve_response::<FULL>(history, ports, &drive, drive))
+    }
+
+    fn solve_response<const FULL: bool>(
+        &self,
+        history: &History,
+        ports: &[f64; SHARED],
+        drive: &Junctions,
+        mut z: Junctions,
+    ) -> Result<Response, StepError> {
         for _ in 0..16 {
             if z.iter()
                 .zip(&self.bias)
@@ -269,6 +282,7 @@ impl Map {
                 current,
                 jacobian,
                 nonlinear,
+                junctions: z,
             });
         }
         Err(StepError::IterationBudget)

@@ -60,8 +60,15 @@ pub fn run(path: &str, branch: &str, cap: usize, size: usize) -> Result<(), Box<
         let elapsed = start.elapsed().as_nanos();
         ACTIVE.store(false, Relaxed);
         let count = COUNT.load(Relaxed);
-        let Counters { widths, guard_retries, solver_retries, iterations, max_residual_a, max_correction_v } =
-            stats.map_err(|e| format!("{branch} cap={cap} block={block}: {e:?}"))?;
+        let stats = stats.map_err(|e| format!("{branch} cap={cap} block={block}: {e:?}"))?;
+        let Counters { widths, guard_retries, solver_retries, iterations, max_residual_a, max_correction_v, .. } = stats;
+        #[cfg(profile_reduced)]
+        for (region, p) in stats.profile.into_iter().enumerate() {
+            let [contour, audio, direction] = p.calls;
+            let [contour_ns, audio_ns, direction_ns] = p.ns;
+            println!("PROFILE,{region},{},{},{},{contour},{audio},{direction},{contour_ns},{audio_ns},{direction_ns}",
+                     p.steps, p.fine_steps, p.wall_ns);
+        }
         println!("BLOCK,{size},{elapsed},{count},{guard_retries},{solver_retries},{iterations},{max_residual_a:.17e},{max_correction_v:.17e},{}",
                  widths.map(|n| n.to_string()).join(","));
         for (i, sample) in frames.iter().enumerate() {

@@ -106,7 +106,8 @@ def main():
     assert not list(AREA.iterdir())
     base, native = next((path, report) for path in sorted(
         (ROOT / "evidence").glob("rf_d_reduced_engine[0-9][0-9].json"), reverse=True)
-        if (report := read(path.relative_to(ROOT).as_posix()))["passed"] and report.get("clock_banks", BANKS) == BANKS)
+        if (report := read(path.relative_to(ROOT).as_posix()))["passed"] and report.get("clock_banks", BANKS) == BANKS
+        and not report.get("profiled", False))
     sequence = 1
     while (out := ROOT / f"evidence/rf_d_reduced_engine_rack{sequence:02}.json").exists():
         sequence += 1

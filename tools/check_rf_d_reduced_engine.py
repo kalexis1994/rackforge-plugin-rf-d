@@ -77,7 +77,7 @@ def maps(stamp, panel, state, bank_count=BANKS):
 
 
 def assess(raw, target, expected, size, bank_count=BANKS):
-    grid, switches, blocks = [], [], []
+    grid, switches, blocks, profile = [], [], [], []
     for line in raw.decode().splitlines():
         tag, *fields = line.split(",")
         if tag == "GRID":
@@ -88,6 +88,10 @@ def assess(raw, target, expected, size, bank_count=BANKS):
             grid.append((float(angle), float(r59), float(r60), state))
         elif tag == "SWITCH":
             switches.append(list(map(int, fields)))
+        elif tag == "PROFILE":
+            values = list(map(int, fields))
+            assert len(values) == 10 and values[0] in (0, 1, 2)
+            profile.append(values)
         else:
             assert tag == "BLOCK"
             frames, ns, allocs, guard, retries, iterations = map(int, fields[:6])
@@ -108,9 +112,20 @@ def assess(raw, target, expected, size, bank_count=BANKS):
         assert max(abs(a[1] - b[1]), abs(a[2] - b[2])) <= 2e-9 + 2e-5 * max(abs(b[1]), abs(b[2]))
         endpoints.append(result)
     sound = compare_audio(endpoints, target)
+    windows = []
+    if profile:
+        assert len(profile) == 3 * len(blocks)
+        for region, label in enumerate(("before", "crossing", "after")):
+            rows = np.asarray([row[1:] for row in profile if row[0] == region], dtype=np.int64)
+            steps, fine, wall, nc, na, nd, tc, ta, td = map(int, rows.sum(axis=0))
+            assert 0 <= fine <= steps and tc + ta + td <= wall and nc >= na >= nd
+            windows.append(dict(region=label, steps=steps, fine_steps=fine, wall_ns=wall,
+                                calls=dict(contour=nc, audio=na, direction=nd),
+                                ns=dict(contour=tc, audio=ta, direction=td)))
+        assert sum(row["steps"] for row in windows) == sum(sum(b["widths"]) for b in blocks)
     passed = (switches == expected and all(endpoint_passed(row) for row in endpoints)
               and max(row["phase_error_cycles"] for row in endpoints) <= 1e-7 and sound["passed"])
-    return dict(passed=passed, switches=switches, expected_switches=expected, audio=sound, blocks=blocks,
+    return dict(passed=passed, switches=switches, expected_switches=expected, audio=sound, blocks=blocks, profile=windows,
                 accepted_steps=sum(sum(b["widths"]) for b in blocks),
                 maximum={k: max(row[k] for row in endpoints) for k in (
                     "nodal_gate_fraction", "max_nodal_error_v", "contour_return_gate_fraction",
@@ -127,6 +142,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--wide-clock", action="store_true", help="exercise the 1,024-tick ceiling in the native bank")
     parser.add_argument("--curvature", action="store_true", help="refine wide steps from contour stage curvature")
+    parser.add_argument("--profile", action="store_true", help="measure native solve phases by window")
     options = parser.parse_args()
     if options.curvature and not options.wide_clock:
         parser.error("--curvature requires --wide-clock")
@@ -137,7 +153,7 @@ def main():
         sequence += 1
     sources = Sources(SOURCES)
     report = dict(passed=False, rackforge_measured=False, native_deadline_ns=DEADLINE_NS,
-                  clock_banks=bank_count, curvature_guard=options.curvature, **sources.fields(), compiler_sha256=sha(Path(COMPILER)), library_sha256=sha(LIB),
+                  profiled=options.profile, clock_banks=bank_count, curvature_guard=options.curvature, **sources.fields(), compiler_sha256=sha(Path(COMPILER)), library_sha256=sha(LIB),
                   control_sha256=sha(ROOT / PRIOR), clock_sha256=sha(ROOT / CLOCK), trials={})
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
 
@@ -169,6 +185,7 @@ def main():
         exe = AREA / "reduced-engine.exe"
         proc, report["build"] = run([COMPILER, "--edition=2021", "-C", "opt-level=3", "-C", "target-feature=+fma",
                                      "-C", "link-arg=-Wl,--stack,33554432", "--cfg", "laboratory", "-A", "dead_code",
+                                     *(["--cfg", "profile_reduced"] if options.profile else []),
                                      *(["--cfg", "wide_contour_clock"] if options.wide_clock else []),
                                      *(["--cfg", "wide_clock_curvature"] if options.curvature else []),
                                      source(kernel), "--extern", f"rf_d_circuit={LIB}", "-o", exe])

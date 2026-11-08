@@ -126,3 +126,28 @@ el plazo. El render incluye ambos biestables y
 sus cargas de contorno. El margen de 1,333 ms
 sigue pendiente y estos pases no abrieron ASIO.
 [Slot con precondicionador](../evidence/rf_d_reduced_engine_rack03.json)
+
+## Perfil de la transición y semilla de audio
+
+En los frames 74–82, el tramo de audio tomó
+3,001 de 3,827 s del banco positivo instrumentado.
+En esa ventana hubo 2.340 pasos aceptados y
+2.014 de ocho ticks o menos. El lector inicial
+exigió el mismo número de llamadas de armado y
+audio. La traza conserva siete candidatos que
+terminaron antes de entrar al tramo de audio.
+El lector corregido recuperó el contraste con
+el mismo estado y los mismos límites.
+[Perfil original](../evidence/rf_d_reduced_engine08.json)
+
+Al reutilizar las raíces de juntura como
+semillas, la ventana bajó a 2,518 s y el audio
+dentro de ella a 1,361 s. El bloque positivo
+completo bajó de 18,656 s a 13,260 s en los
+bancos instrumentados. Se conservaron el reloj,
+el cruce, las corrientes R59/R60, J7 y la
+identidad de la partición. El error nodal
+máximo siguió en 7,82 µV. La semilla acompaña
+el estado aceptado y el render registró cero
+asignaciones.
+[Reutilización contrastada](../evidence/rf_d_reduced_engine09.json)

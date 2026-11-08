@@ -53,7 +53,46 @@ pub struct Counters {
     pub iterations: usize,
     pub max_residual_a: f64,
     pub max_correction_v: f64,
+    #[cfg(profile_reduced)]
+    pub profile: [StepProfile; 3],
 }
+
+#[derive(Clone, Copy, Default)]
+pub struct StepProfile {
+    #[cfg(profile_reduced)]
+    pub steps: usize,
+    #[cfg(profile_reduced)]
+    pub fine_steps: usize,
+    #[cfg(profile_reduced)]
+    pub wall_ns: u128,
+    #[cfg(profile_reduced)]
+    pub calls: [usize; 3],
+    #[cfg(profile_reduced)]
+    pub ns: [u128; 3],
+}
+
+#[derive(Clone, Copy)]
+enum Work { Contour, Audio, Direction }
+
+impl StepProfile {
+    #[inline]
+    fn measure<T>(&mut self, part: Work, run: impl FnOnce() -> T) -> T {
+        #[cfg(profile_reduced)]
+        {
+            let start = std::time::Instant::now();
+            let result = run();
+            self.calls[part as usize] += 1;
+            self.ns[part as usize] += start.elapsed().as_nanos();
+            result
+        }
+        #[cfg(not(profile_reduced))]
+        {
+            let _ = part;
+            run()
+        }
+    }
+}
+
 
 #[derive(Clone, Copy)]
 struct Running {
@@ -61,6 +100,7 @@ struct Running {
     phase: f64,
     frame: usize,
     proposal: usize,
+    junctions: [f64; audio::STAGE_LAWS],
 }
 
 pub struct Engine {
@@ -188,7 +228,9 @@ impl Engine {
             maps.push(audio::Map::read(&mut bytes));
         }
         let ceiling = TICKS / cap;
-        let initial = Running { state, phase, frame: 0, proposal: ceiling };
+        let initial = Running {
+            state, phase, frame: 0, proposal: ceiling, junctions: [0.; audio::STAGE_LAWS],
+        };
         Ok(Self {
             maps, initial, running: initial, ceiling,
             audio_anchor: audio::NODE.map(|k| value(state, k)),
@@ -218,13 +260,13 @@ impl Engine {
 
     fn evaluate<const FULL: bool>(
         &self, running: Running, map: &audio::Map, history: &audio::History, key: f64, h: f64,
-        delta: [f64; 2 * C], bus: [f64; 2],
+        delta: [f64; 2 * C], bus: [f64; 2], seed: &audio::Junctions, profile: &mut StepProfile,
     ) -> Result<Evaluation<FULL>, StepError> {
         let state = running.state;
-        let contour = [
+        let contour = profile.measure(Work::Contour, || -> Result<_, StepError> { Ok([
             graph::reduced_contour::<FULL>(state, delta[..C].try_into().unwrap(), key, h)?,
             graph::reduced_contour::<FULL>(state, delta[C..].try_into().unwrap(), key, h)?,
-        ];
+        ]) })?;
         let shared = std::array::from_fn(|i| {
             if i >= 4 {
                 bus[i - 4]
@@ -253,14 +295,14 @@ impl Engine {
             let row = i % C;
             contour[stage].dc[row] + B[stage][0] * contour[0].dq[row] + B[stage][1] * contour[1].dq[row]
         });
-        let mut response = map.response::<FULL>(history, &shared)?;
+        let mut response = profile.measure(Work::Audio, || map.response::<FULL>(history, &shared, seed))?;
         for i in 0..2 {
             response.current[i + 4] += panel[i].currents_a[2];
         }
         Ok(Evaluation { contour, response, shared, current, panel_j, phase: phases[1] })
     }
 
-    fn step(&self, old: Running, key: f64, width: usize) -> Result<Accepted, StepError> {
+    fn step(&self, old: Running, key: f64, width: usize, profile: &mut StepProfile) -> Result<Accepted, StepError> {
         let h = width as f64 / (RATE * TICKS) as f64;
         let map = &self.maps[width.trailing_zeros() as usize];
         let offset = std::array::from_fn(|i| value(old.state, audio::NODE[i]) - self.audio_anchor[i]);
@@ -273,10 +315,11 @@ impl Engine {
             delta[22 + C] = seed;
         }
         let mut bus = [offset[62]; 2];
+        let mut seed = std::array::from_fn(|i| old.junctions[i % audio::STAGE_LAWS]);
         for iterations in 1..=80 {
-            let e = self.evaluate::<true>(old, map, &history, key, h, delta, bus)?;
+            let e = self.evaluate::<true>(old, map, &history, key, h, delta, bus, &seed, profile)?;
             let norm = e.norm();
-            let (dv, db) = direction(&e)?;
+            let (dv, db) = profile.measure(Work::Direction, || direction(&e))?;
             let correction = maximum(&dv).max(maximum(&db));
             if correction <= 2e-9 && norm <= 1e-12 {
                 let end = map.endpoint(&history, &e.shared, &e.response);
@@ -296,6 +339,7 @@ impl Engine {
                 }
                 running.state = state;
                 running.phase = e.phase;
+                running.junctions.copy_from_slice(&e.response.junctions[audio::STAGE_LAWS..]);
                 let stages = e.contour.each_ref().map(|s| {
                     COLLECTORS.map(|k| s.now.high[k] + s.now.low[k])
                 });
@@ -320,13 +364,16 @@ impl Engine {
             for _ in 0..24 {
                 let trial = std::array::from_fn(|i| delta[i] + scale * dv[i]);
                 let trial_bus = std::array::from_fn(|i| bus[i] + scale * db[i]);
-                if self.evaluate::<false>(old, map, &history, key, h, trial, trial_bus)
-                    .is_ok_and(|e| e.norm() < norm.max(1e-12))
-                {
-                    delta = trial;
-                    bus = trial_bus;
-                    accepted = true;
-                    break;
+                if let Ok(candidate) = self.evaluate::<false>(
+                    old, map, &history, key, h, trial, trial_bus, &e.response.junctions, profile,
+                ) {
+                    if candidate.norm() < norm.max(1e-12) {
+                        delta = trial;
+                        bus = trial_bus;
+                        seed = candidate.response.junctions;
+                        accepted = true;
+                        break;
+                    }
                 }
                 scale *= 0.5;
             }
@@ -359,8 +406,18 @@ impl Engine {
                 while tick % width != 0 || width > TICKS - within {
                     width /= 2;
                 }
+                #[cfg(profile_reduced)]
+                let profile = &mut stats.profile[match candidate.frame {
+                    0..74 => 0,
+                    74..83 => 1,
+                    _ => 2,
+                }];
+                #[cfg(not(profile_reduced))]
+                let profile = &mut StepProfile::default();
+                #[cfg(profile_reduced)]
+                let start = std::time::Instant::now();
                 let q = loop {
-                    match self.step(candidate, key, width) {
+                    match self.step(candidate, key, width, profile) {
                         Ok(q) if width > FINE && (q.movement > MOTION || q.curvature > CURVATURE_LIMIT || q.stage_order.iter().any(|x| *x != initial)) => {
                             stats.guard_retries += 1;
                             width /= 2;
@@ -375,6 +432,12 @@ impl Engine {
                         Err(error) => return Err(error),
                     }
                 };
+                #[cfg(profile_reduced)]
+                {
+                    profile.wall_ns += start.elapsed().as_nanos();
+                    profile.steps += 1;
+                    profile.fine_steps += usize::from(width <= FINE);
+                }
                 for (pair, (&previous, &next)) in initial.iter().zip(&q.stage_order[1]).enumerate() {
                     if previous != next {
                         *switches.get_mut(switch_count).ok_or(StepError::IterationBudget)? = Some(Switch {

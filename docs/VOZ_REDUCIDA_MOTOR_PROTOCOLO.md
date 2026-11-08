@@ -87,3 +87,23 @@ Subdividir por encima de 2 µV y crecer sólo por
 debajo de 0,5 µV y del límite de movimiento.
 Esta diferencia decide el reloj, y el contraste
 contra la referencia decide la admisión.
+
+## Perfil de cruce y semilla de audio
+
+El perfil instrumentado separa el armado de
+contornos, la respuesta de audio y la dirección
+del solve acoplado. Sumar por ventanas de frames
+0–73, 74–82 y 83–127. Incluir intentos rechazados
+en el tiempo del paso. Excluir este binario del
+banco de tiempo de RackForge.
+
+La raíz de audio de un intento aceptado puede
+servir de semilla para la siguiente evaluación
+del mismo paso. Entre pasos, usar las 54
+tensiones de juntura de la etapa final de la
+historia aceptada para iniciar ambas etapas.
+El anclaje de los mapas es común. Inicializar en
+cero y volver a la semilla afín si falla la
+convergencia. Las 108 leyes, el Jacobiano y los
+límites permanecen. Publicar la semilla junto al
+estado sólo después de aceptar el paso y el bloque.
