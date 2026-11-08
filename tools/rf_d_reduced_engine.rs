@@ -97,8 +97,18 @@ fn order(collectors: [f64; 4]) -> [bool; 2] {
     [collectors[0] >= collectors[1], collectors[2] >= collectors[3]]
 }
 
+// Algebraic rows have no stage cross-coupling. Eliminating them first
+// keeps their fill local before the dynamic rows and the two audio ports.
+const INNER_ORDER: [usize; 54] = [
+    8, 16, 22, 24, 53, 44, 47, 50, 51, 49, 46, 45, 43,
+    12, 13, 15, 14, 11, 10, 9, 7, 6,
+    0, 1, 2, 3, 4, 29, 30, 31, 32, 33, 35, 36, 37,
+    5, 17, 18, 19, 20, 21, 23, 25, 26, 27, 28, 34,
+    38, 39, 40, 41, 42, 48, 52,
+];
+
 fn inner_index(i: usize) -> usize {
-    (i / 54) * C + i % 54
+    (i / 54) * C + INNER_ORDER[i % 54]
 }
 
 fn coefficient(e: &Evaluation<true>, i: usize, j: usize) -> f64 {

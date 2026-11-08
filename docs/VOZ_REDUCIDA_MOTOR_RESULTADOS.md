@@ -55,3 +55,36 @@ resto del bloque. La prueba mide el motor y
 mezclador fuera de ASIO. La salida física sigue
 pendiente mientras el motor exceda el plazo.
 [Dos pases por reserva](../evidence/rf_d_reduced_engine_rack01.json)
+
+## Contornos cerrados en el render acoplado
+
+El motor de la reserva nominal vuelve a resolver
+los dos contornos en cada etapa. C2/C5, ambos
+sustain y las ramas de reset del filtro son
+incógnitas internas. KEY y el estado inicial son
+los estímulos del banco. R59/R60 se cierran con
+las reacciones del tramo de audio, y el orden
+de colectores del estado resultante determina
+los cruces de ambos biestables.
+
+Se ordenaron las filas algebraicas antes de las
+filas con carga en cada etapa. Se acotó el tramo
+inicial nulo de la sustitución triangular. Para
+el Jacobiano de audio se probó una serie corta
+cuando la norma de su realimentación permite
+acotar el error de la dirección, con retorno al
+LU completo en los demás casos.
+
+El banco de 128 muestras reprodujo 319096–319104
+con 7,82 µV de error nodal máximo. Los errores de
+R59/R60 quedaron en 2,81e−17 A y 2,51e−14 A.
+J7 pasó sus límites y la partición 64/128 volvió
+a ser idéntica por bits. Los dos pases positivos
+en el slot de RackForge reprodujeron J7 nativo
+en f32 y tardaron 37,524 s y 38,069 s. Los dos
+negativos tardaron 10,668 s y 10,832 s.
+La serie corta no produjo una mejora de tiempo
+demostrable. Estos pases fueron offline. El
+presupuesto aún impide abrir la campaña física.
+[Banco acoplado](../evidence/rf_d_reduced_engine03.json),
+[dos pases por reserva](../evidence/rf_d_reduced_engine_rack02.json)

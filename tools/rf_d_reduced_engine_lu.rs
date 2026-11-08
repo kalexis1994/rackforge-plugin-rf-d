@@ -12,6 +12,7 @@ pub fn maximum(values: &[f64]) -> f64 {
 pub struct Lu<const N: usize> {
     rows: [[f64; N]; N],
     order: [usize; N],
+    start: [usize; N],
     end: [usize; N],
 }
 
@@ -56,14 +57,25 @@ impl<const N: usize> Lu<N> {
                 }
             }
         }
-        Ok(Self { rows, order, end })
+        let start = std::array::from_fn(|i| {
+            rows[i][..i]
+                .iter()
+                .position(|value| *value != 0.)
+                .unwrap_or(i)
+        });
+        Ok(Self {
+            rows,
+            order,
+            start,
+            end,
+        })
     }
 
     pub fn solve(&self, rhs: [f64; N]) -> Result<[f64; N], StepError> {
         let mut x = [0.; N];
         for i in 0..N {
             let mut value = rhs[self.order[i]];
-            for j in 0..i {
+            for j in self.start[i]..i {
                 value -= self.rows[i][j] * x[j];
             }
             x[i] = value;
