@@ -5,12 +5,14 @@ use crate::{family::Family, graph::{self, State, B, N}, reduced_audio as audio,
 pub const TICKS: usize = 4096;
 pub const RATE: usize = 48_000;
 pub const BLOCK: usize = 128;
-pub const BANKS: usize = if cfg!(wide_contour_clock) { 11 } else { 8 };
+pub const BANKS: usize = if cfg!(sample_contour_clock) { 13 }
+    else if cfg!(wide_contour_clock) { 11 } else { 8 };
 const FINE: usize = 8;
 const VT: f64 = 1.380649e-23 * 298.15 / 1.602176634e-19;
 const MOTION: f64 = VT / 32.;
 const CURVATURE_LIMIT: f64 = 2e-6;
 const CLOCK_ERROR_LIMIT: f64 = 0.05;
+const VERIFIED_CLOCK_WIDTH: usize = 1024;
 const C: usize = 56;
 const INNER: usize = 108;
 const PORT: [usize; 4] = [54, 55, 54 + C, 55 + C];
@@ -65,6 +67,7 @@ pub struct ClockCounters {
     pub comparisons: usize,
     pub error_retries: usize,
     pub event_retries: usize,
+    pub reused_halves: usize,
 }
 
 #[derive(Clone, Copy, Default)]
@@ -234,6 +237,11 @@ impl<const FULL: bool> Evaluation<FULL> {
         }
         maximum(&residual).max(maximum(&self.response.current[4..]))
     }
+}
+
+fn clock_limit(width: usize) -> f64 {
+    // Wide proposals get less local error headroom than the 1024-tick bank.
+    CLOCK_ERROR_LIMIT * (VERIFIED_CLOCK_WIDTH as f64 / width as f64).min(1.)
 }
 
 fn clock_error(coarse: Running, fine: Running) -> f64 {
@@ -486,15 +494,19 @@ impl Engine {
     fn compare_clock(
         &self, old: Running, key: f64, width: usize, coarse: Running,
         initial: [bool; 2], profile: &mut StepProfile, clock: &mut ClockCounters,
+        first_half: &mut Option<Accepted>,
     ) -> Result<Option<f64>, StepError> {
         clock.comparisons += 1;
         clock.solves += 1;
         let middle = self.step(old, key, width / 2, profile)?;
-        if middle.stage_order.iter().any(|stage| *stage != initial) {
+        let crossed = middle.stage_order.iter().any(|stage| *stage != initial);
+        let midpoint = middle.running;
+        *first_half = Some(middle);
+        if crossed {
             return Ok(None);
         }
         clock.solves += 1;
-        let fine = self.step(middle.running, key, width / 2, profile)?;
+        let fine = self.step(midpoint, key, width / 2, profile)?;
         if fine.stage_order.iter().any(|stage| *stage != initial) {
             return Ok(None);
         }
@@ -533,16 +545,24 @@ impl Engine {
                 let profile = &mut StepProfile::default();
                 #[cfg(profile_reduced)]
                 let start = std::time::Instant::now();
+                let mut first_half = None;
                 let (q, grow) = loop {
-                    stats.clock.solves += 1;
-                    let q = match self.step(candidate, key, width, profile) {
-                        Ok(q) => q,
-                        Err(error) if width > 1 && retryable(error) => {
-                            stats.solver_retries += 1;
-                            width /= 2;
-                            continue;
+                    let q = if let Some(half) = first_half.take() {
+                        // The last comparison began at this same state and KEY.
+                        // After halving, its first solve is the new trial.
+                        stats.clock.reused_halves += 1;
+                        half
+                    } else {
+                        stats.clock.solves += 1;
+                        match self.step(candidate, key, width, profile) {
+                            Ok(q) => q,
+                            Err(error) if width > 1 && retryable(error) => {
+                                stats.solver_retries += 1;
+                                width /= 2;
+                                continue;
+                            }
+                            Err(error) => return Err(error),
                         }
-                        Err(error) => return Err(error),
                     };
                     if cfg!(adaptive_contour_clock) {
                         if width <= FINE {
@@ -552,11 +572,14 @@ impl Engine {
                         let error = if order_changed {
                             Ok(None)
                         } else {
-                            self.compare_clock(candidate, key, width, q.running, initial, profile, &mut stats.clock)
+                            self.compare_clock(
+                                candidate, key, width, q.running, initial, profile, &mut stats.clock,
+                                &mut first_half,
+                            )
                         };
                         match error {
-                            Ok(Some(value)) if value <= CLOCK_ERROR_LIMIT => {
-                                break (q, value <= CLOCK_ERROR_LIMIT / 16.);
+                            Ok(Some(value)) if value <= clock_limit(width) => {
+                                break (q, value * 16. <= clock_limit((2 * width).min(self.ceiling)));
                             }
                             Ok(Some(_)) => stats.clock.error_retries += 1,
                             Ok(None) => stats.clock.event_retries += 1,

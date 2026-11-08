@@ -93,11 +93,13 @@ def assess(raw, target, expected, size, bank_count=BANKS):
             assert len(values) in (10, 11) and values[0] in (0, 1, 2)
             profile.append(values)
         elif tag == "CLOCK":
-            solves, comparisons, error_retries, event_retries = map(int, fields)
+            solves, comparisons, error_retries, event_retries, *extra = map(int, fields)
+            reused = extra[0] if extra else 0
             assert blocks and "clock" not in blocks[-1]
-            assert solves >= sum(blocks[-1]["widths"]) and 0 <= comparisons <= solves
+            assert len(extra) <= 1 and solves >= sum(blocks[-1]["widths"])
+            assert 0 <= reused <= comparisons <= solves
             blocks[-1]["clock"] = dict(solves=solves, comparisons=comparisons,
-                                      error_retries=error_retries, event_retries=event_retries)
+                                      error_retries=error_retries, event_retries=event_retries, reused_halves=reused)
         else:
             assert tag == "BLOCK"
             frames, ns, allocs, guard, retries, iterations = map(int, fields[:6])
@@ -147,19 +149,31 @@ def electrical(raw):
     return [line for line in raw.splitlines() if line.startswith((b"GRID,", b"SWITCH,"))]
 
 
+def clock_build(wide=False, adaptive=False, sample=False, curvature=False):
+    bank_count = 13 if sample else 11 if wide or adaptive else BANKS
+    flags = [flag for active, name in (
+        (wide or adaptive, "wide_contour_clock"), (adaptive, "adaptive_contour_clock"),
+        (sample, "sample_contour_clock"), (curvature, "wide_clock_curvature"),
+    ) if active for flag in ("--cfg", name)]
+    return bank_count, flags
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--wide-clock", action="store_true", help="exercise the 1,024-tick ceiling in the native bank")
     parser.add_argument("--curvature", action="store_true", help="refine wide steps from contour stage curvature")
     parser.add_argument("--profile", action="store_true", help="measure native solve phases by window")
     parser.add_argument("--adaptive-clock", action="store_true", help="compare wide steps with two halves")
+    parser.add_argument("--sample-clock", action="store_true", help="allow steps of one full sample in adaptive mode")
     options = parser.parse_args()
+    if options.sample_clock and not options.adaptive_clock:
+        parser.error("--sample-clock requires --adaptive-clock")
     if options.adaptive_clock and options.curvature:
         parser.error("--adaptive-clock and --curvature choose different clock guards")
     if options.curvature and not options.wide_clock:
         parser.error("--curvature requires --wide-clock")
-    wide = options.wide_clock or options.adaptive_clock
-    bank_count = 11 if wide else BANKS
+    bank_count, clock_flags = clock_build(options.wide_clock, options.adaptive_clock,
+                                          options.sample_clock, options.curvature)
     assert not list(AREA.iterdir())
     sequence = 1
     while (output := ROOT / f"evidence/rf_d_reduced_engine{sequence:02}.json").exists():
@@ -182,7 +196,8 @@ def main():
         clock, previous = read(CLOCK), read(PRIOR)
         assert clock["passed"] and previous["continuous_128_passed"]
         plan = (("negative", 32), ("positive", 64))
-        report["caps"] = {name: 4 if wide else cap for name, cap in plan}
+        report["caps"] = {name: TICKS >> (bank_count - 1) if bank_count > BANKS else cap
+                          for name, cap in plan}
         keys = [ref[name][1][0] for name, _ in plan]
         path = AREA / "reduced-anchors.bin"
         np.asarray([np.r_[key[3].ravel(), key[0], 0.] for key in keys], "<f8").tofile(path)
@@ -199,9 +214,7 @@ def main():
         proc, report["build"] = run([COMPILER, "--edition=2021", "-C", "opt-level=3", "-C", "target-feature=+fma",
                                      "-C", "link-arg=-Wl,--stack,33554432", "--cfg", "laboratory", "-A", "dead_code",
                                      *(["--cfg", "profile_reduced"] if options.profile else []),
-                                     *(["--cfg", "wide_contour_clock"] if wide else []),
-                                     *(["--cfg", "adaptive_contour_clock"] if options.adaptive_clock else []),
-                                     *(["--cfg", "wide_clock_curvature"] if options.curvature else []),
+                                     *clock_flags,
                                      source(kernel), "--extern", f"rf_d_circuit={LIB}", "-o", exe])
         assert proc.returncode == 0, proc.stderr.decode(errors="replace")
         proc, report["stamps"] = run([exe, "contour-stamps", path], binary=True)

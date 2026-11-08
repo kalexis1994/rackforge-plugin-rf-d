@@ -217,3 +217,37 @@ particiones volvieron a pasar sus límites.
 La reserva negativa publicó 531 pasos y
 también conservó la identidad de partición.
 [Comparación instrumentada](../evidence/rf_d_reduced_engine14.json)
+
+El primer ensayo de 4.096 ticks publicó
+575 pasos en la positiva y conservó los
+ocho ticks del cruce. El nodo 76 de audio
+superó su límite a la muestra 25 por un
+0,72 %. La repetición sin cambios reprodujo
+la salida y quedó registrada. Se mantuvieron
+los límites finales.
+[Ensayo rechazado](../evidence/rf_d_reduced_engine15.json)
+
+Con el control local más estricto para
+anchos superiores a 1.024 ticks, la positiva
+publicó 654 pasos y realizó 2.035 solves,
+con 70 primeros medios pasos reutilizados.
+La ventana 74–82 conservó 152 pasos, 34 de
+ocho ticks. El cruce siguió en 319096–319104.
+Los máximos fueron 15,68 µV por nodo,
+3,52 fA en R59 y 0,663 pA en R60. J7 y la
+partición 64/128 pasaron. El bloque sin
+instrumentación tomó 1,726 s en nativo.
+[Perfil del reloj adaptativo](../evidence/rf_d_reduced_engine16.json),
+[banco sin instrumentación](../evidence/rf_d_reduced_engine17.json)
+
+| Reserva | RackForge offline, pase 1 | RackForge offline, pase 2 |
+| --- | ---: | ---: |
+| Negativa | 0,777 s | 0,757 s |
+| Positiva | 1,791 s | 1,756 s |
+
+El slot de laboratorio usó el banco de trece
+mapas y devolvió J7 idéntico por bits al banco
+nativo convertido a f32 en los cuatro pases
+de 128 frames. El margen físico de 1,333 ms
+sigue fuera del coste actual del bloque.
+[Slot con reloj adaptativo](../evidence/rf_d_reduced_engine_rack05.json)

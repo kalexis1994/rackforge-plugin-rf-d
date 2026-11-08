@@ -152,3 +152,28 @@ pueden registrar el evento y proponer crecer.
 Contar los solves de comparación, los
 rechazos y los pasos publicados. Conservar
 los límites eléctricos y la partición 64/128.
+
+Reutilizar el primer medio paso ya resuelto
+cuando el candidato se rechaza y el ancho se
+reduce a la mitad. La reutilización ocurre
+dentro de la misma historia, KEY y tick de
+inicio. El candidato sigue pasando el mismo
+control al nuevo ancho. Registrar cada
+reutilización por separado.
+
+Probar también un techo de 4.096 ticks
+con trece mapas diádicos, sin cruzar el
+límite de una muestra ni cambiar el
+control de error o de evento. Sólo llevar
+al slot el reloj que haya pasado la
+reserva nativa sin instrumentación.
+
+En el primer ensayo con techo de una muestra,
+el error nodal positivo excedió el límite
+en el tramo de audio antes del cruce. Para
+la siguiente prueba, conservar 0,05 hasta
+1.024 ticks y dividir esa fracción por cada
+duplicación adicional del ancho. Comprobar
+el crecimiento con el límite del ancho
+propuesto. Los límites de aceptación final
+y el guard de colectores permanecen.

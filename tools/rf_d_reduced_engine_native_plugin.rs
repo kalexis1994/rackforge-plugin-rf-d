@@ -28,6 +28,11 @@ impl Voice {
         } else {
             (include_bytes!("POSITIVE_BANK"), 64)
         };
+        let cap = if cfg!(adaptive_contour_clock) {
+            crate::reduced_engine::TICKS >> (crate::reduced_engine::BANKS - 1)
+        } else {
+            cap
+        };
         match Engine::prepare(bank, cap) {
             Ok(engine) => {
                 self.engine = Some(engine);

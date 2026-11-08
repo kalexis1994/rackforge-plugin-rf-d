@@ -1,4 +1,5 @@
 """Load the validated RF-D native engine in RackForge and time one real slot."""
+import argparse
 import os
 import shutil
 import subprocess
@@ -15,7 +16,7 @@ from check_recovery_host import HOST, HOST_COMPILER
 from check_rf_d_reduced_contour_ports import unpack_stamp
 from check_rf_d_reduced_engine import (
     AREA, BANKS, COMPILER, CONTOUR, DEADLINE_NS, KERNEL, LIB, MODEL, MODULES, N, PANEL, ROOT,
-    SOURCES as ENGINE_SOURCES, TABLE, emit, maps, materialize, pin, read, read_oracle, references, source, text,
+    SOURCES as ENGINE_SOURCES, TABLE, clock_build, emit, maps, materialize, pin, read, read_oracle, references, source, text,
 )
 from prepare_dual_chain import sha, write
 from validate_vco_family_voice_bus import J7
@@ -103,17 +104,25 @@ def metrics(raw, target):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--adaptive-clock", action="store_true")
+    parser.add_argument("--sample-clock", action="store_true")
+    options = parser.parse_args()
+    if options.sample_clock and not options.adaptive_clock:
+        parser.error("--sample-clock requires --adaptive-clock")
+    bank_count, clock_flags = clock_build(adaptive=options.adaptive_clock, sample=options.sample_clock)
     assert not list(AREA.iterdir())
     base, native = next((path, report) for path in sorted(
         (ROOT / "evidence").glob("rf_d_reduced_engine[0-9][0-9].json"), reverse=True)
-        if (report := read(path.relative_to(ROOT).as_posix()))["passed"] and report.get("clock_banks", BANKS) == BANKS
-        and not report.get("profiled", False))
+        if (report := read(path.relative_to(ROOT).as_posix()))["passed"] and report.get("clock_banks", BANKS) == bank_count
+        and report.get("adaptive_clock", False) == options.adaptive_clock and not report.get("profiled", False))
     sequence = 1
     while (out := ROOT / f"evidence/rf_d_reduced_engine_rack{sequence:02}.json").exists():
         sequence += 1
     sources = Sources(SOURCES)
     report = dict(passed=False, physical_measured=False, audio_device_opened=False, **sources.fields(),
                   native_evidence=base.name, native_sha256=sha(base), deadline_ns=DEADLINE_NS,
+                  clock_banks=bank_count, adaptive_clock=options.adaptive_clock,
                   host_revision=HOST_REVISION, trials={}, builds={})
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
     last = None
@@ -154,7 +163,7 @@ def main():
         np.asarray([np.r_[key[3].ravel(), key[0], 0.] for key in keys], "<f8").tofile(path)
         report["affinity"] = pin()
         probe = AREA / "rack-prepare.exe"
-        flags = ["--edition=2021", "-C", "opt-level=3", "-A", "dead_code", "-C", "target-feature=+fma"]
+        flags = ["--edition=2021", "-C", "opt-level=3", "-A", "dead_code", "-C", "target-feature=+fma", *clock_flags]
         run("prepare", [COMPILER, *flags, "-C", "link-arg=-Wl,--stack,33554432", "--cfg", "laboratory",
                         source(kernel), "--extern", f"rf_d_circuit={LIB}", "-o", probe])
         raw = run("stamps", [probe, "contour-stamps", path], binary=True)
@@ -164,7 +173,7 @@ def main():
             bank = AREA / f"audio-{name}.bin"
             with bank.open("wb") as stream:
                 stream.write(np.asarray(np.r_[key[3].ravel(), key[0]], "<f8").tobytes())
-                for chunk in maps(parts[1], phase, key[3]):
+                for chunk in maps(parts[1], phase, key[3], bank_count):
                     stream.write(chunk)
             assert sha(bank) == native["trials"][name]["bank_sha256"]
             banks[name] = bank
