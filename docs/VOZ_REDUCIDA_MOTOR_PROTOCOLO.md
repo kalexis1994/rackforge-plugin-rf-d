@@ -132,3 +132,23 @@ siempre vuelve a calcular esa derivada con las
 108 leyes y comprueba la corrección de 2 nV.
 El perfil separa las llamadas a la raíz y a
 su derivada y suma ambas duraciones como audio.
+
+## Reloj por comparación de un paso y dos medios
+
+Ensayar un techo de 1.024 ticks. Para un paso de
+más de ocho ticks, comparar el extremo acoplado
+con dos medios pasos desde la misma historia.
+Exigir una diferencia máxima de 0,05 del
+límite nodal, de retorno y de fase. Publicar el
+paso completo si pasa y permitir duplicarlo
+por debajo de 0,05/16. Estos factores son del
+control de paso local. La admisión sigue
+requiriendo la trayectoria completa del solver.
+
+Reducir al cambiar el orden de cualquier par
+de colectores en cualquiera de las etapas
+comprobadas. Los pasos de ocho ticks o menos
+pueden registrar el evento y proponer crecer.
+Contar los solves de comparación, los
+rechazos y los pasos publicados. Conservar
+los límites eléctricos y la partición 64/128.

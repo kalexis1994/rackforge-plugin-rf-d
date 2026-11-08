@@ -10,6 +10,7 @@ const FINE: usize = 8;
 const VT: f64 = 1.380649e-23 * 298.15 / 1.602176634e-19;
 const MOTION: f64 = VT / 32.;
 const CURVATURE_LIMIT: f64 = 2e-6;
+const CLOCK_ERROR_LIMIT: f64 = 0.05;
 const C: usize = 56;
 const INNER: usize = 108;
 const PORT: [usize; 4] = [54, 55, 54 + C, 55 + C];
@@ -53,8 +54,17 @@ pub struct Counters {
     pub iterations: usize,
     pub max_residual_a: f64,
     pub max_correction_v: f64,
+    pub clock: ClockCounters,
     #[cfg(profile_reduced)]
     pub profile: [StepProfile; 3],
+}
+
+#[derive(Clone, Copy, Default)]
+pub struct ClockCounters {
+    pub solves: usize,
+    pub comparisons: usize,
+    pub error_retries: usize,
+    pub event_retries: usize,
 }
 
 #[derive(Clone, Copy, Default)]
@@ -224,6 +234,23 @@ impl<const FULL: bool> Evaluation<FULL> {
         }
         maximum(&residual).max(maximum(&self.response.current[4..]))
     }
+}
+
+fn clock_error(coarse: Running, fine: Running) -> f64 {
+    let nodal = (0..N).map(|k| {
+        let a = value(coarse.state, k);
+        let b = value(fine.state, k);
+        (a - b).abs() / (20e-6 + 2e-6 * b.abs())
+    }).fold(0_f64, f64::max);
+    let returns = graph::currents(coarse.state).into_iter().zip(graph::currents(fine.state))
+        .map(|(a, b)| (a - b).abs() / (2e-9 + 2e-5 * b.abs()))
+        .fold(0_f64, f64::max);
+    let phase = ((coarse.phase - fine.phase + 0.5).rem_euclid(1.) - 0.5).abs() / 1e-7;
+    nodal.max(returns).max(phase)
+}
+
+fn retryable(error: StepError) -> bool {
+    matches!(error, StepError::NoDecrease | StepError::IterationBudget | StepError::ExponentialDomain)
 }
 
 impl Engine {
@@ -455,6 +482,25 @@ impl Engine {
         Err(StepError::IterationBudget)
     }
 
+    /// Return None when either of the two finer trajectories brackets an event.
+    fn compare_clock(
+        &self, old: Running, key: f64, width: usize, coarse: Running,
+        initial: [bool; 2], profile: &mut StepProfile, clock: &mut ClockCounters,
+    ) -> Result<Option<f64>, StepError> {
+        clock.comparisons += 1;
+        clock.solves += 1;
+        let middle = self.step(old, key, width / 2, profile)?;
+        if middle.stage_order.iter().any(|stage| *stage != initial) {
+            return Ok(None);
+        }
+        clock.solves += 1;
+        let fine = self.step(middle.running, key, width / 2, profile)?;
+        if fine.stage_order.iter().any(|stage| *stage != initial) {
+            return Ok(None);
+        }
+        Ok(Some(clock_error(coarse, fine.running)))
+    }
+
     /// A rejected block publishes neither samples nor electrical history.
     pub fn render(&mut self, keys: &[f64], output: &mut [Frame]) -> Result<Counters, StepError> {
         if keys.is_empty() || keys.len() > BLOCK || keys.len() != output.len()
@@ -487,21 +533,49 @@ impl Engine {
                 let profile = &mut StepProfile::default();
                 #[cfg(profile_reduced)]
                 let start = std::time::Instant::now();
-                let q = loop {
-                    match self.step(candidate, key, width, profile) {
-                        Ok(q) if width > FINE && (q.movement > MOTION || q.curvature > CURVATURE_LIMIT || q.stage_order.iter().any(|x| *x != initial)) => {
-                            stats.guard_retries += 1;
-                            width /= 2;
-                        }
-                        Ok(q) => break q,
-                        Err(error) if width > 1 && matches!(error, StepError::NoDecrease
-                            | StepError::IterationBudget | StepError::ExponentialDomain) =>
-                        {
+                let (q, grow) = loop {
+                    stats.clock.solves += 1;
+                    let q = match self.step(candidate, key, width, profile) {
+                        Ok(q) => q,
+                        Err(error) if width > 1 && retryable(error) => {
                             stats.solver_retries += 1;
                             width /= 2;
+                            continue;
                         }
                         Err(error) => return Err(error),
+                    };
+                    if cfg!(adaptive_contour_clock) {
+                        if width <= FINE {
+                            break (q, true);
+                        }
+                        let order_changed = q.stage_order.iter().any(|stage| *stage != initial);
+                        let error = if order_changed {
+                            Ok(None)
+                        } else {
+                            self.compare_clock(candidate, key, width, q.running, initial, profile, &mut stats.clock)
+                        };
+                        match error {
+                            Ok(Some(value)) if value <= CLOCK_ERROR_LIMIT => {
+                                break (q, value <= CLOCK_ERROR_LIMIT / 16.);
+                            }
+                            Ok(Some(_)) => stats.clock.error_retries += 1,
+                            Ok(None) => stats.clock.event_retries += 1,
+                            Err(error) if retryable(error) => stats.solver_retries += 1,
+                            Err(error) => return Err(error),
+                        }
+                        stats.guard_retries += 1;
+                        width /= 2;
+                        continue;
                     }
+                    if width > FINE && (q.movement > MOTION || q.curvature > CURVATURE_LIMIT
+                        || q.stage_order.iter().any(|stage| *stage != initial))
+                    {
+                        stats.guard_retries += 1;
+                        width /= 2;
+                        continue;
+                    }
+                    let grow = q.movement < MOTION / 4. && q.curvature < CURVATURE_LIMIT / 4.;
+                    break (q, grow);
                 };
                 #[cfg(profile_reduced)]
                 {
@@ -518,7 +592,7 @@ impl Engine {
                     }
                 }
                 candidate = q.running;
-                candidate.proposal = if q.movement < MOTION / 4. && q.curvature < CURVATURE_LIMIT / 4. { (2 * width).min(self.ceiling) } else { width };
+                candidate.proposal = if grow { (2 * width).min(self.ceiling) } else { width };
                 stats.widths[width.trailing_zeros() as usize] += 1;
                 stats.iterations += q.iterations;
                 stats.max_residual_a = stats.max_residual_a.max(q.residual_a);

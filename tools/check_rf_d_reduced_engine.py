@@ -92,6 +92,12 @@ def assess(raw, target, expected, size, bank_count=BANKS):
             values = list(map(int, fields))
             assert len(values) in (10, 11) and values[0] in (0, 1, 2)
             profile.append(values)
+        elif tag == "CLOCK":
+            solves, comparisons, error_retries, event_retries = map(int, fields)
+            assert blocks and "clock" not in blocks[-1]
+            assert solves >= sum(blocks[-1]["widths"]) and 0 <= comparisons <= solves
+            blocks[-1]["clock"] = dict(solves=solves, comparisons=comparisons,
+                                      error_retries=error_retries, event_retries=event_retries)
         else:
             assert tag == "BLOCK"
             frames, ns, allocs, guard, retries, iterations = map(int, fields[:6])
@@ -146,17 +152,21 @@ def main():
     parser.add_argument("--wide-clock", action="store_true", help="exercise the 1,024-tick ceiling in the native bank")
     parser.add_argument("--curvature", action="store_true", help="refine wide steps from contour stage curvature")
     parser.add_argument("--profile", action="store_true", help="measure native solve phases by window")
+    parser.add_argument("--adaptive-clock", action="store_true", help="compare wide steps with two halves")
     options = parser.parse_args()
+    if options.adaptive_clock and options.curvature:
+        parser.error("--adaptive-clock and --curvature choose different clock guards")
     if options.curvature and not options.wide_clock:
         parser.error("--curvature requires --wide-clock")
-    bank_count = 11 if options.wide_clock else BANKS
+    wide = options.wide_clock or options.adaptive_clock
+    bank_count = 11 if wide else BANKS
     assert not list(AREA.iterdir())
     sequence = 1
     while (output := ROOT / f"evidence/rf_d_reduced_engine{sequence:02}.json").exists():
         sequence += 1
     sources = Sources(SOURCES)
     report = dict(passed=False, rackforge_measured=False, native_deadline_ns=DEADLINE_NS,
-                  profiled=options.profile, clock_banks=bank_count, curvature_guard=options.curvature, **sources.fields(), compiler_sha256=sha(Path(COMPILER)), library_sha256=sha(LIB),
+                  profiled=options.profile, clock_banks=bank_count, curvature_guard=options.curvature, adaptive_clock=options.adaptive_clock, **sources.fields(), compiler_sha256=sha(Path(COMPILER)), library_sha256=sha(LIB),
                   control_sha256=sha(ROOT / PRIOR), clock_sha256=sha(ROOT / CLOCK), trials={})
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
 
@@ -172,7 +182,7 @@ def main():
         clock, previous = read(CLOCK), read(PRIOR)
         assert clock["passed"] and previous["continuous_128_passed"]
         plan = (("negative", 32), ("positive", 64))
-        report["caps"] = {name: 4 if options.wide_clock else cap for name, cap in plan}
+        report["caps"] = {name: 4 if wide else cap for name, cap in plan}
         keys = [ref[name][1][0] for name, _ in plan]
         path = AREA / "reduced-anchors.bin"
         np.asarray([np.r_[key[3].ravel(), key[0], 0.] for key in keys], "<f8").tofile(path)
@@ -189,7 +199,8 @@ def main():
         proc, report["build"] = run([COMPILER, "--edition=2021", "-C", "opt-level=3", "-C", "target-feature=+fma",
                                      "-C", "link-arg=-Wl,--stack,33554432", "--cfg", "laboratory", "-A", "dead_code",
                                      *(["--cfg", "profile_reduced"] if options.profile else []),
-                                     *(["--cfg", "wide_contour_clock"] if options.wide_clock else []),
+                                     *(["--cfg", "wide_contour_clock"] if wide else []),
+                                     *(["--cfg", "adaptive_contour_clock"] if options.adaptive_clock else []),
                                      *(["--cfg", "wide_clock_curvature"] if options.curvature else []),
                                      source(kernel), "--extern", f"rf_d_circuit={LIB}", "-o", exe])
         assert proc.returncode == 0, proc.stderr.decode(errors="replace")

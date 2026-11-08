@@ -197,3 +197,23 @@ bits con el banco nativo convertido a f32.
 El plazo de 1,333 ms sigue fuera del coste
 del bloque. La campaña física sigue pendiente.
 [Slot de RackForge](../evidence/rf_d_reduced_engine_rack04.json)
+
+## Reloj adaptativo por refinamiento local
+
+La comparación entre un paso y dos medios
+redujo la reserva positiva de 10.997 a 712
+pasos publicados. El trabajo total, incluidos
+los medios pasos y los rechazos, fue de
+2.165 solves. En los frames 74–82 se pasó
+de 2.340 a 152 pasos publicados y de 2.014
+a 34 pasos de ocho ticks o menos. El perfil
+de la ventana bajó de 1,282 s a 0,388 s y el
+bloque positivo de 128 frames tomó 1,901 s.
+
+El cruce quedó en 319096–319104. El error
+máximo fue de 15,05 µV por nodo, 3,23 fA
+en R59 y 0,644 pA en R60. J7 y ambas
+particiones volvieron a pasar sus límites.
+La reserva negativa publicó 531 pasos y
+también conservó la identidad de partición.
+[Comparación instrumentada](../evidence/rf_d_reduced_engine14.json)
