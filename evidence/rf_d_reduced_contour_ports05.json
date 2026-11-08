@@ -1,0 +1,791 @@
+{
+  "passed": true,
+  "rackforge_measured": false,
+  "source_sha256": {
+    "crates/rf-d-circuit/src/conditioned_voice_latch.rs": "e6cf90db9f013a8a8e6d7e214fb05a3ac47ea7a16632d4e657974546dd12c6ed",
+    "crates/rf-d-circuit/src/dual_voice_chain.rs": "be9328565504f7211bac035a2e27330a23b1269fd3bffa0e2c27264ae7e9f792",
+    "crates/rf-d-circuit/src/incidence_hybrid_solver.rs": "a6cfbe6a8a3f55948bc25f9e58960c9564d8d87f031fe6d08d30d1eedb2e7ab9",
+    "crates/rf-d-circuit/src/incidence_matrix.rs": "ffc531096cf6a24af27519d472ccb639c28b3a5757eb13923cb431af8f19897c",
+    "crates/rf-d-circuit/src/incidence_voice_chain.rs": "b1b65b6037068e77fd92901880a54c030a1e67958d25af451946d992db33f1bf",
+    "crates/rf-d-circuit/src/junction_charge.rs": "6fdc3f084b4cfdd731fbee705e9522f94c3a5dd7e0d7f1a9f04edd8cbbf70c41",
+    "crates/rf-d-circuit/src/prepared_audio_stamp.rs": "2bb31b8226278e1ff074f502b59683f67d016beac4b71d5c31c95dcdcf16435f",
+    "crates/rf-d-circuit/src/prepared_chain_charge.rs": "d50052208d822add92e343690a84e600be2322c924956e5559449e21368061ff",
+    "crates/rf-d-circuit/src/prepared_contour_residual.rs": "9aa008af31fce9e1c3aa97dd401111946fc1f49df068e1c7a6713b490a0bcfe1",
+    "crates/rf-d-circuit/src/vco_panel_port.rs": "e3a2e1e6a7625470a9f132be6912d3e90118ab0f66b5d98062695aa4bb45f4e9",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+    "docs/VCO_FAMILIA_BUS_VOZ_ARMADO_PROTOCOLO.md": "ae45b2f097456798dcf00ebc9aa04990d547e197b48e9896ebf4fc26bee211ab",
+    "docs/VCO_FAMILIA_BUS_VOZ_JACOBIANO_PROTOCOLO.md": "6590147c86d3dbefb46e1bc01e0f8166d2f80dd6e6bfda557bc8dab498c02c11",
+    "docs/VCO_FAMILIA_BUS_VOZ_LATCH_LU_PROTOCOLO.md": "e822c9614b85e575b9ac857dc7d7a76fa0fca9d6f6a3b1738fe23d538344f436",
+    "docs/VOZ_REDUCIDA_CONTORNOS_PROTOCOLO.md": "1c8bb0e35b5e4e3a74dcf7bb396ff703fbfaf157c8b9c5750bfb0c913606bd89",
+    "tools/check_rf_d_reduced_contour_ports.py": "898fe5d0930483ad3d1026abaf77dd014e4ebdbe915f34746ba8675de835448a",
+    "tools/check_vco_family_voice_bus_cost.py": "f492d4d8de85e3fbe8fed009f845e177005c1055ba359c16b9540748fc9a5dcd",
+    "tools/check_vco_family_voice_bus_hot.py": "4da7af853edf32d3a356b797e9701b92db42d184a8dbf0ce4a9c2c9929e396a7",
+    "tools/check_vco_family_voice_bus_jacobian.py": "3ff86b62e099a5e5f1a1b03d9c79ae07a6b66907040339e4a9fcb2b3ff23496b",
+    "tools/check_vco_family_voice_bus_latch_lu.py": "e40e0a60de65dcc8b4004e320bcd81d7be99855e27bf7f6317d23f33732b0dcd",
+    "tools/check_vco_family_voice_bus_reuse.py": "7f68d4c0746ea6b7a69f1d91a3d32c41673d30d94b50b1bd225154bdde42f2e7",
+    "tools/rf_d_reduced_contour_live.py": "517bb9297cc551143d95ac02914eda95c3d1f8ddf864e3ab705a6a78aaad951b",
+    "tools/rf_d_reduced_contour_ports.rs": "985c9f4101cb210ca8cbfdbdfb41d453668545cb7fd4f00068fdebb254afc08e",
+    "tools/rf_d_reduced_contour_probe.rs": "6f69dec52afd9225eb2b874289dc294b770e3771c47c5d407c08003bb9d65750",
+    "tools/rf_d_reduced_contour_stamp.rs": "8bcbc36f9c0f8c8d505c6f13d57f60c957647d751d27c278bee353b5abb241b1",
+    "tools/vco_family_voice_bus_adaptive.rs": "524bfcc1e16c17529de957281fdf0319527adf6bb93b25b05e056ceec4cfa2f9",
+    "tools/vco_family_voice_bus_cost_probe.rs": "0804e821fbcfad37fc7af5e269a7343df3dde468b7b17ce1a3f353ca0c67732c",
+    "tools/vco_family_voice_bus_coupled.rs": "25a12f309097451937b23f2744d81910cf054300ce2c7be600deb8e63fd43aa8",
+    "tools/vco_family_voice_bus_hot_audit.rs": "d4cf659d7328e439613bf43e669ee9f6d4e05cbe3f96ed612697eaf4a84e5639",
+    "tools/vco_family_voice_bus_hot_paths.py": "e3e35376d1fb3c6a253d956ed32bda9460f12f0625edb11b515949100d7cb37e",
+    "tools/vco_family_voice_bus_jacobian_audit.rs": "0a40e16418c1b9d87dac031e33bc60b059447257b71c3d17b40a144a18977648",
+    "tools/vco_family_voice_bus_jacobian_paths.py": "553da2f77badc0d656d3df3ab740d81e2d9165548150d9de8c0c9a9f04be4b85",
+    "tools/vco_family_voice_bus_kernel.rs": "d99eb5e4f7c79a2f4da4607cfcee970bb2259dfc3c70b25b25b21881f3275d09",
+    "tools/vco_family_voice_bus_latch_lu_audit.rs": "3291bb812d4c69dd3dc08018b34724c18f3f4b0cad9ce2818479888619bffe9b",
+    "tools/vco_family_voice_bus_latch_lu_paths.py": "dea4b68e411fb572dddaa86312409260f26088cd49a90504ed4e7581b21b784f",
+    "tools/vco_family_voice_bus_latch_lu_timing.rs": "17bf899780704ad87b57d1e45f63b6fd88a8fdfd2d2d8fb19e6940193ad1100f",
+    "tools/vco_family_voice_bus_probe.rs": "0fa175275ac43b777c9ee4212f5357aa43ed383621008fc25a1ef67f704f04dd"
+  },
+  "source_manifest": {
+    "crates/rf-d-circuit/src/conditioned_voice_latch.rs": {
+      "storage": "git",
+      "commit": "4652481a12b0f5af8312598e049beb797bb1f09d",
+      "path": "crates/rf-d-circuit/src/conditioned_voice_latch.rs",
+      "sha256": "e6cf90db9f013a8a8e6d7e214fb05a3ac47ea7a16632d4e657974546dd12c6ed",
+      "git_sha256": "e6cf90db9f013a8a8e6d7e214fb05a3ac47ea7a16632d4e657974546dd12c6ed",
+      "materialization": "exact"
+    },
+    "crates/rf-d-circuit/src/dual_voice_chain.rs": {
+      "storage": "git",
+      "commit": "4652481a12b0f5af8312598e049beb797bb1f09d",
+      "path": "crates/rf-d-circuit/src/dual_voice_chain.rs",
+      "sha256": "be9328565504f7211bac035a2e27330a23b1269fd3bffa0e2c27264ae7e9f792",
+      "git_sha256": "be9328565504f7211bac035a2e27330a23b1269fd3bffa0e2c27264ae7e9f792",
+      "materialization": "exact"
+    },
+    "crates/rf-d-circuit/src/incidence_hybrid_solver.rs": {
+      "storage": "git",
+      "commit": "4652481a12b0f5af8312598e049beb797bb1f09d",
+      "path": "crates/rf-d-circuit/src/incidence_hybrid_solver.rs",
+      "sha256": "a6cfbe6a8a3f55948bc25f9e58960c9564d8d87f031fe6d08d30d1eedb2e7ab9",
+      "git_sha256": "a6cfbe6a8a3f55948bc25f9e58960c9564d8d87f031fe6d08d30d1eedb2e7ab9",
+      "materialization": "exact"
+    },
+    "crates/rf-d-circuit/src/incidence_matrix.rs": {
+      "storage": "git",
+      "commit": "4652481a12b0f5af8312598e049beb797bb1f09d",
+      "path": "crates/rf-d-circuit/src/incidence_matrix.rs",
+      "sha256": "ffc531096cf6a24af27519d472ccb639c28b3a5757eb13923cb431af8f19897c",
+      "git_sha256": "ffc531096cf6a24af27519d472ccb639c28b3a5757eb13923cb431af8f19897c",
+      "materialization": "exact"
+    },
+    "crates/rf-d-circuit/src/incidence_voice_chain.rs": {
+      "storage": "git",
+      "commit": "4652481a12b0f5af8312598e049beb797bb1f09d",
+      "path": "crates/rf-d-circuit/src/incidence_voice_chain.rs",
+      "sha256": "b1b65b6037068e77fd92901880a54c030a1e67958d25af451946d992db33f1bf",
+      "git_sha256": "b1b65b6037068e77fd92901880a54c030a1e67958d25af451946d992db33f1bf",
+      "materialization": "exact"
+    },
+    "crates/rf-d-circuit/src/junction_charge.rs": {
+      "storage": "git",
+      "commit": "4652481a12b0f5af8312598e049beb797bb1f09d",
+      "path": "crates/rf-d-circuit/src/junction_charge.rs",
+      "sha256": "6fdc3f084b4cfdd731fbee705e9522f94c3a5dd7e0d7f1a9f04edd8cbbf70c41",
+      "git_sha256": "6fdc3f084b4cfdd731fbee705e9522f94c3a5dd7e0d7f1a9f04edd8cbbf70c41",
+      "materialization": "exact"
+    },
+    "crates/rf-d-circuit/src/prepared_audio_stamp.rs": {
+      "storage": "git",
+      "commit": "4652481a12b0f5af8312598e049beb797bb1f09d",
+      "path": "crates/rf-d-circuit/src/prepared_audio_stamp.rs",
+      "sha256": "2bb31b8226278e1ff074f502b59683f67d016beac4b71d5c31c95dcdcf16435f",
+      "git_sha256": "2bb31b8226278e1ff074f502b59683f67d016beac4b71d5c31c95dcdcf16435f",
+      "materialization": "exact"
+    },
+    "crates/rf-d-circuit/src/prepared_chain_charge.rs": {
+      "storage": "git",
+      "commit": "4652481a12b0f5af8312598e049beb797bb1f09d",
+      "path": "crates/rf-d-circuit/src/prepared_chain_charge.rs",
+      "sha256": "d50052208d822add92e343690a84e600be2322c924956e5559449e21368061ff",
+      "git_sha256": "d50052208d822add92e343690a84e600be2322c924956e5559449e21368061ff",
+      "materialization": "exact"
+    },
+    "crates/rf-d-circuit/src/prepared_contour_residual.rs": {
+      "storage": "git",
+      "commit": "4652481a12b0f5af8312598e049beb797bb1f09d",
+      "path": "crates/rf-d-circuit/src/prepared_contour_residual.rs",
+      "sha256": "9aa008af31fce9e1c3aa97dd401111946fc1f49df068e1c7a6713b490a0bcfe1",
+      "git_sha256": "9aa008af31fce9e1c3aa97dd401111946fc1f49df068e1c7a6713b490a0bcfe1",
+      "materialization": "exact"
+    },
+    "crates/rf-d-circuit/src/vco_panel_port.rs": {
+      "storage": "git",
+      "commit": "4652481a12b0f5af8312598e049beb797bb1f09d",
+      "path": "crates/rf-d-circuit/src/vco_panel_port.rs",
+      "sha256": "e3a2e1e6a7625470a9f132be6912d3e90118ab0f66b5d98062695aa4bb45f4e9",
+      "git_sha256": "e3a2e1e6a7625470a9f132be6912d3e90118ab0f66b5d98062695aa4bb45f4e9",
+      "materialization": "exact"
+    },
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": {
+      "storage": "git",
+      "commit": "4652481a12b0f5af8312598e049beb797bb1f09d",
+      "path": "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs",
+      "sha256": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+      "git_sha256": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+      "materialization": "exact"
+    },
+    "docs/VCO_FAMILIA_BUS_VOZ_ARMADO_PROTOCOLO.md": {
+      "storage": "git",
+      "commit": "4652481a12b0f5af8312598e049beb797bb1f09d",
+      "path": "docs/VCO_FAMILIA_BUS_VOZ_ARMADO_PROTOCOLO.md",
+      "sha256": "ae45b2f097456798dcf00ebc9aa04990d547e197b48e9896ebf4fc26bee211ab",
+      "git_sha256": "ae45b2f097456798dcf00ebc9aa04990d547e197b48e9896ebf4fc26bee211ab",
+      "materialization": "exact"
+    },
+    "docs/VCO_FAMILIA_BUS_VOZ_JACOBIANO_PROTOCOLO.md": {
+      "storage": "git",
+      "commit": "4652481a12b0f5af8312598e049beb797bb1f09d",
+      "path": "docs/VCO_FAMILIA_BUS_VOZ_JACOBIANO_PROTOCOLO.md",
+      "sha256": "6590147c86d3dbefb46e1bc01e0f8166d2f80dd6e6bfda557bc8dab498c02c11",
+      "git_sha256": "6590147c86d3dbefb46e1bc01e0f8166d2f80dd6e6bfda557bc8dab498c02c11",
+      "materialization": "exact"
+    },
+    "docs/VCO_FAMILIA_BUS_VOZ_LATCH_LU_PROTOCOLO.md": {
+      "storage": "git",
+      "commit": "4652481a12b0f5af8312598e049beb797bb1f09d",
+      "path": "docs/VCO_FAMILIA_BUS_VOZ_LATCH_LU_PROTOCOLO.md",
+      "sha256": "e822c9614b85e575b9ac857dc7d7a76fa0fca9d6f6a3b1738fe23d538344f436",
+      "git_sha256": "e822c9614b85e575b9ac857dc7d7a76fa0fca9d6f6a3b1738fe23d538344f436",
+      "materialization": "exact"
+    },
+    "docs/VOZ_REDUCIDA_CONTORNOS_PROTOCOLO.md": {
+      "storage": "image",
+      "sha256": "1c8bb0e35b5e4e3a74dcf7bb396ff703fbfaf157c8b9c5750bfb0c913606bd89"
+    },
+    "tools/check_rf_d_reduced_contour_ports.py": {
+      "storage": "image",
+      "sha256": "898fe5d0930483ad3d1026abaf77dd014e4ebdbe915f34746ba8675de835448a"
+    },
+    "tools/check_vco_family_voice_bus_cost.py": {
+      "storage": "git",
+      "commit": "4652481a12b0f5af8312598e049beb797bb1f09d",
+      "path": "tools/check_vco_family_voice_bus_cost.py",
+      "sha256": "f492d4d8de85e3fbe8fed009f845e177005c1055ba359c16b9540748fc9a5dcd",
+      "git_sha256": "f492d4d8de85e3fbe8fed009f845e177005c1055ba359c16b9540748fc9a5dcd",
+      "materialization": "exact"
+    },
+    "tools/check_vco_family_voice_bus_hot.py": {
+      "storage": "git",
+      "commit": "4652481a12b0f5af8312598e049beb797bb1f09d",
+      "path": "tools/check_vco_family_voice_bus_hot.py",
+      "sha256": "4da7af853edf32d3a356b797e9701b92db42d184a8dbf0ce4a9c2c9929e396a7",
+      "git_sha256": "4da7af853edf32d3a356b797e9701b92db42d184a8dbf0ce4a9c2c9929e396a7",
+      "materialization": "exact"
+    },
+    "tools/check_vco_family_voice_bus_jacobian.py": {
+      "storage": "git",
+      "commit": "4652481a12b0f5af8312598e049beb797bb1f09d",
+      "path": "tools/check_vco_family_voice_bus_jacobian.py",
+      "sha256": "3ff86b62e099a5e5f1a1b03d9c79ae07a6b66907040339e4a9fcb2b3ff23496b",
+      "git_sha256": "3ff86b62e099a5e5f1a1b03d9c79ae07a6b66907040339e4a9fcb2b3ff23496b",
+      "materialization": "exact"
+    },
+    "tools/check_vco_family_voice_bus_latch_lu.py": {
+      "storage": "git",
+      "commit": "4652481a12b0f5af8312598e049beb797bb1f09d",
+      "path": "tools/check_vco_family_voice_bus_latch_lu.py",
+      "sha256": "e40e0a60de65dcc8b4004e320bcd81d7be99855e27bf7f6317d23f33732b0dcd",
+      "git_sha256": "e40e0a60de65dcc8b4004e320bcd81d7be99855e27bf7f6317d23f33732b0dcd",
+      "materialization": "exact"
+    },
+    "tools/check_vco_family_voice_bus_reuse.py": {
+      "storage": "git",
+      "commit": "4652481a12b0f5af8312598e049beb797bb1f09d",
+      "path": "tools/check_vco_family_voice_bus_reuse.py",
+      "sha256": "7f68d4c0746ea6b7a69f1d91a3d32c41673d30d94b50b1bd225154bdde42f2e7",
+      "git_sha256": "7f68d4c0746ea6b7a69f1d91a3d32c41673d30d94b50b1bd225154bdde42f2e7",
+      "materialization": "exact"
+    },
+    "tools/rf_d_reduced_contour_live.py": {
+      "storage": "image",
+      "sha256": "517bb9297cc551143d95ac02914eda95c3d1f8ddf864e3ab705a6a78aaad951b"
+    },
+    "tools/rf_d_reduced_contour_ports.rs": {
+      "storage": "image",
+      "sha256": "985c9f4101cb210ca8cbfdbdfb41d453668545cb7fd4f00068fdebb254afc08e"
+    },
+    "tools/rf_d_reduced_contour_probe.rs": {
+      "storage": "image",
+      "sha256": "6f69dec52afd9225eb2b874289dc294b770e3771c47c5d407c08003bb9d65750"
+    },
+    "tools/rf_d_reduced_contour_stamp.rs": {
+      "storage": "image",
+      "sha256": "8bcbc36f9c0f8c8d505c6f13d57f60c957647d751d27c278bee353b5abb241b1"
+    },
+    "tools/vco_family_voice_bus_adaptive.rs": {
+      "storage": "git",
+      "commit": "4652481a12b0f5af8312598e049beb797bb1f09d",
+      "path": "tools/vco_family_voice_bus_adaptive.rs",
+      "sha256": "524bfcc1e16c17529de957281fdf0319527adf6bb93b25b05e056ceec4cfa2f9",
+      "git_sha256": "524bfcc1e16c17529de957281fdf0319527adf6bb93b25b05e056ceec4cfa2f9",
+      "materialization": "exact"
+    },
+    "tools/vco_family_voice_bus_cost_probe.rs": {
+      "storage": "git",
+      "commit": "4652481a12b0f5af8312598e049beb797bb1f09d",
+      "path": "tools/vco_family_voice_bus_cost_probe.rs",
+      "sha256": "0804e821fbcfad37fc7af5e269a7343df3dde468b7b17ce1a3f353ca0c67732c",
+      "git_sha256": "0804e821fbcfad37fc7af5e269a7343df3dde468b7b17ce1a3f353ca0c67732c",
+      "materialization": "exact"
+    },
+    "tools/vco_family_voice_bus_coupled.rs": {
+      "storage": "git",
+      "commit": "4652481a12b0f5af8312598e049beb797bb1f09d",
+      "path": "tools/vco_family_voice_bus_coupled.rs",
+      "sha256": "25a12f309097451937b23f2744d81910cf054300ce2c7be600deb8e63fd43aa8",
+      "git_sha256": "25a12f309097451937b23f2744d81910cf054300ce2c7be600deb8e63fd43aa8",
+      "materialization": "exact"
+    },
+    "tools/vco_family_voice_bus_hot_audit.rs": {
+      "storage": "git",
+      "commit": "4652481a12b0f5af8312598e049beb797bb1f09d",
+      "path": "tools/vco_family_voice_bus_hot_audit.rs",
+      "sha256": "d4cf659d7328e439613bf43e669ee9f6d4e05cbe3f96ed612697eaf4a84e5639",
+      "git_sha256": "d4cf659d7328e439613bf43e669ee9f6d4e05cbe3f96ed612697eaf4a84e5639",
+      "materialization": "exact"
+    },
+    "tools/vco_family_voice_bus_hot_paths.py": {
+      "storage": "git",
+      "commit": "4652481a12b0f5af8312598e049beb797bb1f09d",
+      "path": "tools/vco_family_voice_bus_hot_paths.py",
+      "sha256": "e3e35376d1fb3c6a253d956ed32bda9460f12f0625edb11b515949100d7cb37e",
+      "git_sha256": "e3e35376d1fb3c6a253d956ed32bda9460f12f0625edb11b515949100d7cb37e",
+      "materialization": "exact"
+    },
+    "tools/vco_family_voice_bus_jacobian_audit.rs": {
+      "storage": "git",
+      "commit": "4652481a12b0f5af8312598e049beb797bb1f09d",
+      "path": "tools/vco_family_voice_bus_jacobian_audit.rs",
+      "sha256": "0a40e16418c1b9d87dac031e33bc60b059447257b71c3d17b40a144a18977648",
+      "git_sha256": "0a40e16418c1b9d87dac031e33bc60b059447257b71c3d17b40a144a18977648",
+      "materialization": "exact"
+    },
+    "tools/vco_family_voice_bus_jacobian_paths.py": {
+      "storage": "git",
+      "commit": "4652481a12b0f5af8312598e049beb797bb1f09d",
+      "path": "tools/vco_family_voice_bus_jacobian_paths.py",
+      "sha256": "553da2f77badc0d656d3df3ab740d81e2d9165548150d9de8c0c9a9f04be4b85",
+      "git_sha256": "553da2f77badc0d656d3df3ab740d81e2d9165548150d9de8c0c9a9f04be4b85",
+      "materialization": "exact"
+    },
+    "tools/vco_family_voice_bus_kernel.rs": {
+      "storage": "git",
+      "commit": "4652481a12b0f5af8312598e049beb797bb1f09d",
+      "path": "tools/vco_family_voice_bus_kernel.rs",
+      "sha256": "d99eb5e4f7c79a2f4da4607cfcee970bb2259dfc3c70b25b25b21881f3275d09",
+      "git_sha256": "d99eb5e4f7c79a2f4da4607cfcee970bb2259dfc3c70b25b25b21881f3275d09",
+      "materialization": "exact"
+    },
+    "tools/vco_family_voice_bus_latch_lu_audit.rs": {
+      "storage": "git",
+      "commit": "4652481a12b0f5af8312598e049beb797bb1f09d",
+      "path": "tools/vco_family_voice_bus_latch_lu_audit.rs",
+      "sha256": "3291bb812d4c69dd3dc08018b34724c18f3f4b0cad9ce2818479888619bffe9b",
+      "git_sha256": "3291bb812d4c69dd3dc08018b34724c18f3f4b0cad9ce2818479888619bffe9b",
+      "materialization": "exact"
+    },
+    "tools/vco_family_voice_bus_latch_lu_paths.py": {
+      "storage": "git",
+      "commit": "4652481a12b0f5af8312598e049beb797bb1f09d",
+      "path": "tools/vco_family_voice_bus_latch_lu_paths.py",
+      "sha256": "dea4b68e411fb572dddaa86312409260f26088cd49a90504ed4e7581b21b784f",
+      "git_sha256": "dea4b68e411fb572dddaa86312409260f26088cd49a90504ed4e7581b21b784f",
+      "materialization": "exact"
+    },
+    "tools/vco_family_voice_bus_latch_lu_timing.rs": {
+      "storage": "git",
+      "commit": "4652481a12b0f5af8312598e049beb797bb1f09d",
+      "path": "tools/vco_family_voice_bus_latch_lu_timing.rs",
+      "sha256": "17bf899780704ad87b57d1e45f63b6fd88a8fdfd2d2d8fb19e6940193ad1100f",
+      "git_sha256": "17bf899780704ad87b57d1e45f63b6fd88a8fdfd2d2d8fb19e6940193ad1100f",
+      "materialization": "exact"
+    },
+    "tools/vco_family_voice_bus_probe.rs": {
+      "storage": "git",
+      "commit": "4652481a12b0f5af8312598e049beb797bb1f09d",
+      "path": "tools/vco_family_voice_bus_probe.rs",
+      "sha256": "0fa175275ac43b777c9ee4212f5357aa43ed383621008fc25a1ef67f704f04dd",
+      "git_sha256": "0fa175275ac43b777c9ee4212f5357aa43ed383621008fc25a1ef67f704f04dd",
+      "materialization": "exact"
+    }
+  },
+  "source_images": {
+    "codec": "gzip-base64-v1",
+    "raw_sha256": "e8349084fffffb49a9e97fe7467b5a41f06834d5c0e80c45867d5ab6ad862013",
+    "raw_bytes": 46193,
+    "payload_base64": "H4sIAAAAAAACCrV9WXPqSrbmf6nX6uiSGHysG9EPICYx2UxC6OUEQmYUoGPADB3933t9KzOlFGDvfarufXDsDUipHNbwrVH/9x/hfnb4l/vm/9mvVka2Uyn9ab91h2/97tvgz/f+2/DNfmu//e9t+I//+odzLTeDXT+abf3lx6q88Qfl9cRr7iYD/v8hyHcWft26OfXuF133NdsWv2bX8pmuWTr1y9Jp+F9039Uf981JLtpMevtWZ126dlfGpTMwzm92YeF63eVsVT5MvM5iWo9uYd26Tsc1GrP4FYyj02R8iWjMSm/YOXcrE3qee3Aa9LyGH80WsZjPuP/l1PuRU6le3uzyKcjRXK6FRS9nnWY59xpua1en2sFvUbCiP7u8DnJFI8g3T8G1XLQjx3zjNZVydM3n7a/N4mNQHnTXJXreaNFdL85O5yXmda7Kt5DmGtbdqza/zdTrGtMxxuyc7A3WXv4K6rXr1IuXk9yucsgV5NzLcVC3DHruMhz348n2EjmNfuyPi5FD38+2r9jTI40VB9dCa2zSWurWIcjNK5/jKua1DcfuiZ5/c2rdce9qFL3BsjI0iqOh2Xwbmt15z6hV+6Ni2TPLg6HZf+8ZVmd4LR59e3OwoyOdB+3d1j3RmSyd6uLSWS/DVs2vDE2r3huZzWE1KntG0x2Z1nhoxvPRxh26o8uoN+q/j8Q4LTvqRjNa38RzFgFooDIynHqEedH5WVff6/DeBQ/0cZbXT6729v567E//Ohmb4jzrNdOvR19OYyPHwbmWDd9rYn+WAe2BvaWxvfJytqM9xDW0jp5r2T23W8N9brXWHBKd9b3lmc7bwHz5OXUznuXoOY2uQc8729sLxqZ5dGO/4fI8J0Q/9P91WK/xXtHvRVrLkta9nnr9ZbDtxhO5ThpjRWffmmAcz40k/R3VHs3yowXtOdGdSfOg+yRN4BmOoGmeh9NwT1Oi5/Yi7k6InkAXsxXTLdML0c2B+G/p0/zVvLBXRNNnootrWH9duJvuO+0drdGPp0T7tDa6xl/OciNFgybOo70iGh9uvkbrCT2X9npMa1olPLKiPb+EY9wzamGe4M1gS3tM++qPz4tZg9ZJ49Dc6axo37zmleZ2C8cm7Q2+b0aTcXdN53ui8z3Zi7hK18TMj7ROOgPayyrtXUC0XeB9TMcsf9G6kznwPg6EnMA521uXzrKMMxkQ/y/DwVnby2HlL0Ejko6W8SwP+ouWWDOdsZAfkDu9OL6XceG4xnxI96/Pf3R3wTYy8FziPeId0HLXmO3cmO8fgPdpnbluTNee6NwqkC2zbY1kGa1TyAwTciPIXXI+5My4eKNzhLy5dm6T++ecnJp7I5ppEb3caL9yeDbTgpjDhuZ/Dmdv8YzHKLf7LssrppFg3AQdHyAT5e9yjbTenZgj7wnJ5qDhHv1x4eRU3QLREfMGyZorzpP3G3K1Btl4Xgga2bR6kTts28QHjTLOyZxtm0u5D3vIQOKxWOqHNc7FqTdJTxBtDYgHczVD8Tnz7Y54ne7BHGkPiFbOB6finEn2j+X5E7+QbKiTrKKx2naJ9rNYlr8RrwqZYu824K3bFHqG6HKyJf7Mh8vZtgeaIB4k+sP+Ed/weXgkm7eQoUzbi87YW62azqVjF1qjRvNrwvSJM10uP1ge63TZjYNtaEK2gw/A06FHe4Fnzt5uwapAspHoclsVz07G65L+oL3K056A9qHDiFeDce3M/Hx4OwYr8BSdX722w/nTum94NniNztwQes6n579K2VpdBJA1edrHQSnfvZb32E/mE/r8Nii0MjqQdDLRhNCZOAfwHPbL8yHLIqwnFPoY/E+6q39kOu3FWxo3EnK4uoDc8XNq/4Q8ITqFTlOyA+PRHLIykO5t0frigOQUzfGRJnE2dchboQ9Y5jQISzS6ptIttI6DnNMXnc8XdOckd7yJ+6F3m9F0Gx14b4gW/Rx09Fnwh8QGUh9dCY9cO3bFPrqTRetauvofLWezDuxj/jKeC6zAGIfOmPRvDD0P+W0S7dxIjjSDrU/0Z2K/SKYTv+Zcxj4+nessRzISc6V58B7nageiwQ39TjL8zPsImmW6Ak0Q3vFZZr+2iLZYZ852zdgXfA8ePSgZq/EL9OJarg88CLlTJBkl+LAXEyZxT3zOkvfSOVpYQ2fCfGqeJ7O3i+Rbkqfdz/6WzoD0BXSZj3PLu2fSD9A5mwnzEeM70sGE68b6GeJ78HUUTaTMJV20DvIsk5bthdGyNynvgy5ozONku6v8RfMM6W/aeTtOsHbwh1xfKttTfGBvJT6o17bnFxO/n/j5ddMEv4AHu7cZ7803WPUUnGO5l4zjljRn0k+8NzU6fynDhK4Res7NTca3ymlbAw+bs3NMa2tepwqTJViF6C7fjAL+3pL0Sby1DVlfz3L4THLw8PYSEA0H41eNx2tr3yvz/+/01S1kHVRbK/ww3WH815bgeeiW8wI8w+MBl3juZor/076KeQncA1qWeq51h2UTfToj3gGOmI7NiPaM5QJoVeyjb4YNug94N2J9dT8+zfPyNQWv2Dy3I+mHI/17Jt0ZTehsMD/a+xzR9I1l5yIuShklrmWcbR3o9wRrgR7FOTOGE/gBOC3nss5rL/atIXir0SQ8AzukSfj7mCea3zh1whkesBfJBqJvkr0H4HOciw8+JbkBfghyhdakcSnPG5fC3D6+Tnbnz86qfHIPrTzxwbGF3+xoQevakK5nPc46C+dP87d3TTpf6xCOs7KN+DnBCRKzCUxAe0fygfittiHMvxiOa6AlwkxOS+cNlmljnKccA7qIZA/tFWNkYEyiFaJZ8AD2qEayl/H1zd4JnUQ6EmcZ01rX4swga0in4F8xXvRBciasK33GmBhYgbDY6FTpyf3NubsQ8mwAe0/uH5/JmrAc+AF03DRnua7Qd0zzXXp298ve8toV1l4Ke4xouQ7MVF101j1aZwT6Bz1CtuKMr9C1ku4FfmC6Bp3SXm/dq8A1zcin/5PcJNxZJbnJeI30jL90KgvC+RHsB6KJCBiA1p6v7L0l8V9N0alar1p/er4C97Z0rMH4gfagN7izN1lW4byjVZDisDPJwyOeTzqT8DhkqZRt1WIUkrwETpzSWUPGsU2Td4nvCl178X/+zz/+1z+O+310+Nds+THb/Pk5/zP88/MjPM0+wj9n+91xf/r8M95/Hg//O77CfF85qx7Y3+sRGy0hmr+wpb5dHvRXZlWJwtBzvpSYmLK6aW5JpMP8OtG1MB2IzWNW7SFgk81q5i+pZopteo6zIIhJsGq2o6MjM4hEBptbEJGTXfka0NHPMt9DjHcjhmrneDvbWkdsCc2TxI2zSK6r4btFi44NMO5Kzz6ReXEmkQ4xcZqV9i1/1/wKAKG2gEbu3Pf8mCFjbqSN06V1NkmsdtT16ylBjalp7T8Euc5J7MeZe2g+JDoivyTnV+/uac2fXh7HakFsFb0csXW+l95TpyPLubfw4R5/HZgW7asZB41IPsudT3bu7WEMjYSfzDdHz54TtCDz5lKkcb9IHERejliN1hJkxulHH43e37mfzKv+elojdgI8k+c5Mix3tOnWRldhbvVHfm20cd96hjtPfyNWoLWFNv2bg+hq0rmN/s6zjwTNIBaS5/bcZq1H7EGsCZqMSazFH9uRYCs6L1ojnc+FYADRZ84gNlrSuRxpb7tfXp6hMNFwQjeVoWH2BqNLbUQwe1iNbHUfqQo2d3zX2pBKPNB57CdjqL7k3sHQsEYkHm7TepWeHwIaJ88l03Hu1yzp5nI3OE/BV805wSOYfMmamL/GIUGffkTjXQF3WK2RGvdyF4IeyZ6RqGCoRvuzLDIcqlkwKY8zbY9I/awBzyX/kOiCmHfFHuQIno2jw4dr5YJctKb1reC6SnmiX+5tLjW1DkDrKVR//TfvrzZdnPtgPTs41SPRRLE2pPMfjqxqf0SmXLVwIP4tDzduB2sl2LKxF3FvtLHs/qBkOTaZDCS6Z1fau8jagK/gbqF9nEt3gzmLLNoHa+UPitfZ1Wn1jMv7yBgt3gelFf1OYrrz9dP+8/k1OqfZrrOyo+6oNzJ7TsVYOPQ7qd5bO9/cern+nPaMzr4b0TjSNehevbxwybR3zZsj5j0aGt33oc1zJ9XfvbVN/30cWcQTfbdnRNWea2VccaNa892t4rvLe3trbmic4dB0B8Q7Q8yjZcff8hPu7W2I3qvdDo1Voz0cutVad2SL38S4tM+/t48EdfyovSPTfXVuOXZpof0le6l46Lf2tLFZtXpxZUjzGFx5T0g/RBuWW4MfeX0NWE/ywGCYfitd2tuYoFBhZW9qtA/L91HUoTMuA+oYrXoxgvmC+b8PFue2Xbp0SS50hpODU6nm6XMRn9/48wafL531Iqb9YldbCB4cGvsO7Vt32KFrZjm6hsxl+nxb4HMRY7zxmE6hNdi0eitaT714bpMqh0nVqh2DzqBg0nWnrmsQXR+OXZs/X9trN/Rwz0DdcyE9RObetUgm7mTfW21ao6o1cGtYU2nfHfbomSOT9g7uN3yXe6u9njuVEkFpJ9cBfVUmBXZHmP1yX9D7np6/aF9LZJrQPAeF2CaoS3puCx0DeeURXKfPhVb9EL8t9ny20/FkMb2SvFjRc7G+m5P8xn8k+xjGr0pml+SUvyp/El3S8+F2uNwI+pjdUjpWd+0s3olup9fSK80x93wsGsM2CMYtWg/PWJU+nfph0Wbzv7encf5Jz4pxPWQjzX3xvirdOqsNXVMyHHuvf5/r0j6TDCm7o35zaFqDoRkyHwW70oloPOhU9rkO7Q+B4JfuehkSPbn9avTuGe6EZAf9362q6ydsVoRRqzK50jnmunROww3JLlecU/aaUa4FXSS+I/m92Y9zj/tOWAmuqU+Yf05VPtskXjW7IegKvNIbXeYpPZSN0Csf/MHyNLOLSzIRlh+DZRAgFGIv4a4gCLw50R5sfG+xn9lwK8BFh/MoLMQ4GLu8BUwms2bjs4wmM0KsRaOTpkm8uGnVjxGZv6RrNy/2CmdXljIW9BtGhKFYP6XXnRcOw+0m8NWG5MeiT/Q9y5FsqvVJh41iOc6OeOU8Bf1WayTXqqDX1bRuGW3WeeW9kKWCZgReWMp7imR+mtCJ6jPrCy/PGGYPmUJ7Qc+fWc7ONfz1YtUaEC3ZzVlA6LPFYYGl0aoJGY+9Ztqrm18kCw9ibS6Zlb29s1PysXdM5OPK1PXMQWKnvZTBcRsmHZl2hA/3TlQm+dQfema57FYXK6KdPemGd9cufSlZ3RrQWZoWy58PIth0Pt0vmAx07l9wubUawMbNCOMD05DuLdCe0BngOqKrm0E6t799sx2SZ6VdKrPLwyBnRi27ybqY5hwTXf+TXaO7/q1lbw5Nkm/N62wnzkb8jXLW0R8sVlKGYw+td3ZfYQySmSWNn2s4c1rvNrETjjD/CXvcHOJPyAO4EmfX4sEfF/Y81qB0E/N4ooPW+xd1f8v24Qq5jW9Nol1dHyXrSvRwm90iYZSu8fnYmq4DTtoRH+x/Ofa4e6Aziv7d9RD+/CI+2DdJT/j5btCJDDon4uLr5k72lSOYtMl5b4uErUYHRQ9Ev9umeTk55pEwX38vMMoRmNiE2U1YFnr3NiUZ0PKMlTco02+9xTPc8kbj4PlEdqSLJwgdEP62rpBTs4ZLc9Dsi0EiAw6TcTMiDAB8/RXmWTYFHsm8sWlI2mXZtgauJj4lzFk7KlnTGxUrA5JFI9J5RMNH0FJGN4h7xT2Q/avk/hedPsWeCexOz5jLP5ynwTysz9098lw893Dx3KMYzzXusc1imnOL2M/OsARMv2U3HNl570Pa422KLRyET7Y94IrFu1rfoPRKNFDs4vzg/oOOvp8v5MLWJfxFPN+g67a9fUs8AyE4uCujhP+1P5I3ef0epcPAI2Q7nej5OX98Bg0vZvWlHO8YfbiGkrcIgZizLVxDtRX0Ne2V0CM5iVvEWdJ9fePDKxN+cl5ZdtIU4YbxEZrasZ07F7xZ2mNereFenjlfAzuEdHDh7kyLJMMuX3BtM82cdSzQha0GGjo59mHRWZX+cuqFRWtVzuyfT7rEv7KNd5tdJX7adc+k/wyeu3l4meWiF58x1/GE9WG8gMcrhrQOHX98hVemEbrvSLwSR2+RTg/pfvmrIlzSRchJpz47sUunXjtDD+MZJL+1383lLN/56ZqWPA+2H2HrTLxwLn0qoAHi4TP2QuyjxBKwOUN7kXvDM+AOIjw0XCV6woS7kDASzg52F63/Vf1hrGuQn8lrJ1iDmif/pj1fjUfXd2+EI3YK/0y95byVwSj0jOojXlJ7TLyGcKSBcw8lnQW7zd43j2uimRvcxb5pxNJvdIIvgvHSuFhs8dy6wSTf/KJ/EUJLzs6PDrluRLbQjWx4kl9ITQilHvJN+o3xnB/SuVtyL+SajpHvlZjGaC7xR+1133Pd6mBkzUkfe7Chsp/V3sqwAeyvuh9krjGJzuphQDIjmtUMuadd9VnxHb6LYH+z+7IG+XMg3iN8WzNYrmjfm13CTx1TfN8eVol+Xxej9aj401hsmwzdkLF4Ha7GS9BxzaA7JBlQ6eQ9oZuOwibgVBVFgzQW7fGO6eCPudpjYMb64aBkFePTugtfGkKXJFsXpOf7ay9XBZ5ZZVMf3DljItKbCINwqJjlr7UlvXknE+IvhFN8W/FyHIE24NuYkp70d+4hqB0/vYw8zGDXA4eMc12BoRtxPLOXb0OjzzZxi/eCbF55hq1Ef5Ue50DyQuBn3a4pSbsmpZn0uQjBubeWK2mRZdsxmJoZGSL3txtImYszov2laz0hw0mWkS1QW82uy78C8MS4B3tnG44vh3HuCDvgkY7IpiAMdhtfm5uJaS0d4gfYWZ3t6NgZcvh/Q+dFvGFdZ+bhyfk0aR5nWl8tIhq7/jD+4xmqZ43pWURHdzbbXrjozyqUBLua1wI5RzLokMzrnOgUgb9cK/YbHW1/U/1BPE52T/MkaKQ5H+fE3rdFiJbODHZiMUxtF3MZNpqEpZfSB3ZeTG1dLzbN2c18IwwUJboLsjIrF8W9pWQON1qHkchDkk3Biu2w6INwL9mguD9mfZP+btMcj5CF4OOprWRKxPYVaI3DiiT7hls6IzUXQTsKz2ySefMcfdJLSL8prj9cawOfMOYkr9HvJ9lHOJBxA/ScwMWE6zZEaxn7kf3KA8z/EtGcd1n8wSEOM2j0g0QP1NkvQ+cZ4gy050RK7p4RniE8RHp3AT1O+Mi9IBVtko/mPq+dfqtW73GvfFYvxaNKxhNtSKzzDV1gfd1PulFe5wbtVYF0b4nWVjry+slOHV/pO+iIYZ94q6RSVh7wlv7XeriXZK1Ne373nC70GcvryRk6e+It49nNILnL+HqNsNksSZOMvsgm0HHTHJh76vXn3nV5I1mxRYhpyhhb2mlZ+hDX7IRvF3iB7bIsroqC+gT+AIQHle4jvdwn3vS3nXEv67cQ549nxgJzsN0X6zJzOmb8cWaay5GtvCqSfkba2Vl95nno98jvEScyILvfkZLQ6Gr0FEFOxNNBFD67zx+7G479MOa77GfmMZHHs0YJ+iluZbC83JvtJfbF3uD6g0gDJPzGIcDR/m5eh/ux1VpbCYbOzOs2yS3N2eqbOYn7IMvlXPyI7MEVaNSpJmPQnHzDVj4OyC7EF/JlDkO2xPkBL+9n16zuYjxYj9Ykk5az1YMvUaaPLdWzl5xegTPaLm/jvE4XzXtcrHiR8ed03OX0pbb9zTqy8zjyXAlPp7TZD+/XB32ENKQQ/tpkjSItk/j9MPHgU+nuEc/w7ey6PxRW2JLd2OgTnl6y/Z2lxQ1sZP17pkmm6dwSMY8NyQsavxyNb7XwTt4V1P4w/QOjDRDLIZt93Ht6ndpHIYfv90NcQzbKlnBwKVlX6emeF1IdJtMQCTMLewc6LLG/U1tO1zU7OqvBcvlRj27vw6rwQ2G9degn+IET+wQ4cK/ZdWn8KI97EJYe7SWmuWk6XMr1ZB7se5C+5svbsDnvVErntjzvoL5k3RRw6khEOIdtG5rD4qDZ7bbrdhIblWSP4tcX2tOv2XWxZ3sQ8aFKL1a0SvPl9BvS4TcRL+p+zbZ9ft7YZPsvVP5K2CGkJ1Ykw2OkDhAWvvgDIwd/MdvRJHdb0n9POGdHfPOW+uCEjxZ+uwSbSHncFmmvJJc27NcgnWxyuhr8oXdY9M6Xm+BW4us7TFxg+Qjalc/LyB6V4vR0j+rZPRLjsa61nCrs7ww+0HHuE1wsbPVxXqx1fCuHtAdn2BICNz76KMTcLkEAv31D3VfDfRe+zzaw78WMTQ98ndFr4k/hGuHPx9n4iDcT3hNrbkn8zfPn2GIUdGpZOZ1Zh3kUdjH8ClfGLJjXledFdhTmRZ+PwLVvWV2Cc4Kt9SKxhKXzpsL9nQj23yIWMpH4h/iZdJaBdGaFV73MuQCHPeIygWeJXlZZDAZ9OR338fxP0AfPqZQZL0mPx74NRG5GTHptn/KfoDmi233Ky2fea5aNSNci+wDPaaU0frqTj/d6QeZSsP8mTrDNqggsdwZ/Ej+J+dp3uHJcI5skIl3XIQxCfEp2izhrTqk5BsI3S/y1YJxC1yL2oT9D6uAi8ZwfBTbieKU929BkN2lzO7n2Jr7Xc0gTIpsjfba9hA1y0PeyfbfeZC9SmQ0+XJO+Jd4vsl9skjvsdfmEvW0BI1yF/tXllSaDkSNCeCWaq1RuWqvynyr9k8gKyNa2kJcHbS04A75Hyr7brH6JwzudqexrzKWVsflBg2eV1xMzJsrqZZZzXJqQb25mtywe5WfVjrSH3VDxrhznJMoZijeyy8xJvrfP6klNL0c9pQtY5yh7K6hzyuGOdBynN+r7mayBdGzqq4a8War1H6VfLabxNd/cgrA50cpK4zfgL+JF+Obw7Mm4eRPPYt3NvkbG/tpzkbYWiDjNcrIjG5bOpjWg64VdL+fAmIR/1+/V08+lTN9MOScJ55OkjgEPQbaCFr5Cr2dhTz62SKnsIm/kk2hFS5EDbg33tPfRu0jxi5xKYdGxC2pv87DvE7rYudJ/fJmr2KG0C3bCP5GmRbJdk875JPGF5mMW54P8E05jZj+8nAN8u1uSr2wX8t6wrXGHWw7CV4d4vnl7dzMxw3T8hKaRghttsus/s73OGHjcn8vzoXEtM6yYqd40LcLfx6ilnTnWF+aWJF9G1pMxEFc+t3VaIb4Q+wge6e1DpB7mOe6TlBK8u0eOX4crFY+dMB/Ja0kPyfPguIwJmYm0y/lkaG5Jpy5DW1tb7SivNbLxt8zf8/HEGlx9XHFGrjam8KnQcyxRqiJk2Fz6hObhOrkX+3icEK0IHkGaqCoVGyGGeXjQxYnsJZvbtYRvLLKW72Of9ENN6nlz+WEvmU902z/L25GyuQmPbOLWD/b7jGxxLyd8Tl6uan3je1uHSJWns6L/s20M3uGYq3sgmx+4iu2En/Zc+NG1cw9z0Q15ULCVQqTsVp7sXcpLP67j746b0m4v1nUW02vtsJrBF5FzN+zPG5T2yr81vjZ/Pv+V8h0653ss9/RP+PeTOclnXLvDKBlzMmiGbc3P5OycXKeW0gfNMRbPbD7FnQ97Bf+nttYf987O+ELPmn0hfEtqnFKip5E/90JjzZE6P92KEpSPwVLYAvmObtto5ZOQP25hxiUr7ibx5bBvqWm0bY7r4SxkrpE6s645ETLuBiwpMKMe1zycPZfOM++uiEdyU5IT0LOOimXVF2zvtFelL8deGDJ3CD45Oosm65pZjjGYkrGPfkfd50jy0Ydd6bngD8ISHGNh/xPjSbl/HxWOtWjrdzkmAXwEn8D4Rvg7I/dLCruvnZosnfPKJsqGOB+5IfxcXAZTR+r0SGKW2iGwk3KyIucpEzaBr4dLLAT9SayL2EFzjbhWYqOOa2fe09RezMYXHmw9jke/TL3SXubMHJzq5b1n1DqeKXI9kmvznb9l24n8XpEfpHAPyStaB9luHBtJ4g8cH0J53VNbD/jVXrJfVujzJdtGid/ZtAgT96MPu8hxT6SfYz/ZB50ZD7gH4yX+dLkHT/zp13t7pfO9jVqFDVa63fuZYeO8ERYTa5QYUpZ5J/xlHq7IM5jaz+8dCnl21OwFdd/ZY6y3ubeBRZ4q/dFzDWknP8kzYL+WsCHF/KVNa24efe8qZr+8jXPK3kzuu35/n24/wWZP7ZAE7/4NG42+T/TaEzyu+CiDR2Ue1HJ2Zxel81Kx6HPqm7eTGJWyU773uaIkhjC0PzZBk/R9dx+izFrYH/S9wdhI8OUPGOLur+2xLOF8EuQJSb8NfxbxS15TYgNiXbR+4DI114jkjfExWOyHbA+UPp2Kdj3PT8WdSvtHG6mH+Ez8LA4p1/KS9Xuo5/eDDL3/ymayU1up5R4zsiTJX0C5UKO/VDJE2AmdNF9A6icvZ239XTdi/JrkqhDtjKNrkl+h57SukTPrFDjP59ZDbq3RiczEf4zceNJTX1IfFDq1oxjLZN8J6SnizbVBuqEc0FpixEXBs6QXlOyFnf2JXDgfucOk04jeoxnPr3d+G04W7evr4l7X3ccvYVdO88iB4rxsc7LrGoj9P9F5LEe7lVKxq2JK+ZBoprsXMUj35BOPTRkXCh1BPBV42Ti5tIlR5jrat3CPreJN8DmTzHvQ4fe+fMgBdy55W4vnufMg52/pXwO209SG/NR1Mee1aGeEfMawluXlYhSaRB+EuyYirzFZE3xVKo8I5Vgh6hUq1VPiG3JVblw3E5dxruXRFGXOQn7RPqDsEzbiASXBiKGvgnx/79RQOlozlY+L5VfulbEV10w0+nuf6EP478o5shFNLv3XdaLKi0l5DLRFeLLMvsWMb1TEYhDDErxnHi53uQMKq7A99ky/Cp3eJaxipDoWGGuw+Ru+U9axKq+Q/QKiHUNRbwmwJh2t5HTi33nmp8z4DZ/xrvouL/fZPBwxf7p/Dx/3M7zWWpX2PVdc1yN5xthD3Q9fRxJrF7IEPtz26vxAq16Sn1BSMR7QEctUn+wh+VnfOxWzp3kvzqDrJ9ec2Qcm9ZaUj1mZUTNJXhYsJZPH+fKS7BWiiT3batk9Q9n3QcX0SYYS30h5Qnv0iT36RmZk/Fsh8iDgG7gWo49Gn/PwxjnGWizn2HeAca7qX/jBRcm5ly9HnGtKtjLppHPbFjTI9UQoj5ey0ruLgT63qVi38fVCtz3xj3N9j096hOSJXbVEvQ9KKu/iA/p1FVnflEtzqpJ8BXv5yf6bwWbRHDyXo53Kox+faA+5q/ref+pjfS/P9fXqcjjNgdR0qLIlby2ZQ5nmhrAvKLHnITPGOXFNSrtarh98kiJv5BrWLJHXOTTl3M+stz15/zvK5aGP7+b/7t3L+7OuVyxdxzw/6zLRVxm2N/vRErq7men3ci5y/TeeS7JHjNHYvqe55Keo01OxEs0GVTWbQf28/4nmkNuh+QV2iG+JPehyfCPJCRoUlO2NXMyVlmMt97c459YCLu+r8P0n/oTq6ac5CL8ZcjbZ/qKz7J+RLxUKTKds8/R75T/YdfaSBg8pfitDN5Ns7um5JFvQP86Z5JrxvX0qc7pY17DvSMmzI9vlSU5miFwV0L26Hvb3tVMfHbmuhX0ZE2AS6RN2t2nMEbW3vcSfrPvBFNaDDzqda/WlYyb5hvClEY0mz+fPyEtpCf+JaF8xMEzIPeG7YwxxU7Uq9+M+iXnIWivFBxmee0ojT3x8fA38hE4jRI6c4XGcbGSlMT/MI3vtN/xCeGA5x94QhvjRVyl+czi/5bfo88kY+OzLNf4wp6yPK/W58nkgnsoxt+/8k/wMxi9Et/t8ck1+klwjxw4G65BzGFTOFNeRulam7ppwaQGxPpIZOc0/8W/5qsAn3ZvMJ26olmMh5823qmQPVQlHVovv/ao7FPHfcmdodMvDmtUbms2RwGXnhWwPRHvav069xUGLqx5021fm9KscQT0WgFwx9jOF46Ksn11GH+zrJ34hnCBqbdD6BK0R0E4HNRWdFxnj28l81jvsYa3boi3NnmjFUnHTmZz3gz7Ji31BLi6fl9zTd0/ubUaXinYmqCclmXLitWV1qZUdvxyS7L2/ZoV5+A3ONUBOg9XJ1GmW6czRUs7afQzN9P+4x1ueQROENS3t/wkmQF0L+0Ee/KeXiHVGZGRtlyQHT8Q/lI9XxE27NzxH1n8lPgLUyQZ1iTfU9cgVsherWa7Gz0L9jpK3mqznOpNf6H05vqj91vyket1H/J2uETbdw1hP8ju6qE06CB+h5AvGNAq/6XiRbUeBX+Hfqr8Cd95jUaZ/jCF8pD1gdKNT2eSSmpYn9Sr3eBA5g2gZNK1vDirnUfgkNN9/ij9WnhoziWUVzVmd8yz332GWDB4jTKKdj7DTyA73K2Zm/dCDKXYRtTMkqw+t0l1NBuGGRI7/gBUkdkEOapDWnDXnih6F/nPn0P0ihlEgnuH6HLJjhI8XuEbltqfY6RETKhrV84unqPlK6l4Ya3G/Ca5jEPWY5dHGLbdFCxHiXWef6tGusscizp+SvBfmljForYU4ZaNsEm280L5xPwHob3+VqZn+sQ6ec0Hzx5vyFfjD/bmzM05TxM9XTtzeugX4zB9qr/S5IZe3onJ0k54Y4MEhascmZP+1at13121W+q4ul5OcVIETUpqoTzifHjK0tp7m0BILuS9mRLLChE/rfeQvUTtF9uZfrV3yTLLToyioi1rFb3GiaNdGe8g23H4ydMzu2kQfhv2I+GdqL7W+DpwfcpiOgXmaxfvr0fMhxWPQJWmMF22MoEfJ3vxCG7ZRtTYaVIxV77an53eLs9vEaOdM1K3ku+ve12Qbnd6Mzgt9d/vwOrmubZkTOp/ktyvXpH7Brgx2JOO31olkfq/n9h3Evu7yJ03knUv5xHWR0Ofws5LeTGRtNu6A2kxzKeJLtGYP2M1czmDnNJD3inrEzoNdSHpS2G3jJutE0re39o6fj7jyEViffcy5nqX0LPYFtgh07yRXOwMvEg/TOfbPyFtw0WpJ2MlHf4x4vHF5q5TiO53C9DvOoe7RFTUTwi5Lnvs+TtbEWAV500T/G7LVhP7eSazKtbEjloU+ag/W5hmxP9JLe263dy2SbCX8vnN+iO3e2UP5/obo33gfC3qY7MDjHYvo7iRqNjsndY3KOe2sRzlcz/1e7KWcI+ZEe2BvVGwG+btXbj+H+kHVU+bJ9Vkfmay1Us+WMpD3Q9T+wN+gjUH7sCpu4ItCnonSoe+DJnj3wP18VpuntXDaniEPRdURGUR797ggwTDtRCYgtqvrZOhwknMN4Jm7uCbqce/ytUQ+LvAI59zN9Wck/LuSebi0561a831o9pDrKvtOZNYk+krIeCrZW3v0C+kZh+d7W+8yBiS+VLhmlc3n0+xq5A2JOdJ6+2hRfEDNDe5NekwM8NkhWcDf6/b+SshG18A9+lwIA6wY19jxXOXVar1uOOeM7v/C/XTd/rGOQ51Bf4lWwvd7RjwGXy/Ja/F71o+c6LhfjZPsp+ztEtP6DLIzD/Ank2wlu2iyuvNpom8TZA3rTOg6t1qzh9XRXUyrv2/vRD8dL9csIr77fK6qF4FWx7+V/WkG5iftGcnvM/d5gS+AewEkPWk2J5Y/aKs3WKwGler1rWaNh0ZEOs4a9UbNDv0rZLOIhZFeuavf7/0sR7L9AbiVcq83omdL++hprwDZG+fbXgHKbyRs/mQfn/cvKOK6VYZfdyS77OYqpD3ybQf505keSM7KOIqWjrCJjWun4lwc/t6s8L9b6xzaJuFhPwoqxi3zG9oBkp6n37c+0WyIvLTBcRuMq6tfytxkfNQ2HI7w27wPTC+wz0dR69/9bFc6t+5wZHQrnasj5zrJ+Tt5H9GHBcwOu5LrFdsjUbdIcnApauEJI69+rgF60g+D+NA5tsdugVsirqBHJyvZC2dN2GBNe2m8e8fOYNS05H584V+it+gunvCsnl7an03E8KE797q8y8pGifOJh0UfLPiamur+W3tLemXlZGQB124RZkYbQ9SJiJr5b+TFFnWDS+TipPwr8vr2k2/unXgzaZcX9s5O9EbiutDaUdjnDz0b5O9yLR7nGUbIQSxmcwClLES+npAZhE+MPeecVxyuGee8fonx6V/Rz4b7/UwKxO/I7YcPzMzEjkSOtMK38PVwn6zJzuW8s1ajuQzRt6zRL87qI8tZX0SfDa3GgvV/Ut/Pfq2Yrs/qsbroqyBahnP/pFvqa2jOfdpLjtOpWCPtw0fe+EaOq1oN9ybyuNIa3tQuLO0JhzHmln7QWNZisk37sY3O6ZzP+j5kMaSMnyV+I1XLkfqP9Fri530CHuSilgO+UvvBcZq/W4/yWIsg+jFY4MmPHPoruJaXl/a/Z6ye5Hck+CLJv2b7+HgSsYIU/8u+JInvgfCuqGm9Ps5D8G6feLB2nnFseKmt+fH6hCbS60U/vCdjp706YK/XgkD4NjifT9urJ3ukerhke+9kamoeZUa2V4RGx488kcgV+ZzNt/Sr/MOIlz6RLd/cr/v9Cug5I/uynBfjnPBz6n1oZN+VVVutm+v2JdYemiO0mL2Tp6g/MJJ8OxFfI2xtkn5Ebqij+7k2YSM6+0Nj9V6fFAg3670fRH6G7LcBWwC1CV37sZ6dc0/h95Q9INui3asp6CTNOUtso2uT43kztMUmnNjewW7GqwS4l5mgGfbv6mt5Vv+OuEKz2N65Z5/l+PJpHYKgQdk+Vfgc4+/wuawDEr3foAt5Loit6jmnIu4ELBe42XzU+1yg31nzd3NBf8SPrXvy0PZ8HIs204QDBD/LXqXRna/cjrPymOeHfjqI6bnz7m22evAD32H7th7Ds7/TqxceT/PbZOYh94l78d3Nf//kHDX/fumve9ngwL+ai7h3jXeb5R3UK2X9o9oaR8K/rPmHn9rnui0k7be/QQOZ2LryJ6EWAa30UY/sE75VPuCPOp078XzfW3K7a9DzfT+55My3tTiA32Eg7Brk6dLYnPPblm3YER/8qD/YmMtpWjuzFblrl2L2OcL+SH1052Q/Wg+6V9gssr8b5Czquwk/9uPZavFMv0obx+V6l+k1WT9aAZ9Ce7HqGdabW7XcUSRjKVdH1e1/hwvidpbmuB7OE3V9c6Vv6LPw0dlNPZ+LcxScjT8YmnFtCIz7W7yV5JldOZZnNzsD16956IcZ9eEvHLLtlNKRoHGtb2Q2t5rnhL6+W6dmzYWes+Zsa9rNuZeDP7Y4966Oqks9Ir8IveMzrZCfNkGOVl8faQ/kAXq3IA8NeceN8Evre4wYUh6vy+D+T41wP0VNC35Hi+od+tTMSCcjBu6DdtJX0tRr12BQQOfjb3sd/9SzWMa2H3qNzq5LFav6Curc+0fm6pTJxt1wPaKiMfRrDcci5qJyvki/bAi/LolODqJ3kbw/8x3hdeTb1oyW5hdk/xbJ5lOYb8aIFajxEUdmfUi2s9CHHGc9k56Vvt8NZN3qA3ygyW3Nr0S6rrgl/r1NU/5nG0PlmWd9YaL3X6tSVdfGsqeIuH5oLCar5uyjUro46/1Tn5ae95z60tgOMWXsYuVEl0KnUmKbnPs+NDiPQM4F+39O/S0izxtnIuujkPuu9k/YBOz3V32urqWrsFn482Nt0Z1PUfT/64l8ajUe3f9mJ3F6ZUM+s2PkuD/bMqiJkzaW2tfNhLFeVfZJMZJ+EqK+ban6gQTA8mk9srLJ0j5csHdUjfpj/g33H7ugt+P9fAL+A00aeg0fYl6ix1aaB8K4EHY211XsuIfCV5AXvmI63zXkfBrXRmxrwXk8TIekh2bXYi/I47Uey0CMU1pp/R9Vbh/ryUk+3Lx7yfincG3yM38nd1nykXX/7IFbrom4H/tZn/7eEjKCaTCro/qEa/dP8tHTHjZY02zbjTn/m3kvi0mf6j49Ps78F53aEnu3shgnycWVfJ2fcD9DvLrC5fV0hqVY5k9+1wOmq/IZ9D7Y0r9+IHpH3EL4JVZ6LUIaX38SWwdtmTNZl93W4+R3eCdZN0ntoay5nzYispGijfT1XsWrLnqk261TgNfhcN98XeaXzRnyefG6A6kr6WwY2/B9NLakf/QJKmdy1kTvFVlbkdjl8F8ktS7tTL1AtjZA5DJZZ9qHLz+/SXsccQ+hflL7reeGij6ND316kvxSlWfNuaymldSCJFgzn/qh1HfynhPrHfaPyL5ZPVXHTDZuXshDsv3+3ZolWaNv/TK/V6+f4bp3Pbf3MW8325sq089X4ijuUS3qJtPed+L9CNl6+KXKc9mL3625sNEP9/0w9LXEd7kv+5QuUvvrIe77i35Pqqd00vNpGxppbypBv14uycXBOhKaayW/i5wY1FqAJrNrp7XJ89dpQdEH5+hKOvAGRfbfyV5JSf1dWlvCeXaJ/1H4GtNeiv+j9Qx6zkOa7/Gk16m5/KhZqDWR+Tjck4Rz0vTXf4g4XNof5Vn9gJbT85Tes3Fd6+DXLJlbjvWpPpD9TB3VfR4jcgfvz+l/ph7hIHi40jlx/nh010dpK/rDqLmktV7IP8+s7Sjy0fvIj7jjnyPqiHCOD2OPczo/d9GzK9ub7D5v/pyNSXG9gewFQXr3LGmR6Z+xSdKnCbVhqHEpc0+5O98+cCD3ZVC1WCJHPcYrvnakM0L0u5g1Nnd+Yl5/ys/8mZ+R8q9LOIjrqWqFqdexOjb6oCfyWfkwAiEzsjUcqOd73kfmnMjku9iS7KXHdJbm26gezUovY572WY1/r4/338QUk3dVZPrhsR8Pr6+ived85dQWk73gMFf0Vdogh33Cr6y02PZzHvsJy9os1aN9cW49wUgZ/Ek8zLQvfNiP1664xwTh4tKnU3UWPdTMDjZpL95Hf/dBq4uU+nMZjI1mgPcNEB2D54/I+eO6CFmz2IsOZ9lDh/jLRB1t+Lu5Cjz2IDs2ei6Nb1Wuk2C7A7lx6I9eD3ls71n/YVlzpuxHWVtJtN2fJzqJeBDzlmef7oN71GxXUbPoPdkbzlPmPquKx7rrKclD0S9NPh9yR9TIsR9I8FI5fBpbSPpBcBzgxHboYBE/9f3L/g/jh3dXdGVPQ87JfhJnsAjnsS/xaQ8DTf7Hz/o6T1S97l2d56NOf3Im9z1UEv8925/rjIyyzS3vFde3us/2i+tS1Pl833elk9Rstq5JXZPsw3NetL3Up6/OBvqG85ntJ2tQ9X31zq97xOBaJROz8vbeHpSy9clZq1erpfv0vJ9Fg+t/np4Z936XrxgT/nnOK0ROfTHtZ9w86j1WH+2oJO5YIIxmiHcgyVqageiX8OQ3kk0cu7x8l2PA9+SzPWxEnwvGKJkeKYJ2v+mnUIeuqn0+7h/LUtqjyzYrTx3jmTyV98j+g8BlDuKzfzm2yWN8kzu/Ro6XeL8Q5zPA9gEff2pj/eU07mu0dJ7u4/WDsk/Mr/UVYfmTj9dTinctrcVrea2D7Lv3zbqibfoc1l1Mj9+dtZb/TXaBG32zdn7PDfecyWLHPfJdoAeVfuit0JNIPl/UCvyge1QOkRhDp5FfyDx+34Dq3Ym6QWnfJHKgdyc7vns255Zn+648WyvxXOmVMTXeaUJ8BN1HvHXprJ7Er7KyBHqa6UWM2/shpyOhKdAHXkEdc/zrp9ydb3mC+ye8fFcHcldbJnry1F1Dy41HPH0JfzLXe8kawffxQf9esy8K1hS2u4pzDI2VeM2vu4YO4Fjnb+KDjByLrBzyKjX5eNB1I+pTHmWGyFV84if671i3iT5MziZ53eGK9A3qtn5jfWV+1aovdRHqZrIy+6y9BvqC+hymtWw8aDnXbPnfrOEVthfjV9eIH32Y2Ti8rLP+8rf+jdaV9lFJa6+D9rAWPrW3VP9nwnCtak1cR1jpQ9lNQkdq/oRu+MTGQB+6SNSzsY3BuaL3dfvITyasx1jyeR3u03svP96b1P0ndeVtf+yeuS6cX61qov/EDTLZFzXBOTpL9M2WfgD61yujJxt+xyulOW4zYawY8uuFw2tB328TtaP6Whn3NkSO5vhqXO7qhoW903CRi3FlHJO7sPy968mZF/2VS3v1O65tafeFdfMs8472Ah9f5Lmq36DbeE7ZOWg2fcfO9kZ58LUQjWhnf+xk+1hq9mdV87/ovhIpp+vRbppZ90GtMVtjJGTtfjoO97wO9AvJXqM9s5SxeWVvl9209M1a8Y62rfRN1UROixwf7/rayzkexRlt2O4g7PwV5rT9zpzlImODf9N7SGJ6N++JV8mz/+rjuz4W2e8vXna/8yRbjOlv9a5QujmSPa4PsNXE/Zn6mLSWF/UbocgPCjjG2kD9O977JHpoqH/ZHhNxnIPsC8R1+eiRRLhS1CRFRuz1filPRc0M1zBxPgrHlgLiQ6JJ0WPkqo/tLJyh4Be1l62HHgqlPdfIV6p0fqOHvfm2v0Lqi0t71DQW39VyZ/SOqj/4vrbp0Zf3Pn7i3yv9Hv5mnXn3XVurgXv3tDoyLYfcy6dn/T7WajF7RuvneLZ4qe/n4R//9Q8iuKVT6+eDqwkj4shBHTsNJLdzKljBQRwo2wUBPX75CzEW3afe711WTvGTvSubExGMvoVkgL2tEOSIXjjZrtL7Q/7OLxByqqpxlCiA89cT441Asjc8oFFT9tpaaniOc5NctyKvWezXaEJBYA2JSJWgLhxDPTbmo1COoYzGxUgzgj/OKrjsrpx6vCQAsCJBf6I5d1XRqSSuLzBnL3E6w4Cs5fgFOEIZJY2NVABhQspaEH1ZvsxXe4e7rYK4Yq+U0CFieFHrbJdi6+e1nRf9ukuAZ4YXo4omrONLbYbvvSoxbHwOx44oShyUa6LIvPyHZAIYIgjiITgv11geYj3SmG7Ne/sWrfmL6EOsb0xkRIraX2nJDw0tQY+MAGLmAxJHRUO2Ljd2mNWXRTp/DpDx3gzK7Z5xVnSyDVZcaIEmwOlLx/Ceej3xU4As2pv0eaQQj+/iffYIBr6OlJOpKpIt39O1HgCcApK+SaOyyh7vReeAmXTgbd7WsQiADPcv/NJc16K5LV+n3jmhE5VM7Vf2LzLQ8/ImEv/m/rawn9fjV80JeZqi0CIHZV4Mpq4ZTCNDd4r8RWtBgdcyiI6x5x7/ShNjjPjtnATAMG8zFE3TXnQ++NW829qetreJ8pxPXHoeAwrpSHv4bZM8n40yFVzkYkUUKgrBDgXTsjeckIWCx+aOX0QgXtLE77svkZFWjGempWgNTuO7/UwCu0Sjzr4vCvBf3jZwRKE5c4TkcXWW1sOZyuax2UZ0cNSU9nNOdDhzIWcbCVJ1a84JVqtFDCfczF5uu+senSGMzc3J38LYX5zRyIZl0TqGoyVuDQ/pi1mS5xV5b+FMnl0XWzTPdRqHpwkkWFNL0iWNqfHZw7q28v304qVKBLzam0J2v1BobZePIa1/RsoQzvB3BsPnP7KgM6GbFYxdTiixC5lr7ppmYIzH59nafo9rO5wH0W+kN+4f51GYawaYtzcosmOTX56i9so8IvkjfHscF8k4xwnJFjoXk19muZLzzexlxsiOZmLN+n1/fGNcn6ee/yWSZGiOt8cxMwnxDeOh+Z/Yu7N4odHQebY3f+OcnzwzpdlbmKudW5Af3DyRzzZ+y/IK8dfvXJfQ6K+vFQ67JOGfaY8L1QunYSJDS/f0p7+sRQaulwH4zGNn/iVEcVFCH3Ag1SR9DB/PQA90/vL5SUOPzDM/8RIfOGtTR1R6DT8X1wx/cf5as0ge93FM/u1xHQn/PpNPSYI1Y5db6SQxTuvZ/rcEz7NjICQ5dSdTtHFFcrNokoCXtoAHjUf+TgLIVv7HfVXjcRBU0mRN8C1eNAYnQprcXcSLzL6naW3Ncl6gE9HADXLhfvzM3JM95ES9NMmdXwZ6ZX0j9ItsCHdeOJ6YO8n4m5dTOgPFb9l1Js0owKOrpcBE6/0LO2O2/HKlKJH1ShZUrc+Wtp5WL7Yqvf0vkkbjz33wIUA2Ot7hjYnwUpBQ+EO9xZz+XyeUHwcNZFnINxrbpNy3ZLkCiNcs+fZi0VETVSbYAHicw60VT3Ku9XaOTXTYE59HL2+7Y0X3TI/u7huJqOhBdNQ7L4Y7gGz3xp6Seg/3R2pTpCKGp+3GmUS3/cuHQdZRJDKcEXEBmIZ33OUsT9ea0+bZK+7EJixbuyk7uliqWr0VjK2N6ppLgqgl3vbTWwxGxZ7r9l4cZHai66zKgJRdUXGtL7otLFElM/FmL47tB+FwiYjlZ2pobBbtYYEVeMI8dRgMCUBCpanMMMU4YfDGnrPDqb1esAdbWZ2kzIzZLkKFnRGgcmLnIqOVgAMyUwHQYwDY/IwJbonMNcyJlTNn8tplT/x2TjJs32Adk0UnOthYTWk10p5fmtyNFNl3NPf3lViHBHm8/yOZofdOD9YALoMGMb7oRJJk82aFB+YnM3LdOXfXsH3JlLQ+U98XgJ7Xe4Z8x5s2YKXDOBBGk38SmUQi2xjZ6W+r0hZvb7oH6JwtXG1+fVQum4+xUJY073/eA3Wi+Tzvwa5D9CgyWQU9bf6lFFeShTtgOjgFAogumoPSns+yGr2Nau5IvnX5nAI4Vl78drIMb9DewqvDnSi4AgwV/wAxG0QjRAcmAtWyouuVhTaqBOzq3kl55l/zgaPvm1xPWgXCoIn2389x1HTug5bqi5e3KPNcAqRF4jL2HKPDAYxzdLYQoJU7lzlkbAigMefzb5Ky6y1bdvMP2cHq5T1vrGj+/8oaEqrKGZVd8v9kOHBXPxiw/MaLQo4AvhnsIJNK+7u9Y9pGljFXk+7creR9AJ6T7832Or0mXQ5IaItsBh1M33Xg5QrKIiL6J1SC+N5yiShv9jzLjyBXq26V8u0ZSGMv5NtKyjmZgUTz5OxnUhonUiifc1FxuBEdiFEFdnjadR/ezr89Fsux8ufTjmB168xKjviWxt3KLigZgPH2aASoTKWkop6rpQZnJTfjJ/es+dyQPYCM50Zn8XHlaoCXb8YQ0WTRpQJdW16YhrgDC8nwBoOBZUAGtS8iNot5FhgJHQbZ64lqPS+v3shcSqp5EVFt26WtMNK5g8V/wHcPBpBJgOBLdH+1rkQH/BY8Lyd0Lp3bZnJd3nU3e3rdUEYV/kAnJj+3eEnmv+XPyJYkI2Ovso9A8/n7fUp+y4sqJThG5rS/T+XCJs2OIlnObx8n+li3t6LqIj0TZF3w/w93tETXpp/hWPhPZIhGRyqTVmVcMn+NDcIVpqG6V+H7AzowoZPbHWAWspErWjg7Rsql4tdkJyr4WjKzWWZuZ3Rv1tgheYFs7W1/nTz/Zsixi+mbO0xriWzUp/fu0qzrybi/aUl8JDvQMd22t5wtyBE1ztJc/TfRqL1EJtm6xXz8OB+fdBuy8FvZ/ZOYY6HxDGGMcRGOTbqnE7/ffn29fy0iA/lLZJE8OHZ+a4zJz2PwHulgXeEUwln8lr0H+lIVdBJHcUWLXQ6+O8/n55P9Lsn+F2+JOGU7Hi9f0usfo6eeNj9l5PCctj4ZQ919S8Mlw9wBn2N7Ryrv0cH5n+Ijxvoymw5YXTp1z5pTu2hl9H2Ds9rBp5pDFfIr4+wOhFFaMuB47/KbyjWH4HC/SH4fpHpIYTCi/4ujKrFJ58tq6r1wfp+lE3xzuDe6RniThXhrWHyHMWLQPM3VYJyiOX1ZBiZO1cLLz87Y6PWXztrGqKD0dqu+4az/KeHuCck2YPAf31L0mLlzt2folF46dvjtQJzhfOzaxZBk8B/ZjvToUlhdqrc10HwUvWj7oO8jGaS1A3AaMirFM678ZseT7rgV5w9MxfIV4wo8IrrppLydZNlW98DebURV4XiwiUcrvbOsHBMdnO3NE6c65ADwpGYbrhWeFvsP5/1bUpEH5ytXNgBfZ2yYpOPeN1iwy1UepcJzHKjRCWGceV1m+zfOT4M+mlxLHfHr/S+d6j/+vjsn9ql4m3lScUD2JDo2ljkSTTT2FFcmVQ01a/kLfBkn+JIduIQftMz7juhc/vCWrflv6JBEvqjKLW1fW5WSqBZOZMni2vk37ZIn9iXbp/72QnKO7Mz0d83uvJOrmYrXkO1Wxzb+CZnBVYwVVF2SHt9ahfd6vyiCDJA/hX+mvgGRreNUL7UhnT/JdHTLQkaB2V3fXVPzy8OaWxvdMtcZ4JFh1X3jvV8/2kuyQ4/ESzjT6IvOU1azavzwja2FThr/ub2lBQ5EFZd4w1/tcCbZXsAa3E2t4440rEZ4NsiX7gIQ0VZ1qVGVps2tCFCx7vS6Bt6E3nGN+P0q7O9nzvzUGWfhrexx66lDVe+Swm9mREem6KNO9GdLum0IXU5rD+Dc9J7jVYlHsV5pLz6ZE2eNVH4hA/JnDopNr6VXphnoU2k7NXdqLj22HUnWizfYwmaolE6Mv0tPMtvzs1/osuOr2PfD4t0ud/qjAuw2wf+2n+x7W/4m7Myypd7c9HEFXi1bT23Z1A5JbbtMVonxxK6C/ZHanZl1CzmHeTyzP/eyqy/JyMU2pUN0PYG9if0Uvre374Je6ArQ4KqzsT8GDkJ2xnKObpIkp+KwsRGVz/bimuHLVTK+/HcjdMkzu0SrhGWH/Jq71lw/QAPo+kHyb2ovX2UF1OszWhL7lL5pR/omlG/nV76D7wIf8s0iZ7EuwkPP9rJVcZQNtoM/VJ7Ht3TxGAzgikXph9g8CQIlNjG6mMhOEUlFgnyu6vx1XiRvj1HdAmiOqcwok92Xyfyx7s4EgRza77SzzxMdrnQE4ZRnOr6U4HYht1SXQLwdbrHlbut3tlnWb8rdSe99p2ru/3oS2HzcU4F/5+yTXH07ZiDk5vlbWZis4Yn9Mf+t4MThON3GIjiROHE5tYhbsahy/TMBkJ7ugCSCKNB3Q3WoE1KCmiNJvj51rw5WOLl1ACjBoUq7g3Nbd2ij7CjIL179RnRS9/lJNoDM6lgXWupwEQxQ7SWwKTCsBJBBq4xzxnEulCYMQNkSiOYuHfRNGK8DbrtSQ5TvdcAOMC4JynUrhUzq348OeZni/PEYXZVOdo6yq9cYPSPif9NB/yQCp5Rq785wZaG0SF5xn3UOfyusAmQOOFVuzVDQHUp34EIvNd0jM8LL0b94lQYpUZQKkeC8Irjj5fm1MstAllTgrN8b3Mbvn61GSWWUHLS20ntkWIjni7EzLUky36FcepFkpdyV6PzHDv20ZCzJ9CElxBlYZGTtX5Fp5g8L+w+7mADUu7mq+xicTuTrEu+uz9Ldf+C003mE25EhxXDbX2vr0gNY3AIB5XnT1W86h/SWR9w2BPuDDJzu7THrhl9DZPh8LipLR/AkrUdFiP9Ca5rv56eyln5aQ3qNl0udHT/P59s9UxlbvCYvZ6EF2nxq/7uOr3LmWZrTCC0tRNYe0lOVwzyXLU9CGTgy2JJgrqQrXTZLRzGym8APLyzLkB7+e3JS0d6PDip5333A+J/vizjrJIBRjzRpu7j0cdZbtJFaylfOCcfxnRz5LkgBeYCSZUMLkjwFsJqT5X+UZwPOLNN/+2+TNQ9BXclXmycO1/W0XiPdslS8fXn8bn/iILZpJVkU3PoCrylb3bckvr+XZE++81v3Z3Uft18SfOla3M6vKVvytXn+l7RNc0aeaJkXMtDOoOb//X/nWcuBcbQAAA=="
+  },
+  "compiler_sha256": "fd6232f90a981e28472ce6900232946a1f1bcad8ec8270cd5ae6a3a357208b98",
+  "library_sha256": "9dbada9779f30c4972b057befe092524d091d3444ea777206b618d701236385d",
+  "reference_inputs": {
+    "evidence/vco_family_voice_bus_coupled02.json": "e762803fdbd452d63cbbfb413e39b7e1990a10d08592f962496607a9840cf251",
+    "evidence/vco_family_voice_bus_coupled04.json": "4dbd6c4a9655d8695f22c28b0f5e1ed03251c125ae150dde7539509716e6804f"
+  },
+  "clock_reference_sha256": "77a01c163b889ecbc2b286d78cc07bb13b1e84e10e7e9e8bcd7eaee02b778eaf",
+  "table_sha256": "accc39be49cc829bf9028e4d235eed875fe14c92043caf4973f8186875f8df8d",
+  "build": {
+    "command": [
+      "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+      "--edition=2021",
+      "-C",
+      "opt-level=3",
+      "-C",
+      "target-feature=+fma",
+      "-C",
+      "link-arg=-Wl,--stack,33554432",
+      "--cfg",
+      "laboratory",
+      "-A",
+      "dead_code",
+      "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\hot-probe.rs",
+      "--extern",
+      "rf_d_circuit=C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-assembly-public01\\librf_d_circuit.rlib",
+      "-o",
+      "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\reduced-contour.exe"
+    ],
+    "exit_code": 0,
+    "stderr": {
+      "codec": "gzip-base64-v1",
+      "raw_sha256": "7252a2ee823c29bf43a19fc9982af4f47701cb0587edce1782dd1939c86e6e62",
+      "raw_bytes": 2486,
+      "payload_base64": "H4sIAAAAAAACCt2VW0/bMBTH3/spjrQXkJJqLSsgs/EATNqeNg3tibDUjZ3GI7Ej+7gFAd99x0lG6Ug3NHaRsKrEt7j/8zsXL7nVSs8ZeO2dFKCq2lhkMM08mjxPSy6EtKnxWHucDiCOD+GYJZ+dtC654KW8TD5oeWLVQiYnJvOV1OgSy7OL3Ni5jOvSz5WObR6LBKs6Kfkszry1tC0RysoMY+6FMkPr2JiNXw4AbgZjuAFSAzZPRZopm3mFjF33SYraV5oZvSBJymja+JFbXkmkMXAHx3dLq/nbaJHxcXcGY+sfHH3FqJ0ZDodBEPS0Lz2tEQ/wBrRBSQxfnC0J71aLNm3Ruu3zKWzV3CKY/IcttLQNRsPsCoTMuS9xMFhucpBDwRiqSjL2Xjvk+qnuySxHSYvUjzvoCU3Qfufr8KdJpS4JfFZwpckLs+CzHTZprN7pXPZQ1cEdwR5gG8xzZN/KJ9MIpkorVLxM6UiUYcKhrNOlwiKVVV1wp8I2rkW78j9Q7Hco9jtz1yRHEGS1z3XZERwZrwW3VxGsbI76qbXDPpT9sfmT+Dk1JaXFkRdzGSLn3/Ma7bJJIEbIRrv9Gb+el+8kF3VhtLyHCe6bcXvQHAe/1x4TmH+nMPbhczZLaiupUFDpaEpkCKSqfh6F8gHeBbeKz8pQNU0pnhqPG26aJvwCwMmI7e21oTcZkWySX9+zLXLG20w6dpbvvjqYnEckiZ02aSxkibzrF4yWI22W7Xg7PvwkHRXt13QSuuiUUv2ttcYewvXj4jKkcSHLmoHKAQvlIPw0kgnkFF5GQBGRq0tQCKGGUL0jfuRjlxkb0KUdu+Ya2nQPfUf91Jvoz7rslznQ1g560pfP34cr2nvQdR3ISiFKMRh8A076SuC2CQAA"
+    },
+    "stdout": {
+      "codec": "gzip-base64-v1",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_bytes": 0,
+      "payload_base64": "H4sIAAAAAAACCgMAAAAAAAAAAAA="
+    }
+  },
+  "anchor_sha256": "e9d6e75d3bdd8e9b5da6600e29f591f28884b5f1487d5724deccfd506c789cd6",
+  "stamps": {
+    "command": [
+      "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\reduced-contour.exe",
+      "contour-stamps",
+      "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\anchors.bin"
+    ],
+    "exit_code": 0,
+    "stderr": {
+      "codec": "gzip-base64-v1",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_bytes": 0,
+      "payload_base64": "H4sIAAAAAAACCgMAAAAAAAAAAAA="
+    },
+    "stdout": {
+      "bytes": 5582720,
+      "sha256": "0abbbf9913a14336e6d9fbf54862df2426cb0156fa1289ff9422a8b92deaad1f"
+    }
+  },
+  "reserves": {
+    "negative_0": {
+      "stamp_errors": {
+        "dc_a": 0.0,
+        "conductance_s": 0.0,
+        "capacitance_f": 0.0
+      },
+      "worst_component": [
+        35,
+        2
+      ],
+      "worst_component_a": 4.1348632434713695e-31,
+      "worst_component_scale_a": 4.134863244112844e-31,
+      "nodal_direction_error_v": 1.5659945128837505e-17,
+      "r59_error_a": 1.989126084774575e-25,
+      "r60_error_a": 6.228183435693385e-25,
+      "raw_componentwise_backward": 0.9999999998448621,
+      "componentwise_backward": 1.8594910810360634e-12,
+      "passed": true
+    },
+    "negative_15": {
+      "stamp_errors": {
+        "dc_a": 0.0,
+        "conductance_s": 0.0,
+        "capacitance_f": 0.0
+      },
+      "worst_component": [
+        153,
+        2
+      ],
+      "worst_component_a": 5.13093281360309e-26,
+      "worst_component_scale_a": 5.172062487980483e-26,
+      "nodal_direction_error_v": 3.923456611681919e-18,
+      "r59_error_a": 1.989126084774575e-25,
+      "r60_error_a": 6.228183435693385e-25,
+      "raw_componentwise_backward": 0.992047722843068,
+      "componentwise_backward": 7.79968434916324e-13,
+      "passed": true
+    },
+    "negative_16": {
+      "stamp_errors": {
+        "dc_a": 0.0,
+        "conductance_s": 0.0,
+        "capacitance_f": 0.0
+      },
+      "worst_component": [
+        153,
+        2
+      ],
+      "worst_component_a": 5.1051682067519106e-26,
+      "worst_component_scale_a": 5.1460913511539366e-26,
+      "nodal_direction_error_v": 6.425803696107936e-18,
+      "r59_error_a": 1.989126084774575e-25,
+      "r60_error_a": 6.228183435693385e-25,
+      "raw_componentwise_backward": 0.9920477229008285,
+      "componentwise_backward": 6.6498792548653284e-12,
+      "passed": true
+    },
+    "negative_17": {
+      "stamp_errors": {
+        "dc_a": 0.0,
+        "conductance_s": 0.0,
+        "capacitance_f": 0.0
+      },
+      "worst_component": [
+        36,
+        2
+      ],
+      "worst_component_a": 4.974490708580672e-33,
+      "worst_component_scale_a": 4.974490708580672e-33,
+      "nodal_direction_error_v": 4.723055713889979e-18,
+      "r59_error_a": 1.989126084774575e-25,
+      "r60_error_a": 6.228183435693385e-25,
+      "raw_componentwise_backward": 1.0,
+      "componentwise_backward": 1.4003946537287589e-12,
+      "passed": true
+    },
+    "negative_95": {
+      "stamp_errors": {
+        "dc_a": 0.0,
+        "conductance_s": 0.0,
+        "capacitance_f": 0.0
+      },
+      "worst_component": [
+        35,
+        1
+      ],
+      "worst_component_a": 1.188342293256597e-35,
+      "worst_component_scale_a": 1.188342293256597e-35,
+      "nodal_direction_error_v": 1.3017202333404088e-17,
+      "r59_error_a": 3.1140917178466925e-27,
+      "r60_error_a": 1.245636687138677e-24,
+      "raw_componentwise_backward": 1.0,
+      "componentwise_backward": 3.5586384282151365e-12,
+      "passed": true
+    },
+    "negative_96": {
+      "stamp_errors": {
+        "dc_a": 0.0,
+        "conductance_s": 0.0,
+        "capacitance_f": 0.0
+      },
+      "worst_component": [
+        35,
+        1
+      ],
+      "worst_component_a": 1.6375913289251138e-35,
+      "worst_component_scale_a": 1.6375913289251138e-35,
+      "nodal_direction_error_v": 1.0838633593066027e-17,
+      "r59_error_a": 1.9930186994218832e-25,
+      "r60_error_a": 1.245636687138677e-24,
+      "raw_componentwise_backward": 1.0,
+      "componentwise_backward": 2.108041988172016e-12,
+      "passed": true
+    },
+    "negative_97": {
+      "stamp_errors": {
+        "dc_a": 0.0,
+        "conductance_s": 0.0,
+        "capacitance_f": 0.0
+      },
+      "worst_component": [
+        35,
+        2
+      ],
+      "worst_component_a": 5.374625256090442e-32,
+      "worst_component_scale_a": 5.374625256090442e-32,
+      "nodal_direction_error_v": 2.6767088166183145e-17,
+      "r59_error_a": 1.989126084774575e-25,
+      "r60_error_a": 6.228183435693385e-25,
+      "raw_componentwise_backward": 1.0,
+      "componentwise_backward": 3.674338515991983e-12,
+      "passed": true
+    },
+    "negative_128": {
+      "stamp_errors": {
+        "dc_a": 0.0,
+        "conductance_s": 0.0,
+        "capacitance_f": 0.0
+      },
+      "worst_component": [
+        20,
+        2
+      ],
+      "worst_component_a": 2.763707449097865e-34,
+      "worst_component_scale_a": 2.76378768532108e-34,
+      "nodal_direction_error_v": 6.780498742770674e-18,
+      "r59_error_a": 1.989126084774575e-25,
+      "r60_error_a": 1.245636687138677e-24,
+      "raw_componentwise_backward": 0.9999709687456668,
+      "componentwise_backward": 2.783058540339561e-12,
+      "passed": true
+    },
+    "positive_0": {
+      "stamp_errors": {
+        "dc_a": 0.0,
+        "conductance_s": 0.0,
+        "capacitance_f": 0.0
+      },
+      "worst_component": [
+        35,
+        2
+      ],
+      "worst_component_a": 2.2112153904337384e-32,
+      "worst_component_scale_a": 2.211269271722427e-32,
+      "nodal_direction_error_v": 9.944442086473344e-17,
+      "r59_error_a": 1.460013875086961e-21,
+      "r60_error_a": 1.7750322791726145e-23,
+      "raw_componentwise_backward": 0.9999756333209268,
+      "componentwise_backward": 7.896730116716056e-12,
+      "passed": true
+    },
+    "positive_53": {
+      "stamp_errors": {
+        "dc_a": 0.0,
+        "conductance_s": 0.0,
+        "capacitance_f": 0.0
+      },
+      "worst_component": [
+        138,
+        2
+      ],
+      "worst_component_a": 4.727939643918874e-38,
+      "worst_component_scale_a": 4.72795295913482e-38,
+      "nodal_direction_error_v": 7.728593308544253e-17,
+      "r59_error_a": 1.1348046058546543e-21,
+      "r60_error_a": 1.1132877891301926e-23,
+      "raw_componentwise_backward": 0.9999971837249523,
+      "componentwise_backward": 3.8483500063782046e-12,
+      "passed": true
+    },
+    "positive_76": {
+      "stamp_errors": {
+        "dc_a": 0.0,
+        "conductance_s": 0.0,
+        "capacitance_f": 0.0
+      },
+      "worst_component": [
+        20,
+        2
+      ],
+      "worst_component_a": 2.2955314801664376e-37,
+      "worst_component_scale_a": 2.2955547631125798e-37,
+      "nodal_direction_error_v": 1.0209711629729709e-16,
+      "r59_error_a": 1.4991673502554475e-21,
+      "r60_error_a": 1.821743654940315e-23,
+      "raw_componentwise_backward": 0.9999898573771725,
+      "componentwise_backward": 2.3022221140405175e-12,
+      "passed": true
+    },
+    "positive_77": {
+      "stamp_errors": {
+        "dc_a": 0.0,
+        "conductance_s": 0.0,
+        "capacitance_f": 0.0
+      },
+      "worst_component": [
+        29,
+        1
+      ],
+      "worst_component_a": 1.192050726163385e-38,
+      "worst_component_scale_a": 1.192050726163385e-38,
+      "nodal_direction_error_v": 2.0875974018029486e-16,
+      "r59_error_a": 3.0653810951961343e-21,
+      "r60_error_a": 1.736106132699531e-23,
+      "raw_componentwise_backward": 1.0,
+      "componentwise_backward": 1.6385483897957285e-12,
+      "passed": true
+    },
+    "positive_78": {
+      "stamp_errors": {
+        "dc_a": 0.0,
+        "conductance_s": 0.0,
+        "capacitance_f": 0.0
+      },
+      "worst_component": [
+        29,
+        2
+      ],
+      "worst_component_a": 4.446381857439226e-34,
+      "worst_component_scale_a": 4.446381857439226e-34,
+      "nodal_direction_error_v": 8.897742297727523e-17,
+      "r59_error_a": 8.684407707686374e-22,
+      "r60_error_a": 2.998683478783294e-20,
+      "raw_componentwise_backward": 1.0,
+      "componentwise_backward": 2.154831194029362e-12,
+      "passed": true
+    },
+    "positive_79": {
+      "stamp_errors": {
+        "dc_a": 0.0,
+        "conductance_s": 0.0,
+        "capacitance_f": 0.0
+      },
+      "worst_component": [
+        153,
+        1
+      ],
+      "worst_component_a": 6.011560944111425e-33,
+      "worst_component_scale_a": 6.011560944111425e-33,
+      "nodal_direction_error_v": 1.472455605727274e-16,
+      "r59_error_a": 2.162124779021971e-21,
+      "r60_error_a": 1.0948056547847725e-20,
+      "raw_componentwise_backward": 1.0,
+      "componentwise_backward": 2.7245934085058863e-12,
+      "passed": true
+    },
+    "positive_99": {
+      "stamp_errors": {
+        "dc_a": 0.0,
+        "conductance_s": 0.0,
+        "capacitance_f": 0.0
+      },
+      "worst_component": [
+        35,
+        2
+      ],
+      "worst_component_a": 1.2432670007191564e-32,
+      "worst_component_scale_a": 1.2432670007191564e-32,
+      "nodal_direction_error_v": 8.557912679289098e-17,
+      "r59_error_a": 1.2566294309026759e-21,
+      "r60_error_a": 1.627112922574897e-23,
+      "raw_componentwise_backward": 1.0,
+      "componentwise_backward": 2.0021330809547135e-12,
+      "passed": true
+    },
+    "positive_128": {
+      "stamp_errors": {
+        "dc_a": 0.0,
+        "conductance_s": 0.0,
+        "capacitance_f": 0.0
+      },
+      "worst_component": [
+        138,
+        1
+      ],
+      "worst_component_a": 8.278106825080514e-37,
+      "worst_component_scale_a": 8.278106825080514e-37,
+      "nodal_direction_error_v": 6.98119261171074e-17,
+      "r59_error_a": 1.0251044969100688e-21,
+      "r60_error_a": 1.6611714000480994e-23,
+      "raw_componentwise_backward": 1.0,
+      "componentwise_backward": 1.7859536237227317e-12,
+      "passed": true
+    }
+  },
+  "reactions_sha256": "96a13c36895e7cf7b2a2622afa93ff212349328208ab0776264c1a5c7589f49b",
+  "close": {
+    "command": [
+      "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\reduced-contour.exe",
+      "contour-close",
+      "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\reactions.bin"
+    ],
+    "exit_code": 0,
+    "stderr": {
+      "codec": "gzip-base64-v1",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_bytes": 0,
+      "payload_base64": "H4sIAAAAAAACCgMAAAAAAAAAAAA="
+    },
+    "stdout": {
+      "bytes": 2048,
+      "sha256": "b1a52ea476d649562a56f4f9a2f3ca6a108540f908c9e1ad53a3ffef82fc7a14"
+    }
+  },
+  "local_port_checks_passed": true,
+  "frozen_trajectory": {
+    "start_frame": 77,
+    "end_frame": 79,
+    "subdivisions": 512,
+    "switches": [],
+    "expected_switches": [
+      [
+        0,
+        319096,
+        319104,
+        1
+      ]
+    ],
+    "endpoints": [
+      {
+        "frame": 78,
+        "nodal_gate_fraction": 237812.9762384505,
+        "worst_node": 7,
+        "max_nodal_error_v": 8.240980218757235,
+        "contour_return_gate_fraction": 0.6778129550972574,
+        "r59_error_a": 1.3841543106925425e-09,
+        "r60_error_a": 2.559031764569125e-10,
+        "j7_error_v": 3.0217676761619752e-06
+      },
+      {
+        "frame": 79,
+        "nodal_gate_fraction": 237814.28396851453,
+        "worst_node": 7,
+        "max_nodal_error_v": 8.225524100134132,
+        "contour_return_gate_fraction": 8.340867825032541,
+        "r59_error_a": 1.7032785628601605e-08,
+        "r60_error_a": 4.9248122128216394e-09,
+        "j7_error_v": 5.509151785780498e-05
+      }
+    ],
+    "passed": false
+  },
+  "live_contour_trajectory": {
+    "completed": true,
+    "switches": [
+      [
+        0,
+        319096,
+        319104,
+        1
+      ]
+    ],
+    "max_iterations": 14,
+    "max_residual_a": 9.939814017563554e-13,
+    "expected_switches": [
+      [
+        0,
+        319096,
+        319104,
+        1
+      ]
+    ],
+    "endpoints": [
+      {
+        "frame": 78,
+        "nodal_gate_fraction": 1366.5446682213521,
+        "worst_node": 116,
+        "max_nodal_error_v": 0.029822178358600016,
+        "contour_return_gate_fraction": 0.00038772359398587224,
+        "r59_error_a": 7.917660468672292e-13,
+        "r60_error_a": 4.0657581468206416e-20,
+        "j7_error_v": 9.814872783766616e-07
+      },
+      {
+        "frame": 79,
+        "nodal_gate_fraction": 1727.7799145746205,
+        "worst_node": 116,
+        "max_nodal_error_v": 0.03770718556155739,
+        "contour_return_gate_fraction": 0.00038513710724942724,
+        "r59_error_a": 7.86483843529033e-13,
+        "r60_error_a": 1.0842021724855044e-19,
+        "j7_error_v": 5.688777004000858e-06
+      }
+    ],
+    "passed": false
+  }
+}
