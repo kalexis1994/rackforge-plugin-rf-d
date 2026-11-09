@@ -251,3 +251,25 @@ nativo convertido a f32 en los cuatro pases
 de 128 frames. El margen físico de 1,333 ms
 sigue fuera del coste actual del bloque.
 [Slot con reloj adaptativo](../evidence/rf_d_reduced_engine_rack05.json)
+
+## Auditoría del punto medio reconstruido
+
+Se reconstruyó el punto medio de los 118
+nodos, incluidos los dos puertos de retorno,
+y se contrastó con el primer medio paso.
+El ensayo exigió cuatro veces la discrepancia
+normalizada dentro del límite local y 1 mV
+de separación de los colectores de cada
+biestable en la interpolación de Radau.
+El segundo medio paso auditó cada atajo.
+
+Los 25 casos elegibles de la reserva negativa
+coincidieron con la comparación completa.
+En la positiva hubo una discrepancia entre
+183 casos elegibles. El banco eléctrico
+terminó con el cruce de ocho ticks gracias
+al control completo. La variante queda
+rechazada y se retira del motor. El recibo
+conserva los dos bloques y las fuentes del
+ensayo.
+[Auditoría del punto medio](../evidence/rf_d_reduced_engine18.json)
