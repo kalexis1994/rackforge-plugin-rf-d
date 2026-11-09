@@ -490,3 +490,58 @@ f32. La reserva positiva quedó entre 714 y
 717 veces el presupuesto de 1,333 ms. La
 medición física queda pendiente.
 [Slot de RackForge](../evidence/rf_d_reduced_engine_rack09.json)
+
+## Respuesta no lineal cerca del cruce
+
+En los frames 74–82 de la reserva positiva
+se midieron 1.163 respuestas, 3.480
+iteraciones y 2.317 correcciones de
+juntura. Las correcciones tomaron
+60,84 ms de los 81,88 ms de respuesta.
+El precondicionador resolvió todas esas
+correcciones dentro del gate existente.
+[Perfil inicial de la respuesta](../evidence/rf_d_reduced_engine36.json)
+
+El producto AVX sobre la matriz preparada
+por cuatro filas redujo la respuesta a
+62,18 ms. Factorizar sólo el cuadrado
+fuerte y reconstruir las filas débiles
+desde esa matriz redujo la respuesta a
+55,97 ms, un 31,6 % menos que el perfil
+inicial. Las correcciones tomaron
+47,93 ms con el mismo número de
+iteraciones. La ventana completa pasó
+de 196,02 a 170,60 ms y el bloque
+positivo instrumentado de 942,11 a
+808,26 ms.
+[Perfil del producto AVX](../evidence/rf_d_reduced_engine37.json),
+[perfil con reconstrucción de filas débiles](../evidence/rf_d_reduced_engine38.json)
+
+Las dos reservas conservaron sus trazas
+y su reloj por bits en 64 y 128 frames.
+La positiva mantuvo 654 pasos publicados,
+1.967 resoluciones y el cruce 319096–319104.
+Los máximos frente al solver fueron
+3,52 fA en R59, 0,663 pA en R60,
+82,4 nV en J7 y 15,68 µV en los nodos.
+La copia AVX ocupa 93.312 bytes por mapa
+y se reserva al preparar el banco.
+
+El banco sin instrumentación completó
+128 frames en 371,6 ms para la reserva
+negativa y 856,4 ms para la positiva.
+Coincidió por bits con el perfil en
+ambas particiones y no hizo asignaciones.
+[Banco nativo](../evidence/rf_d_reduced_engine39.json)
+
+| Reserva | RackForge offline, pase 1 | RackForge offline, pase 2 |
+| --- | ---: | ---: |
+| Negativa | 376,4 ms | 371,5 ms |
+| Positiva | 858,2 ms | 819,9 ms |
+
+Los cuatro bloques de 128 frames devolvieron
+J7 idéntico al banco nativo convertido a
+f32. La reserva positiva quedó entre 615 y
+644 veces el presupuesto de 1,333 ms.
+La medición física queda pendiente.
+[Slot de RackForge](../evidence/rf_d_reduced_engine_rack10.json)

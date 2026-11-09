@@ -289,3 +289,32 @@ registros del producto. Conservar el
 `expm1` de las junturas convergidas con
 la respuesta y derivar la pendiente a
 partir de ese mismo valor.
+
+## Coste de la respuesta no lineal
+
+Separar el tiempo de las correcciones
+de juntura del resto de la respuesta.
+Contar las iteraciones y los retornos
+al LU completo en la misma ventana
+positiva de los frames 74–82. Mantener
+las reservas, los puertos y el reloj.
+
+Empaquetar la matriz de realimentación
+en grupos de cuatro filas al preparar
+cada banco con AVX. Aplicar el producto
+al residuo no lineal y al refinamiento
+de una sola columna. Cada carril sigue
+el orden escalar y separa multiplicación
+y suma. Conservar la matriz original
+para el factor y las seis tangentes.
+La copia vive fuera del callback y el
+formato del banco conserva sus bytes.
+
+Para la corrección de una columna con AVX,
+armar sólo el cuadrado de columnas fuertes.
+Reconstruir las filas débiles desde las
+teselas y la solución fuerte. Preservar
+el orden `(P * pendiente) * solución`,
+la suma en orden de columna y el refinamiento
+con el residuo de las 108 leyes. Para varias
+columnas reutilizar el acoplamiento armado.

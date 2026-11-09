@@ -25,8 +25,7 @@ pub struct Map {
     iexp: [f64; LAWS],
     z_history: [[f64; HISTORY]; LAWS],
     z_port: [[f64; SHARED]; LAWS],
-    feedback: LawMatrix,
-    feedback_peak: LawVector,
+    feedback: Feedback,
     i_history: [[f64; HISTORY]; SHARED],
     i_port: [[f64; SHARED]; SHARED],
     i_law: [[f64; LAWS]; SHARED],
@@ -46,6 +45,18 @@ pub struct Response {
     nonlinear: [f64; LAWS],
     exponential_change: Junctions,
     pub junctions: Junctions,
+}
+
+#[derive(Clone, Copy, Default)]
+pub struct ResponseProfile {
+    #[cfg(profile_reduced)]
+    pub iterations: usize,
+    #[cfg(profile_reduced)]
+    pub corrections: usize,
+    #[cfg(profile_reduced)]
+    pub full_lu: usize,
+    #[cfg(profile_reduced)]
+    pub correction_ns: u128,
 }
 
 pub fn read_array<const N: usize>(bytes: &mut &[u8]) -> [f64; N] {
@@ -77,23 +88,110 @@ type LawVector = Junctions;
 type LawMatrix = [LawVector; LAWS];
 pub type PortJacobian = [[f64; SHARED]; SHARED];
 
+#[cfg(all(target_arch = "x86_64", target_feature = "avx"))]
+const ROW_TILE: usize = 4;
+
+struct Feedback {
+    rows: LawMatrix,
+    peak: LawVector,
+    #[cfg(all(target_arch = "x86_64", target_feature = "avx"))]
+    tiles: Box<[[[f64; ROW_TILE]; LAWS]]>,
+}
+
+impl Feedback {
+    fn read(bytes: &mut &[u8]) -> Self {
+        let rows: LawMatrix = read_matrix(bytes);
+        let mut peak: LawVector = [0.; LAWS];
+        for row in &rows {
+            for (peak, coefficient) in peak.iter_mut().zip(row) {
+                *peak = peak.max(coefficient.abs());
+            }
+        }
+        #[cfg(all(target_arch = "x86_64", target_feature = "avx"))]
+        let tiles = {
+            const _: () = assert!(LAWS % ROW_TILE == 0);
+            rows.as_chunks::<ROW_TILE>()
+                .0
+                .iter()
+                .map(|tile| std::array::from_fn(|i| std::array::from_fn(|r| tile[r][i])))
+                .collect()
+        };
+        Self {
+            rows,
+            peak,
+            #[cfg(all(target_arch = "x86_64", target_feature = "avx"))]
+            tiles,
+        }
+    }
+
+    #[cfg(all(target_arch = "x86_64", target_feature = "avx"))]
+    fn product(&self, input: &LawVector) -> LawVector {
+        use std::arch::x86_64::*;
+        let mut result = [0.; LAWS];
+        // SAFETY: AVX is enabled. All unaligned reads and writes span four doubles.
+        unsafe {
+            for (tile, output) in self.tiles.iter().zip(result.as_chunks_mut::<ROW_TILE>().0) {
+                let mut sum = _mm256_setzero_pd();
+                for (weights, &value) in tile.iter().zip(input) {
+                    let weights = _mm256_loadu_pd(weights.as_ptr());
+                    sum = _mm256_add_pd(sum, _mm256_mul_pd(weights, _mm256_set1_pd(value)));
+                }
+                _mm256_storeu_pd(output.as_mut_ptr(), sum);
+            }
+        }
+        result
+    }
+
+    #[cfg(not(all(target_arch = "x86_64", target_feature = "avx")))]
+    fn product(&self, input: &LawVector) -> LawVector {
+        self.rows.each_ref().map(|row| dot(row, input))
+    }
+
+    #[cfg(all(target_arch = "x86_64", target_feature = "avx"))]
+    fn strong_product(&self, columns: &[usize], scales: &[f64], solved: &[f64]) -> LawVector {
+        use std::arch::x86_64::*;
+        let mut result = [0.; LAWS];
+        // SAFETY: AVX is enabled. All unaligned reads and writes span four doubles.
+        unsafe {
+            for (tile, output) in self.tiles.iter().zip(result.as_chunks_mut::<ROW_TILE>().0) {
+                let mut sum = _mm256_setzero_pd();
+                for ((&col, &scale), &value) in columns.iter().zip(scales).zip(solved) {
+                    let weights = _mm256_loadu_pd(tile[col].as_ptr());
+                    let scaled = _mm256_mul_pd(weights, _mm256_set1_pd(scale));
+                    sum = _mm256_add_pd(sum, _mm256_mul_pd(scaled, _mm256_set1_pd(value)));
+                }
+                _mm256_storeu_pd(output.as_mut_ptr(), sum);
+            }
+        }
+        result
+    }
+}
+
 // The largest columns precondition the same full linear system. The
 // omitted columns still participate in the residual at each refinement.
 const SUPPORT: usize = 56;
 const COLUMN_FLOOR: f64 = 5e-4;
 
 fn refinement_residual<const K: usize>(
-    coefficients: &LawMatrix,
+    feedback: &Feedback,
     weighted: &[[f64; K]; LAWS],
     rhs: &[[f64; K]; LAWS],
     x: &[[f64; K]; LAWS],
 ) -> [[f64; K]; LAWS] {
     #[cfg(all(target_arch = "x86_64", target_feature = "avx"))]
-    if K == SHARED {
-        return tangent_residual(coefficients, weighted, rhs, x);
+    {
+        if K == 1 {
+            let product = feedback.product(weighted.as_flattened().try_into().unwrap());
+            return std::array::from_fn(|i| {
+                std::array::from_fn(|k| rhs[i][k] - x[i][k] - product[i])
+            });
+        }
+        if K == SHARED {
+            return tangent_residual(&feedback.rows, weighted, rhs, x);
+        }
     }
     std::array::from_fn(|i| {
-        let feedback = row_product(&coefficients[i], weighted);
+        let feedback = row_product(&feedback.rows[i], weighted);
         std::array::from_fn(|k| rhs[i][k] - x[i][k] - feedback[k])
     })
 }
@@ -148,7 +246,7 @@ struct Projection {
     columns: [usize; SUPPORT],
     slots: [usize; LAWS],
     count: usize,
-    coupling: [[f64; SUPPORT]; LAWS],
+    scales: [f64; SUPPORT],
     factor: Lu<SUPPORT>,
 }
 
@@ -164,18 +262,13 @@ impl Projection {
                 count += 1;
             }
         }
-        let mut coupling = [[0.; SUPPORT]; LAWS];
-        for (row, weights) in port_map.iter().zip(&mut coupling) {
-            for (weight, &col) in weights.iter_mut().zip(&columns[..count]) {
-                *weight = row[col] * slope[col];
-            }
-        }
+        let scales = std::array::from_fn(|j| if j < count { slope[columns[j]] } else { 0. });
         let factor = Lu::factor_prefix(
             std::array::from_fn(|i| {
                 std::array::from_fn(|j| {
                     f64::from(i == j)
-                        + if i < count {
-                            coupling[columns[i]][j]
+                        + if i < count && j < count {
+                            port_map[columns[i]][columns[j]] * scales[j]
                         } else {
                             0.
                         }
@@ -188,14 +281,13 @@ impl Projection {
             columns,
             slots,
             count,
-            coupling,
+            scales,
             factor,
         })
     }
 
-    fn apply<const K: usize>(&self, rhs: &[[f64; K]; LAWS]) -> Option<[[f64; K]; LAWS]> {
-        let strong = self
-            .factor
+    fn solve_strong<const K: usize>(&self, rhs: &[[f64; K]; LAWS]) -> Option<[[f64; K]; SUPPORT]> {
+        self.factor
             .solve_batch_prefix(
                 &std::array::from_fn(|j| {
                     if j < self.count {
@@ -206,21 +298,54 @@ impl Projection {
                 }),
                 self.count,
             )
-            .ok()?;
-        Some(std::array::from_fn(|i| {
-            if let Some(solution) = strong.get(self.slots[i]) {
-                return *solution;
-            }
-            let change = row_product(&self.coupling[i][..self.count], &strong[..self.count]);
-            std::array::from_fn(|k| rhs[i][k] - change[k])
-        }))
+            .ok()
     }
 
     fn refine<const K: usize>(
         &self,
-        port_map: &LawMatrix,
+        feedback: &Feedback,
         slope: &LawVector,
         rhs: &[[f64; K]; LAWS],
+    ) -> Option<[[f64; K]; LAWS]> {
+        let columns = &self.columns[..self.count];
+        let scales = &self.scales[..self.count];
+        #[cfg(all(target_arch = "x86_64", target_feature = "avx"))]
+        if K == 1 {
+            return self.refine_with(feedback, slope, rhs, |rhs| {
+                let strong = self.solve_strong(rhs)?;
+                let change = feedback.strong_product(columns, scales, strong.as_flattened());
+                Some(std::array::from_fn(|i| {
+                    strong
+                        .get(self.slots[i])
+                        .copied()
+                        .unwrap_or_else(|| rhs[i].map(|v| v - change[i]))
+                }))
+            });
+        }
+        let mut coupling = [[0.; SUPPORT]; LAWS];
+        for (row, weights) in feedback.rows.iter().zip(&mut coupling) {
+            for ((weight, &col), &scale) in weights.iter_mut().zip(columns).zip(scales) {
+                *weight = row[col] * scale;
+            }
+        }
+        self.refine_with(feedback, slope, rhs, |rhs| {
+            let strong = self.solve_strong(rhs)?;
+            Some(std::array::from_fn(|i| {
+                if let Some(solution) = strong.get(self.slots[i]) {
+                    return *solution;
+                }
+                let change = row_product(&coupling[i][..self.count], &strong[..self.count]);
+                std::array::from_fn(|k| rhs[i][k] - change[k])
+            }))
+        })
+    }
+
+    fn refine_with<const K: usize>(
+        &self,
+        feedback: &Feedback,
+        slope: &LawVector,
+        rhs: &[[f64; K]; LAWS],
+        apply: impl Fn(&[[f64; K]; LAWS]) -> Option<[[f64; K]; LAWS]>,
     ) -> Option<[[f64; K]; LAWS]> {
         let mut limits = [0_f64; K];
         for row in rhs {
@@ -229,11 +354,11 @@ impl Projection {
             }
         }
         limits = limits.map(|v| 1e-14 + 2e-13 * v);
-        let mut x = self.apply(rhs)?;
+        let mut x = apply(rhs)?;
         let mut converged = [false; K];
         for _ in 0..5 {
             let weighted: [[f64; K]; LAWS] = std::array::from_fn(|i| x[i].map(|v| slope[i] * v));
-            let mut residual = refinement_residual(port_map, &weighted, rhs, &x);
+            let mut residual = refinement_residual(feedback, &weighted, rhs, &x);
             for k in 0..K {
                 converged[k] |= residual
                     .iter()
@@ -249,7 +374,7 @@ impl Projection {
                     }
                 }
             }
-            let correction = self.apply(&residual)?;
+            let correction = apply(&residual)?;
             for (value, delta) in x.iter_mut().zip(correction) {
                 for k in 0..K {
                     if !converged[k] {
@@ -263,18 +388,24 @@ impl Projection {
 }
 
 fn feedback_directions<const K: usize>(
-    port_map: &LawMatrix,
-    peak: &LawVector,
+    feedback: &Feedback,
     slope: &LawVector,
     rhs: &[[f64; K]; LAWS],
+    profile: Option<&mut ResponseProfile>,
 ) -> Result<[[f64; K]; LAWS], StepError> {
-    if let Some(direction) = Projection::new(port_map, peak, slope)
-        .and_then(|projection| projection.refine(port_map, slope, rhs))
+    if let Some(direction) = Projection::new(&feedback.rows, &feedback.peak, slope)
+        .and_then(|projection| projection.refine(feedback, slope, rhs))
     {
         return Ok(direction);
     }
+    #[cfg(profile_reduced)]
+    if let Some(profile) = profile {
+        profile.full_lu += 1;
+    }
+    #[cfg(not(profile_reduced))]
+    let _ = profile;
     let matrix = std::array::from_fn(|row| {
-        std::array::from_fn(|col| port_map[row][col] * slope[col] + f64::from(row == col))
+        std::array::from_fn(|col| feedback.rows[row][col] * slope[col] + f64::from(row == col))
     });
     Lu::factor(matrix)?.solve_batch(rhs)
 }
@@ -286,26 +417,19 @@ impl Map {
             + (NODES + SHARED) * (HISTORY + SHARED + LAWS));
 
     pub fn read(bytes: &mut &[u8]) -> Self {
-        let mut map = Self {
+        Self {
             bias: read_array(bytes),
             iexp: read_array(bytes),
             z_history: read_matrix(bytes),
             z_port: read_matrix(bytes),
-            feedback: read_matrix(bytes),
-            feedback_peak: [0.; LAWS],
+            feedback: Feedback::read(bytes),
             i_history: read_matrix(bytes),
             i_port: read_matrix(bytes),
             i_law: read_matrix(bytes),
             x_history: read_matrix(bytes),
             x_port: read_matrix(bytes),
             x_law: read_matrix(bytes),
-        };
-        for row in &map.feedback {
-            for (peak, coefficient) in map.feedback_peak.iter_mut().zip(row) {
-                *peak = peak.max(coefficient.abs());
-            }
         }
-        map
     }
 
     pub fn history(&self, offset: [f64; NODES]) -> History {
@@ -322,10 +446,11 @@ impl Map {
         history: &History,
         ports: &[f64; SHARED],
         seed: &Junctions,
+        profile: &mut ResponseProfile,
     ) -> Result<Response, StepError> {
         let drive = std::array::from_fn(|i| history.junction[i] + dot(&self.z_port[i], ports));
-        self.solve_response(history, ports, &drive, *seed)
-            .or_else(|_| self.solve_response(history, ports, &drive, drive))
+        self.solve_response(history, ports, &drive, *seed, profile)
+            .or_else(|_| self.solve_response(history, ports, &drive, drive, profile))
     }
 
     fn solve_response(
@@ -334,8 +459,13 @@ impl Map {
         ports: &[f64; SHARED],
         drive: &Junctions,
         mut z: Junctions,
+        profile: &mut ResponseProfile,
     ) -> Result<Response, StepError> {
         for _ in 0..16 {
+            #[cfg(profile_reduced)]
+            {
+                profile.iterations += 1;
+            }
             if z.iter()
                 .zip(&self.bias)
                 .any(|(v, bias)| !v.is_finite() || bias + v > 45.)
@@ -344,17 +474,24 @@ impl Map {
             }
             let change = z.map(f64::exp_m1);
             let nonlinear = std::array::from_fn(|i| self.iexp[i] * excess(z[i], change[i]));
-            let residual: [f64; LAWS] =
-                std::array::from_fn(|i| z[i] - drive[i] + dot(&self.feedback[i], &nonlinear));
+            let feedback = self.feedback.product(&nonlinear);
+            let residual: LawVector = std::array::from_fn(|i| z[i] - drive[i] + feedback[i]);
             if maximum(&residual) > 2e-13 {
                 let slope = std::array::from_fn(|i| self.iexp[i] * change[i]);
+                #[cfg(profile_reduced)]
+                let start = std::time::Instant::now();
                 let correction = feedback_directions(
                     &self.feedback,
-                    &self.feedback_peak,
                     &slope,
                     &residual.map(|v| [v]),
-                )?;
-                for (value, [delta]) in z.iter_mut().zip(correction) {
+                    Some(profile),
+                );
+                #[cfg(profile_reduced)]
+                {
+                    profile.corrections += 1;
+                    profile.correction_ns += start.elapsed().as_nanos();
+                }
+                for (value, [delta]) in z.iter_mut().zip(correction?) {
                     *value -= delta;
                 }
                 continue;
@@ -377,8 +514,7 @@ impl Map {
 
     pub fn jacobian(&self, response: &Response) -> Result<PortJacobian, StepError> {
         let slope = std::array::from_fn(|i| self.iexp[i] * response.exponential_change[i]);
-        let mut derivatives =
-            feedback_directions(&self.feedback, &self.feedback_peak, &slope, &self.z_port)?;
+        let mut derivatives = feedback_directions(&self.feedback, &slope, &self.z_port, None)?;
         for (row, scale) in derivatives.iter_mut().zip(slope) {
             for value in row {
                 *value *= scale;

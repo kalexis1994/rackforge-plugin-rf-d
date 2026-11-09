@@ -90,12 +90,26 @@ pub struct StepProfile {
     pub reused_audio: usize,
     #[cfg(profile_reduced)]
     pub audio_tangent_ns: u128,
+    pub audio_response: audio::ResponseProfile,
 }
 
 #[derive(Clone, Copy)]
 enum Work { Contour, Audio, Direction, AudioTangent }
 
 impl StepProfile {
+    #[inline]
+    fn measure_response<T>(&mut self, run: impl FnOnce(&mut audio::ResponseProfile) -> T) -> T {
+        #[cfg(profile_reduced)]
+        let start = std::time::Instant::now();
+        let result = run(&mut self.audio_response);
+        #[cfg(profile_reduced)]
+        {
+            self.calls[Work::Audio as usize] += 1;
+            self.ns[Work::Audio as usize] += start.elapsed().as_nanos();
+        }
+        result
+    }
+
     #[inline]
     fn measure<T>(&mut self, part: Work, run: impl FnOnce() -> T) -> T {
         #[cfg(profile_reduced)]
@@ -421,7 +435,7 @@ impl Engine {
             (if i == j { panel[i].bus_dbus } else { 0. })
                 + panel[i].bus_dphase * A[i][j] * h * rate[j].1
         }));
-        let mut response = profile.measure(Work::Audio, || map.response(history, &shared, seed))?;
+        let mut response = profile.measure_response(|p| map.response(history, &shared, seed, p))?;
         for i in 0..2 {
             response.current[i + 4] += panel[i].currents_a[2];
         }
