@@ -200,8 +200,9 @@ fn order(collectors: [f64; 4]) -> [bool; 2] {
     [collectors[0] >= collectors[1], collectors[2] >= collectors[3]]
 }
 
-// Algebraic rows have no stage cross-coupling. Eliminating them first
-// keeps their fill local before the dynamic rows and the two audio ports.
+// Algebraic rows have no stage cross-coupling. Eliminate both sets
+// before the dynamic rows, whose Radau couplings stay close in pairs.
+const ALGEBRAIC: usize = 35;
 const INNER_ORDER: [usize; 54] = [
     8, 16, 22, 24, 53, 44, 47, 50, 51, 49, 46, 45, 43,
     12, 13, 15, 14, 11, 10, 9, 7, 6,
@@ -210,8 +211,23 @@ const INNER_ORDER: [usize; 54] = [
     38, 39, 40, 41, 42, 48, 52,
 ];
 
+const INNER_INDICES: [usize; INNER] = {
+    let mut nodes = [0; INNER];
+    let mut i = 0;
+    while i < INNER {
+        nodes[i] = if i < 2 * ALGEBRAIC {
+            (i / ALGEBRAIC) * C + INNER_ORDER[i % ALGEBRAIC]
+        } else {
+            let pair = i - 2 * ALGEBRAIC;
+            (pair % 2) * C + INNER_ORDER[ALGEBRAIC + pair / 2]
+        };
+        i += 1;
+    }
+    nodes
+};
+
 fn inner_index(i: usize) -> usize {
-    (i / 54) * C + INNER_ORDER[i % 54]
+    INNER_INDICES[i]
 }
 
 fn coefficient(e: &Evaluation<true>, i: usize, j: usize) -> f64 {
@@ -480,7 +496,7 @@ impl Engine {
                     let movement = stages.iter().flat_map(|s| s.iter().zip(before))
                         .fold(0_f64, |m, (v, base)| m.max((v - base).abs()));
                     let curvature = if cfg!(wide_clock_curvature) {
-                        INNER_ORDER[35..].iter().copied().chain([14]).map(|k| {
+                        INNER_ORDER[ALGEBRAIC..].iter().copied().chain([14]).map(|k| {
                             let first = e.contour[0].now.high[k] + e.contour[0].now.low[k];
                             let last = e.contour[1].now.high[k] + e.contour[1].now.low[k];
                             ((first - value(old.state, k)) - (last - value(old.state, k)) / 3.).abs()

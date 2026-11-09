@@ -231,3 +231,13 @@ grupo agota las correcciones, usar el LU
 completo. La sustitución conserva el orden
 de las operaciones por columna. Contrastar
 la trayectoria y las dos particiones.
+
+Comparar un orden de eliminación que agrupe
+las filas algebraicas de las dos etapas
+antes de intercalar las dos filas de cada
+nodo dinámico. La permutación se prepara
+como tabla constante. Mantener todos los
+coeficientes, los pivotes por escala y las
+ecuaciones de puerto. Admitir la variante
+sólo si pasan las mismas reservas y baja
+el coste medido del contorno.

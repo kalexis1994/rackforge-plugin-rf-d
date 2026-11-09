@@ -340,3 +340,44 @@ compilación requirió declarar explícitamente
 el ancho de cinco columnas del contorno.
 [Compilación rechazada](../evidence/rf_d_reduced_engine23.json),
 [perfil de sustituciones agrupadas](../evidence/rf_d_reduced_engine24.json)
+
+Omitir los coeficientes de pivote exactamente
+cero conservó la trayectoria por bits. En la
+ventana positiva aumentó el tiempo de
+dirección de 63,2 a 65,6 ms. Se conserva el
+recibo y se retira esa variante.
+[Ensayo del LU disperso](../evidence/rf_d_reduced_engine25.json)
+
+El orden que agrupa las filas algebraicas
+de ambas etapas e intercala las dinámicas
+redujo la dirección de 63,2 a 51,1 ms.
+El mayor cambio frente al banco agrupado
+fue 0,64 pV en los nodos observados. El
+reloj conservó 654 pasos publicados,
+1.967 resoluciones de paso y el cruce
+319096–319104. Desde el inicio de este
+bloque, la ventana del cruce bajó de
+277,4 a 208,0 ms. El promedio por
+resolución de paso en el bloque positivo
+instrumentado bajó de 703 a 512 µs.
+
+La reserva sin instrumentación completó
+128 frames positivos en 1,023 s, sin
+asignaciones. R59, R60 y J7 pasaron sus
+límites. El máximo nodal respecto del
+solver fue 15,68 µV. La partición 64/128
+y el banco instrumentado coincidieron por
+bits con el banco sin instrumentación.
+[Perfil de la permutación](../evidence/rf_d_reduced_engine26.json),
+[banco nativo](../evidence/rf_d_reduced_engine27.json)
+
+| Reserva | RackForge offline, pase 1 | RackForge offline, pase 2 |
+| --- | ---: | ---: |
+| Negativa | 0,549 s | 0,491 s |
+| Positiva | 1,006 s | 1,010 s |
+
+Los cuatro bloques de 128 frames devolvieron
+J7 idéntico al banco nativo convertido a f32.
+El presupuesto físico de 1,333 ms sigue
+pendiente.
+[Slot de RackForge](../evidence/rf_d_reduced_engine_rack07.json)
