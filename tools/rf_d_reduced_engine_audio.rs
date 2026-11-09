@@ -25,7 +25,8 @@ pub struct Map {
     iexp: [f64; LAWS],
     z_history: [[f64; HISTORY]; LAWS],
     z_port: [[f64; SHARED]; LAWS],
-    feedback: [[f64; LAWS]; LAWS],
+    feedback: LawMatrix,
+    feedback_peak: LawVector,
     i_history: [[f64; HISTORY]; SHARED],
     i_port: [[f64; SHARED]; SHARED],
     i_law: [[f64; LAWS]; SHARED],
@@ -83,30 +84,31 @@ const COLUMN_FLOOR: f64 = 5e-4;
 struct Projection {
     columns: [usize; SUPPORT],
     count: usize,
+    coupling: [[f64; SUPPORT]; LAWS],
     factor: Lu<SUPPORT>,
 }
 
 impl Projection {
-    fn new(weights: &LawMatrix) -> Option<Self> {
-        let mut strengths = [0_f64; LAWS];
-        for row in weights {
-            for (strength, value) in strengths.iter_mut().zip(row) {
-                *strength = strength.max(value.abs());
-            }
-        }
+    fn new(port_map: &LawMatrix, peak: &LawVector, slope: &LawVector) -> Option<Self> {
         let mut columns = [0; SUPPORT];
         let mut count = 0;
-        for (col, strength) in strengths.into_iter().enumerate() {
-            if strength > COLUMN_FLOOR {
+        for (col, (&maximum, &derivative)) in peak.iter().zip(slope).enumerate() {
+            if maximum * derivative.abs() > COLUMN_FLOOR {
                 *columns.get_mut(count)? = col;
                 count += 1;
+            }
+        }
+        let mut coupling = [[0.; SUPPORT]; LAWS];
+        for (row, weights) in port_map.iter().zip(&mut coupling) {
+            for (weight, &col) in weights.iter_mut().zip(&columns[..count]) {
+                *weight = row[col] * slope[col];
             }
         }
         let factor = Lu::factor(std::array::from_fn(|i| {
             std::array::from_fn(|j| {
                 f64::from(i == j)
-                    + if i < count && j < count {
-                        weights[columns[i]][columns[j]]
+                    + if i < count {
+                        coupling[columns[i]][j]
                     } else {
                         0.
                     }
@@ -116,11 +118,12 @@ impl Projection {
         Some(Self {
             columns,
             count,
+            coupling,
             factor,
         })
     }
 
-    fn apply(&self, weights: &LawMatrix, rhs: LawVector) -> Option<LawVector> {
+    fn apply(&self, rhs: LawVector) -> Option<LawVector> {
         let strong = self
             .factor
             .solve(std::array::from_fn(|j| {
@@ -133,10 +136,10 @@ impl Projection {
             .ok()?;
         let mut x = std::array::from_fn(|i| {
             rhs[i]
-                - self.columns[..self.count]
+                - self.coupling[i][..self.count]
                     .iter()
                     .zip(strong)
-                    .map(|(&j, value)| weights[i][j] * value)
+                    .map(|(weight, value)| weight * value)
                     .sum::<f64>()
         });
         for (&i, value) in self.columns[..self.count].iter().zip(strong) {
@@ -145,15 +148,18 @@ impl Projection {
         Some(x)
     }
 
-    fn refine(&self, weights: &LawMatrix, rhs: LawVector) -> Option<LawVector> {
+    fn refine(&self, port_map: &LawMatrix, slope: &LawVector, rhs: LawVector) -> Option<LawVector> {
         let limit = 1e-14 + 2e-13 * maximum(&rhs);
-        let mut x = self.apply(weights, rhs)?;
+        let mut x = self.apply(rhs)?;
         for _ in 0..5 {
-            let residual = std::array::from_fn(|i| rhs[i] - x[i] - dot(&weights[i], &x));
+            // The projection leaves weak columns out of the factor, but the
+            // residual uses every column of the original feedback law.
+            let weighted = std::array::from_fn(|i| slope[i] * x[i]);
+            let residual = std::array::from_fn(|i| rhs[i] - x[i] - dot(&port_map[i], &weighted));
             if residual.iter().all(|v| v.is_finite() && v.abs() <= limit) {
                 return Some(x);
             }
-            let correction = self.apply(weights, residual)?;
+            let correction = self.apply(residual)?;
             for (value, delta) in x.iter_mut().zip(correction) {
                 *value += delta;
             }
@@ -164,21 +170,24 @@ impl Projection {
 
 fn feedback_directions<const K: usize>(
     port_map: &LawMatrix,
+    peak: &LawVector,
     slope: &LawVector,
     rhs: [LawVector; K],
 ) -> Result<[LawVector; K], StepError> {
-    let mut weights = port_map.map(|row| std::array::from_fn(|j| row[j] * slope[j]));
-    let projection = Projection::new(&weights);
+    let projection = Projection::new(port_map, peak, slope);
     let mut directions = [[0.; LAWS]; K];
     for (i, column) in rhs.iter().copied().enumerate() {
-        if let Some(direction) = projection.as_ref().and_then(|p| p.refine(&weights, column)) {
+        if let Some(direction) = projection
+            .as_ref()
+            .and_then(|p| p.refine(port_map, slope, column))
+        {
             directions[i] = direction;
             continue;
         }
-        for (j, row) in weights.iter_mut().enumerate() {
-            row[j] += 1.;
-        }
-        let lu = Lu::factor(weights)?;
+        let matrix = std::array::from_fn(|row| {
+            std::array::from_fn(|col| port_map[row][col] * slope[col] + f64::from(row == col))
+        });
+        let lu = Lu::factor(matrix)?;
         for j in i..K {
             directions[j] = lu.solve(rhs[j])?;
         }
@@ -194,19 +203,26 @@ impl Map {
             + (NODES + SHARED) * (HISTORY + SHARED + LAWS));
 
     pub fn read(bytes: &mut &[u8]) -> Self {
-        Self {
+        let mut map = Self {
             bias: read_array(bytes),
             iexp: read_array(bytes),
             z_history: read_matrix(bytes),
             z_port: read_matrix(bytes),
             feedback: read_matrix(bytes),
+            feedback_peak: [0.; LAWS],
             i_history: read_matrix(bytes),
             i_port: read_matrix(bytes),
             i_law: read_matrix(bytes),
             x_history: read_matrix(bytes),
             x_port: read_matrix(bytes),
             x_law: read_matrix(bytes),
+        };
+        for row in &map.feedback {
+            for (peak, coefficient) in map.feedback_peak.iter_mut().zip(row) {
+                *peak = peak.max(coefficient.abs());
+            }
         }
+        map
     }
 
     pub fn history(&self, offset: [f64; NODES]) -> History {
@@ -249,7 +265,8 @@ impl Map {
                 std::array::from_fn(|i| z[i] - drive[i] + dot(&self.feedback[i], &nonlinear));
             if maximum(&residual) > 2e-13 {
                 let slope = std::array::from_fn(|i| self.iexp[i] * change[i]);
-                let [correction] = feedback_directions(&self.feedback, &slope, [residual])?;
+                let [correction] =
+                    feedback_directions(&self.feedback, &self.feedback_peak, &slope, [residual])?;
                 for i in 0..LAWS {
                     z[i] -= correction[i];
                 }
@@ -274,6 +291,7 @@ impl Map {
         let slope = std::array::from_fn(|i| self.iexp[i] * response.junctions[i].exp_m1());
         let derivatives: [LawVector; SHARED] = feedback_directions(
             &self.feedback,
+            &self.feedback_peak,
             &slope,
             std::array::from_fn(|col| self.z_port.each_ref().map(|row| row[col])),
         )?;

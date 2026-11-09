@@ -314,3 +314,17 @@ El presupuesto de 1,333 ms sigue por debajo
 del coste medido. La campaña física permanece
 pendiente.
 [Slot con reutilización y semillas](../evidence/rf_d_reduced_engine_rack06.json)
+
+## Coste por paso con el reloj adaptativo fijo
+
+El factor de audio arma sólo las columnas
+fuertes. Los máximos de las columnas se
+preparan al cargar el banco y el residuo
+sigue usando las 108 leyes. Las trazas de
+128 y 64 frames y el reloj coincidieron por
+bits con el banco anterior. En el perfil
+positivo, el audio de los frames 74–82
+bajó de 152,0 a 140,4 ms, con las mismas
+1.899 evaluaciones. El bloque positivo
+instrumentado tomó 1,325 s.
+[Perfil de columnas compactas](../evidence/rf_d_reduced_engine22.json)

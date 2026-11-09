@@ -204,3 +204,19 @@ el BUS. Si falla, volver al predictor normal
 y contar ese trabajo. Confirmar ambos medios
 pasos con los mismos residuos, correcciones
 y control de cruce.
+
+## Factor de audio con columnas compactas
+
+Preparar fuera del callback el máximo
+absoluto de cada columna del mapa de
+realimentación P. En el solve, multiplicarlo
+por la pendiente absoluta para seleccionar
+las mismas columnas fuertes del umbral
+5e−4. Armar sólo esas columnas para el
+precondicionador. Calcular el residuo completo
+como rhs − x − P·(pendiente·x). La prueba
+conserva sus límites y las 108 leyes. Armar
+la matriz completa sólo si hace falta la
+ruta de LU completo. Comparar contra el
+solver y medir las mismas ventanas con
+el reloj adaptativo.
