@@ -67,7 +67,8 @@ pub fn run(path: &str, branch: &str, cap: usize, size: usize) -> Result<(), Box<
             let [contour, audio, direction] = p.calls;
             let [contour_ns, audio_ns, direction_ns] = p.ns;
             let response = p.audio_response;
-            println!("PROFILE,{region},{},{},{},{contour},{audio},{direction},{contour_ns},{audio_ns},{direction_ns},{},{},{},{},{},{},{}",
+            let [assemble, factor, solve] = p.direction.ns;
+            println!("PROFILE,{region},{},{},{},{contour},{audio},{direction},{contour_ns},{audio_ns},{direction_ns},{},{},{},{},{},{},{},{assemble},{factor},{solve}",
                      p.steps, p.fine_steps, p.wall_ns, p.audio_tangents, p.reused_audio, p.audio_tangent_ns,
                      response.iterations, response.corrections, response.full_lu, response.correction_ns);
         }

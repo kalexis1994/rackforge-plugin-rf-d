@@ -545,3 +545,57 @@ f32. La reserva positiva quedó entre 615 y
 644 veces el presupuesto de 1,333 ms.
 La medición física queda pendiente.
 [Slot de RackForge](../evidence/rf_d_reduced_engine_rack10.json)
+
+## Dirección de Newton cerca del cruce
+
+Se midieron las mismas 1.146 direcciones
+en los frames 74–82 de la reserva positiva.
+
+| Variante | Armado interior | LU interior | Dirección completa |
+| --- | ---: | ---: | ---: |
+| Perfil inicial | 18,11 ms | 23,28 ms | 55,85 ms |
+| Armado por etapas | 9,29 ms | 23,29 ms | 45,39 ms |
+| Escalas AVX | 9,14 ms | 22,62 ms | 44,47 ms |
+| Filas afectadas registradas durante el pivoteo | 9,21 ms | 18,45 ms | 40,42 ms |
+
+La dirección bajó un 27,6 % y la ventana
+completa pasó de 175,11 a 161,94 ms.
+Las 108 incógnitas interiores, los seis
+puertos y los umbrales se conservaron.
+El LU con filas registradas coincidió
+por bits con el LU escalar en cinco
+columnas sobre 256 matrices dispersas
+con permutaciones de pivote. Ambos
+rechazaron la matriz nula. El contraste
+se ejecutó con y sin AVX.
+[Perfil inicial](../evidence/rf_d_reduced_engine40.json),
+[armado por etapas](../evidence/rf_d_reduced_engine41.json),
+[escalas AVX](../evidence/rf_d_reduced_engine42.json),
+[filas afectadas](../evidence/rf_d_reduced_engine43.json)
+
+Ambas reservas conservaron sus trazas
+y el reloj por bits a 64 y 128 frames.
+La positiva mantuvo 654 pasos publicados,
+1.967 resoluciones y el cruce 319096–319104.
+Los máximos frente al solver fueron
+3,52 fA en R59, 0,663 pA en R60,
+82,4 nV en J7 y 15,68 µV en los nodos.
+
+El banco sin instrumentación completó
+128 frames en 343,0 ms para la reserva
+negativa y 765,6 ms para la positiva.
+Coincidió por bits con el perfil en
+ambas particiones y no hizo asignaciones.
+[Banco nativo](../evidence/rf_d_reduced_engine44.json)
+
+| Reserva | RackForge offline, pase 1 | RackForge offline, pase 2 |
+| --- | ---: | ---: |
+| Negativa | 339,78 ms | 340,73 ms |
+| Positiva | 764,14 ms | 764,13 ms |
+
+Los cuatro bloques de 128 frames devolvieron
+J7 idéntico al banco nativo convertido a
+f32. Ambos pases positivos tardaron unas
+573 veces el presupuesto de 1,333 ms.
+La medición física queda pendiente.
+[Slot de RackForge](../evidence/rf_d_reduced_engine_rack11.json)

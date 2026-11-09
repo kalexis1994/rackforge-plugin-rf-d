@@ -318,3 +318,35 @@ el orden `(P * pendiente) * solución`,
 la suma en orden de columna y el refinamiento
 con el residuo de las 108 leyes. Para varias
 columnas reutilizar el acoplamiento armado.
+
+## Dirección de Newton del contorno
+
+Separar el armado de la matriz interior,
+el LU, la sustitución de cinco columnas
+y el trabajo de los puertos. Medir en
+los frames 74–82 de la reserva positiva
+con el mismo reloj. Mantener el sistema
+de seis puertos, sus cargas y los gates
+de corrección y residuo.
+
+Armar cada fila interior con la etapa
+de origen fija. Mantener el orden de
+las columnas algebraicas y los pares
+dinámicos. Multiplicar las cargas por
+el mismo coeficiente de Radau y sumar
+la conductancia de la misma etapa.
+
+Calcular los máximos absolutos de las
+filas interiores con AVX. Mantener el
+mismo máximo escalar, la comparación
+por escala, el orden de los pivotes y
+la eliminación. Usar el máximo escalar
+en targets sin AVX.
+
+Registrar las filas con coeficiente
+distinto de cero durante la búsqueda
+del pivote. Tras el intercambio,
+eliminar sobre esas filas y remapear la
+fila desplazada. Cada actualización
+conserva los coeficientes, su orden
+dentro de la fila y el pivote elegido.

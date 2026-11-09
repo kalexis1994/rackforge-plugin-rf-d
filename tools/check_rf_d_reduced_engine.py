@@ -90,7 +90,7 @@ def assess(raw, target, expected, size, bank_count=BANKS):
             switches.append(list(map(int, fields)))
         elif tag == "PROFILE":
             values = list(map(int, fields))
-            assert len(values) in (10, 11, 12, 13, 17) and values[0] in (0, 1, 2)
+            assert len(values) in (10, 11, 12, 13, 17, 20) and values[0] in (0, 1, 2)
             profile.append(values)
         elif tag == "CLOCK":
             solves, comparisons, error_retries, event_retries, *extra = map(int, fields)
@@ -139,13 +139,18 @@ def assess(raw, target, expected, size, bank_count=BANKS):
                                 calls=dict(contour=nc, audio=na, direction=nd, audio_tangents=tangents,
                                            reused_audio=reused_audio),
                                 ns=dict(contour=tc, audio=ta, direction=td, audio_tangents=tangent_ns)))
-            if field_count == 17:
-                iterations, corrections, full_lu, correction_ns = extra[3:]
+            if field_count >= 17:
+                iterations, corrections, full_lu, correction_ns = extra[3:7]
                 assert na <= iterations and 0 <= full_lu <= corrections <= iterations
                 assert 0 <= correction_ns <= ta - tangent_ns
                 windows[-1]["response"] = dict(iterations=iterations, corrections=corrections,
                                                full_lu=full_lu, correction_ns=correction_ns,
                                                elapsed_ns=ta - tangent_ns)
+            if field_count == 20:
+                assemble, factor, solve = extra[7:]
+                assert min(assemble, factor, solve) >= 0 and assemble + factor + solve <= td
+                windows[-1]["direction"] = dict(assemble_ns=assemble, factor_ns=factor, solve_ns=solve,
+                                                ports_ns=td - assemble - factor - solve)
         assert sum(row["steps"] for row in windows) == sum(sum(b["widths"]) for b in blocks)
     passed = (switches == expected and all(endpoint_passed(row) for row in endpoints)
               and max(row["phase_error_cycles"] for row in endpoints) <= 1e-7 and sound["passed"])

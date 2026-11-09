@@ -91,12 +91,46 @@ pub struct StepProfile {
     #[cfg(profile_reduced)]
     pub audio_tangent_ns: u128,
     pub audio_response: audio::ResponseProfile,
+    pub direction: DirectionProfile,
+}
+
+#[derive(Clone, Copy, Default)]
+pub struct DirectionProfile {
+    #[cfg(profile_reduced)]
+    pub ns: [u128; 3],
+}
+
+impl DirectionProfile {
+    #[inline]
+    fn measure<T>(&mut self, phase: usize, run: impl FnOnce() -> T) -> T {
+        #[cfg(profile_reduced)]
+        let start = std::time::Instant::now();
+        let result = run();
+        #[cfg(profile_reduced)]
+        { self.ns[phase] += start.elapsed().as_nanos(); }
+        #[cfg(not(profile_reduced))]
+        let _ = phase;
+        result
+    }
 }
 
 #[derive(Clone, Copy)]
 enum Work { Contour, Audio, Direction, AudioTangent }
 
 impl StepProfile {
+    #[inline]
+    fn measure_direction<T>(&mut self, run: impl FnOnce(&mut DirectionProfile) -> T) -> T {
+        #[cfg(profile_reduced)]
+        let start = std::time::Instant::now();
+        let result = run(&mut self.direction);
+        #[cfg(profile_reduced)]
+        {
+            self.calls[Work::Direction as usize] += 1;
+            self.ns[Work::Direction as usize] += start.elapsed().as_nanos();
+        }
+        result
+    }
+
     #[inline]
     fn measure_response<T>(&mut self, run: impl FnOnce(&mut audio::ResponseProfile) -> T) -> T {
         #[cfg(profile_reduced)]
@@ -260,15 +294,38 @@ fn coefficient(e: &Evaluation<true>, i: usize, j: usize) -> f64 {
         + if a == b { e.contour[a].j[r][c] } else { 0. }
 }
 
-fn direction(e: &Evaluation<true>, mut jacobian: audio::PortJacobian) -> Result<([f64; 2 * C], [f64; 2]), StepError> {
-    let lu = Lu::<INNER>::factor(std::array::from_fn(|i| std::array::from_fn(|j| {
-        coefficient(e, inner_index(i), inner_index(j))
-    })))?;
+fn interior_row<const STAGE: usize>(e: &Evaluation<true>, r: usize) -> [f64; INNER] {
+    let j = &e.contour[STAGE].j[r];
+    let m0 = &e.contour[0].mass[r];
+    let m1 = &e.contour[1].mass[r];
+    let left = |c: usize| B[STAGE][0] * m0[c] + if STAGE == 0 { j[c] } else { 0. };
+    let right = |c: usize| B[STAGE][1] * m1[c] + if STAGE == 1 { j[c] } else { 0. };
+
+    let mut row = [0.; INNER];
+    let (algebraic, dynamic) = row.split_at_mut(2 * ALGEBRAIC);
+    let (a0, a1) = algebraic.split_at_mut(ALGEBRAIC);
+    for ((x, y), &c) in a0.iter_mut().zip(a1).zip(&INNER_ORDER[..ALGEBRAIC]) {
+        *x = left(c);
+        *y = right(c);
+    }
+    for (pair, &c) in dynamic.as_chunks_mut::<2>().0.iter_mut().zip(&INNER_ORDER[ALGEBRAIC..]) {
+        *pair = [left(c), right(c)];
+    }
+    row
+}
+
+fn direction(
+    e: &Evaluation<true>, mut jacobian: audio::PortJacobian, profile: &mut DirectionProfile,
+) -> Result<([f64; 2 * C], [f64; 2]), StepError> {
+    let rows = profile.measure(0, || INNER_INDICES.map(|i| {
+        if i < C { interior_row::<0>(e, i) } else { interior_row::<1>(e, i - C) }
+    }));
+    let lu = profile.measure(1, || Lu::<INNER>::factor_contour(rows))?;
     // One particular solution and four port lifts share the same row pass.
-    let interior = lu.solve_batch::<5>(&std::array::from_fn(|i| {
+    let interior = profile.measure(2, || lu.solve_batch::<5>(&std::array::from_fn(|i| {
         let row = inner_index(i);
         std::array::from_fn(|k| if k == 0 { -e.current[row] } else { coefficient(e, row, PORT[k - 1]) })
-    }))?;
+    })))?;
     let mut current = e.audio.response.current;
     for (p, &row) in PORT.iter().enumerate() {
         let feedback: [f64; INNER] = std::array::from_fn(|i| coefficient(e, row, inner_index(i)));
@@ -500,7 +557,7 @@ impl Engine {
                     Some(jacobian) => jacobian,
                     None => profile.measure(Work::AudioTangent, || map.jacobian(&e.audio.response))?,
                 };
-                let (dv, db) = match profile.measure(Work::Direction, || direction(&e, jacobian)) {
+                let (dv, db) = match profile.measure_direction(|p| direction(&e, jacobian, p)) {
                     Ok(change) => change,
                     Err(_) if reused => {
                         cached_jacobian = None;
