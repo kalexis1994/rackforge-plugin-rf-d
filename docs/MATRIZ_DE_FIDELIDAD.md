@@ -22,7 +22,7 @@ no significa identidad sonora con el hardware.
 | Contorno de filtro | Alcance y puntos de entrada documentados | Frontera impuesta | Circuito y banco propios |
 | Voz nativa conjunta | VCO1, BUS/C27 y cadena hasta J7 con controles impuestos | [Dos perfiles de5,25 ms](VOZ_PRIMER_CICLO_RESULTADOS.md), resets, balances y refinamiento | Arranque DC conjunto, asentamiento, contornos, fuentes restantes y RT |
 | Voz SPICE conjunta | VCO1 y cadena con contorno de laboratorio | [Cuatro escenas cortas admitidas](VOZ_SEIS_ACTIVO_RESULTADOS.md); [largo rechazado y auditado](VOZ_SERIAL_CAMPANA_RESULTADOS.md), una de cuatro completa | Contrastes largos sin medir; causas de abortos pendientes |
-| Audio / producto | Escuchas de alcance parcial conservadas | Sin voz nativa instalable admitida | Voz completa, adaptador de escucha, deadlines, host y paquete |
+| Audio / producto | Sierra H128, ladder, VCA, C27, C18, R59/R60 y J7 | [Piloto portable instalable](VOZ_PILOTO_RETORNOS_RESULTADOS.md#retornos-en-el-paquete-portable), MIDI y puertos impuestos contrastados con Radau, presupuesto offline a 128 frames | C2/C5 y biestable autónomos, resto del panel y prueba física del paquete |
 
 El [VCO1 nativo ensamblado](VCO1_STAMP_RESULTADOS.md) conserva 134
 incógnitas, dos 741 completos, BJT/JFET, Schmitt/reset y cargas del panel.

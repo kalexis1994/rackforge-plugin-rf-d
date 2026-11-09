@@ -1,0 +1,708 @@
+{
+  "passed": true,
+  "wide": false,
+  "cutoff_laws": false,
+  "full_contours_integrated": false,
+  "physical_measured": false,
+  "source_sha256": {
+    "crates/rf-d-circuit/src/chain_charge.rs": "39499f27fc4b8d9ecdd760962d40001b9cc2bee5161f51b12b60f7b133c5dadc",
+    "crates/rf-d-circuit/src/circuit66.rs": "bc91fef2b06923cdb358fe0bb5ef1843ccbc62bdeee3273b6bbf65e097c75ff1",
+    "crates/rf-d-circuit/src/cutoff.rs": "1df0970230244c1e2a2c27ba42bbdba12a35e7272fcdb8e5b8cfaf9db80f925b",
+    "crates/rf-d-circuit/src/j7_antialias_coefficients.rs": "302845b308d59f7cfe6f21d40d69f00dfd4b9354cdd75acd3afe10b5fd017921",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+    "docs/VOZ_PILOTO_RETORNOS_PROTOCOLO.md": "373f8c8b1806b42551f0f8d23ddeda6da48bfd2be275dca26722f02b8d1c71a6",
+    "tools/check_rf_d_pilot_returns.py": "9dee92b8d5a62e4855405318715efeed5236ffd5b09ddaf8489fcd08789a8731",
+    "tools/check_rf_d_reduced_voice.py": "93e71b34bf2a2d659137613fa75738e5c6ee690475f59314770b9ded19d289db",
+    "tools/prepare_charge_reduced.py": "4d3ad4c06e3bb8c7ced7406409442db88b95737012742541eec75e4394a5f1ca",
+    "tools/prepare_rf_d_pilot_returns.py": "6442e18489f2d2326b6151edbec47f95c0414a397fcf1281beff12c2bb27abb1",
+    "tools/recovery_cost_exp_data.rs": "ac365fa541d84e6ad84370e29d9a39923d253924b8e74da5056d9f23109d643d",
+    "tools/recovery_cost_exp_kernel.rs": "bd750b1e0fd2e06a0cab0595a2e4628d0eafc5b476d788fc959dcd4995fd641b",
+    "tools/recovery_port_input_model.py": "38cc12456a5f79c4faf183277c47116f96852f583ff6e2de0e8eae353199d307",
+    "tools/rf_d_pilot_return_plant.rs": "da2926f767194e9362b6125180c1df9c0a52e7c828615d9daca87dad121452de",
+    "tools/rf_d_pilot_returns_oracle.rs": "407afed099a58067e41d4b17a9e45937f35b1d51ea6bb2320748970b55fa5ca2",
+    "tools/rf_d_pilot_returns_probe.rs": "6cdfc485248a766e371e5eb11f672909d3226dfd8763b8b6d4b0ac265f607f1c",
+    "tools/rf_d_pilot_returns_scene.rs": "0fa0fd3c16dea7e6aa4d2e4b75bd7656f5f5bf94c506e88bf48bd6d9462c337e",
+    "tools/rf_d_reduced_voice.rs": "72f69cc160db440595537f0417b8954d91b0914360d67e68843e5ab0084ff346",
+    "tools/rf_d_reduced_voice_probe.rs": "5b0ec366bf6b779a6e3475b5930e856a2504ae81109c0b2de96e6889ea5b020c",
+    "tools/vco_cv_load_linear.rs": "945cc14ddf61986b2772968d13d8cc84c11ae38e87b4ef5b74597c57691055a1",
+    "tools/vco_family_voice_bus_latch_lu_timing.rs": "17bf899780704ad87b57d1e45f63b6fd88a8fdfd2d2d8fb19e6940193ad1100f"
+  },
+  "source_manifest": {
+    "crates/rf-d-circuit/src/chain_charge.rs": {
+      "storage": "git",
+      "commit": "bfcba88a28f194526efa322b9eab5efb17c231b9",
+      "path": "crates/rf-d-circuit/src/chain_charge.rs",
+      "sha256": "39499f27fc4b8d9ecdd760962d40001b9cc2bee5161f51b12b60f7b133c5dadc",
+      "git_sha256": "39499f27fc4b8d9ecdd760962d40001b9cc2bee5161f51b12b60f7b133c5dadc",
+      "materialization": "exact"
+    },
+    "crates/rf-d-circuit/src/circuit66.rs": {
+      "storage": "git",
+      "commit": "bfcba88a28f194526efa322b9eab5efb17c231b9",
+      "path": "crates/rf-d-circuit/src/circuit66.rs",
+      "sha256": "bc91fef2b06923cdb358fe0bb5ef1843ccbc62bdeee3273b6bbf65e097c75ff1",
+      "git_sha256": "bc91fef2b06923cdb358fe0bb5ef1843ccbc62bdeee3273b6bbf65e097c75ff1",
+      "materialization": "exact"
+    },
+    "crates/rf-d-circuit/src/cutoff.rs": {
+      "storage": "git",
+      "commit": "bfcba88a28f194526efa322b9eab5efb17c231b9",
+      "path": "crates/rf-d-circuit/src/cutoff.rs",
+      "sha256": "1df0970230244c1e2a2c27ba42bbdba12a35e7272fcdb8e5b8cfaf9db80f925b",
+      "git_sha256": "1df0970230244c1e2a2c27ba42bbdba12a35e7272fcdb8e5b8cfaf9db80f925b",
+      "materialization": "exact"
+    },
+    "crates/rf-d-circuit/src/j7_antialias_coefficients.rs": {
+      "storage": "git",
+      "commit": "bfcba88a28f194526efa322b9eab5efb17c231b9",
+      "path": "crates/rf-d-circuit/src/j7_antialias_coefficients.rs",
+      "sha256": "302845b308d59f7cfe6f21d40d69f00dfd4b9354cdd75acd3afe10b5fd017921",
+      "git_sha256": "302845b308d59f7cfe6f21d40d69f00dfd4b9354cdd75acd3afe10b5fd017921",
+      "materialization": "exact"
+    },
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": {
+      "storage": "git",
+      "commit": "bfcba88a28f194526efa322b9eab5efb17c231b9",
+      "path": "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs",
+      "sha256": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+      "git_sha256": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+      "materialization": "exact"
+    },
+    "docs/VOZ_PILOTO_RETORNOS_PROTOCOLO.md": {
+      "storage": "image",
+      "sha256": "373f8c8b1806b42551f0f8d23ddeda6da48bfd2be275dca26722f02b8d1c71a6"
+    },
+    "tools/check_rf_d_pilot_returns.py": {
+      "storage": "git",
+      "commit": "bfcba88a28f194526efa322b9eab5efb17c231b9",
+      "path": "tools/check_rf_d_pilot_returns.py",
+      "sha256": "9dee92b8d5a62e4855405318715efeed5236ffd5b09ddaf8489fcd08789a8731",
+      "git_sha256": "9dee92b8d5a62e4855405318715efeed5236ffd5b09ddaf8489fcd08789a8731",
+      "materialization": "exact"
+    },
+    "tools/check_rf_d_reduced_voice.py": {
+      "storage": "git",
+      "commit": "bfcba88a28f194526efa322b9eab5efb17c231b9",
+      "path": "tools/check_rf_d_reduced_voice.py",
+      "sha256": "93e71b34bf2a2d659137613fa75738e5c6ee690475f59314770b9ded19d289db",
+      "git_sha256": "93e71b34bf2a2d659137613fa75738e5c6ee690475f59314770b9ded19d289db",
+      "materialization": "exact"
+    },
+    "tools/prepare_charge_reduced.py": {
+      "storage": "git",
+      "commit": "bfcba88a28f194526efa322b9eab5efb17c231b9",
+      "path": "tools/prepare_charge_reduced.py",
+      "sha256": "4d3ad4c06e3bb8c7ced7406409442db88b95737012742541eec75e4394a5f1ca",
+      "git_sha256": "4d3ad4c06e3bb8c7ced7406409442db88b95737012742541eec75e4394a5f1ca",
+      "materialization": "exact"
+    },
+    "tools/prepare_rf_d_pilot_returns.py": {
+      "storage": "git",
+      "commit": "bfcba88a28f194526efa322b9eab5efb17c231b9",
+      "path": "tools/prepare_rf_d_pilot_returns.py",
+      "sha256": "6442e18489f2d2326b6151edbec47f95c0414a397fcf1281beff12c2bb27abb1",
+      "git_sha256": "6442e18489f2d2326b6151edbec47f95c0414a397fcf1281beff12c2bb27abb1",
+      "materialization": "exact"
+    },
+    "tools/recovery_cost_exp_data.rs": {
+      "storage": "git",
+      "commit": "bfcba88a28f194526efa322b9eab5efb17c231b9",
+      "path": "tools/recovery_cost_exp_data.rs",
+      "sha256": "ac365fa541d84e6ad84370e29d9a39923d253924b8e74da5056d9f23109d643d",
+      "git_sha256": "ac365fa541d84e6ad84370e29d9a39923d253924b8e74da5056d9f23109d643d",
+      "materialization": "exact"
+    },
+    "tools/recovery_cost_exp_kernel.rs": {
+      "storage": "git",
+      "commit": "bfcba88a28f194526efa322b9eab5efb17c231b9",
+      "path": "tools/recovery_cost_exp_kernel.rs",
+      "sha256": "bd750b1e0fd2e06a0cab0595a2e4628d0eafc5b476d788fc959dcd4995fd641b",
+      "git_sha256": "bd750b1e0fd2e06a0cab0595a2e4628d0eafc5b476d788fc959dcd4995fd641b",
+      "materialization": "exact"
+    },
+    "tools/recovery_port_input_model.py": {
+      "storage": "git",
+      "commit": "bfcba88a28f194526efa322b9eab5efb17c231b9",
+      "path": "tools/recovery_port_input_model.py",
+      "sha256": "38cc12456a5f79c4faf183277c47116f96852f583ff6e2de0e8eae353199d307",
+      "git_sha256": "38cc12456a5f79c4faf183277c47116f96852f583ff6e2de0e8eae353199d307",
+      "materialization": "exact"
+    },
+    "tools/rf_d_pilot_return_plant.rs": {
+      "storage": "git",
+      "commit": "bfcba88a28f194526efa322b9eab5efb17c231b9",
+      "path": "tools/rf_d_pilot_return_plant.rs",
+      "sha256": "da2926f767194e9362b6125180c1df9c0a52e7c828615d9daca87dad121452de",
+      "git_sha256": "da2926f767194e9362b6125180c1df9c0a52e7c828615d9daca87dad121452de",
+      "materialization": "exact"
+    },
+    "tools/rf_d_pilot_returns_oracle.rs": {
+      "storage": "git",
+      "commit": "bfcba88a28f194526efa322b9eab5efb17c231b9",
+      "path": "tools/rf_d_pilot_returns_oracle.rs",
+      "sha256": "407afed099a58067e41d4b17a9e45937f35b1d51ea6bb2320748970b55fa5ca2",
+      "git_sha256": "407afed099a58067e41d4b17a9e45937f35b1d51ea6bb2320748970b55fa5ca2",
+      "materialization": "exact"
+    },
+    "tools/rf_d_pilot_returns_probe.rs": {
+      "storage": "git",
+      "commit": "bfcba88a28f194526efa322b9eab5efb17c231b9",
+      "path": "tools/rf_d_pilot_returns_probe.rs",
+      "sha256": "6cdfc485248a766e371e5eb11f672909d3226dfd8763b8b6d4b0ac265f607f1c",
+      "git_sha256": "6cdfc485248a766e371e5eb11f672909d3226dfd8763b8b6d4b0ac265f607f1c",
+      "materialization": "exact"
+    },
+    "tools/rf_d_pilot_returns_scene.rs": {
+      "storage": "git",
+      "commit": "bfcba88a28f194526efa322b9eab5efb17c231b9",
+      "path": "tools/rf_d_pilot_returns_scene.rs",
+      "sha256": "0fa0fd3c16dea7e6aa4d2e4b75bd7656f5f5bf94c506e88bf48bd6d9462c337e",
+      "git_sha256": "0fa0fd3c16dea7e6aa4d2e4b75bd7656f5f5bf94c506e88bf48bd6d9462c337e",
+      "materialization": "exact"
+    },
+    "tools/rf_d_reduced_voice.rs": {
+      "storage": "git",
+      "commit": "bfcba88a28f194526efa322b9eab5efb17c231b9",
+      "path": "tools/rf_d_reduced_voice.rs",
+      "sha256": "72f69cc160db440595537f0417b8954d91b0914360d67e68843e5ab0084ff346",
+      "git_sha256": "72f69cc160db440595537f0417b8954d91b0914360d67e68843e5ab0084ff346",
+      "materialization": "exact"
+    },
+    "tools/rf_d_reduced_voice_probe.rs": {
+      "storage": "image",
+      "sha256": "5b0ec366bf6b779a6e3475b5930e856a2504ae81109c0b2de96e6889ea5b020c"
+    },
+    "tools/vco_cv_load_linear.rs": {
+      "storage": "git",
+      "commit": "bfcba88a28f194526efa322b9eab5efb17c231b9",
+      "path": "tools/vco_cv_load_linear.rs",
+      "sha256": "945cc14ddf61986b2772968d13d8cc84c11ae38e87b4ef5b74597c57691055a1",
+      "git_sha256": "945cc14ddf61986b2772968d13d8cc84c11ae38e87b4ef5b74597c57691055a1",
+      "materialization": "exact"
+    },
+    "tools/vco_family_voice_bus_latch_lu_timing.rs": {
+      "storage": "git",
+      "commit": "bfcba88a28f194526efa322b9eab5efb17c231b9",
+      "path": "tools/vco_family_voice_bus_latch_lu_timing.rs",
+      "sha256": "17bf899780704ad87b57d1e45f63b6fd88a8fdfd2d2d8fb19e6940193ad1100f",
+      "git_sha256": "17bf899780704ad87b57d1e45f63b6fd88a8fdfd2d2d8fb19e6940193ad1100f",
+      "materialization": "exact"
+    }
+  },
+  "source_images": {
+    "codec": "gzip-base64-v1",
+    "raw_sha256": "fb2e119a5f9e131ac9bd4bb712a3113dce804c87de181f9b3a21b6cc3e3e0fa8",
+    "raw_bytes": 10859,
+    "payload_base64": "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"
+  },
+  "compiler_sha256": "fd6232f90a981e28472ce6900232946a1f1bcad8ec8270cd5ae6a3a357208b98",
+  "library_sha256": "9dbada9779f30c4972b057befe092524d091d3444ea777206b618d701236385d",
+  "builds": {
+    "candidate": {
+      "command": [
+        "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+        "--edition=2021",
+        "-C",
+        "opt-level=3",
+        "-C",
+        "target-feature=+fma",
+        "-A",
+        "dead_code",
+        "-C",
+        "link-arg=-Wl,--stack,33554432",
+        "--cfg",
+        "pilot_returns",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\returns-probe.rs",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\pilot-returns.exe"
+      ],
+      "exit_code": 0,
+      "stderr": {
+        "codec": "gzip-base64-v1",
+        "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "raw_bytes": 0,
+        "payload_base64": "H4sIAAAAAAACCgMAAAAAAAAAAAA="
+      },
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 0
+    },
+    "oracle": {
+      "command": [
+        "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+        "--edition=2021",
+        "-C",
+        "opt-level=3",
+        "-C",
+        "target-feature=+fma",
+        "-A",
+        "dead_code",
+        "-C",
+        "link-arg=-Wl,--stack,33554432",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\rf_d_pilot_returns_oracle.rs",
+        "--extern",
+        "rf_d_circuit=C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-assembly-public01\\librf_d_circuit.rlib",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\pilot-returns-oracle.exe"
+      ],
+      "exit_code": 0,
+      "stderr": {
+        "codec": "gzip-base64-v1",
+        "raw_sha256": "fc5dddc1a290ae3d27e12d20a6f7fbd2415b8f0ad7c0081bc4a7327154ec33e1",
+        "raw_bytes": 1026,
+        "payload_base64": "H4sIAAAAAAACCsWSwU7DMAyG730KS1w2qZ00TUMoCA6DA5xAQpwItKZxt4g2qRKHgYB3J6WVtsG4cMGHqrUT9/8/e43OaLMUEEzwpEA3rXUsoPCshGDdkBCXxjMaLhLIslM4E/LWk/PyCWt6kVeGzp1+Jnluy9CQYS8dlk+VdUvK2jostclclSnJ1tZeTiaydMgUT8VkVmpXBs0yJuJFH9ru77LRL+TycoXa5DU+TpwXMzFPAN6TGbxDFAo/5R13deji4Ud8XQU4AWOZormDu3X0Peo9571nP74vYNSiY7DVtyOxNAZr4PEVFFUYak6S9V5yPna/RocNcWRUpFBoo1ljnUeRTF3CM7X5WvMqp6ZdodfdMTSqr/wr5aOB8tFAckd7Cp2+/rmrP4WFDUahe01hYz7dP5D+c9+UYCu2ZvcL6Qj6xtbP5BZBLanbzn8ENz0U8w5dZDc9HFbUVbnKhw5CvG3AAHq4IFTtyhra4gXbfj6Ov9rB32Jn+TcAZzC8eqBGM5NKkk8JPDLgAgQAAA=="
+      },
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 0
+    },
+    "baseline": {
+      "command": [
+        "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+        "--edition=2021",
+        "-C",
+        "opt-level=3",
+        "-C",
+        "target-feature=+fma",
+        "-A",
+        "dead_code",
+        "-C",
+        "link-arg=-Wl,--stack,33554432",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\baseline.rs",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\pilot-baseline.exe"
+      ],
+      "exit_code": 0,
+      "stderr": {
+        "codec": "gzip-base64-v1",
+        "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "raw_bytes": 0,
+        "payload_base64": "H4sIAAAAAAACCgMAAAAAAAAAAAA="
+      },
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 0
+    }
+  },
+  "scenes": {
+    "volume": {
+      "candidate": {
+        "command": [
+          "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\pilot-returns.exe",
+          "electrical"
+        ],
+        "exit_code": 0,
+        "stderr": {
+          "codec": "gzip-base64-v1",
+          "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "raw_bytes": 0,
+          "payload_base64": "H4sIAAAAAAACCgMAAAAAAAAAAAA="
+        },
+        "stdout_sha256": "2d42db4503f7e9843ca3a01b9823efb6cbc52149391ad2f502becc730856afd2",
+        "stdout_bytes": 24576
+      },
+      "reference": {
+        "2": {
+          "command": [
+            "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\pilot-returns-oracle.exe",
+            "384000"
+          ],
+          "exit_code": 0,
+          "stderr": {
+            "codec": "gzip-base64-v1",
+            "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "raw_bytes": 0,
+            "payload_base64": "H4sIAAAAAAACCgMAAAAAAAAAAAA="
+          },
+          "stdout_sha256": "9547a50e0c68db299647ea41545587a026eb24f86db6ce97982ed8376b6096d4",
+          "stdout_bytes": 49152
+        },
+        "4": {
+          "command": [
+            "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\pilot-returns-oracle.exe",
+            "768000"
+          ],
+          "exit_code": 0,
+          "stderr": {
+            "codec": "gzip-base64-v1",
+            "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "raw_bytes": 0,
+            "payload_base64": "H4sIAAAAAAACCgMAAAAAAAAAAAA="
+          },
+          "stdout_sha256": "dbe394442bd68ce09765ae9d8f1042f835c2b72b90b9ac798a062b9f49c9134d",
+          "stdout_bytes": 98304
+        }
+      },
+      "refinement": {
+        "passed": true,
+        "maximum": [
+          3.2975311258508585e-12,
+          4.006473972029134e-14,
+          4.1522341120980855e-14,
+          1.0207805805598387e-18,
+          1.4272928677708588e-17,
+          3.2610768469290563e-19
+        ],
+        "limits": [
+          0.0,
+          2.4264131096467432e-05,
+          2.0977243117479266e-05,
+          1.1203100850588133e-08,
+          2e-09,
+          2e-09
+        ],
+        "j7_rms_relative": 3.613355768602644e-08,
+        "j7_peak_relative": 1.8962244069324057e-07,
+        "j7_mean_v": 2.885407605239402e-14
+      },
+      "comparison": {
+        "passed": true,
+        "maximum": [
+          6.684874641312629e-10,
+          7.248904599949264e-10,
+          7.466380846921084e-10,
+          1.8468546769161766e-14,
+          1.68360503761001e-17,
+          1.7958792547685676e-17
+        ],
+        "limits": [
+          0.0,
+          2.4264131096467432e-05,
+          2.0977243117479266e-05,
+          1.1203100850588133e-08,
+          2e-09,
+          2e-09
+        ],
+        "j7_rms_relative": 3.238202126158723e-05,
+        "j7_peak_relative": 3.8440948601720135e-05,
+        "j7_mean_v": 1.4928148498026282e-10
+      },
+      "drive_peak_v": [
+        0.06542384905724806,
+        0.0126294522416033,
+        0.0
+      ],
+      "reference_return_range_a": [
+        [
+          2.1969894457078485e-06,
+          2.228343220976814e-06
+        ],
+        [
+          6.8248985090263775e-06,
+          6.824898509026704e-06
+        ]
+      ]
+    },
+    "filter": {
+      "candidate": {
+        "command": [
+          "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\pilot-returns.exe",
+          "electrical"
+        ],
+        "exit_code": 0,
+        "stderr": {
+          "codec": "gzip-base64-v1",
+          "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "raw_bytes": 0,
+          "payload_base64": "H4sIAAAAAAACCgMAAAAAAAAAAAA="
+        },
+        "stdout_sha256": "204d32f085a34dea7c2beeee8ba3a6bd3c35269b6e818efbcf5fc8fd07b58a82",
+        "stdout_bytes": 24576
+      },
+      "reference": {
+        "2": {
+          "command": [
+            "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\pilot-returns-oracle.exe",
+            "384000"
+          ],
+          "exit_code": 0,
+          "stderr": {
+            "codec": "gzip-base64-v1",
+            "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "raw_bytes": 0,
+            "payload_base64": "H4sIAAAAAAACCgMAAAAAAAAAAAA="
+          },
+          "stdout_sha256": "a87e40e75053c5c5b22207b5b3a7935a1aea21e8b600ec7c4c3a3b8e85147e8d",
+          "stdout_bytes": 49152
+        },
+        "4": {
+          "command": [
+            "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\pilot-returns-oracle.exe",
+            "768000"
+          ],
+          "exit_code": 0,
+          "stderr": {
+            "codec": "gzip-base64-v1",
+            "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "raw_bytes": 0,
+            "payload_base64": "H4sIAAAAAAACCgMAAAAAAAAAAAA="
+          },
+          "stdout_sha256": "b2cfe440ce7dff72c8aaef983fa1d3f331dc34f9750a2409c03d63a07238eb1d",
+          "stdout_bytes": 98304
+        }
+      },
+      "refinement": {
+        "passed": true,
+        "maximum": [
+          6.852622193805945e-14,
+          4.0054114539000985e-14,
+          4.1300296516055823e-14,
+          1.0205688223230251e-18,
+          0.0,
+          3.944883157115664e-15
+        ],
+        "limits": [
+          0.0,
+          2.4264230740012817e-05,
+          2.0977243402036088e-05,
+          1.1203096050831867e-08,
+          2e-09,
+          2e-09
+        ],
+        "j7_rms_relative": 1.606400260271438e-09,
+        "j7_peak_relative": 5.434038943692285e-09,
+        "j7_mean_v": 3.5353014061012366e-15
+      },
+      "comparison": {
+        "passed": true,
+        "maximum": [
+          7.951684256416602e-09,
+          7.272923351346779e-10,
+          7.466689488921929e-10,
+          1.8529741087952627e-14,
+          2.5597335666024956e-18,
+          4.6614212488276375e-12
+        ],
+        "limits": [
+          0.0,
+          2.4264230740012817e-05,
+          2.0977243402036088e-05,
+          1.1203096050831867e-08,
+          2e-09,
+          2e-09
+        ],
+        "j7_rms_relative": 0.0006599644627203179,
+        "j7_peak_relative": 0.0006305580651501517,
+        "j7_mean_v": 1.3055742620277117e-09
+      },
+      "drive_peak_v": [
+        0.06542384905724806,
+        0.0,
+        0.0008339370301405987
+      ],
+      "reference_return_range_a": [
+        [
+          2.213838205050644e-06,
+          2.213838205050644e-06
+        ],
+        [
+          6.81949647305293e-06,
+          6.832889409941527e-06
+        ]
+      ]
+    },
+    "both": {
+      "candidate": {
+        "command": [
+          "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\pilot-returns.exe",
+          "electrical"
+        ],
+        "exit_code": 0,
+        "stderr": {
+          "codec": "gzip-base64-v1",
+          "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "raw_bytes": 0,
+          "payload_base64": "H4sIAAAAAAACCgMAAAAAAAAAAAA="
+        },
+        "stdout_sha256": "6fac4407cac40dd81ce0666032513395104d27bcc24aeb74a41cef58f5b73760",
+        "stdout_bytes": 24576
+      },
+      "reference": {
+        "2": {
+          "command": [
+            "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\pilot-returns-oracle.exe",
+            "384000"
+          ],
+          "exit_code": 0,
+          "stderr": {
+            "codec": "gzip-base64-v1",
+            "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "raw_bytes": 0,
+            "payload_base64": "H4sIAAAAAAACCgMAAAAAAAAAAAA="
+          },
+          "stdout_sha256": "59048053d060f5e17942be5dd4b1d9940137c5e332797b4ea85c1a904e8266a3",
+          "stdout_bytes": 49152
+        },
+        "4": {
+          "command": [
+            "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\pilot-returns-oracle.exe",
+            "768000"
+          ],
+          "exit_code": 0,
+          "stderr": {
+            "codec": "gzip-base64-v1",
+            "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "raw_bytes": 0,
+            "payload_base64": "H4sIAAAAAAACCgMAAAAAAAAAAAA="
+          },
+          "stdout_sha256": "788089db929b35a892dd27b3c2d82bd753b20b335debd3b53e091a63a3857978",
+          "stdout_bytes": 98304
+        }
+      },
+      "refinement": {
+        "passed": true,
+        "maximum": [
+          3.2273812968770396e-12,
+          4.0006951744497865e-14,
+          4.1300296516055823e-14,
+          1.0192982729021437e-18,
+          1.4272928677708588e-17,
+          3.9497815486496356e-15
+        ],
+        "limits": [
+          0.0,
+          2.4264230713452964e-05,
+          2.097724340268446e-05,
+          1.1203096050983787e-08,
+          2e-09,
+          2e-09
+        ],
+        "j7_rms_relative": 3.6038307488364506e-08,
+        "j7_peak_relative": 1.8558692936214437e-07,
+        "j7_mean_v": 3.87508768251911e-14
+      },
+      "comparison": {
+        "passed": true,
+        "maximum": [
+          8.259712654933455e-09,
+          7.272923003317881e-10,
+          7.466685048029831e-10,
+          1.852974018798012e-14,
+          1.68360503761001e-17,
+          4.66142092187292e-12
+        ],
+        "limits": [
+          0.0,
+          2.4264230713452964e-05,
+          2.097724340268446e-05,
+          1.1203096050983787e-08,
+          2e-09,
+          2e-09
+        ],
+        "j7_rms_relative": 0.0004191044493195816,
+        "j7_peak_relative": 0.0004749654806905039,
+        "j7_mean_v": 1.3868553226072954e-09
+      },
+      "drive_peak_v": [
+        0.06542384905724806,
+        0.0126294522416033,
+        0.0008339370301405987
+      ],
+      "reference_return_range_a": [
+        [
+          2.1969894457078485e-06,
+          2.228343220976814e-06
+        ],
+        [
+          6.819496473052604e-06,
+          6.8328894099412e-06
+        ]
+      ]
+    }
+  },
+  "native": {
+    "baseline": {
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\pilot-baseline.exe",
+        "128"
+      ],
+      "exit_code": 0,
+      "stderr": {
+        "codec": "gzip-base64-v1",
+        "raw_sha256": "99d7b1979495a9c37d0f90f737aa468f725f524cabee56e0419f11f8a3e05381",
+        "raw_bytes": 37,
+        "payload_base64": "H4sIAAAAAAACCgvw9PEP0THRMTSy0DE2NwPS5kbmpoYGBjomZiYmQAoIuQA8t+mkJQAAAA=="
+      },
+      "stdout_sha256": "2cd90ad6cc5a1e909ac396fafbc3c712781f40dbc0c10423d32272a8934e2761",
+      "stdout_bytes": 1540096
+    },
+    "zero_128": {
+      "run": {
+        "command": [
+          "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\pilot-returns.exe",
+          "zero",
+          "128"
+        ],
+        "exit_code": 0,
+        "stderr": {
+          "codec": "gzip-base64-v1",
+          "raw_sha256": "c18bd177a566190be1f8b2c7675b4b19bd45fd4721a02a58ea2ed058f763b5a8",
+          "raw_bytes": 27,
+          "payload_base64": "H4sIAAAAAAACCgvw9PEPiQ/wDwoJ1jE0stAxNTIzMzDQAUIuAPQUjGobAAAA"
+        },
+        "stdout_sha256": "5e98a615eb4ae3665436790b147a0f24bd6134ba4d8a7c63729e18b0c8fc2aff",
+        "stdout_bytes": 2310144
+      },
+      "max_ns": 526600,
+      "over_margin": 0,
+      "allocations": 0
+    },
+    "driven_128": {
+      "run": {
+        "command": [
+          "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\pilot-returns.exe",
+          "driven",
+          "128"
+        ],
+        "exit_code": 0,
+        "stderr": {
+          "codec": "gzip-base64-v1",
+          "raw_sha256": "b467694db387a995a37deb2083bbb0c17b58f69b1bc1aa7e7b1f0863bc69831e",
+          "raw_bytes": 27,
+          "payload_base64": "H4sIAAAAAAACCgvw9PEPiQ/wDwoJ1jE0stAxNzA2NjDQAUIuACM2YjQbAAAA"
+        },
+        "stdout_sha256": "eacafb7a2cce5e55b85793539686ed1d2aa71cb6b9c9bd33c6260bf9d3201acc",
+        "stdout_bytes": 2310144
+      },
+      "max_ns": 703300,
+      "over_margin": 0,
+      "allocations": 0
+    },
+    "driven_64": {
+      "run": {
+        "command": [
+          "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\pilot-returns.exe",
+          "driven",
+          "64"
+        ],
+        "exit_code": 0,
+        "stderr": {
+          "codec": "gzip-base64-v1",
+          "raw_sha256": "02f5a7ae131d7115877c3f633c35466bd84317bd31678eaeb77a6d5a700bf7eb",
+          "raw_bytes": 26,
+          "payload_base64": "H4sIAAAAAAACCgvw9PEPiQ/wDwoJ1jEz0TGyMDUyMNABQi4AiKt1+RoAAAA="
+        },
+        "stdout_sha256": "eacafb7a2cce5e55b85793539686ed1d2aa71cb6b9c9bd33c6260bf9d3201acc",
+        "stdout_bytes": 2310144
+      },
+      "max_ns": 285200,
+      "over_margin": 0,
+      "allocations": 0
+    },
+    "host_expected_j7_f32_sha256": "b212ff0750c6c396f5e8679b1b18a78d5d02a69441e7a490a16fe8892f6a66bc"
+  },
+  "maps": {
+    "map_checks": {
+      "projection_error": 9.454148555306753e-14,
+      "charge_error": 5.551115123125783e-17,
+      "semigroup_error": 0.0
+    },
+    "maps_sha256": "e0dc412c052fefd698f034a7352a06def47b949ef395fee3093613f4105faa39",
+    "wave_sha256": "ac6823d8b1ed52a5afbfdb62e1b068fdbf309ac7f2b41bbbc04211dbc4fbfe4c",
+    "h128_sha256": "accc39be49cc829bf9028e4d235eed875fe14c92043caf4973f8186875f8df8d"
+  },
+  "affinity": {
+    "cpu": 9,
+    "mask": 512,
+    "original_mask": 4095
+  },
+  "pilot_zero_drive_max_error": 4.610327805352793e-10,
+  "split_bit_exact": true
+}

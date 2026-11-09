@@ -1,11 +1,15 @@
 //! Render the RF-D portable package through RackForge's real MIDI ingress.
 use rackforge_core::{
     parallel_render::{RenderPool, RenderTelemetry, MAX_RENDER_SLOTS},
-    parameter_link::ControlLayers,
+    parameter_link::{CompiledParameterLink, ControlLayers},
     rack_voice::{RackEngine, RackSlotRuntimeSpec, RackSlotStateLoad},
     LoadedPlugin, PluginPackage,
 };
-use rackforge_midi_api::{IngressMidiEvent, MidiPacket, MidiSourceKey};
+use rackforge_midi_api::{
+    ControlTakeover, IngressMidiEvent, MidiPacket, MidiSourceId, MidiSourceKey, ParameterLink,
+    ParameterLinkId, ParameterLinkMessage, ParameterLinkPassThrough, ParameterLinkSource,
+    PARAMETER_LINK_SCHEMA_VERSION,
+};
 use std::{
     collections::BTreeMap,
     error::Error,
@@ -36,6 +40,32 @@ fn main() -> Result<(), Box<dyn Error>> {
         pan_per_mille: 0,
     };
     let mut rack = RackEngine::build(&BTreeMap::from([(id, &plugin)]), &[slot], RATE, FRAMES, 2)?;
+    let source = MidiSourceKey::new(0);
+    let links = [(0, 20, "pilot.r59"), (1, 21, "pilot.pin16")]
+        .into_iter()
+        .map(|(parameter_index, controller, id)| {
+            let link = ParameterLink {
+                schema_version: PARAMETER_LINK_SCHEMA_VERSION,
+                id: ParameterLinkId::new(id).unwrap(),
+                instance_id: "rf-d-pilot".into(),
+                parameter_index,
+                source: ParameterLinkSource {
+                    source_id: MidiSourceId::new("lab.returns").unwrap(),
+                    display_name: "Lab return drives".into(),
+                },
+                channel: Default::default(),
+                message: ParameterLinkMessage::ControlChange { controller },
+                transform: Default::default(),
+                pass_through: ParameterLinkPassThrough::Consume,
+                mode: Default::default(),
+                layer: Default::default(),
+            };
+            let mut compiled = CompiledParameterLink::new(link, source, plugin.parameters())?;
+            compiled.set_takeover(ControlTakeover::Jump);
+            Ok(compiled)
+        })
+        .collect::<Result<_, Box<dyn Error>>>()?;
+    rack.set_parameter_links(links);
     let telemetry = RenderTelemetry::new(MAX_RENDER_SLOTS);
     let mut pool = RenderPool::with_workers(0, telemetry.clone());
     let mut layers = ControlLayers::default();
@@ -59,7 +89,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         while let Some((frame, data)) = events.next_if(|(frame, _)| *frame < offset + FRAMES) {
             rack.route(
                 IngressMidiEvent {
-                    source: MidiSourceKey::new(0),
+                    source,
                     packet: MidiPacket {
                         frame: frame - offset,
                         length: 3,

@@ -8,7 +8,7 @@ no acredita identidad sonora con una unidad vintage.
 
 ## Motor jugable y referencia offline
 
-La ruta jugable parte del [piloto monofónico portable](docs/VOZ_REDUCIDA_PILOTO_RESULTADOS.md#paquete-jugable-en-rackforge).
+La ruta jugable usa el [piloto monofónico con R59/R60](docs/VOZ_PILOTO_RETORNOS_RESULTADOS.md#retornos-en-el-paquete-portable).
 El [solver acoplado](docs/VOZ_REDUCIDA_MOTOR_RESULTADOS.md) es la referencia
 eléctrica offline. Cada bloque que se incorpore al piloto debe contrastar
 sus puertos y su salida y cumplir el presupuesto de RackForge.
@@ -16,7 +16,7 @@ sus puertos y su salida y cumplir el presupuesto de RackForge.
 El banco construye, instala en un almacén temporal y prueba el paquete con
 MIDI a 48 kHz y 128 frames. Se ejecuta desde la raíz con
 `python -B tools/check_rf_d_playable_pilot.py`. Al pasar deja
-`artifacts/rf-d-pilot-0.1.0.rfplugin` para importar en RackForge.
+`artifacts/rf-d-pilot-0.2.0.rfplugin` para importar en RackForge.
 [Protocolo](docs/VOZ_PILOTO_JUGABLE_PROTOCOLO.md).
 
 ## Estado actual — 2026-10-12

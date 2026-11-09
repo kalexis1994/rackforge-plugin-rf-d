@@ -1,4 +1,5 @@
 """Build and admit the MIDI pilot as an installable RackForge audition package."""
+import json
 import os
 import shutil
 import struct
@@ -13,13 +14,13 @@ from check_hybrid_voice import packed
 from check_recovery_engine128 import HOST_CORE
 from check_recovery_host import HOST, HOST_COMPILER
 from check_rf_d_reduced_engine_rack import HOST_REVISION, HOST_SOURCES
+from check_rf_d_pilot_returns import SOURCES as RETURN_SOURCES, generate
 from check_rf_d_reduced_voice import (
-    AREA, COMPILER, DATA, DOC, FIR, GUEST, MAPS, N, OWN, PLANT, PROBE, ROOT,
-    VOICE, digest, pin, pilot_plant, portable_source, prepare_pilot, read, score, sha, write,
+    AREA, COMPILER, GUEST, N, NODE, ROOT, digest, emit, pin, read, score, sha, write,
 )
 
 PACKAGE = ROOT / "plugin/package"
-ARTIFACT = ROOT / "artifacts/rf-d-pilot-0.1.0.rfplugin"
+ARTIFACT = ROOT / "artifacts/rf-d-pilot-0.2.0.rfplugin"
 REFERENCE = "evidence/rf_d_reduced_voice_pilot03.json"
 MIDI_PROBE = "tools/rf_d_playable_pilot_probe.rs"
 PROTOCOL = "docs/VOZ_PILOTO_JUGABLE_PROTOCOLO.md"
@@ -27,7 +28,8 @@ MARGIN = 128e9 / 48_000 / 2
 BLOCKS = N // 128
 MIDI_LIB = "librackforge_midi_api-9bf68be69a56bbe5.rlib"
 SDK_PATH = "crates/rackforge-plugin-sdk/src/lib.rs"
-SOURCES = (OWN, DOC, DATA, FIR, GUEST, MAPS, PLANT, PROBE, VOICE, MIDI_PROBE, PROTOCOL,
+WASM_OPT = ROOT.parent / "rackforge-plugin-rf-5/target/tools/binaryen/binaryen-version_132/bin/wasm-opt.exe"
+SOURCES = (*RETURN_SOURCES, GUEST, NODE, MIDI_PROBE, PROTOCOL, "tools/recovery_engine128_broadcast.rs",
            "tools/affine_evidence.py", "tools/check_rf_d_playable_pilot.py",
            *(p.relative_to(ROOT).as_posix() for p in PACKAGE.rglob("*") if p.is_file()))
 
@@ -49,6 +51,22 @@ def assess(raw, stderr, expected, events):
                 peak=peak, faults=int(faults), dropped_events=int(dropped), deadline_misses=int(misses),
                 max_ns=int(max(times)), p99_ns=float(np.quantile(times, .99)),
                 over_margin=int(sum(times > MARGIN)), times=packed(times.tobytes()))
+
+
+def driven_score():
+    events = [[frame, status, note, 100] for frame, status, note in score()]
+    for controller, start, period in ((20, 173, 239), (21, 211, 149)):
+        events.extend([frame, 0xb0, controller, 127 if i % 2 == 0 else 0]
+                      for i, frame in enumerate(range(start, N, period)))
+    return sorted(events, key=lambda event: event[0])
+
+
+def electrical_reference():
+    for path in sorted((ROOT / "evidence").glob("rf_d_pilot_returns[0-9][0-9].json"), reverse=True):
+        result = read(path.relative_to(ROOT).as_posix())
+        if result["passed"] and not result["wide"]:
+            return path, result
+    raise ValueError("The narrow return model requires a passed Radau contrast")
 
 
 def main():
@@ -79,29 +97,43 @@ def main():
         host_sources = (*HOST_SOURCES, SDK_PATH)
         assert not subprocess.check_output(["git", "status", "--porcelain", "--", *host_sources], cwd=HOST)
         report["host_sources"] = {path: sha(HOST / path) for path in host_sources}
-        wave, data, checks = prepare_pilot()
-        report["maps"] = checks
+        reference, electrical = electrical_reference()
+        report["electrical_reference"] = reference.relative_to(ROOT).as_posix()
+        report["electrical_reference_sha256"] = sha(reference)
+        code, report["maps"] = generate()
+        assert report["maps"] == electrical["maps"]
+        for path in ("tools/rf_d_pilot_return_plant.rs", "tools/prepare_rf_d_pilot_returns.py"):
+            assert electrical["source_sha256"][path] == sha(ROOT / path)
         prior = read(REFERENCE)
         assert prior["passed"] and prior["portable"]["bit_exact"]
-        for name in ("candidate_maps_sha256", "wave_table_sha256"):
-            assert checks[name] == prior[name]
-        guest = portable_source(pilot_plant(data), wave)
+        assert report["maps"]["wave_sha256"] == prior["wave_table_sha256"]
+        guest = emit("pilot-return-guest.rs", code + (ROOT / GUEST).read_text(encoding="utf8"))
         sdk = AREA / "librackforge_plugin_sdk.rlib"
         component = AREA / "component.wasm"
         flags = [COMPILER, "--target", "wasm32-unknown-unknown", "-C", "target-feature=+simd128",
                  "-C", "opt-level=3", "-A", "dead_code"]
         execute("sdk", [*flags, "--edition=2024", "--crate-type", "rlib", "--crate-name", "rackforge_plugin_sdk",
                         HOST / SDK_PATH, "-o", sdk])
-        execute("guest", [*flags, "--edition=2021", "--crate-type", "cdylib", "-C", "panic=abort",
-                          "-C", "lto=fat", guest, "--extern", f"rackforge_plugin_sdk={sdk}", "-o", component])
+        guest_flags = [*flags, "--edition=2021", "--crate-type", "cdylib", "-C", "panic=abort",
+                       "-C", "lto=fat", "--cfg", "pilot_returns", guest,
+                       "--extern", f"rackforge_plugin_sdk={sdk}"]
+        execute("guest_scalar", [*guest_flags, "-o", component])
+        simd = AREA / "component-simd.wasm"
+        execute("guest_simd", [*guest_flags, "--cfg", "pilot_returns_simd", "-o", simd])
+        optimizer = Path(os.environ.get("RF_D_WASM_OPT", WASM_OPT))
+        version = execute("optimizer_version", [optimizer, "--version"]).stdout.decode().strip()
+        assert version.startswith("wasm-opt version 132"), version
+        optimized = AREA / "component-opt.wasm"
+        execute("optimize", [optimizer, simd, "-O4", "-o", optimized])
+        report["optimizer"] = dict(version=version, sha256=sha(optimizer), input_sha256=sha(simd))
         store = HOST / "target/release/rackforge-store.exe"
         archive = AREA / ARTIFACT.name
         installed = AREA / "pilot-store"
-        execute("package", [store, "pack-wasm", PACKAGE, component, archive])
+        execute("package", [store, "pack-wasm", PACKAGE, optimized, archive])
         execute("install", [store, "install-local", archive, installed])
         manifest, = installed.rglob("rackforge-plugin.toml")
-        assert sha(manifest.parent / "component.wasm") == sha(component)
-        report["component_sha256"] = sha(component)
+        assert sha(manifest.parent / "component.wasm") == sha(optimized)
+        report["component_sha256"] = sha(optimized)
         report["store_sha256"] = sha(store)
 
         deps = HOST / "target/release/deps"
@@ -116,15 +148,23 @@ def main():
                          *[arg for path in native_dirs for arg in ("-L", f"native={path}")],
                          ROOT / MIDI_PROBE, "--extern", f"rackforge_core={core}",
                          "--extern", f"rackforge_midi_api={midi}", "-o", probe])
-        events = score()
+        events = driven_score()
         midi_score = AREA / "pilot-score.bin"
-        midi_score.write_bytes(b"".join(struct.pack("<IBBBB", sample, status, note, 100, 0)
-                                        for sample, status, note in events))
+        midi_score.write_bytes(b"".join(struct.pack("<IBBBB", sample, status, note, value, 0)
+                                        for sample, status, note, value in events))
         report["midi_score"] = events
         report["affinity"] = pin()
+        direct = execute("direct_wasm", ["node", ROOT / NODE, optimized, json.dumps(events), N])
+        raw = execute("scalar_wasm", ["node", ROOT / NODE, component, json.dumps(events), N])
+        assert direct.stdout == raw.stdout
+        neutral = execute("neutral_wasm", ["node", ROOT / NODE, optimized, json.dumps(score()), N])
+        assert len(direct.stdout) == len(neutral.stdout) == N * 8
+        expected = digest(direct.stdout)
+        assert expected != digest(neutral.stdout)
+        report["direct_wasm"] = dict(driven_j7_sha256=expected, neutral_j7_sha256=digest(neutral.stdout))
         for attempt in (1, 2):
             run = execute(f"rack_{attempt}", [probe, manifest.parent, AREA / "pilot-cache", midi_score])
-            trial = assess(run.stdout, run.stderr, prior["portable"]["output_sha256"], len(events))
+            trial = assess(run.stdout, run.stderr, expected, len(events))
             report["trials"].append(trial)
             print("RF_D_MIDI", attempt, {k: v for k, v in trial.items() if k != "times"}, flush=True)
         report["offline_margin_passed"] = all(t["over_margin"] == t["deadline_misses"] == 0 for t in report["trials"])

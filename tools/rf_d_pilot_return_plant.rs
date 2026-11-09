@@ -55,22 +55,78 @@ fn dot<const N: usize>(a: &[f64; N], b: &[f64; N]) -> f64 {
     a.iter().zip(b).map(|(x, y)| x * y).sum()
 }
 
+#[cfg(not(pilot_returns_simd))]
+use map::{F, N0, N1, P, ZH};
+
+#[cfg(not(pilot_returns_simd))]
+fn product<const R: usize, const C: usize>(matrix: &[[f64; C]; R], input: &[f64; C]) -> [f64; R] {
+    matrix.each_ref().map(|row| dot(row, input))
+}
+
+#[cfg(pilot_returns_simd)]
+#[path = "recovery_engine128_broadcast.rs"]
+mod broadcast;
+
+#[cfg(pilot_returns_simd)]
+use self::wasm::{product, F, N0, N1, P, ZH};
+
+#[cfg(pilot_returns_simd)]
+mod wasm {
+    use super::{broadcast::accumulate, map, JUNCTIONS};
+
+    const N: usize = 18;
+    const _: () = assert!(JUNCTIONS == N);
+    type Matrix = [[f64; N]; N];
+
+    const fn transpose(matrix: &Matrix) -> Matrix {
+        let mut columns = [[0.; N]; N];
+        let mut row = 0;
+        while row < N {
+            let mut col = 0;
+            while col < N {
+                columns[col][row] = matrix[row][col];
+                col += 1;
+            }
+            row += 1;
+        }
+        columns
+    }
+
+    pub const F: Matrix = transpose(&map::F);
+    pub const N0: Matrix = transpose(&map::N0);
+    pub const N1: Matrix = transpose(&map::N1);
+    pub const P: Matrix = transpose(&map::P);
+    pub const ZH: Matrix = transpose(&map::ZH);
+
+    #[inline]
+    pub fn product(matrix: &Matrix, input: &[f64; N]) -> [f64; N] {
+        let mut output = [-0.; N];
+        accumulate::<N, N, 9, false>(&mut output, matrix, input);
+        output
+    }
+}
+
 pub fn step(state: &mut State, signal: f64, drive: Drive) -> Result<Ports, Error> {
     if !drive.valid() || !signal.is_finite() || signal.abs() > 0.08 {
         return Err(Error::Input);
     }
     let input = [signal, drive.volume_delta_v, drive.filter_delta_v];
+    let stored = product(&F, &state.q);
+    let correction = product(&N0, &state.defects);
     let base: [f64; 18] = std::array::from_fn(|i| {
-        dot(&map::U0[i], &state.input) + dot(&map::U1[i], &input)
-            + dot(&map::F[i], &state.q) + dot(&map::N0[i], &state.defects)
+        dot(&map::U0[i], &state.input) + dot(&map::U1[i], &input) + stored[i] + correction[i]
     });
-    let predictor: [f64; JUNCTIONS] = std::array::from_fn(|i| dot(&map::ZH[i], &base) + dot(&map::ZU[i], &input));
-    let mut z = std::array::from_fn(|i| predictor[i] - dot(&map::P[i], &state.defects));
+    let history = product(&ZH, &base);
+    let predictor: [f64; JUNCTIONS] = std::array::from_fn(|i| history[i] + dot(&map::ZU[i], &input));
+    let previous = product(&P, &state.defects);
+    let mut z = std::array::from_fn(|i| predictor[i] - previous[i]);
     for _ in 0..12 {
         let (defects, slope) = law(z)?;
-        let residual: [f64; JUNCTIONS] = std::array::from_fn(|i| z[i] - predictor[i] + dot(&map::P[i], &defects));
+        let feedback = product(&P, &defects);
+        let residual: [f64; JUNCTIONS] = std::array::from_fn(|i| z[i] - predictor[i] + feedback[i]);
         if residual.iter().all(|x| x.abs() <= 2e-13) {
-            let q: [f64; 18] = std::array::from_fn(|i| base[i] + dot(&map::N1[i], &defects));
+            let charge = product(&N1, &defects);
+            let q: [f64; 18] = std::array::from_fn(|i| base[i] + charge[i]);
             let [j7_v, bus_v, base_v, vca_base, tail, collector] = std::array::from_fn(|i| {
                 map::DC[i] + dot(&map::XQ[i], &base) + dot(&map::XU[i], &input) - dot(&map::XD[i], &defects)
             });

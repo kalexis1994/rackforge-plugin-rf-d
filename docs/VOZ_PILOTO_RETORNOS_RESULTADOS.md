@@ -94,3 +94,45 @@ cero plazos perdidos y cero fallos del slot.
 La admisión cubre esta etapa de retornos y
 la configuración física probada.
 [Campaña ASIO](../evidence/rf_d_pilot_returns_rack06.json)
+
+## Retornos en el paquete portable
+
+RF-D Pilot 0.2.0 integra el mapa FOH de 18 leyes en el
+paquete MIDI. Los offsets de laboratorio de R59 y pin 16
+se exponen en mV, parten de cero y admiten automatización
+por muestra. R60 conserva su rama física en el filtro.
+El rango de los offsets es ±15 mV y ±1 mV respectivamente.
+C2/C5 y el biestable quedan pendientes de acople.
+
+El banco a 192 kHz reprodujo por bits la partición
+64/128, sin asignaciones. Las tres escenas eléctricas
+pasaron contra Radau a 768 kHz. El peor RMS de J7
+fue 0,0660 %, frente a 0,3 %. Los máximos de corriente
+fueron 0,0168 fA en R59 y 4,66 pA en R60, frente a
+2 nA por retorno. El refinamiento 384/768 kHz pasó.
+[Banco eléctrico inicial](../evidence/rf_d_pilot_returns09.json),
+[contraste de las fuentes del paquete](../evidence/rf_d_pilot_returns10.json).
+
+RackForge recibió 531 eventos por pase, ocho de la
+partitura y el resto de CC20/21 enlazados a los puertos.
+La salida de cada pase coincidió por bits con las 48.128
+muestras estéreo del componente directo con los mismos
+estímulos. El componente SIMD coincidió también por bits
+con el escalar. La salida con controles neutros fue
+distinta de la salida con retornos activos.
+
+| Variante a 128 frames | Máximo del pase 1 | Máximo del pase 2 |
+| --- | ---: | ---: |
+| Escalar sin Binaryen | 1,950 ms | 1,361 ms |
+| Escalar con Binaryen 132 | 1,147 ms | 1,451 ms |
+| SIMD por pares de filas y Binaryen 132 | 0,980 ms | 1,140 ms |
+
+Los dos pases finales de 376 bloques a 48 kHz quedaron
+dentro de 1,333 ms, con cero eventos descartados,
+fallos de slot y plazos perdidos. El peor bloque dejó
+0,193 ms de margen offline. La admisión deja
+`artifacts/rf-d-pilot-0.2.0.rfplugin` para importar.
+La medición física corresponde a una etapa posterior.
+[Primer intento portable](../evidence/rf_d_playable_pilot04.json),
+[ensayo de Binaryen](../evidence/rf_d_playable_pilot05.json),
+[campaña admitida](../evidence/rf_d_playable_pilot06.json).

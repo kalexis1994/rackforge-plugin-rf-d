@@ -29,15 +29,25 @@ const timings = [];
 for (let start = 0, event = 0; start < frames; start += 128) {
     const size = Math.min(128, frames - start);
     midi = new DataView(wasm.memory.buffer, wasm.rackforge_midi_ptr());
+    const parameters = new DataView(wasm.memory.buffer, wasm.rackforge_parameter_ptr());
     let count = 0;
+    let parameterCount = 0;
     while (event < score.length && score[event][0] < start + size) {
-        const [sample, status, note] = score[event++];
+        const [sample, status, note, value = 100] = score[event++];
+        if (status === 0xb0 && (note === 20 || note === 21)) {
+            if (value !== 0 && value !== 127) throw new Error("Expected an endpoint control value");
+            const at = parameterCount++ * 16;
+            parameters.setUint32(at, sample - start, true);
+            parameters.setUint32(at + 4, note - 20, true);
+            parameters.setFloat64(at + 8, (value === 0 ? -1 : 1) * (note === 20 ? 15 : 1), true);
+            continue;
+        }
         midi.setUint32(count * 8, sample - start, true);
-        midi.setUint32(count * 8 + 4, status | note << 8 | 100 << 16 | 3 << 24, true);
+        midi.setUint32(count * 8 + 4, status | note << 8 | value << 16 | 3 << 24, true);
         count++;
     }
     const time = performance.now();
-    const status = wasm.rackforge_process(size, 0, 2, count, 0);
+    const status = wasm.rackforge_process(size, 0, 2, count, parameterCount);
     timings.push(Math.round((performance.now() - time) * 1e6));
     check(status);
     output.set(new Uint8Array(wasm.memory.buffer, wasm.rackforge_output_ptr(), size * 8), start * 8);

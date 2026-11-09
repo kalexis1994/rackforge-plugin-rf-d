@@ -29,3 +29,35 @@ evento del biestable se contrastan con el solver
 antes de integrar sus modelos de tiempo real.
 [Retornos](VOZ_PILOTO_RETORNOS_PROTOCOLO.md),
 [gatillo y biestable](VOZ_PILOTO_GATILLO_PROTOCOLO.md).
+
+## Puertos de retorno en el paquete
+
+Integrar las 18 leyes ya contrastadas en el piloto
+FOH a 192 kHz, con C27, C18, el ladder, ambos VCA,
+R59 de 68 kΩ y R60 de 680 Ω. Exponer dos entradas de
+laboratorio automatizables, en mV. R59 recibe el
+offset alrededor de 2 V dentro de ±15 mV. El pin 16
+del filtro recibe ±1 mV alrededor de 0 V y actúa
+sobre la rama de R60 a través de Q26/Q28.
+La escena nominal arranca con ambos offsets a cero.
+
+Antes de empacar, verificar la misma planta contra
+Radau a 384/768 kHz con las tres escenas de retornos.
+Aplicar el contrato previo de J7 y 2 nA por retorno.
+Para el banco del paquete, dirigir CC20/21 a los
+extremos de los offsets desde el host y comparar
+las 48.128 muestras estéreo por bits con la misma
+secuencia aplicada al ABI portable. Comparar también
+con controles neutros para demostrar su efecto.
+Mantener los dos pases de 128 frames, 48 kHz y el
+presupuesto de 1,333 ms. Los estímulos de frontera
+siguen siendo explícitos hasta integrar C2/C5.
+[Contrato eléctrico](VOZ_PILOTO_RETORNOS_PROTOCOLO.md).
+
+Emparejar filas independientes de las matrices de
+carga y realimentación en carriles SIMD. Conservar
+el orden de suma por fila y el residuo de las 18
+leyes. Empaquetar con Binaryen 132 y exigir salida
+idéntica al componente escalar para la misma escena.
+El banco reutiliza el ejecutable de RF-5 o el indicado
+por la variable `RF_D_WASM_OPT`.
