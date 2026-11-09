@@ -350,3 +350,20 @@ eliminar sobre esas filas y remapear la
 fila desplazada. Cada actualización
 conserva los coeficientes, su orden
 dentro de la fila y el pivote elegido.
+
+## Armado de las dos etapas del contorno
+
+Medir por separado el par de etapas
+con tangente y el par usado en la
+búsqueda de Newton. Comparar los
+frames 74–82 de la reserva positiva
+con el mismo reloj y el mismo
+contraste eléctrico.
+
+Preparar el estado compensado de 56
+nodos una vez para las dos etapas y
+avanzar cada cambio sobre ese estado.
+Usar almacenamiento de dimensión cero
+para las matrices de conductancia y
+masa en los ensayos de residuo. Mantener
+las dos matrices completas para Newton.

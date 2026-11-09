@@ -90,7 +90,7 @@ def assess(raw, target, expected, size, bank_count=BANKS):
             switches.append(list(map(int, fields)))
         elif tag == "PROFILE":
             values = list(map(int, fields))
-            assert len(values) in (10, 11, 12, 13, 17, 20) and values[0] in (0, 1, 2)
+            assert len(values) in (10, 11, 12, 13, 17, 20, 22) and values[0] in (0, 1, 2)
             profile.append(values)
         elif tag == "CLOCK":
             solves, comparisons, error_retries, event_retries, *extra = map(int, fields)
@@ -146,11 +146,16 @@ def assess(raw, target, expected, size, bank_count=BANKS):
                 windows[-1]["response"] = dict(iterations=iterations, corrections=corrections,
                                                full_lu=full_lu, correction_ns=correction_ns,
                                                elapsed_ns=ta - tangent_ns)
-            if field_count == 20:
-                assemble, factor, solve = extra[7:]
+            if field_count >= 20:
+                assemble, factor, solve = extra[7:10]
                 assert min(assemble, factor, solve) >= 0 and assemble + factor + solve <= td
                 windows[-1]["direction"] = dict(assemble_ns=assemble, factor_ns=factor, solve_ns=solve,
                                                 ports_ns=td - assemble - factor - solve)
+            if field_count == 22:
+                full, full_ns = extra[10:]
+                assert 0 <= full <= nc and 0 <= full_ns <= tc
+                windows[-1]["contour"] = dict(full=full, full_ns=full_ns,
+                                              trial=nc-full, trial_ns=tc-full_ns)
         assert sum(row["steps"] for row in windows) == sum(sum(b["widths"]) for b in blocks)
     passed = (switches == expected and all(endpoint_passed(row) for row in endpoints)
               and max(row["phase_error_cycles"] for row in endpoints) <= 1e-7 and sound["passed"])

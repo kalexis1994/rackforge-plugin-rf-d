@@ -599,3 +599,62 @@ f32. Ambos pases positivos tardaron unas
 573 veces el presupuesto de 1,333 ms.
 La medición física queda pendiente.
 [Slot de RackForge](../evidence/rf_d_reduced_engine_rack11.json)
+
+## Armado de las dos etapas cerca del cruce
+
+En los frames 74–82 de la reserva
+positiva se midieron 1.148 pares con
+tangente y 772 pares de ensayo.
+Avanzar sólo los 56 nodos del contorno
+y usar matrices de dimensión cero en
+los ensayos redujo su tiempo de 13,28
+a 4,62 ms. El armado total bajó de
+35,17 a 24,17 ms.
+[Perfil inicial](../evidence/rf_d_reduced_engine45.json),
+[perfil de los ensayos compactos](../evidence/rf_d_reduced_engine46.json)
+
+El primer intento de reutilizar el
+historial de carga se detuvo en el
+generador de fuentes. Se corrigió la
+sustitución que adapta el módulo de
+carga para el banco.
+[Intento detenido](../evidence/rf_d_reduced_engine47.json)
+
+El historial de carga conservó las
+trazas eléctricas y el reloj. Los dos
+perfiles registraron aumentos simultáneos
+en audio, dirección y armado. Esas
+mediciones quedaron fuera de la
+comparación de coste. Se retiró la
+variante y se conservó el armado compacto.
+[Banco nativo del ensayo](../evidence/rf_d_reduced_engine48.json),
+[primer perfil del ensayo](../evidence/rf_d_reduced_engine49.json),
+[repetición del perfil](../evidence/rf_d_reduced_engine50.json),
+[RackForge del ensayo](../evidence/rf_d_reduced_engine_rack12.json)
+
+El armado compacto conservó ambas trazas
+y el reloj por bits a 64 y 128 frames.
+La reserva positiva mantuvo 654 pasos
+publicados, 1.967 resoluciones y el
+cruce 319096–319104. Los máximos frente
+al solver fueron 3,52 fA en R59, 0,663 pA
+en R60, 82,4 nV en J7 y 15,68 µV en los nodos.
+
+Sin instrumentación, el banco compacto
+completó 128 frames en 315,4 ms para la
+reserva negativa y 707,2 ms para la positiva.
+Coincidió por bits con el perfil en ambas
+particiones y no hizo asignaciones.
+[Banco nativo del armado compacto](../evidence/rf_d_reduced_engine51.json)
+
+| Reserva | RackForge offline, pase 1 | RackForge offline, pase 2 |
+| --- | ---: | ---: |
+| Negativa | 321,73 ms | 321,78 ms |
+| Positiva | 732,00 ms | 732,43 ms |
+
+Los cuatro bloques de 128 frames devolvieron
+J7 idéntico al banco nativo convertido a f32.
+Ambos pases positivos tardaron unas 549 veces
+el presupuesto de 1,333 ms. La medición
+física queda pendiente.
+[Slot de RackForge](../evidence/rf_d_reduced_engine_rack13.json)

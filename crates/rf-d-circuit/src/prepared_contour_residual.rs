@@ -76,11 +76,11 @@ impl State {
         })
     }
 }
-pub struct Parts<const FULL:bool> {
+pub struct Parts<const FULL:bool, const T:usize = N> {
     pub dc: [f64; N],
-    pub j: [[f64; N]; N],
+    pub j: [[f64; T]; T],
     pub dq: [f64; N],
-    pub mass: [[f64; N]; N],
+    pub mass: [[f64; T]; T],
     pub ports: [f64; P],
     pub charge_ports: [f64; P],
     pub now: State,
@@ -92,18 +92,18 @@ fn voltage(x: &[f64; N], c: Controls, k: usize) -> f64 {
         [0., 9.3, -10., 10., c.key, 0., 1.4, 0., 1.][k - N]
     }
 }
-fn row<const FULL:bool>(s: &mut Parts<FULL>, k: usize, i: f64, d: &[(usize, f64)]) {
+fn row<const FULL:bool, const T:usize>(s: &mut Parts<FULL, T>, k: usize, i: f64, d: &[(usize, f64)]) {
     if k<N{s.dc[k]+=i;s.dc[k]+=d.iter().map(|&(j,g)|if j<N{g*s.now.low[j]}else{0.}).sum::<f64>();if FULL{for &(j,g)in d{if j<N{s.j[k][j]+=g;}}}}
     else{s.ports[k-N]+=i;}
 }
 
-fn resistor<const FULL:bool>(s: &mut Parts<FULL>, x: &[f64; N], c: Controls, a: usize, b: usize, g: f64) {
+fn resistor<const FULL:bool, const T:usize>(s: &mut Parts<FULL, T>, x: &[f64; N], c: Controls, a: usize, b: usize, g: f64) {
     let i = (voltage(x, c, a) - voltage(x, c, b)) * g;
     row(s, a, i, &[(a, g), (b, -g)]);
     row(s, b, -i, &[(a, -g), (b, g)]);
 }
-fn bjt<const FULL:bool>(
-    s: &mut Parts<FULL>,
+fn bjt<const FULL:bool, const T:usize>(
+    s: &mut Parts<FULL, T>,
     x: &[f64; N],
     c: Controls,
     b: usize,
@@ -138,8 +138,8 @@ fn bjt<const FULL:bool>(
     );
     Ok(())
 }
-fn diode<const FULL:bool>(
-    s: &mut Parts<FULL>,
+fn diode<const FULL:bool, const T:usize>(
+    s: &mut Parts<FULL, T>,
     x: &[f64; N],
     c: Controls,
     a: usize,
@@ -157,18 +157,23 @@ fn diode<const FULL:bool>(
     row(s, b, -i, &[(a, -g), (b, g)]);
     Ok(())
 }
-fn empty<const FULL:bool>(now: State) -> Parts<FULL> {
-    Parts::<FULL> {
+fn empty<const FULL:bool, const T:usize>(now: State) -> Parts<FULL, T> {
+    Parts {
         dc: [0.; N],
-        j: [[0.; N]; N],
+        j: [[0.; T]; T],
         dq: [0.; N],
-        mass: [[0.; N]; N],
+        mass: [[0.; T]; T],
         ports: [0.; P],
         charge_ports: [0.; P],
         now,
     }
 }
 pub fn dc<const FULL:bool>(x: State, c: Controls) -> Result<Parts<FULL>, StepError> {
+    dc_compact::<FULL, N>(x, c)
+}
+
+fn dc_compact<const FULL:bool, const T:usize>(x: State, c: Controls) -> Result<Parts<FULL, T>, StepError> {
+    const { assert!(T == N || (!FULL && T == 0)); }
     if c.optional != x.optional || !c.key.is_finite() || !(0. ..=10.).contains(&c.key)
     {
         return Err(StepError::InvalidInput);
@@ -295,9 +300,15 @@ pub const CAPS: [(usize, usize, f64); 7] = [
 ];
 pub const LATCH: [(usize, usize); 6] = [(25, 26), (27, 28), (39, 40), (41, 42), (19, 17), (20, 18)];
 pub fn parts<const FULL:bool>(old: State, delta: State, c: Controls, h: f64, now:State) -> Result<Parts<FULL>, StepError> {
+    parts_compact::<FULL, N>(old, delta, c, h, now)
+}
+
+pub fn parts_compact<const FULL:bool, const T:usize>(
+    old: State, delta: State, c: Controls, h: f64, now: State,
+) -> Result<Parts<FULL, T>, StepError> {
     // old/delta/now were checked in the full 118-node stage boundary.
     if !h.is_finite()||h<=0.{return Err(StepError::InvalidInput);}
-    let mut s = dc(now, c)?;
+    let mut s = dc_compact(now, c)?;
     let mut cap = |a: usize, b: usize, cf: f64| {
         let get = |k| {
             if k < N {

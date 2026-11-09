@@ -68,9 +68,10 @@ pub fn run(path: &str, branch: &str, cap: usize, size: usize) -> Result<(), Box<
             let [contour_ns, audio_ns, direction_ns] = p.ns;
             let response = p.audio_response;
             let [assemble, factor, solve] = p.direction.ns;
-            println!("PROFILE,{region},{},{},{},{contour},{audio},{direction},{contour_ns},{audio_ns},{direction_ns},{},{},{},{},{},{},{},{assemble},{factor},{solve}",
+            println!("PROFILE,{region},{},{},{},{contour},{audio},{direction},{contour_ns},{audio_ns},{direction_ns},{},{},{},{},{},{},{},{assemble},{factor},{solve},{},{}",
                      p.steps, p.fine_steps, p.wall_ns, p.audio_tangents, p.reused_audio, p.audio_tangent_ns,
-                     response.iterations, response.corrections, response.full_lu, response.correction_ns);
+                     response.iterations, response.corrections, response.full_lu, response.correction_ns,
+                     p.contour_full, p.contour_full_ns);
         }
         println!("BLOCK,{size},{elapsed},{count},{guard_retries},{solver_retries},{iterations},{max_residual_a:.17e},{max_correction_v:.17e},{}",
                  widths.map(|n| n.to_string()).join(","));

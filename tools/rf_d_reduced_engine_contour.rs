@@ -1,12 +1,15 @@
 // Appended inside the graph module to reuse the exact contour stamp.
 pub use contour::Parts as ContourParts;
 
-pub fn reduced_contour<const FULL: bool>(
-    old: State, change: [f64; 56], key: f64, h: f64,
-) -> Result<ContourParts<FULL>, StepError> {
-    let delta = State::new(std::array::from_fn(|k| change.get(k).copied().unwrap_or(0.)), old.optional);
-    let now = old.advanced(delta.high);
-    contour::parts::<FULL>(old.contour(), delta.contour(), Controls {
-        key, short: false, optional: old.optional,
-    }, h, now.contour())
+pub fn reduced_contours<const FULL: bool, const T: usize>(
+    old: State, change: &[f64; 2 * contour::N], key: f64, h: f64,
+) -> Result<[ContourParts<FULL, T>; 2], StepError> {
+    let old = old.contour();
+    let controls = Controls { key, short: false, optional: old.optional };
+    let stage = |change| {
+        let delta = contour::State::new(change, old.optional);
+        contour::parts_compact::<FULL, T>(old, delta, controls, h, old.advanced(change))
+    };
+    Ok([stage(change[..contour::N].try_into().unwrap())?,
+        stage(change[contour::N..].try_into().unwrap())?])
 }
