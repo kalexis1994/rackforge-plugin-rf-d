@@ -42,6 +42,26 @@ fn pivot_scale(row: &[f64]) -> f64 {
 #[cfg(not(all(target_arch = "x86_64", target_feature = "avx")))]
 use self::maximum as pivot_scale;
 
+fn row_slots(mut mask: u128) -> impl Iterator<Item = usize> {
+    std::iter::from_fn(move || {
+        if mask == 0 {
+            return None;
+        }
+        let row = mask.trailing_zeros() as usize;
+        mask &= mask - 1;
+        Some(row)
+    })
+}
+
+fn eliminate<const N: usize>(row: &mut [f64; N], pivot: &[f64; N], col: usize, end: usize) -> f64 {
+    let ratio = row[col] / pivot[col];
+    row[col] = ratio;
+    for j in col + 1..end {
+        row[j] -= ratio * pivot[j];
+    }
+    ratio
+}
+
 pub struct Lu<const N: usize> {
     rows: [[f64; N]; N],
     order: [usize; N],
@@ -54,41 +74,102 @@ impl<const N: usize> Lu<N> {
         Self::factor_prefix(rows, N)
     }
 
-    pub fn factor_contour(rows: [[f64; N]; N]) -> Result<Self, StepError> {
-        Self::factor_rows::<true>(rows, N, pivot_scale)
+    pub fn factor_contour(mut rows: [[f64; N]; N]) -> Result<Self, StepError> {
+        const {
+            assert!(N <= 128);
+        }
+        let mut order = std::array::from_fn(|i| i);
+        let mut scale = rows.each_ref().map(|row| pivot_scale(row));
+        let mut left = [N; N];
+        let mut right = [0; N];
+        let mut start = [N; N];
+        let mut buckets = [0_u128; N];
+        for (i, row) in rows.iter().enumerate() {
+            if let Some(first) = row.iter().position(|v| *v != 0.) {
+                left[i] = first;
+                right[i] = row.iter().rposition(|v| *v != 0.).unwrap() + 1;
+                buckets[first] |= 1 << i;
+            }
+        }
+        for col in 0..N {
+            // A row appears only in the bucket for its first remaining nonzero.
+            let affected = std::mem::take(&mut buckets[col]);
+            let mut best = 0.;
+            let mut pivot = col;
+            for row in row_slots(affected) {
+                let score = rows[row][col].abs() / scale[row];
+                if score > best {
+                    best = score;
+                    pivot = row;
+                }
+            }
+            if !best.is_finite() || best < 1e-12 {
+                return Err(StepError::SingularJacobian);
+            }
+            if col != pivot {
+                let displaced = left[col];
+                if displaced < N && displaced != col {
+                    buckets[displaced] ^= (1 << col) | (1 << pivot);
+                }
+                rows.swap(col, pivot);
+                order.swap(col, pivot);
+                scale.swap(col, pivot);
+                left.swap(col, pivot);
+                right.swap(col, pivot);
+                start.swap(col, pivot);
+            }
+            let (head, tail) = rows.split_at_mut(col + 1);
+            let pivot_row = &head[col];
+            // The bound may include exact cancellation, so trim it before eliminating.
+            let end = pivot_row[..right[col]]
+                .iter()
+                .rposition(|v| *v != 0.)
+                .unwrap()
+                + 1;
+            right[col] = end;
+            for source in row_slots(affected & !(1 << pivot)) {
+                let row = if source == col { pivot } else { source };
+                let values = &mut tail[row - col - 1];
+                let ratio = eliminate(values, pivot_row, col, end);
+                if ratio != 0. {
+                    start[row] = start[row].min(col);
+                }
+                right[row] = right[row].max(end);
+                left[row] = N;
+                if let Some(offset) = values[col + 1..right[row]].iter().position(|v| *v != 0.) {
+                    let first = col + 1 + offset;
+                    left[row] = first;
+                    buckets[first] |= 1 << row;
+                }
+            }
+        }
+        for (i, first) in start.iter_mut().enumerate() {
+            *first = (*first).min(i);
+        }
+        Ok(Self {
+            rows,
+            order,
+            start,
+            end: right,
+        })
     }
 
     /// Factor only the leading square block. The suffix is ignored.
     #[inline]
-    pub fn factor_prefix(rows: [[f64; N]; N], active: usize) -> Result<Self, StepError> {
-        Self::factor_rows::<false>(rows, active, maximum)
-    }
-
-    #[inline]
-    fn factor_rows<const INDEXED: bool>(
-        mut rows: [[f64; N]; N],
-        active: usize,
-        scale: impl Fn(&[f64]) -> f64,
-    ) -> Result<Self, StepError> {
+    pub fn factor_prefix(mut rows: [[f64; N]; N], active: usize) -> Result<Self, StepError> {
         let mut order = std::array::from_fn(|i| i);
         let mut end = [active; N];
         let mut scales = [0.; N];
-        let mut affected = [0; N];
         for i in 0..active {
-            scales[i] = scale(&rows[i][..active]);
+            scales[i] = maximum(&rows[i][..active]);
         }
         for col in 0..active {
             let mut best = 0.;
             let mut pivot = col;
-            let mut count = 0;
             for row in col..active {
                 let entry = rows[row][col];
                 if entry == 0. {
                     continue;
-                }
-                if INDEXED {
-                    affected[count] = row;
-                    count += 1;
                 }
                 let score = entry.abs() / scales[row];
                 if score > best {
@@ -104,30 +185,11 @@ impl<const N: usize> Lu<N> {
             scales.swap(col, pivot);
             let (head, tail) = rows[..active].split_at_mut(col + 1);
             let pivot_row = &head[col];
-            let diagonal = pivot_row[col];
             let limit = pivot_row[..active].iter().rposition(|x| *x != 0.).unwrap() + 1;
             end[col] = limit;
-            let eliminate = |row: &mut [f64; N]| {
-                let ratio = row[col] / diagonal;
-                row[col] = ratio;
-                for j in col + 1..limit {
-                    row[j] -= ratio * pivot_row[j];
-                }
-            };
-            if INDEXED {
-                for &source in &affected[..count] {
-                    if source == pivot {
-                        continue;
-                    }
-                    // The old first row now occupies the selected pivot's slot.
-                    let row = if source == col { pivot } else { source };
-                    eliminate(&mut tail[row - col - 1]);
-                }
-            } else {
-                for row in tail {
-                    if row[col] != 0. {
-                        eliminate(row);
-                    }
+            for row in tail {
+                if row[col] != 0. {
+                    eliminate(row, pivot_row, col, limit);
                 }
             }
         }

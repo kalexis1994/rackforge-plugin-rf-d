@@ -721,3 +721,62 @@ Los pases positivos tardaron entre 492 y
 499 veces el presupuesto de 1,333 ms.
 La medición física queda pendiente.
 [Slot de RackForge](../evidence/rf_d_reduced_engine_rack14.json)
+
+## LU disperso cerca del cruce
+
+Se midieron 1.146 factorizaciones del
+contorno en los frames 74–82 de la
+reserva positiva. Clasificar cada fila
+por su primer coeficiente activo bajó
+el LU de 18,51 a 15,22 ms (−17,8 %).
+La dirección completa pasó de 40,32 a
+34,76 ms. En la partición de 64 frames,
+el LU bajó de 18,29 a 15,32 ms.
+[Perfil de las listas por columna](../evidence/rf_d_reduced_engine56.json)
+
+La preparación conjunta de escala y
+límites dio 15,30 y 15,13 ms en las
+particiones de 128 y 64. Los intercambios
+lógicos dieron 15,43 y 15,27 ms. Ambas
+variantes conservaron el contraste
+eléctrico. Se retiraron por la mejora
+inconsistente frente a las listas solas.
+[Preparación conjunta](../evidence/rf_d_reduced_engine57.json),
+[intercambios lógicos](../evidence/rf_d_reduced_engine58.json)
+
+En 516 casos por compilación, con y
+sin AVX, coincidieron los pivotes, los
+factores, los límites de sustitución y
+las cinco soluciones. Se incluyeron
+empates, cancelación exacta, subdesborde
+y una matriz singular.
+
+Ambas reservas conservaron las trazas
+y el reloj por bits a 64 y 128 frames.
+La positiva mantuvo 654 pasos publicados,
+1.967 resoluciones y el cruce 319096–319104.
+Los máximos frente al solver fueron
+3,52 fA en R59, 0,663 pA en R60,
+82,4 nV en J7 y 15,68 µV en los nodos.
+
+Sin instrumentación, el banco completó
+128 frames en 272,0 ms para la reserva
+negativa y 638,4 ms para la positiva.
+El bloque positivo anterior había
+tardado 636,5 ms. La mejora medida
+corresponde a la factorización en
+el perfil. El render no hizo asignaciones.
+[Banco nativo del LU disperso](../evidence/rf_d_reduced_engine59.json)
+
+| Reserva | RackForge offline, pase 1 | RackForge offline, pase 2 |
+| --- | ---: | ---: |
+| Negativa | 274,19 ms | 340,18 ms |
+| Positiva | 655,86 ms | 664,16 ms |
+
+Los cuatro bloques de 128 frames devolvieron
+J7 idéntico al nativo convertido a f32.
+Los pases positivos quedaron en el rango
+de la campaña anterior, entre 492 y 498
+veces el presupuesto de 1,333 ms.
+La medición física queda pendiente.
+[Slot de RackForge](../evidence/rf_d_reduced_engine_rack15.json)

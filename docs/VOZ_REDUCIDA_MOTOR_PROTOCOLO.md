@@ -391,3 +391,14 @@ para consultar las etapas por referencia.
 Limpiar los sellos antes de cada ensayo
 o iteración y contar la inicialización
 de ambos buffers en el tiempo con tangente.
+
+## Pivoteo con filas dispersas
+
+Clasificar las filas vivas por su primera
+entrada distinta de cero. Buscar el pivote
+en ese grupo y conservar el orden lógico
+de desempate. Tras cada actualización,
+reubicar la fila según su nuevo primer
+coeficiente, incluido el relleno.
+Mantener las operaciones del LU, los
+puertos y los umbrales de Newton.
