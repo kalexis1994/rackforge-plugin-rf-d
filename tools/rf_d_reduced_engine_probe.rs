@@ -72,8 +72,8 @@ pub fn run(path: &str, branch: &str, cap: usize, size: usize) -> Result<(), Box<
         println!("BLOCK,{size},{elapsed},{count},{guard_retries},{solver_retries},{iterations},{max_residual_a:.17e},{max_correction_v:.17e},{}",
                  widths.map(|n| n.to_string()).join(","));
         let clock = stats.clock;
-        println!("CLOCK,{},{},{},{},{},{}", clock.solves, clock.comparisons,
-                 clock.error_retries, clock.event_retries, clock.reused_halves, clock.reused_siblings);
+        println!("CLOCK,{},{},{},{},{},{},{}", clock.solves, clock.comparisons,
+                 clock.error_retries, clock.event_retries, clock.reused_halves, clock.reused_siblings, clock.half_seed_retries);
         for (i, sample) in frames.iter().enumerate() {
             frame(block * size + i + 1, sample);
         }

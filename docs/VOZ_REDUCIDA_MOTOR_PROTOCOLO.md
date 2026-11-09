@@ -191,3 +191,16 @@ primer medio paso se subdivide, su compañero
 pierde el origen y se descarta. Exigir la
 misma trayectoria por bits y contar por
 separado cada resolución evitada.
+
+Para iniciar cada medio paso, reconstruir
+las dos etapas de Radau del candidato amplio
+a partir de su extremo y su derivada final.
+Evaluar la interpolación cuadrática en 1/6
+y 1/2 del intervalo para el primer medio paso
+y en 2/3 y 1 para el segundo. Restar el estado
+real de inicio de cada medio paso. Usar esta
+estimación sólo como semilla del contorno y
+el BUS. Si falla, volver al predictor normal
+y contar ese trabajo. Confirmar ambos medios
+pasos con los mismos residuos, correcciones
+y control de cruce.

@@ -282,3 +282,35 @@ eléctricas completas y los eventos fueron
 idénticos por bits respecto del banco anterior,
 tanto en 128 frames como en dos bloques de 64.
 [Banco con reutilización exacta](../evidence/rf_d_reduced_engine19.json)
+
+## Semilla de los medios pasos
+
+La interpolación del paso amplio inició los
+medios pasos sin reintentos en las dos reservas.
+Junto con la reutilización del segundo medio
+paso, redujo las direcciones de Newton en los
+frames 74–82 de 1.377 a 1.146. El tiempo
+perfilado pasó de 379 ms a 277 ms. Se
+conservaron los 654 pasos publicados, los
+1.967 solves y el cruce 319096–319104.
+
+El error máximo fue 15,68 µV por nodo, 3,52 fA
+en R59 y 0,663 pA en R60. J7 y la partición
+64/128 pasaron. El bloque positivo sin
+instrumentación tardó 1,426 s. El banco
+perfilado y el banco sin instrumentación
+coincidieron por bits.
+[Perfil de las semillas](../evidence/rf_d_reduced_engine20.json),
+[banco nativo](../evidence/rf_d_reduced_engine21.json)
+
+| Reserva | RackForge offline, pase 1 | RackForge offline, pase 2 |
+| --- | ---: | ---: |
+| Negativa | 0,766 s | 0,700 s |
+| Positiva | 1,441 s | 1,438 s |
+
+Los cuatro bloques de 128 frames devolvieron
+J7 idéntico al banco nativo convertido a f32.
+El presupuesto de 1,333 ms sigue por debajo
+del coste medido. La campaña física permanece
+pendiente.
+[Slot con reutilización y semillas](../evidence/rf_d_reduced_engine_rack06.json)

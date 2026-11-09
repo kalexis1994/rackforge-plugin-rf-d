@@ -69,6 +69,7 @@ pub struct ClockCounters {
     pub event_retries: usize,
     pub reused_halves: usize,
     pub reused_siblings: usize,
+    pub half_seed_retries: usize,
 }
 
 #[derive(Clone, Copy, Default)]
@@ -167,6 +168,28 @@ struct Accepted {
 struct Halves {
     first: Accepted,
     second: Option<Accepted>,
+}
+
+struct StageSeed {
+    contour: [f64; 2 * C],
+    bus: [f64; 2],
+}
+
+fn half_seed(origin: State, coarse: Running, start: State, at: [f64; 2]) -> Option<StageSeed> {
+    let prior = coarse.continuation?;
+    let increment = |end: State, k: usize| {
+        (end.high[k] - origin.high[k]) + (end.low[k] - origin.low[k])
+    };
+    let weights = at.map(|t| [4.5 * t * (1. - t), 1.5 * t * (t - 1. / 3.)]);
+    let project = |k, derivative, [a, b]: [f64; 2]| {
+        let last = increment(coarse.state, k);
+        let first = (2.5 * last - derivative) / 4.5;
+        a * first + b * last - increment(start, k)
+    };
+    Some(StageSeed {
+        contour: std::array::from_fn(|i| project(i % C, prior.contour[i % C], weights[i / C])),
+        bus: weights.map(|w| project(BUS, prior.bus, w)),
+    })
 }
 
 fn value(s: State, k: usize) -> f64 {
@@ -368,16 +391,16 @@ impl Engine {
         if let Some(prior) = old.continuation.as_ref().filter(|prior| {
             prior.key == key && width <= 2 * prior.width
         }) {
-            if let Ok(accepted) = self.solve_step(old, key, width, Some(prior), profile) {
+            if let Ok(accepted) = self.solve_step(old, key, width, Some(prior), None, profile) {
                 return Ok(accepted);
             }
         }
-        self.solve_step(old, key, width, None, profile)
+        self.solve_step(old, key, width, None, None, profile)
     }
 
     fn solve_step(
         &self, old: Running, key: f64, width: usize,
-        prior: Option<&Continuation>, profile: &mut StepProfile,
+        prior: Option<&Continuation>, stage_seed: Option<&StageSeed>, profile: &mut StepProfile,
     ) -> Result<Accepted, StepError> {
         let h = width as f64 / (RATE * TICKS) as f64;
         let map = &self.maps[width.trailing_zeros() as usize];
@@ -386,7 +409,10 @@ impl Engine {
         let before = COLLECTORS.map(|k| value(old.state, k));
         let mut delta = [0.; 2 * C];
         let mut bus = [offset[62]; 2];
-        if let Some(prior) = prior {
+        if let Some(seed) = stage_seed {
+            delta = seed.contour;
+            bus = seed.bus.map(|change| offset[62] + change);
+        } else if let Some(prior) = prior {
             let ratio = width as f64 / prior.width as f64;
             for (stage, fraction) in [1. / 3., 1.].into_iter().enumerate() {
                 let scale = fraction * ratio;
@@ -496,6 +522,22 @@ impl Engine {
         Err(StepError::IterationBudget)
     }
 
+    fn solve_half(
+        &self, old: Running, key: f64, width: usize, seed: Option<StageSeed>,
+        profile: &mut StepProfile, clock: &mut ClockCounters,
+    ) -> Result<Accepted, StepError> {
+        clock.solves += 1;
+        if let Some(seed) = seed {
+            let prior = old.continuation.as_ref().filter(|p| p.key == key && width <= 2 * p.width);
+            if let Ok(step) = self.solve_step(old, key, width, prior, Some(&seed), profile) {
+                return Ok(step);
+            }
+            clock.half_seed_retries += 1;
+            clock.solves += 1;
+        }
+        self.step(old, key, width, profile)
+    }
+
     /// Return None when either of the two finer trajectories brackets an event.
     fn compare_clock(
         &self, old: Running, key: f64, width: usize, coarse: Running,
@@ -503,16 +545,16 @@ impl Engine {
         halves: &mut Option<Halves>,
     ) -> Result<Option<f64>, StepError> {
         clock.comparisons += 1;
-        clock.solves += 1;
-        let middle = self.step(old, key, width / 2, profile)?;
+        let middle_seed = half_seed(old.state, coarse, old.state, [1. / 6., 0.5]);
+        let middle = self.solve_half(old, key, width / 2, middle_seed, profile, clock)?;
         let crossed = middle.stage_order.iter().any(|stage| *stage != initial);
         let midpoint = middle.running;
         let halves = halves.insert(Halves { first: middle, second: None });
         if crossed {
             return Ok(None);
         }
-        clock.solves += 1;
-        let fine = self.step(midpoint, key, width / 2, profile)?;
+        let end_seed = half_seed(old.state, coarse, midpoint.state, [2. / 3., 1.]);
+        let fine = self.solve_half(midpoint, key, width / 2, end_seed, profile, clock)?;
         let crossed = fine.stage_order.iter().any(|stage| *stage != initial);
         let endpoint = fine.running;
         halves.second = Some(fine);
