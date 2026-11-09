@@ -381,3 +381,22 @@ J7 idéntico al banco nativo convertido a f32.
 El presupuesto físico de 1,333 ms sigue
 pendiente.
 [Slot de RackForge](../evidence/rf_d_reduced_engine_rack07.json)
+
+## Prefijo activo del factor de audio
+
+El ensayo de un LU de 114 filas para las dos
+etapas y los seis puertos pasó las reservas
+con el mismo reloj. En la ventana positiva
+el tiempo de dirección subió de 51,1 a
+79,8 ms. Se retiró esa variante.
+[Ensayo del factor acoplado](../evidence/rf_d_reduced_engine28.json)
+
+Limitar el factor y las sustituciones de audio
+al prefijo activo bajó el tiempo de audio de
+112,7 a 106,2 ms en los frames 74–82. La
+ventana pasó de 208,0 a 201,8 ms y el
+bloque positivo instrumentado de 1.008,0
+a 972,0 ms. En las dos reservas, las
+trazas y el reloj coincidieron por bits
+con el banco anterior en 128 y 64 frames.
+[Perfil del prefijo activo](../evidence/rf_d_reduced_engine29.json)

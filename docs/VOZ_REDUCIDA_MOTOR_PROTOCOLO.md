@@ -241,3 +241,14 @@ coeficientes, los pivotes por escala y las
 ecuaciones de puerto. Admitir la variante
 sólo si pasan las mismas reservas y baja
 el coste medido del contorno.
+
+## Prefijo activo del factor de audio
+
+Factorizar y sustituir sólo el prefijo
+de columnas fuertes del precondicionador.
+Sus filas ya tienen solución del LU.
+Reconstruir por producto únicamente las
+filas débiles. Conservar la selección de
+columnas, el pivoteo y el residuo de las
+108 leyes. Comparar el banco por bits y
+medir el coste con el mismo calendario.

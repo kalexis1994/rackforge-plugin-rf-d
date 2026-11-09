@@ -83,6 +83,7 @@ const COLUMN_FLOOR: f64 = 5e-4;
 
 struct Projection {
     columns: [usize; SUPPORT],
+    slots: [usize; LAWS],
     count: usize,
     coupling: [[f64; SUPPORT]; LAWS],
     factor: Lu<SUPPORT>,
@@ -92,9 +93,11 @@ impl Projection {
     fn new(port_map: &LawMatrix, peak: &LawVector, slope: &LawVector) -> Option<Self> {
         let mut columns = [0; SUPPORT];
         let mut count = 0;
+        let mut slots = [SUPPORT; LAWS];
         for (col, (&maximum, &derivative)) in peak.iter().zip(slope).enumerate() {
             if maximum * derivative.abs() > COLUMN_FLOOR {
                 *columns.get_mut(count)? = col;
+                slots[col] = count;
                 count += 1;
             }
         }
@@ -104,19 +107,23 @@ impl Projection {
                 *weight = row[col] * slope[col];
             }
         }
-        let factor = Lu::factor(std::array::from_fn(|i| {
-            std::array::from_fn(|j| {
-                f64::from(i == j)
-                    + if i < count {
-                        coupling[columns[i]][j]
-                    } else {
-                        0.
-                    }
-            })
-        }))
+        let factor = Lu::factor_prefix(
+            std::array::from_fn(|i| {
+                std::array::from_fn(|j| {
+                    f64::from(i == j)
+                        + if i < count {
+                            coupling[columns[i]][j]
+                        } else {
+                            0.
+                        }
+                })
+            }),
+            count,
+        )
         .ok()?;
         Some(Self {
             columns,
+            slots,
             count,
             coupling,
             factor,
@@ -126,22 +133,24 @@ impl Projection {
     fn apply<const K: usize>(&self, rhs: &[[f64; K]; LAWS]) -> Option<[[f64; K]; LAWS]> {
         let strong = self
             .factor
-            .solve_batch(&std::array::from_fn(|j| {
-                if j < self.count {
-                    rhs[self.columns[j]]
-                } else {
-                    [0.; K]
-                }
-            }))
+            .solve_batch_prefix(
+                &std::array::from_fn(|j| {
+                    if j < self.count {
+                        rhs[self.columns[j]]
+                    } else {
+                        [0.; K]
+                    }
+                }),
+                self.count,
+            )
             .ok()?;
-        let mut x = std::array::from_fn(|i| {
+        Some(std::array::from_fn(|i| {
+            if let Some(solution) = strong.get(self.slots[i]) {
+                return *solution;
+            }
             let change = row_product(&self.coupling[i][..self.count], &strong[..self.count]);
             std::array::from_fn(|k| rhs[i][k] - change[k])
-        });
-        for (&i, value) in self.columns[..self.count].iter().zip(strong) {
-            x[i] = value;
-        }
-        Some(x)
+        }))
     }
 
     fn refine<const K: usize>(

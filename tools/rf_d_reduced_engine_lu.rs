@@ -27,14 +27,23 @@ pub struct Lu<const N: usize> {
 }
 
 impl<const N: usize> Lu<N> {
-    pub fn factor(mut rows: [[f64; N]; N]) -> Result<Self, StepError> {
+    pub fn factor(rows: [[f64; N]; N]) -> Result<Self, StepError> {
+        Self::factor_prefix(rows, N)
+    }
+
+    /// Factor only the leading square block. The suffix is ignored.
+    #[inline]
+    pub fn factor_prefix(mut rows: [[f64; N]; N], active: usize) -> Result<Self, StepError> {
         let mut order = std::array::from_fn(|i| i);
-        let mut end = [N; N];
-        let mut scales = rows.each_ref().map(|row| maximum(row));
-        for col in 0..N {
+        let mut end = [active; N];
+        let mut scales = [0.; N];
+        for i in 0..active {
+            scales[i] = maximum(&rows[i][..active]);
+        }
+        for col in 0..active {
             let mut best = 0.;
             let mut pivot = col;
-            for row in col..N {
+            for row in col..active {
                 let entry = rows[row][col];
                 if entry == 0. {
                     continue;
@@ -51,10 +60,10 @@ impl<const N: usize> Lu<N> {
             rows.swap(col, pivot);
             order.swap(col, pivot);
             scales.swap(col, pivot);
-            let (head, tail) = rows.split_at_mut(col + 1);
+            let (head, tail) = rows[..active].split_at_mut(col + 1);
             let pivot_row = &head[col];
             let diagonal = pivot_row[col];
-            let limit = pivot_row.iter().rposition(|x| *x != 0.).unwrap() + 1;
+            let limit = pivot_row[..active].iter().rposition(|x| *x != 0.).unwrap() + 1;
             end[col] = limit;
             for row in tail {
                 if row[col] == 0. {
@@ -67,12 +76,13 @@ impl<const N: usize> Lu<N> {
                 }
             }
         }
-        let start = std::array::from_fn(|i| {
-            rows[i][..i]
+        let mut start = [0; N];
+        for i in 0..active {
+            start[i] = rows[i][..i]
                 .iter()
                 .position(|value| *value != 0.)
-                .unwrap_or(i)
-        });
+                .unwrap_or(i);
+        }
         Ok(Self {
             rows,
             order,
@@ -91,8 +101,18 @@ impl<const N: usize> Lu<N> {
         &self,
         rhs: &[[f64; K]; N],
     ) -> Result<[[f64; K]; N], StepError> {
+        self.solve_batch_prefix(rhs, N)
+    }
+
+    /// Solve the same leading block passed to factor_prefix.
+    #[inline]
+    pub fn solve_batch_prefix<const K: usize>(
+        &self,
+        rhs: &[[f64; K]; N],
+        active: usize,
+    ) -> Result<[[f64; K]; N], StepError> {
         let mut x = [[0.; K]; N];
-        for i in 0..N {
+        for i in 0..active {
             let mut value = rhs[self.order[i]];
             for j in self.start[i]..i {
                 let weight = self.rows[i][j];
@@ -102,7 +122,7 @@ impl<const N: usize> Lu<N> {
             }
             x[i] = value;
         }
-        for i in (0..N).rev() {
+        for i in (0..active).rev() {
             let mut value = x[i];
             for j in i + 1..self.end[i] {
                 let weight = self.rows[i][j];
