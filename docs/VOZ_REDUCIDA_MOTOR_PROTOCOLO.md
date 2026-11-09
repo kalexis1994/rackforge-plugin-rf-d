@@ -177,3 +177,17 @@ duplicación adicional del ancho. Comprobar
 el crecimiento con el límite del ancho
 propuesto. Los límites de aceptación final
 y el guard de colectores permanecen.
+
+## Reutilización del segundo medio paso
+
+Al rechazar un candidato, conservar los dos
+medios pasos resueltos. El primero se somete
+al mismo control al nuevo ancho. Su compañero
+sólo puede sustituir el candidato siguiente
+si se publica exactamente ese primer medio
+paso y el siguiente ancho coincide. La caché
+se limita a una muestra con KEY fijo. Si el
+primer medio paso se subdivide, su compañero
+pierde el origen y se descarta. Exigir la
+misma trayectoria por bits y contar por
+separado cada resolución evitada.

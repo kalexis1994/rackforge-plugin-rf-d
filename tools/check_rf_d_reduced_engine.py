@@ -94,12 +94,12 @@ def assess(raw, target, expected, size, bank_count=BANKS):
             profile.append(values)
         elif tag == "CLOCK":
             solves, comparisons, error_retries, event_retries, *extra = map(int, fields)
-            reused = extra[0] if extra else 0
+            reused, siblings = (extra + [0, 0])[:2]
             assert blocks and "clock" not in blocks[-1]
-            assert len(extra) <= 1 and solves >= sum(blocks[-1]["widths"])
-            assert 0 <= reused <= comparisons <= solves
+            assert len(extra) <= 2 and solves >= sum(blocks[-1]["widths"])
+            assert 0 <= siblings <= reused <= comparisons <= solves
             blocks[-1]["clock"] = dict(solves=solves, comparisons=comparisons,
-                                      error_retries=error_retries, event_retries=event_retries, reused_halves=reused)
+                                      error_retries=error_retries, event_retries=event_retries, reused_halves=reused, reused_siblings=siblings)
         else:
             assert tag == "BLOCK"
             frames, ns, allocs, guard, retries, iterations = map(int, fields[:6])

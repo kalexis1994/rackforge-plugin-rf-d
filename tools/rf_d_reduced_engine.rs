@@ -68,6 +68,7 @@ pub struct ClockCounters {
     pub error_retries: usize,
     pub event_retries: usize,
     pub reused_halves: usize,
+    pub reused_siblings: usize,
 }
 
 #[derive(Clone, Copy, Default)]
@@ -161,6 +162,11 @@ struct Accepted {
     iterations: usize,
     residual_a: f64,
     correction_v: f64,
+}
+
+struct Halves {
+    first: Accepted,
+    second: Option<Accepted>,
 }
 
 fn value(s: State, k: usize) -> f64 {
@@ -494,23 +500,23 @@ impl Engine {
     fn compare_clock(
         &self, old: Running, key: f64, width: usize, coarse: Running,
         initial: [bool; 2], profile: &mut StepProfile, clock: &mut ClockCounters,
-        first_half: &mut Option<Accepted>,
+        halves: &mut Option<Halves>,
     ) -> Result<Option<f64>, StepError> {
         clock.comparisons += 1;
         clock.solves += 1;
         let middle = self.step(old, key, width / 2, profile)?;
         let crossed = middle.stage_order.iter().any(|stage| *stage != initial);
         let midpoint = middle.running;
-        *first_half = Some(middle);
+        let halves = halves.insert(Halves { first: middle, second: None });
         if crossed {
             return Ok(None);
         }
         clock.solves += 1;
         let fine = self.step(midpoint, key, width / 2, profile)?;
-        if fine.stage_order.iter().any(|stage| *stage != initial) {
-            return Ok(None);
-        }
-        Ok(Some(clock_error(coarse, fine.running)))
+        let crossed = fine.stage_order.iter().any(|stage| *stage != initial);
+        let endpoint = fine.running;
+        halves.second = Some(fine);
+        Ok((!crossed).then(|| clock_error(coarse, endpoint)))
     }
 
     /// A rejected block publishes neither samples nor electrical history.
@@ -528,6 +534,7 @@ impl Engine {
             let mut within = 0;
             let mut switch_count = 0;
             let mut switches = [None; 4];
+            let mut next_sibling = None;
             while within < TICKS {
                 let tick = candidate.frame * TICKS + within;
                 let initial = order(COLLECTORS.map(|k| value(candidate.state, k)));
@@ -545,17 +552,20 @@ impl Engine {
                 let profile = &mut StepProfile::default();
                 #[cfg(profile_reduced)]
                 let start = std::time::Instant::now();
-                let mut first_half = None;
-                let (q, grow) = loop {
-                    let q = if let Some(half) = first_half.take() {
-                        // The last comparison began at this same state and KEY.
-                        // After halving, its first solve is the new trial.
+                let mut sibling = next_sibling.take().filter(|(w, _)| *w == width);
+                let mut halves: Option<Halves> = None;
+                let (q, grow, second_half) = loop {
+                    let (q, second_half) = if let Some(pair) = halves.take() {
+                        // The last comparison began at the same state and KEY.
                         stats.clock.reused_halves += 1;
-                        half
+                        (pair.first, pair.second)
+                    } else if let Some((_, trial)) = sibling.take() {
+                        stats.clock.reused_siblings += 1;
+                        (trial, None)
                     } else {
                         stats.clock.solves += 1;
                         match self.step(candidate, key, width, profile) {
-                            Ok(q) => q,
+                            Ok(q) => (q, None),
                             Err(error) if width > 1 && retryable(error) => {
                                 stats.solver_retries += 1;
                                 width /= 2;
@@ -566,7 +576,7 @@ impl Engine {
                     };
                     if cfg!(adaptive_contour_clock) {
                         if width <= FINE {
-                            break (q, true);
+                            break (q, true, second_half);
                         }
                         let order_changed = q.stage_order.iter().any(|stage| *stage != initial);
                         let error = if order_changed {
@@ -574,12 +584,12 @@ impl Engine {
                         } else {
                             self.compare_clock(
                                 candidate, key, width, q.running, initial, profile, &mut stats.clock,
-                                &mut first_half,
+                                &mut halves,
                             )
                         };
                         match error {
                             Ok(Some(value)) if value <= clock_limit(width) => {
-                                break (q, value * 16. <= clock_limit((2 * width).min(self.ceiling)));
+                                break (q, value * 16. <= clock_limit((2 * width).min(self.ceiling)), second_half);
                             }
                             Ok(Some(_)) => stats.clock.error_retries += 1,
                             Ok(None) => stats.clock.event_retries += 1,
@@ -598,7 +608,7 @@ impl Engine {
                         continue;
                     }
                     let grow = q.movement < MOTION / 4. && q.curvature < CURVATURE_LIMIT / 4.;
-                    break (q, grow);
+                    break (q, grow, second_half);
                 };
                 #[cfg(profile_reduced)]
                 {
@@ -614,6 +624,9 @@ impl Engine {
                         switch_count += 1;
                     }
                 }
+                // Reuse the second half only if its exact predecessor was
+                // just published. A finer replacement discards this sibling.
+                next_sibling = second_half.map(|trial| (width, trial));
                 candidate = q.running;
                 candidate.proposal = if grow { (2 * width).min(self.ceiling) } else { width };
                 stats.widths[width.trailing_zeros() as usize] += 1;

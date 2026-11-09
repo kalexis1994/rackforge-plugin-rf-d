@@ -273,3 +273,12 @@ rechazada y se retira del motor. El recibo
 conserva los dos bloques y las fuentes del
 ensayo.
 [Auditoría del punto medio](../evidence/rf_d_reduced_engine18.json)
+
+La reutilización del segundo medio paso
+eliminó 68 resoluciones en la reserva positiva
+y 21 en la negativa. Los totales pasaron de
+2.035 a 1.967 y de 937 a 916. Las trazas
+eléctricas completas y los eventos fueron
+idénticos por bits respecto del banco anterior,
+tanto en 128 frames como en dos bloques de 64.
+[Banco con reutilización exacta](../evidence/rf_d_reduced_engine19.json)
