@@ -328,3 +328,15 @@ bajó de 152,0 a 140,4 ms, con las mismas
 1.899 evaluaciones. El bloque positivo
 instrumentado tomó 1,325 s.
 [Perfil de columnas compactas](../evidence/rf_d_reduced_engine22.json)
+
+La sustitución agrupada conservó la
+trayectoria completa por bits y el mismo
+calendario. En los frames 74–82 del banco
+positivo, el audio bajó de 140,4 a 113,9 ms
+y la dirección del contorno de 82,1 a
+63,2 ms. La ventana tomó 221,6 ms y el
+bloque completo 1,066 s. La primera
+compilación requirió declarar explícitamente
+el ancho de cinco columnas del contorno.
+[Compilación rechazada](../evidence/rf_d_reduced_engine23.json),
+[perfil de sustituciones agrupadas](../evidence/rf_d_reduced_engine24.json)

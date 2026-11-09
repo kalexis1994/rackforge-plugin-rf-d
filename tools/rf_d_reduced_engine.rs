@@ -1,6 +1,6 @@
 //! The loaded RF-D contour engine for the frozen nominal H128 scene.
 use crate::{family::Family, graph::{self, State, B, N}, reduced_audio as audio,
-            reduced_lu::{dot, maximum, Lu}, StepError};
+            reduced_lu::{maximum, row_product, Lu}, StepError};
 
 pub const TICKS: usize = 4096;
 pub const RATE: usize = 48_000;
@@ -225,17 +225,18 @@ fn direction(e: &Evaluation<true>, mut jacobian: audio::PortJacobian) -> Result<
     let lu = Lu::<INNER>::factor(std::array::from_fn(|i| std::array::from_fn(|j| {
         coefficient(e, inner_index(i), inner_index(j))
     })))?;
-    let particular = lu.solve(std::array::from_fn(|i| -e.current[inner_index(i)]))?;
-    let mut lift = [[0.; INNER]; 4];
-    for (p, &column) in PORT.iter().enumerate() {
-        lift[p] = lu.solve(std::array::from_fn(|i| coefficient(e, inner_index(i), column)))?;
-    }
+    // One particular solution and four port lifts share the same row pass.
+    let interior = lu.solve_batch::<5>(&std::array::from_fn(|i| {
+        let row = inner_index(i);
+        std::array::from_fn(|k| if k == 0 { -e.current[row] } else { coefficient(e, row, PORT[k - 1]) })
+    }))?;
     let mut current = e.response.current;
     for (p, &row) in PORT.iter().enumerate() {
         let feedback: [f64; INNER] = std::array::from_fn(|i| coefficient(e, row, inner_index(i)));
-        current[p] += e.current[row] + dot(&feedback, &particular);
+        let response = row_product(&feedback, &interior);
+        current[p] += e.current[row] + response[0];
         for (q, &column) in PORT.iter().enumerate() {
-            jacobian[p][q] += coefficient(e, row, column) - dot(&feedback, &lift[q]);
+            jacobian[p][q] += coefficient(e, row, column) - response[q + 1];
         }
     }
     for i in 0..2 {
@@ -249,9 +250,9 @@ fn direction(e: &Evaluation<true>, mut jacobian: audio::PortJacobian) -> Result<
         change[k] = shared[i];
     }
     for i in 0..INNER {
-        let mut v = particular[i];
+        let mut v = interior[i][0];
         for j in 0..4 {
-            v -= lift[j][i] * shared[j];
+            v -= interior[i][j + 1] * shared[j];
         }
         change[inner_index(i)] = v;
     }

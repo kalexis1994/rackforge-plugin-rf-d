@@ -5,6 +5,16 @@ pub fn dot<const N: usize>(row: &[f64; N], input: &[f64; N]) -> f64 {
     row.iter().zip(input).map(|(a, b)| a * b).sum()
 }
 
+pub fn row_product<const K: usize>(row: &[f64], vectors: &[[f64; K]]) -> [f64; K] {
+    let mut result = [0.; K];
+    for (&weight, vector) in row.iter().zip(vectors) {
+        for (sum, value) in result.iter_mut().zip(vector) {
+            *sum += weight * value;
+        }
+    }
+    result
+}
+
 pub fn maximum(values: &[f64]) -> f64 {
     values.iter().fold(0_f64, |m, value| m.max(value.abs()))
 }
@@ -72,22 +82,37 @@ impl<const N: usize> Lu<N> {
     }
 
     pub fn solve(&self, rhs: [f64; N]) -> Result<[f64; N], StepError> {
-        let mut x = [0.; N];
+        Ok(self
+            .solve_batch(&rhs.map(|value| [value]))?
+            .map(|[value]| value))
+    }
+
+    pub fn solve_batch<const K: usize>(
+        &self,
+        rhs: &[[f64; K]; N],
+    ) -> Result<[[f64; K]; N], StepError> {
+        let mut x = [[0.; K]; N];
         for i in 0..N {
             let mut value = rhs[self.order[i]];
             for j in self.start[i]..i {
-                value -= self.rows[i][j] * x[j];
+                let weight = self.rows[i][j];
+                for (v, x) in value.iter_mut().zip(x[j]) {
+                    *v -= weight * x;
+                }
             }
             x[i] = value;
         }
         for i in (0..N).rev() {
             let mut value = x[i];
             for j in i + 1..self.end[i] {
-                value -= self.rows[i][j] * x[j];
+                let weight = self.rows[i][j];
+                for (v, x) in value.iter_mut().zip(x[j]) {
+                    *v -= weight * x;
+                }
             }
-            x[i] = value / self.rows[i][i];
+            x[i] = value.map(|v| v / self.rows[i][i]);
         }
-        if x.iter().any(|v| !v.is_finite()) {
+        if x.iter().flatten().any(|v| !v.is_finite()) {
             return Err(StepError::SingularJacobian);
         }
         Ok(x)

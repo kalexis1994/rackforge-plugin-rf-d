@@ -220,3 +220,14 @@ la matriz completa sólo si hace falta la
 ruta de LU completo. Comparar contra el
 solver y medir las mismas ventanas con
 el reloj adaptativo.
+
+Resolver juntas las cinco columnas del
+contorno y las seis derivadas del audio
+para compartir la lectura de filas del LU.
+En el audio, agrupar también el producto
+por P y el refinamiento. Cada columna que
+pasa su residuo deja de actualizarse. Si el
+grupo agota las correcciones, usar el LU
+completo. La sustitución conserva el orden
+de las operaciones por columna. Contrastar
+la trayectoria y las dos particiones.

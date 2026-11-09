@@ -1,7 +1,7 @@
 //! Schur response of the audio arm and its retained exponential remainders.
 use crate::{
     graph,
-    reduced_lu::{dot, maximum, Lu},
+    reduced_lu::{dot, maximum, row_product, Lu},
     StepError,
 };
 
@@ -123,24 +123,20 @@ impl Projection {
         })
     }
 
-    fn apply(&self, rhs: LawVector) -> Option<LawVector> {
+    fn apply<const K: usize>(&self, rhs: &[[f64; K]; LAWS]) -> Option<[[f64; K]; LAWS]> {
         let strong = self
             .factor
-            .solve(std::array::from_fn(|j| {
+            .solve_batch(&std::array::from_fn(|j| {
                 if j < self.count {
                     rhs[self.columns[j]]
                 } else {
-                    0.
+                    [0.; K]
                 }
             }))
             .ok()?;
         let mut x = std::array::from_fn(|i| {
-            rhs[i]
-                - self.coupling[i][..self.count]
-                    .iter()
-                    .zip(strong)
-                    .map(|(weight, value)| weight * value)
-                    .sum::<f64>()
+            let change = row_product(&self.coupling[i][..self.count], &strong[..self.count]);
+            std::array::from_fn(|k| rhs[i][k] - change[k])
         });
         for (&i, value) in self.columns[..self.count].iter().zip(strong) {
             x[i] = value;
@@ -148,20 +144,49 @@ impl Projection {
         Some(x)
     }
 
-    fn refine(&self, port_map: &LawMatrix, slope: &LawVector, rhs: LawVector) -> Option<LawVector> {
-        let limit = 1e-14 + 2e-13 * maximum(&rhs);
+    fn refine<const K: usize>(
+        &self,
+        port_map: &LawMatrix,
+        slope: &LawVector,
+        rhs: &[[f64; K]; LAWS],
+    ) -> Option<[[f64; K]; LAWS]> {
+        let mut limits = [0_f64; K];
+        for row in rhs {
+            for (limit, v) in limits.iter_mut().zip(row) {
+                *limit = limit.max(v.abs());
+            }
+        }
+        limits = limits.map(|v| 1e-14 + 2e-13 * v);
         let mut x = self.apply(rhs)?;
+        let mut converged = [false; K];
         for _ in 0..5 {
-            // The projection leaves weak columns out of the factor, but the
-            // residual uses every column of the original feedback law.
-            let weighted = std::array::from_fn(|i| slope[i] * x[i]);
-            let residual = std::array::from_fn(|i| rhs[i] - x[i] - dot(&port_map[i], &weighted));
-            if residual.iter().all(|v| v.is_finite() && v.abs() <= limit) {
+            let weighted: [[f64; K]; LAWS] = std::array::from_fn(|i| x[i].map(|v| slope[i] * v));
+            let mut residual: [[f64; K]; LAWS] = std::array::from_fn(|i| {
+                let feedback = row_product(&port_map[i], &weighted);
+                std::array::from_fn(|k| rhs[i][k] - x[i][k] - feedback[k])
+            });
+            for k in 0..K {
+                converged[k] |= residual
+                    .iter()
+                    .all(|r| r[k].is_finite() && r[k].abs() <= limits[k]);
+            }
+            if converged.iter().all(|&done| done) {
                 return Some(x);
             }
-            let correction = self.apply(residual)?;
+            for row in &mut residual {
+                for (v, done) in row.iter_mut().zip(converged) {
+                    if done {
+                        *v = 0.;
+                    }
+                }
+            }
+            let correction = self.apply(&residual)?;
             for (value, delta) in x.iter_mut().zip(correction) {
-                *value += delta;
+                for k in 0..K {
+                    if !converged[k] {
+                        value[k] += delta[k];
+                    }
+                }
             }
         }
         None
@@ -172,28 +197,17 @@ fn feedback_directions<const K: usize>(
     port_map: &LawMatrix,
     peak: &LawVector,
     slope: &LawVector,
-    rhs: [LawVector; K],
-) -> Result<[LawVector; K], StepError> {
-    let projection = Projection::new(port_map, peak, slope);
-    let mut directions = [[0.; LAWS]; K];
-    for (i, column) in rhs.iter().copied().enumerate() {
-        if let Some(direction) = projection
-            .as_ref()
-            .and_then(|p| p.refine(port_map, slope, column))
-        {
-            directions[i] = direction;
-            continue;
-        }
-        let matrix = std::array::from_fn(|row| {
-            std::array::from_fn(|col| port_map[row][col] * slope[col] + f64::from(row == col))
-        });
-        let lu = Lu::factor(matrix)?;
-        for j in i..K {
-            directions[j] = lu.solve(rhs[j])?;
-        }
-        break;
+    rhs: &[[f64; K]; LAWS],
+) -> Result<[[f64; K]; LAWS], StepError> {
+    if let Some(direction) = Projection::new(port_map, peak, slope)
+        .and_then(|projection| projection.refine(port_map, slope, rhs))
+    {
+        return Ok(direction);
     }
-    Ok(directions)
+    let matrix = std::array::from_fn(|row| {
+        std::array::from_fn(|col| port_map[row][col] * slope[col] + f64::from(row == col))
+    });
+    Lu::factor(matrix)?.solve_batch(rhs)
 }
 
 impl Map {
@@ -265,10 +279,14 @@ impl Map {
                 std::array::from_fn(|i| z[i] - drive[i] + dot(&self.feedback[i], &nonlinear));
             if maximum(&residual) > 2e-13 {
                 let slope = std::array::from_fn(|i| self.iexp[i] * change[i]);
-                let [correction] =
-                    feedback_directions(&self.feedback, &self.feedback_peak, &slope, [residual])?;
-                for i in 0..LAWS {
-                    z[i] -= correction[i];
+                let correction = feedback_directions(
+                    &self.feedback,
+                    &self.feedback_peak,
+                    &slope,
+                    &residual.map(|v| [v]),
+                )?;
+                for (value, [delta]) in z.iter_mut().zip(correction) {
+                    *value -= delta;
                 }
                 continue;
             }
@@ -289,19 +307,17 @@ impl Map {
 
     pub fn jacobian(&self, response: &Response) -> Result<PortJacobian, StepError> {
         let slope = std::array::from_fn(|i| self.iexp[i] * response.junctions[i].exp_m1());
-        let derivatives: [LawVector; SHARED] = feedback_directions(
-            &self.feedback,
-            &self.feedback_peak,
-            &slope,
-            std::array::from_fn(|col| self.z_port.each_ref().map(|row| row[col])),
-        )?;
-        let mut jacobian = self.i_port;
-        for (col, mut derivative) in derivatives.into_iter().enumerate() {
-            for (d, s) in derivative.iter_mut().zip(slope) {
-                *d *= s;
+        let mut derivatives =
+            feedback_directions(&self.feedback, &self.feedback_peak, &slope, &self.z_port)?;
+        for (row, scale) in derivatives.iter_mut().zip(slope) {
+            for value in row {
+                *value *= scale;
             }
-            for (row, coefficient) in jacobian.iter_mut().zip(&self.i_law) {
-                row[col] += dot(coefficient, &derivative);
+        }
+        let mut jacobian = self.i_port;
+        for (row, coefficient) in jacobian.iter_mut().zip(&self.i_law) {
+            for (value, delta) in row.iter_mut().zip(row_product(coefficient, &derivatives)) {
+                *value += delta;
             }
         }
         Ok(jacobian)
