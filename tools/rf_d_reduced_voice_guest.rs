@@ -5,50 +5,112 @@ use voice::{Event, Frame, Message, Voice};
 struct Guest {
     voice: Option<Voice<4>>,
     #[cfg(pilot_returns)]
-    return_mv: [f64; 2],
+    controls: Controls,
+    #[cfg(pilot_returns)]
+    master: f64,
 }
 
 #[cfg(pilot_returns)]
-const RETURN_RANGE_MV: [f64; 2] = [15., 1.];
+const RANGES: [(f64, f64); 6] = [
+    (-15., 15.),
+    (-1., 1.),
+    (0., 100.),
+    (0., 100.),
+    (1., 100.),
+    (1., 200.),
+];
+#[cfg(pilot_returns)]
+const DEFAULTS: [f64; 6] = [0., 0., 100., 100., 5., 5.];
+#[cfg(pilot_returns)]
+const STATE_TAG: &[u8; 4] = b"RFD1";
+#[cfg(pilot_returns)]
+const STATE_BYTES: usize = 4 + DEFAULTS.len() * 8;
 
 #[cfg(pilot_returns)]
-fn return_index(index: u32, value: f64) -> Option<usize> {
+#[derive(Clone, Copy)]
+struct Controls([f64; DEFAULTS.len()]);
+
+#[cfg(pilot_returns)]
+impl Default for Controls {
+    fn default() -> Self {
+        Self(DEFAULTS)
+    }
+}
+
+#[cfg(pilot_returns)]
+fn control_index(index: u32, value: f64) -> Option<usize> {
     let index = index as usize;
-    (value.abs() <= *RETURN_RANGE_MV.get(index)?).then_some(index)
+    let &(min, max) = RANGES.get(index)?;
+    (min..=max).contains(&value).then_some(index)
+}
+
+#[cfg(pilot_returns)]
+impl Controls {
+    fn voice(self) -> voice::Panel {
+        let [r59_mv, pin16_mv, mix, _, attack_ms, release_ms] = self.0;
+        voice::Panel {
+            drive: plant::Drive {
+                volume_delta_v: r59_mv * 1e-3,
+                filter_delta_v: pin16_mv * 1e-3,
+            },
+            mixer_gain: mix * 0.01,
+            attack_ms,
+            release_ms,
+        }
+    }
+
+    fn master(self) -> f64 {
+        self.0[3] * 0.01
+    }
 }
 
 #[cfg(pilot_returns)]
 impl Guest {
-    fn render_returns(
+    fn render_panel(
         &mut self,
         midi: &[Event],
         automation: &[ParameterEvent],
         frames: &mut [Frame],
+        output: &mut [f32],
     ) {
-        let mut changes = [[None; 2]; voice::MAX_BLOCK];
+        let mut changes = [[None; DEFAULTS.len()]; voice::MAX_BLOCK];
         for event in automation {
-            let index = return_index(event.index, event.value).expect("bounded return input");
-            changes[event.frame as usize][index] = Some(event.value);
+            if let Some(index) = control_index(event.index, event.value) {
+                changes[event.frame as usize][index] = Some(event.value);
+            }
         }
-        let mut mv = self.return_mv;
-        let mut drives = [plant::Drive::default(); voice::MAX_BLOCK];
-        for (drive, changes) in drives[..frames.len()].iter_mut().zip(changes) {
-            for (value, change) in mv.iter_mut().zip(changes) {
+        let mut controls = self.controls;
+        let mut panels = [voice::Panel::default(); voice::MAX_BLOCK];
+        let mut masters = [0.; voice::MAX_BLOCK];
+        for ((panel, master), changes) in panels[..frames.len()]
+            .iter_mut()
+            .zip(&mut masters)
+            .zip(changes)
+        {
+            for (value, change) in controls.0.iter_mut().zip(changes) {
                 if let Some(change) = change {
                     *value = change;
                 }
             }
-            *drive = plant::Drive {
-                volume_delta_v: mv[0] * 1e-3,
-                filter_delta_v: mv[1] * 1e-3,
-            };
+            *panel = controls.voice();
+            *master = controls.master();
         }
         self.voice
             .as_mut()
             .expect("prepared pilot")
-            .render_with_returns(midi, frames, &drives[..frames.len()])
+            .render_panel(midi, frames, &panels[..frames.len()])
             .expect("pilot render");
-        self.return_mv = mv;
+        self.controls = controls;
+        for ((stereo, frame), master) in output.chunks_exact_mut(2).zip(frames).zip(masters) {
+            // A full-scale fader move settles in 64 host frames.
+            self.master += (master - self.master).clamp(-1. / 64., 1. / 64.);
+            let sample = if self.master == 0. {
+                0.
+            } else {
+                ((frame.j7_v / voice::AUDITION_VOLTS_PER_FULL_SCALE) * self.master) as f32
+            };
+            stereo.fill(sample);
+        }
     }
 }
 
@@ -78,12 +140,20 @@ impl Processor for Guest {
         {
             return false;
         }
+        #[cfg(pilot_returns)]
+        {
+            self.controls = Controls::default();
+        }
+        self.reset();
+        true
+    }
+
+    fn reset(&mut self) {
         self.voice = Some(Voice::new());
         #[cfg(pilot_returns)]
         {
-            self.return_mv = [0.; 2];
+            self.master = self.controls.master();
         }
-        true
     }
 
     #[cfg(not(pilot_returns))]
@@ -93,16 +163,48 @@ impl Processor for Guest {
 
     #[cfg(pilot_returns)]
     fn set_parameter(&mut self, index: u32, value: f64) -> bool {
-        let Some(index) = return_index(index, value) else {
+        let Some(index) = control_index(index, value) else {
             return false;
         };
-        self.return_mv[index] = value;
+        self.controls.0[index] = value;
         true
     }
 
     #[cfg(pilot_returns)]
     fn get_parameter(&self, index: u32) -> Option<f64> {
-        self.return_mv.get(index as usize).copied()
+        self.controls.0.get(index as usize).copied()
+    }
+
+    #[cfg(pilot_returns)]
+    fn save_state(&self, destination: &mut [u8]) -> Option<usize> {
+        let bytes = destination.get_mut(..STATE_BYTES)?;
+        bytes[..4].copy_from_slice(STATE_TAG);
+        for (value, word) in self
+            .controls
+            .0
+            .into_iter()
+            .zip(bytes[4..].chunks_exact_mut(8))
+        {
+            word.copy_from_slice(&value.to_le_bytes());
+        }
+        Some(STATE_BYTES)
+    }
+
+    #[cfg(pilot_returns)]
+    fn load_state(&mut self, bytes: &[u8]) -> bool {
+        if bytes.len() != STATE_BYTES || &bytes[..4] != STATE_TAG {
+            return false;
+        }
+        let mut candidate = Controls::default();
+        for (index, word) in bytes[4..].chunks_exact(8).enumerate() {
+            let value = f64::from_le_bytes(word.try_into().unwrap());
+            if control_index(index as u32, value).is_none() {
+                return false;
+            }
+            candidate.0[index] = value;
+        }
+        self.controls = candidate;
+        true
     }
 
     fn load_preset(&mut self, id: &str) -> bool {
@@ -111,7 +213,7 @@ impl Processor for Guest {
         }
         #[cfg(pilot_returns)]
         {
-            self.return_mv = [0.; 2];
+            self.controls = Controls::default();
         }
         true
     }
@@ -141,16 +243,18 @@ impl Processor for Guest {
         }
         let mut result = [Frame::default(); voice::MAX_BLOCK];
         let block = &mut result[..frames as usize];
-        #[cfg(not(pilot_returns))]
-        self.voice
-            .as_mut()
-            .expect("prepared pilot")
-            .render(&events[..count], block)
-            .expect("pilot render");
         #[cfg(pilot_returns)]
-        self.render_returns(&events[..count], _parameters, block);
-        for (stereo, frame) in output.chunks_exact_mut(2).zip(block) {
-            stereo.fill((frame.j7_v / voice::AUDITION_VOLTS_PER_FULL_SCALE) as f32);
+        self.render_panel(&events[..count], _parameters, block, output);
+        #[cfg(not(pilot_returns))]
+        {
+            self.voice
+                .as_mut()
+                .expect("prepared pilot")
+                .render(&events[..count], block)
+                .expect("pilot render");
+            for (stereo, frame) in output.chunks_exact_mut(2).zip(block) {
+                stereo.fill((frame.j7_v / voice::AUDITION_VOLTS_PER_FULL_SCALE) as f32);
+            }
         }
     }
 }

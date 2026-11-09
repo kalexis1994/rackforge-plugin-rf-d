@@ -13,10 +13,15 @@ El [solver acoplado](docs/VOZ_REDUCIDA_MOTOR_RESULTADOS.md) es la referencia
 eléctrica offline. Cada bloque que se incorpore al piloto debe contrastar
 sus puertos y su salida y cumplir el presupuesto de RackForge.
 
-El banco construye, instala en un almacén temporal y prueba el paquete con
-MIDI a 48 kHz y 128 frames. Se ejecuta desde la raíz con
-`python -B tools/check_rf_d_playable_pilot.py`. Al pasar deja
-`artifacts/rf-d-pilot-0.2.0.rfplugin` para importar en RackForge.
+Importá `artifacts/rf-d-pilot-0.3.0.rfplugin` desde la sección Plugins de
+RackForge. Elegí RF-D Pilot en PLAY y tocá por MIDI a 48 kHz. El panel incluye
+faders de mezcla y salida, knobs de ataque y release de audición, y los trims
+de filtro y R59. El motor de audición usa una sierra monofónica y admite notas
+MIDI 36–72. Los dos tiempos de audición ajustan la rampa lineal del piloto.
+
+El banco construye e instala el paquete en un almacén temporal, prueba los
+controles y mide dos pases a 128 frames. Desde la raíz, ejecutá
+`python -B tools/check_rf_d_playable_pilot.py` para regenerar el paquete local.
 [Protocolo](docs/VOZ_PILOTO_JUGABLE_PROTOCOLO.md).
 
 ## Estado actual — 2026-10-12
@@ -145,8 +150,8 @@ nuevo, sin sobrescribir una campaÃ±a congelada. Heap cero no prueba RT.
 
 El objetivo musical es una voz mono para bajos, leads y articulaciÃ³n en vivo.
 Presets/MIDI y automatizaciÃ³n son adaptadores de RackForge; no representan
-memoria del instrumento clÃ¡sico. AÃºn no hay paquete RF-D instalable ni
-admisiÃ³n de fidelidad fÃ­sica o deadline de la voz.
+memoria del instrumento clásico. La admisión offline del piloto cubre
+la escena probada y el paquete de audición.
 
 ## Historial y material local
 

@@ -20,8 +20,9 @@ from check_rf_d_reduced_voice import (
 )
 
 PACKAGE = ROOT / "plugin/package"
-ARTIFACT = ROOT / "artifacts/rf-d-pilot-0.2.0.rfplugin"
+ARTIFACT = ROOT / "artifacts/rf-d-pilot-0.3.0.rfplugin"
 REFERENCE = "evidence/rf_d_reduced_voice_pilot03.json"
+PANEL_BASELINE = "evidence/rf_d_playable_pilot07.json"
 MIDI_PROBE = "tools/rf_d_playable_pilot_probe.rs"
 PROTOCOL = "docs/VOZ_PILOTO_JUGABLE_PROTOCOLO.md"
 MARGIN = 128e9 / 48_000 / 2
@@ -148,7 +149,13 @@ def main():
                          *[arg for path in native_dirs for arg in ("-L", f"native={path}")],
                          ROOT / MIDI_PROBE, "--extern", f"rackforge_core={core}",
                          "--extern", f"rackforge_midi_api={midi}", "-o", probe])
-        events = driven_score()
+        base_events = driven_score()
+        events = sorted(base_events + [
+            [at, 0xb0, controller, 0 if i % 2 == 0 else 127]
+            for controller, first, period in ((22, 1013, 1639), (23, 1427, 1979),
+                                              (24, 37, 1831), (25, 91, 2239))
+            for i, at in enumerate(range(first, N, period))
+        ], key=lambda event: event[0])
         midi_score = AREA / "pilot-score.bin"
         midi_score.write_bytes(b"".join(struct.pack("<IBBBB", sample, status, note, value, 0)
                                         for sample, status, note, value in events))
@@ -158,12 +165,49 @@ def main():
         raw = execute("scalar_wasm", ["node", ROOT / NODE, component, json.dumps(events), N])
         assert direct.stdout == raw.stdout
         neutral = execute("neutral_wasm", ["node", ROOT / NODE, optimized, json.dumps(score()), N])
+        returns = execute("returns_wasm", ["node", ROOT / NODE, optimized, json.dumps(base_events), N, "--panel-state"])
+        baseline = read(PANEL_BASELINE)["direct_wasm"]
+        assert baseline["driven_j7_sha256"] == digest(returns.stdout)
+        assert baseline["neutral_j7_sha256"] == digest(neutral.stdout)
+        report["panel_baseline_sha256"] = sha(ROOT / PANEL_BASELINE)
+        report["panel_state_round_trip"] = True
+
+        phrase = [[61, 0x90, 57, 100], [6179, 0x80, 57, 100]]
+        count = 8192
+        clean = execute("panel_control", ["node", ROOT / NODE, optimized, json.dumps(phrase), count]).stdout
+        neutral_samples = np.frombuffer(clean, "<f4").reshape(-1, 2)
+        report["control_checks"] = {}
+        for i, value in enumerate((127, 127, 0, 0, 127, 127)):
+            control = sorted([*phrase, [173, 0xb0, 20 + i, value]], key=lambda event: event[0])
+            audio = execute(f"panel_{i}", ["node", ROOT / NODE, optimized, json.dumps(control), count]).stdout
+            samples = np.frombuffer(audio, "<f4").reshape(-1, 2)
+            delta = abs(samples - neutral_samples)
+            assert np.isfinite(samples).all() and float(delta.max()) > 1e-7
+            assert np.array_equal(samples[:173], neutral_samples[:173])
+            if i == 3:
+                assert not samples[173 + 64:].any()
+            report["control_checks"][i] = dict(max_delta=float(delta.max()), first_change=int(np.flatnonzero(delta[:, 0])[0]))
         assert len(direct.stdout) == len(neutral.stdout) == N * 8
         expected = digest(direct.stdout)
         assert expected != digest(neutral.stdout)
-        report["direct_wasm"] = dict(driven_j7_sha256=expected, neutral_j7_sha256=digest(neutral.stdout))
+        report["direct_wasm"] = dict(driven_j7_sha256=expected, neutral_j7_sha256=digest(neutral.stdout),
+                                     legacy_returns_j7_sha256=digest(returns.stdout))
         for attempt in (1, 2):
             run = execute(f"rack_{attempt}", [probe, manifest.parent, AREA / "pilot-cache", midi_score])
+            audio = run.stdout[8 * BLOCKS:]
+            if audio != direct.stdout:
+                observed = np.frombuffer(audio, "<f4").reshape(N, 2)
+                target = np.frombuffer(direct.stdout, "<f4").reshape(N, 2)
+                indices = np.flatnonzero(np.any(observed.view("<u4") != target.view("<u4"), axis=1))
+                first = int(indices[0])
+                window = slice(max(0, first - 16), min(N, first + 48))
+                report["rack_audio_difference"] = dict(
+                    first_frame=first, different_frames=len(indices), max_absolute=float(abs(observed - target).max()),
+                    window_start=window.start, observed=observed[window, 0].tolist(), expected=target[window, 0].tolist(),
+                    nearby_events=[event for event in events if abs(event[0] - first) < 256],
+                )
+                replay = execute("rack_unchanged_replay", [probe, manifest.parent, AREA / "pilot-cache", midi_score])
+                assert replay.stdout[8 * BLOCKS:] == audio
             trial = assess(run.stdout, run.stderr, expected, len(events))
             report["trials"].append(trial)
             print("RF_D_MIDI", attempt, {k: v for k, v in trial.items() if k != "times"}, flush=True)

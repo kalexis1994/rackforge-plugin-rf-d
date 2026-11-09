@@ -61,3 +61,38 @@ leyes. Empaquetar con Binaryen 132 y exigir salida
 idéntica al componente escalar para la misma escena.
 El banco reutiliza el ejecutable de RF-5 o el indicado
 por la variable `RF_D_WASM_OPT`.
+
+## Panel de audición 0.3.0
+
+El paquete declara una superficie web de PLAY y usa
+`plugin.parameters`, `plugin.set_parameter` y la
+telemetría canónica `parameter_changed` de RackForge.
+El panel y el motor comparten seis índices públicos.
+El preset Pilot Saw restablece los valores de fábrica.
+El estado `RFD1` guarda los seis valores como f64 LE,
+con validación antes de publicar un restore.
+
+| Control | Intervalo | Inicial | Acción en el piloto |
+| --- | --- | --- | --- |
+| Saw mix | 0–100 % | 100 % | Escala la sierra antes del mixer/capacitor de entrada dentro de su límite de 80 mV |
+| Output | 0–100 % | 100 % | Escala la salida de audición después de J7; un recorrido completo tarda 64 frames |
+| Attack | 1–100 ms | 5 ms | Duración nominal de la rampa de audición ascendente |
+| Release | 1–200 ms | 5 ms | Duración nominal de la rampa de audición descendente |
+| Filter trim | ±1 mV | 0 mV | Entrada del pin 16 de la planta FOH |
+| Volume bias | ±15 mV | 0 mV | Desplazamiento del extremo de R59 alrededor de 2 V |
+
+Los porcentajes y los tiempos de rampa son decisiones
+de audición. Los límites de los trims provienen del
+[contraste eléctrico admitido](VOZ_PILOTO_RETORNOS_RESULTADOS.md).
+La planta conserva una sierra monofónica. El acople
+de C2/C5 y el biestable sigue en el banco offline.
+
+El banco automatiza los seis índices en el ABI y en
+el enrutador MIDI de RackForge. Con el preset de
+fábrica y con la automatización previa de R59/pin 16,
+exige coincidencia por bits con 0.2.0. Prueba cada
+control por separado, incluido el silencio del fader
+de salida, y un restore válido y otro rechazado.
+Con todos los controles activos compara el escalar,
+el SIMD y RackForge por bits y aplica 1,333 ms de
+máximo a dos pases offline de 128 frames efectivos.

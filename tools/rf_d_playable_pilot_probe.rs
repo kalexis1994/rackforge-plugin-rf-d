@@ -41,12 +41,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     };
     let mut rack = RackEngine::build(&BTreeMap::from([(id, &plugin)]), &[slot], RATE, FRAMES, 2)?;
     let source = MidiSourceKey::new(0);
-    let links = [(0, 20, "pilot.r59"), (1, 21, "pilot.pin16")]
-        .into_iter()
-        .map(|(parameter_index, controller, id)| {
+    let links = (0..6)
+        .map(|parameter_index| {
+            let controller = 20 + parameter_index as u8;
             let link = ParameterLink {
                 schema_version: PARAMETER_LINK_SCHEMA_VERSION,
-                id: ParameterLinkId::new(id).unwrap(),
+                id: ParameterLinkId::new(format!("pilot.control.{parameter_index}")).unwrap(),
                 instance_id: "rf-d-pilot".into(),
                 parameter_index,
                 source: ParameterLinkSource {

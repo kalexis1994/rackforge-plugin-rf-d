@@ -211,3 +211,32 @@ efectivos, los dos pases de 376 bloques dieron
 respecto de 1,333 ms, con cero excesos, fallos de
 slot o eventos descartados.
 [Control offline de RackForge](../evidence/rf_d_playable_pilot07.json).
+
+## Panel PLAY del piloto 0.3.0
+
+El paquete de audición añade dos faders y cuatro
+knobs. El ensayo en Edge con un anfitrión simulado
+comprobó el arrastre del knob, las flechas del fader,
+la actualización desde la telemetría y el ajuste
+del panel a 376 px. Los seis controles cambiaron
+el audio individualmente en el ABI portable.
+El preset restableció los valores de fábrica y el
+estado rechazó una restauración con un valor inválido.
+
+Con los controles nuevos en sus valores de fábrica,
+la salida de 0.2.0 se reprodujo por bits con los trims
+en reposo y con la automatización previa. En RackForge,
+los dos pases offline con 633 eventos y 376 bloques a
+128 frames coincidieron por bits con los componentes
+escalar y SIMD. Los máximos fueron 0,949 y 1,016 ms.
+El peor dejó 0,318 ms respecto de 1,333 ms, con cero
+fallos de slot, plazos perdidos o eventos descartados.
+[Recibo de admisión](../evidence/rf_d_playable_pilot12.json).
+
+Se conserva el rechazo de empaquetado por exigir
+branding con el esquema 2, la comparación de
+`+0` y `-0` al silenciar la salida y la campaña
+con un bloque de 1,500 ms.
+[Empaquetado](../evidence/rf_d_playable_pilot08.json),
+[comparación y replay](../evidence/rf_d_playable_pilot10.json),
+[primer pase después del ajuste](../evidence/rf_d_playable_pilot11.json).

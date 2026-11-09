@@ -38,6 +38,37 @@ pub struct Frame {
     pub returns_a: [f64; 2],
 }
 
+#[cfg(pilot_returns)]
+#[derive(Clone, Copy)]
+pub struct Panel {
+    pub drive: plant::Drive,
+    pub mixer_gain: f64,
+    pub attack_ms: f64,
+    pub release_ms: f64,
+}
+
+#[cfg(pilot_returns)]
+impl Default for Panel {
+    fn default() -> Self {
+        Self {
+            drive: plant::Drive::default(),
+            mixer_gain: 1.,
+            attack_ms: RAMP_S * 1000.,
+            release_ms: RAMP_S * 1000.,
+        }
+    }
+}
+
+#[cfg(pilot_returns)]
+impl Panel {
+    fn valid(self) -> bool {
+        self.drive.valid()
+            && (0. ..=1.).contains(&self.mixer_gain)
+            && (1. ..=100.).contains(&self.attack_ms)
+            && (1. ..=200.).contains(&self.release_ms)
+    }
+}
+
 #[derive(Clone)]
 pub struct Voice<const FACTOR: usize> {
     circuit: plant::State,
@@ -86,9 +117,26 @@ impl<const FACTOR: usize> Voice<FACTOR> {
         Ok(())
     }
 
-    fn next(&mut self, #[cfg(pilot_returns)] target: plant::Drive) -> Result<Frame, Error> {
-        let kernel = if FACTOR == 4 { &coefficients::H192000[..] } else { &coefficients::H384000[..] };
-        let change = 1. / (RAMP_S * (RATE * FACTOR) as f64);
+    fn next(&mut self, #[cfg(pilot_returns)] panel: Panel) -> Result<Frame, Error> {
+        let kernel = if FACTOR == 4 {
+            &coefficients::H192000[..]
+        } else {
+            &coefficients::H384000[..]
+        };
+        #[cfg(not(pilot_returns))]
+        let ramp_s = RAMP_S;
+        #[cfg(pilot_returns)]
+        let ramp_s = 0.001
+            * if self.held != 0 {
+                panel.attack_ms
+            } else {
+                panel.release_ms
+            };
+        let change = 1. / (ramp_s * (RATE * FACTOR) as f64);
+        #[cfg(not(pilot_returns))]
+        let input_peak = INPUT_PEAK_V;
+        #[cfg(pilot_returns)]
+        let input_peak = INPUT_PEAK_V * panel.mixer_gain;
         let mut last = Frame::default();
         for _substep in 0..FACTOR {
             self.phase += self.increment;
@@ -104,27 +152,37 @@ impl<const FACTOR: usize> Voice<FACTOR> {
             let index = position as usize;
             let left = wave::SAW[index % TABLE];
             let right = wave::SAW[(index + 1) % TABLE];
-            let input = INPUT_PEAK_V * self.trim * (left + position.fract() * (right - left));
+            let input = input_peak * self.trim * (left + position.fract() * (right - left));
             #[cfg(not(pilot_returns))]
             let ports = plant::step(&mut self.circuit, input).map_err(Error::Plant)?;
             #[cfg(pilot_returns)]
             let ports = plant::step(
-                &mut self.circuit, input, self.drive.interpolate(target, (_substep + 1) as f64 / FACTOR as f64),
-            ).map_err(Error::Plant)?;
+                &mut self.circuit,
+                input,
+                self.drive
+                    .interpolate(panel.drive, (_substep + 1) as f64 / FACTOR as f64),
+            )
+            .map_err(Error::Plant)?;
             self.history[self.head] = ports.j7_v;
             self.head = (self.head + 1) % kernel.len();
             last.bus_v = ports.bus_v;
             last.c27_v = ports.base_v - ports.bus_v;
             last.panel_a = ports.panel_a;
             #[cfg(pilot_returns)]
-            { last.returns_a = ports.returns_a; }
+            {
+                last.returns_a = ports.returns_a;
+            }
         }
         #[cfg(pilot_returns)]
-        { self.drive = target; }
+        {
+            self.drive = panel.drive;
+        }
         self.frames += 1;
         if self.frames > LATENCY {
             let (first, second) = kernel.split_at(kernel.len() - self.head);
-            last.j7_v = first.iter().zip(&self.history[self.head..kernel.len()])
+            last.j7_v = first
+                .iter()
+                .zip(&self.history[self.head..kernel.len()])
                 .chain(second.iter().zip(&self.history[..self.head]))
                 .fold(0., |sum, (coefficient, value)| sum + coefficient * value);
         }
@@ -133,26 +191,57 @@ impl<const FACTOR: usize> Voice<FACTOR> {
 
     /// Events at one offset are applied in caller order. Failed blocks publish no state.
     pub fn render(&mut self, events: &[Event], frames: &mut [Frame]) -> Result<(), Error> {
-        self.render_inner(events, frames, #[cfg(pilot_returns)] None)
+        self.render_inner(
+            events,
+            frames,
+            #[cfg(pilot_returns)]
+            |_| Panel::default(),
+        )
     }
 
     #[cfg(pilot_returns)]
     pub fn render_with_returns(
-        &mut self, events: &[Event], frames: &mut [Frame], drives: &[plant::Drive],
+        &mut self,
+        events: &[Event],
+        frames: &mut [Frame],
+        drives: &[plant::Drive],
     ) -> Result<(), Error> {
         if drives.len() != frames.len() || drives.iter().any(|drive| !drive.valid()) {
             return Err(Error::Input);
         }
-        self.render_inner(events, frames, Some(drives))
+        self.render_inner(events, frames, |i| Panel {
+            drive: drives[i],
+            ..Panel::default()
+        })
+    }
+
+    #[cfg(pilot_returns)]
+    pub fn render_panel(
+        &mut self,
+        events: &[Event],
+        frames: &mut [Frame],
+        panel: &[Panel],
+    ) -> Result<(), Error> {
+        if panel.len() != frames.len() || panel.iter().any(|control| !control.valid()) {
+            return Err(Error::Input);
+        }
+        self.render_inner(events, frames, |i| panel[i])
     }
 
     fn render_inner(
-        &mut self, events: &[Event], frames: &mut [Frame],
-        #[cfg(pilot_returns)] drives: Option<&[plant::Drive]>,
+        &mut self,
+        events: &[Event],
+        frames: &mut [Frame],
+        #[cfg(pilot_returns)] panel: impl Fn(usize) -> Panel,
     ) -> Result<(), Error> {
-        if frames.is_empty() || frames.len() > MAX_BLOCK || events.len() > 256
+        if frames.is_empty()
+            || frames.len() > MAX_BLOCK
+            || events.len() > 256
             || events.iter().any(|event| event.offset >= frames.len())
-            || events.windows(2).any(|pair| pair[0].offset > pair[1].offset) {
+            || events
+                .windows(2)
+                .any(|pair| pair[0].offset > pair[1].offset)
+        {
             return Err(Error::Input);
         }
         let mut candidate = self.clone();
@@ -162,7 +251,10 @@ impl<const FACTOR: usize> Voice<FACTOR> {
             while let Some(event) = events.next_if(|event| event.offset == offset) {
                 candidate.event(event.message)?;
             }
-            *frame = candidate.next(#[cfg(pilot_returns)] drives.map_or_else(plant::Drive::default, |d| d[offset]))?;
+            *frame = candidate.next(
+                #[cfg(pilot_returns)]
+                panel(offset),
+            )?;
         }
         *self = candidate;
         frames.copy_from_slice(&output[..frames.len()]);

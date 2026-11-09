@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RF-D Pilot</title>
+  <link rel="stylesheet" href="panel.css">
+  <script src="panel.js" defer></script>
+</head>
+<body>
+  <main class="instrument">
+    <header class="masthead">
+      <div><p class="series">RACKFORGE · MONOPHONIC INSTRUMENT</p><h1>RF-D <small>PILOT</small></h1></div>
+      <p class="status" id="status" role="status">Connecting to RackForge…</p>
+    </header>
+    <div class="controls">
+      <section aria-labelledby="levels">
+        <h2 id="levels"><span>01</span> Levels</h2>
+        <div class="pair">
+          <label class="control fader">
+            <span class="label">Saw mix</span>
+            <span class="mechanism">
+              <input type="range" min="0" max="100" step="1" value="100" data-index="2" data-unit="%" disabled>
+            </span>
+            <span class="value" aria-hidden="true">100 %</span>
+            <span class="caption">Into filter</span>
+          </label>
+          <label class="control fader">
+            <span class="label">Output</span>
+            <span class="mechanism">
+              <input type="range" min="0" max="100" step="1" value="100" data-index="3" data-unit="%" disabled>
+            </span>
+            <span class="value" aria-hidden="true">100 %</span>
+            <span class="caption">Master level</span>
+          </label>
+        </div>
+      </section>
+      <section aria-labelledby="contour">
+        <h2 id="contour"><span>02</span> Audition contour</h2>
+        <div class="pair">
+          <label class="control rotary">
+            <span class="label">Attack</span>
+            <span class="mechanism">
+              <span class="dial" aria-hidden="true"></span>
+              <input type="range" min="1" max="100" step="1" value="5" data-index="4" data-unit="ms" disabled>
+            </span>
+            <span class="value" aria-hidden="true">5 ms</span>
+            <span class="caption">Rise time</span>
+          </label>
+          <label class="control rotary">
+            <span class="label">Release</span>
+            <span class="mechanism">
+              <span class="dial" aria-hidden="true"></span>
+              <input type="range" min="1" max="200" step="1" value="5" data-index="5" data-unit="ms" disabled>
+            </span>
+            <span class="value" aria-hidden="true">5 ms</span>
+            <span class="caption">Fall time</span>
+          </label>
+        </div>
+      </section>
+      <section aria-labelledby="returns">
+        <h2 id="returns"><span>03</span> Circuit trims</h2>
+        <div class="pair">
+          <label class="control rotary">
+            <span class="label">Filter trim</span>
+            <span class="mechanism">
+              <span class="dial" aria-hidden="true"></span>
+              <input type="range" min="-1" max="1" step="0.01" value="0" data-index="1" data-unit="mV" disabled>
+            </span>
+            <span class="value" aria-hidden="true">0 mV</span>
+            <span class="caption">Pin 16</span>
+          </label>
+          <label class="control rotary">
+            <span class="label">Volume bias</span>
+            <span class="mechanism">
+              <span class="dial" aria-hidden="true"></span>
+              <input type="range" min="-15" max="15" step="0.1" value="0" data-index="0" data-unit="mV" disabled>
+            </span>
+            <span class="value" aria-hidden="true">0 mV</span>
+            <span class="caption">R59 source</span>
+          </label>
+        </div>
+      </section>
+    </div>
+    <footer><span>MIDI 36–72 · LOW-NOTE PRIORITY</span><span>SINGLE SAW · v0.3.0</span></footer>
+  </main>
+</body>
+</html>

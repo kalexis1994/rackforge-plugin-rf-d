@@ -2,10 +2,10 @@ schema_version = 1
 id = "org.rackforge.lab.rf-d-pilot"
 name = "RF-D Pilot"
 vendor = "RackForge"
-version = "0.2.0"
+version = "0.3.0"
 kind = "instrument"
 state_version = 1
-capabilities = ["audio_output", "midi_input", "presets", "sample_accurate_automation"]
+capabilities = ["audio_output", "midi_input", "presets", "state", "sample_accurate_automation"]
 
 [midi]
 channel_model = "single_part"
@@ -21,6 +21,13 @@ output_buses = [{ id = "main", name = "Output", channels = 2, layout = "stereo" 
 [api]
 major = 1
 minor = 11
+
+[web_ui]
+api_version = 1
+
+[[web_ui.surfaces]]
+kind = "play"
+entry = "web/play.html"
 
 [component]
 abi = "wasm-v1"
