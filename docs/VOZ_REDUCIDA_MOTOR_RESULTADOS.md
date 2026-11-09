@@ -658,3 +658,66 @@ Ambos pases positivos tardaron unas 549 veces
 el presupuesto de 1,333 ms. La medición
 física queda pendiente.
 [Slot de RackForge](../evidence/rf_d_reduced_engine_rack13.json)
+
+## Armado con tangente cerca del cruce
+
+Se compararon los mismos 1.148 pares
+con tangente en los frames 74–82 de
+la reserva positiva. La comprobación
+AVX de finitud bajó su tiempo de 19,55
+a 19,16 ms. Escribir corriente,
+conductancia y carga en los registros
+del par bajó el tiempo a 17,56 ms.
+Las dos variantes conservaron las
+trazas y el reloj por bits.
+[Validación AVX](../evidence/rf_d_reduced_engine52.json),
+[armado en el par](../evidence/rf_d_reduced_engine53.json)
+
+Consultar las etapas por referencia
+desde un par reutilizable bajó el
+armado con tangente a 11,18 ms,
+un 42,8 % menos que el perfil inicial.
+La inicialización está incluida.
+El armado total pasó de 24,17 a
+15,57 ms y la ventana completa de
+154,47 a 139,54 ms.
+[Perfil del par reutilizable](../evidence/rf_d_reduced_engine54.json)
+
+Se contrastaron 576 sellos completos
+por compilación con AVX y sin AVX.
+Coincidieron por bits el estado,
+las corrientes, las cargas, los
+puertos y las matrices. Los casos
+incluyeron reutilización tras un
+rechazo y los caminos con C11 y
+el gatillo corto. La comprobación
+de finitud rechazó NaN e infinitos
+y aceptó el mayor doble finito.
+
+Las dos reservas conservaron las
+trazas y el reloj por bits a 64 y
+128 frames. La positiva mantuvo
+654 pasos publicados, 1.967
+resoluciones y el cruce 319096–319104.
+Los máximos frente al solver fueron
+3,52 fA en R59, 0,663 pA en R60,
+82,4 nV en J7 y 15,68 µV en los nodos.
+
+Sin instrumentación, el banco completó
+128 frames en 275,8 ms para la reserva
+negativa y 636,5 ms para la positiva.
+Coincidió por bits con el perfil en
+ambas particiones y no hizo asignaciones.
+[Banco nativo](../evidence/rf_d_reduced_engine55.json)
+
+| Reserva | RackForge offline, pase 1 | RackForge offline, pase 2 |
+| --- | ---: | ---: |
+| Negativa | 282,99 ms | 352,15 ms |
+| Positiva | 664,75 ms | 655,47 ms |
+
+Los cuatro bloques de 128 frames devolvieron
+J7 idéntico al nativo convertido a f32.
+Los pases positivos tardaron entre 492 y
+499 veces el presupuesto de 1,333 ms.
+La medición física queda pendiente.
+[Slot de RackForge](../evidence/rf_d_reduced_engine_rack14.json)

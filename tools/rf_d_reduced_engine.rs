@@ -119,7 +119,7 @@ impl DirectionProfile {
 }
 
 #[derive(Clone, Copy)]
-enum Work { Contour, Audio, Direction, AudioTangent, ContourFull }
+enum Work { Contour, Audio, Direction, AudioTangent, ContourFull, ContourSetup }
 
 impl StepProfile {
     #[inline]
@@ -159,10 +159,11 @@ impl StepProfile {
                 self.audio_tangents += 1;
                 self.audio_tangent_ns += elapsed;
                 self.ns[Work::Audio as usize] += elapsed;
-            } else if matches!(part, Work::ContourFull) {
-                self.contour_full += 1;
+            } else if matches!(part, Work::ContourFull | Work::ContourSetup) {
+                let stamped = usize::from(matches!(part, Work::ContourFull));
+                self.contour_full += stamped;
                 self.contour_full_ns += elapsed;
-                self.calls[Work::Contour as usize] += 1;
+                self.calls[Work::Contour as usize] += stamped;
                 self.ns[Work::Contour as usize] += elapsed;
             } else {
                 self.calls[part as usize] += 1;
@@ -208,8 +209,8 @@ pub struct Engine {
     running: Running,
 }
 
-struct Evaluation<const FULL: bool, const T: usize = C> {
-    contour: [graph::ContourParts<FULL, T>; 2],
+struct Evaluation<'a, const FULL: bool, const T: usize = C> {
+    contour: &'a [graph::ContourParts<FULL, T>; 2],
     current: [f64; 2 * C],
     audio: AudioEvaluation,
 }
@@ -364,7 +365,7 @@ fn direction(
     Ok((change, [shared[4], shared[5]]))
 }
 
-impl<const FULL: bool, const T: usize> Evaluation<FULL, T> {
+impl<const FULL: bool, const T: usize> Evaluation<'_, FULL, T> {
     fn norm(&self) -> f64 {
         let mut residual = self.current;
         for (i, &row) in PORT.iter().enumerate() {
@@ -447,13 +448,14 @@ impl Engine {
         }
     }
 
-    fn evaluate<const FULL: bool, const T: usize>(
+    fn evaluate<'a, const FULL: bool, const T: usize>(
         &self, running: Running, map: &audio::Map, history: &audio::History, key: f64, h: f64,
         delta: [f64; 2 * C], bus: [f64; 2], seed: &audio::Junctions,
         trial_audio: Option<AudioEvaluation>, profile: &mut StepProfile,
-    ) -> Result<Evaluation<FULL, T>, StepError> {
+        contour: &'a mut [graph::ContourParts<FULL, T>; 2],
+    ) -> Result<Evaluation<'a, FULL, T>, StepError> {
         let work = if FULL { Work::ContourFull } else { Work::Contour };
-        let contour = profile.measure(work, || graph::reduced_contours::<FULL, T>(running.state, &delta, key, h))?;
+        profile.measure(work, || graph::reduced_contours(contour, running.state, &delta, key, h))?;
         let current = std::array::from_fn(|i| {
             let stage = i / C;
             let row = i % C;
@@ -551,9 +553,12 @@ impl Engine {
         let mut trial_audio = None;
         let mut cached_jacobian = prior.filter(|prior| prior.width == width)
             .map(|prior| prior.audio_jacobian);
+        let (mut full, mut trial_workspace) = profile.measure(Work::ContourSetup, || {
+            (graph::contour_workspace::<true, C>(old.state), graph::contour_workspace::<false, 0>(old.state))
+        });
         for iterations in 1..=80 {
             let e = self.evaluate::<true, C>(
-                old, map, &history, key, h, delta, bus, &seed, trial_audio.take(), profile,
+                old, map, &history, key, h, delta, bus, &seed, trial_audio.take(), profile, &mut full,
             )?;
             let norm = e.norm();
             let mut estimate = cached_jacobian.filter(|_| norm > 1e-12);
@@ -622,7 +627,7 @@ impl Engine {
                     let trial_bus = std::array::from_fn(|i| bus[i] + scale * db[i]);
                     if let Ok(candidate) = self.evaluate::<false, 0>(
                         old, map, &history, key, h, trial, trial_bus, &e.audio.response.junctions,
-                        None, profile,
+                        None, profile, &mut trial_workspace,
                     ) {
                         if candidate.norm() < norm.max(1e-12) {
                             delta = trial;

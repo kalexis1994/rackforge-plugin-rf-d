@@ -168,17 +168,43 @@ fn empty<const FULL:bool, const T:usize>(now: State) -> Parts<FULL, T> {
         now,
     }
 }
-pub fn dc<const FULL:bool>(x: State, c: Controls) -> Result<Parts<FULL>, StepError> {
-    dc_compact::<FULL, N>(x, c)
+
+fn finite_tangent<const T: usize>(j: &[[f64; T]; T]) -> bool {
+    let values = j.as_flattened();
+    #[cfg(all(target_arch = "x86_64", target_feature = "avx"))]
+    {
+        use std::arch::x86_64::*;
+        let (groups, tail) = values.as_chunks::<4>();
+        // SAFETY: AVX is enabled and every unaligned load spans four doubles.
+        unsafe {
+            let sign = _mm256_set1_pd(-0.);
+            let limit = _mm256_set1_pd(f64::MAX);
+            for group in groups {
+                let abs = _mm256_andnot_pd(sign, _mm256_loadu_pd(group.as_ptr()));
+                if _mm256_movemask_pd(_mm256_cmp_pd::<_CMP_LE_OQ>(abs, limit)) != 0b1111 {
+                    return false;
+                }
+            }
+        }
+        tail.iter().all(|value| value.is_finite())
+    }
+    #[cfg(not(all(target_arch = "x86_64", target_feature = "avx")))]
+    values.iter().all(|value| value.is_finite())
 }
 
-fn dc_compact<const FULL:bool, const T:usize>(x: State, c: Controls) -> Result<Parts<FULL, T>, StepError> {
+pub fn dc<const FULL:bool>(x: State, c: Controls) -> Result<Parts<FULL>, StepError> {
+    let mut stamp = empty(x);
+    stamp_dc(&mut stamp, c)?;
+    Ok(stamp)
+}
+
+fn stamp_dc<const FULL:bool, const T:usize>(s: &mut Parts<FULL, T>, c: Controls) -> Result<(), StepError> {
     const { assert!(T == N || (!FULL && T == 0)); }
+    let x = s.now;
     if c.optional != x.optional || !c.key.is_finite() || !(0. ..=10.).contains(&c.key)
     {
         return Err(StepError::InvalidInput);
     }
-    let mut s = empty(x);
     let v = x.high;
     let vol = volume::linearize::<FULL>(
         std::array::from_fn(|k| if k < 29 { v[k] } else { v[54] }),
@@ -199,8 +225,8 @@ fn dc_compact<const FULL:bool, const T:usize>(x: State, c: Controls) -> Result<P
         s.ports[k] += vol.ports[k];
     }
     // Change only the electrical panel coordinates of the inherited volume graph.
-    resistor(&mut s, &v, c, 8, 5, 1. / 1000. - 1. / 10000.);
-    resistor(&mut s, &v, c, 11, 5, 1. / 10000. - 1. / 100000.);
+    resistor(s, &v, c, 8, 5, 1. / 1000. - 1. / 10000.);
+    resistor(s, &v, c, 11, 5, 1. / 10000. - 1. / 100000.);
     let fp = filter::Parameters {
         c11_f: if c.optional { 47e-12 } else { 0. },
         ..filter::Parameters::default()
@@ -262,7 +288,7 @@ fn dc_compact<const FULL:bool, const T:usize>(x: State, c: Controls) -> Result<P
         (51, N, 2500.),
         (51, N + 3, 2500.),
     ] {
-        resistor(&mut s, &v, c, a, b, 1. / r);
+        resistor(s, &v, c, a, b, 1. / r);
     }
     for (b, col, e, sign) in [
         (39, 40, N, 1.),
@@ -272,22 +298,20 @@ fn dc_compact<const FULL:bool, const T:usize>(x: State, c: Controls) -> Result<P
         (46, 47, 48, 1.),
         (49, 50, 48, -1.),
     ] {
-        bjt(&mut s, &v, c, b, col, e, sign)?;
+        bjt(s, &v, c, b, col, e, sign)?;
     }
-    diode(&mut s, &v, c, 53, 41, 1e-8)?;
-    diode(&mut s, &v, c, 48, 17, 1e-12)?;
+    diode(s, &v, c, 53, 41, 1e-8)?;
+    diode(s, &v, c, 48, 17, 1e-12)?;
     // First-order low correction preserves compensated state through static laws.
     // LOW has been accounted at the original device/port incidences.
 
-    if s.dc
-        .iter()
-        .chain(s.j.iter().flatten())
-        .chain(s.ports.iter())
-        .any(|v| !v.is_finite())
+    if s.dc.iter().any(|v| !v.is_finite())
+        || !finite_tangent(&s.j)
+        || s.ports.iter().any(|v| !v.is_finite())
     {
         return Err(StepError::ExponentialDomain);
     }
-    Ok(s)
+    Ok(())
 }
 pub const CAPS: [(usize, usize, f64); 7] = [
     (5, N, 1e-5),
@@ -306,9 +330,38 @@ pub fn parts<const FULL:bool>(old: State, delta: State, c: Controls, h: f64, now
 pub fn parts_compact<const FULL:bool, const T:usize>(
     old: State, delta: State, c: Controls, h: f64, now: State,
 ) -> Result<Parts<FULL, T>, StepError> {
+    let mut stamp = empty(now);
+    stamp_parts(&mut stamp, old, delta, c, h)?;
+    Ok(stamp)
+}
+
+pub fn pair_workspace<const FULL:bool, const T:usize>(old: State) -> [Parts<FULL, T>; 2] {
+    [empty(old), empty(old)]
+}
+
+pub fn stamp_pair<const FULL:bool, const T:usize>(
+    stages: &mut [Parts<FULL, T>; 2], old: State, changes: [[f64; N]; 2], c: Controls, h: f64,
+) -> Result<(), StepError> {
+    for (stamp, change) in stages.iter_mut().zip(changes) {
+        stamp.now = old.advanced(change);
+        stamp.dc.fill(0.);
+        stamp.dq.fill(0.);
+        stamp.j.as_flattened_mut().fill(0.);
+        stamp.mass.as_flattened_mut().fill(0.);
+        stamp.ports.fill(0.);
+        stamp.charge_ports.fill(0.);
+        stamp_parts(stamp, old, State::new(change, old.optional), c, h)?;
+    }
+    Ok(())
+}
+
+fn stamp_parts<const FULL:bool, const T:usize>(
+    s: &mut Parts<FULL, T>, old: State, delta: State, c: Controls, h: f64,
+) -> Result<(), StepError> {
     // old/delta/now were checked in the full 118-node stage boundary.
     if !h.is_finite()||h<=0.{return Err(StepError::InvalidInput);}
-    let mut s = dc_compact(now, c)?;
+    stamp_dc(s, c)?;
+    let now = s.now;
     let mut cap = |a: usize, b: usize, cf: f64| {
         let get = |k| {
             if k < N {
@@ -350,5 +403,5 @@ pub fn parts_compact<const FULL:bool, const T:usize>(
         }
         s.charge_ports[0] -= (q[0] + q[1]) / h;
     }
-    Ok(s)
+    Ok(())
 }

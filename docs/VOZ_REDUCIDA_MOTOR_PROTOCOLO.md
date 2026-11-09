@@ -367,3 +367,27 @@ Usar almacenamiento de dimensión cero
 para las matrices de conductancia y
 masa en los ensayos de residuo. Mantener
 las dos matrices completas para Newton.
+
+## Validación del armado con tangente
+
+Comprobar las 3.136 entradas de
+conductancia por etapa en grupos AVX.
+Comparar el valor absoluto contra
+el mayor doble finito con un predicado
+ordenado. Conservar el rechazo de
+infinitos y NaN y la comprobación
+escalar en targets sin AVX.
+
+Armar conductancia y carga en los
+registros del par de etapas. Inicializar
+cada registro una vez y escribir la
+carga sobre el mismo registro que
+recibió la corriente y su derivada.
+Conservar las fórmulas, el orden de
+los sellos y la interfaz de una etapa.
+
+Probar un par de buffers por resolución
+para consultar las etapas por referencia.
+Limpiar los sellos antes de cada ensayo
+o iteración y contar la inicialización
+de ambos buffers en el tiempo con tangente.
