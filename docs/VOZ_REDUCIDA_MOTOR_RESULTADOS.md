@@ -442,3 +442,51 @@ Los pases positivos tomaron entre 721 y
 733 veces el presupuesto de 1,333 ms. La
 campaña física queda pendiente.
 [Slot de RackForge](../evidence/rf_d_reduced_engine_rack08.json)
+
+## Tangentes de audio cerca del cruce
+
+Se midieron 617 tangentes en los frames
+74–82 de la reserva positiva. El perfil
+escalar tomó 19,66 ms en las tangentes y
+198,09 ms en la ventana completa. El
+producto SIMD por cuatro filas bajó las
+tangentes a 18,11 ms. En ese pase la
+ventana completa tomó 199,98 ms.
+[Perfil escalar](../evidence/rf_d_reduced_engine32.json),
+[primer perfil SIMD](../evidence/rf_d_reduced_engine33.json)
+
+Calcular el residuo en los registros del
+producto y reutilizar el `expm1` de la
+respuesta bajó las tangentes a 17,40 ms,
+28,21 µs por llamada y 11,5 % menos que
+el perfil escalar. La ventana completa
+tomó 196,43 ms y el bloque positivo
+instrumentado 948,75 ms.
+
+Las dos reservas conservaron sus trazas
+y su reloj por bits en 64 y 128 frames.
+La positiva mantuvo 654 pasos publicados,
+1.967 resoluciones y el cruce 319096–319104.
+Los máximos frente al solver fueron
+3,52 fA en R59, 0,663 pA en R60, 82,4 nV
+en J7 y 15,68 µV en los nodos observados.
+[Perfil con el residuo SIMD y reutilización](../evidence/rf_d_reduced_engine34.json)
+
+El banco sin instrumentación completó 128
+frames en 445,4 ms para la reserva negativa
+y 945,3 ms para la positiva. Coincidió por
+bits con el perfil en ambas particiones y
+no hizo asignaciones.
+[Banco nativo](../evidence/rf_d_reduced_engine35.json)
+
+| Reserva | RackForge offline, pase 1 | RackForge offline, pase 2 |
+| --- | ---: | ---: |
+| Negativa | 447,1 ms | 443,8 ms |
+| Positiva | 951,4 ms | 955,7 ms |
+
+Los cuatro bloques de 128 frames devolvieron
+J7 idéntico al banco nativo convertido a
+f32. La reserva positiva quedó entre 714 y
+717 veces el presupuesto de 1,333 ms. La
+medición física queda pendiente.
+[Slot de RackForge](../evidence/rf_d_reduced_engine_rack09.json)

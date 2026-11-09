@@ -267,3 +267,25 @@ La respuesta dura una iteración de una
 sola resolución. Comparar las trazas por
 bits, los contadores del reloj y las
 evaluaciones de audio evitadas.
+
+## Coste de la tangente de audio
+
+Medir por separado las tangentes de seis
+columnas dentro del tiempo total de audio.
+Comparar la ventana positiva de los frames
+74–82 con el mismo banco y calendario.
+Conservar las 108 leyes en el residuo, los
+umbrales de refinamiento y el respaldo de LU.
+
+Comparar el producto del residuo de tangente
+en grupos de cuatro filas. Con AVX, cada
+fila usa cuatro carriles AVX y dos SSE.
+Mantener la suma en el orden de las leyes
+y separar multiplicación y suma. En otros
+targets usar el producto escalar existente.
+
+Formar el residuo directamente en los
+registros del producto. Conservar el
+`expm1` de las junturas convergidas con
+la respuesta y derivar la pendiente a
+partir de ese mismo valor.

@@ -88,6 +88,8 @@ pub struct StepProfile {
     pub audio_tangents: usize,
     #[cfg(profile_reduced)]
     pub reused_audio: usize,
+    #[cfg(profile_reduced)]
+    pub audio_tangent_ns: u128,
 }
 
 #[derive(Clone, Copy)]
@@ -103,6 +105,7 @@ impl StepProfile {
             let elapsed = start.elapsed().as_nanos();
             if matches!(part, Work::AudioTangent) {
                 self.audio_tangents += 1;
+                self.audio_tangent_ns += elapsed;
                 self.ns[Work::Audio as usize] += elapsed;
             } else {
                 self.calls[part as usize] += 1;

@@ -44,6 +44,7 @@ pub struct History {
 pub struct Response {
     pub current: [f64; SHARED],
     nonlinear: [f64; LAWS],
+    exponential_change: Junctions,
     pub junctions: Junctions,
 }
 
@@ -80,6 +81,68 @@ pub type PortJacobian = [[f64; SHARED]; SHARED];
 // omitted columns still participate in the residual at each refinement.
 const SUPPORT: usize = 56;
 const COLUMN_FLOOR: f64 = 5e-4;
+
+fn refinement_residual<const K: usize>(
+    coefficients: &LawMatrix,
+    weighted: &[[f64; K]; LAWS],
+    rhs: &[[f64; K]; LAWS],
+    x: &[[f64; K]; LAWS],
+) -> [[f64; K]; LAWS] {
+    #[cfg(all(target_arch = "x86_64", target_feature = "avx"))]
+    if K == SHARED {
+        return tangent_residual(coefficients, weighted, rhs, x);
+    }
+    std::array::from_fn(|i| {
+        let feedback = row_product(&coefficients[i], weighted);
+        std::array::from_fn(|k| rhs[i][k] - x[i][k] - feedback[k])
+    })
+}
+
+#[cfg(all(target_arch = "x86_64", target_feature = "avx"))]
+fn tangent_residual<const K: usize>(
+    coefficients: &LawMatrix,
+    weighted: &[[f64; K]; LAWS],
+    rhs: &[[f64; K]; LAWS],
+    x: &[[f64; K]; LAWS],
+) -> [[f64; K]; LAWS] {
+    use std::arch::x86_64::*;
+
+    const TILE: usize = 4;
+    const _: () = assert!(LAWS % TILE == 0);
+    assert_eq!(K, SHARED);
+    let (tiles, _) = coefficients.as_chunks::<TILE>();
+    let mut result = [[0.; K]; LAWS];
+    let (output, _) = result.as_chunks_mut::<TILE>();
+    // Each row has four AVX lanes and two SSE lanes. Each lane keeps
+    // the scalar summation order, with separate multiply and add.
+    // SAFETY: AVX is enabled and each load/store covers exactly one six-lane row.
+    unsafe {
+        for (t, (tile, output)) in tiles.iter().zip(output).enumerate() {
+            let mut first = [_mm256_setzero_pd(); TILE];
+            let mut last = [_mm_setzero_pd(); TILE];
+            for (i, input) in weighted.iter().enumerate() {
+                let low = _mm256_loadu_pd(input.as_ptr());
+                let high = _mm_loadu_pd(input.as_ptr().add(4));
+                for r in 0..TILE {
+                    let coefficient = tile[r][i];
+                    first[r] =
+                        _mm256_add_pd(first[r], _mm256_mul_pd(_mm256_set1_pd(coefficient), low));
+                    last[r] = _mm_add_pd(last[r], _mm_mul_pd(_mm_set1_pd(coefficient), high));
+                }
+            }
+            for (r, row) in output.iter_mut().enumerate() {
+                let i = t * TILE + r;
+                let b = rhs[i].as_ptr();
+                let a = x[i].as_ptr();
+                let low = _mm256_sub_pd(_mm256_loadu_pd(b), _mm256_loadu_pd(a));
+                let high = _mm_sub_pd(_mm_loadu_pd(b.add(4)), _mm_loadu_pd(a.add(4)));
+                _mm256_storeu_pd(row.as_mut_ptr(), _mm256_sub_pd(low, first[r]));
+                _mm_storeu_pd(row.as_mut_ptr().add(4), _mm_sub_pd(high, last[r]));
+            }
+        }
+    }
+    result
+}
 
 struct Projection {
     columns: [usize; SUPPORT],
@@ -170,10 +233,7 @@ impl Projection {
         let mut converged = [false; K];
         for _ in 0..5 {
             let weighted: [[f64; K]; LAWS] = std::array::from_fn(|i| x[i].map(|v| slope[i] * v));
-            let mut residual: [[f64; K]; LAWS] = std::array::from_fn(|i| {
-                let feedback = row_product(&port_map[i], &weighted);
-                std::array::from_fn(|k| rhs[i][k] - x[i][k] - feedback[k])
-            });
+            let mut residual = refinement_residual(port_map, &weighted, rhs, &x);
             for k in 0..K {
                 converged[k] |= residual
                     .iter()
@@ -308,6 +368,7 @@ impl Map {
             return Ok(Response {
                 current,
                 nonlinear,
+                exponential_change: change,
                 junctions: z,
             });
         }
@@ -315,7 +376,7 @@ impl Map {
     }
 
     pub fn jacobian(&self, response: &Response) -> Result<PortJacobian, StepError> {
-        let slope = std::array::from_fn(|i| self.iexp[i] * response.junctions[i].exp_m1());
+        let slope = std::array::from_fn(|i| self.iexp[i] * response.exponential_change[i]);
         let mut derivatives =
             feedback_directions(&self.feedback, &self.feedback_peak, &slope, &self.z_port)?;
         for (row, scale) in derivatives.iter_mut().zip(slope) {

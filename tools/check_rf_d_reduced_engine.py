@@ -90,7 +90,7 @@ def assess(raw, target, expected, size, bank_count=BANKS):
             switches.append(list(map(int, fields)))
         elif tag == "PROFILE":
             values = list(map(int, fields))
-            assert len(values) in (10, 11, 12) and values[0] in (0, 1, 2)
+            assert len(values) in (10, 11, 12, 13) and values[0] in (0, 1, 2)
             profile.append(values)
         elif tag == "CLOCK":
             solves, comparisons, error_retries, event_retries, *extra = map(int, fields)
@@ -128,15 +128,17 @@ def assess(raw, target, expected, size, bank_count=BANKS):
             rows = np.asarray([row[1:] for row in profile if row[0] == region], dtype=np.int64)
             steps, fine, wall, nc, na, nd, tc, ta, td, *extra = map(int, rows.sum(axis=0))
             tangents = extra[0] if field_count >= 11 else None
-            reused_audio = extra[1] if field_count == 12 else None
+            reused_audio = extra[1] if field_count >= 12 else None
+            tangent_ns = extra[2] if field_count == 13 else None
             evaluations = na + (reused_audio or 0)
             assert 0 <= fine <= steps and tc + ta + td <= wall and nc >= evaluations
             assert 0 <= (reused_audio or 0) <= na
+            assert 0 <= (tangent_ns or 0) <= ta
             assert 0 <= (tangents or 0) <= evaluations and nd <= evaluations + (tangents or 0)
             windows.append(dict(region=label, steps=steps, fine_steps=fine, wall_ns=wall,
                                 calls=dict(contour=nc, audio=na, direction=nd, audio_tangents=tangents,
                                            reused_audio=reused_audio),
-                                ns=dict(contour=tc, audio=ta, direction=td)))
+                                ns=dict(contour=tc, audio=ta, direction=td, audio_tangents=tangent_ns)))
         assert sum(row["steps"] for row in windows) == sum(sum(b["widths"]) for b in blocks)
     passed = (switches == expected and all(endpoint_passed(row) for row in endpoints)
               and max(row["phase_error_cycles"] for row in endpoints) <= 1e-7 and sound["passed"])
