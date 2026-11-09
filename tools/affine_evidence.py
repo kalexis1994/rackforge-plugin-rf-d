@@ -6,7 +6,7 @@ from check_hybrid_voice import packed,unpack
 def encode_json(value):return json.dumps(value,sort_keys=True,separators=(',',':')).encode()
 def valid_name(name):
     p=PurePosixPath(name);assert not p.is_absolute() and '..' not in p.parts
-    assert name.split('/')[0] in ['crates','tools','docs','evidence']
+    assert name.split('/')[0] in ['crates','tools','docs','evidence','plugin']
 class Sources:
     def __init__(self,names):
         self.commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip();self.hashes={};self.manifest={};self.images={}

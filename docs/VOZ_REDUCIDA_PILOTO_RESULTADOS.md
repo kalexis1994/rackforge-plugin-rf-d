@@ -67,3 +67,38 @@ R59/R60 y la conmutación con los puertos dinámicos,
 contrastar la salida con el solver offline y medir
 el mismo presupuesto. La medición wasm-v1 se hizo
 fuera del motor de RackForge y del driver físico.
+
+## Paquete jugable en RackForge
+
+El paquete portable RF-D Pilot 0.1.0 expone
+una entrada MIDI y una salida estéreo. Usa la
+misma sierra H128, la cadena de audio y la
+rampa de laboratorio del piloto archivado.
+La prioridad de nota grave conserva el rango
+MIDI 36–72. Cutoff y polarización de VCA quedan
+fijos en esta base.
+
+El archivo `artifacts/rf-d-pilot-0.1.0.rfplugin`
+se instaló en un almacén temporal. Ocho eventos
+entraron por el enrutador MIDI real. Los dos
+pases de 376 bloques a 48 kHz y 128 frames
+reprodujeron por bits las 48.128 muestras
+estéreo archivadas. Hubo cero eventos
+descartados, fallos del slot o bloques por
+encima de 1,333 ms.
+
+| Pase offline | Máximo | Percentil 99 |
+| --- | ---: | ---: |
+| 1 | 1,212 ms | 0,852 ms |
+| 2 | 1,282 ms | 0,952 ms |
+
+La verificación cubre el host offline y el
+alcance de este piloto. El presupuesto físico
+y la integración de C2/C5, R59/R60 y el
+biestable siguen abiertos. El ensayo de
+empaquetado usa el componente SIMD construido
+por Rust y el esquema 1 del manifiesto.
+[Protocolo](VOZ_PILOTO_JUGABLE_PROTOCOLO.md),
+[registro inicial de fuentes](../evidence/rf_d_playable_pilot01.json),
+[rechazo del esquema 2](../evidence/rf_d_playable_pilot02.json),
+[campaña MIDI admitida](../evidence/rf_d_playable_pilot03.json).

@@ -106,14 +106,39 @@ def pitch_checks(samples):
     return result
 
 
-def portable(run, plant, wave_path, native, report):
+def portable_source(plant, wave_path):
     probe = (ROOT / PROBE).read_text(encoding="utf8")
     modules = probe[:probe.index("mod coefficients;") + len("mod coefficients;")]
     modules = modules.replace("PLANT_PATH", plant.as_posix()).replace("WAVE_PATH", wave_path.as_posix())
     modules = modules.replace("FIR_PATH", (ROOT / FIR).as_posix())
     source = modules + f'\n#[path = "{(ROOT / VOICE).as_posix()}"] mod voice;\n'
     source += (ROOT / GUEST).read_text(encoding="utf8")
-    guest = emit("pilot-guest.rs", source)
+    return emit("pilot-guest.rs", source)
+
+
+def prepare_pilot():
+    table, logs, models, _, _, _ = materialize(read_oracle())
+    assert digest(table) == read(MODEL)["table_sha256"]
+    z = prediction(logs, models, -1.6, 0.)["c"][0].copy()
+    z[1:] *= 2.
+    cycle = np.fft.ifft(z, n=4096).real * 4096
+    scale = float(max(abs(cycle)))
+    assert scale > 0.
+    wave_path = emit("pilot-wave.rs", "pub const SAW:[f64;4096]=[" +
+                     ",".join(f"{v:.17e}" for v in cycle / scale) + "];\n")
+    maps, checks = rate_maps()
+    candidate = emit("pilot-maps.rs", maps)
+    return wave_path, candidate, dict(independent_maps=checks, wave_table_sha256=sha(wave_path),
+                                      wave_peak_source_v=scale, candidate_maps_sha256=sha(candidate))
+
+
+def pilot_plant(data):
+    return emit("pilot-plant.rs", once((ROOT / PLANT).read_text(encoding="utf8"),
+                '"recovery_cost_exp_data.rs"', f'"{data.as_posix()}"'))
+
+
+def portable(run, plant, wave_path, native, report):
+    guest = portable_source(plant, wave_path)
     sdk = AREA / "librackforge_plugin_sdk.rlib"
     wasm = AREA / "pilot.wasm"
     flags = [COMPILER, "--target", "wasm32-unknown-unknown", "-C", "target-feature=+simd128",
@@ -168,25 +193,12 @@ def main():
         return process
 
     try:
-        table, logs, models, _, _, _ = materialize(read_oracle())
-        assert digest(table) == read(MODEL)["table_sha256"]
-        z = prediction(logs, models, -1.6, 0.)["c"][0].copy()
-        z[1:] *= 2.
-        cycle = np.fft.ifft(z, n=4096).real * 4096
-        scale = float(max(abs(cycle)))
-        assert scale > 0.
-        wave_path = emit("pilot-wave.rs", "pub const SAW:[f64;4096]=[" +
-                         ",".join(f"{v:.17e}" for v in cycle / scale) + "];\n")
-        maps, report["independent_maps"] = rate_maps()
-        candidate_maps = emit("pilot-maps.rs", maps)
-        report["wave_table_sha256"] = sha(wave_path)
-        report["wave_peak_source_v"] = scale
-        report["candidate_maps_sha256"] = sha(candidate_maps)
+        wave_path, candidate_maps, checks = prepare_pilot()
+        report.update(checks)
         report["affinity"] = pin()
         outputs = {}
         for factor, data in ((8, ROOT / DATA), (4, candidate_maps)):
-            plant = emit("pilot-plant.rs", once((ROOT / PLANT).read_text(encoding="utf8"),
-                         '"recovery_cost_exp_data.rs"', f'"{data.as_posix()}"'))
+            plant = pilot_plant(data)
             source = (ROOT / PROBE).read_text(encoding="utf8")
             for token, path in (("PLANT_PATH", plant), ("VOICE_PATH", ROOT / VOICE),
                                 ("FIR_PATH", ROOT / FIR), ("TIMING_PATH", ROOT / TIMING), ("WAVE_PATH", wave_path)):
