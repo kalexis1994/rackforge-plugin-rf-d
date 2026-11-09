@@ -136,3 +136,78 @@ La medición física corresponde a una etapa posterior.
 [Primer intento portable](../evidence/rf_d_playable_pilot04.json),
 [ensayo de Binaryen](../evidence/rf_d_playable_pilot05.json),
 [campaña admitida](../evidence/rf_d_playable_pilot06.json).
+
+## C2, C5 y biestable con cargas impuestas
+
+El candidato de laboratorio conserva dos estados de carga
+de 10 µF. Cada temporizador resuelve un sistema de dos etapas
+a partir de `C dV/dt = Σ (Vpuerto − V) / R`. C2 usa los
+puertos x8/x11 del biestable y la rama de placa de 10 kΩ
+hacia Q3. C5 conserva los caminos de ataque y descarga
+x44/x47 y la corriente de base de Q22. La receta es la
+nominal con decay habilitado, sin C11/C12 opcionales y
+con los controles congelados de la reserva. Las leyes y
+valores provienen de los stamps de la voz cargada.
+[Volumen](../crates/rf-d-circuit/src/prepared_volume_residual.rs),
+[filtro](../crates/rf-d-circuit/src/prepared_filter_residual.rs),
+[contornos cargados](../crates/rf-d-circuit/src/prepared_contour_residual.rs).
+
+La salida de volumen resuelve Q3/Q2 junto con R59 a
+68 kΩ y realimenta la carga de Q3 hacia C2. La rama
+Q26/Q28 reconstruye R60 a 680 Ω con la carga TAIL y el
+sumador del filtro impuestos. C5 realimenta la base
+de Q22. Quedan impuestos los demás terminales del
+seguidor, los dos sustain, las dos cargas de reset
+y los extremos del circuito de audio. El contraste
+usa dos flancos negativos y una transición positiva.
+[Modelo](../tools/rf_d_pilot_contours.rs),
+[retornos](../tools/rf_d_pilot_contour_ports.rs),
+[banco](../tools/check_rf_d_pilot_contours.py).
+
+Con las fronteras a paso fino, las dos corrientes
+quedaron bajo 2 nA de error y el biestable cambió
+entre 319096 y 319104. Interpolar sólo las cuatro
+entradas de carga de C5 desde 192 kHz conservó
+el cruce con error de C5 de 7,48 µV en el peor
+punto. Interpolar todas las fronteras adelantó
+el cruce 80 ticks y elevó el error de R59 a 7,77 nA.
+La primera etapa cerraba C2 alrededor del
+biestable con la base de Q3 impuesta. El segundo
+contraste incorporó las dos ramas de retorno y
+la carga de base de Q22.
+[Primera etapa](../evidence/rf_d_pilot_contours01.json),
+[contraste con corrientes](../evidence/rf_d_pilot_contours02.json).
+
+En el barrido individual, interpolar x48 (sustain del
+filtro) adelantó por sí solo el cruce 80 ticks y dejó
+3,34 nA de error en R59. Interpolar x14, x41 o x52
+conservó el intervalo pero excedió 20 µV en los
+nodos del biestable. Las cuatro cargas requieren
+conservar su reacción cerca de la transición.
+Con fronteras finas los peores errores de corriente
+sobre las tres ventanas fueron 0,029 pA en R59
+y 0,195 pA en R60.
+[Barrido de puertos](../evidence/rf_d_pilot_contours03.json).
+
+En la ventana positiva, R59 pide 1,8955–1,9180 V
+en su extremo de contorno. El extremo baja a unos
+−0,277 V en los dos flancos negativos. Sujetar el
+extremo al rango 1,985–2,015 V del piloto y conservar
+la tensión de base del solver introduciría hasta
+1,316 µA de error en la ventana positiva, frente
+a 2 nA. El contraste de J7 sigue pendiente del
+acople al modelo de audio sobre ese dominio.
+
+El avance a ocho ticks durante toda la ventana
+positiva consumió 45,6 ms de cálculo en su frame
+más caro. El candidato queda como referencia
+offline para condensar la transición y extender
+la planta de audio por regiones de polarización.
+La repetición en RackForge corresponde al paquete
+portable 0.2.0, con los mismos bytes y el mismo
+J7 que en el banco anterior. A 48 kHz y 128 frames
+efectivos, los dos pases de 376 bloques dieron
+0,965 y 1,104 ms de máximos. Quedaron 0,229 ms
+respecto de 1,333 ms, con cero excesos, fallos de
+slot o eventos descartados.
+[Control offline de RackForge](../evidence/rf_d_playable_pilot07.json).
