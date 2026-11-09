@@ -66,8 +66,8 @@ pub fn run(path: &str, branch: &str, cap: usize, size: usize) -> Result<(), Box<
         for (region, p) in stats.profile.into_iter().enumerate() {
             let [contour, audio, direction] = p.calls;
             let [contour_ns, audio_ns, direction_ns] = p.ns;
-            println!("PROFILE,{region},{},{},{},{contour},{audio},{direction},{contour_ns},{audio_ns},{direction_ns},{}",
-                     p.steps, p.fine_steps, p.wall_ns, p.audio_tangents);
+            println!("PROFILE,{region},{},{},{},{contour},{audio},{direction},{contour_ns},{audio_ns},{direction_ns},{},{}",
+                     p.steps, p.fine_steps, p.wall_ns, p.audio_tangents, p.reused_audio);
         }
         println!("BLOCK,{size},{elapsed},{count},{guard_retries},{solver_retries},{iterations},{max_residual_a:.17e},{max_correction_v:.17e},{}",
                  widths.map(|n| n.to_string()).join(","));

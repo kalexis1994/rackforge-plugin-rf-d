@@ -86,6 +86,8 @@ pub struct StepProfile {
     pub ns: [u128; 3],
     #[cfg(profile_reduced)]
     pub audio_tangents: usize,
+    #[cfg(profile_reduced)]
+    pub reused_audio: usize,
 }
 
 #[derive(Clone, Copy)]
@@ -148,9 +150,13 @@ pub struct Engine {
 
 struct Evaluation<const FULL: bool> {
     contour: [graph::ContourParts<FULL>; 2],
+    current: [f64; 2 * C],
+    audio: AudioEvaluation,
+}
+
+struct AudioEvaluation {
     response: audio::Response,
     shared: [f64; 6],
-    current: [f64; 2 * C],
     panel_j: [[f64; 2]; 2],
     phase: f64,
 }
@@ -246,7 +252,7 @@ fn direction(e: &Evaluation<true>, mut jacobian: audio::PortJacobian) -> Result<
         let row = inner_index(i);
         std::array::from_fn(|k| if k == 0 { -e.current[row] } else { coefficient(e, row, PORT[k - 1]) })
     }))?;
-    let mut current = e.response.current;
+    let mut current = e.audio.response.current;
     for (p, &row) in PORT.iter().enumerate() {
         let feedback: [f64; INNER] = std::array::from_fn(|i| coefficient(e, row, inner_index(i)));
         let response = row_product(&feedback, &interior);
@@ -257,7 +263,7 @@ fn direction(e: &Evaluation<true>, mut jacobian: audio::PortJacobian) -> Result<
     }
     for i in 0..2 {
         for j in 0..2 {
-            jacobian[i + 4][j + 4] += e.panel_j[i][j];
+            jacobian[i + 4][j + 4] += e.audio.panel_j[i][j];
         }
     }
     let shared = Lu::factor(jacobian)?.solve(current.map(|v| -v))?;
@@ -279,9 +285,9 @@ impl<const FULL: bool> Evaluation<FULL> {
     fn norm(&self) -> f64 {
         let mut residual = self.current;
         for (i, &row) in PORT.iter().enumerate() {
-            residual[row] += self.response.current[i];
+            residual[row] += self.audio.response.current[i];
         }
-        maximum(&residual).max(maximum(&self.response.current[4..]))
+        maximum(&residual).max(maximum(&self.audio.response.current[4..]))
     }
 }
 
@@ -360,13 +366,35 @@ impl Engine {
 
     fn evaluate<const FULL: bool>(
         &self, running: Running, map: &audio::Map, history: &audio::History, key: f64, h: f64,
-        delta: [f64; 2 * C], bus: [f64; 2], seed: &audio::Junctions, profile: &mut StepProfile,
+        delta: [f64; 2 * C], bus: [f64; 2], seed: &audio::Junctions,
+        trial_audio: Option<AudioEvaluation>, profile: &mut StepProfile,
     ) -> Result<Evaluation<FULL>, StepError> {
         let state = running.state;
         let contour = profile.measure(Work::Contour, || -> Result<_, StepError> { Ok([
             graph::reduced_contour::<FULL>(state, delta[..C].try_into().unwrap(), key, h)?,
             graph::reduced_contour::<FULL>(state, delta[C..].try_into().unwrap(), key, h)?,
         ]) })?;
+        let current = std::array::from_fn(|i| {
+            let stage = i / C;
+            let row = i % C;
+            contour[stage].dc[row] + B[stage][0] * contour[0].dq[row] + B[stage][1] * contour[1].dq[row]
+        });
+        let audio = match trial_audio {
+            Some(audio) => {
+                #[cfg(profile_reduced)]
+                { profile.reused_audio += 1; }
+                audio
+            }
+            None => self.evaluate_audio(running, map, history, h, &delta, bus, seed, profile)?,
+        };
+        Ok(Evaluation { contour, current, audio })
+    }
+
+    fn evaluate_audio(
+        &self, running: Running, map: &audio::Map, history: &audio::History, h: f64,
+        delta: &[f64; 2 * C], bus: [f64; 2], seed: &audio::Junctions, profile: &mut StepProfile,
+    ) -> Result<AudioEvaluation, StepError> {
+        let state = running.state;
         let shared = std::array::from_fn(|i| {
             if i >= 4 {
                 bus[i - 4]
@@ -390,16 +418,11 @@ impl Engine {
             (if i == j { panel[i].bus_dbus } else { 0. })
                 + panel[i].bus_dphase * A[i][j] * h * rate[j].1
         }));
-        let current = std::array::from_fn(|i| {
-            let stage = i / C;
-            let row = i % C;
-            contour[stage].dc[row] + B[stage][0] * contour[0].dq[row] + B[stage][1] * contour[1].dq[row]
-        });
         let mut response = profile.measure(Work::Audio, || map.response(history, &shared, seed))?;
         for i in 0..2 {
             response.current[i + 4] += panel[i].currents_a[2];
         }
-        Ok(Evaluation { contour, response, shared, current, panel_j, phase: phases[1] })
+        Ok(AudioEvaluation { response, shared, panel_j, phase: phases[1] })
     }
 
     fn step(
@@ -444,18 +467,21 @@ impl Engine {
             delta[22] = seed;
             delta[22 + C] = seed;
         }
-        let mut seed = std::array::from_fn(|i| old.junctions[i % audio::STAGE_LAWS]);
+        let seed = std::array::from_fn(|i| old.junctions[i % audio::STAGE_LAWS]);
+        let mut trial_audio = None;
         let mut cached_jacobian = prior.filter(|prior| prior.width == width)
             .map(|prior| prior.audio_jacobian);
         for iterations in 1..=80 {
-            let e = self.evaluate::<true>(old, map, &history, key, h, delta, bus, &seed, profile)?;
+            let e = self.evaluate::<true>(
+                old, map, &history, key, h, delta, bus, &seed, trial_audio.take(), profile,
+            )?;
             let norm = e.norm();
             let mut estimate = cached_jacobian.filter(|_| norm > 1e-12);
             loop {
                 let reused = estimate.is_some();
                 let jacobian = match estimate.take() {
                     Some(jacobian) => jacobian,
-                    None => profile.measure(Work::AudioTangent, || map.jacobian(&e.response))?,
+                    None => profile.measure(Work::AudioTangent, || map.jacobian(&e.audio.response))?,
                 };
                 let (dv, db) = match profile.measure(Work::Direction, || direction(&e, jacobian)) {
                     Ok(change) => change,
@@ -467,7 +493,7 @@ impl Engine {
                 };
                 let correction = maximum(&dv).max(maximum(&db));
                 if correction <= 2e-9 && norm <= 1e-12 {
-                    let end = map.endpoint(&history, &e.shared, &e.response);
+                    let end = map.endpoint(&history, &e.audio.shared, &e.audio.response);
                     let mut state = old.state;
                     state.high[..C].copy_from_slice(&e.contour[1].now.high);
                     state.low[..C].copy_from_slice(&e.contour[1].now.low);
@@ -483,8 +509,8 @@ impl Engine {
                         return Err(StepError::ExponentialDomain);
                     }
                     running.state = state;
-                    running.phase = e.phase;
-                    running.junctions.copy_from_slice(&e.response.junctions[audio::STAGE_LAWS..]);
+                    running.phase = e.audio.phase;
+                    running.junctions.copy_from_slice(&e.audio.response.junctions[audio::STAGE_LAWS..]);
                     running.continuation = Some(Continuation {
                         contour: std::array::from_fn(|k| 2.5 * delta[C + k] - 4.5 * delta[k]),
                         bus: 2.5 * (bus[1] - offset[62]) - 4.5 * (bus[0] - offset[62]),
@@ -515,12 +541,14 @@ impl Engine {
                     let trial = std::array::from_fn(|i| delta[i] + scale * dv[i]);
                     let trial_bus = std::array::from_fn(|i| bus[i] + scale * db[i]);
                     if let Ok(candidate) = self.evaluate::<false>(
-                        old, map, &history, key, h, trial, trial_bus, &e.response.junctions, profile,
+                        old, map, &history, key, h, trial, trial_bus, &e.audio.response.junctions,
+                        None, profile,
                     ) {
                         if candidate.norm() < norm.max(1e-12) {
                             delta = trial;
                             bus = trial_bus;
-                            seed = candidate.response.junctions;
+                            // The accepted junctions already pass the audio residual at this trial.
+                            trial_audio = Some(candidate.audio);
                             accepted = true;
                             break;
                         }

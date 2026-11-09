@@ -252,3 +252,18 @@ filas débiles. Conservar la selección de
 columnas, el pivoteo y el residuo de las
 108 leyes. Comparar el banco por bits y
 medir el coste con el mismo calendario.
+
+## Audio del ensayo aceptado por Newton
+
+Conservar la respuesta de audio y del panel
+del ensayo que ya pasó el residuo de las
+108 leyes y redujo el residuo acoplado.
+Consumirla en la siguiente iteración para
+el mismo estado inicial, ancho, historial
+y tensiones de etapa. Volver a armar el
+contorno completo y aplicar los mismos
+controles de dirección y convergencia.
+La respuesta dura una iteración de una
+sola resolución. Comparar las trazas por
+bits, los contadores del reloj y las
+evaluaciones de audio evitadas.

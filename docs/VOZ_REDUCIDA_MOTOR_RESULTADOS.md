@@ -400,3 +400,45 @@ a 972,0 ms. En las dos reservas, las
 trazas y el reloj coincidieron por bits
 con el banco anterior en 128 y 64 frames.
 [Perfil del prefijo activo](../evidence/rf_d_reduced_engine29.json)
+
+## Reutilización de la respuesta de audio
+
+El ensayo aceptado por Newton entregó su
+respuesta de audio a la iteración siguiente.
+En los frames 74–82 de la reserva positiva
+se evitaron 736 de 1.899 evaluaciones de
+respuesta. Se conservaron las 617
+evaluaciones de tangente y las 1.146
+direcciones de la ventana. El tiempo
+de audio pasó de 106,2 a 102,0 ms y la
+ventana de 201,8 a 197,7 ms. Desde el
+inicio de este bloque, el tiempo total
+instrumentado bajó de 1.008,0 a 953,3 ms.
+
+Las dos reservas coincidieron por bits con
+el banco anterior en ambas particiones.
+La positiva conservó los 654 pasos
+publicados, las 1.967 resoluciones y el
+cruce 319096–319104. Frente al solver,
+los errores máximos de R59, R60 y J7
+fueron 3,52 fA, 0,663 pA y 82,4 nV.
+El máximo nodal fue 15,68 µV.
+[Perfil con reutilización](../evidence/rf_d_reduced_engine30.json)
+
+El banco sin instrumentación tardó 452,5 ms
+en la reserva negativa y 964,4 ms en la
+positiva a 128 frames. Coincidió por bits
+con el perfil y no hizo asignaciones.
+[Banco nativo](../evidence/rf_d_reduced_engine31.json)
+
+| Reserva | RackForge offline, pase 1 | RackForge offline, pase 2 |
+| --- | ---: | ---: |
+| Negativa | 507,8 ms | 452,4 ms |
+| Positiva | 976,9 ms | 961,3 ms |
+
+Los cuatro bloques de 128 frames devolvieron
+J7 idéntico al nativo convertido a f32.
+Los pases positivos tomaron entre 721 y
+733 veces el presupuesto de 1,333 ms. La
+campaña física queda pendiente.
+[Slot de RackForge](../evidence/rf_d_reduced_engine_rack08.json)
