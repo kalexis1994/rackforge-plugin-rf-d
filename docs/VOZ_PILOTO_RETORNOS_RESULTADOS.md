@@ -1069,3 +1069,21 @@ Queda trasladar la actualización al motor nativo,
 extenderla a la rama negativa y medir R59/R60, J7
 y la voz completa antes de probar en Desktop.
 [Arranque y proyección hasta el umbral](../evidence/rf_d_pilot_precursor10.json).
+
+### Avance nativo de los temporizadores
+
+Rust recorre los mismos 161 puntos de C4 con el
+espaciado de arranque y proyecta los segmentos de
+carga dentro de cada muestra. Conserva la memoria
+de C2 y C5 hasta el borde posterior al cruce.
+Los seis resultados de voltaje en ese borde fueron
+idénticos bit a bit a Python. Las corrientes y los
+ocho ticks volvieron a pasar contra el solver. El
+replay previo de C4 también conservó su salida.
+
+En 2.000 repeticiones por caso, el recorrido aislado
+desde la semilla hasta el cierre del evento tuvo
+medianas de 112,3–124,5 µs y un máximo de 198,9 µs.
+El banco no ejecuta la voz ni la salida de audio.
+Las anclas negativas no disparan el núcleo positivo.
+[Medición nativa](../evidence/rf_d_pilot_precursor11.json).

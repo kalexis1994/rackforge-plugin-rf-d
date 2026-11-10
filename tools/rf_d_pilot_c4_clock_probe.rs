@@ -77,7 +77,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         }),
         tail: std::array::from_fn(|_| std::array::from_fn(|_| next())),
     };
-    let guard = clock::Family(std::array::from_fn(|_| clock::Knot {
+    let guard = clock::Family::uniform(std::array::from_fn(|_| clock::Knot {
         nominal: std::array::from_fn(|_| next()),
         linear: std::array::from_fn(|_| std::array::from_fn(|_| next())),
         quadratic: std::array::from_fn(|_| std::array::from_fn(|_| next())),
