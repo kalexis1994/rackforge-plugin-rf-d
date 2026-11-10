@@ -1277,3 +1277,34 @@ limitadas por 2,38–2,84 nV de corrección nodal frente
 a 2 nV. Se conservan las métricas y los replays.
 [Positivos con comprobación incluida](../evidence/rf_d_pilot_audio_readout_pos04.json),
 [rechazos negativos](../evidence/rf_d_pilot_audio_readout_neg05.json).
+
+En el tercer pase, la iteración conjunta resuelve las
+celdas a 2 fA y 2 pV antes de calcular el Schur. La
+derivada del voltaje de salida respecto de cada carga
+se obtiene resolviendo el Jacobiano ya factorizado
+con 1/R59 o 1/R60 en la fila del puerto. Así se conserva
+la realimentación de Q3/Q2 y Q26/Q28 sin el sondeo de
+1 µV del primer pase. Las tolerancias de aceptación
+de la KCL y del contraste con Radau se mantuvieron.
+
+Pasaron los 12 casos. Los máximos de J7 fueron
+0,0192 % RMS en el positivo y 0,0126 % en el negativo.
+El error máximo fue de 2,60 pA en R59 y 53,2 pA en
+R60. La diferencia de carga llegó a 1,98 pV, frente a
+100 pV. En las reservas negativas se aplicaron hasta
+cuatro correcciones nodales por ventana. La salida de
+los temporizadores y del banco anidado se conservó
+bit a bit. Los ocho ticks quedaron en sus intervalos.
+
+| Ventanas a 96 kHz | Factor de mejora de la mediana | Pico anidado | Pico conjunto |
+| --- | ---: | ---: | ---: |
+| Positivas | 1,81–2,30 | 1,289 ms | 0,600 ms |
+| Negativas | 1,16–1,81 | 0,992 ms | 0,820 ms |
+
+La medición alterna 200 ventanas por caso y modo.
+Cada ventana cubre tres o cuatro pasos, con el mapa
+preparado, los contornos calculados y x4 impuesto.
+El tiempo del candidato incluye el cierre de KCL.
+Queda medir el recorrido continuo a 128 frames.
+[Positivos](../evidence/rf_d_pilot_audio_readout_pos05.json),
+[negativos](../evidence/rf_d_pilot_audio_readout_neg06.json).

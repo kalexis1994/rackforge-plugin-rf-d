@@ -60,12 +60,15 @@ fn load_tangent(
         slope[2 * i] = (shifted_volume[2] - input[i][0]) / LOAD_PROBE_V;
         slope[2 * i + 1] = (shifted_filter[2] - input[i][1]) / LOAD_PROBE_V;
     }
+    Ok((load_factor(map, slope)?, slope))
+}
+
+fn load_factor(map: &Audio, slope: [f64; 4]) -> Result<Lu<4>, String> {
     let response = map.reduced.as_ref().expect("audio map").load_response();
     let jacobian = std::array::from_fn(|r| {
         std::array::from_fn(|c| f64::from(r == c) - response[r][c] * slope[c])
     });
-    let factor = Lu::factor(jacobian).map_err(|error| format!("load tangent: {error:?}"))?;
-    Ok((factor, slope))
+    Lu::factor(jacobian).map_err(|error| format!("load tangent: {error:?}"))
 }
 
 fn advance(
@@ -137,7 +140,23 @@ fn advance_joint(
     const BUDGET: usize = 16;
     for iteration in 1..=BUDGET {
         let loads = x.map(|row| LOAD.map(|k| voltage(anchor, k) + row[k]));
-        solve_cells(&mut cells, stages, loads, collector)?;
+        let mut slope = [0.; 4];
+        for i in 0..2 {
+            let (next, [volume, filter]) = contour_ports::joint_cells(
+                cells[i],
+                stages[i],
+                loads[i],
+                collector,
+                tangent.is_none(),
+            )
+            .map_err(|error| format!("joint return cells: {error:?}"))?;
+            cells[i] = next;
+            slope[2 * i] = volume;
+            slope[2 * i + 1] = filter;
+        }
+        if tangent.is_none() {
+            tangent = Some((load_factor(map, slope)?, slope));
+        }
         let input = cells.map(|s| [s.volume[2], s.filter[2]]);
         let current = |r: usize| x[r / SIZE][super::local(r % SIZE)];
         let mut response = [0.; PAIR];
@@ -191,9 +210,6 @@ fn advance_joint(
             let row = i / 2 * SIZE + LOAD[i % 2];
             response[row] - current(row)
         });
-        if tangent.is_none() {
-            tangent = Some(load_tangent(map, cells, stages, loads, input, collector)?);
-        }
         let (factor, slope) = tangent.as_ref().unwrap();
         let load_change = factor
             .solve(load_error)

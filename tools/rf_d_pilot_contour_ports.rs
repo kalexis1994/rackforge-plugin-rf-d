@@ -85,19 +85,28 @@ impl<const N: usize> Stamp<N> {
     }
 }
 
-fn solve<const N: usize>(
+fn solve_factored<const N: usize>(
     mut x: [f64; N],
     stamp: impl Fn([f64; N]) -> Result<Stamp<N>, StepError>,
-) -> Result<[f64; N], StepError> {
+    [current, voltage]: [f64; 2],
+) -> Result<([f64; N], Lu<N>), StepError> {
     for _ in 0..12 {
         let Stamp { f, j } = stamp(x)?;
-        let d = Lu::factor(j)?.solve(f)?;
-        if maximum(&f) <= 2e-13 && maximum(&d) <= 2e-9 {
-            return Ok(x);
+        let factor = Lu::factor(j)?;
+        let d = factor.solve(f)?;
+        if maximum(&f) <= current && maximum(&d) <= voltage {
+            return Ok((x, factor));
         }
         x = std::array::from_fn(|i| x[i] - d[i]);
     }
     Err(StepError::IterationBudget)
+}
+
+fn solve<const N: usize>(
+    x: [f64; N],
+    stamp: impl Fn([f64; N]) -> Result<Stamp<N>, StepError>,
+) -> Result<[f64; N], StepError> {
+    solve_factored(x, stamp, [2e-13, 2e-9]).map(|(x, _)| x)
 }
 
 #[cfg(not(pilot_closed_cv))]
@@ -125,18 +134,22 @@ pub fn volume(
     [collector_seed, cv_return, vca_base]: [f64; 3],
 ) -> Result<[f64; 3], StepError> {
     let [base, emitter, loudness] = initial;
-    let [base, emitter, loudness, _collector] =
-        solve([base, emitter, loudness, collector_seed], |x| {
-            let mut s = Stamp::default();
-            s.transistor(&x, [0, 3, 1], 1.)?;
-            s.transistor(&x, [1, 3, 2], 1.)?;
-            s.load(0, x[0], c2, 10_000.);
-            s.load(2, x[2], cv_return, 6800.);
-            s.load(2, x[2], vca_base, R59);
-            s.load(3, x[3], 9.3, 560.); // R15 supplies both collectors at x2.
-            Ok(s)
-        })?;
+    let [base, emitter, loudness, _] = solve([base, emitter, loudness, collector_seed], |x| {
+        volume_stamp(x, c2, cv_return, vca_base)
+    })?;
     Ok([base, emitter, loudness])
+}
+
+#[cfg(pilot_closed_cv)]
+fn volume_stamp(x: [f64; 4], c2: f64, cv: f64, vca_base: f64) -> Result<Stamp<4>, StepError> {
+    let mut s = Stamp::default();
+    s.transistor(&x, [0, 3, 1], 1.)?;
+    s.transistor(&x, [1, 3, 2], 1.)?;
+    s.load(0, x[0], c2, 10_000.);
+    s.load(2, x[2], cv, 6800.);
+    s.load(2, x[2], vca_base, R59);
+    s.load(3, x[3], 9.3, 560.); // R15 supplies both collectors at x2.
+    Ok(s)
 }
 
 #[cfg(pilot_closed_cv)]
@@ -154,16 +167,59 @@ pub fn cv_return_residual(x4: f64, x3: f64, x27: f64) -> Result<f64, StepError> 
 }
 
 pub fn filter(initial: [f64; 3], [sum, tail]: [f64; 2]) -> Result<[f64; 3], StepError> {
-    solve(initial, |x| {
-        let mut s = Stamp::default();
-        let v = [x[0], x[1], x[2], sum, 0.];
-        s.transistor(&v, [3, 1, 0], -1.)?; // Q26
-        s.transistor(&v, [0, 2, 4], 1.)?; // Q28
-        s.load(0, x[0], 1., 68_900.);
-        s.load(1, x[1], -10., 330.);
-        s.load(2, x[2], tail, R60);
-        Ok(s)
-    })
+    solve(initial, |x| filter_stamp(x, sum, tail))
+}
+
+fn filter_stamp(x: [f64; 3], sum: f64, tail: f64) -> Result<Stamp<3>, StepError> {
+    let mut s = Stamp::default();
+    let v = [x[0], x[1], x[2], sum, 0.];
+    s.transistor(&v, [3, 1, 0], -1.)?; // Q26
+    s.transistor(&v, [0, 2, 4], 1.)?; // Q28
+    s.load(0, x[0], 1., 68_900.);
+    s.load(1, x[1], -10., 330.);
+    s.load(2, x[2], tail, R60);
+    Ok(s)
+}
+
+#[cfg(pilot_audio_readout)]
+const JOINT_TOLERANCES: [f64; 2] = [2e-15, 2e-12];
+
+#[cfg(pilot_audio_readout)]
+pub fn joint_cells(
+    cells: Returns,
+    [c2, sum, cv]: [f64; 3],
+    [base, tail]: [f64; 2],
+    collector: f64,
+    tangent: bool,
+) -> Result<(Returns, [f64; 2]), StepError> {
+    let [q3, q2, x3] = cells.volume;
+    let ([q3, q2, x3, _], volume) = solve_factored(
+        [q3, q2, x3, collector],
+        |x| volume_stamp(x, c2, cv, base),
+        JOINT_TOLERANCES,
+    )?;
+    let (filter, filter_factor) = solve_factored(
+        cells.filter,
+        |x| filter_stamp(x, sum, tail),
+        JOINT_TOLERANCES,
+    )?;
+    let slope = if tangent {
+        // Both KCL rows use (source - load) / R. Differentiating with
+        // respect to the imposed load gives J dx/dload = e_2 / R.
+        [
+            volume.solve([0., 0., 1. / R59, 0.])?[2],
+            filter_factor.solve([0., 0., 1. / R60])?[2],
+        ]
+    } else {
+        [0.; 2]
+    };
+    Ok((
+        Returns {
+            volume: [q3, q2, x3],
+            filter,
+        },
+        slope,
+    ))
 }
 
 pub fn q22_base(mut base: f64, c5: f64, [collector, emitter]: [f64; 2]) -> Result<f64, StepError> {
