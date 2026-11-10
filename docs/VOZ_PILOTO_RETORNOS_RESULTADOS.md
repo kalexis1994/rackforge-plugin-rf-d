@@ -1709,3 +1709,36 @@ El receptor solo tuvo medianas de 1,054–1,119 ms
 en las ventanas de cinco frames y un máximo de
 1,722 ms. La prueba no mide el plazo de RackForge.
 [Contraste de J7 y las corrientes](../evidence/rf_d_pilot_bistable_handoff07.json).
+
+### Retorno de la base del VCA por R59
+
+El receptor expone x3 y la base del VCA en las
+dos etapas de Radau. El banco repite la ventana
+desde la misma semilla y devuelve esos voltajes
+de base al bloque Q25/Q15. En positivo, el
+retorno se aplica desde el borde del cruce.
+El reloj de C4 sigue generando el tramo previo
+y la primera etapa del intervalo del cruce.
+En negativo, el retorno se aplica a las dos
+etapas de cada paso. La corriente de cada
+bloque se compara con el mismo signo físico,
+de x3 a la base del VCA a través de 68 kΩ.
+
+Pasaron las cinco reservas con una o dos
+evaluaciones de la ventana. El mayor desacuerdo
+de base fue 88,1 pV y el de corriente por R59
+entre los dos bloques fue 1,30 fA. Contra el
+solver, los errores máximos fueron 0,320 µV
+en J7, 2,36 pA en R59 y 1,65 fA en R60.
+El banco unilateral conservó sus salidas
+bit a bit. Los tres cruces conservaron sus
+intervalos de ocho ticks.
+
+El contraste ejecuta las dos partes en procesos
+de laboratorio y deja x34 impuesto en ambas
+etapas. C2 se genera hasta el fin del intervalo
+proyectado en positivo. La continuación de
+C2 y la rama negativa usan las fronteras
+de referencia. El coste del receptor y el
+cierre por etapa en el motor quedan pendientes.
+[Retorno recíproco de R59](../evidence/rf_d_pilot_bistable_handoff08.json).

@@ -14,7 +14,8 @@ const H: f64 = 1. / 96_000.;
 const LOAD_TOLERANCE_V: f64 = 1e-10;
 const LOAD_PROBE_V: f64 = 1e-6;
 type Stage = [f64; 3]; // C2, x34 and either x4 (imposed) or x27 (closed).
-type Output = [f64; 11]; // J7, R59, R60, x3, x37, VCA base, TAIL, and two stages of x4/CR6.
+                       // Endpoint audio and returns, x4/CR6 at both stages, then first-stage x3 and VCA base.
+type Output = [f64; 13];
 
 #[derive(Clone, Copy)]
 struct History {
@@ -108,6 +109,8 @@ fn advance(
                 0.,
                 0.,
                 0.,
+                cells[0].volume[2],
+                next[0][0],
             ];
             return Ok((
                 History {
@@ -225,6 +228,8 @@ fn advance_joint(
                     cv2,
                     diode1,
                     diode2,
+                    input[0][0],
+                    loads[0][0],
                 ];
                 return Ok((
                     History {
@@ -295,6 +300,19 @@ fn render(
 }
 
 pub fn run(bench: bool, joint: bool, closed_cv: bool) -> Result<(), Box<dyn std::error::Error>> {
+    run_mode(bench, joint, closed_cv, false)
+}
+
+pub fn run_stage_loads() -> Result<(), Box<dyn std::error::Error>> {
+    run_mode(false, true, true, true)
+}
+
+fn run_mode(
+    bench: bool,
+    joint: bool,
+    closed_cv: bool,
+    stage_loads: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
     let mut bytes = Vec::new();
     std::io::stdin().read_to_end(&mut bytes)?;
     assert_eq!(bytes.len() % 8, 0);
@@ -399,12 +417,19 @@ pub fn run(bench: bool, joint: bool, closed_cv: bool) -> Result<(), Box<dyn std:
             |row| samples.push(row),
         )?;
         let mut out = std::io::BufWriter::new(std::io::stdout().lock());
+        let columns = if stage_loads {
+            13
+        } else if closed_cv {
+            11
+        } else {
+            7
+        };
         for value in [outer as f64, mismatch, map.checked_proposals.get() as f64]
             .into_iter()
             .chain(
                 samples
                     .into_iter()
-                    .flat_map(|row| row.into_iter().take(if closed_cv { 11 } else { 7 })),
+                    .flat_map(|row| row.into_iter().take(columns)),
             )
         {
             out.write_all(&value.to_le_bytes())?;

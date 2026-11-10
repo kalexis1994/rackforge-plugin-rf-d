@@ -31,6 +31,7 @@ def prepare(probe, report):
         Some("audio-readout-joint") => closed_returns::run_audio_readout(false, true, false),
         Some("audio-readout-compare") => closed_returns::run_audio_readout(true, true, false),
         Some("audio-readout-cv") => closed_returns::run_audio_readout(false, true, true),
+        Some("audio-readout-cv-loads") => closed_returns::run_audio_stage_loads(),
         Some("audio-readout-cv-bench") => closed_returns::run_audio_readout(true, true, true),''')
     code += f'\n#[path = "{(c.ROOT / PARENT).as_posix()}"] mod closed_returns;\n'
     code += f'#[path = "{devices.as_posix()}"] mod radau_devices;\n'
@@ -51,13 +52,20 @@ class Case:
         return subprocess.run([str(self.target), mode], cwd=c.ROOT, env=self.env,
                               input=payload, capture_output=True, timeout=60)
 
-    def compare(self, first, generated=None, stage_sum=None, stage_cathode=None, stage_c2=None, *, exact_stages=None):
+    def anchor(self, first):
         if first:
             seed = np.r_[self.stages[first * FINE_ROWS], np.zeros(c.N)]
         else:
             seed = self.state.ravel()
         prefix = self.stages[1:first * FINE_ROWS + 1, BUS]
-        anchor = np.r_[seed, self.phase, len(prefix) // 2, prefix]
+        return np.r_[seed, self.phase, len(prefix) // 2, prefix]
+
+    def stage_payload(self, first, stages):
+        return np.r_[self.anchor(first), stages.ravel()].astype("<f8").tobytes()
+
+    def compare(self, first, generated=None, stage_sum=None, stage_cathode=None, stage_c2=None, *,
+                exact_stages=None, time_exact=True):
+        anchor = self.anchor(first)
         count = len(exact_stages) if exact_stages is not None else len(generated) - 1
         slot = np.arange(first, first + count)
         indices = slot[:, None] * FINE_ROWS + np.array([FINE_ROWS // 3, FINE_ROWS])
@@ -133,7 +141,7 @@ class Case:
         if exact_stages is not None:
             assert self.closed_cv and exact_stages.shape == (count, 2, 3) and np.isfinite(exact_stages).all()
             control = measure(self.stages[indices[:, :, None], DRIVES], joint=True, cathode=self.stages[indices, 27])
-            trial = measure(exact_stages[:, :, :2], timing=True, joint=True, cathode=exact_stages[:, :, 2])
+            trial = measure(exact_stages[:, :, :2], timing=time_exact, joint=True, cathode=exact_stages[:, :, 2])
             return dict(passed=control["passed"] and trial["passed"], first_slot=first,
                         reference_peak_j7_v=float(abs(wanted[:, 0]).max()),
                         closed_cv_oracle=control, closed_cv_generated=trial)
