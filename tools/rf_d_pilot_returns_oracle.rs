@@ -31,7 +31,7 @@ const TAIL: usize = 5;
 const COLLECTOR: usize = 65;
 const BUS: usize = 66;
 
-fn stage(
+pub(crate) fn stage(
     old: State,
     delta: State,
     u: [f64; 3],

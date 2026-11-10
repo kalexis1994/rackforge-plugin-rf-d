@@ -219,3 +219,50 @@ Contar asignaciones y conservar los picos frente a
 1,333333… ms. Estas mediciones observan el coste de
 la interfaz. El cierre dinámico con los contornos debe
 validar la frecuencia de actualización de la tangente.
+
+
+## Cierre de R59 con el seguidor de volumen
+
+El candidato une Q3/Q2, R15/R16/R24/R27 y CR6 al
+receptor FOH por R59 de 68 kΩ. La fuente ideal en
+el extremo de R59 se sustituye por la salida calculada
+del seguidor. Se mantienen como entradas explícitas
+la señal, C2, la base de reset y el colector de R60.
+La base de reset se fija a 0 V como condición de este
+banco. La alimentación del seguidor es 9,3 V según
+el stamp nominal de board 2. El valor inicial de C2
+se obtiene resolviendo el mismo circuito para reproducir
+el punto de operación previo del receptor. Ese cálculo
+prepara una condición del banco con las tarjetas nominales.
+
+Cada trial del receptor parte de la misma historia
+aceptada. Se cierra F = Vsalida_seguidor − Vfuente59
+con dirección dV = F / (1 − dVsalida/dVbase · dVbase/dVfuente).
+La tangente del audio se calcula en el primer paso del
+bloque de 128 frames y se renueva si el residuo deja
+de reducirse al menos a la mitad. El control calcula
+una tangente nueva en cada paso. En ambos caminos se
+acepta únicamente un desacuerdo de fuente de 1e−10 V
+y de corriente R59 de 2 pA. El estado de audio y el
+seguidor se publican juntos después de ese cierre.
+El límite es ocho trials por paso.
+
+La referencia une las 68 incógnitas de audio y cinco
+del seguidor en las dos etapas de Radau. Reutiliza el
+stamp nodal original y la linealización independiente
+de loudness_follower. Los dos terminales de R59
+aportan −1/68 kΩ en las columnas cruzadas. Comparar
+384/768 kHz, J7 con los límites previos, ambos retornos
+a 2 nA y las siete tensiones de carga/seguidor a 20 µV.
+La entrada C2 recorre la misma excursión que usaba la
+fuente anterior de volumen. Registrar la excursión
+real obtenida en la salida del seguidor.
+
+Ejecutar 128 frames de calentamiento y contrastar
+los 256 frames completos. Exigir replay por bytes,
+partición 64/128 idéntica y acuerdo entre las tangentes
+renovadas por bloque y por paso. Medir 64 repeticiones
+del bloque posterior al calentamiento, incluyendo el
+seguidor, todos los trials y las renovaciones de tangente,
+con cero asignaciones y margen de 1,333333… ms. Quedan
+pendientes las dinámicas propias de C2, C5 y el biestable.

@@ -2261,3 +2261,47 @@ cero asignaciones. Las máximas nativas fueron 0,745 ms
 con controles neutros y 0,567 ms con retornos activos
 a 128 frames. Este control usa el perfil de 192 kHz.
 [Regresión tras el cambio de interfaz](../evidence/rf_d_pilot_returns15.json).
+
+
+## R59 cerrado entre el seguidor y el receptor FOH
+
+El candidato positivo resuelve la salida de Q3/Q2 con
+la base del VCA devuelta por el receptor. Reúne R15,
+R16, R24, R27 y CR6 en el mismo cierre. La historia
+de las 17 memorias de audio permanece fija durante
+los trials y se confirma junto con el seguidor.
+C2, la base de reset a 0 V, la señal y el colector
+de R60 son entradas explícitas de este banco.
+
+La referencia une 73 incógnitas por etapa y conserva
+las dos incidencias cruzadas de R59. Pasaron el
+refinamiento 384/768 kHz y los 256 frames, incluidos
+128 de calentamiento. Con tangente renovada por
+bloque, el error RMS de J7 fue 0,0373 % y su máximo
+64,2 nV. Los errores máximos fueron 0,0944 fA en
+R59 y 3,29 pA en R60. Las siete tensiones de carga
+y seguidor quedaron dentro de 20 µV.
+
+Ambas políticas necesitaron como máximo dos trials
+por paso. La política por bloque calculó dos tangentes
+en los 256 frames y la política por paso calculó 512.
+El cierre tuvo desacuerdo máximo de 70,8 pV y de
+1,04 fA entre las corrientes de R59. Pasaron el
+contraste entre políticas, los replays por bytes
+y la partición 64/128 idéntica.
+
+En 64 repeticiones del bloque posterior al calentamiento,
+la política por bloque tuvo mediana 2,622 ms y máximo
+2,843 ms. La política por paso tuvo mediana 4,427 ms
+y máximo 5,324 ms. Hubo cero asignaciones. El cierre
+con tangente por bloque sigue por encima de 1,333 ms.
+Quedan pendientes las dinámicas propias de C2/C5,
+el biestable y su integración en RackForge.
+[Cierre positivo y coste](../evidence/rf_d_pilot_fast_r5902.json).
+
+El primer intento se detuvo en compilación por una
+sustitución que alteró rangos de Rust y por una conversión
+de error del adaptador. Las fuentes y el rechazo quedaron
+conservados. La repetición anterior corrigió ambos errores
+antes del contraste eléctrico.
+[Rechazo de compilación](../evidence/rf_d_pilot_fast_r5901.json).
