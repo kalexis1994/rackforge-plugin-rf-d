@@ -64,7 +64,18 @@ fn main() -> Result<(), Box<dyn Error>> {
     let key = next();
     let steps = next() as usize;
     let mode = std::env::args().nth(1);
-    if mode.as_deref() == Some("stage-sum") {
+    if mode.as_deref() == Some("cv-stages") {
+        let mut clock = profile.start(initial, key).ok_or("edge outside domain")?;
+        let mut out = std::io::BufWriter::new(std::io::stdout().lock());
+        for _ in 0..steps {
+            for fraction in [1. / 3., 1.] {
+                let voltage = clock.cathode(fraction).ok_or("CV stage outside domain")?;
+                out.write_all(&voltage.to_le_bytes())?;
+            }
+            clock.advance().ok_or("interval outside domain")?;
+        }
+        out.flush()?;
+    } else if mode.as_deref() == Some("stage-sum") {
         let mut clock = profile.start(initial, key).ok_or("edge outside domain")?;
         let mut out = std::io::BufWriter::new(std::io::stdout().lock());
         for _ in 0..steps {

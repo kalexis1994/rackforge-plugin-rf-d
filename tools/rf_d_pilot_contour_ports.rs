@@ -9,6 +9,9 @@ pub const VOLUME_NODES: [usize; 3] = [0, 1, 3];
 pub const FILTER_NODES: [usize; 3] = [35, 36, 37];
 pub const VOLUME_PORTS: [usize; 3] = [2, 4, 54];
 pub const FILTER_PORTS: [usize; 2] = [34, 55];
+const R24: f64 = 6800.;
+#[cfg(pilot_closed_cv)]
+const R27: f64 = 16_900.;
 const R59: f64 = 68_000.;
 const R60: f64 = 680.;
 
@@ -121,7 +124,7 @@ pub fn volume(
         s.transistor(&v, [0, 3, 1], 1.)?; // Q3
         s.transistor(&v, [1, 3, 2], 1.)?; // Q2
         s.load(0, x[0], c2, 10_000.);
-        s.load(2, x[2], cv_return, 6800.);
+        s.load(2, x[2], cv_return, R24);
         s.load(2, x[2], vca_base, R59);
         Ok(s)
     })
@@ -146,7 +149,7 @@ fn volume_stamp(x: [f64; 4], c2: f64, cv: f64, vca_base: f64) -> Result<Stamp<4>
     s.transistor(&x, [0, 3, 1], 1.)?;
     s.transistor(&x, [1, 3, 2], 1.)?;
     s.load(0, x[0], c2, 10_000.);
-    s.load(2, x[2], cv, 6800.);
+    s.load(2, x[2], cv, R24);
     s.load(2, x[2], vca_base, R59);
     s.load(3, x[3], 9.3, 560.); // R15 supplies both collectors at x2.
     Ok(s)
@@ -154,16 +157,21 @@ fn volume_stamp(x: [f64; 4], c2: f64, cv: f64, vca_base: f64) -> Result<Stamp<4>
 
 #[cfg(pilot_closed_cv)]
 pub fn cv_return_residual(x4: f64, x3: f64, x27: f64) -> Result<f64, StepError> {
+    let (residual, slope, _) = cv_law(x4, x3, x27)?;
+    Ok(residual / slope)
+}
+
+#[cfg(pilot_closed_cv)]
+fn cv_law(x4: f64, x3: f64, x27: f64) -> Result<(f64, f64, f64), StepError> {
     let vt = 1.5 * VT;
     let z = (x4 - x27) / vt;
     if !z.is_finite() || z > 45. {
         return Err(StepError::ExponentialDomain);
     }
-    // The two resistors and CR6 are the complete x4 KCL. Scale it
-    // by its local conductance to use a voltage tolerance at the interface.
-    let f = (x4 + 10.) / 16_900. + (x4 - x3) / 6800. + 1e-8 * z.exp_m1();
-    let g = 1. / 16_900. + 1. / 6800. + 1e-8 * z.exp() / vt;
-    Ok(f / g)
+    let diode = 1e-8 * z.exp_m1();
+    let residual = (x4 + 10.) / R27 + (x4 - x3) / R24 + diode;
+    let slope = 1. / R27 + 1. / R24 + 1e-8 * z.exp() / vt;
+    Ok((residual, slope, diode))
 }
 
 pub fn filter(initial: [f64; 3], [sum, tail]: [f64; 2]) -> Result<[f64; 3], StepError> {
@@ -185,40 +193,86 @@ fn filter_stamp(x: [f64; 3], sum: f64, tail: f64) -> Result<Stamp<3>, StepError>
 const JOINT_TOLERANCES: [f64; 2] = [2e-15, 2e-12];
 
 #[cfg(pilot_audio_readout)]
+#[derive(Clone, Copy)]
+pub enum Cv {
+    Fixed(f64),
+    Closed { seed: f64, cathode: f64 },
+}
+
+#[cfg(pilot_audio_readout)]
+fn closed_volume_stamp(
+    x: [f64; 5],
+    c2: f64,
+    cathode: f64,
+    base: f64,
+) -> Result<Stamp<5>, StepError> {
+    let four = volume_stamp([x[0], x[1], x[2], x[3]], c2, x[4], base)?;
+    let (cv, slope, _) = cv_law(x[4], x[2], cathode)?;
+    let mut stamp = Stamp::<5>::default();
+    stamp.f[..4].copy_from_slice(&four.f);
+    for (dest, source) in stamp.j[..4].iter_mut().zip(four.j) {
+        dest[..4].copy_from_slice(&source);
+    }
+    stamp.f[4] = cv;
+    stamp.j[2][4] = -1. / R24;
+    stamp.j[4][2] = -1. / R24;
+    stamp.j[4][4] = slope;
+    Ok(stamp)
+}
+
+#[cfg(pilot_audio_readout)]
 pub fn joint_cells(
     cells: Returns,
-    [c2, sum, cv]: [f64; 3],
+    [c2, sum]: [f64; 2],
+    cv: Cv,
     [base, tail]: [f64; 2],
     collector: f64,
     tangent: bool,
-) -> Result<(Returns, [f64; 2]), StepError> {
+) -> Result<(Returns, [f64; 2], [f64; 2]), StepError> {
     let [q3, q2, x3] = cells.volume;
-    let ([q3, q2, x3, _], volume) = solve_factored(
-        [q3, q2, x3, collector],
-        |x| volume_stamp(x, c2, cv, base),
-        JOINT_TOLERANCES,
-    )?;
-    let (filter, filter_factor) = solve_factored(
+    // In each branch J dx/dload = e_2 / R.
+    let (volume, volume_slope, cv_readout) = match cv {
+        Cv::Fixed(x4) => {
+            let ([q3, q2, x3, _], factor) = solve_factored(
+                [q3, q2, x3, collector],
+                |x| volume_stamp(x, c2, x4, base),
+                JOINT_TOLERANCES,
+            )?;
+            let slope = if tangent {
+                factor.solve([0., 0., 1. / R59, 0.])?[2]
+            } else {
+                0.
+            };
+            ([q3, q2, x3], slope, [x4, 0.])
+        }
+        Cv::Closed { seed, cathode } => {
+            let ([q3, q2, x3, _, x4], factor) = solve_factored(
+                [q3, q2, x3, collector, seed],
+                |x| closed_volume_stamp(x, c2, cathode, base),
+                JOINT_TOLERANCES,
+            )?;
+            let slope = if tangent {
+                factor.solve([0., 0., 1. / R59, 0., 0.])?[2]
+            } else {
+                0.
+            };
+            ([q3, q2, x3], slope, [x4, cv_law(x4, x3, cathode)?.2])
+        }
+    };
+    let (filter, factor) = solve_factored(
         cells.filter,
         |x| filter_stamp(x, sum, tail),
         JOINT_TOLERANCES,
     )?;
-    let slope = if tangent {
-        // Both KCL rows use (source - load) / R. Differentiating with
-        // respect to the imposed load gives J dx/dload = e_2 / R.
-        [
-            volume.solve([0., 0., 1. / R59, 0.])?[2],
-            filter_factor.solve([0., 0., 1. / R60])?[2],
-        ]
+    let filter_slope = if tangent {
+        factor.solve([0., 0., 1. / R60])?[2]
     } else {
-        [0.; 2]
+        0.
     };
     Ok((
-        Returns {
-            volume: [q3, q2, x3],
-            filter,
-        },
-        slope,
+        Returns { volume, filter },
+        [volume_slope, filter_slope],
+        cv_readout,
     ))
 }
 

@@ -9,6 +9,8 @@ use crate::{
 pub const STATE: usize = 15;
 pub const POINTS: usize = 161;
 pub const POST_POINTS: usize = 33;
+const STAGE_S: f64 = PERIOD_S / 3.;
+const CATHODE: usize = 4;
 const RATES: [f64; 2] = [
     (1. / RESISTANCE_OHM[0][1] + 1. / RESISTANCE_OHM[0][2]) / CAPACITANCE_F,
     (1. / RESISTANCE_OHM[1][1] + 1. / RESISTANCE_OHM[1][2]) / CAPACITANCE_F,
@@ -23,7 +25,7 @@ pub struct PostKnot {
     pub nominal: Ports,
     pub linear: [Ports; 2],
     pub quadratic: [Ports; 2],
-    pub sum: [f64; 5],
+    pub readout: [[f64; 5]; 2], // x34 and x27
 }
 
 pub struct PostProfile(pub [PostKnot; POST_POINTS]);
@@ -37,6 +39,7 @@ pub struct Carry<'a> {
     slope: Ports,
     full: [f64; 2],
     finished: bool,
+    cathode: [f64; 2],
 }
 
 pub enum Sample {
@@ -133,7 +136,7 @@ impl PostKnot {
 }
 
 impl PostProfile {
-    fn filter_sum(&self, duration: f64, [a, b]: [f64; 2]) -> Option<f64> {
+    fn readout(&self, port: usize, duration: f64, [a, b]: [f64; 2]) -> Option<f64> {
         let i = self.0.partition_point(|row| row.time <= duration);
         if i == 0 || i == POST_POINTS {
             return None;
@@ -141,7 +144,7 @@ impl PostProfile {
         let left = self.0[i - 1];
         let right = self.0[i];
         let at = |row: PostKnot| {
-            let [center, da, db, aa, bb] = row.sum;
+            let [center, da, db, aa, bb] = row.readout[port];
             center + (a * da + b * db) + (a * a * aa + b * b * bb)
         };
         let u = (duration - left.time) / (right.time - left.time);
@@ -192,7 +195,12 @@ impl<'a> Carry<'a> {
             slope: [[0.; 2]; 2],
             full: weights(PERIOD_S).0,
             finished: false,
+            cathode: [initial[CATHODE]; 2],
         })
+    }
+
+    pub fn cathode(&self) -> [f64; 2] {
+        self.cathode
     }
 
     pub fn filter_sum(&self) -> f64 {
@@ -226,7 +234,12 @@ impl<'a> Carry<'a> {
         let mut passive = [[0.; 2]; 2];
         let full = self.full;
         let mut slope = self.slope;
+        let mut cathode = None;
         let step = self.clock.advance_projected(|start, end, from, to| {
+            if start <= STAGE_S && STAGE_S <= end && end > start {
+                let u = (STAGE_S - start) / (end - start);
+                cathode = Some(from[CATHODE] + u * (to[CATHODE] - from[CATHODE]));
+            }
             let from = ports(from);
             let to = ports(to);
             project(&mut passive, from, to, start, end, full);
@@ -239,6 +252,7 @@ impl<'a> Carry<'a> {
         self.slope = slope;
         match step {
             Step::Boundary(state) => {
+                self.cathode = [cathode?, state[CATHODE]];
                 self.timers =
                     continuous_step(self.timers, self.attack, latch(&state), PERIOD_S, passive)?;
                 self.previous_attack = Some(self.attack);
@@ -283,7 +297,16 @@ impl<'a> Carry<'a> {
                 project(&mut passive, from, end, guard_s, cross, full);
                 let load = self.clock.load_weights();
                 post.project(&mut passive, cross, full, load);
-                let filter_sum = post.filter_sum(PERIOD_S - cross, load)?;
+                let filter_sum = post.readout(0, PERIOD_S - cross, load)?;
+                let first_cathode = match cathode {
+                    Some(value) => value,
+                    None if STAGE_S < cross => {
+                        let u = (STAGE_S - guard_s) / (cross - guard_s);
+                        guard[CATHODE] + u * (event.point.neighbors[1] - guard[CATHODE])
+                    }
+                    None => post.readout(1, STAGE_S - cross, load)?,
+                };
+                self.cathode = [first_cathode, post.readout(1, PERIOD_S - cross, load)?];
                 self.timers = CurrentStep::new(PERIOD_S).advance(self.timers, mean, passive);
                 self.finished = true;
                 Some(Sample::Event {

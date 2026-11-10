@@ -7,7 +7,8 @@ use crate::{
 };
 
 pub const POINTS: usize = 65;
-pub const NODES: usize = 10;
+pub const NODES: usize = 11;
+const CATHODE: usize = 10;
 const CAP_C7: f64 = 100e-9;
 const R55: f64 = 47_000.;
 const R60_TRIGGER: f64 = 100_000.;
@@ -143,6 +144,11 @@ impl Carry {
             self.nodes[left][k] + f * (self.nodes[right][k] - self.nodes[left][k])
         });
         Some((left, cap, nodes))
+    }
+
+    pub fn cathode(&self, fraction: f64) -> Option<f64> {
+        let (_, _, nodes) = self.sample((self.slot as f64 + fraction) * PERIOD_S)?;
+        Some(nodes[CATHODE])
     }
 
     pub fn stage_filter_sum(&self) -> Option<f64> {

@@ -18,6 +18,7 @@ SOURCES = ("tools/rf_d_pilot_audio_readout.py", MODEL, PARENT,
 FINE_ROWS = 1536
 DRIVES = [5, 34]
 LOADS = [54, 55]
+CR6_SCALE_V = 1.5 * (1.380649e-23 * 298.15 / 1.602176634e-19)
 
 
 def prepare(probe, report):
@@ -25,10 +26,12 @@ def prepare(probe, report):
     report["audio_devices"] = dict(sha256=c.sha(devices), unit_bias_underflow_columns=underflow)
     code = c.once(probe.read_text(encoding="utf8"), '        Some("ports") => ports(),', '''
         Some("ports") => ports(),
-        Some("audio-readout") => closed_returns::run_audio_readout(false, false),
-        Some("audio-readout-bench") => closed_returns::run_audio_readout(true, false),
-        Some("audio-readout-joint") => closed_returns::run_audio_readout(false, true),
-        Some("audio-readout-compare") => closed_returns::run_audio_readout(true, true),''')
+        Some("audio-readout") => closed_returns::run_audio_readout(false, false, false),
+        Some("audio-readout-bench") => closed_returns::run_audio_readout(true, false, false),
+        Some("audio-readout-joint") => closed_returns::run_audio_readout(false, true, false),
+        Some("audio-readout-compare") => closed_returns::run_audio_readout(true, true, false),
+        Some("audio-readout-cv") => closed_returns::run_audio_readout(false, true, true),
+        Some("audio-readout-cv-bench") => closed_returns::run_audio_readout(true, true, true),''')
     code += f'\n#[path = "{(c.ROOT / PARENT).as_posix()}"] mod closed_returns;\n'
     code += f'#[path = "{devices.as_posix()}"] mod radau_devices;\n'
     return c.emit(probe.name, code)
@@ -42,12 +45,13 @@ class Case:
     phase: float
     stages: np.ndarray
     joint: bool = False
+    closed_cv: bool = False
 
     def run(self, mode, payload):
         return subprocess.run([str(self.target), mode], cwd=c.ROOT, env=self.env,
                               input=payload, capture_output=True, timeout=60)
 
-    def compare(self, first, generated, stage_sum=None):
+    def compare(self, first, generated, stage_sum=None, stage_cathode=None):
         if first:
             seed = np.r_[self.stages[first * FINE_ROWS], np.zeros(c.N)]
         else:
@@ -70,9 +74,12 @@ class Case:
             return np.stack((boundaries[:-1] + (boundaries[1:] - boundaries[:-1]) / 3.,
                              boundaries[1:]), axis=1)
 
-        def measure(drives, timing=False, joint=False):
-            data = np.r_[anchor, np.concatenate((drives, cv[..., None]), axis=2).ravel()].astype("<f8").tobytes()
+        def measure(drives, timing=False, joint=False, cathode=None):
+            drive = cv if cathode is None else cathode
+            data = np.r_[anchor, np.concatenate((drives, drive[..., None]), axis=2).ravel()].astype("<f8").tobytes()
             mode = "audio-readout-joint" if joint else "audio-readout"
+            if cathode is not None:
+                mode = "audio-readout-cv"
             raw = self.run(mode, data)
             replay = self.run(mode, data)
             assert (raw.returncode, raw.stdout, raw.stderr) == (replay.returncode, replay.stdout, replay.stderr)
@@ -81,9 +88,9 @@ class Case:
             if raw.returncode:
                 return dict(result, error=raw.stderr.decode(errors="replace").strip(), failure_input=packed(data))
             values = np.frombuffer(raw.stdout, "<f8")
-            rows = values[3:].reshape(-1, 7)
-            assert rows.shape == wanted.shape and np.isfinite(values).all()
-            error = rows - wanted
+            rows = values[3:].reshape(-1, 7 if cathode is None else 11)
+            assert rows[:, :7].shape == wanted.shape and np.isfinite(values).all()
+            error = rows[:, :7] - wanted
             max_error = abs(error).max(axis=0)
             rms = float(np.linalg.norm(error[:, 0]) / np.linalg.norm(wanted[:, 0]))
             peak = float(max_error[0] / abs(wanted[:, 0]).max())
@@ -93,16 +100,27 @@ class Case:
                           max_error=max_error.tolist(), j7_rms_relative=rms, j7_peak_relative=peak,
                           j7_mean_v=mean, max_load_iterations=int(values[0]),
                           max_load_mismatch_v=float(values[1]), checked_nodal_proposals=int(values[2]))
+            if cathode is not None:
+                wanted_cathode = self.stages[indices, 27]
+                wanted_cr6 = 1e-8 * np.expm1((cv - wanted_cathode) / CR6_SCALE_V)
+                voltage_error = float(abs(rows[:, 7:9] - cv).max())
+                current_error = float(abs(rows[:, 9:11] - wanted_cr6).max())
+                result.update(max_x4_error_v=voltage_error, max_cr6_error_a=current_error,
+                              max_x27_error_v=float(abs(cathode - wanted_cathode).max()),
+                              reference_cr6_range_a=[float(wanted_cr6.min()), float(wanted_cr6.max())])
+                result["passed"] &= voltage_error <= 20e-6 and current_error <= 2e-9
             if not result["passed"]:
                 result["failure_input"] = packed(data)
             if timing:
                 mode = "audio-readout-compare" if joint else "audio-readout-bench"
+                if cathode is not None:
+                    mode = "audio-readout-cv-bench"
                 measured = self.run(mode, data)
                 assert measured.returncode == 0, measured.stderr.decode(errors="replace")
                 labels = ("windows", "median_ns", "p99_ns", "max_ns")
                 timings = [dict(zip(labels, map(int, row.split(",")), strict=True))
                            for row in measured.stdout.decode().splitlines()]
-                if joint:
+                if joint and cathode is None:
                     before, after = timings
                     result["timing"] = dict(alternating=True, nested=before, joint=after,
                                             median_speedup=before["median_ns"] / after["median_ns"])
@@ -122,5 +140,10 @@ class Case:
         if self.joint:
             results["generated_joint"] = measure(stages, timing=True, joint=True)
             passed &= results["generated_joint"]["passed"]
+        if self.closed_cv:
+            assert stage_cathode.shape == cv.shape and np.isfinite(stage_cathode).all()
+            results["closed_cv_oracle"] = measure(stages, joint=True, cathode=self.stages[indices, 27])
+            results["closed_cv_generated"] = measure(stages, timing=True, joint=True, cathode=stage_cathode)
+            passed &= results["closed_cv_oracle"]["passed"] and results["closed_cv_generated"]["passed"]
         return dict(passed=passed, first_slot=first,
                     reference_peak_j7_v=float(abs(wanted[:, 0]).max()), **results)

@@ -3,7 +3,7 @@ import numpy as np
 
 from rf_d_pilot_timer_carry import MOVE, PERIOD, continuous_step, project_passive
 
-NODES = (20, 26, 40, 28, 42, 11, 0, 47, 29, 34)
+NODES = (20, 26, 40, 28, 42, 11, 0, 47, 29, 34, 27)
 POINTS = 65
 PERTURBATION_V = .01
 CAP_C7 = 100e-9

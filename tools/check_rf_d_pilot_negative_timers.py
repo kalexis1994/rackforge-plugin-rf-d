@@ -82,7 +82,13 @@ def compare(evaluate, model, stages, seed, key, frames, native=None, readout=Non
                 assert raw_sum == run(command, data)
                 stage_sum = np.frombuffer(raw_sum, "<f8")
                 assert stage_sum.shape == (len(drives) - 1,) and np.isfinite(stage_sum).all()
-                item["audio_readout"] = audio.compare(0, drives, stage_sum)
+                cathode = None
+                if audio.closed_cv:
+                    command = [target, "cv-stages"]
+                    raw_cv = run(command, data)
+                    assert raw_cv == run(command, data)
+                    cathode = np.frombuffer(raw_cv, "<f8").reshape(len(drives) - 1, 2)
+                item["audio_readout"] = audio.compare(0, drives, stage_sum, cathode)
     return item
 
 
@@ -92,13 +98,17 @@ def main():
     parser.add_argument("--returns", action="store_true", help="contrast return readout at imposed receiver loads")
     parser.add_argument("--audio", action="store_true", help="close base and TAIL with the reduced audio receiver")
     parser.add_argument("--audio-joint", action="store_true", help="compare the joint and nested audio loops")
+    parser.add_argument("--audio-cv", action="store_true", help="close R24/R27 and CR6 with generated x27")
     args = parser.parse_args()
+    assert not args.audio_cv or args.audio_joint
     assert not args.audio_joint or args.audio
     assert not args.audio or args.returns
     assert not args.returns or args.native
     assert c.AREA.is_dir() and not list(c.AREA.iterdir())
     seq = 1
     prefix = "rf_d_pilot_audio_readout_neg" if args.audio else "rf_d_pilot_negative_timers"
+    if args.audio_cv:
+        prefix = "rf_d_pilot_cv_readout_neg"
     while (out := c.ROOT / f"evidence/{prefix}{seq:02}.json").exists():
         seq += 1
     native_sources = NATIVE_SOURCES if args.native else ()
@@ -170,7 +180,7 @@ def main():
                         phase, _, _, state = refs[branch][1][start]
                         state = state.copy()
                         state[0, TIMER_NODES] += offset
-                        audio_case = audio.Case(oracle, env, state, phase, stages, args.audio_joint)
+                        audio_case = audio.Case(oracle, env, state, phase, stages, args.audio_joint, args.audio_cv)
                     result = compare(evaluate, model, stages, seed, key, frames, native, readout, audio_case)
                 item["trials"].append(dict(meta, **result, unchanged_replay=True))
                 print(label, offset, result, flush=True)

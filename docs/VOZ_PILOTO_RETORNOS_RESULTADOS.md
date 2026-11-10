@@ -1308,3 +1308,25 @@ El tiempo del candidato incluye el cierre de KCL.
 Queda medir el recorrido continuo a 128 frames.
 [Positivos](../evidence/rf_d_pilot_audio_readout_pos05.json),
 [negativos](../evidence/rf_d_pilot_audio_readout_neg06.json).
+
+## Cierre del divisor x4 y CR6
+
+La celda de volumen resuelve x3 y x4 juntos. R24 de
+6,8 kΩ estampa ambas filas. R27 de 16,9 kΩ conecta
+x4 a −10 V y CR6 devuelve corriente hacia el cátodo
+x27. La fila de x4 y su derivada reutilizan la ley de
+la referencia CA3046. El Jacobiano de cinco nodos
+devuelve la tangente de R59 al cierre de audio.
+[SVC-9 Fig. 9-7 p. 9 y topología](CONTORNO_VOLUMEN_CIRCUITO.md),
+[stamp](../tools/rf_d_pilot_contour_ports.rs).
+
+El primer contraste usa el cátodo exacto del solver
+y luego el generado por C4/C7 en ambas etapas. Se
+mantienen los límites de J7 y R59/R60 y se exigen
+20 µV en x4 y 2 nA en CR6 en las dos etapas. Los
+seis negativos pasaron, con 0,431 nV de error en
+x4 y −10 nA de CR6. En los positivos J7 y ambos
+retornos pasaron, pero x4 llegó a 335 µV de error
+también con x27 exacto. Se conservaron los replays.
+[Negativos](../evidence/rf_d_pilot_cv_readout_neg01.json),
+[rechazo positivo](../evidence/rf_d_pilot_cv_readout_pos01.json).

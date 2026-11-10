@@ -197,7 +197,7 @@ def timer_native_fixture(prefix, shape, post, initial):
     table = np.column_stack((nominal.T, linear[0].T, linear[1].T, quadratic[0].T, quadratic[1].T))
     time, nominal, linear, quadratic, _ = post
     values = np.array([nominal, *linear, *quadratic])
-    after = np.column_stack((time, *(row[1:-1].T for row in values), values[:, -1].T))
+    after = np.column_stack((time, *(row[1:-2].T for row in values), values[:, -2].T, values[:, -1].T))
     return np.r_[prefix, phase, table.ravel(), after.ravel(), initial[[26, *NODES, *PORTS, 34]]].astype("<f8").tobytes()
 
 
@@ -240,7 +240,13 @@ def timer_native_trial(run, target, prefix, shape, post, initial, observations, 
         item["returns"] = returns.assess(run, readout, reference, drives, skip)
         print("RETURN", start, first, item["returns"], flush=True)
         if audio is not None:
-            item["audio_readout"] = audio.compare(first, drives)
+            cathode = None
+            if audio.closed_cv:
+                command = [target, "cv-stages"]
+                raw_cv = run(command, data)
+                assert raw_cv == run(command, data)
+                cathode = np.frombuffer(raw_cv, "<f8").reshape(len(drives) - 1, 2)
+            item["audio_readout"] = audio.compare(first, drives, stage_cathode=cathode)
             print("AUDIO", start, first, {key: (trial.get("error"), trial.get("max_error"))
                                          for key, trial in item["audio_readout"].items()
                                          if isinstance(trial, dict)}, flush=True)
@@ -308,7 +314,9 @@ def main():
     parser.add_argument("--returns", action="store_true", help="contrast return readout at imposed receiver loads")
     parser.add_argument("--audio", action="store_true", help="close base and TAIL with the reduced audio receiver")
     parser.add_argument("--audio-joint", action="store_true", help="compare the joint and nested audio loops")
+    parser.add_argument("--audio-cv", action="store_true", help="close R24/R27 and CR6 with generated x27")
     args_main = parser.parse_args()
+    assert not args_main.audio_cv or args_main.audio_joint
     assert not args_main.audio_joint or args_main.audio
     assert not args_main.audio or args_main.returns
     assert not args_main.returns or args_main.timers_native
@@ -318,6 +326,8 @@ def main():
     assert c.AREA.is_dir() and not list(c.AREA.iterdir())
     seq = 1
     prefix = "rf_d_pilot_audio_readout_pos" if args_main.audio else "rf_d_pilot_precursor"
+    if args_main.audio_cv:
+        prefix = "rf_d_pilot_cv_readout_pos"
     while (out := c.ROOT / f"evidence/{prefix}{seq:02}.json").exists():
         seq += 1
     previous = "evidence/rf_d_pilot_timer_rc10.json"
@@ -399,8 +409,8 @@ def main():
             if args_main.timers:
                 timer_paths.append(charge_trace(stages, PORTS))
                 slot, _, at = timing_reference(stages)
-                time, values = post_trace(stages, slot / CLOCK + at["time"], STEPS, (34,))
-                post_paths.append((time, values[:-1]))
+                time, values = post_trace(stages, slot / CLOCK + at["time"], STEPS, (34, 27))
+                post_paths.append((time, values[:-2]))
                 if args_main.timers_native:
                     native_paths.append(charge_trace(stages, (*PORTS, 34)))
                     native_post.append((time, values))
@@ -518,7 +528,7 @@ def main():
                         phase, _, _, state = refs["positive"][1][start]
                         state = state.copy()
                         state[0, TIMER_NODES] += offset
-                        audio_case = audio.Case(exe, env, state, phase, stages, args_main.audio_joint)
+                        audio_case = audio.Case(exe, env, state, phase, stages, args_main.audio_joint, args_main.audio_cv)
                     item["native_timers"] = [
                         timer_native_trial(run, native_timer, native_args[1], native_grid, native_after,
                                            observations[i], observations, start, expected, i, any(offset), result, readout, audio_case)

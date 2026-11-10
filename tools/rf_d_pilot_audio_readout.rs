@@ -13,13 +13,14 @@ use std::{
 const H: f64 = 1. / 96_000.;
 const LOAD_TOLERANCE_V: f64 = 1e-10;
 const LOAD_PROBE_V: f64 = 1e-6;
-type Stage = [f64; 3]; // C2, filter sum x34, volume CV return x4.
-type Output = [f64; 7]; // J7, R59, R60, x3, x37, VCA base, TAIL.
+type Stage = [f64; 3]; // C2, x34 and either x4 (imposed) or x27 (closed).
+type Output = [f64; 11]; // J7, R59, R60, x3, x37, VCA base, TAIL, and two stages of x4/CR6.
 
 #[derive(Clone, Copy)]
 struct History {
     audio: chain::State,
     cells: Returns,
+    cv: f64,
     phase: f64,
 }
 
@@ -95,11 +96,24 @@ fn advance(
             let [base, tail] = next[1];
             let [r59, r60] = cells[1].currents(base, tail);
             let [x3, x37] = input[1];
-            let row = [voltage(now[1], 61), r59, r60, x3, x37, base, tail];
+            let row = [
+                voltage(now[1], 61),
+                r59,
+                r60,
+                x3,
+                x37,
+                base,
+                tail,
+                0.,
+                0.,
+                0.,
+                0.,
+            ];
             return Ok((
                 History {
                     audio: now[1],
                     cells: cells[1],
+                    cv: stages[1][2],
                     phase,
                 },
                 row,
@@ -129,12 +143,14 @@ fn advance_joint(
     family: &Family,
     collector: f64,
     stages: [Stage; 2],
+    closed_cv: bool,
 ) -> Result<(History, Output, usize, f64), String> {
     let reduced = map.reduced.as_ref().expect("audio map");
     let anchor = reduced.anchor();
     let (base, offset) = reduced.joint_history(old.audio);
     let mut x = [offset; 2];
     let mut cells = [old.cells; 2];
+    let mut cv = [[old.cv, 0.]; 2];
     let mut tangent: Option<(Lu<4>, [f64; 4])> = None;
     let mut use_nodal = false;
     const BUDGET: usize = 16;
@@ -142,15 +158,26 @@ fn advance_joint(
         let loads = x.map(|row| LOAD.map(|k| voltage(anchor, k) + row[k]));
         let mut slope = [0.; 4];
         for i in 0..2 {
-            let (next, [volume, filter]) = contour_ports::joint_cells(
+            let [c2, sum, drive] = stages[i];
+            let port = if closed_cv {
+                contour_ports::Cv::Closed {
+                    seed: cv[i][0],
+                    cathode: drive,
+                }
+            } else {
+                contour_ports::Cv::Fixed(drive)
+            };
+            let (next, [volume, filter], readout) = contour_ports::joint_cells(
                 cells[i],
-                stages[i],
+                [c2, sum],
+                port,
                 loads[i],
                 collector,
                 tangent.is_none(),
             )
             .map_err(|error| format!("joint return cells: {error:?}"))?;
             cells[i] = next;
+            cv[i] = readout;
             slope[2 * i] = volume;
             slope[2 * i + 1] = filter;
         }
@@ -185,11 +212,25 @@ fn advance_joint(
                 let [base, tail] = loads[1];
                 let [r59, r60] = cells[1].currents(base, tail);
                 let [x3, x37] = input[1];
-                let row = [voltage(now[1], 61), r59, r60, x3, x37, base, tail];
+                let [[cv1, diode1], [cv2, diode2]] = cv;
+                let row = [
+                    voltage(now[1], 61),
+                    r59,
+                    r60,
+                    x3,
+                    x37,
+                    base,
+                    tail,
+                    cv1,
+                    cv2,
+                    diode1,
+                    diode2,
+                ];
                 return Ok((
                     History {
                         audio: now[1],
                         cells: cells[1],
+                        cv: cv2,
                         phase,
                     },
                     row,
@@ -232,13 +273,14 @@ fn render(
     collector: f64,
     stages: &[[Stage; 2]],
     joint: bool,
+    closed_cv: bool,
     mut emit: impl FnMut(Output),
 ) -> Result<(usize, f64), String> {
     let mut outer = 0;
     let mut closure_error = 0_f64;
     for (i, &row) in stages.iter().enumerate() {
         let result = if joint {
-            advance_joint(state, map, family, collector, row)
+            advance_joint(state, map, family, collector, row, closed_cv)
         } else {
             advance(state, map, family, collector, row)
         };
@@ -252,7 +294,7 @@ fn render(
     Ok((outer, closure_error))
 }
 
-pub fn run(bench: bool, joint: bool) -> Result<(), Box<dyn std::error::Error>> {
+pub fn run(bench: bool, joint: bool, closed_cv: bool) -> Result<(), Box<dyn std::error::Error>> {
     let mut bytes = Vec::new();
     std::io::stdin().read_to_end(&mut bytes)?;
     assert_eq!(bytes.len() % 8, 0);
@@ -290,6 +332,7 @@ pub fn run(bench: bool, joint: bool) -> Result<(), Box<dyn std::error::Error>> {
             volume: super::VOLUME_NODES.map(x),
             filter: super::FILTER_NODES.map(x),
         },
+        cv: x(4),
         phase,
     };
     let map = Audio::new(
@@ -308,10 +351,11 @@ pub fn run(bench: bool, joint: bool) -> Result<(), Box<dyn std::error::Error>> {
     if bench {
         const RUNS: usize = 200;
         let mut times = [[0; RUNS]; 2];
+        let paired = joint && !closed_cv;
         for i in 0..RUNS {
-            for candidate in [joint && i % 2 == 1, joint && i % 2 == 0]
+            for candidate in [closed_cv || (paired && i % 2 == 1), paired && i % 2 == 0]
                 .into_iter()
-                .take(if joint { 2 } else { 1 })
+                .take(if paired { 2 } else { 1 })
             {
                 let start = Instant::now();
                 render(
@@ -321,6 +365,7 @@ pub fn run(bench: bool, joint: bool) -> Result<(), Box<dyn std::error::Error>> {
                     x(2),
                     &stages,
                     candidate,
+                    closed_cv,
                     |row| {
                         black_box(row);
                     },
@@ -328,7 +373,11 @@ pub fn run(bench: bool, joint: bool) -> Result<(), Box<dyn std::error::Error>> {
                 times[usize::from(candidate)][i] = start.elapsed().as_nanos();
             }
         }
-        for group in times.iter_mut().take(if joint { 2 } else { 1 }) {
+        for group in times
+            .iter_mut()
+            .skip(usize::from(closed_cv))
+            .take(if paired { 2 } else { 1 })
+        {
             group.sort_unstable();
             println!(
                 "{RUNS},{},{},{}",
@@ -339,13 +388,24 @@ pub fn run(bench: bool, joint: bool) -> Result<(), Box<dyn std::error::Error>> {
         }
     } else {
         let mut samples = Vec::with_capacity(stages.len());
-        let (outer, mismatch) = render(initial, &map, &family, x(2), &stages, joint, |row| {
-            samples.push(row)
-        })?;
+        let (outer, mismatch) = render(
+            initial,
+            &map,
+            &family,
+            x(2),
+            &stages,
+            joint,
+            closed_cv,
+            |row| samples.push(row),
+        )?;
         let mut out = std::io::BufWriter::new(std::io::stdout().lock());
         for value in [outer as f64, mismatch, map.checked_proposals.get() as f64]
             .into_iter()
-            .chain(samples.into_iter().flatten())
+            .chain(
+                samples
+                    .into_iter()
+                    .flat_map(|row| row.into_iter().take(if closed_cv { 11 } else { 7 })),
+            )
         {
             out.write_all(&value.to_le_bytes())?;
         }
