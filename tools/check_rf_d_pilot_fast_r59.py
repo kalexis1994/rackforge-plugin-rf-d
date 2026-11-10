@@ -129,6 +129,8 @@ def main():
             report[f"reference_{RATE * factor}_sha256"] = digest(raw)
             print("Reference", RATE * factor, flush=True)
         report["refinement"] = assess(fine[4], fine[8])
+        report["reference_r59_source_range_v"] = [float(fine[8][:, 11].min()), float(fine[8][:, 11].max())]
+        report["reference_source_domain_passed"] = bool(abs(fine[8][:, 11] - center[0]).max() <= limits[0])
         input = controls(np.arange(1, 2 * STEPS + 1) / RATE)
         payload = packed(np.r_[header, input.ravel()])
         report.update(input_sha256=digest(payload), input=pack_bytes(payload), cases={})
@@ -142,6 +144,7 @@ def main():
             item = dict(comparison=result, max_iterations=int(stats[0]), max_closure_v=float(stats[1]),
                         max_r59_mismatch_a=float(stats[2]), tangent_calls=int(stats[3]),
                         output_sha256=digest(raw), unchanged_replay=True)
+            item["r59_source_range_v"] = [float(rows[:, 11].min()), float(rows[:, 11].max())]
             item["passed"] = bool(result["passed"] and stats[1] <= 1e-10 and stats[2] <= 2e-12)
             timing = run([exe, mode, "bench"], payload).decode().strip().split(",")
             item["timing"] = dict(zip(("blocks", "median_ns", "p99_ns", "max_ns", "allocations"), map(int, timing), strict=True))
@@ -152,7 +155,7 @@ def main():
         partition = run([exe, "cached", 64], payload, repeat=True)
         report["partition_bit_exact"] = digest(partition) == report["cases"]["cached"]["output_sha256"]
         report["cached_vs_fresh"] = assess(outputs["cached"], outputs["fresh"])
-        report["passed"] = bool(report["refinement"]["passed"] and report["partition_bit_exact"]
+        report["passed"] = bool(report["refinement"]["passed"] and report["reference_source_domain_passed"] and report["partition_bit_exact"]
                                  and report["cached_vs_fresh"]["passed"] and all(v["passed"] for v in report["cases"].values()))
         report["realtime"] = report["passed"] and report["cases"]["cached"]["realtime"]
         sources.unchanged()

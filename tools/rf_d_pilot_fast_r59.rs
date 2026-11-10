@@ -39,6 +39,7 @@ pub fn advance(
     let mut gradient = if refresh { None } else { old.gradient };
     let mut previous_error = f64::INFINITY;
     let mut tangent_calls = 0;
+    let mut junction_seed = None;
     for iteration in 1..=8 {
         let drive = plant::Drive {
             volume_delta_v: source - map::SPLIT_CENTER[0],
@@ -48,11 +49,16 @@ pub fn advance(
             let trial =
                 plant::trial_with_load_tangent(old.audio, signal, drive).map_err(Error::Audio)?;
             gradient = Some(trial.load_jacobian[0][0]);
+            junction_seed = Some(trial.junction);
             tangent_calls += 1;
             (trial.state, trial.ports)
         } else {
             let mut candidate = old.audio;
-            let ports = plant::step(&mut candidate, signal, drive).map_err(Error::Audio)?;
+            let (ports, junction) =
+                plant::step_with_junction(&mut candidate, signal, drive, junction_seed)
+                    .or_else(|_| plant::step_with_junction(&mut candidate, signal, drive, None))
+                    .map_err(Error::Audio)?;
+            junction_seed = Some(junction);
             (candidate, ports)
         };
         let (next, factor) = contour_ports::close_volume(volume, c2, cathode, ports.loads_v[0])

@@ -2305,3 +2305,50 @@ de error del adaptador. Las fuentes y el rechazo quedaron
 conservados. La repetición anterior corrigió ambos errores
 antes del contraste eléctrico.
 [Rechazo de compilación](../evidence/rf_d_pilot_fast_r5901.json).
+
+
+### Continuación de junturas y rama negativa de R59
+
+Los trials posteriores del mismo paso usan las junturas
+del trial previo como semilla. La memoria física aceptada
+permanece fija y se verifica de nuevo el residuo completo
+de 2e−13. Un rechazo de la semilla devuelve el predictor
+anterior. La semilla provisional se descarta después
+del paso.
+
+La repetición positiva pasó los mismos gates y conservó
+un máximo de dos trials. La salida de R59 recorrió
+1,895366–1,924634 V, dentro del dominio del mapa.
+La política por bloque tuvo mediana 2,144 ms y máximo
+2,516 ms. La política por paso tuvo mediana 3,936 ms
+y máximo 4,244 ms. Los pases se midieron por separado
+de la primera versión del cierre.
+[Continuación positiva](../evidence/rf_d_pilot_fast_r5903.json).
+
+La rama negativa normalizada pasó el refinamiento y
+los dos caminos de tangente contra el circuito unido.
+R59 recorrió −0,284874 a −0,275126 V, dentro de su
+dominio. J7 tuvo 0,00294 % RMS de error y 22,7 fV
+de máximo. R60 difirió 57,2 fA. El cierre máximo fue
+95,5 pV y 1,41 fA entre ambos lados de R59. Hubo
+como máximo dos trials por paso y dos tangentes en
+los 256 frames con la política por bloque. Pasaron
+los replays, la partición 64/128 y el contraste con
+la política por paso.
+
+En 64 bloques, la política por bloque tuvo mediana
+2,027 ms y máximo 2,128 ms. La política por paso
+tuvo mediana 3,840 ms y máximo 3,940 ms. Ambas
+rutas tuvieron cero asignaciones. Los dos cierres
+siguen excediendo 1,333 ms. C2, reset y el colector
+de R60 permanecen como entradas explícitas en esta
+etapa, con las dinámicas del biestable pendientes.
+[Cierre negativo y coste](../evidence/rf_d_pilot_fast_r5904.json).
+
+La voz previa de 18 junturas volvió a pasar las tres
+escenas eléctricas y su refinamiento. La partitura
+conservó los mismos bits al usar bloques de 64/128
+y el hash de J7 f32 del control anterior. Hubo cero
+asignaciones y un máximo de 0,718 ms en el pase de
+retornos activos a 128 frames del perfil de 192 kHz.
+[Regresión del solver compartido](../evidence/rf_d_pilot_returns16.json).

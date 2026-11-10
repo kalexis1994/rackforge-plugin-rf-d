@@ -54,12 +54,13 @@ pub struct Trial {
     pub ports: Ports,
     /// Rows are VCA base/TAIL, columns are R59/R60 source voltage, in V/V.
     pub load_jacobian: [[f64; 2]; 2],
+    pub(crate) junction: [f64; JUNCTIONS],
 }
 
 #[cfg(pilot_receiver_ports)]
 pub fn trial_with_load_tangent(old: State, signal: f64, drive: Drive) -> Result<Trial, Error> {
     let mut state = old;
-    let (ports, junction) = step_with_junction(&mut state, signal, drive)?;
+    let (ports, junction) = step_with_junction(&mut state, signal, drive, None)?;
     let (_, slope) = law(junction)?;
     let jacobian = std::array::from_fn(|i| {
         std::array::from_fn(|j| f64::from(i == j) + map::P[i][j] * slope[j])
@@ -81,7 +82,7 @@ pub fn trial_with_load_tangent(old: State, signal: f64, drive: Drive) -> Result<
     if load_jacobian.iter().flatten().any(|v| !v.is_finite()) {
         return Err(Error::Domain);
     }
-    Ok(Trial { state, ports, load_jacobian })
+    Ok(Trial { state, ports, load_jacobian, junction })
 }
 
 impl State {
@@ -259,10 +260,11 @@ fn block_direction(residual: &[f64; JUNCTIONS], slope: &[f64; JUNCTIONS]) -> Res
 }
 
 pub fn step(state: &mut State, signal: f64, drive: Drive) -> Result<Ports, Error> {
-    step_with_junction(state, signal, drive).map(|(ports, _)| ports)
+    step_with_junction(state, signal, drive, None).map(|(ports, _)| ports)
 }
 
-fn step_with_junction(state: &mut State, signal: f64, drive: Drive) -> Result<(Ports, [f64; JUNCTIONS]), Error> {
+pub(crate) fn step_with_junction(state: &mut State, signal: f64, drive: Drive,
+                               seed: Option<[f64; JUNCTIONS]>) -> Result<(Ports, [f64; JUNCTIONS]), Error> {
     if !drive.valid() || !signal.is_finite() || signal.abs() > 0.08 {
         return Err(Error::Input);
     }
@@ -278,7 +280,7 @@ fn step_with_junction(state: &mut State, signal: f64, drive: Drive) -> Result<(P
     let previous = product(&P, &state.defects);
     #[cfg(pilot_block_roots)]
     let previous = state.feedback;
-    let mut z = std::array::from_fn(|i| predictor[i] - previous[i]);
+    let mut z = seed.unwrap_or_else(|| std::array::from_fn(|i| predictor[i] - previous[i]));
     for _iteration in 0..12 {
         let (defects, slope) = law(z)?;
         let feedback = product(&P, &defects);

@@ -266,3 +266,15 @@ del bloque posterior al calentamiento, incluyendo el
 seguidor, todos los trials y las renovaciones de tangente,
 con cero asignaciones y margen de 1,333333… ms. Quedan
 pendientes las dinámicas propias de C2, C5 y el biestable.
+
+
+En la continuación de trials del mismo paso, el receptor
+puede arrancar desde las junturas de su trial anterior.
+La nueva fuente se evalúa contra la misma historia q y
+los mismos defectos aceptados del instante previo.
+Cada trial verifica de nuevo el residuo de las leyes
+completas con 2e−13. Si falla la semilla provisional,
+se vuelve al predictor de la historia aceptada. La
+semilla se descarta al terminar el paso y conserva
+su función exclusivamente numérica. Contrastar otra
+vez el circuito unido, la partición y el coste.
