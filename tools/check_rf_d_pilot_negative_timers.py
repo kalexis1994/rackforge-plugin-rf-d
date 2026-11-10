@@ -26,7 +26,7 @@ NATIVE_SOURCES = (NATIVE, "tools/rf_d_pilot_negative_timers.rs", "tools/rf_d_pil
                   "tools/rf_d_pilot_precursor.rs", "tools/latch_charge_driver.rs")
 
 
-def compare(evaluate, model, stages, seed, key, frames, native=None, readout=None):
+def compare(evaluate, model, stages, seed, key, frames, native=None, readout=None, audio=None):
     reference = stages[::1536]
     output = render(evaluate, model, reference[0], seed, key, frames)
     if output is None:
@@ -74,7 +74,10 @@ def compare(evaluate, model, stages, seed, key, frames, native=None, readout=Non
             rows = np.frombuffer(with_sum, "<f8").reshape(-1, 11)
             assert np.array_equal(rows[:, :10], got)
             assert abs(rows[:, 10] - nodes[:, 9]).max() <= 1e-12
-            item["returns"] = returns.assess(run, readout, reference, rows[:, [0, 10]], 1)
+            drives = rows[:, [0, 10]]
+            item["returns"] = returns.assess(run, readout, reference, drives, 1)
+            if audio is not None:
+                item["audio_readout"] = audio.compare(0, drives)
     return item
 
 
@@ -82,15 +85,21 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--native", action="store_true", help="verify and time the bounded Rust C7 clock")
     parser.add_argument("--returns", action="store_true", help="contrast return readout at imposed receiver loads")
+    parser.add_argument("--audio", action="store_true", help="close base and TAIL with the reduced audio receiver")
     args = parser.parse_args()
+    assert not args.audio or args.returns
     assert not args.returns or args.native
     assert c.AREA.is_dir() and not list(c.AREA.iterdir())
     seq = 1
-    while (out := c.ROOT / f"evidence/rf_d_pilot_negative_timers{seq:02}.json").exists():
+    prefix = "rf_d_pilot_audio_readout_neg" if args.audio else "rf_d_pilot_negative_timers"
+    while (out := c.ROOT / f"evidence/{prefix}{seq:02}.json").exists():
         seq += 1
     native_sources = NATIVE_SOURCES if args.native else ()
     if args.returns:
         native_sources += ("tools/rf_d_pilot_return_readout.py", *returns.SOURCES)
+    if args.audio:
+        import rf_d_pilot_audio_readout as audio
+        native_sources += audio.SOURCES
     sources = Sources((*c.ALL_SOURCES, c.OWN, c.CANDIDATE, c.PROBE, c.PORTS,
                        "tools/rf_d_pilot_step_profile.rs", *SOURCE_NAMES, *native_sources))
     report = dict(passed=False, rack_integrated=False, clock_hz=96_000, native=args.native, returns=args.returns, edges={},
@@ -105,7 +114,7 @@ def main():
 
     try:
         refs, report["reference_inputs"] = c.references()
-        oracle, build = prepare_reference(run, report)
+        oracle, build = prepare_reference(run, report, args.audio)
         attack = c.AREA / "pilot-negative-attack.exe"
         run([*build, "-A", "dead_code", c.ROOT / ATTACK_PROBE, "-o", attack])
         native = None
@@ -149,7 +158,13 @@ def main():
                 result = compare(evaluate, model, stages, seed, key, frames)
                 assert result == compare(evaluate, model, stages, seed, key, frames)
                 if native is not None:
-                    result = compare(evaluate, model, stages, seed, key, frames, native, readout)
+                    audio_case = None
+                    if args.audio:
+                        phase, _, _, state = refs[branch][1][start]
+                        state = state.copy()
+                        state[0, TIMER_NODES] += offset
+                        audio_case = audio.Case(oracle, env, state, phase, stages)
+                    result = compare(evaluate, model, stages, seed, key, frames, native, readout, audio_case)
                 item["trials"].append(dict(meta, **result, unchanged_replay=True))
                 print(label, offset, result, flush=True)
         report["passed"] = all(trial["passed"] for edge in report["edges"].values() for trial in edge["trials"])
@@ -157,6 +172,10 @@ def main():
             report["return_readout_passed"] = all(
                 trial["returns"]["passed"] for edge in report["edges"].values() for trial in edge["trials"])
             report["passed"] &= report["return_readout_passed"]
+        if args.audio:
+            report["audio_readout_passed"] = all(
+                trial["audio_readout"]["passed"] for edge in report["edges"].values() for trial in edge["trials"])
+            report["passed"] &= report["audio_readout_passed"]
         sources.unchanged()
     except Exception:
         report["failure"] = traceback.format_exc()

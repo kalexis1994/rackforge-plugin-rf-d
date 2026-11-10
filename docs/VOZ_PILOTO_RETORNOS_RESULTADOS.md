@@ -1169,3 +1169,33 @@ La lectura mide los retornos con el receptor fijado
 a la referencia. Queda realimentar el receptor con
 esos retornos, devolver base y TAIL a los contornos,
 y contrastar J7 y el plazo de la voz completa.
+
+## Receptor de audio cerrado sobre R59/R60 a 96 kHz
+
+El banco reutiliza el mapa reducido de Radau de la
+voz CA3046 con el ancla transitoria, 17 voltajes de
+capacitor y la fase del VCO H128. El VCO sigue viendo
+BUS. Las dos etapas del receptor devuelven base del
+VCA y TAIL a Q3/Q2 y Q26/Q28. El receptor recibe x3 y
+x37 por los caminos de 68 kΩ y 680 Ω. x4 queda fijado
+a la trayectoria del solver en este contraste.
+[Cadena y fuentes](CONTORNOS_CADENA_PROTOCOLO.md),
+[mapa de audio](../tools/rf_d_pilot_reduced_audio.rs).
+
+Se comparan las etapas exactas de C2/x34, sus bordes
+a 96 kHz interpolados al tercio de paso y los bordes
+generados por C4/C7 con la misma interpolación. Los
+límites son 2 nA en cada retorno, 20 µV en los cuatro
+nodos de interfaz y 0,1 % RMS, 0,3 % de pico relativo
+y 1 µV de media absoluta en J7. El cierre local exige
+100 pV de diferencia máxima entre las tensiones
+recibidas y las devueltas en las dos etapas.
+
+La iteración directa se agotó en los seis casos
+negativos durante el primer paso. En los positivos se
+agotó entre el segundo y tercer paso, por la iteración
+de interfaz o por la iteración interna del mapa. Los
+rechazos se reprodujeron por bytes incluso al usar
+C2 y x34 del solver en ambas etapas.
+[Rama negativa](../evidence/rf_d_pilot_audio_readout_neg01.json),
+[rama positiva](../evidence/rf_d_pilot_audio_readout_pos01.json).

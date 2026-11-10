@@ -201,7 +201,7 @@ def timer_native_fixture(prefix, shape, post, initial):
     return np.r_[prefix, phase, table.ravel(), after.ravel(), initial[[26, *NODES, *PORTS, 34]]].astype("<f8").tobytes()
 
 
-def timer_native_trial(run, target, prefix, shape, post, initial, observations, start, expected, first, shifted, python, readout=None):
+def timer_native_trial(run, target, prefix, shape, post, initial, observations, start, expected, first, shifted, python, readout=None, audio=None):
     assert python["passed"]
     data = timer_native_fixture(prefix, shape, post, initial)
     raw = run([target], data)
@@ -239,6 +239,11 @@ def timer_native_trial(run, target, prefix, shape, post, initial, observations, 
         drives = np.vstack((body[:, [0, 8]], extra[[2, 4]]))
         item["returns"] = returns.assess(run, readout, reference, drives, skip)
         print("RETURN", start, first, item["returns"], flush=True)
+        if audio is not None:
+            item["audio_readout"] = audio.compare(first, drives)
+            print("AUDIO", start, first, {key: (trial.get("error"), trial.get("max_error"))
+                                         for key, trial in item["audio_readout"].items()
+                                         if isinstance(trial, dict)}, flush=True)
     return item
 
 
@@ -301,14 +306,17 @@ def main():
     parser.add_argument("--timers-native", action="store_true",
                         help="run the Rust timer carry and the reference C4 replay")
     parser.add_argument("--returns", action="store_true", help="contrast return readout at imposed receiver loads")
+    parser.add_argument("--audio", action="store_true", help="close base and TAIL with the reduced audio receiver")
     args_main = parser.parse_args()
+    assert not args_main.audio or args_main.returns
     assert not args_main.returns or args_main.timers_native
     assert not args_main.timers_native or args_main.timer_grid_refine
     assert not args_main.timer_grid_refine or args_main.timers
     assert not args_main.carry_native or args_main.carry
     assert c.AREA.is_dir() and not list(c.AREA.iterdir())
     seq = 1
-    while (out := c.ROOT / f"evidence/rf_d_pilot_precursor{seq:02}.json").exists():
+    prefix = "rf_d_pilot_audio_readout_pos" if args_main.audio else "rf_d_pilot_precursor"
+    while (out := c.ROOT / f"evidence/{prefix}{seq:02}.json").exists():
         seq += 1
     previous = "evidence/rf_d_pilot_timer_rc10.json"
     native_sources = (NATIVE, NATIVE_PROBE) if args_main.native else ()
@@ -322,6 +330,9 @@ def main():
         native_sources += (TIMER_NATIVE, TIMER_NATIVE_PROBE, C4_CLOCK, NATIVE)
     if args_main.returns:
         native_sources += ("tools/rf_d_pilot_return_readout.py", *returns.SOURCES)
+    if args_main.audio:
+        import rf_d_pilot_audio_readout as audio
+        native_sources += audio.SOURCES
     sources = Sources((*c.ALL_SOURCES, c.OWN, c.CANDIDATE, c.PROBE, c.PORTS,
                        "tools/rf_d_pilot_step_profile.rs", previous, *SOURCE_NAMES, *native_sources))
     report = dict(passed=False, rack_integrated=False, clock_hz=CLOCK, native=args_main.native, carry=args_main.carry, carry_native=args_main.carry_native, timers=args_main.timers, timer_grid_refine=args_main.timer_grid_refine, timers_native=args_main.timers_native, calibration=[],
@@ -337,7 +348,7 @@ def main():
 
     try:
         refs, report["reference_inputs"] = c.references()
-        exe, build = prepare_reference(run, report)
+        exe, build = prepare_reference(run, report, args_main.audio)
         native = c.AREA / "pilot-crossing.exe"
         run([*build, "-A", "dead_code", c.ROOT / CROSSING_PROBE, "--extern",
              f"rf_d_circuit={c.LIB}", "-o", native])
@@ -500,9 +511,15 @@ def main():
                         assert result == timer_trial(*args)
                         timers[mode].append(result)
                 if args_main.timers_native:
+                    audio_case = None
+                    if args_main.audio:
+                        phase, _, _, state = refs["positive"][1][start]
+                        state = state.copy()
+                        state[0, TIMER_NODES] += offset
+                        audio_case = audio.Case(exe, env, state, phase, stages)
                     item["native_timers"] = [
                         timer_native_trial(run, native_timer, native_args[1], native_grid, native_after,
-                                           observations[i], observations, start, expected, i, any(offset), result, readout)
+                                           observations[i], observations, start, expected, i, any(offset), result, readout, audio_case)
                         for i, result in enumerate(timers["startup25_event"])]
                     print("NATIVE_TIMERS", name, item["native_timers"], flush=True)
                 print("OWN_TIMERS", name,
@@ -548,6 +565,10 @@ def main():
             report["return_readout_passed"] = all(
                 trial["returns"]["passed"] for name in NAMES for trial in report["reserves"][name]["native_timers"])
             report["passed"] &= report["return_readout_passed"]
+        if args_main.audio:
+            report["audio_readout_passed"] = all(
+                trial["audio_readout"]["passed"] for name in NAMES for trial in report["reserves"][name]["native_timers"])
+            report["passed"] &= report["audio_readout_passed"]
         sources.unchanged()
     except Exception:
         report["failure"] = traceback.format_exc()
@@ -557,6 +578,8 @@ def main():
             assert path.is_file() and path.resolve().parent == c.AREA.resolve()
             path.unlink()
         c.write(out, report)
+    if args_main.audio and not report["passed"]:
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

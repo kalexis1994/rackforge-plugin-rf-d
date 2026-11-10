@@ -663,3 +663,9 @@ pub fn run(
     out.flush()?;
     Ok(())
 }
+
+#[cfg(pilot_audio_readout)]
+#[path = "rf_d_pilot_audio_readout.rs"]
+mod audio_readout;
+#[cfg(pilot_audio_readout)]
+pub use audio_readout::run as run_audio_readout;
