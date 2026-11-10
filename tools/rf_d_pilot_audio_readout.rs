@@ -20,7 +20,7 @@ mod feedback;
 pub use feedback::{
     run as run_feedback, run_accelerated as run_feedback_accelerated,
     run_packed as run_feedback_packed, run_packed_profile as run_feedback_packed_profile,
-    run_seeded as run_feedback_seeded,
+    run_seeded as run_feedback_seeded, run_vector as run_feedback_vector,
 };
 
 const H: f64 = 1. / 96_000.;
@@ -158,6 +158,7 @@ struct JointGuess<'a> {
     packed: Option<&'a DefectBlocks>,
     previous: Option<&'a chain::State>,
     accelerate: bool,
+    vector_residual: bool,
 }
 
 struct DefectTrial {
@@ -297,9 +298,14 @@ fn advance_joint_with(
         if use_nodal || iteration == BUDGET {
             let delta =
                 x.map(|row| chain::State::from_nodes(anchor.advanced(row).difference(old.audio)));
-            let (now, phase, current_error, direction) = map
-                .direction(old.audio, input, family, old.phase, H, delta)
-                .map_err(|error| format!("joint nodal direction: {error:?}"))?;
+            let nodal = if guess.vector_residual {
+                Audio::direction::<true>
+            } else {
+                Audio::direction::<false>
+            };
+            let (now, phase, current_error, direction) =
+                nodal(map, old.audio, input, family, old.phase, H, delta)
+                    .map_err(|error| format!("joint nodal direction: {error:?}"))?;
             timing = profile::split(profile::Part::ReceiverNodal, timing);
             let load_error: [f64; 4] =
                 std::array::from_fn(|i| direction[i / 2 * SIZE + LOAD[i % 2]]);

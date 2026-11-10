@@ -1908,3 +1908,34 @@ El residuo tomó 235–239 µs por ventana y el
 LU, 59 µs. La compilación sin instrumentación
 reprodujo bit a bit las cinco reservas.
 [Perfil del residuo y del LU](../evidence/rf_d_pilot_bistable_handoff16.json).
+
+### Vectores de corriente y carga para la verificación
+
+El receptor reúne dos vectores por etapa antes
+de aplicar las incidencias de R59, R60 y BUS
+y combinar las cargas con Radau. El armado
+preparado se comparte con la interfaz de stamp.
+El banco también admite una interfaz que
+devuelve únicamente corriente y carga. Ambos
+caminos conservan las mismas leyes, el LU y
+las tolerancias de aceptación.
+
+Pasaron las cinco reservas con salidas bit
+a bit iguales al control. El residuo positivo
+del perfil anterior tomó 235–239 µs por
+ventana. En la nueva compilación, el control
+que devuelve el stamp tomó 127–129 µs y la
+interfaz vectorial, 127–134 µs. El LU se
+mantuvo cerca de 58 µs. La mejora observada
+entre compilaciones se comparte entre las
+dos rutas actuales.
+
+Las medianas alternadas de ambas rutas
+quedaron en 0,733–0,766 ms por cinco frames.
+La salida vectorial tuvo un máximo de
+1,115 ms y una diferencia de mediana
+menor a 0,5 % en las cinco escenas. La
+medición cubre ventanas cortas sin el reloj
+previo de C4 ni el host.
+[Primer contraste](../evidence/rf_d_pilot_bistable_handoff17.json).
+[Perfil de las dos rutas en la misma compilación](../evidence/rf_d_pilot_bistable_handoff18.json).

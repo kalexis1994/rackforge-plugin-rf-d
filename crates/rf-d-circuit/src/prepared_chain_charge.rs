@@ -48,7 +48,20 @@ pub fn constraint_row(p:Parameters,row:usize)->bool {
   (p.boundary.r14_ohm.is_none()||p.boundary.r14_ohm==Some(p.circuit.r30_ohm-1330.))
 }
 fn value(a:&[f64;N],k:usize)->f64 {if k==GROUND {0.} else {a[k]}}
-pub fn linearize_prevalidated<const FULL:bool>(p:Parameters,sources:[f64;5],old:State,delta:State,h:f64,now:State)->Result<Parts,StepError> {
+pub fn linearize_prevalidated<const FULL:bool>(p:Parameters,sources:[f64;5],_old:State,delta:State,h:f64,now:State)->Result<Parts,StepError> {
+ stamp_prevalidated::<FULL>(p,sources,delta,h,now)
+}
+
+/// Current and charge rows for a residual check with a prepared factor.
+pub fn residual_prevalidated(
+ p: Parameters, sources: [f64; 5], delta: State, h: f64, now: State,
+) -> Result<([f64; N], [f64; N]), StepError> {
+ let Parts { dc, charge_over_h, .. } = stamp_prevalidated::<false>(p, sources, delta, h, now)?;
+ Ok((dc, charge_over_h))
+}
+
+#[inline(always)]
+fn stamp_prevalidated<const FULL:bool>(p:Parameters,sources:[f64;5],delta:State,h:f64,now:State)->Result<Parts,StepError> {
  // State/LOW canonicality belongs to the checked full-graph boundary.
  if !h.is_finite()||!(MIN_DT_S..=1e-3).contains(&h){return Err(StepError::InvalidInput);}
  let x:[f64;66]=std::array::from_fn(|k|now.high[k]);

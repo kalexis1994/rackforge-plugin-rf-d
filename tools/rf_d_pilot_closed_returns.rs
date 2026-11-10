@@ -128,7 +128,7 @@ impl Audio {
         })
     }
 
-    fn residual(
+    fn residual<const VECTOR: bool>(
         &self,
         old: chain::State,
         input: [[f64; 2]; 2],
@@ -145,17 +145,24 @@ impl Audio {
             f[1].as_ref().map_err(|_| StepError::InvalidInput)?,
         ];
         let stages = A.map(|row| (phase + h * (row[0] * f[0] + row[1] * f[1])).rem_euclid(1.));
-        let mut p = [
-            chain::linearize_prevalidated::<false>(self.params, [0.; 5], old, delta[0], h, now[0])?,
-            chain::linearize_prevalidated::<false>(self.params, [0.; 5], old, delta[1], h, now[1])?,
-        ];
+        let stamp = |i: usize| {
+            if VECTOR {
+                chain::residual_prevalidated(self.params, [0.; 5], delta[i], h, now[i])
+            } else {
+                let parts = chain::linearize_prevalidated::<false>(
+                    self.params, [0.; 5], old, delta[i], h, now[i],
+                )?;
+                Ok((parts.dc, parts.charge_over_h))
+            }
+        };
+        let mut p = [stamp(0)?, stamp(1)?];
         for i in 0..2 {
             for (j, resistance) in [R59, R60].into_iter().enumerate() {
                 let node = LOAD[j];
-                p[i].dc[node] +=
+                p[i].0[node] +=
                     ((now[i].high[node] - input[i][j]) + now[i].low[node]) / resistance;
             }
-            p[i].dc[chain::BUS] += family
+            p[i].0[chain::BUS] += family
                 .observe(bus[i], stages[i])
                 .map_err(|_| StepError::InvalidInput)?
                 .currents_a[2];
@@ -163,7 +170,7 @@ impl Audio {
         let residual = std::array::from_fn(|r| {
             let i = r / SIZE;
             let row = local(r % SIZE);
-            p[i].dc[row] + B[i][0] * p[0].charge_over_h[row] + B[i][1] * p[1].charge_over_h[row]
+            p[i].0[row] + B[i][0] * p[0].1[row] + B[i][1] * p[1].1[row]
         });
         Ok((now, stages[1], residual))
     }
@@ -178,7 +185,7 @@ impl Audio {
         delta: [chain::State; 2],
     ) -> Result<([chain::State; 2], f64), StepError> {
         let (now, angle, current, correction) =
-            self.direction(old, input, family, phase, h, delta)?;
+            self.direction::<false>(old, input, family, phase, h, delta)?;
         if current <= 2e-13 && maximum(&correction) <= 2e-9 {
             Ok((now, angle))
         } else {
@@ -186,7 +193,7 @@ impl Audio {
         }
     }
 
-    fn direction(
+    fn direction<const VECTOR: bool>(
         &self,
         old: chain::State,
         input: [[f64; 2]; 2],
@@ -196,7 +203,7 @@ impl Audio {
         delta: [chain::State; 2],
     ) -> Result<([chain::State; 2], f64, f64, [f64; PAIR]), StepError> {
         let timer = latch::profile::start();
-        let (now, angle, residual) = self.residual(old, input, family, phase, h, delta)?;
+        let (now, angle, residual) = self.residual::<VECTOR>(old, input, family, phase, h, delta)?;
         let timer = latch::profile::split(latch::profile::Part::ReceiverResidual, timer);
         let correction = self.lu.solve(residual.map(|v| -v))?;
         latch::profile::split(latch::profile::Part::ReceiverLu, timer);
@@ -229,7 +236,7 @@ impl Audio {
         }
         let budget = if self.diagnostic_recovery { 24 } else { 12 };
         for iteration in 1..=budget {
-            let (now, end_phase, residual) = self.residual(old, input, family, phase, h, delta)?;
+            let (now, end_phase, residual) = self.residual::<false>(old, input, family, phase, h, delta)?;
             let change = self.lu.solve(residual.map(|v| -v))?;
             if maximum(&residual) <= 2e-13 && maximum(&change) <= 2e-9 {
                 return Ok((now, end_phase, delta, iteration));
@@ -703,4 +710,5 @@ pub use audio_readout::{run as run_audio_readout, run_stage_loads as run_audio_s
 pub use audio_readout::{run_feedback as run_audio_feedback, run_feedback_packed as run_audio_feedback_packed,
     run_feedback_packed_profile as run_audio_feedback_packed_profile,
     run_feedback_seeded as run_audio_feedback_seeded,
-    run_feedback_accelerated as run_audio_feedback_accelerated};
+    run_feedback_accelerated as run_audio_feedback_accelerated,
+    run_feedback_vector as run_audio_feedback_vector};

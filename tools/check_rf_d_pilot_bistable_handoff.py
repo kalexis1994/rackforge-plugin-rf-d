@@ -33,6 +33,7 @@ STEP_CONTROL = "evidence/rf_d_pilot_bistable_handoff10.json"
 FROZEN_CONTROL = "evidence/rf_d_pilot_bistable_handoff11.json"
 PROFILE_CONTROL = "evidence/rf_d_pilot_bistable_handoff12.json"
 PACKED_CONTROL = "evidence/rf_d_pilot_bistable_handoff13.json"
+NODAL_CONTROL = "evidence/rf_d_pilot_bistable_handoff16.json"
 NATIVE = ("tools/rf_d_pilot_bistable_handoff.rs", "tools/rf_d_pilot_bistable_handoff_probe.rs")
 TIMERS = (5, 38)
 NODES = (*b.NODES, *b.LOAD_NODES)
@@ -113,7 +114,7 @@ def close_r59(case, replay, assemble, reference, mask):
 
 
 def stage_feedback(case, run, replay, inputs, coarse_rows, event=None, profiles=b"", *, frozen=False,
-                   profile_target=None, packed_rows=False, seeded=False, accelerated=False):
+                   profile_target=None, packed_rows=False, seeded=False, accelerated=False, vector=False):
     expected = case.stages[coarse_rows]
     stages = np.concatenate((inputs, expected[:, :, [17, 24, 14]]), axis=2)
     mask = np.ones(coarse_rows.shape, dtype=bool)
@@ -129,7 +130,9 @@ def stage_feedback(case, run, replay, inputs, coarse_rows, event=None, profiles=
                + stages.astype("<f8").tobytes())
     result = dict(passed=False)
     mode = "audio-readout-feedback"
-    if accelerated:
+    if vector:
+        suffix, baseline, bench = "-vector", "-packed", "-vector-bench"
+    elif accelerated:
         suffix, baseline, bench = "-accelerated", "-packed", "-accelerated-bench"
     elif seeded:
         suffix, baseline, bench = "-seeded", "-packed", "-seeded-bench"
@@ -197,6 +200,10 @@ def stage_feedback(case, run, replay, inputs, coarse_rows, event=None, profiles=
             packed, variant = timings
             result["timing"] = dict(alternating=True, packed_rows=packed, **{variant_key: variant},
                                     median_speedup=packed["median_ns"] / variant["median_ns"])
+        elif vector:
+            packed, reduced = timings
+            result["timing"] = dict(alternating=True, packed_rows=packed, vector_residual=reduced,
+                                    median_speedup=packed["median_ns"] / reduced["median_ns"])
         elif packed_rows:
             scalar, packed = timings
             result["timing"] = dict(alternating=True, scalar_rows=scalar, packed_rows=packed,
@@ -208,16 +215,20 @@ def stage_feedback(case, run, replay, inputs, coarse_rows, event=None, profiles=
         else:
             result["timing"], = timings
         if profile_target is not None:
-            timing, *parts = run([profile_target, mode + "-profile"], payload).decode().splitlines()
-            measured = {}
-            for line in parts:
-                tag, name, elapsed, calls = line.split(",")
-                assert tag == "RECEIVER" and name not in measured
-                measured[name] = dict(total_ns=int(elapsed), calls=int(calls))
-            assert len(measured) == 9 and all(x["calls"] > 0 for x in measured.values())
-            assert measured["nodal"]["calls"] == measured["residual"]["calls"] == measured["lu"]["calls"]
-            result["profile"] = dict(layout="packed", timing=dict(zip(keys, map(int, timing.split(",")), strict=True)),
-                                     parts=measured)
+            variants = (("profile_control", "-profile", "stamp"), ("profile", "-vector-profile", "vector")) if vector else (
+                ("profile", "-profile", "stamp"),)
+            for key, profile_suffix, residual in variants:
+                timing, *parts = run([profile_target, mode + profile_suffix], payload).decode().splitlines()
+                measured = {}
+                for line in parts:
+                    tag, name, elapsed, calls = line.split(",")
+                    assert tag == "RECEIVER" and name not in measured
+                    measured[name] = dict(total_ns=int(elapsed), calls=int(calls))
+                assert len(measured) == 9 and all(x["calls"] > 0 for x in measured.values())
+                assert measured["nodal"]["calls"] == measured["residual"]["calls"] == measured["lu"]["calls"]
+                result[key] = dict(layout="packed", residual=residual,
+                                   timing=dict(zip(keys, map(int, timing.split(",")), strict=True)),
+                                   parts=measured)
     else:
         result["failure_input"] = packed(payload)
     return result
@@ -239,9 +250,11 @@ def main():
     receiver_mode.add_argument("--receiver-packed", action="store_true", help="compare receiver products grouped by four output rows")
     receiver_mode.add_argument("--receiver-seeded", action="store_true", help="seed the packed receiver with prior endpoint motion")
     receiver_mode.add_argument("--receiver-accelerated", action="store_true", help="accelerate receiver defects within each step")
+    receiver_mode.add_argument("--receiver-vector", action="store_true", help="check only current and charge vectors in the nodal residual")
     args = parser.parse_args()
+    profile_receiver = args.receiver_profile or args.receiver_vector
     iteration_trial = args.receiver_seeded or args.receiver_accelerated
-    args.receiver_packed |= iteration_trial or args.receiver_profile
+    args.receiver_packed |= iteration_trial or profile_receiver
     args.stage_feedback_frozen |= args.receiver_profile or args.receiver_packed
     args.stage_feedback |= args.stage_feedback_frozen
     args.reciprocal_r59 |= args.stage_feedback
@@ -268,8 +281,11 @@ def main():
         native_sources += (FROZEN_CONTROL, "tools/rf_d_pilot_step_profile.rs")
     if args.receiver_packed:
         native_sources += (PROFILE_CONTROL,)
-    if iteration_trial or args.receiver_profile:
+    if iteration_trial or profile_receiver:
         native_sources += (PACKED_CONTROL,)
+    if args.receiver_vector:
+        native_sources += (NODAL_CONTROL, "crates/rf-d-circuit/src/prepared_chain_charge.rs",
+                           "crates/rf-d-circuit/src/prepared_audio_stamp.rs")
     sources = Sources((*b.SOURCES, *c.ALL_SOURCES, c.OWN, c.CANDIDATE, c.PROBE, c.PORTS,
                        OWN, PREVIOUS, CLOCK_CONTROL, *SOURCE_NAMES, C4_CLOCK, TIMER_CARRY, TIMER_NATIVE,
                        TIMER_NATIVE_PROBE, "tools/rf_d_pilot_timer_rc.rs", *native_sources))
@@ -280,7 +296,8 @@ def main():
                   delayed_reentry=args.delay_reentry, native_reentry=args.native_reentry,
                   closed_c2=args.native_c2, audio_readout=args.audio,
                   reciprocal_r59=args.reciprocal_r59, stage_feedback=args.stage_feedback,
-                  frozen_feedback=args.stage_feedback_frozen, receiver_profile=args.receiver_profile,
+                  frozen_feedback=args.stage_feedback_frozen, receiver_profile=profile_receiver,
+                  receiver_vector=args.receiver_vector,
                   receiver_packed=args.receiver_packed, receiver_seeded=args.receiver_seeded,
                   receiver_accelerated=args.receiver_accelerated,
                   calibration=[], cases={})
@@ -294,7 +311,7 @@ def main():
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
     clock = c.AREA / "handoff-clock.exe"
     closed = c.AREA / "handoff-return.exe"
-    profile_target = c.AREA / "handoff-receiver-profile.exe" if args.receiver_profile else None
+    profile_target = c.AREA / "handoff-receiver-profile.exe" if profile_receiver else None
 
     def process(command, data=None):
         return subprocess.run(list(map(str, command)), cwd=c.ROOT, env=env, input=data,
@@ -351,9 +368,9 @@ def main():
         native_control = c.read(NATIVE_CONTROL)["cases"] if args.native_c2 else {}
         c2_control = c.read(C2_CONTROL)["cases"] if args.audio else {}
         audio_control = c.read(AUDIO_CONTROL)["cases"] if args.reciprocal_r59 else {}
-        step_evidence = PACKED_CONTROL if iteration_trial else (FROZEN_CONTROL if args.receiver_packed else STEP_CONTROL)
+        step_evidence = PACKED_CONTROL if iteration_trial or args.receiver_vector else (FROZEN_CONTROL if args.receiver_packed else STEP_CONTROL)
         step_control = c.read(step_evidence)["cases"] if args.stage_feedback_frozen else {}
-        profile_control = c.read(PACKED_CONTROL)["cases"] if args.receiver_profile else {}
+        profile_control = c.read(PACKED_CONTROL)["cases"] if profile_receiver else {}
 
         def receiver(branch, start, offset, stages):
             phase, _, _, state = refs[branch][1][start]
@@ -451,10 +468,11 @@ def main():
                         item["stage_feedback"] = stage_feedback(case, run, replay, inputs, coarse_rows,
                                                                frozen=args.stage_feedback_frozen,
                                                                profile_target=profile_target, packed_rows=args.receiver_packed,
-                                                               seeded=args.receiver_seeded, accelerated=args.receiver_accelerated)
+                                                               seeded=args.receiver_seeded, accelerated=args.receiver_accelerated,
+                                                               vector=args.receiver_vector)
                         if args.stage_feedback_frozen and item["stage_feedback"]["passed"]:
                             assert item["stage_feedback"]["control"]["output_sha256"] == step_control[name]["stage_feedback"]["output_sha256"]
-                        if args.receiver_profile and item["stage_feedback"]["passed"]:
+                        if profile_receiver and item["stage_feedback"]["passed"]:
                             assert item["stage_feedback"]["output_sha256"] == profile_control[name]["stage_feedback"]["output_sha256"]
                         item["passed"] &= item["stage_feedback"]["passed"]
                 print(name, "negative", item["passed"], flush=True)
@@ -634,11 +652,11 @@ def main():
                                                 case, run, replay, inputs, coarse_rows, event, profiles,
                                                 frozen=args.stage_feedback_frozen, profile_target=profile_target,
                                                 packed_rows=args.receiver_packed, seeded=args.receiver_seeded,
-                                                accelerated=args.receiver_accelerated)
+                                                accelerated=args.receiver_accelerated, vector=args.receiver_vector)
                                             result = item["stage_feedback"]
                                             if args.stage_feedback_frozen and result["passed"]:
                                                 assert result["control"]["output_sha256"] == step_control[name]["stage_feedback"]["output_sha256"]
-                                            if args.receiver_profile and result["passed"]:
+                                            if profile_receiver and result["passed"]:
                                                 assert result["output_sha256"] == profile_control[name]["stage_feedback"]["output_sha256"]
                                 else:
                                     closed_c2["timing"] = timings("bench-native-handoff-c2", payload)

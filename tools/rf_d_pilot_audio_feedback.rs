@@ -24,6 +24,7 @@ enum Candidate<'a> {
     Packed(&'a DefectBlocks),
     Seeded(&'a DefectBlocks),
     Accelerated(&'a DefectBlocks),
+    Vector(&'a DefectBlocks),
 }
 
 #[derive(Clone, Copy)]
@@ -32,6 +33,7 @@ enum Matrix {
     Packed,
     Seeded,
     Accelerated,
+    Vector,
 }
 
 struct Event {
@@ -114,13 +116,15 @@ fn render(
 ) -> Result<[f64; 7], String> {
     let frozen = !matches!(candidate_mode, Candidate::Exact);
     let packed = match candidate_mode {
-        Candidate::Packed(blocks) | Candidate::Seeded(blocks) | Candidate::Accelerated(blocks) => {
-            Some(blocks)
-        }
+        Candidate::Packed(blocks)
+        | Candidate::Seeded(blocks)
+        | Candidate::Accelerated(blocks)
+        | Candidate::Vector(blocks) => Some(blocks),
         _ => None,
     };
     let seeded = matches!(candidate_mode, Candidate::Seeded(_));
     let accelerate = matches!(candidate_mode, Candidate::Accelerated(_));
+    let vector_residual = matches!(candidate_mode, Candidate::Vector(_));
     let mut previous_audio = None;
     // Maximum iterations, voltage/current mismatch, latch calls, total iterations, seeds, retries.
     let mut stats = [0_f64; 7];
@@ -131,6 +135,7 @@ fn render(
             packed,
             previous: previous_audio.as_ref().filter(|_| predict),
             accelerate,
+            vector_residual,
         };
         stats[5] += f64::from(guess.previous.is_some() || accelerate);
         let (next, output, iterations, mismatch, candidate) = loop {
@@ -207,6 +212,10 @@ pub fn run_packed_profile() -> Result<(), Box<dyn std::error::Error>> {
     run_mode(true, true, false, Matrix::Packed)
 }
 
+pub fn run_vector(bench: bool, compare: bool) -> Result<(), Box<dyn std::error::Error>> {
+    run_mode(bench, true, compare, Matrix::Vector)
+}
+
 pub fn run_seeded(bench: bool) -> Result<(), Box<dyn std::error::Error>> {
     run_mode(bench, true, bench, Matrix::Seeded)
 }
@@ -278,6 +287,7 @@ fn run_mode(
         (Matrix::Accelerated, Some(blocks)) => {
             (Candidate::Packed(blocks), Candidate::Accelerated(blocks))
         }
+        (Matrix::Vector, Some(blocks)) => (Candidate::Packed(blocks), Candidate::Vector(blocks)),
         _ => (Candidate::Exact, Candidate::Frozen),
     };
     if bench {
