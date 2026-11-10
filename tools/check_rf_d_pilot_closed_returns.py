@@ -18,6 +18,7 @@ OWN = "tools/check_rf_d_pilot_closed_returns.py"
 MODEL = "tools/rf_d_pilot_closed_returns.rs"
 CLOCK = "tools/rf_d_pilot_contour_clock.rs"
 REDUCED = "tools/rf_d_pilot_reduced_audio.rs"
+PROFILE = "tools/rf_d_pilot_step_profile.rs"
 MODES = tuple((256, 8, policy, True, True, True) for policy in (0, 3, 4, 5))
 POLICIES = {1: "adaptive", 2: "port_clock", 3: "latch_clock",
             4: "collector_clock", 5: "whole_clock"}
@@ -53,10 +54,11 @@ def radau_devices():
 
 
 def telemetry(stderr):
+    *profile, line = stderr.splitlines()
     (tag, peak, outer, audio, mismatch, solve, defect, switch, worst, builds, reused,
-     trials, reused_substeps, whole, elapsed, fallbacks, checks) = stderr.split(",")
+     trials, reused_substeps, whole, elapsed, fallbacks, checks) = line.split(",")
     assert tag == "PORTS"
-    return dict(max_frame_ns=int(peak), max_outer_iterations=int(outer),
+    result = dict(max_frame_ns=int(peak), max_outer_iterations=int(outer),
                 max_audio_iterations=int(audio), max_port_mismatch_v=float(mismatch),
                 rejections=dict(solve=int(solve), defect=int(defect), switch=int(switch)),
                 max_accepted_defect=float(worst),
@@ -64,6 +66,14 @@ def telemetry(stderr):
                 clock_trials=int(trials), reused_substeps=int(reused_substeps),
                 whole_steps=int(whole), compute_ns=int(elapsed),
                 nodal_fallbacks=int(fallbacks), checked_proposals=int(checks))
+
+    if profile:
+        prefix, c, a, s, l, cn, an, sn, ln = profile[0].split(",")
+        assert len(profile) == 1 and prefix == "PROFILE"
+        names = ("contours", "audio", "schur", "linear")
+        result["profile_ns"] = dict(zip(names, map(int, (c, a, s, l))))
+        result["profile_calls"] = dict(zip(names, map(int, (cn, an, sn, ln))))
+    return result
 
 
 def output_columns(samples):
@@ -119,7 +129,7 @@ def validate(raw, reference, info, stride, adaptive):
                 stride_histogram=histogram, accepted_steps=len(steps), near_crossing_steps=nearby)
 
 
-def benchmark_blocks(run, exe, anchor, refs, prior, mode, recover, verify):
+def benchmark_blocks(run, exe, anchor, refs, prior, mode, recover, verify, suffix_cache):
     result = {}
     # The local positive map begins just before the switch. The continuous
     # negative case includes both keyboard edges in the same callback.
@@ -168,17 +178,20 @@ def benchmark_blocks(run, exe, anchor, refs, prior, mode, recover, verify):
                 suffix_start = start + covered
                 phase, _, _, state = grid[suffix_start]
                 anchor.write_bytes(packed(np.r_[state.ravel(), phase]))
-                ref = run([exe, "contour-endpoints", anchor, suffix_start, BLOCK - covered, key])
-                assert ref.returncode == 0, ref.stderr.decode(errors="replace")
-                suffix = np.frombuffer(ref.stdout, "<f8").reshape(BLOCK - covered + 1, c.N)
+                if suffix_start not in suffix_cache:
+                    ref = run([exe, "contour-endpoints", anchor, suffix_start, BLOCK - covered, key])
+                    assert ref.returncode == 0, ref.stderr.decode(errors="replace")
+                    suffix_cache[suffix_start] = (ref.stdout, ref.stderr)
+                output, events_raw = suffix_cache[suffix_start]
+                suffix = np.frombuffer(output, "<f8").reshape(BLOCK - covered + 1, c.N)
                 assert np.array_equal(suffix[0], samples[-1])
                 samples = np.vstack((samples, suffix[1:]))
-                for line in ref.stderr.decode().splitlines():
+                for line in events_raw.decode().splitlines():
                     tag, left, right, order = line.split(",")
                     assert tag == "SWITCH"
                     expected.append([int(left), int(right), int(order)])
                 item["reference_suffix"] = dict(start_frame=suffix_start, frames=BLOCK - covered,
-                                                sha256=c.digest(ref.stdout), anchor_sha256=c.sha(anchor))
+                                                sha256=c.digest(output), anchor_sha256=c.sha(anchor))
             want = output_columns(samples)
             error = endpoints[indices] - want
             worst = np.max(abs(error), axis=0)
@@ -200,17 +213,23 @@ def main():
     parser.add_argument("--policy", type=int, choices=(3, 4, 5), default=4)
     parser.add_argument("--diagnostic-recovery", action="store_true")
     parser.add_argument("--verify-reduced", action="store_true", help="verify the last reduced proposal with nodal KCL")
+    parser.add_argument("--profile-substeps", action="store_true")
+    latch = parser.add_mutually_exclusive_group()
+    latch.add_argument("--sparse-latch", action="store_true")
+    latch.add_argument("--compare-latch", action="store_true")
     args = parser.parse_args()
+    assert args.blocks or not args.compare_latch
     assert args.blocks or not (args.diagnostic_recovery or args.verify_reduced)
     assert not (args.diagnostic_recovery and args.verify_reduced)
     assert not list(c.AREA.iterdir())
     seq = 1
     while (out := c.ROOT / f"evidence/rf_d_pilot_closed_returns{seq:02}.json").exists():
         seq += 1
-    sources = Sources((*c.ALL_SOURCES, c.OWN, c.CANDIDATE, c.PROBE, c.PORTS, OWN, MODEL, CLOCK, REDUCED,
+    sources = Sources((*c.ALL_SOURCES, c.OWN, c.CANDIDATE, c.PROBE, c.PORTS, OWN, MODEL, CLOCK, REDUCED, PROFILE,
                        "tools/check_rf_d_reduced_contour_ports.py", "tools/rf_d_reduced_contour_live.py",
                        "tools/check_rf_d_pilot_split_returns.py", CONTOURS))
     report = dict(passed=False, rack_integrated=False, source_boundary="loaded x2/x4",
+                  instrumented=args.profile_substeps, sparse_latch=args.sparse_latch,
                   windows={}, **sources.fields(), compiler_sha256=c.sha(Path(c.COMPILER)),
                   library_sha256=c.sha(c.LIB))
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
@@ -241,13 +260,33 @@ def main():
         code += f'\n#[path = "{devices.as_posix()}"] mod radau_devices;\n'
         probe = c.emit(probe.name, code)
         exe = c.AREA / "pilot-closed-returns.exe"
-        built = run([c.COMPILER, "--edition=2021", "-C", "opt-level=3", "-C", "target-feature=+fma",
-                     "-C", "link-arg=-Wl,--stack,33554432", "--cfg", "laboratory", "--cfg", "pilot_loaded_filter", "--cfg", "pilot_closed_cv",
-                     "-A", "dead_code", probe, "--extern", f"rf_d_circuit={c.LIB}", "-o", exe])
-        assert built.returncode == 0, built.stderr.decode(errors="replace")
+        profile_flags = ["--cfg", "pilot_profile_steps"] if args.profile_substeps else []
+        def compile_bench(target, sparse):
+            latch_flags = ["--cfg", "pilot_sparse_latch"] if sparse else []
+            built = run([c.COMPILER, "--edition=2021", "-C", "opt-level=3", "-C", "target-feature=+fma",
+                         "-C", "link-arg=-Wl,--stack,33554432", "--cfg", "laboratory",
+                         "--cfg", "pilot_loaded_filter", "--cfg", "pilot_closed_cv",
+                         *profile_flags, *latch_flags, "-A", "dead_code", probe,
+                         "--extern", f"rf_d_circuit={c.LIB}", "-o", target])
+            assert built.returncode == 0, built.stderr.decode(errors="replace")
+
+        compile_bench(exe, args.sparse_latch)
         anchor = c.AREA / "closed-returns.anchor"
         if args.blocks:
-            report["blocks"] = benchmark_blocks(run, exe, anchor, refs, prior, args.policy, args.diagnostic_recovery, args.verify_reduced)
+            suffix = {}
+            def blocks(target):
+                return benchmark_blocks(run, target, anchor, refs, prior, args.policy,
+                                        args.diagnostic_recovery, args.verify_reduced, suffix)
+            if args.compare_latch:
+                candidate = c.AREA / "pilot-sparse-latch.exe"
+                compile_bench(candidate, True)
+                report["baseline"] = blocks(exe)
+                report["blocks"] = blocks(candidate)
+                report["identical_outputs"] = all(
+                    item["output_sha256"] == report["baseline"][name]["output_sha256"]
+                    for name, item in report["blocks"].items())
+            else:
+                report["blocks"] = blocks(exe)
             report["passed"] = all(item.get("comparison_passed", False)
                                    for item in report["blocks"].values())
         else:

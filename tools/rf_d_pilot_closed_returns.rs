@@ -256,6 +256,7 @@ impl Step<'_> {
             ports[i].latch.volts[CV] = cv;
             ports[i].latch.volts[TAIL] = tail;
         }
+        let timer = latch::profile::start();
         let contour = contours::step_with_budget(
             self.contour,
             ports,
@@ -264,12 +265,15 @@ impl Step<'_> {
             self.change,
             self.timer_budget,
             self.model.warm.then_some(&mut contour_seed),
-        )?;
+        );
+        let timer = latch::profile::split(latch::profile::Part::Contours, timer);
+        let contour = contour?;
         let drive = contour.map(|s| [s.returns.volume[2], s.returns.filter[2]]);
-        let (audio, phase, delta, audio_iterations) = self
+        let audio = self
             .model
-            .step(self.audio, drive, self.family, self.phase, self.h, seed)
-            .map_err(|error| ("audio", error))?;
+            .step(self.audio, drive, self.family, self.phase, self.h, seed);
+        latch::profile::split(latch::profile::Part::Audio, timer);
+        let (audio, phase, delta, audio_iterations) = audio.map_err(|error| ("audio", error))?;
         let mut residual = [0.; INTERFACE];
         for i in 0..2 {
             residual[3 * i] = v[3 * i] - voltage(audio[i], LOAD[0]);
@@ -651,6 +655,7 @@ pub fn run(
         .flatten()
         .map(|m| m.checked_proposals.get())
         .sum();
+    latch::profile::report();
     eprintln!(
         "PORTS,{peak_ns},{max_outer},{max_audio},{max_residual:.17e},{},{},{},{:.17e},{builds},{reused},{},{},{},{block_ns},{fallbacks},{checks}",
         stats.solve, stats.defect, stats.switch, stats.worst, stats.trials, stats.reused, stats.whole,

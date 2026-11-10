@@ -624,3 +624,21 @@ R59/R60. El cruce quedó en **319096–319104**. Ambos tiempos
 superan el presupuesto y la prueba física del candidato en
 Desktop queda pendiente.
 [Medición a 128 frames](../evidence/rf_d_pilot_closed_returns16.json).
+
+## Coste de la dirección del biestable
+
+El perfil de dos bloques completos separó el tiempo del
+receptor de audio y de los contornos. En el positivo,
+los contornos consumieron 3,71 s de 4,40 s. El armado de
+Schur y la resolución lineal representaron 1,97 s de ese
+tiempo. En el negativo sumaron 0,485 s de los 0,912 s de
+contornos. [Perfil nativo](../evidence/rf_d_pilot_closed_returns18.json).
+
+El armado disperso omite productos con ceros en la reacción
+de los nodos algebraicos. Recorre esos nodos en el mismo
+orden y usa el pivoteo escalado del LU disperso existente.
+En la comparación instrumentada, las salidas de los dos
+bloques fueron idénticas bit a bit. El positivo bajó de
+4,01 a 3,71 s y el negativo de 1,10 a 1,03 s. Ambos
+pasaron el contraste de 128 frames contra el solver.
+[Comparación del armado](../evidence/rf_d_pilot_closed_returns19.json).

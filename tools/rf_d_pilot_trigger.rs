@@ -5,6 +5,9 @@ use crate::{
     StepError,
 };
 
+#[path = "rf_d_pilot_step_profile.rs"]
+pub mod profile;
+
 const CORE_BASE: [usize; 19] = [
     6, 7, 8, 9, 10, 11, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 53,
 ];
@@ -397,7 +400,33 @@ const KEPT: [usize; N - ALGEBRAIC.len()] = {
 };
 const K: usize = KEPT.len();
 
+#[cfg(pilot_sparse_latch)]
+fn schur_reaction(stamp: &Stamp, lift: &[[f64; A]; K]) -> [[f64; K]; K] {
+    let mut reaction = [[0.; K]; K];
+    for (g, &a) in ALGEBRAIC.iter().enumerate() {
+        let mut columns = [(0, 0.); K];
+        let mut count = 0;
+        for (j, &b) in KEPT.iter().enumerate() {
+            let value = stamp.conductance[a][b];
+            if value != 0. {
+                columns[count] = (j, value);
+                count += 1;
+            }
+        }
+        for (row, weights) in reaction.iter_mut().zip(lift) {
+            let weight = weights[g];
+            if weight != 0. {
+                for &(column, value) in &columns[..count] {
+                    row[column] += weight * value;
+                }
+            }
+        }
+    }
+    reaction
+}
+
 fn direction(s: &[Stamp; 2], r: [f64; 2 * N], h: f64) -> Result<[f64; 2 * N], StepError> {
+    let timer = profile::start();
     // These algebraic rows have neither stored charge nor mutual
     // coupling. Their exact Schur contribution stays within each stage.
     let inv_diagonal: [[f64; A]; 2] =
@@ -414,6 +443,8 @@ fn direction(s: &[Stamp; 2], r: [f64; 2 * N], h: f64) -> Result<[f64; 2 * N], St
             std::array::from_fn(|g| s[j].conductance[a][ALGEBRAIC[g]] * inv_diagonal[j][g])
         })
     });
+    #[cfg(pilot_sparse_latch)]
+    let reactions = std::array::from_fn::<_, 2, _>(|i| schur_reaction(&s[i], &lift[i]));
     let jac: [[f64; 2 * K]; 2 * K] = std::array::from_fn(|i| {
         let (stage, row) = (i / K, KEPT[i % K]);
         std::array::from_fn(|j| {
@@ -422,6 +453,9 @@ fn direction(s: &[Stamp; 2], r: [f64; 2 * N], h: f64) -> Result<[f64; 2 * N], St
             if stage != other {
                 return mass;
             }
+            #[cfg(pilot_sparse_latch)]
+            let reaction = reactions[stage][i % K][j % K];
+            #[cfg(not(pilot_sparse_latch))]
             let reaction: f64 = ALGEBRAIC
                 .iter()
                 .zip(&lift[stage][i % K])
@@ -439,7 +473,14 @@ fn direction(s: &[Stamp; 2], r: [f64; 2 * N], h: f64) -> Result<[f64; 2 * N], St
             .sum();
         -r[stage * N + KEPT[i % K]] + load
     });
-    let solution = Lu::factor(jac)?.solve(rhs)?;
+    let timer = profile::split(profile::Part::Schur, timer);
+    #[cfg(pilot_sparse_latch)]
+    let factor = Lu::factor_contour(jac);
+    #[cfg(not(pilot_sparse_latch))]
+    let factor = Lu::factor(jac);
+    let solution = factor.and_then(|factor| factor.solve(rhs));
+    profile::split(profile::Part::Linear, timer);
+    let solution = solution?;
     let mut full = [0.; 2 * N];
     for stage in 0..2 {
         let base = stage * N;
