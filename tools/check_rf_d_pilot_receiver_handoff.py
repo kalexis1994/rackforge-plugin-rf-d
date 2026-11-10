@@ -1,4 +1,5 @@
-"""Resume the fast positive receiver from a charged nonlinear circuit snapshot."""
+"""Resume either fast receiver branch from a charged nonlinear circuit snapshot."""
+import argparse
 import os
 from pathlib import Path
 import subprocess
@@ -12,8 +13,10 @@ from check_rf_d_pilot_returns import (
     AREA, COMPILER, LIB, ORACLE, PROBE, ROOT, SOURCES, compare, emit, generate, generate_law,
 )
 from check_rf_d_pilot_split_returns import (
-    ANCHOR_SOURCE, BUDGET_NS, HOST_FRAMES, LOAD_LIMIT_V, OPEN, OPEN_RANGE, drives, packed,
+    ANCHOR_SOURCE, BUDGET_NS, CLOSED, HOST_FRAMES, LOAD_LIMIT_V, OPEN, OPEN_RANGE, drives, packed,
 )
+from check_rf_d_pilot_off_anchor import OWN as OFF_OWN, RANGE as CLOSED_RANGE, stimulus as off_drives
+from check_rf_d_reduced_contour_ports import SOURCES as CONTOUR_SOURCES, chain_index, references
 from check_recovery_cost import digest
 from prepare_charge_reduced import Y
 from prepare_dual_chain import sha, write
@@ -28,16 +31,25 @@ CHARGE_LIMIT_C = 1e-20
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--branch", choices=("positive", "negative"), default="positive")
+    args = parser.parse_args()
+    negative = args.branch == "negative"
+    center, limits = (CLOSED, CLOSED_RANGE) if negative else (OPEN, OPEN_RANGE)
+    stimulus = off_drives if negative else drives
     assert AREA.is_dir() and not list(AREA.iterdir())
     seq = 1
     while (out := ROOT / f"evidence/rf_d_pilot_receiver_handoff{seq:02}.json").exists():
         seq += 1
+    extra_sources = (*CONTOUR_SOURCES, OFF_OWN, "tools/check_vco_family_voice_bus_cost.py") if negative else ()
     sources = Sources((*SOURCES, OWN, ANCHOR_SOURCE, "tools/check_rf_d_pilot_split_returns.py",
-                       "tools/affine_evidence.py", "tools/check_hybrid_voice.py"))
+                       "tools/affine_evidence.py", "tools/check_hybrid_voice.py", *extra_sources))
     report = dict(passed=False, native_receiver_realtime=False, rack_integrated=False,
                   contour_feedback=False, internal_rate_hz=RATE, frames=HOST_FRAMES,
                   warmup_frames=HOST_FRAMES, budget_ns=BUDGET_NS,
                   charge_limit_c=CHARGE_LIMIT_C, load_limit_v=LOAD_LIMIT_V,
+                  branch=args.branch, bias_v=center, drive_range_v=limits,
+                  normalized_defects=negative,
                   imposed_sources=("signal", "R59 voltage", "R60 voltage"),
                   **sources.fields(), compiler_sha256=sha(Path(COMPILER)), library_sha256=sha(LIB))
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
@@ -66,7 +78,13 @@ def main():
         oracle = AREA / "receiver-handoff-oracle.exe"
         floats([*flags, ROOT / ORACLE, "--extern", f"rf_d_circuit={LIB}", "-o", oracle], None)
         baseline = cases()[1]
-        dc = floats([oracle, "anchor"], packed(np.r_[baseline["DC"], 0., OPEN]))
+        seed = baseline["DC"]
+        if negative:
+            reference, report["reference_inputs"] = references()
+            _, _, _, full_seed = reference["negative"][1][0]
+            seed = full_seed[:, [chain_index(k) for k in range(68)]].ravel()
+            report["negative_seed_sha256"] = digest(packed(seed))
+        dc = floats([oracle, "anchor-direct" if negative else "anchor"], packed(np.r_[seed, 0., center]))
         assert 0. <= dc[-1] <= 1e-13
         case = dict(baseline, DC=dc[:136], G=dc[136:-1].reshape(68, 68).copy())
         case["G"][66, 66] -= Y
@@ -75,8 +93,8 @@ def main():
         code, _ = generate(rate=RATE)
         generate_law(SPLIT_LAWS)
         bank = AREA / "pilot-return-maps.rs"
-        checks = emit_data(bank, 1. / RATE, split=case, center=OPEN, limits=OPEN_RANGE,
-                           split_ladder=True, state_transfer=True)
+        checks = emit_data(bank, 1. / RATE, split=case, center=center, limits=limits,
+                           split_ladder=True, normalize_defects=negative, state_transfer=True)
         report["maps"] = dict(checks=checks, sha256=sha(bank))
         src = emit("receiver-handoff.rs", code + f'#[path = "{(ROOT / PROBE).as_posix()}"] mod probe;\n'
                    "fn main() -> Result<(), Box<dyn std::error::Error>> { probe::main() }\n")
@@ -88,8 +106,8 @@ def main():
         for factor in (4, 8):
             clock = RATE * factor
             ticks = np.arange(2 * STEPS * factor)
-            stages = np.column_stack((drives((ticks + 1. / 3.) / clock) + [0., *OPEN],
-                                      drives((ticks + 1.) / clock) + [0., *OPEN]))
+            stages = np.column_stack((stimulus((ticks + 1. / 3.) / clock) + [0., *center],
+                                      stimulus((ticks + 1.) / clock) + [0., *center]))
             payload = packed(np.r_[case["DC"], stages.ravel()])
             values = floats([oracle, clock, "split"], payload)
             fine[factor] = values.reshape(-1, 6)[factor - 1::factor]
@@ -98,8 +116,8 @@ def main():
         snapshot = floats([oracle, RATE * 8, "split-snapshot"], prefixes[8], repeat=True)
         assert snapshot.shape == (136,)
         node = snapshot[:68] + snapshot[68:]
-        initial_drive = drives(np.array([STEPS / RATE]))[0]
-        actual_drive = initial_drive[1:] + OPEN
+        initial_drive = stimulus(np.array([STEPS / RATE]))[0]
+        actual_drive = initial_drive[1:] + center
         observed = np.array([node[61], node[66], node[6] - node[66],
                              (node[66] - .5 * initial_drive[0]) / 39_250.,
                              (actual_drive[0] - node[32]) / 68_000.,
@@ -107,7 +125,7 @@ def main():
         np.testing.assert_array_equal(observed, fine[8][STEPS - 1])
         report.update(snapshot_sha256=digest(packed(snapshot)), snapshot_observations_bit_exact=True)
 
-        coarse = drives(np.arange(1, 2 * STEPS + 1) / RATE)
+        coarse = stimulus(np.arange(1, 2 * STEPS + 1) / RATE)
         suffix = packed(coarse[STEPS:])
         header = np.r_[snapshot, initial_drive]
         payload = packed(header) + suffix
@@ -124,7 +142,7 @@ def main():
                                  initial_offset_c=wanted_charge.tolist())
         report["refinement"] = compare(fine[4][STEPS:], fine[8][STEPS:])
         report["comparison"] = compare(rows[:, :6], fine[8][STEPS:])
-        endpoint = coarse[STEPS:, 1:] + OPEN
+        endpoint = coarse[STEPS:, 1:] + center
         wanted_load = np.column_stack((endpoint[:, 0] - 68_000. * fine[8][STEPS:, 4],
                                        endpoint[:, 1] + 680. * fine[8][STEPS:, 5]))
         load_error = abs(rows[:, 6:] - wanted_load).max(axis=0)
@@ -149,7 +167,7 @@ def main():
         report["guards"] = {}
         for name, index, value, error in (("nonfinite_node", 0, np.nan, "Input"),
                                          ("nonfinite_signal", 136, np.nan, "Input"),
-                                         ("drive_domain", 137, OPEN_RANGE[0] + .001, "Input"),
+                                         ("drive_domain", 137, limits[0] + .001, "Input"),
                                          ("junction_domain", 6, header[6] + 2., "Domain")):
             bad = header.copy()
             bad[index] = value

@@ -2149,3 +2149,34 @@ y los ocho canales de salida reprodujeron los mismos
 bytes del recibo anterior. Este pase tuvo mediana
 1,035 ms y máximo 1,093 ms, con cero asignaciones.
 [Regresión de la ruta previa](../evidence/rf_d_pilot_split_returns04.json).
+
+
+### Transferencia de la rama negativa normalizada
+
+La misma importación se contrastó en la rama negativa,
+con el anclaje directo y la normalización de defectos
+que ya usa ese receptor. La fuente de R59 permaneció
+en −0,28 ± 0,005 V y la del colector de R60 en
+1,45 ± 0,001 V. El snapshot se tomó después de
+128 frames y se continuaron otros 128 frames.
+
+Pasaron el refinamiento 384/768 kHz, las 17 cargas,
+los puertos y los cuatro rechazos de entrada. Las
+cargas tuvieron desacuerdo observado nulo frente a
+1e−20 C. La importación de DC y los replays fueron
+idénticos por bytes. J7 tuvo 0,000169 % RMS de error
+contra Radau a 768 kHz, con máximo de 1,06 fV.
+R60 difirió 40,6 fA. El mayor error de TAIL fue
+27,6 pV y ambas identidades de corriente cerraron
+con desacuerdo observado nulo.
+
+El control que reinició la memoria fue rechazado,
+con 107,9 % RMS de error en J7. La continuación
+importada difirió de la trayectoria ininterrumpida
+del receptor en 0,00310 % RMS. En 64 bloques nativos,
+la mediana fue 0,768 ms y el máximo 1,566 ms, con
+cero asignaciones. Ese máximo excedió el margen de
+1,333 ms y deja abierto el gate temporal de esta
+campaña. La prueba conserva las fuentes impuestas
+y prepara la importación antes del cronómetro.
+[Continuidad negativa y exceso temporal](../evidence/rf_d_pilot_receiver_handoff02.json).

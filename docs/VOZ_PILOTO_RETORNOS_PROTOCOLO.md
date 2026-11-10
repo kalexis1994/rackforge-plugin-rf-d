@@ -169,3 +169,15 @@ importado, con cero asignaciones y el mismo margen
 de 1,333333… ms. La transferencia inicial se prepara
 antes del intervalo cronometrado. Las fuentes de señal
 y contorno siguen impuestas en este contraste.
+
+
+El mismo contraste se aplica a la rama negativa con
+fuentes −0,28 ± 0,005 V y 1,45 ± 0,001 V. El anclaje
+usa el estado negativo de la referencia admitida y el
+procedimiento directo ya contrastado. La proyección
+normaliza cada defecto por su corriente de polarización,
+conservando las mismas incidencias y 34 junturas. La
+importación reconstruye el resto adimensional que usa
+ese mapa y todas las 17 memorias retenidas. Se aplican
+los mismos límites de carga, audio, retornos y tiempo,
+incluido el control que detecta un reinicio de memoria.
