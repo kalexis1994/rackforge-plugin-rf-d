@@ -1,7 +1,12 @@
 const fs = require("node:fs");
 const { performance } = require("node:perf_hooks");
 
-const [, , path, encodedScore, length, option] = process.argv;
+const [, , path, encodedScore, length, option, requestedBlock, requestedCapacity] = process.argv;
+const blockSize = Number(requestedBlock ?? 128);
+const capacity = Number(requestedCapacity ?? blockSize);
+if (!Number.isInteger(blockSize) || blockSize < 1 || blockSize > capacity) {
+    throw new Error("Invalid RF-D block size");
+}
 const {parameters: panel} = require("../plugin/package/metadata/parameters.json");
 const score = JSON.parse(encodedScore);
 const frames = Number(length);
@@ -12,7 +17,7 @@ function check(status) {
 }
 
 function prepare() {
-    check(wasm.rackforge_prepare(48000, 128, 0, 2));
+    check(wasm.rackforge_prepare(48000, capacity, 0, 2));
     if (wasm.rackforge_latency_frames() !== 48) throw new Error("Unexpected RF-D latency");
 }
 
@@ -52,14 +57,14 @@ let midi = new DataView(wasm.memory.buffer, wasm.rackforge_midi_ptr());
 midi.setUint32(0, 0, true);
 midi.setUint32(4, 0x90 | 57 << 8 | 100 << 16 | 3 << 24, true);
 for (let i = 0; i < 128; i++) {
-    check(wasm.rackforge_process(128, 0, 2, i === 0 ? 1 : 0, 0));
+    check(wasm.rackforge_process(Math.min(128, capacity), 0, 2, i === 0 ? 1 : 0, 0));
 }
 
 prepare();
 const output = Buffer.alloc(frames * 8);
 const timings = [];
-for (let start = 0, event = 0; start < frames; start += 128) {
-    const size = Math.min(128, frames - start);
+for (let start = 0, event = 0; start < frames; start += blockSize) {
+    const size = Math.min(blockSize, frames - start);
     midi = new DataView(wasm.memory.buffer, wasm.rackforge_midi_ptr());
     const parameters = new DataView(wasm.memory.buffer, wasm.rackforge_parameter_ptr());
     let count = 0;

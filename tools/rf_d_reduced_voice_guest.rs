@@ -6,6 +6,13 @@ const PILOT_FACTOR: usize = 2;
 #[cfg(not(pilot_pi))]
 const PILOT_FACTOR: usize = 4;
 
+// Desktop prepares for its maximum callback, independently of the device period.
+const MAX_HOST_FRAMES: usize = if cfg!(pilot_host_blocks) {
+    4096
+} else {
+    voice::MAX_BLOCK
+};
+
 #[derive(Default)]
 struct Guest {
     voice: Option<Voice<PILOT_FACTOR>>,
@@ -75,13 +82,18 @@ impl Guest {
         &mut self,
         midi: &[Event],
         automation: &[ParameterEvent],
+        first_frame: usize,
         frames: &mut [Frame],
         output: &mut [f32],
     ) {
         let mut changes = [[None; DEFAULTS.len()]; voice::MAX_BLOCK];
-        for event in automation {
+        let span = first_frame..first_frame + frames.len();
+        for event in automation
+            .iter()
+            .filter(|event| span.contains(&(event.frame as usize)))
+        {
             if let Some(index) = control_index(event.index, event.value) {
-                changes[event.frame as usize][index] = Some(event.value);
+                changes[event.frame as usize - first_frame][index] = Some(event.value);
             }
         }
         let mut controls = self.controls;
@@ -139,7 +151,7 @@ fn note_event(event: &MidiEvent) -> Option<Event> {
 impl Processor for Guest {
     fn prepare(&mut self, rate: f64, frames: u32, inputs: u32, outputs: u32) -> bool {
         if rate != voice::RATE as f64
-            || !(1..=voice::MAX_BLOCK as u32).contains(&frames)
+            || !(1..=MAX_HOST_FRAMES as u32).contains(&frames)
             || inputs != 0
             || outputs != 2
         {
@@ -233,23 +245,44 @@ impl Processor for Guest {
         output: &mut [f32],
         midi: &[MidiEvent],
         _parameters: &[ParameterEvent],
-        frames: u32,
+        _: u32,
         _: u32,
         _: u32,
     ) {
+        for (index, stereo) in output.chunks_mut(2 * voice::MAX_BLOCK).enumerate() {
+            self.process_chunk(stereo, midi, _parameters, index * voice::MAX_BLOCK);
+        }
+    }
+}
+
+impl Guest {
+    fn process_chunk(
+        &mut self,
+        output: &mut [f32],
+        midi: &[MidiEvent],
+        _parameters: &[ParameterEvent],
+        first_frame: usize,
+    ) {
+        let frames = output.len() / 2;
+        let span = first_frame..first_frame + frames;
         let mut events = [Event {
             offset: 0,
             message: Message::AllNotesOff,
         }; 256];
         let mut count = 0;
-        for event in midi.iter().filter_map(note_event) {
+        for mut event in midi
+            .iter()
+            .filter(|event| span.contains(&(event.frame as usize)))
+            .filter_map(note_event)
+        {
+            event.offset -= first_frame;
             events[count] = event;
             count += 1;
         }
         let mut result = [Frame::default(); voice::MAX_BLOCK];
-        let block = &mut result[..frames as usize];
+        let block = &mut result[..frames];
         #[cfg(pilot_returns)]
-        self.render_panel(&events[..count], _parameters, block, output);
+        self.render_panel(&events[..count], _parameters, first_frame, block, output);
         #[cfg(not(pilot_returns))]
         {
             self.voice
@@ -266,7 +299,7 @@ impl Processor for Guest {
 
 export_processor!(
     Guest,
-    max_frames = 128,
+    max_frames = MAX_HOST_FRAMES,
     max_input_channels = 0,
     max_output_channels = 2,
     max_midi_events = 256,

@@ -13,15 +13,16 @@ El [solver acoplado](docs/VOZ_REDUCIDA_MOTOR_RESULTADOS.md) es la referencia
 eléctrica offline. Cada bloque que se incorpore al piloto debe contrastar
 sus puertos y su salida y cumplir el presupuesto de RackForge.
 
-Importá `artifacts/rf-d-pilot-0.3.0.rfplugin` desde la sección Plugins de
-RackForge. Elegí RF-D Pilot en PLAY y tocá por MIDI a 48 kHz. El panel incluye
+Importá `artifacts/rf-d-pilot-0.3.2.rfplugin` desde la sección Plugins de
+RackForge. Elegí RF-D Pilot en PLAY y tocá por MIDI a 48 kHz. El paquete
+admite callbacks de hasta 4.096 frames. El panel incluye
 faders de mezcla y salida, knobs de ataque y release de audición, y los trims
 de filtro y R59. El motor de audición usa una sierra monofónica y admite notas
 MIDI 36–72. Los dos tiempos de audición ajustan la rampa lineal del piloto.
 
-El banco construye e instala el paquete en un almacén temporal, prueba los
-controles y mide dos pases a 128 frames. Desde la raíz, ejecutá
-`python -B tools/check_rf_d_playable_pilot.py` para regenerar el paquete local.
+Desde la raíz, ejecutá `python -B tools/check_rf_d_pi_pilot.py --desktop-blocks`
+para regenerar el 0.3.2. El banco de referencia a 192 kHz internos se ejecuta
+con `python -B tools/check_rf_d_playable_pilot.py`.
 [Protocolo](docs/VOZ_PILOTO_JUGABLE_PROTOCOLO.md).
 
 Para Raspberry Pi, el perfil `artifacts/rf-d-pilot-0.3.1.rfplugin` usa

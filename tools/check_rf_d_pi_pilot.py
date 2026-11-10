@@ -1,4 +1,5 @@
 """Build the 96 kHz RF-D audition profile and contrast it before deployment."""
+import argparse
 import json
 import math
 import os
@@ -47,12 +48,20 @@ def antialias():
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--desktop-blocks", action="store_true", help="build 0.3.2 with callbacks up to 4096 frames")
+    wide = parser.parse_args().desktop_blocks
+    artifact = ARTIFACT.with_name("rf-d-pilot-0.3.2.rfplugin") if wide else ARTIFACT
+    version = "0.3.2" if wide else "0.3.1"
+    profile = (*PROFILE, "--cfg", "pilot_host_blocks") if wide else PROFILE
     assert not list(AREA.iterdir())
     sources = Sources((*SOURCES, "tools/check_rf_d_pi_pilot.py", "tools/prepare_long_note_aa.py"))
     sequence = 1
-    while (out := ROOT / f"evidence/rf_d_pi_pilot{sequence:02}.json").exists():
+    prefix = "rf_d_host_blocks" if wide else "rf_d_pi_pilot"
+    while (out := ROOT / f"evidence/{prefix}{sequence:02}.json").exists():
         sequence += 1
-    report = dict(passed=False, internal_rate_hz=RATE, **sources.fields(), builds={}, electrical={})
+    report = dict(passed=False, internal_rate_hz=RATE, package_version=version,
+                  **sources.fields(), builds={}, electrical={})
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"],
                RACKFORGE_OPTIMIZE_PLUGINS="0")
     last = None
@@ -111,7 +120,7 @@ def main():
         execute("sdk", [*flags, "--edition=2024", "--crate-type", "rlib", "--crate-name",
                         "rackforge_plugin_sdk", HOST / SDK_PATH, "-o", sdk])
         guest_flags = [*flags, "--edition=2021", "--crate-type", "cdylib", "-C", "panic=abort",
-                       "-C", "lto=fat", *PROFILE, guest, "--extern", f"rackforge_plugin_sdk={sdk}"]
+                       "-C", "lto=fat", *profile, guest, "--extern", f"rackforge_plugin_sdk={sdk}"]
         scalar, simd, optimized = (AREA / name for name in ("pi-scalar.wasm", "pi-simd.wasm", "pi.wasm"))
         execute("scalar", [*guest_flags, "-o", scalar])
         execute("simd", [*guest_flags, "--cfg", "pilot_returns_simd", "-o", simd])
@@ -135,13 +144,52 @@ def main():
             path = package / relative
             text = path.read_text(encoding="utf8")
             assert text.count("0.3.0") == 1
-            path.write_text(text.replace("0.3.0", "0.3.1"), encoding="utf8", newline="\n")
-        archive = AREA / ARTIFACT.name
+            path.write_text(text.replace("0.3.0", version), encoding="utf8", newline="\n")
+        archive = AREA / artifact.name
         execute("package", [HOST / "target/release/rackforge-store.exe", "pack-wasm", package, optimized, archive])
         report["archive_sha256"] = sha(archive)
         report["component_sha256"] = sha(optimized)
+        if wide:
+            release = json.loads((ROOT / "evidence/rf_d_pi_pilot01.json").read_bytes())
+            assert sha(ARTIFACT) == release["archive_sha256"]
+            assert digest(pi_audio) == release["builds"]["simd_score"]["stdout_sha256"]
+            report["old_package_sha256"] = release["archive_sha256"]
+            report["partitions"] = {}
+            for size in (127, 256, 480, 512, 1024, 4096):
+                raw = execute(f"block_{size}", ["node", ROOT / NODE, optimized, score, N,
+                                                "--panel-state", size, 4096])
+                assert raw == pi_audio, size
+                report["partitions"][size] = dict(prepare_frames=4096, output_sha256=digest(raw))
+            store = HOST / "target/release/rackforge-store.exe"
+            core = HOST / "target/release/rackforge-core.exe"
+            old_store, new_store, data_root = (AREA / name for name in ("old-store", "new-store", "stress-state"))
+            execute("install_legacy", [store, "install-local", ARTIFACT, old_store])
+            execute("install_candidate", [store, "install-local", archive, new_store])
+            old_package, = old_store.rglob("rackforge-plugin.toml")
+            new_package, = new_store.rglob("rackforge-plugin.toml")
+
+            def stress(manifest, size):
+                return [core, "stress", manifest.parent, "--preset", "default", "--data-root", data_root,
+                        "--voices", "1", "--blocks", "100", "--frames", size]
+
+            report["legacy_rejections"] = {}
+            report["host_stress"] = {}
+            for size in (480, 4096):
+                command = list(map(str, stress(old_package, size)))
+                first, second = (subprocess.run(command, cwd=ROOT, env=env, capture_output=True, timeout=120)
+                                 for _ in range(2))
+                assert first.returncode != 0 and first.returncode == second.returncode
+                assert first.stderr == second.stderr
+                assert f"capacity 256 samples is smaller than requested {2 * size}".encode() in first.stderr
+                report["legacy_rejections"][size] = dict(command=command, exit_code=first.returncode,
+                                                         error=first.stderr.decode().strip(), repeat_identical=True)
+            for size in (128, 256, 480, 4096):
+                result = execute(f"host_{size}", stress(new_package, size)).decode().strip()
+                assert "PLUGIN_STRESS_OK" in result and f"frames={size}" in result
+                assert float(result.split("realtime_ratio=")[1]) < 1., result
+                report["host_stress"][size] = result
         sources.unchanged()
-        archive.replace(ARTIFACT)
+        archive.replace(artifact)
         report["passed"] = True
         print("RF_D_PI", report["score_difference"], report["archive_sha256"], flush=True)
     except Exception:
@@ -156,7 +204,7 @@ def main():
         for path in AREA.iterdir():
             assert path.resolve().parent == AREA.resolve()
             if path.is_dir():
-                assert path.name == "pi-package"
+                assert path.name in ("pi-package", "old-store", "new-store", "stress-state")
                 shutil.rmtree(path)
             else:
                 path.unlink()

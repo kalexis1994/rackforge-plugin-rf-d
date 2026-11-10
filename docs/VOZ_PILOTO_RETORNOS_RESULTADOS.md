@@ -327,3 +327,30 @@ dejó de responder por SSH y HTTP antes del
 nuevo pase con MIDI. La medición disponible
 corresponde al paquete de audición.
 [Observación de la Pi](../evidence/rf_d_pi_contour_control01.json).
+
+## Compatibilidad de bloques en Desktop 0.3.2
+
+Desktop 0.1.36 prepara la instancia a 4.096 frames,
+independientemente del período solicitado al driver.
+Con el piloto 0.3.1, la capacidad de 256 muestras
+estéreo provocaba un rechazo al pedir 960 muestras
+(480 frames) o 8.192 muestras (4.096 frames).
+El banco reprodujo ambos rechazos dos veces con
+el mismo mensaje.
+
+0.3.2 admite hasta 4.096 frames a 48 kHz y conserva
+el perfil interno de 96 kHz. Cada callback se divide
+en tramos de hasta 128 frames con offsets locales
+para MIDI y automatización. La planta, el FIR y
+la memoria se conservan entre tramos. La partitura
+de 633 eventos a 127, 128, 256, 480, 512, 1.024
+y 4.096 frames produjo los mismos bits que 0.3.1.
+[Rechazos y contraste](../evidence/rf_d_host_blocks01.json).
+
+El paquete se instaló y activó en Desktop, con la
+salida WASAPI y las preferencias existentes. Una
+nota MIDI virtual produjo señal en ambos canales.
+El host informó 483 frames en la ventana medida,
+sin plazos perdidos ni errores de stream. Se
+restauró el instrumento que estaba seleccionado.
+[Medición en Desktop](../evidence/rf_d_desktop_live01.json).
