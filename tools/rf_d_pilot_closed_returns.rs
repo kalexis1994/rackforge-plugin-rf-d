@@ -12,6 +12,8 @@ use std::io::{BufWriter, Read, Write};
 
 #[path = "../crates/rf-d-circuit/src/prepared_chain_charge.rs"]
 mod chain;
+#[path = "rf_d_pilot_contour_clock.rs"]
+mod clock;
 
 const R59: f64 = 68_000.;
 const R60: f64 = 680.;
@@ -23,6 +25,7 @@ const LOAD: [usize; 2] = [32, 5];
 const CV: usize = latch::pin(4) - N;
 const TAIL: usize = latch::pin(55) - N;
 const INTERFACE: usize = 6;
+type Failure = (&'static str, StepError);
 const fn local(k: usize) -> usize {
     if k < 62 {
         k
@@ -164,10 +167,11 @@ struct Step<'a> {
     previous: Boundary,
     change: [f64; N],
     ports: [Ports; 2],
+    timer_budget: usize,
 }
 
 impl Step<'_> {
-    fn evaluate(&self, v: [f64; INTERFACE], seed: [chain::State; 2]) -> Result<Closure, StepError> {
+    fn evaluate(&self, v: [f64; INTERFACE], seed: [chain::State; 2]) -> Result<Closure, Failure> {
         let mut ports = self.ports;
         for i in 0..2 {
             let [base, tail, cv] = [v[3 * i], v[3 * i + 1], v[3 * i + 2]];
@@ -177,11 +181,19 @@ impl Step<'_> {
             ports[i].latch.volts[CV] = cv;
             ports[i].latch.volts[TAIL] = tail;
         }
-        let contour = contours::step(self.contour, ports, self.h, self.previous, self.change)?;
+        let contour = contours::step_with_budget(
+            self.contour,
+            ports,
+            self.h,
+            self.previous,
+            self.change,
+            self.timer_budget,
+        )?;
         let drive = contour.map(|s| [s.returns.volume[2], s.returns.filter[2]]);
-        let (audio, phase, delta, audio_iterations) =
-            self.model
-                .step(self.audio, drive, self.family, self.phase, self.h, seed)?;
+        let (audio, phase, delta, audio_iterations) = self
+            .model
+            .step(self.audio, drive, self.family, self.phase, self.h, seed)
+            .map_err(|error| ("audio", error))?;
         let mut residual = [0.; INTERFACE];
         for i in 0..2 {
             residual[3 * i] = v[3 * i] - voltage(audio[i], LOAD[0]);
@@ -190,7 +202,8 @@ impl Step<'_> {
                 v[3 * i + 2],
                 drive[i][0],
                 contour[i].latch.0[latch::pin(27)],
-            )?;
+            )
+            .map_err(|error| ("CV", error))?;
         }
         Ok(Closure {
             audio,
@@ -207,7 +220,7 @@ impl Step<'_> {
         &self,
         mut v: [f64; INTERFACE],
         seed: [chain::State; 2],
-    ) -> Result<(Closure, usize), StepError> {
+    ) -> Result<(Closure, usize), Failure> {
         let mut result = self.evaluate(v, seed)?;
         for iteration in 1..=6 {
             if maximum(&result.residual) <= 1e-10 {
@@ -226,7 +239,9 @@ impl Step<'_> {
                         (probe.residual[row] - result.residual[row]) / (x[column] - v[column]);
                 }
             }
-            let direction = Lu::factor(j)?.solve(result.residual.map(|r| -r))?;
+            let direction = Lu::factor(j)
+                .and_then(|lu| lu.solve(result.residual.map(|r| -r)))
+                .map_err(|error| ("interface tangent", error))?;
             let mut accepted = None;
             for half in 0..12 {
                 let x = std::array::from_fn(|i| v[i] + direction[i] * 0.5_f64.powi(half));
@@ -237,10 +252,106 @@ impl Step<'_> {
                     }
                 }
             }
-            (v, result) = accepted.ok_or(StepError::NoDecrease)?;
+            (v, result) = accepted.ok_or(("interface descent", StepError::NoDecrease))?;
         }
-        Err(StepError::IterationBudget)
+        Err(("interface", StepError::IterationBudget))
     }
+}
+
+#[derive(Clone, Copy)]
+struct History {
+    audio: chain::State,
+    contour: Loaded,
+    phase: f64,
+    previous: Boundary,
+    change: [f64; N],
+    stride: usize,
+}
+
+struct Accepted {
+    end: History,
+    result: Closure,
+    outer_iterations: usize,
+    stride: usize,
+}
+
+impl History {
+    fn advance(
+        self,
+        model: &Audio,
+        family: &Family,
+        ports: [Ports; 2],
+        stride: usize,
+        timer_budget: usize,
+    ) -> Result<Accepted, Failure> {
+        let [base, tail] = LOAD.map(|k| voltage(self.audio, k));
+        let cv = self.previous.volts[CV];
+        let change = self
+            .change
+            .map(|value| value * (stride as f64 / self.stride as f64));
+        let step = Step {
+            model,
+            family,
+            audio: self.audio,
+            contour: self.contour,
+            phase: self.phase,
+            h: stride as f64 / (48_000. * 512.),
+            previous: self.previous,
+            change,
+            ports,
+            timer_budget,
+        };
+        let zero = chain::State::from_nodes([0.; chain::N]);
+        let (result, outer_iterations) = step.solve([base, tail, cv, base, tail, cv], [zero; 2])?;
+        let mut previous = self.previous;
+        previous.volts[TAIL] = voltage(result.audio[1], LOAD[1]);
+        previous.volts[CV] = result.cv;
+        let end = History {
+            audio: result.audio[1],
+            contour: result.contour[1],
+            phase: result.phase,
+            change: std::array::from_fn(|i| result.contour[1].latch.0[i] - self.contour.latch.0[i]),
+            previous,
+            stride,
+        };
+        Ok(Accepted {
+            end,
+            result,
+            outer_iterations,
+            stride,
+        })
+    }
+}
+
+fn readout(out: &mut impl Write, accepted: &Accepted, adaptive: bool) -> std::io::Result<()> {
+    if adaptive {
+        out.write_all(&(accepted.stride as f64).to_le_bytes())?;
+    }
+    for (audio, contour) in accepted
+        .result
+        .audio
+        .into_iter()
+        .zip(accepted.result.contour)
+    {
+        let [base, tail] = LOAD.map(|k| voltage(audio, k));
+        let [r59, r60] = contour.returns.currents(base, tail);
+        for value in [
+            voltage(audio, 61),
+            r59,
+            r60,
+            contour.timers[0],
+            contour.timers[1],
+            contour.returns.volume[2],
+            contour.returns.filter[2],
+            base,
+            tail,
+            contour.latch.0[latch::pin(26)],
+            contour.latch.0[latch::pin(28)],
+        ] {
+            out.write_all(&value.to_le_bytes())?;
+        }
+    }
+    Ok(())
 }
 
 pub fn run(
@@ -248,8 +359,17 @@ pub fn run(
     key: f64,
     frames: usize,
     stride: usize,
+    timer_budget: usize,
+    mode: usize,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    assert!(stride.is_power_of_two() && stride <= 256);
+    assert!(mode <= 3);
+    let adaptive = mode != 0;
+    let tolerance = match mode {
+        2 => clock::PORTS,
+        3 => clock::LATCH,
+        _ => clock::STRICT,
+    };
+    assert!(stride.is_power_of_two() && stride <= 256 && matches!(timer_budget, 3 | 8));
     let mut bytes = Vec::new();
     std::fs::File::open(path)?.read_to_end(&mut bytes)?;
     let values = bytes
@@ -258,12 +378,12 @@ pub fn run(
         .collect::<Vec<_>>();
     assert_eq!(values.len(), 2 * graph::N + 1);
     let x = |k| values[k] + values[k + graph::N];
-    let mut phase = values[2 * graph::N];
-    let mut audio = chain::State {
+    let phase = values[2 * graph::N];
+    let audio = chain::State {
         high: std::array::from_fn(|k| values[graph::chain_index(k)]),
         low: std::array::from_fn(|k| values[graph::N + graph::chain_index(k)]),
     };
-    let mut contour = Loaded {
+    let contour = Loaded {
         timers: TIMER_NODES.map(x),
         latch: State(CORE.map(x)),
         returns: Returns {
@@ -272,86 +392,89 @@ pub fn run(
         },
         q22_base: x(29),
     };
-    let mut previous = Boundary {
+    let previous = Boundary {
         volts: PORTS.map(x),
         key,
         short: false,
     };
-    let mut change = [0.; N];
-    // The two shared CV terminals still belong to the keyboard source.
-    // Their error under a constant anchor is checked against the full trajectory.
+
+    // The x2 slot seeds its local collector solve. Shared CV and TAIL
+    // are replaced by the stage voltages during interface iteration.
     let ports = [Ports {
         latch: previous,
         volume: VOLUME_PORTS.map(x),
         filter: FILTER_PORTS.map(x),
     }; 2];
     let family = Family::prepare(-1.6).map_err(|_| "H128 prepare")?;
-    let h = stride as f64 / (48_000. * 512.);
-    let model = Audio::new(audio, &family, phase, h).map_err(|e| format!("audio factor: {e:?}"))?;
+    let mut state = History {
+        audio,
+        contour,
+        phase,
+        previous,
+        change: [0.; N],
+        stride,
+    };
+    let mut models = Vec::with_capacity(stride.ilog2() as usize + 1);
+    for power in 0..=stride.ilog2() {
+        let span = 1 << power;
+        let model = if adaptive || span == stride {
+            let h = span as f64 / (48_000. * 512.);
+            Some(Audio::new(audio, &family, phase, h).map_err(|e| format!("audio factor: {e:?}"))?)
+        } else {
+            None
+        };
+        models.push(model);
+    }
+    let advance = |history: History, span: usize| {
+        let model = models[span.ilog2() as usize].as_ref().unwrap();
+        history.advance(model, &family, ports, span, timer_budget)
+    };
     let mut out = BufWriter::new(std::io::stdout().lock());
     let mut peak_ns = 0;
     let mut frame_ns = 0;
     let mut max_outer = 0;
     let mut max_audio = 0;
     let mut max_residual: f64 = 0.;
-    for k in 0..frames * 512 / stride {
+    let mut stats = clock::Stats::default();
+    let mut tick = 0;
+    let mut proposal = stride;
+    while tick < frames * 512 {
         let start = std::time::Instant::now();
-        let [base, tail] = LOAD.map(|k| voltage(audio, k));
-        let cv = previous.volts[CV];
-        let guess = [base, tail, cv, base, tail, cv];
-        let zero = chain::State::from_nodes([0.; chain::N]);
-        let step = Step {
-            model: &model,
-            family: &family,
-            audio,
-            contour,
-            phase,
-            h,
-            previous,
-            change,
-            ports,
+        let trial = if adaptive {
+            let remaining = stride - tick % stride;
+            while proposal > remaining {
+                proposal /= 2;
+            }
+            clock::advance(
+                state,
+                &advance,
+                &mut proposal,
+                stride,
+                &mut stats,
+                tolerance,
+            )
+        } else {
+            advance(state, stride).map(|step| [Some(step), None])
         };
-        let (result, iterations) = step
-            .solve(guess, [zero; 2])
-            .map_err(|e| format!("loaded ports at tick {}: {e:?}", 8 * k * stride))?;
+        let steps = trial.map_err(|e| format!("loaded ports at tick {}: {e:?}", 8 * tick))?;
         frame_ns += start.elapsed().as_nanos();
-        if (k + 1) % (512 / stride) == 0 {
+        for step in steps.into_iter().flatten() {
+            tick += step.stride;
+            state = step.end;
+            max_outer = max_outer.max(step.outer_iterations);
+            max_audio = max_audio.max(step.result.audio_iterations);
+            max_residual = max_residual.max(maximum(&step.result.residual));
+            readout(&mut out, &step, adaptive)?;
+        }
+        if tick % 512 == 0 {
             peak_ns = peak_ns.max(frame_ns);
             frame_ns = 0;
         }
-        max_outer = max_outer.max(iterations);
-        max_audio = max_audio.max(result.audio_iterations);
-        max_residual = max_residual.max(maximum(&result.residual));
-        for i in 0..2 {
-            let a = result.audio[i];
-            let c = result.contour[i];
-            let [base, tail] = LOAD.map(|k| voltage(a, k));
-            let [r59, r60] = c.returns.currents(base, tail);
-            let v = [
-                voltage(a, 61),
-                r59,
-                r60,
-                c.timers[0],
-                c.timers[1],
-                c.returns.volume[2],
-                c.returns.filter[2],
-                base,
-                tail,
-                c.latch.0[latch::pin(26)],
-                c.latch.0[latch::pin(28)],
-            ];
-            for x in v {
-                out.write_all(&x.to_le_bytes())?;
-            }
-        }
-        change = std::array::from_fn(|i| result.contour[1].latch.0[i] - contour.latch.0[i]);
-        contour = result.contour[1];
-        audio = result.audio[1];
-        phase = result.phase;
-        previous.volts[TAIL] = voltage(audio, LOAD[1]);
-        previous.volts[CV] = result.cv;
     }
-    eprintln!("PORTS,{peak_ns},{max_outer},{max_audio},{max_residual:.17e}");
+    eprintln!(
+        "PORTS,{peak_ns},{max_outer},{max_audio},{max_residual:.17e},{},{},{},{:.17e}",
+        stats.solve, stats.defect, stats.switch, stats.worst,
+    );
     out.flush()?;
     Ok(())
 }

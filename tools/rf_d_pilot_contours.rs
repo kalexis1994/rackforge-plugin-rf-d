@@ -57,9 +57,20 @@ pub fn step(
     old: Loaded,
     input: [Ports; 2],
     h: f64,
-    mut previous: Boundary,
+    previous: Boundary,
     previous_change: [f64; N],
 ) -> Result<[Loaded; 2], StepError> {
+    step_with_budget(old, input, h, previous, previous_change, 3).map_err(|(_, error)| error)
+}
+
+pub fn step_with_budget(
+    old: Loaded,
+    input: [Ports; 2],
+    h: f64,
+    mut previous: Boundary,
+    previous_change: [f64; N],
+    budget: usize,
+) -> Result<[Loaded; 2], (&'static str, StepError)> {
     previous.volts[C2] = old.timers[0];
     #[cfg(pilot_loaded_filter)]
     {
@@ -95,7 +106,7 @@ pub fn step(
     let mut trial = [old; 2];
     // Bound the iteration over both capacitors and their endogenous loads.
     // Publish both stages only after the loaded timing voltages converge.
-    for _ in 0..3 {
+    for _ in 0..budget {
         for i in 0..2 {
             boundary[i].volts[C2] = c2[i];
             #[cfg(pilot_loaded_filter)]
@@ -103,15 +114,17 @@ pub fn step(
                 boundary[i].volts[C5] = c5[i];
             }
             trial[i].returns.volume =
-                ports::volume(trial[i].returns.volume, c2[i], input[i].volume)?;
+                ports::volume(trial[i].returns.volume, c2[i], input[i].volume)
+                    .map_err(|error| ("C2 volume", error))?;
             #[cfg(not(pilot_loaded_filter))]
             {
                 let [_, _, collector, emitter] = input[i].c5;
-                trial[i].q22_base =
-                    ports::q22_base(trial[i].q22_base, c5[i], [collector, emitter])?;
+                trial[i].q22_base = ports::q22_base(trial[i].q22_base, c5[i], [collector, emitter])
+                    .map_err(|error| ("C5 Q22", error))?;
             }
         }
-        let stages = latch::step(old.latch, boundary, h, previous, previous_change)?;
+        let stages = latch::step(old.latch, boundary, h, previous, previous_change)
+            .map_err(|error| ("latch", error))?;
         #[cfg(pilot_loaded_filter)]
         for (trial, stage) in trial.iter_mut().zip(stages) {
             trial.q22_base = stage.0[latch::pin(29)];
@@ -145,7 +158,8 @@ pub fn step(
                 trial[i].latch = stages[i];
                 #[cfg(not(pilot_loaded_filter))]
                 {
-                    trial[i].returns.filter = ports::filter(old.returns.filter, input[i].filter)?;
+                    trial[i].returns.filter = ports::filter(old.returns.filter, input[i].filter)
+                        .map_err(|error| ("C5 filter", error))?;
                 }
                 #[cfg(pilot_loaded_filter)]
                 {
@@ -158,5 +172,5 @@ pub fn step(
         c2 = next_c2;
         c5 = next_c5;
     }
-    Err(StepError::IterationBudget)
+    Err(("C2/C5 timer", StepError::IterationBudget))
 }

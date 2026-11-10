@@ -13,18 +13,33 @@ from check_rf_d_pilot_split_returns import CONTOURS, inspect_reserve, packed
 
 OWN = "tools/check_rf_d_pilot_closed_returns.py"
 MODEL = "tools/rf_d_pilot_closed_returns.rs"
-MODES = (256, 1)
+CLOCK = "tools/rf_d_pilot_contour_clock.rs"
+MODES = ((256, 8, 0), (256, 8, 3), (1, 3, 0))
+POLICIES = {1: 'adaptive', 2: 'port_clock', 3: 'latch_clock'}
 CHANNELS = (c.J7, None, None, 5, 38, 3, 37, 54, 55, 26, 28)
 
 
-def validate(raw, reference, info, stride):
+def validate(raw, reference, info, stride, adaptive):
     full = np.frombuffer(reference, "<f8").reshape(-1, c.N)
-    end = full[2 * stride::2 * stride]
-    candidate = np.frombuffer(raw, "<f8").reshape(len(end), 2, len(CHANNELS))
-    # An endpoint exists at all clocks. For Radau 1/3 stages require a
-    # matching reference time, which only the fine power-of-two stride has.
-    samples = full[1:] if stride == 1 else end
-    trial = candidate.reshape(-1, len(CHANNELS)) if stride == 1 else candidate[:, 1, :]
+    values = np.frombuffer(raw, "<f8")
+    if adaptive:
+        records = values.reshape(-1, 1 + 2 * len(CHANNELS))
+        steps = records[:, 0].astype(int)
+        assert np.array_equal(steps, records[:, 0])
+        assert np.isin(steps, [1 << k for k in range(9)]).all()
+        candidate = records[:, 1:].reshape(len(steps), 2, len(CHANNELS))
+    else:
+        candidate = values.reshape(-1, 2, len(CHANNELS))
+        steps = np.full(len(candidate), stride)
+    ticks = np.cumsum(steps)
+    assert ticks[-1] == info["frames"] * 512
+    assert np.all(np.searchsorted(ticks, np.arange(stride, ticks[-1] + 1, stride)) < len(ticks))
+    assert np.all(ticks[np.searchsorted(ticks, np.arange(stride, ticks[-1] + 1, stride))]
+                  == np.arange(stride, ticks[-1] + 1, stride))
+    # Compare both fine stages or accepted endpoints at the same fine-grid times.
+    both_stages = stride == 1 and not adaptive
+    samples = full[1:] if both_stages else full[2 * ticks]
+    trial = candidate.reshape(-1, len(CHANNELS)) if both_stages else candidate[:, 1, :]
     want = np.column_stack([samples[:, node] if node is not None else
                             (samples[:, 3] - samples[:, 54]) / 68_000. if k == 1 else
                             (samples[:, 55] - samples[:, 37]) / 680.
@@ -34,14 +49,18 @@ def validate(raw, reference, info, stride):
     initial = full[0, 26] >= full[0, 28]
     sign = np.r_[initial, candidate[:, 1, -2] >= candidate[:, 1, -1]]
     base = info["start_frame"] * 4096
-    switches = [[base + int(i) * stride * 8, base + (int(i) + 1) * stride * 8, int(sign[i + 1])]
+    switches = [[base + int(ticks[i] - steps[i]) * 8, base + int(ticks[i]) * 8, int(sign[i + 1])]
                 for i in np.flatnonzero(sign[1:] != sign[:-1])]
-    relative = np.linalg.norm(error[:, 0]) / np.linalg.norm(want[:, 0])
+    weights = np.ones(len(error)) if both_stages else np.sqrt(steps)
+    relative = np.linalg.norm(weights * error[:, 0]) / np.linalg.norm(weights * want[:, 0])
+    sizes, counts = np.unique(steps, return_counts=True)
+    histogram = dict(zip(map(int, sizes), map(int, counts)))
     return dict(passed=bool(np.isfinite(candidate).all() and switches == info["expected_events"]
                             and max(worst[1:3]) <= 2e-9 and max(worst[3:]) <= 20e-6
                             and relative <= .001 and worst[0] <= .003 * max(abs(want[:, 0]))
                             and abs(np.mean(error[:, 0])) <= 1e-6),
-                switches=switches, max_error=worst.tolist(), j7_rms_relative=float(relative))
+                switches=switches, max_error=worst.tolist(), j7_rms_relative=float(relative),
+                stride_histogram=histogram)
 
 
 def main():
@@ -49,7 +68,7 @@ def main():
     seq = 1
     while (out := c.ROOT / f"evidence/rf_d_pilot_closed_returns{seq:02}.json").exists():
         seq += 1
-    sources = Sources((*c.ALL_SOURCES, c.OWN, c.CANDIDATE, c.PROBE, c.PORTS, OWN, MODEL,
+    sources = Sources((*c.ALL_SOURCES, c.OWN, c.CANDIDATE, c.PROBE, c.PORTS, OWN, MODEL, CLOCK,
                        "tools/check_rf_d_pilot_split_returns.py", CONTOURS))
     report = dict(passed=False, rack_integrated=False, source_boundary="loaded x2/x4",
                   windows={}, **sources.fields(), compiler_sha256=c.sha(Path(c.COMPILER)),
@@ -72,8 +91,8 @@ def main():
         probe = c.component(kernel)
         code = c.once(probe.read_text(encoding="utf8"), '        Some("ports") => ports(),', '''
         Some("ports") => ports(),
-        Some("closed-returns") if args.len() == 6 =>
-            closed_returns::run(&args[2], args[3].parse()?, args[4].parse()?, args[5].parse()?),''')
+        Some("closed-returns") if args.len() == 8 =>
+            closed_returns::run(&args[2], args[3].parse()?, args[4].parse()?, args[5].parse()?, args[6].parse()?, args[7].parse()?),''')
         code += f'\n#[path = "{(c.ROOT / MODEL).as_posix()}"] mod closed_returns;\n'
         probe = c.emit(probe.name, code)
         exe = c.AREA / "pilot-closed-returns.exe"
@@ -90,27 +109,32 @@ def main():
             ref = run([exe, "contour-capture", anchor, start, frames, key])
             assert ref.returncode == 0, ref.stderr.decode(errors="replace")
             entry = report["windows"][label] = dict(reference=inspect_reserve(ref.stdout, info), modes={})
-            for stride in MODES:
-                cmd = [exe, "closed-returns", anchor, key, frames, stride]
+            for stride, budget, policy in MODES:
+                adaptive = policy != 0
+                cmd = [exe, "closed-returns", anchor, key, frames, stride, budget, policy]
                 trial = run(cmd)
                 stderr = trial.stderr.decode(errors="replace").strip()
                 result = dict(exit_code=trial.returncode, output_sha256=c.digest(trial.stdout), passed=False)
-                entry["modes"][str(stride)] = result
+                mode = POLICIES[policy] if adaptive else f"{stride}_{budget}"
+                entry["modes"][mode] = result
                 if trial.returncode == 0:
-                    tag, time, outer, audio, mismatch = stderr.split(",")
+                    tag, time, outer, audio, mismatch, solve, defect, switch, worst = stderr.split(",")
                     assert tag == "PORTS"
-                    result.update(validate(trial.stdout, ref.stdout, info, stride))
+                    result.update(validate(trial.stdout, ref.stdout, info, stride, adaptive))
                     result.update(max_frame_ns=int(time), max_outer_iterations=int(outer),
-                                  max_audio_iterations=int(audio), max_port_mismatch_v=float(mismatch))
+                                  max_audio_iterations=int(audio), max_port_mismatch_v=float(mismatch),
+                                  rejections=dict(solve=int(solve), defect=int(defect), switch=int(switch)),
+                                  max_accepted_defect=float(worst))
                 else:
                     result["error"] = stderr
-                if not result["passed"]:
+                if adaptive or not result["passed"]:
                     replay = run(cmd)
                     assert trial.returncode == replay.returncode and trial.stdout == replay.stdout
                     assert trial.returncode == 0 or trial.stderr == replay.stderr
                     result["unchanged_replay"] = True
-                print(label, stride, result, flush=True)
-        report["passed"] = all(entry["modes"]["1"]["passed"] for entry in report["windows"].values())
+                print(label, mode, result, flush=True)
+        report["passed"] = all(entry["modes"]["1_3"]["passed"] and entry["modes"]["latch_clock"]["passed"]
+                               for entry in report["windows"].values())
         sources.unchanged()
     except Exception:
         report["failure"] = traceback.format_exc()

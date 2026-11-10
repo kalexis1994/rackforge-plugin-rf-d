@@ -458,3 +458,48 @@ R60 fue 0,032 pA y el RMS relativo de J7 fue 0,0044 %. El J7 de
 referencia tuvo 50 pV de pico en esta prueba de corte. La
 conmutación de la voz completa sigue bajo el banco acoplado.
 [Contraste del receptor negativo](../evidence/rf_d_pilot_off_anchor02.json).
+
+## Reloj de los contornos acoplados
+
+El diagnóstico localizó los dos rechazos iniciales de 96 kHz en
+las tres iteraciones permitidas para C2/C5. Con hasta ocho, la
+pulsación y la liberación de la rama negativa pasaron en bloques
+fijos de 96 kHz. El peor error de sus retornos fue 0,00132 pA.
+La rama positiva avanzó 6144 ticks desde el ancla antes de que
+Newton dejara de reducir el residual del biestable. Los límites
+de convergencia de las ecuaciones fueron los mismos.
+[Diagnóstico y repeticiones](../evidence/rf_d_pilot_closed_returns04.json).
+
+El controlador conserva los límites de cada muestra a 96 kHz.
+Antes de aceptar, contrasta un paso con dos medios pasos y guarda
+los dos estados refinados. Si falla el solver o el defecto excede
+su presupuesto, reduce el tramo. También reduce el paso cuando
+las etapas difieren en el orden de Q26 y Q28, de modo que un
+cruce aceptado se pueda fechar con resolución de ocho ticks.
+Las factorizaciones de audio se preparan una vez por paso posible.
+[Controlador](../tools/rf_d_pilot_contour_clock.rs).
+
+El reloj estricto pasó las tres reservas, con el mismo cruce
+**319096–319104** y un error máximo de 0,140 pA en R59/R60.
+La comparación de pasos aumentó el coste en el cruce positivo.
+Permitir un defecto local de 0,5 µV para todos los nodos redujo
+el número de pasos positivos de 776 a 296. Esa variante conservó
+R59/R60 y el intervalo del cruce, pero Q26 se desvió 177 µV y
+excedió el límite de 20 µV de la reserva.
+[Contraste estricto](../evidence/rf_d_pilot_closed_returns05.json),
+[rechazo del defecto amplio](../evidence/rf_d_pilot_closed_returns06.json).
+
+Con 20 nV de defecto local para el biestable y 0,5 µV en el resto
+de las tensiones, las tres reservas pasaron. En la positiva se
+aceptaron 504 pasos, Q26 quedó a 7,50 µV y el intervalo del
+cruce se conservó. El peor error de R59/R60 entre las tres
+ventanas fue 0,105 pA. El coste máximo observado de 8,63 s
+por frame positivo deja este método como banco de referencia.
+[Contraste con tolerancias separadas](../evidence/rf_d_pilot_closed_returns07.json).
+
+El control 0.3.2 en Desktop 0.1.36 dio señal en ambos canales
+en 18 ventanas de seis notas. RackForge informó 477 callbacks
+durante el pase, 481 frames efectivos al final, cero plazos
+perdidos y cero errores de stream. Se restauró el instrumento
+anterior y se cerró la sesión abierta para la prueba.
+[Control de audio en Desktop](../evidence/rf_d_contours_live_control04.json).
