@@ -1844,3 +1844,24 @@ positivo fue 1,209 ms y el mayor pico fue
 1,550 ms. El ensayo excluye el reloj previo de
 C4, la preparación de la matriz y el host.
 [Comparación de las dos disposiciones](../evidence/rf_d_pilot_bistable_handoff13.json).
+
+### Semilla por extrapolación del estado aceptado
+
+Se extrapoló la diferencia entre los dos últimos
+estados aceptados a las fracciones 1/3 y 1 del
+paso de Radau. La semilla sólo modifica el punto
+de arranque. La historia del capacitor, el cierre
+del biestable y la comprobación nodal final siguen
+con sus criterios anteriores. El paso del cruce
+usa la semilla habitual.
+
+Pasaron las cinco reservas y los tres cruces
+conservaron sus intervalos de ocho ticks. Se
+usaron 30 semillas en las cinco ventanas, sin
+reintentos. La variante dejó igual el número
+total de iteraciones en cuatro casos y sumó
+una en C2 alto. Las medianas positivas fueron
+0,839–0,878 ms y el control fue 0,837–0,872 ms
+en las mediciones alternadas. Se conserva la
+variante como diagnóstico de laboratorio.
+[Contraste de la semilla extrapolada](../evidence/rf_d_pilot_bistable_handoff14.json).

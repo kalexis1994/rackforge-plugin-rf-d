@@ -1,7 +1,7 @@
 //! Close both R59 stage loads while advancing the receiver and latch histories.
 use super::{
-    advance_joint_with, prepare, read_values, Audio, DefectBlocks, Family, History, Output, Stage,
-    H,
+    advance_joint_with, prepare, read_values, Audio, DefectBlocks, Family, History, JointGuess,
+    Output, Stage, H,
 };
 use crate::{
     bistable::{self, Drive, State},
@@ -22,6 +22,14 @@ enum Candidate<'a> {
     Exact,
     Frozen,
     Packed(&'a DefectBlocks),
+    Seeded(&'a DefectBlocks),
+}
+
+#[derive(Clone, Copy)]
+enum Matrix {
+    Scalar,
+    Packed,
+    Seeded,
 }
 
 struct Event {
@@ -101,39 +109,57 @@ fn render(
     event: Option<&Event>,
     candidate_mode: Candidate<'_>,
     mut emit: impl FnMut(Output, Latch),
-) -> Result<[f64; 4], String> {
+) -> Result<[f64; 7], String> {
     let frozen = !matches!(candidate_mode, Candidate::Exact);
     let packed = match candidate_mode {
-        Candidate::Packed(blocks) => Some(blocks),
+        Candidate::Packed(blocks) | Candidate::Seeded(blocks) => Some(blocks),
         _ => None,
     };
-    let mut stats = [0_f64; 4];
+    let seeded = matches!(candidate_mode, Candidate::Seeded(_));
+    let mut previous_audio = None;
+    // Maximum iterations, voltage/current mismatch, latch calls, total iterations, seeds, retries.
+    let mut stats = [0_f64; 7];
     for (slot, &input) in inputs.iter().enumerate() {
-        let mut previous = None;
-        let mut candidate = [None; 2];
         let base_inputs: [Stage; 2] = input.map(|u| [u[0], u[1], u[2]]);
-        let (next, output, iterations, mismatch) = advance_joint_with(
-            audio,
-            map,
-            family,
-            collector,
-            true,
+        let predict = seeded && event.is_none_or(|event| slot != event.slot);
+        let mut guess = JointGuess {
             packed,
-            |loads, exact| {
-                let bases = loads.map(|load| load[0]);
-                if previous.is_none() || ((!frozen || exact) && previous != Some(bases)) {
-                    candidate = trial(latch, event, slot, input, bases)
-                        .map_err(|e| format!("latch step {slot}: {e:?}"))?;
-                    previous = Some(bases);
-                    stats[3] += f64::from(candidate[1].is_some());
+            previous: previous_audio.as_ref().filter(|_| predict),
+        };
+        stats[5] += f64::from(guess.previous.is_some());
+        let (next, output, iterations, mismatch, candidate) = loop {
+            let mut previous = None;
+            let mut candidate = [None; 2];
+            let result = advance_joint_with(
+                audio,
+                map,
+                family,
+                collector,
+                true,
+                guess,
+                |loads, exact| {
+                    let bases = loads.map(|load| load[0]);
+                    if previous.is_none() || ((!frozen || exact) && previous != Some(bases)) {
+                        candidate = trial(latch, event, slot, input, bases)
+                            .map_err(|e| format!("latch step {slot}: {e:?}"))?;
+                        previous = Some(bases);
+                        stats[3] += f64::from(candidate[1].is_some());
+                    }
+                    Ok(std::array::from_fn(|i| match candidate[i] {
+                        Some((state, u)) => [u.c2, input[i][1], state.nodes[2]],
+                        None => base_inputs[i],
+                    }))
+                },
+            );
+            match result {
+                Ok((next, output, iterations, mismatch)) => {
+                    break (next, output, iterations, mismatch, candidate)
                 }
-                Ok(std::array::from_fn(|i| match candidate[i] {
-                    Some((state, u)) => [u.c2, input[i][1], state.nodes[2]],
-                    None => base_inputs[i],
-                }))
-            },
-        )
-        .map_err(|e| format!("coupled step {slot}: {e}"))?;
+                Err(_) if guess.previous.take().is_some() => stats[6] += 1.,
+                Err(error) => return Err(format!("coupled step {slot}: {error}")),
+            }
+        };
+        stats[4] += iterations as f64;
         stats[0] = stats[0].max(iterations as f64);
         stats[1] = stats[1].max(mismatch);
         for (entry, (x3, base)) in candidate
@@ -149,6 +175,7 @@ fn render(
         if stats[2] > 2e-12 {
             return Err(format!("R59 step {slot}: {} A", stats[2]));
         }
+        previous_audio = Some(audio.audio);
         audio = next;
         if let Some((state, _)) = candidate[1] {
             latch = state;
@@ -159,18 +186,22 @@ fn render(
 }
 
 pub fn run(bench: bool, frozen: bool, compare: bool) -> Result<(), Box<dyn std::error::Error>> {
-    run_mode(bench, frozen, compare, false)
+    run_mode(bench, frozen, compare, Matrix::Scalar)
 }
 
 pub fn run_packed(bench: bool) -> Result<(), Box<dyn std::error::Error>> {
-    run_mode(bench, true, bench, true)
+    run_mode(bench, true, bench, Matrix::Packed)
+}
+
+pub fn run_seeded(bench: bool) -> Result<(), Box<dyn std::error::Error>> {
+    run_mode(bench, true, bench, Matrix::Seeded)
 }
 
 fn run_mode(
     bench: bool,
     frozen: bool,
     compare: bool,
-    packed: bool,
+    matrix: Matrix,
 ) -> Result<(), Box<dyn std::error::Error>> {
     const TABLE: usize = POINTS * (1 + 15 * 5);
     let values = read_values()?;
@@ -221,23 +252,24 @@ fn run_mode(
     {
         return Err("C4 event must precede the projected interval".into());
     }
-    let blocks = packed.then(|| map.reduced.as_ref().expect("receiver map").pack_defects());
-    let control = if packed {
-        Candidate::Frozen
-    } else {
-        Candidate::Exact
+    let blocks = (!matches!(matrix, Matrix::Scalar))
+        .then(|| map.reduced.as_ref().expect("receiver map").pack_defects());
+    let (control, variant) = match (matrix, blocks.as_ref()) {
+        (Matrix::Packed, Some(blocks)) => (Candidate::Frozen, Candidate::Packed(blocks)),
+        (Matrix::Seeded, Some(blocks)) => (Candidate::Packed(blocks), Candidate::Seeded(blocks)),
+        _ => (Candidate::Exact, Candidate::Frozen),
     };
-    let variant = blocks.as_ref().map_or(Candidate::Frozen, Candidate::Packed);
     if bench {
         const PASSES: usize = 200;
         let mut times = [[0; PASSES]; 2];
+        let mut stats = [[0.; 7]; 2];
         for i in 0..PASSES {
             for candidate in [if compare { i % 2 == 1 } else { frozen }, i % 2 == 0]
                 .into_iter()
                 .take(if compare { 2 } else { 1 })
             {
                 let begin = Instant::now();
-                black_box(render(
+                stats[usize::from(candidate)] = black_box(render(
                     black_box(initial),
                     latch,
                     &map,
@@ -264,6 +296,11 @@ fn run_mode(
                 group[PASSES - 1]
             );
         }
+        if matches!(matrix, Matrix::Seeded) {
+            for group in stats {
+                println!("SEEDS,{},{},{}", group[4], group[5], group[6]);
+            }
+        }
         super::profile::report_receiver();
     } else {
         let mut samples = Vec::new();
@@ -289,7 +326,7 @@ fn run_mode(
             },
         )?;
         let mut out = std::io::BufWriter::new(std::io::stdout().lock());
-        for value in stats.into_iter().chain(samples) {
+        for value in stats.into_iter().take(4).chain(samples) {
             out.write_all(&value.to_le_bytes())?;
         }
         out.flush()?;

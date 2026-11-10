@@ -17,7 +17,9 @@ use std::{
 #[path = "rf_d_pilot_audio_feedback.rs"]
 mod feedback;
 #[cfg(pilot_stage_feedback)]
-pub use feedback::{run as run_feedback, run_packed as run_feedback_packed};
+pub use feedback::{
+    run as run_feedback, run_packed as run_feedback_packed, run_seeded as run_feedback_seeded,
+};
 
 const H: f64 = 1. / 96_000.;
 const LOAD_TOLERANCE_V: f64 = 1e-10;
@@ -149,6 +151,12 @@ fn advance(
     Err(format!("interface: {:?}", StepError::IterationBudget))
 }
 
+#[derive(Clone, Copy, Default)]
+struct JointGuess<'a> {
+    packed: Option<&'a DefectBlocks>,
+    previous: Option<&'a chain::State>,
+}
+
 fn advance_joint(
     old: History,
     map: &Audio,
@@ -157,9 +165,15 @@ fn advance_joint(
     stages: [Stage; 2],
     closed_cv: bool,
 ) -> Result<(History, Output, usize, f64), String> {
-    advance_joint_with(old, map, family, collector, closed_cv, None, |_, _| {
-        Ok(stages)
-    })
+    advance_joint_with(
+        old,
+        map,
+        family,
+        collector,
+        closed_cv,
+        JointGuess::default(),
+        |_, _| Ok(stages),
+    )
 }
 
 fn advance_joint_with(
@@ -168,15 +182,23 @@ fn advance_joint_with(
     family: &Family,
     collector: f64,
     closed_cv: bool,
-    packed: Option<&DefectBlocks>,
+    guess: JointGuess<'_>,
     mut stages_at: impl FnMut([[f64; 2]; 2], bool) -> Result<[Stage; 2], String>,
 ) -> Result<(History, Output, usize, f64), String> {
     let reduced = map.reduced.as_ref().expect("audio map");
     let timing = profile::start();
     let anchor = reduced.anchor();
     let (base, offset) = reduced.joint_history(old.audio);
-    profile::split(profile::Part::ReceiverHistory, timing);
     let mut x = [offset; 2];
+    if let Some(previous) = guess.previous {
+        let change = old.audio.difference(*previous);
+        for (stage, fraction) in x.iter_mut().zip([1. / 3., 1.]) {
+            for (voltage, delta) in stage.iter_mut().zip(change) {
+                *voltage += fraction * delta;
+            }
+        }
+    }
+    profile::split(profile::Part::ReceiverHistory, timing);
     let mut cells = [old.cells; 2];
     let mut cv = [[old.cv, 0.]; 2];
     let mut tangent: Option<(Lu<4>, [f64; 4])> = None;
@@ -225,7 +247,7 @@ fn advance_joint_with(
                 .defects(&x, family, old.phase, H)
                 .map_err(|error| format!("joint defects: {error:?}"))?;
             timing = profile::split(profile::Part::ReceiverDefects, timing);
-            response = reduced.joint_response(&base, input, &defect, packed);
+            response = reduced.joint_response(&base, input, &defect, guess.packed);
             if !response.iter().all(|v| v.is_finite()) {
                 return Err(format!("joint response: {:?}", StepError::InvalidInput));
             }

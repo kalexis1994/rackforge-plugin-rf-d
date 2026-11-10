@@ -697,4 +697,5 @@ mod audio_readout;
 #[cfg(pilot_audio_readout)]
 pub use audio_readout::{run as run_audio_readout, run_stage_loads as run_audio_stage_loads};
 #[cfg(pilot_stage_feedback)]
-pub use audio_readout::{run_feedback as run_audio_feedback, run_feedback_packed as run_audio_feedback_packed};
+pub use audio_readout::{run_feedback as run_audio_feedback, run_feedback_packed as run_audio_feedback_packed,
+    run_feedback_seeded as run_audio_feedback_seeded};

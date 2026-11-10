@@ -50,7 +50,9 @@ def prepare(probe, report, stage_feedback=False):
         Some("audio-readout-feedback-compare") => closed_returns::run_audio_feedback(true, true, true),
         Some("audio-readout-feedback-profile") => closed_returns::run_audio_feedback(true, true, false),
         Some("audio-readout-feedback-packed") => closed_returns::run_audio_feedback_packed(false),
-        Some("audio-readout-feedback-packed-bench") => closed_returns::run_audio_feedback_packed(true),''')
+        Some("audio-readout-feedback-packed-bench") => closed_returns::run_audio_feedback_packed(true),
+        Some("audio-readout-feedback-seeded") => closed_returns::run_audio_feedback_seeded(false),
+        Some("audio-readout-feedback-seeded-bench") => closed_returns::run_audio_feedback_seeded(true),''')
         code += '\nuse latch_charge as latch_charge_driver;\n'
         for name, path in FEEDBACK_MODULES:
             code += f'\n#[path = "{(c.ROOT / path).as_posix()}"] mod {name};\n'
