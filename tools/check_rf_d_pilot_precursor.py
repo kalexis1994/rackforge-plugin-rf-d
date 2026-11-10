@@ -307,7 +307,9 @@ def main():
                         help="run the Rust timer carry and the reference C4 replay")
     parser.add_argument("--returns", action="store_true", help="contrast return readout at imposed receiver loads")
     parser.add_argument("--audio", action="store_true", help="close base and TAIL with the reduced audio receiver")
+    parser.add_argument("--audio-joint", action="store_true", help="compare the joint and nested audio loops")
     args_main = parser.parse_args()
+    assert not args_main.audio_joint or args_main.audio
     assert not args_main.audio or args_main.returns
     assert not args_main.returns or args_main.timers_native
     assert not args_main.timers_native or args_main.timer_grid_refine
@@ -516,7 +518,7 @@ def main():
                         phase, _, _, state = refs["positive"][1][start]
                         state = state.copy()
                         state[0, TIMER_NODES] += offset
-                        audio_case = audio.Case(exe, env, state, phase, stages)
+                        audio_case = audio.Case(exe, env, state, phase, stages, args_main.audio_joint)
                     item["native_timers"] = [
                         timer_native_trial(run, native_timer, native_args[1], native_grid, native_after,
                                            observations[i], observations, start, expected, i, any(offset), result, readout, audio_case)

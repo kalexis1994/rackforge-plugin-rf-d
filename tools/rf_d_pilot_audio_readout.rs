@@ -1,6 +1,9 @@
 //! 96 kHz closure of the reduced audio map and the two return cells.
-use super::{chain, contour_ports, voltage, Audio, Family, Returns, StepError, LOAD};
-use crate::{graph, reduced_lu::Lu};
+use super::{chain, contour_ports, voltage, Audio, Family, Returns, StepError, LOAD, PAIR, SIZE};
+use crate::{
+    graph,
+    reduced_lu::{maximum, Lu},
+};
 use std::{
     hint::black_box,
     io::{Read, Write},
@@ -20,6 +23,51 @@ struct History {
     phase: f64,
 }
 
+fn solve_cells(
+    cells: &mut [Returns; 2],
+    stages: [Stage; 2],
+    loads: [[f64; 2]; 2],
+    collector: f64,
+) -> Result<(), String> {
+    for i in 0..2 {
+        let [c2, sum, cv] = stages[i];
+        let [base, tail] = loads[i];
+        cells[i].volume = contour_ports::volume(cells[i].volume, c2, [collector, cv, base])
+            .map_err(|error| format!("R59 cell: {error:?}"))?;
+        cells[i].filter = contour_ports::filter(cells[i].filter, [sum, tail])
+            .map_err(|error| format!("R60 cell: {error:?}"))?;
+    }
+    Ok(())
+}
+
+fn load_tangent(
+    map: &Audio,
+    cells: [Returns; 2],
+    stages: [Stage; 2],
+    loads: [[f64; 2]; 2],
+    input: [[f64; 2]; 2],
+    collector: f64,
+) -> Result<(Lu<4>, [f64; 4]), String> {
+    let mut slope = [0.; 4];
+    for i in 0..2 {
+        let [c2, sum, cv] = stages[i];
+        let [base, tail] = loads[i];
+        let shifted_volume =
+            contour_ports::volume(cells[i].volume, c2, [collector, cv, base + LOAD_PROBE_V])
+                .map_err(|error| format!("R59 tangent: {error:?}"))?;
+        let shifted_filter = contour_ports::filter(cells[i].filter, [sum, tail + LOAD_PROBE_V])
+            .map_err(|error| format!("R60 tangent: {error:?}"))?;
+        slope[2 * i] = (shifted_volume[2] - input[i][0]) / LOAD_PROBE_V;
+        slope[2 * i + 1] = (shifted_filter[2] - input[i][1]) / LOAD_PROBE_V;
+    }
+    let response = map.reduced.as_ref().expect("audio map").load_response();
+    let jacobian = std::array::from_fn(|r| {
+        std::array::from_fn(|c| f64::from(r == c) - response[r][c] * slope[c])
+    });
+    let factor = Lu::factor(jacobian).map_err(|error| format!("load tangent: {error:?}"))?;
+    Ok((factor, slope))
+}
+
 fn advance(
     old: History,
     map: &Audio,
@@ -32,14 +80,7 @@ fn advance(
     let mut delta = [chain::State::from_nodes([0.; chain::N]); 2];
     let mut tangent: Option<Lu<4>> = None;
     for iteration in 1..=16 {
-        for i in 0..2 {
-            let [c2, sum, cv] = stages[i];
-            let [base, tail] = loads[i];
-            cells[i].volume = contour_ports::volume(cells[i].volume, c2, [collector, cv, base])
-                .map_err(|error| format!("R59 cell: {error:?}"))?;
-            cells[i].filter = contour_ports::filter(cells[i].filter, [sum, tail])
-                .map_err(|error| format!("R60 cell: {error:?}"))?;
-        }
+        solve_cells(&mut cells, stages, loads, collector)?;
         let input = cells.map(|s| [s.volume[2], s.filter[2]]);
         let (now, phase, next_delta, _) = map
             .step(old.audio, input, family, old.phase, H, delta)
@@ -64,28 +105,7 @@ fn advance(
             ));
         }
         if tangent.is_none() {
-            let mut slope = [0.; 4];
-            for i in 0..2 {
-                let [c2, sum, cv] = stages[i];
-                let [base, tail] = loads[i];
-                let shifted_volume = contour_ports::volume(
-                    cells[i].volume,
-                    c2,
-                    [collector, cv, base + LOAD_PROBE_V],
-                )
-                .map_err(|error| format!("R59 tangent: {error:?}"))?;
-                let shifted_filter =
-                    contour_ports::filter(cells[i].filter, [sum, tail + LOAD_PROBE_V])
-                        .map_err(|error| format!("R60 tangent: {error:?}"))?;
-                slope[2 * i] = (shifted_volume[2] - input[i][0]) / LOAD_PROBE_V;
-                slope[2 * i + 1] = (shifted_filter[2] - input[i][1]) / LOAD_PROBE_V;
-            }
-            let response = map.reduced.as_ref().expect("audio map").load_response();
-            let jacobian = std::array::from_fn(|r| {
-                std::array::from_fn(|c| f64::from(r == c) - response[r][c] * slope[c])
-            });
-            tangent =
-                Some(Lu::factor(jacobian).map_err(|error| format!("load tangent: {error:?}"))?);
+            tangent = Some(load_tangent(map, cells, stages, loads, input, collector)?.0);
         }
         let change = tangent
             .as_ref()
@@ -100,19 +120,106 @@ fn advance(
     Err(format!("interface: {:?}", StepError::IterationBudget))
 }
 
+fn advance_joint(
+    old: History,
+    map: &Audio,
+    family: &Family,
+    collector: f64,
+    stages: [Stage; 2],
+    audit: bool,
+) -> Result<(History, Output, usize, f64), String> {
+    let reduced = map.reduced.as_ref().expect("audio map");
+    let anchor = reduced.anchor();
+    let (base, offset) = reduced.joint_history(old.audio);
+    let mut x = [offset; 2];
+    let mut cells = [old.cells; 2];
+    let mut tangent: Option<(Lu<4>, [f64; 4])> = None;
+    const BUDGET: usize = 16;
+    for iteration in 1..=BUDGET {
+        let loads = x.map(|row| LOAD.map(|k| voltage(anchor, k) + row[k]));
+        solve_cells(&mut cells, stages, loads, collector)?;
+        let input = cells.map(|s| [s.volume[2], s.filter[2]]);
+        let (defect, phase) = reduced
+            .defects(&x, family, old.phase, H)
+            .map_err(|error| format!("joint defects: {error:?}"))?;
+        let mut response = reduced.joint_response(&base, input, &defect);
+        if !response.iter().all(|v| v.is_finite()) {
+            return Err(format!("joint response: {:?}", StepError::InvalidInput));
+        }
+        let residual: [f64; PAIR] =
+            std::array::from_fn(|r| response[r] - x[r / SIZE][super::local(r % SIZE)]);
+        let load_error = std::array::from_fn(|i| residual[i / 2 * SIZE + LOAD[i % 2]]);
+        let mismatch = maximum(&load_error);
+        let settled = maximum(&residual) <= 2e-12;
+        if settled || (iteration == BUDGET && mismatch <= LOAD_TOLERANCE_V) {
+            let now = x.map(|row| anchor.advanced(row));
+            let phase = if audit || !settled {
+                let delta = now.map(|v| chain::State::from_nodes(v.difference(old.audio)));
+                let (_, checked_phase) = map
+                    .verify(old.audio, input, family, old.phase, H, delta)
+                    .map_err(|error| format!("joint nodal check: {error:?}"))?;
+                if settled {
+                    phase
+                } else {
+                    map.checked_proposals.set(map.checked_proposals.get() + 1);
+                    checked_phase
+                }
+            } else {
+                phase
+            };
+            let [base, tail] = loads[1];
+            let [r59, r60] = cells[1].currents(base, tail);
+            let [x3, x37] = input[1];
+            let row = [voltage(now[1], 61), r59, r60, x3, x37, base, tail];
+            return Ok((
+                History {
+                    audio: now[1],
+                    cells: cells[1],
+                    phase,
+                },
+                row,
+                iteration,
+                mismatch,
+            ));
+        }
+        if tangent.is_none() {
+            tangent = Some(load_tangent(map, cells, stages, loads, input, collector)?);
+        }
+        let (factor, slope) = tangent.as_ref().unwrap();
+        let load_change = factor
+            .solve(load_error)
+            .map_err(|error| format!("joint direction: {error:?}"))?;
+        reduced.correct_wires(
+            &mut response,
+            std::array::from_fn(|i| slope[i] * load_change[i]),
+        );
+        for (r, value) in response.into_iter().enumerate() {
+            x[r / SIZE][super::local(r % SIZE)] = value;
+        }
+    }
+    Err(format!("joint interface: {:?}", StepError::IterationBudget))
+}
+
 fn render(
     mut state: History,
     map: &Audio,
     family: &Family,
     collector: f64,
     stages: &[[Stage; 2]],
+    joint: bool,
+    audit: bool,
     mut emit: impl FnMut(Output),
 ) -> Result<(usize, f64), String> {
     let mut outer = 0;
     let mut closure_error = 0_f64;
     for (i, &row) in stages.iter().enumerate() {
-        let (next, sample, iterations, mismatch) = advance(state, map, family, collector, row)
-            .map_err(|error| format!("step {i}: {error}"))?;
+        let result = if joint {
+            advance_joint(state, map, family, collector, row, audit)
+        } else {
+            advance(state, map, family, collector, row)
+        };
+        let (next, sample, iterations, mismatch) =
+            result.map_err(|error| format!("step {i}: {error}"))?;
         state = next;
         outer = outer.max(iterations);
         closure_error = closure_error.max(mismatch);
@@ -121,7 +228,7 @@ fn render(
     Ok((outer, closure_error))
 }
 
-pub fn run(bench: bool) -> Result<(), Box<dyn std::error::Error>> {
+pub fn run(bench: bool, joint: bool) -> Result<(), Box<dyn std::error::Error>> {
     let mut bytes = Vec::new();
     std::io::stdin().read_to_end(&mut bytes)?;
     assert_eq!(bytes.len() % 8, 0);
@@ -176,26 +283,43 @@ pub fn run(bench: bool) -> Result<(), Box<dyn std::error::Error>> {
     .map_err(|e| format!("audio factor: {e:?}"))?;
     if bench {
         const RUNS: usize = 200;
-        let mut times = [0; RUNS];
-        for time in &mut times {
-            let start = Instant::now();
-            render(black_box(initial), &map, &family, x(2), &stages, |row| {
-                black_box(row);
-            })?;
-            *time = start.elapsed().as_nanos();
+        let mut times = [[0; RUNS]; 2];
+        for i in 0..RUNS {
+            for candidate in [joint && i % 2 == 1, joint && i % 2 == 0]
+                .into_iter()
+                .take(if joint { 2 } else { 1 })
+            {
+                let start = Instant::now();
+                render(
+                    black_box(initial),
+                    &map,
+                    &family,
+                    x(2),
+                    &stages,
+                    candidate,
+                    false,
+                    |row| {
+                        black_box(row);
+                    },
+                )?;
+                times[usize::from(candidate)][i] = start.elapsed().as_nanos();
+            }
         }
-        times.sort_unstable();
-        println!(
-            "{RUNS},{},{},{}",
-            times[RUNS / 2],
-            times[RUNS * 99 / 100],
-            times[RUNS - 1]
-        );
+        for group in times.iter_mut().take(if joint { 2 } else { 1 }) {
+            group.sort_unstable();
+            println!(
+                "{RUNS},{},{},{}",
+                group[RUNS / 2],
+                group[RUNS * 99 / 100],
+                group[RUNS - 1]
+            );
+        }
     } else {
         let mut samples = Vec::with_capacity(stages.len());
-        let (outer, mismatch) = render(initial, &map, &family, x(2), &stages, |row| {
-            samples.push(row)
-        })?;
+        let (outer, mismatch) =
+            render(initial, &map, &family, x(2), &stages, joint, joint, |row| {
+                samples.push(row)
+            })?;
         let mut out = std::io::BufWriter::new(std::io::stdout().lock());
         for value in [outer as f64, mismatch, map.checked_proposals.get() as f64]
             .into_iter()

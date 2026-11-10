@@ -91,7 +91,9 @@ def main():
     parser.add_argument("--native", action="store_true", help="verify and time the bounded Rust C7 clock")
     parser.add_argument("--returns", action="store_true", help="contrast return readout at imposed receiver loads")
     parser.add_argument("--audio", action="store_true", help="close base and TAIL with the reduced audio receiver")
+    parser.add_argument("--audio-joint", action="store_true", help="compare the joint and nested audio loops")
     args = parser.parse_args()
+    assert not args.audio_joint or args.audio
     assert not args.audio or args.returns
     assert not args.returns or args.native
     assert c.AREA.is_dir() and not list(c.AREA.iterdir())
@@ -168,7 +170,7 @@ def main():
                         phase, _, _, state = refs[branch][1][start]
                         state = state.copy()
                         state[0, TIMER_NODES] += offset
-                        audio_case = audio.Case(oracle, env, state, phase, stages)
+                        audio_case = audio.Case(oracle, env, state, phase, stages, args.audio_joint)
                     result = compare(evaluate, model, stages, seed, key, frames, native, readout, audio_case)
                 item["trials"].append(dict(meta, **result, unchanged_replay=True))
                 print(label, offset, result, flush=True)

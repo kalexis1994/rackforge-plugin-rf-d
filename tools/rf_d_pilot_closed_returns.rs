@@ -168,6 +168,24 @@ impl Audio {
         Ok((now, stages[1], residual))
     }
 
+    fn verify(
+        &self,
+        old: chain::State,
+        input: [[f64; 2]; 2],
+        family: &Family,
+        phase: f64,
+        h: f64,
+        delta: [chain::State; 2],
+    ) -> Result<([chain::State; 2], f64), StepError> {
+        let (now, angle, residual) = self.residual(old, input, family, phase, h, delta)?;
+        let correction = self.lu.solve(residual.map(|v| -v))?;
+        if maximum(&residual) <= 2e-13 && maximum(&correction) <= 2e-9 {
+            Ok((now, angle))
+        } else {
+            Err(StepError::IterationBudget)
+        }
+    }
+
     fn step(
         &self,
         old: chain::State,
@@ -183,14 +201,9 @@ impl Audio {
                     return Ok((now, angle, next, iteration))
                 }
                 Ok((_, _, next, iteration, false)) if self.verify_reduced => {
-                    let (now, angle, residual) =
-                        self.residual(old, input, family, phase, h, next)?;
-                    let correction = self.lu.solve(residual.map(|v| -v))?;
-                    if maximum(&residual) <= 2e-13 && maximum(&correction) <= 2e-9 {
-                        self.checked_proposals.set(self.checked_proposals.get() + 1);
-                        return Ok((now, angle, next, iteration));
-                    }
-                    return Err(StepError::IterationBudget);
+                    let (now, angle) = self.verify(old, input, family, phase, h, next)?;
+                    self.checked_proposals.set(self.checked_proposals.get() + 1);
+                    return Ok((now, angle, next, iteration));
                 }
                 Err(error) if !matches!(error, StepError::IterationBudget) => return Err(error),
                 _ if !self.diagnostic_recovery => return Err(StepError::IterationBudget),

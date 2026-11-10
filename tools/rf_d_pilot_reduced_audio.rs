@@ -167,6 +167,89 @@ impl Map {
         })
     }
 
+    pub(super) fn linear(&self, old_offset: [f64; chain::N], input: [[f64; 2]; 2]) -> [f64; PAIR] {
+        let state = std::array::from_fn(|i| match i {
+            0..CAP_COUNT => {
+                let (a, b, _) = capacitors()[i];
+                old_offset[a] - pair_value(&old_offset, b)
+            }
+            CAP_COUNT => 1.,
+            _ => {
+                let i = i - CAP_COUNT - 1;
+                input[i / 2][i % 2] - self.wires[i % 2]
+            }
+        });
+        self.affine.each_ref().map(|row| dot(row, &state))
+    }
+
+    pub(super) fn defects(
+        &self,
+        x: &[[f64; chain::N]; 2],
+        family: &Family,
+        phase: f64,
+        h: f64,
+    ) -> Result<([f64; DEFECT], f64), StepError> {
+        let bus = x.map(|row| voltage(self.anchor, chain::BUS) + row[chain::BUS]);
+        let f = bus.map(|v| {
+            family
+                .frequency(v)
+                .map(|p| p.0)
+                .map_err(|_| StepError::InvalidInput)
+        });
+        let [a, b] = f;
+        let (a, b) = (a?, b?);
+        let angles = A.map(|row| (phase + h * (row[0] * a + row[1] * b)).rem_euclid(1.));
+        let mut correction = [0.; DEFECT];
+        for i in 0..2 {
+            for (j, (a, b, scale, _)) in devices::S.into_iter().enumerate() {
+                let z = scale * (pair_value(&x[i], a) - pair_value(&x[i], b));
+                if !z.is_finite() || self.bias[j] + z > 45. {
+                    return Err(StepError::ExponentialDomain);
+                }
+                correction[i * (LAWS + 1) + j] = remainder(z);
+            }
+            let actual = family
+                .observe(bus[i], angles[i])
+                .map_err(|_| StepError::InvalidInput)?;
+            correction[i * (LAWS + 1) + LAWS] =
+                (actual.currents_a[2] - self.bus_current) - self.bus_slope * x[i][chain::BUS];
+        }
+        Ok((correction, angles[1]))
+    }
+
+    #[cfg(pilot_audio_readout)]
+    pub(super) fn joint_history(&self, old: chain::State) -> ([f64; PAIR], [f64; chain::N]) {
+        let offset = old.difference(self.anchor);
+        (self.linear(offset, [self.wires; 2]), offset)
+    }
+
+    #[cfg(pilot_audio_readout)]
+    pub(super) fn joint_response(
+        &self,
+        base: &[f64; PAIR],
+        input: [[f64; 2]; 2],
+        correction: &[f64; DEFECT],
+    ) -> [f64; PAIR] {
+        let drives: [f64; 4] = std::array::from_fn(|i| input[i / 2][i % 2] - self.wires[i % 2]);
+        std::array::from_fn(|r| {
+            let wires: &[f64; 4] = self.affine[r][CAP_COUNT + 1..].try_into().unwrap();
+            base[r] + dot(wires, &drives) + dot(&self.defect[r], correction)
+        })
+    }
+
+    #[cfg(pilot_audio_readout)]
+    pub(super) fn correct_wires(&self, response: &mut [f64; PAIR], change: [f64; 4]) {
+        for (r, value) in response.iter_mut().enumerate() {
+            let wires: &[f64; 4] = self.affine[r][CAP_COUNT + 1..].try_into().unwrap();
+            *value += dot(wires, &change);
+        }
+    }
+
+    #[cfg(pilot_audio_readout)]
+    pub(super) fn anchor(&self) -> chain::State {
+        self.anchor
+    }
+
     pub(super) fn step(
         &self,
         old: chain::State,
@@ -182,45 +265,10 @@ impl Map {
                 .advanced(delta.low)
                 .difference(self.anchor)
         });
-        let state = std::array::from_fn(|i| match i {
-            0..CAP_COUNT => {
-                let (a, b, _) = capacitors()[i];
-                old_offset[a] - pair_value(&old_offset, b)
-            }
-            CAP_COUNT => 1.,
-            _ => {
-                let i = i - CAP_COUNT - 1;
-                input[i / 2][i % 2] - self.wires[i % 2]
-            }
-        });
-        let linear = self.affine.each_ref().map(|row| dot(row, &state));
+        let linear = self.linear(old_offset, input);
         let budget = 12;
         for iteration in 1..=budget {
-            let bus = x.map(|row| voltage(self.anchor, chain::BUS) + row[chain::BUS]);
-            let f = bus.map(|v| {
-                family
-                    .frequency(v)
-                    .map(|p| p.0)
-                    .map_err(|_| StepError::InvalidInput)
-            });
-            let [a, b] = f;
-            let (a, b) = (a?, b?);
-            let angles = A.map(|row| (phase + h * (row[0] * a + row[1] * b)).rem_euclid(1.));
-            let mut correction = [0.; DEFECT];
-            for i in 0..2 {
-                for (j, (a, b, scale, _)) in devices::S.into_iter().enumerate() {
-                    let z = scale * (pair_value(&x[i], a) - pair_value(&x[i], b));
-                    if !z.is_finite() || self.bias[j] + z > 45. {
-                        return Err(StepError::ExponentialDomain);
-                    }
-                    correction[i * (LAWS + 1) + j] = remainder(z);
-                }
-                let actual = family
-                    .observe(bus[i], angles[i])
-                    .map_err(|_| StepError::InvalidInput)?;
-                correction[i * (LAWS + 1) + LAWS] =
-                    (actual.currents_a[2] - self.bus_current) - self.bus_slope * x[i][chain::BUS];
-            }
+            let (correction, angle) = self.defects(&x, family, phase, h)?;
             let response = std::array::from_fn::<_, PAIR, _>(|r| {
                 linear[r] + dot(&self.defect[r], &correction)
             });
@@ -234,7 +282,7 @@ impl Map {
                 let now = x.map(|v| self.anchor.advanced(v));
                 return Ok((
                     now,
-                    angles[1],
+                    angle,
                     now.map(|v| chain::State::from_nodes(v.difference(old))),
                     iteration,
                     settled,

@@ -1242,3 +1242,26 @@ El cierre local permite contrastar el receptor de
 referencia bajo ambas ramas. Quedan el cierre de x4,
 la transición entre ventanas y la reducción del coste
 antes de medir una voz continua a 128 frames.
+
+## Una iteración conjunta para audio y retornos
+
+La proyección de Radau separa el término de historia,
+las cuatro excitaciones de R59/R60 y los defectos de
+juntura y BUS. En cada iteración se calcula una sola
+respuesta de audio. Las cuatro diferencias de carga
+se corrigen con el complemento de Schur de la
+respuesta lineal. Las celdas se vuelven a evaluar
+con las cargas corregidas, desde la misma historia
+de capacitores y fase. x4 sigue fijado por el solver.
+
+El primer pase alternó 200 ventanas por caso con
+cada implementación, usando el mismo mapa y las
+mismas entradas. Los seis cruces positivos pasaron,
+con medianas entre 2,05 y 2,41 veces más rápidas.
+Pasaron los dos flancos negativos nominales. Las
+cuatro reservas negativas perturbadas fueron
+rechazadas en el primer paso por la auditoría nodal,
+que se ejecutó aparte de la medición. Se conservaron
+las entradas y el replay de esos rechazos.
+[Positivos](../evidence/rf_d_pilot_audio_readout_pos03.json),
+[negativos](../evidence/rf_d_pilot_audio_readout_neg04.json).

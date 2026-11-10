@@ -25,8 +25,10 @@ def prepare(probe, report):
     report["audio_devices"] = dict(sha256=c.sha(devices), unit_bias_underflow_columns=underflow)
     code = c.once(probe.read_text(encoding="utf8"), '        Some("ports") => ports(),', '''
         Some("ports") => ports(),
-        Some("audio-readout") => closed_returns::run_audio_readout(false),
-        Some("audio-readout-bench") => closed_returns::run_audio_readout(true),''')
+        Some("audio-readout") => closed_returns::run_audio_readout(false, false),
+        Some("audio-readout-bench") => closed_returns::run_audio_readout(true, false),
+        Some("audio-readout-joint") => closed_returns::run_audio_readout(false, true),
+        Some("audio-readout-compare") => closed_returns::run_audio_readout(true, true),''')
     code += f'\n#[path = "{(c.ROOT / PARENT).as_posix()}"] mod closed_returns;\n'
     code += f'#[path = "{devices.as_posix()}"] mod radau_devices;\n'
     return c.emit(probe.name, code)
@@ -39,6 +41,7 @@ class Case:
     state: np.ndarray
     phase: float
     stages: np.ndarray
+    joint: bool = False
 
     def run(self, mode, payload):
         return subprocess.run([str(self.target), mode], cwd=c.ROOT, env=self.env,
@@ -67,10 +70,11 @@ class Case:
             return np.stack((boundaries[:-1] + (boundaries[1:] - boundaries[:-1]) / 3.,
                              boundaries[1:]), axis=1)
 
-        def measure(drives, timing=False):
+        def measure(drives, timing=False, joint=False):
             data = np.r_[anchor, np.concatenate((drives, cv[..., None]), axis=2).ravel()].astype("<f8").tobytes()
-            raw = self.run("audio-readout", data)
-            replay = self.run("audio-readout", data)
+            mode = "audio-readout-joint" if joint else "audio-readout"
+            raw = self.run(mode, data)
+            replay = self.run(mode, data)
             assert (raw.returncode, raw.stdout, raw.stderr) == (replay.returncode, replay.stdout, replay.stderr)
             result = dict(passed=False, steps=len(reference), unchanged_replay=True,
                           input_sha256=c.digest(data), output_sha256=c.digest(raw.stdout))
@@ -92,20 +96,31 @@ class Case:
             if not result["passed"]:
                 result["failure_input"] = packed(data)
             if timing:
-                measured = self.run("audio-readout-bench", data)
+                mode = "audio-readout-compare" if joint else "audio-readout-bench"
+                measured = self.run(mode, data)
                 assert measured.returncode == 0, measured.stderr.decode(errors="replace")
-                times = list(map(int, measured.stdout.decode().strip().split(",")))
-                result["timing"] = dict(zip(("windows", "median_ns", "p99_ns", "max_ns"), times, strict=True))
+                labels = ("windows", "median_ns", "p99_ns", "max_ns")
+                timings = [dict(zip(labels, map(int, row.split(",")), strict=True))
+                           for row in measured.stdout.decode().splitlines()]
+                if joint:
+                    before, after = timings
+                    result["timing"] = dict(alternating=True, nested=before, joint=after,
+                                            median_speedup=before["median_ns"] / after["median_ns"])
+                else:
+                    result["timing"], = timings
             return result
 
         results = dict(oracle_stages=measure(self.stages[indices[:, :, None], DRIVES]),
                        oracle_foh=measure(foh(oracle)), generated_foh=measure(foh(generated), timing=True))
+        stages = foh(generated)
         if stage_sum is None:
             passed = all(row["passed"] for row in results.values())
         else:
-            stages = foh(generated)
             stages[:, 0, 1] = stage_sum
             results["generated_c7_stage"] = measure(stages, timing=True)
             passed = results["oracle_stages"]["passed"] and results["generated_c7_stage"]["passed"]
+        if self.joint:
+            results["generated_joint"] = measure(stages, timing=True, joint=True)
+            passed &= results["generated_joint"]["passed"]
         return dict(passed=passed, first_slot=first,
                     reference_peak_j7_v=float(abs(wanted[:, 0]).max()), **results)
