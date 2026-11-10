@@ -800,3 +800,57 @@ intervalo del evento del biestable sigue en
 eléctrico durante la caída del ataque y validarla
 con otras cargas.
 [Contraste del área de ataque](../evidence/rf_d_pilot_timer_rc05.json).
+
+## Cola de ataque en coordenadas del colector Q25
+
+Durante la subida monótona de x26 se usa ese voltaje
+como coordenada. La única memoria del colector en
+el stamp nominal es la juntura BC de Q25. La ecuación
+local es `dt/dx26 = −dQcolector/dx26 / I_dc`.
+El término de corriente incluye Q25, la base de Q17,
+la rama de 33 kΩ y la reacción de la celda de ataque
+por 3,3 kΩ. La capacitancia diferencial conserva la
+depleción y difusión del [modelo de junturas](../tools/latch_charge_driver.rs).
+El área se pondera con la misma respuesta de C2
+a 96 kHz. La integración rechaza una densidad de
+tiempo no positiva. [Modelo del colector](../tools/rf_d_pilot_attack_orbit.py).
+
+Las dos reservas nuevas cambian las memorias iniciales
+de C2/C5 en +50/−50 mV y −50/+50 mV, respectivamente.
+El solver de referencia mantiene el resto de la voz y
+las cargas de R59/R60. La discrepancia algebraica del
+ancla se registra aparte. La comparación de los puertos
+de ataque comienza en la primera etapa resuelta. En
+las reservas desplazadas, la forma de las trayectorias
+se toma de la nominal y se traslada usando sólo sus
+voltajes en el cruce. El banco todavía suministra ese
+estado e instante, las rampas exteriores y las demás
+cargas de los temporizadores.
+
+El primer ensayo con el paso de 40,69 ns dejó 7,79 µV
+en C2 nominal. Trasladar la forma completa a C2 bajo
+produjo densidad de tiempo negativa antes del cruce.
+Se conserva también la comparación de las anclas
+perturbadas antes de resolver sus nodos algebraicos.
+[Primer ensayo](../evidence/rf_d_pilot_timer_rc06.json).
+
+Con el paso de referencia de 13,56 ns, todos los
+cruces quedaron dentro de sus brackets de ocho ticks
+anteriores, incluido **319096–319104** en nominal.
+Integrar sólo la cola posterior al cruce evitó la
+densidad negativa de la forma trasladada. Con 16
+tramos, el nominal dio 1,16 µV de error de C2 y las
+reservas trasladadas dieron 2,12 y 0,033 µV. El
+límite de corriente de 2 nA en el resistor de 1 kΩ
+equivale a 2 µV con el resto de sus puertos impuestos.
+[Referencia refinada](../evidence/rf_d_pilot_timer_rc07.json).
+
+Con 24 tramos y ocho evaluaciones por tramo, la misma
+forma nominal de la cola pasó los tres casos refinados.
+El error máximo en C2 fue 0,712 µV en nominal, 1,687 µV
+con C2 alto y 0,501 µV con C2 bajo. La variante de 32
+tramos también pasó. Queda pendiente generar el estado
+y el instante del cruce en el motor, contrastar R59/R60
+y J7 en el candidato acoplado y medir el bloque de voz
+completa antes de probarlo en Desktop.
+[Comparación de tramos y reservas](../evidence/rf_d_pilot_timer_rc08.json).

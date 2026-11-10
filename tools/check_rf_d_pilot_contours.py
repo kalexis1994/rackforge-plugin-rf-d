@@ -46,6 +46,8 @@ def component(kernel):
         Some("ports") => ports(),
         Some("contour-capture") if args.len() == 6 =>
             contour_probe::capture(&args[2], args[3].parse()?, args[4].parse()?, args[5].parse()?),
+        Some("contour-capture-refined") if args.len() == 6 =>
+            contour_probe::capture_refined(&args[2], args[3].parse()?, args[4].parse()?, args[5].parse()?),
         Some("contour-replay") if (5..=6).contains(&args.len()) =>
             contour_probe::replay(&args[2], args[3].parse()?, args[4].parse()?, args.get(5).map_or(Ok(128), |s| s.parse())?),''')
     for name, path in (("pilot_contours", CANDIDATE), ("contour_probe", PROBE), ("contour_ports", PORTS)):

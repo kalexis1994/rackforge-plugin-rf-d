@@ -27,7 +27,7 @@ fn read(path: &str) -> Result<Vec<f64>, Box<dyn Error>> {
 }
 
 pub fn capture(path: &str, start: usize, frames: usize, key: f64) -> Result<(), Box<dyn Error>> {
-    capture_at(path, start, frames, key, false)
+    capture_at(path, start, frames, key, 1, false)
 }
 
 pub fn capture_endpoints(
@@ -36,7 +36,16 @@ pub fn capture_endpoints(
     frames: usize,
     key: f64,
 ) -> Result<(), Box<dyn Error>> {
-    capture_at(path, start, frames, key, true)
+    capture_at(path, start, frames, key, 1, true)
+}
+
+pub fn capture_refined(
+    path: &str,
+    start: usize,
+    frames: usize,
+    key: f64,
+) -> Result<(), Box<dyn Error>> {
+    capture_at(path, start, frames, key, 3, false)
 }
 
 fn capture_at(
@@ -44,6 +53,7 @@ fn capture_at(
     start: usize,
     frames: usize,
     key: f64,
+    subdivisions: usize,
     endpoints_only: bool,
 ) -> Result<(), Box<dyn Error>> {
     let data = read(path)?;
@@ -71,8 +81,10 @@ fn capture_at(
     };
     write(&state)?;
     let order = |x: &voice::State| x.high[26] + x.low[26] >= x.high[28] + x.low[28];
-    for i in 0..frames * 512 {
-        model.time = (start * 512 + i) as f64 * H;
+    let steps_per_frame = subdivisions * 512;
+    let h = H / subdivisions as f64;
+    for i in 0..frames * steps_per_frame {
+        model.time = (start * steps_per_frame + i) as f64 * h;
         let q = voice::radau(
             &mut workspace,
             &family,
@@ -80,7 +92,7 @@ fn capture_at(
             state,
             phase,
             controls,
-            H,
+            h,
             80,
         )
         .map_err(|e| format!("reference {start}/{i}: {e:?}"))?;
@@ -90,7 +102,7 @@ fn capture_at(
                 let tick = start * 4096 + 8 * i;
                 eprintln!("SWITCH,{tick},{},{}", tick + 8, usize::from(order(&next)));
             }
-            if (i + 1) % 512 == 0 {
+            if (i + 1) % steps_per_frame == 0 {
                 write(&next)?;
             }
         } else {

@@ -16,6 +16,9 @@ PROBE = "tools/rf_d_pilot_timer_rc_probe.rs"
 DOC = "docs/VOZ_PILOTO_RETORNOS_PROTOCOLO.md"
 ATTACK = "tools/rf_d_pilot_attack_cell.rs"
 ATTACK_PROBE = "tools/rf_d_pilot_attack_cell_probe.rs"
+ATTACK_ORBIT = "tools/rf_d_pilot_attack_orbit.py"
+ORBIT_RESERVES = (("positive_c2_up", "positive", 76, 5, 0., (+.05, -.05)),
+                  ("positive_c2_down", "positive", 76, 5, 0., (-.05, +.05)))
 ATTACK_INPUTS = [[26, 5], [40, 38]]
 ATTACK_BASES = [6, 43]
 ATTACK_COLLECTOR_OHM = [1100., 100.]
@@ -32,16 +35,16 @@ def fixture(first, ticks, loads):
     return np.r_[first, np.column_stack((ticks, loads.reshape(-1, 6))).ravel()].astype("<f8").tobytes()
 
 
-def project_loads(stages, first_path=0):
+def project_loads(stages, first_path=0, ticks=FINE_TICKS):
     """Project the selected load ports with their summed conductance."""
     stage_values = stages[1:, np.array(LOAD_NODES)[:, first_path:]]
     conductance = (1. / OHMS[:, first_path:]).sum(axis=1)
-    return project_stages(stage_values, conductance)
+    return project_stages(stage_values, conductance, ticks)
 
 
-def project_stages(stage_values, conductance):
-    steps = HALF_FRAME_TICKS // FINE_TICKS
-    x = conductance * FINE_TICKS / (10e-6 * 48_000 * 4096)
+def project_stages(stage_values, conductance, ticks):
+    steps = round(HALF_FRAME_TICKS / ticks)
+    x = conductance * ticks / (10e-6 * 48_000 * 4096)
     # The original fine oracle uses two-stage Radau. Its final row weights
     # the two load stages in the ratio 4.5:(1.5+x) for this linear network.
     w1 = 4.5 / (6. + x)
@@ -90,7 +93,7 @@ def attack_fixture(nodes):
     return nodes[:, ATTACK_INPUTS].astype("<f8").tobytes()
 
 
-def attack_results(run, target, stages):
+def attack_results(run, target, stages, changed=False):
     data = attack_fixture(stages)
     raw = run([target], data)
     ports = np.frombuffer(raw, "<f8").reshape(-1, 2, 4)
@@ -101,17 +104,20 @@ def attack_results(run, target, stages):
     control = stages[:, np.array(ATTACK_INPUTS)[:, 0]]
     ref = np.stack((base, port, (port - timer) / OHMS[:, 0],
                     (base - control) / 3300.), axis=2)
-    peak = abs(ports - ref).max(axis=0)
+    error = abs(ports - ref)
+    peak = error[int(changed):].max(axis=0)
     passes = bool(peak[:, :2].max() <= TIMER_LIMIT_V and peak[:, 2:].max() <= LOAD_LIMIT_A)
     item = dict(passed=passes, stages=len(ports), max_error=peak.tolist(),
                 input_sha256=c.digest(data), output_sha256=c.digest(raw))
+    if changed:
+        item["anchor_algebraic_error"] = error[0].tolist()
     if not passes:
         assert run([target], data) == raw
         item["unchanged_replay"] = True
     return ports, item
 
 
-def crossing_charge(ports, stages, regular, changes):
+def crossing_charge(ports, stages, regular, changes, orbit=None, ticks=FINE_TICKS):
     """Separate a two-level current model from the need to locate the event."""
     assert len(changes) == 1
     capacitance = 10e-6
@@ -120,8 +126,8 @@ def crossing_charge(ports, stages, regular, changes):
     x = total / (96_000 * capacitance)
     moved = -np.expm1(-x)
     end_weight = (1. - moved / x) / moved
-    other = project_loads(stages, first_path=1)
-    exact_current = project_stages(ports[1:, :, 2, None], total)[:, :, 0]
+    other = project_loads(stages, first_path=1, ticks=ticks)
+    exact_current = project_stages(ports[1:, :, 2, None], total, ticks)[:, :, 0]
     endpoints = ports[regular * 2, :, 2]
     affine_current = endpoints[:-1] + end_weight * np.diff(endpoints, axis=0)
     change = int(changes[0])
@@ -179,13 +185,37 @@ def crossing_charge(ports, stages, regular, changes):
 
     ideal = error(exact_current)
     assert ideal["passed"]
-    return dict(oracle_projected=ideal, coarse_affine=error(affine_current),
+    report = dict(oracle_projected=ideal, coarse_affine=error(affine_current),
                 split_reference_crossing=error(at_event), split_area_equivalent=error(at_effective),
                 event_interval=int(slot), reference_fraction=bracket.tolist(),
                 area_equivalent_fraction=float(effective),
                 area_equivalent_minus_crossing_ns=float((effective - fraction) * 1e9 / 96_000),
                 effective_attack_a=exact_current[slot].tolist(),
                 predicted_attack_at_reference_event_a=at_event[slot].tolist())
+    if orbit is not None:
+        from rf_d_pilot_attack_orbit import attack_area, extract
+        evaluate, saved = orbit
+        local = stages[2 * regular[slot]:2 * regular[slot+1] + 1]
+        target = extract(local, width)
+        if not saved:
+            saved.append(target)
+        anchor = target["time"] * 96_000
+        base = split_ramps(anchor)
+        report["collector_orbit"] = dict(crossing_s=target["time"], crossing_v=target["bounds"][1],
+                                         modes={})
+        for source_name, source in (("local_landmarks", target), ("nominal_shape", saved[0])):
+            trials = report["collector_orbit"]["modes"][source_name] = {}
+            for points in (4, 8, 16, 24, 32):
+                for post_only in (False, True):
+                    trial = attack_area(target, source, points, evaluate, x[0], pre[0], post[0],
+                                        pre_slope[0], post_slope[0], post_only=post_only)
+                    if "correction_a" in trial:
+                        mean = at_event.copy()
+                        mean[slot, 0] = base[0] + trial["correction_a"]
+                        trial.update(error(mean), modeled_attack_a=float(mean[slot, 0]),
+                                     reference_attack_a=float(exact_current[slot, 0]))
+                    trials[f"{points}_tail" if post_only else str(points)] = trial
+    return report
 
 
 def attack_sweep(run, target):
@@ -215,19 +245,28 @@ def main():
                         help="generate the attack branches from latch and timer voltages")
     parser.add_argument("--crossing-charge", action="store_true",
                         help="diagnose current area versus the eight-tick reference event")
+    parser.add_argument("--collector-orbit", action="store_true",
+                        help="evaluate a sparse collector KCL path on nominal and loaded reserves")
+    parser.add_argument("--refine-orbit", action="store_true",
+                        help="repeat the collector comparison at one-third the reference step")
     args = parser.parse_args()
+    assert not args.refine_orbit or args.collector_orbit
     assert not args.crossing_charge or args.attack_cells
+    assert not args.collector_orbit or args.crossing_charge
     assert c.AREA.is_dir() and not list(c.AREA.iterdir())
     seq = 1
     while (out := c.ROOT / f"evidence/rf_d_pilot_timer_rc{seq:02}.json").exists():
         seq += 1
     added_sources = (ATTACK, ATTACK_PROBE) if args.attack_cells else ()
+    if args.collector_orbit:
+        added_sources += (ATTACK_ORBIT,)
     sources = Sources((*c.ALL_SOURCES, c.OWN, c.CANDIDATE, c.PROBE, c.PORTS,
                        "tools/rf_d_pilot_step_profile.rs", OWN, MODEL, PROBE, DOC, *added_sources))
     report = dict(passed=False, coupled=False, rack_integrated=False, clock_hz=96_000,
                   timer_nodes=TIMER_NODES, load_nodes=LOAD_NODES, load_ohms=OHMS.tolist(),
                   timer_limit_v=TIMER_LIMIT_V, load_limit_a=LOAD_LIMIT_A,
-                  attack_cells=args.attack_cells, crossing_charge=args.crossing_charge, windows={}, **sources.fields(), compiler_sha256=c.sha(Path(c.COMPILER)),
+                  attack_cells=args.attack_cells, crossing_charge=args.crossing_charge,
+                  collector_orbit=args.collector_orbit, refine_orbit=args.refine_orbit, windows={}, **sources.fields(), compiler_sha256=c.sha(Path(c.COMPILER)),
                   library_sha256=c.sha(c.LIB))
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
 
@@ -259,8 +298,23 @@ def main():
             report["attack_sweep"] = attack_sweep(run, attack)
         anchor = c.AREA / "timer-anchor.bin"
         archived = c.read(c.CLOCK)["trials"]["positive"]["64"]["expected_brackets"]
-        for label, branch, start, frames, key in c.WINDOWS:
+        windows = [(*case, (0., 0.)) for case in c.WINDOWS]
+        if args.collector_orbit:
+            windows.extend(ORBIT_RESERVES)
+        saved_orbits = []
+        refined_orbits = []
+
+        def evaluate_volume(collector, capacitor):
+            data = np.column_stack((collector, capacitor, np.full_like(collector, 8.3), capacitor)).astype("<f8")
+            raw = run([attack], data.tobytes())
+            return np.frombuffer(raw, "<f8").reshape(-1, 2, 4)[:, 0, :]
+
+        for label, branch, start, frames, key, offset in windows:
             phase, _, _, state = references[branch][1][start]
+            changed = any(offset)
+            if changed:
+                state = state.copy()
+                state[0, TIMER_NODES] += offset
             anchor.write_bytes(np.asarray(np.r_[state.ravel(), phase], "<f8").tobytes())
             raw = run([exe, "contour-capture", anchor, start, frames, key])
             stages = np.frombuffer(raw, "<f8").reshape(-1, c.N)
@@ -272,7 +326,10 @@ def main():
             base = start * 4096
             events = [[base + 8 * int(i), base + 8 * int(i + 1), int(signs[i + 1])] for i in changes]
             expected = [[lo, hi, sign] for pair, lo, hi, sign in archived if pair == 0] if branch == "positive" else []
-            assert events == expected
+            if changed:
+                assert len(events) == 1 and events[0][-1] == 1, events
+            else:
+                assert events == expected
             regular = np.arange(0, len(nodes), HALF_FRAME_TICKS // FINE_TICKS)
             modes = dict(fine_affine=np.arange(len(nodes)), fixed_affine=regular,
                          split_at_reference_bracket=np.unique(np.r_[regular, changes, changes + 1]))
@@ -280,10 +337,10 @@ def main():
             projected = project_loads(stages)
             results["projected_hold"] = replay(run, timer, nodes, regular, projected)
             item = report["windows"][label] = dict(anchor_sha256=c.sha(anchor), reference_sha256=c.digest(raw),
-                                             reference_events=events, key_v=key, start_frame=start,
+                                             reference_events=events, capacitor_offset_v=offset, key_v=key, start_frame=start,
                                              frames=frames, modes=results)
             if args.attack_cells:
-                ports, item["attack_ports"] = attack_results(run, attack, stages)
+                ports, item["attack_ports"] = attack_results(run, attack, stages, changed)
                 mixed = stages.copy()
                 mixed[:, np.array(LOAD_NODES)[:, 0]] = ports[:, :, 1]
                 generated = project_loads(mixed)
@@ -301,15 +358,43 @@ def main():
                 results["generated_attack_current"] = timer_result(
                     run, [attack, "current"], data, nodes[regular[1:]][:, TIMER_NODES])
                 if args.crossing_charge and len(changes):
-                    charge = crossing_charge(ports, stages, regular, changes)
-                    assert charge == crossing_charge(ports, stages, regular, changes)
+                    orbit = (evaluate_volume, saved_orbits) if args.collector_orbit else None
+                    charge = crossing_charge(ports, stages, regular, changes, orbit)
+                    assert charge == crossing_charge(ports, stages, regular, changes, orbit)
                     item["crossing_charge"] = dict(charge, unchanged_replay=True)
-                    print("CROSSING_CHARGE", charge, flush=True)
+                    if args.refine_orbit:
+                        refined = run([exe, "contour-capture-refined", anchor, start, frames, key])
+                        fine = np.frombuffer(refined, "<f8").reshape(-1, c.N)
+                        assert fine.shape[0] == 1 + frames * 3072 and np.isfinite(fine).all()
+                        signs = fine[::2, 26] >= fine[::2, 28]
+                        edges = np.flatnonzero(signs[1:] != signs[:-1])
+                        assert len(edges) == 1 and signs[edges[0] + 1]
+                        fine_ports, fine_check = attack_results(run, attack, fine, changed)
+                        assert fine_check["passed"]
+                        args_fine = (fine_ports, fine, 3 * regular, edges,
+                                     (evaluate_volume, refined_orbits), FINE_TICKS / 3)
+                        refined_charge = crossing_charge(*args_fine)
+                        assert refined_charge == crossing_charge(*args_fine)
+                        item["refined_crossing_charge"] = dict(
+                            sha256=c.digest(refined), metrics=refined_charge, unchanged_replay=True,
+                            bracket_ticks=[base + FINE_TICKS / 3 * (int(edges[0]) + k) for k in (0, 1)])
+                        lo, hi = item["refined_crossing_charge"]["bracket_ticks"]
+                        assert events[0][0] <= lo < hi <= events[0][1]
+                    if args.collector_orbit:
+                        for tag, result in (("8tick", charge),
+                                            ("refined", item.get("refined_crossing_charge", {}).get("metrics"))):
+                            if result is not None:
+                                modes = result["collector_orbit"]["modes"]
+                                print("ORBIT", label, tag, {key: {name: item.get("max_timer_error_v", item.get("reason"))
+                                                                 for name, item in trials.items()}
+                                                           for key, trials in modes.items()}, flush=True)
+                    else:
+                        print("CROSSING_CHARGE", charge, flush=True)
                 print(label, item["attack_ports"]["passed"], results["generated_attack_projection"]["passed"],
                       results["generated_attack_current"], flush=True)
             else:
                 print(label, results, flush=True)
-            if branch == "positive":
+            if branch == "positive" and not changed:
                 loads = nodes[regular][:, LOAD_NODES]
                 bench_ports = np.tile(projected, (256 // len(projected) + 1, 1, 1))[:256]
                 data = fixture(np.r_[nodes[0, TIMER_NODES], loads[0].ravel()],
@@ -337,6 +422,13 @@ def main():
             report["passed"] &= all(
                 report["windows"][name]["modes"]["generated_attack_current"]["passed"]
                 for name in ("negative_key_on", "negative_key_off"))
+        if args.refine_orbit:
+            report["refined_tail_reserves_passed"] = {
+                str(points): all(
+                    window["refined_crossing_charge"]["metrics"]["collector_orbit"]["modes"]
+                    ["nominal_shape"][f"{points}_tail"]["passed"]
+                    for window in report["windows"].values() if "refined_crossing_charge" in window)
+                for points in (4, 8, 16, 24, 32)}
         sources.unchanged()
     except Exception:
         report["failure"] = traceback.format_exc()
