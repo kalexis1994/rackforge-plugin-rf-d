@@ -1491,14 +1491,14 @@ con el receptor de audio.
 
 ## Cargas de ataque y decay en el colector de Q25
 
-Q16 resuelve x6 y x8 con R41 = 560 Î©, R40 = 3,3 kÎ©
-y R42/R13 de 100 Î©/1 kÎ© en serie. Devuelve a x26
+Q16 resuelve x6 y x8 con R41 = 560 Ω, R40 = 3,3 kΩ
+y R42/R13 de 100 Ω/1 kΩ en serie. Devuelve a x26
 la corriente de R40 y su tangente a C2 fijo. El
-banco tambiÃ©n comprueba la corriente que entra a C2.
+banco también comprueba la corriente que entra a C2.
 
 El decay resuelve x9, x10 y x11 con Q17/Q18, R43
-de 10 kÎ© a âˆ’10 V, R44 de 4,7 kÎ© y R16 de panel
-de 10 kÎ© a C2. Se resuelve el Jacobiano local contra
+de 10 kΩ a −10 V, R44 de 4,7 kΩ y R16 de panel
+de 10 kΩ a C2. Se resuelve el Jacobiano local contra
 la derivada de la fila de emisor de Q17 para devolver
 a x26 la corriente de base con su tangente cargada.
 La corriente de R16 sale de C2 hacia x11 con el signo
@@ -1507,36 +1507,36 @@ biestable y C4 sigue en las dos etapas de Radau.
 
 Los valores corresponden al panel nominal del
 [stamp de referencia](../tools/rf_d_pilot_trigger.rs)
-y a la [topologÃ­a SVC-9, Fig. 9-7 p. 9](CONTORNO_VOLUMEN_CIRCUITO.md).
-Q16 mantiene su dominio de 0â€“9,3 V en x26 y 0â€“8 V
+y a la [topología SVC-9, Fig. 9-7 p. 9](CONTORNO_VOLUMEN_CIRCUITO.md).
+Q16 mantiene su dominio de 0–9,3 V en x26 y 0–8 V
 en C2. El contraste cubre las cinco reservas de la
-referencia numÃ©rica a temperatura nominal. Quedan
-por caracterizar las tolerancias fÃ­sicas y el
-recorrido completo de los potenciÃ³metros.
+referencia numérica a temperatura nominal. Quedan
+por caracterizar las tolerancias físicas y el
+recorrido completo de los potenciómetros.
 
 Las dos variantes parten de una semilla por ventana.
 El cierre de ataque retira x6 de las entradas de
-etapa. El cierre conjunto retira ademÃ¡s x9. C2,
+etapa. El cierre conjunto retira además x9. C2,
 la base del VCA, x17, x24 y el emisor de sustain
 x14 siguen impuestos en el cierre conjunto. El
-caso conjunto pasÃ³ a 73,728 MHz con 0,689 ÂµV de
-error mÃ¡ximo en los puertos cerrados y 0,689 nA
-en la corriente de R13. R40 quedÃ³ en 15,5 pA y
+caso conjunto pasó a 73,728 MHz con 0,689 µV de
+error máximo en los puertos cerrados y 0,689 nA
+en la corriente de R13. R40 quedó en 15,5 pA y
 R16 de panel en 13,2 pA. Los tres cruces positivos
 quedaron en los intervalos de ocho ticks y ambos
 negativos conservaron su orden.
 [Ataque](../evidence/rf_d_pilot_bistable_return_attack01.json),
 [ataque y decay](../evidence/rf_d_pilot_bistable_return_loads02.json).
 
-Los dos negativos tambiÃ©n pasaron el contraste
+Los dos negativos también pasaron el contraste
 a 96 kHz. Los tres positivos repitieron el rechazo
 en el cuarto paso. Se guardaron las entradas de
-replay, y tambiÃ©n el primer fallo de compilaciÃ³n
-del orÃ¡culo por alcance de la configuraciÃ³n Rust.
-El cierre elÃ©ctrico se usa como referencia local
+replay, y también el primer fallo de compilación
+del oráculo por alcance de la configuración Rust.
+El cierre eléctrico se usa como referencia local
 para el piloto. El reloj positivo a 96 kHz y su
-integraciÃ³n con el receptor de audio quedan abiertos.
-[CompilaciÃ³n inicial](../evidence/rf_d_pilot_bistable_return_loads01.json).
+integración con el receptor de audio quedan abiertos.
+[Compilación inicial](../evidence/rf_d_pilot_bistable_return_loads01.json).
 
 Los recorridos controlados de CR6 con las cargas
 impuestas conservaron sus entradas y salidas bit
@@ -1564,3 +1564,37 @@ oráculo se limita al laboratorio. Para el piloto
 queda contrastar un avance que trate el evento
 dentro del paso con el reloj de C4.
 [Diagnóstico del cruce](../evidence/rf_d_pilot_bistable_return_seeded01.json).
+
+### Transferencia desde el reloj de C4
+
+El reloj de C4 arranca con el estado inicial de
+la ventana y predice el cruce y los voltajes de
+C2/C5. La curva posterior usa la edad desde el
+cruce y los dos pesos de carga inferidos por el
+reloj. Se construye con las cinco trayectorias
+axiales a ±75 mV y nominal del banco de C4. Las
+dos perturbaciones diagonales de ±50 mV quedan
+reservadas. La interpolación usa el voltaje
+entre placas de C4 como coordenada de estado.
+Al retomar Radau, ese voltaje vuelve a entrar
+como historia de carga. Q16, Q17/Q18 y el
+seguidor se resuelven con el C2 generado en la
+transferencia. La continuación recibe C2, base
+del VCA, x17, x24 y x14 de la referencia.
+
+Los tres eventos quedaron en sus ocho ticks.
+El peor error temporal fue 0,117 ns y el de
+C2/C5 en el borde, 1,78 µV. La curva de 33
+puntos superó 20 µV en x25 con C2 bajo. Con
+129 puntos, las tres transferencias pasaron y
+el peor error nodal fue 7,73 µV. En C2 bajo,
+el primer paso posterior dio 47,34 µV de error
+en x25. Con el estado exacto del solver dio
+44,45 µV. Las dos ramas negativas pasaron sin
+eventos. El error de continuación acota este
+ensayo de panel nominal y las reservas medidas.
+[Contraste del reloj y la transferencia](../evidence/rf_d_pilot_bistable_handoff02.json).
+El primer intento se detuvo al elevar al cuadrado
+una lista de pesos en Python. Se guardó el
+resultado parcial y se corrigió el adaptador.
+[Registro del primer intento](../evidence/rf_d_pilot_bistable_handoff01.json).

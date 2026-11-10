@@ -223,7 +223,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map(|b| f64::from_le_bytes(b.try_into().unwrap()))
         .collect();
     assert_eq!(raw.len(), data.len() * 8);
-    if matches!(mode.as_str(), "attack" | "loads" | "loads-seeded") {
+    if matches!(
+        mode.as_str(),
+        "attack" | "loads" | "loads-seeded" | "loads-handoff"
+    ) {
         let seeded = mode == "loads-seeded";
         let (data, guesses) = if seeded {
             assert_eq!(data.len(), 66);
@@ -239,14 +242,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         };
         assert!(!settle && data.len() >= 36 && (data.len() - 22) % 14 == 0);
         assert!(data.iter().all(|v| v.is_finite()));
-        let seed = unpack_loads(data);
+        let start = drive_with_sustain(&data[15..22]);
+        let mut seed = unpack_loads(data);
+        if mode == "loads-handoff" {
+            seed = bistable::handoff_readout(seed, start).map_err(|e| format!("handoff: {e:?}"))?;
+        }
         let inputs: Vec<_> = data[22..]
             .chunks_exact(14)
             .map(|r| [drive_with_sustain(&r[..7]), drive_with_sustain(&r[7..])])
             .collect();
         let combine = |state, u| row(state, u).into_iter().chain(load_row(state, u));
         let mut values = Vec::with_capacity(20 * (1 + 2 * inputs.len()));
-        values.extend(combine(seed, drive_with_sustain(&data[15..22])));
+        values.extend(combine(seed, start));
         let mut emit = |stages: [State; 2], drives: [Drive; 2]| {
             for i in 0..2 {
                 values.extend(combine(stages[i], drives[i]));

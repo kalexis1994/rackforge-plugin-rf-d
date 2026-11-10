@@ -256,6 +256,10 @@ pub fn loads_step(old: State, drive: [Drive; 2], h: Option<f64>) -> Result<[Stat
     solve::<4, 8>(old, [old; 2], drive, h, Loads::AttackAndDecay)
 }
 
+pub fn handoff_readout(state: State, drive: Drive) -> Result<State, StepError> {
+    stage(state, state, drive, Loads::AttackAndDecay).map(|stage| stage.state)
+}
+
 // Oracle-assisted diagnostic only. The initial guess is separate from history.
 pub fn seeded_loads_step(
     old: State,

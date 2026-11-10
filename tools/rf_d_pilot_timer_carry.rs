@@ -221,6 +221,10 @@ impl<'a> Carry<'a> {
         ]
     }
 
+    pub fn load_weights(&self) -> [f64; 2] {
+        self.clock.load_weights()
+    }
+
     pub fn filter_sum(&self) -> f64 {
         self.clock.state()[14]
     }

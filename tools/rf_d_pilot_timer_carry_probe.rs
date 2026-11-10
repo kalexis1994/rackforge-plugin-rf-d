@@ -28,7 +28,7 @@ fn render(
     initial: [f64; carry::STATE],
     mut emit: impl FnMut([f64; 2], [[f64; 3]; 2], f64),
     mut emit_cv: impl FnMut([f64; 3]),
-) -> Option<[f64; 5]> {
+) -> Option<[f64; 7]> {
     let mut voice = carry::Carry::start(family, initial)?;
     for slot in 0..64 {
         let (timers, currents) = voice.observe()?;
@@ -42,7 +42,16 @@ fn render(
                 timers,
                 filter_sum,
             } => {
-                return Some([slot as f64, seconds, timers[0], timers[1], filter_sum]);
+                let [c2_weight, c5_weight] = voice.load_weights();
+                return Some([
+                    slot as f64,
+                    seconds,
+                    timers[0],
+                    timers[1],
+                    filter_sum,
+                    c2_weight,
+                    c5_weight,
+                ]);
             }
         }
     }
@@ -133,14 +142,14 @@ fn main() -> Result<(), Box<dyn Error>> {
         ) {
             let mut out = std::io::stdout().lock();
             let header = if with_returns {
-                &event[..]
+                &event[..5]
             } else {
                 &event[..4]
             };
-            let values = if mode.as_deref() == Some("cv-stages") {
-                cathodes
-            } else {
-                header.iter().copied().chain(states).collect()
+            let values = match mode.as_deref() {
+                Some("cv-stages") => cathodes,
+                Some("handoff") => event.to_vec(),
+                _ => header.iter().copied().chain(states).collect(),
             };
             for value in values {
                 out.write_all(&value.to_le_bytes())?;

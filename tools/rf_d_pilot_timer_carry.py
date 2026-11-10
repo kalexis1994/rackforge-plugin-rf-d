@@ -14,10 +14,10 @@ PORTS = (40, 11, 0, 47, 29)
 POST_POINTS = 33
 
 
-def post_trace(stages, cross_s, steps, extra_nodes=()):
+def post_trace(stages, cross_s, steps, extra_nodes=(), points=POST_POINTS):
     time = np.r_[0., (np.arange(len(stages) // 2)[:, None] + [1. / 3., 1.]).ravel()] / (steps * CLOCK)
     # Denser around the regenerative crossing, where decay changes fastest.
-    clock = PERIOD * np.linspace(0., 1., POST_POINTS) ** 2
+    clock = PERIOD * np.linspace(0., 1., points) ** 2
     assert cross_s + clock[-1] <= time[-1]
     return clock, np.array([np.interp(cross_s + clock, time, stages[:, i]) for i in (*PORTS, *extra_nodes)])
 
