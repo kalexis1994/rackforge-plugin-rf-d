@@ -1571,8 +1571,8 @@ El reloj de C4 arranca con el estado inicial de
 la ventana y predice el cruce y los voltajes de
 C2/C5. La curva posterior usa la edad desde el
 cruce y los dos pesos de carga inferidos por el
-reloj. Se construye con las cinco trayectorias
-axiales a ±75 mV y nominal del banco de C4. Las
+reloj. Se construye con la trayectoria nominal y
+las cuatro perturbaciones axiales de ±75 mV. Las
 dos perturbaciones diagonales de ±50 mV quedan
 reservadas. La interpolación usa el voltaje
 entre placas de C4 como coordenada de estado.
@@ -1598,3 +1598,33 @@ El primer intento se detuvo al elevar al cuadrado
 una lista de pesos en Python. Se guardó el
 resultado parcial y se corrigió el adaptador.
 [Registro del primer intento](../evidence/rf_d_pilot_bistable_handoff01.json).
+
+El ensayo con dos pasos de 192 kHz en el primer
+intervalo posterior superó el límite en nominal
+y con C2 bajo. En C2 bajo, el mayor error fue
+60,38 µV en x23 y 2,20 nA en R40.
+[Dos medios pasos](../evidence/rf_d_pilot_bistable_handoff03.json).
+
+La segunda variante proyecta un intervalo
+adicional sobre la trayectoria posterior al
+evento. Usa 129 puntos sobre dos periodos de
+96 kHz con más densidad cerca del cruce. Las dos
+etapas de ese intervalo resuelven sus cargas
+algebraicas con las fronteras impuestas. Radau
+retoma en el borde siguiente con el voltaje
+entre placas de C4 y las cuatro tensiones de
+Q25/Q15 de la curva. El paso vuelve a ser de
+96 kHz durante el resto de la ventana.
+
+Pasaron las cinco reservas. Los tres cruces
+quedaron en sus ocho ticks. Las dos etapas del
+intervalo proyectado quedaron en 3,31 µV y la
+continuación en 4,42 µV. El error de corriente
+máximo en esos dos tramos fue 0,446 pA. Las
+salidas del reloj previo se reprodujeron bit
+a bit. Queda portar la proyección de estado a
+Rust y contrastar C2, R59/R60 y J7 acoplados.
+La prueba usa ventanas de hasta cinco frames
+y deja abierta la medición de 128 frames en el
+host.
+[Transferencia un intervalo más tarde](../evidence/rf_d_pilot_bistable_handoff04.json).

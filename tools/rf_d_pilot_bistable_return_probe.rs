@@ -225,7 +225,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(raw.len(), data.len() * 8);
     if matches!(
         mode.as_str(),
-        "attack" | "loads" | "loads-seeded" | "loads-handoff"
+        "attack" | "loads" | "loads-seeded" | "loads-handoff" | "loads-handoff-half"
     ) {
         let seeded = mode == "loads-seeded";
         let (data, guesses) = if seeded {
@@ -240,11 +240,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         } else {
             bistable::loads_step
         };
-        assert!(!settle && data.len() >= 36 && (data.len() - 22) % 14 == 0);
+        let minimum = match mode.as_str() {
+            "loads-handoff" => 22,
+            "loads-handoff-half" => 50,
+            _ => 36,
+        };
+        assert!(!settle && data.len() >= minimum && (data.len() - 22) % 14 == 0);
         assert!(data.iter().all(|v| v.is_finite()));
         let start = drive_with_sustain(&data[15..22]);
         let mut seed = unpack_loads(data);
-        if mode == "loads-handoff" {
+        let half = mode == "loads-handoff-half";
+        if mode == "loads-handoff" || half {
             seed = bistable::handoff_readout(seed, start).map_err(|e| format!("handoff: {e:?}"))?;
         }
         let inputs: Vec<_> = data[22..]
@@ -264,6 +270,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let stages = bistable::seeded_loads_step(seed, initial, inputs[0], rate.recip())
                 .map_err(|e| format!("step 0: {e:?}"))?;
             emit(stages, inputs[0]);
+        } else if half {
+            let (first, rest) = inputs.split_at(2);
+            let state = run(seed, first, 0.5 / rate, solve, &mut emit)?;
+            run(state, rest, rate.recip(), solve, emit)?;
         } else {
             run(seed, &inputs, rate.recip(), solve, emit)?;
         }

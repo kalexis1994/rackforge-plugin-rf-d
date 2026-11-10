@@ -1,4 +1,5 @@
 """Probe a C4-clock handoff to the closed Q25/Q15 block at 96 kHz."""
+import argparse
 import os
 import subprocess
 import traceback
@@ -27,8 +28,8 @@ NODES = (*b.NODES, *b.LOAD_NODES)
 DENSITIES = (33, 129)
 
 
-def handoff_trace(stages, cross, points):
-    time, ports = post_trace(stages, cross, STEPS, NODES, points)
+def handoff_trace(stages, cross, points, intervals=1):
+    time, ports = post_trace(stages, cross, STEPS, NODES, points, intervals)
     state = ports[len(TIMER_PORTS):]
     state[4] -= state[0]  # Carry C4 as the voltage across its plates.
     return time, state
@@ -49,6 +50,11 @@ def assess(got, expected):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    reentry = parser.add_mutually_exclusive_group()
+    reentry.add_argument("--half-reentry", action="store_true", help="split only the first interval after handoff")
+    reentry.add_argument("--delay-reentry", action="store_true", help="carry the post-event surface for one extra interval")
+    args = parser.parse_args()
     assert c.AREA.is_dir() and not list(c.AREA.iterdir())
     seq = 1
     while (out := c.ROOT / f"evidence/rf_d_pilot_bistable_handoff{seq:02}.json").exists():
@@ -58,7 +64,9 @@ def main():
                        TIMER_NATIVE_PROBE, "tools/rf_d_pilot_timer_rc.rs"))
     report = dict(passed=False, rack_integrated=False, rate_hz=b.PILOT_RATE, refinement=STEPS,
                   **sources.fields(), compiler_sha256=c.sha(Path(c.COMPILER)), library_sha256=c.sha(c.LIB),
-                  imposed_ports=(5, 54, 17, 24, 14), post_grids=DENSITIES, calibration=[], cases={})
+                  imposed_ports=(5, 54, 17, 24, 14), post_grids=DENSITIES,
+                  first_reentry_substeps=2 if args.half_reentry else 1,
+                  delayed_reentry=args.delay_reentry, calibration=[], cases={})
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
     clock = c.AREA / "handoff-clock.exe"
     closed = c.AREA / "handoff-return.exe"
@@ -120,7 +128,7 @@ def main():
                                 offset_v=offset, start_frame=start, frames=frames, key_v=key)
 
         _, positive, start, frames, key = c.WINDOWS[0]
-        paths, timers, traces = [], [], {points: [] for points in DENSITIES}
+        paths, timers, delayed_traces, traces = [], [], [], {points: [] for points in DENSITIES}
         for offset in CALIBRATION:
             stages, item = capture(positive, start, frames, key, offset)
             report["calibration"].append(item)
@@ -130,11 +138,14 @@ def main():
             timers.append(post_trace(stages, cross, STEPS, (34, 27)))
             for points, rows in traces.items():
                 rows.append(handoff_trace(stages, cross, points))
+            if args.delay_reentry:
+                delayed_traces.append(handoff_trace(stages, cross, 129, intervals=2))
             if offset == (0., 0.):
                 nominal, nominal_event = stages, event
         quarter = np.r_[np.arange(64) / 256., np.arange(32, 129) / 128.]
         grid, timer_model = charge_family(paths, quarter), post_family(timers)
         models = {points: post_family(rows) for points, rows in traces.items()}
+        delayed = post_family(delayed_traces) if args.delay_reentry else None
         _, tail = landmarks(nominal_event, 24)
         prefix = np.r_[np.column_stack(crossing_profile(nominal_event)).ravel(), tail[24:].ravel()]
 
@@ -198,10 +209,51 @@ def main():
                 data = b.payload(state, boundary, drive)
                 item[label] = trial = {}
                 trial["passed"] = restart(data, expected, trial, "loads-handoff")
-            item["passed"] = bool(event_matches and timer_error.max() <= 2e-6 and item["predicted129"]["passed"])
+            chosen = item["predicted129"]
+            if args.half_reentry:
+                assert STEPS % 6 == 0
+                # Two Radau steps of h/2 have stages at h/6, h/2, 2h/3 and h.
+                half_rows = next_index + (STEPS // 3) * np.array([1, 3, 4, 6])
+                mixed_rows = np.r_[half_rows, coarse_rows[slot+2:].ravel()]
+                mixed_drive = stages[mixed_rows[:, None], port_nodes].copy()
+                mixed_drive[:, 4:6] = 0.
+                state = initial_state(models[129], weights, 1. / b.PILOT_RATE - seconds)
+                data = b.payload(state, boundary, mixed_drive)
+                chosen = item["predicted129_half_reentry"] = dict(reference_rows=mixed_rows.tolist())
+                chosen["passed"] = restart(data, stages[np.r_[next_index, mixed_rows]], chosen, "loads-handoff-half")
+            if args.delay_reentry:
+                projected = item["delayed_projection"] = {}
+                for fraction, row in zip((1. / 3., 1.), coarse_rows[slot+1], strict=True):
+                    at = stages[row:row+1]
+                    u = at[0, port_nodes].copy()
+                    u[4:6] = 0.
+                    age = (1. + fraction) / b.PILOT_RATE - seconds
+                    state = initial_state(delayed, weights, age)
+                    data = b.payload(state, u, np.empty(0))
+                    trial = projected[str(fraction)] = dict(reference_row=int(row))
+                    got = replay([closed, "loads-handoff", b.PILOT_RATE], data, trial)
+                    if got is not None:
+                        trial.update(assess(got.reshape(1, -1), at))
+                    if not trial.get("passed", False):
+                        trial["failure_input"] = packed(data)
+
+                start_row = coarse_rows[slot+1, 1]
+                rest_rows = coarse_rows[slot+2:].ravel()
+                expected = stages[np.r_[start_row, rest_rows]]
+                u = expected[0, port_nodes].copy()
+                rest_drive = expected[1:, port_nodes].copy()
+                u[4:6] = 0.
+                rest_drive[:, 4:6] = 0.
+                state = initial_state(delayed, weights, 2. / b.PILOT_RATE - seconds)
+                chosen = item["predicted129_delayed_reentry"] = {}
+                data = b.payload(state, u, rest_drive)
+                passed = restart(data, expected, chosen, "loads-handoff")
+                chosen["passed"] = passed and all(trial.get("passed", False) for trial in projected.values())
+            item["passed"] = bool(event_matches and timer_error.max() <= 2e-6
+                                  and item["predicted129"]["handoff"]["passed"] and chosen["passed"])
             print(name, "event error ns", item["event_error_ns"], "timer error V", timer_error,
-                  {label: item[label].get("passed", item[label].get("error")) for label in
-                   ("predicted33", "predicted129", "reference_time129")}, flush=True)
+                  {label: trial["passed"] for label, trial in item.items() if label.startswith("predicted")},
+                  flush=True)
         report["passed"] = bool(report["cases"]) and all(item["passed"] for item in report["cases"].values())
         sources.unchanged()
     except Exception:
