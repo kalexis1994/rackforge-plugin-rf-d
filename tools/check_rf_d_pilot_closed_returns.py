@@ -9,14 +9,43 @@ import numpy as np
 
 from affine_evidence import Sources
 import check_rf_d_pilot_contours as c
+from check_rf_d_reduced_contour_ports import AUDIO_ROWS, OUTPUT
+from rf_d_reduced_contour_live import Diode, Transistor, junction_incidence
 from check_rf_d_pilot_split_returns import CONTOURS, inspect_reserve, packed
 
 OWN = "tools/check_rf_d_pilot_closed_returns.py"
 MODEL = "tools/rf_d_pilot_closed_returns.rs"
 CLOCK = "tools/rf_d_pilot_contour_clock.rs"
-MODES = ((256, 8, 0), (256, 8, 3), (1, 3, 0))
+REDUCED = "tools/rf_d_pilot_reduced_audio.rs"
+MODES = ((256, 8, 0, False), (256, 8, 3, False), (256, 8, 0, True), (256, 8, 3, True))
 POLICIES = {1: 'adaptive', 2: 'port_clock', 3: 'latch_clock'}
 CHANNELS = (c.J7, None, None, 5, 38, 3, 37, 54, 55, 26, 28)
+
+
+def radau_devices():
+    # Q21 is biased by the same fixed 2 V reference used in the nominal stamp.
+    spec = (*OUTPUT, Transistor(2., 35, 36))
+    inject, sense, fixed, current = junction_incidence(spec, np.zeros(64))
+    with np.errstate(invalid="ignore"):
+        rejected = np.flatnonzero(~np.isfinite(current / np.exp(fixed))).tolist()
+    assert len(rejected) == 1 and fixed[rejected[0]] < -745.
+    saturation = np.array([value for device in spec for value in
+                           ((device.saturation_a,) if isinstance(device, Diode) else (1e-14, 1e-14))])
+    assert np.array_equal(saturation * np.exp(fixed), current)
+    terms = []
+    for row, offset in zip(sense, fixed):
+        positive = np.flatnonzero(row > 0.)
+        negative = np.flatnonzero(row < 0.)
+        assert len(positive) <= 1 and len(negative) <= 1
+        a = AUDIO_ROWS[positive[0]] if len(positive) else 68
+        b = AUDIO_ROWS[negative[0]] if len(negative) else 68
+        terms.append(f"({a},{b},{max(abs(row)):.17e},{offset:.17e})")
+    n = len(terms)
+    arrays = lambda x: "[" + ",".join(f"{v:.17e}" for v in x) + "]"
+    path = c.emit("radau-devices.rs", f"pub const S:[(usize,usize,f64,f64);{n}]=[" + ",".join(terms)
+                  + f"];\npub const IS:[f64;{n}]=" + arrays(saturation)
+                  + f";\npub const D:[[f64;64];{n}]=[" + ",".join(map(arrays, inject.T)) + "];\n")
+    return path, rejected
 
 
 def validate(raw, reference, info, stride, adaptive):
@@ -68,7 +97,8 @@ def main():
     seq = 1
     while (out := c.ROOT / f"evidence/rf_d_pilot_closed_returns{seq:02}.json").exists():
         seq += 1
-    sources = Sources((*c.ALL_SOURCES, c.OWN, c.CANDIDATE, c.PROBE, c.PORTS, OWN, MODEL, CLOCK,
+    sources = Sources((*c.ALL_SOURCES, c.OWN, c.CANDIDATE, c.PROBE, c.PORTS, OWN, MODEL, CLOCK, REDUCED,
+                       "tools/check_rf_d_reduced_contour_ports.py", "tools/rf_d_reduced_contour_live.py",
                        "tools/check_rf_d_pilot_split_returns.py", CONTOURS))
     report = dict(passed=False, rack_integrated=False, source_boundary="loaded x2/x4",
                   windows={}, **sources.fields(), compiler_sha256=c.sha(Path(c.COMPILER)),
@@ -91,9 +121,12 @@ def main():
         probe = c.component(kernel)
         code = c.once(probe.read_text(encoding="utf8"), '        Some("ports") => ports(),', '''
         Some("ports") => ports(),
-        Some("closed-returns") if args.len() == 8 =>
-            closed_returns::run(&args[2], args[3].parse()?, args[4].parse()?, args[5].parse()?, args[6].parse()?, args[7].parse()?),''')
+        Some("closed-returns") if args.len() == 9 =>
+            closed_returns::run(&args[2], args[3].parse()?, args[4].parse()?, args[5].parse()?, args[6].parse()?, args[7].parse()?, args[8].parse()?),''')
         code += f'\n#[path = "{(c.ROOT / MODEL).as_posix()}"] mod closed_returns;\n'
+        devices, report["unit_bias_underflow_columns"] = radau_devices()
+        report["devices_sha256"] = c.sha(devices)
+        code += f'\n#[path = "{devices.as_posix()}"] mod radau_devices;\n'
         probe = c.emit(probe.name, code)
         exe = c.AREA / "pilot-closed-returns.exe"
         built = run([c.COMPILER, "--edition=2021", "-C", "opt-level=3", "-C", "target-feature=+fma",
@@ -109,13 +142,15 @@ def main():
             ref = run([exe, "contour-capture", anchor, start, frames, key])
             assert ref.returncode == 0, ref.stderr.decode(errors="replace")
             entry = report["windows"][label] = dict(reference=inspect_reserve(ref.stdout, info), modes={})
-            for stride, budget, policy in MODES:
+            for stride, budget, policy, reduced in MODES:
                 adaptive = policy != 0
-                cmd = [exe, "closed-returns", anchor, key, frames, stride, budget, policy]
+                cmd = [exe, "closed-returns", anchor, key, frames, stride, budget, policy, str(reduced).lower()]
                 trial = run(cmd)
                 stderr = trial.stderr.decode(errors="replace").strip()
                 result = dict(exit_code=trial.returncode, output_sha256=c.digest(trial.stdout), passed=False)
                 mode = POLICIES[policy] if adaptive else f"{stride}_{budget}"
+                if reduced:
+                    mode = 'reduced_' + mode
                 entry["modes"][mode] = result
                 if trial.returncode == 0:
                     tag, time, outer, audio, mismatch, solve, defect, switch, worst = stderr.split(",")
@@ -133,7 +168,7 @@ def main():
                     assert trial.returncode == 0 or trial.stderr == replay.stderr
                     result["unchanged_replay"] = True
                 print(label, mode, result, flush=True)
-        report["passed"] = all(entry["modes"]["1_3"]["passed"] and entry["modes"]["latch_clock"]["passed"]
+        report["passed"] = all(entry["modes"]["latch_clock"]["passed"] and entry["modes"]["reduced_latch_clock"]["passed"]
                                for entry in report["windows"].values())
         sources.unchanged()
     except Exception:

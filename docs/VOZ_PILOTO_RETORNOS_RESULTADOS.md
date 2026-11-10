@@ -503,3 +503,32 @@ durante el pase, 481 frames efectivos al final, cero plazos
 perdidos y cero errores de stream. Se restauró el instrumento
 anterior y se cerró la sesión abierta para la prueba.
 [Control de audio en Desktop](../evidence/rf_d_contours_live_control04.json).
+
+## Receptor de audio reducido en las etapas Radau
+
+El receptor conserva las 17 tensiones de capacitor del audio,
+incluido C27. El seguidor Q26/Q28 conserva su propia carga del
+lado de C5. En la preparación se comprueba que la incidencia de
+los capacitores reproduce el stamp de masa y se proyectan las
+dos etapas para cada paso posible. Cada etapa usa sus propias
+tensiones en R59 y R60. BUS conserva la corriente y la fase del
+VCO H128. Las 56 junturas de audio aportan el resto exponencial
+alrededor del estado inicial, con sus corrientes de polarización
+como escala. El mapa se prepara desde un estado por reserva.
+[Código del receptor](../tools/rf_d_pilot_reduced_audio.rs),
+[incidencias y tarjetas](../tools/rf_d_reduced_contour_live.py).
+
+El primer generador recuperaba la saturación dividiendo la
+corriente polarizada por su exponencial. La juntura del
+amplificador con colector a −20 V produjo 0/0 al generar
+los coeficientes. La tarjeta ahora entrega directamente
+la saturación y el banco reproduce el fallo anterior.
+[Rechazo del generador](../evidence/rf_d_pilot_closed_returns08.json).
+
+Pasaron las tres reservas acopladas. La pulsación y liberación
+negativas pasaron también a 96 kHz fijos. El reloj adaptativo
+conservó **319096–319104** y el peor error entre R59/R60 fue
+0,147 pA. En el mismo pase nativo, el máximo positivo fue
+3,92 s por frame con el mapa y 5,55 s con el audio nodal.
+El mapa reducido se contrastó como parte del banco.
+[Comparación del receptor acoplado](../evidence/rf_d_pilot_closed_returns09.json).

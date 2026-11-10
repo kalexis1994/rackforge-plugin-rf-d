@@ -14,6 +14,8 @@ use std::io::{BufWriter, Read, Write};
 mod chain;
 #[path = "rf_d_pilot_contour_clock.rs"]
 mod clock;
+#[path = "rf_d_pilot_reduced_audio.rs"]
+mod reduced_audio;
 
 const R59: f64 = 68_000.;
 const R60: f64 = 680.;
@@ -37,6 +39,7 @@ const fn local(k: usize) -> usize {
 struct Audio {
     params: chain::Parameters,
     lu: Lu<PAIR>,
+    reduced: Option<reduced_audio::Map>,
 }
 
 fn voltage(state: chain::State, node: usize) -> f64 {
@@ -44,7 +47,14 @@ fn voltage(state: chain::State, node: usize) -> f64 {
 }
 
 impl Audio {
-    fn new(old: chain::State, family: &Family, phase: f64, h: f64) -> Result<Self, StepError> {
+    fn new(
+        old: chain::State,
+        family: &Family,
+        phase: f64,
+        h: f64,
+        wires: [f64; 2],
+        reduce_audio: bool,
+    ) -> Result<Self, StepError> {
         let mut p = parameters();
         p.boundary.recovery.vca.loudness_v = 0.;
         let params = chain::Parameters::new(p)?;
@@ -72,9 +82,24 @@ impl Audio {
                 B[i][j] * stamp.mass_over_h[row][column] + if i == j { g[row][column] } else { 0. }
             })
         });
+        let lu = Lu::factor_contour(lhs)?;
+        let reduced = if reduce_audio {
+            Some(reduced_audio::Map::new(
+                old,
+                wires,
+                [bus.currents_a[2], bus.bus_dbus],
+                params,
+                &stamp,
+                &lu,
+                h,
+            )?)
+        } else {
+            None
+        };
         Ok(Self {
             params,
-            lu: Lu::factor_contour(lhs)?,
+            lu,
+            reduced,
         })
     }
 
@@ -87,6 +112,9 @@ impl Audio {
         h: f64,
         mut delta: [chain::State; 2],
     ) -> Result<([chain::State; 2], f64, [chain::State; 2], usize), StepError> {
+        if let Some(map) = &self.reduced {
+            return map.step(old, input, family, phase, h, delta);
+        }
         for iteration in 1..=12 {
             let now = delta.map(|d| old.advanced(d.high).advanced(d.low));
             let bus = now.map(|x| voltage(x, chain::BUS));
@@ -361,6 +389,7 @@ pub fn run(
     stride: usize,
     timer_budget: usize,
     mode: usize,
+    reduce_audio: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     assert!(mode <= 3);
     let adaptive = mode != 0;
@@ -419,7 +448,10 @@ pub fn run(
         let span = 1 << power;
         let model = if adaptive || span == stride {
             let h = span as f64 / (48_000. * 512.);
-            Some(Audio::new(audio, &family, phase, h).map_err(|e| format!("audio factor: {e:?}"))?)
+            Some(
+                Audio::new(audio, &family, phase, h, [x(3), x(37)], reduce_audio)
+                    .map_err(|e| format!("audio factor: {e:?}"))?,
+            )
         } else {
             None
         };
