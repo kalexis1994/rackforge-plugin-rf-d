@@ -215,14 +215,14 @@ pub struct Boundary {
     pub short: bool,
 }
 
-pub struct Stamp {
+pub struct Stamp<const DIM: usize = N> {
     pub dc: [f64; PINS],
     pub charge_c: [f64; N],
-    conductance: [[f64; N]; N],
-    capacitance: [[f64; N]; N],
+    conductance: [[f64; DIM]; DIM],
+    capacitance: [[f64; DIM]; DIM],
 }
 
-impl Stamp {
+impl<const DIM: usize> Stamp<DIM> {
     fn row<const FULL: bool>(&mut self, row: usize, current: f64, terms: &[(usize, f64)]) {
         self.dc[row] += current;
         if FULL && row < N {
@@ -242,21 +242,35 @@ impl Stamp {
     fn capacitor(&mut self, a: usize, b: usize, change: &[f64; N], c: f64) {
         let q = c * (change[a] - change.get(b).copied().unwrap_or(0.));
         self.charge_c[a] += q;
-        self.capacitance[a][a] += c;
         if b < N {
             self.charge_c[b] -= q;
-            self.capacitance[a][b] -= c;
-            self.capacitance[b][a] -= c;
-            self.capacitance[b][b] += c;
+        }
+        if DIM != 0 {
+            self.capacitance[a][a] += c;
+            if b < N {
+                self.capacitance[a][b] -= c;
+                self.capacitance[b][a] -= c;
+                self.capacitance[b][b] += c;
+            }
         }
     }
 }
 
-fn junction(z: f64, is_a: f64, scale: f64) -> Result<(f64, f64), StepError> {
+fn junction<const DERIVATIVE: bool, const DIM: usize>(
+    z: f64,
+    is_a: f64,
+    scale: f64,
+) -> Result<(f64, f64), StepError> {
     if !z.is_finite() || z > 45. {
         return Err(StepError::ExponentialDomain);
     }
-    Ok((is_a * z.exp_m1(), is_a * z.exp() / scale))
+    let current = is_a * z.exp_m1();
+    let derivative = if DERIVATIVE || DIM != 0 {
+        is_a * z.exp() / scale
+    } else {
+        0.
+    };
+    Ok((current, derivative))
 }
 
 pub fn stamp<const FULL: bool>(
@@ -264,6 +278,14 @@ pub fn stamp<const FULL: bool>(
     change: [f64; N],
     u: Boundary,
 ) -> Result<Stamp, StepError> {
+    stamp_sized::<FULL, N>(old, change, u)
+}
+
+fn stamp_sized<const FULL: bool, const DIM: usize>(
+    old: State,
+    change: [f64; N],
+    u: Boundary,
+) -> Result<Stamp<DIM>, StepError> {
     let x: [f64; PINS] = std::array::from_fn(|i| match i {
         0..N => old.0[i] + change[i],
         N..SUPPLY => u.volts[i - N],
@@ -277,8 +299,8 @@ pub fn stamp<const FULL: bool>(
     let mut s = Stamp {
         dc: [0.; PINS],
         charge_c: [0.; N],
-        conductance: [[0.; N]; N],
-        capacitance: [[0.; N]; N],
+        conductance: [[0.; DIM]; DIM],
+        capacitance: [[0.; DIM]; DIM],
     };
     for &(a, b, ohm) in R {
         s.branch::<FULL>(a, b, (x[a] - x[b]) / ohm, 1. / ohm);
@@ -300,12 +322,12 @@ pub fn stamp<const FULL: bool>(
     }
     for &(a, b, is_a) in DIODES {
         let scale = 1.5 * VT;
-        let (i, g) = junction((x[a] - x[b]) / scale, is_a, scale)?;
+        let (i, g) = junction::<FULL, DIM>((x[a] - x[b]) / scale, is_a, scale)?;
         s.branch::<FULL>(a, b, i, g);
     }
     for &(b, c, e, sign) in TRANSISTORS {
-        let (f, gf) = junction(sign * (x[b] - x[e]) / VT, 1e-14, VT)?;
-        let (r, gr) = junction(sign * (x[b] - x[c]) / VT, 1e-14, VT)?;
+        let (f, gf) = junction::<FULL, DIM>(sign * (x[b] - x[e]) / VT, 1e-14, VT)?;
+        let (r, gr) = junction::<FULL, DIM>(sign * (x[b] - x[c]) / VT, 1e-14, VT)?;
         let ib = sign * (f / 100. + r / 5.);
         let ic = sign * (f - 1.2 * r);
         s.row::<FULL>(
@@ -346,15 +368,22 @@ pub fn stamp<const FULL: bool>(
     Ok(s)
 }
 
-fn evaluate<const FULL: bool>(
+// The line search needs KCL and terminal charge only. Its accepted state is
+// still checked with the full current tangent before returning from Newton.
+#[cfg(pilot_residual_stamp)]
+const RESIDUAL_DIM: usize = 0;
+#[cfg(not(pilot_residual_stamp))]
+const RESIDUAL_DIM: usize = N;
+
+fn evaluate<const FULL: bool, const DIM: usize>(
     old: State,
     delta: [f64; 2 * N],
     u: [Boundary; 2],
     h: f64,
-) -> Result<([Stamp; 2], [f64; 2 * N]), StepError> {
+) -> Result<([Stamp<DIM>; 2], [f64; 2 * N]), StepError> {
     let s = [
-        stamp::<FULL>(old, delta[..N].try_into().unwrap(), u[0])?,
-        stamp::<FULL>(old, delta[N..].try_into().unwrap(), u[1])?,
+        stamp_sized::<FULL, DIM>(old, delta[..N].try_into().unwrap(), u[0])?,
+        stamp_sized::<FULL, DIM>(old, delta[N..].try_into().unwrap(), u[1])?,
     ];
     let r = std::array::from_fn(|k| {
         let (i, a) = (k / N, k % N);
@@ -519,7 +548,7 @@ pub fn audit_direction(
     h: f64,
 ) -> Result<f64, StepError> {
     let delta = std::array::from_fn(|i| candidates[i / N].0[i % N] - old.0[i % N]);
-    let (s, mut r) = evaluate::<true>(old, delta, u, h)?;
+    let (s, mut r) = evaluate::<true, N>(old, delta, u, h)?;
     for stamp in &s {
         for &a in &ALGEBRAIC {
             assert!((0..N).all(|b| stamp.capacitance[a][b] == 0. && stamp.capacitance[b][a] == 0.));
@@ -599,7 +628,7 @@ pub fn trial_diagnostic(
     h: f64,
 ) -> Result<(f64, f64), StepError> {
     let change = std::array::from_fn(|i| candidate[i / N].0[i % N] - old.0[i % N]);
-    let (stamp, residual) = evaluate::<true>(old, change, u, h)?;
+    let (stamp, residual) = evaluate::<true, N>(old, change, u, h)?;
     let correction = direction(&stamp, residual, h)?;
     Ok((maximum(&residual), maximum(&correction)))
 }
@@ -637,7 +666,7 @@ fn solve_with_seed(
         }
     }
     for _ in 0..80 {
-        let (s, r) = evaluate::<true>(old, delta, u, h)?;
+        let (s, r) = evaluate::<true, N>(old, delta, u, h)?;
         let correction = direction(&s, r, h)?;
         let norm = maximum(&r);
         if norm <= 1e-12 && maximum(&correction) <= 2e-9 {
@@ -650,13 +679,13 @@ fn solve_with_seed(
         for _ in 0..24 {
             let trial = std::array::from_fn(|i| delta[i] + alpha * correction[i]);
             let improves = if norm <= 1e-12 {
-                if let Ok((s, r)) = evaluate::<true>(old, trial, u, h) {
+                if let Ok((s, r)) = evaluate::<true, N>(old, trial, u, h) {
                     maximum(&r) <= 1e-12 && maximum(&direction(&s, r, h)?) < maximum(&correction)
                 } else {
                     false
                 }
             } else {
-                evaluate::<false>(old, trial, u, h).is_ok_and(|(_, r)| maximum(&r) < norm)
+                evaluate::<false, RESIDUAL_DIM>(old, trial, u, h).is_ok_and(|(_, r)| maximum(&r) < norm)
             };
             if improves {
                 next = Some(trial);

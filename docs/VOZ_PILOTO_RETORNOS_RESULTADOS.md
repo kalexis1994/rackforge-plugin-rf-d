@@ -642,3 +642,33 @@ bloques fueron idénticas bit a bit. El positivo bajó de
 4,01 a 3,71 s y el negativo de 1,10 a 1,03 s. Ambos
 pasaron el contraste de 128 frames contra el solver.
 [Comparación del armado](../evidence/rf_d_pilot_closed_returns19.json).
+
+Se ensayó reutilizar el LU anterior con una evaluación del
+residual real que exigía reducirlo al menos a la mitad. Se
+conservaron el cruce y los límites eléctricos, pero el positivo
+pasó de 3,85 a 4,10 s y el negativo de 1,09 a 1,13 s.
+Se retiró la variante y se conservó el recibo con sus fuentes.
+[Ensayo de reutilización](../evidence/rf_d_pilot_closed_returns20.json).
+
+En la búsqueda de paso de Newton, cuando el criterio es
+reducir el residual, basta evaluar las mismas corrientes
+y los mismos incrementos de carga. La variante evita
+construir las matrices de esa evaluación y mantiene la
+tangente completa para comprobar la convergencia. Se
+comparó sobre el armado disperso, sin instrumentación.
+En el primer pase el positivo bajó de 3,66 a 3,54 s y el
+negativo pasó de 1,03 a 1,06 s. Los dos bloques conservaron
+su salida bit a bit y pasaron los límites contra el solver.
+[Comparación del residual](../evidence/rf_d_pilot_closed_returns21.json).
+
+Con el candidato primero, el positivo pasó de 3,90 a
+3,42 s y el negativo de 1,06 a 0,965 s. El ahorro en la
+rama positiva se observó en los dos órdenes. El efecto
+en la negativa cambió de signo. Las dos salidas volvieron
+a coincidir bit a bit. El peor error de R59/R60 frente al
+solver fue 0,178 pA y el cruce conservó los ocho ticks
+319096–319104. La variante queda disponible en el banco
+con `--blocks --verify-reduced --compare-residual`. Los
+bloques siguen fuera del margen de 1,333 ms y la prueba
+del candidato en Desktop queda pendiente.
+[Comparación en orden inverso](../evidence/rf_d_pilot_closed_returns22.json).

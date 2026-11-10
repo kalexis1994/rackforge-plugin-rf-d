@@ -217,8 +217,14 @@ def main():
     latch = parser.add_mutually_exclusive_group()
     latch.add_argument("--sparse-latch", action="store_true")
     latch.add_argument("--compare-latch", action="store_true")
+    latch.add_argument("--compare-residual", action="store_true",
+                       help="compare sparse latch with and without a residual-only stamp")
+    parser.add_argument("--candidate-first", action="store_true",
+                        help="time the candidate before the baseline")
     args = parser.parse_args()
-    assert args.blocks or not args.compare_latch
+    comparing = args.compare_latch or args.compare_residual
+    assert args.blocks or not comparing
+    assert comparing or not args.candidate_first
     assert args.blocks or not (args.diagnostic_recovery or args.verify_reduced)
     assert not (args.diagnostic_recovery and args.verify_reduced)
     assert not list(c.AREA.iterdir())
@@ -230,6 +236,7 @@ def main():
                        "tools/check_rf_d_pilot_split_returns.py", CONTOURS))
     report = dict(passed=False, rack_integrated=False, source_boundary="loaded x2/x4",
                   instrumented=args.profile_substeps, sparse_latch=args.sparse_latch,
+                  candidate_first=args.candidate_first,
                   windows={}, **sources.fields(), compiler_sha256=c.sha(Path(c.COMPILER)),
                   library_sha256=c.sha(c.LIB))
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
@@ -261,8 +268,10 @@ def main():
         probe = c.emit(probe.name, code)
         exe = c.AREA / "pilot-closed-returns.exe"
         profile_flags = ["--cfg", "pilot_profile_steps"] if args.profile_substeps else []
-        def compile_bench(target, sparse):
+        def compile_bench(target, sparse, residual=False):
             latch_flags = ["--cfg", "pilot_sparse_latch"] if sparse else []
+            if residual:
+                latch_flags.extend(["--cfg", "pilot_residual_stamp"])
             built = run([c.COMPILER, "--edition=2021", "-C", "opt-level=3", "-C", "target-feature=+fma",
                          "-C", "link-arg=-Wl,--stack,33554432", "--cfg", "laboratory",
                          "--cfg", "pilot_loaded_filter", "--cfg", "pilot_closed_cv",
@@ -270,25 +279,32 @@ def main():
                          "--extern", f"rf_d_circuit={c.LIB}", "-o", target])
             assert built.returncode == 0, built.stderr.decode(errors="replace")
 
-        compile_bench(exe, args.sparse_latch)
+        compile_bench(exe, args.sparse_latch or args.compare_residual)
         anchor = c.AREA / "closed-returns.anchor"
         if args.blocks:
             suffix = {}
             def blocks(target):
                 return benchmark_blocks(run, target, anchor, refs, prior, args.policy,
                                         args.diagnostic_recovery, args.verify_reduced, suffix)
-            if args.compare_latch:
-                candidate = c.AREA / "pilot-sparse-latch.exe"
-                compile_bench(candidate, True)
-                report["baseline"] = blocks(exe)
-                report["blocks"] = blocks(candidate)
+            if comparing:
+                candidate = c.AREA / "pilot-candidate.exe"
+                compile_bench(candidate, True, args.compare_residual)
+                report["comparison"] = "residual_stamp" if args.compare_residual else "sparse_latch"
+                if args.candidate_first:
+                    report["blocks"] = blocks(candidate)
+                    report["baseline"] = blocks(exe)
+                else:
+                    report["baseline"] = blocks(exe)
+                    report["blocks"] = blocks(candidate)
                 report["identical_outputs"] = all(
                     item["output_sha256"] == report["baseline"][name]["output_sha256"]
                     for name, item in report["blocks"].items())
             else:
                 report["blocks"] = blocks(exe)
-            report["passed"] = all(item.get("comparison_passed", False)
-                                   for item in report["blocks"].values())
+            report["passed"] = report.get("identical_outputs", True) and all(
+                item.get("comparison_passed", False)
+                for group in (report["blocks"], report.get("baseline", {}))
+                for item in group.values())
         else:
             for label, branch, start, frames, key in c.WINDOWS:
                 phase, _, _, state = refs[branch][1][start]
