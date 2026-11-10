@@ -48,6 +48,8 @@ struct Audio {
     tangent: RefCell<Option<Lu<INTERFACE>>>,
     builds: Cell<usize>,
     reused: Cell<usize>,
+    diagnostic_recovery: bool,
+    fallback_calls: Cell<usize>,
 }
 
 fn voltage(state: chain::State, node: usize) -> f64 {
@@ -64,6 +66,7 @@ impl Audio {
         reduce_audio: bool,
         reuse: bool,
         warm: bool,
+        diagnostic_recovery: bool,
     ) -> Result<Self, StepError> {
         let mut p = parameters();
         p.boundary.recovery.vca.loudness_v = 0.;
@@ -115,6 +118,8 @@ impl Audio {
             tangent: RefCell::new(None),
             builds: Cell::new(0),
             reused: Cell::new(0),
+            diagnostic_recovery,
+            fallback_calls: Cell::new(0),
         })
     }
 
@@ -128,9 +133,14 @@ impl Audio {
         mut delta: [chain::State; 2],
     ) -> Result<([chain::State; 2], f64, [chain::State; 2], usize), StepError> {
         if let Some(map) = &self.reduced {
-            return map.step(old, input, family, phase, h, delta);
+            let result = map.step(old, input, family, phase, h, delta);
+            if !self.diagnostic_recovery || !matches!(result, Err(StepError::IterationBudget)) {
+                return result;
+            }
+            self.fallback_calls.set(self.fallback_calls.get() + 1);
         }
-        for iteration in 1..=12 {
+        let budget = if self.diagnostic_recovery { 24 } else { 12 };
+        for iteration in 1..=budget {
             let now = delta.map(|d| old.advanced(d.high).advanced(d.low));
             let bus = now.map(|x| voltage(x, chain::BUS));
             let f = bus.map(|x| family.frequency(x).map(|pair| pair.0));
@@ -293,7 +303,12 @@ impl Step<'_> {
         seed: [chain::State; 2],
     ) -> Result<(Closure, usize), Failure> {
         let mut result = self.evaluate(v, seed, None)?;
-        for iteration in 1..=6 {
+        let budget = if self.model.diagnostic_recovery {
+            12
+        } else {
+            6
+        };
+        for iteration in 1..=budget {
             if maximum(&result.residual) <= 1e-10 {
                 return Ok((result, iteration));
             }
@@ -330,6 +345,9 @@ impl Step<'_> {
             if self.model.reuse {
                 self.model.tangent.replace(Some(factor));
             }
+        }
+        if self.model.diagnostic_recovery && maximum(&result.residual) <= 1e-10 {
+            return Ok((result, budget + 1));
         }
         Err(("interface", StepError::IterationBudget))
     }
@@ -383,6 +401,7 @@ impl History {
         let mut previous = self.previous;
         previous.volts[TAIL] = voltage(result.audio[1], LOAD[1]);
         previous.volts[CV] = result.cv;
+        previous.key = ports[1].latch.key;
         let end = History {
             audio: result.audio[1],
             contour: result.contour[1],
@@ -441,12 +460,14 @@ pub fn run(
     reduce_audio: bool,
     reuse: bool,
     warm: bool,
+    diagnostic_recovery: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    assert!(mode <= 3);
+    assert!(mode <= 5);
     let adaptive = mode != 0;
     let tolerance = match mode {
         2 => clock::PORTS,
         3 => clock::LATCH,
+        4 | 5 => clock::COLLECTORS,
         _ => clock::STRICT,
     };
     assert!(stride.is_power_of_two() && stride <= 256 && matches!(timer_budget, 3 | 8));
@@ -472,9 +493,11 @@ pub fn run(
         },
         q22_base: x(29),
     };
+    let negative_score = key == -1. && frames == 128;
+    assert!(negative_score || (0. ..=10.).contains(&key));
     let previous = Boundary {
         volts: PORTS.map(x),
-        key,
+        key: if negative_score { 0. } else { key },
         short: false,
     };
 
@@ -509,6 +532,7 @@ pub fn run(
                     reduce_audio,
                     reuse,
                     warm,
+                    diagnostic_recovery,
                 )
                 .map_err(|e| format!("audio factor: {e:?}"))?,
             )
@@ -517,13 +541,10 @@ pub fn run(
         };
         models.push(model);
     }
-    let advance = |history: History, span: usize| {
-        let model = models[span.ilog2() as usize].as_ref().unwrap();
-        history.advance(model, &family, ports, span, timer_budget)
-    };
     let mut out = BufWriter::new(std::io::stdout().lock());
     let mut peak_ns = 0;
     let mut frame_ns = 0;
+    let mut block_ns = 0;
     let mut max_outer = 0;
     let mut max_audio = 0;
     let mut max_residual: f64 = 0.;
@@ -532,6 +553,21 @@ pub fn run(
     let mut proposal = stride;
     while tick < frames * 512 {
         let start = std::time::Instant::now();
+        let mut input = ports;
+        if negative_score {
+            let key = if (16..96).contains(&(tick / 512)) {
+                10.
+            } else {
+                0.
+            };
+            for stage in &mut input {
+                stage.latch.key = key;
+            }
+        }
+        let advance = |history: History, span: usize| {
+            let model = models[span.ilog2() as usize].as_ref().unwrap();
+            history.advance(model, &family, input, span, timer_budget)
+        };
         let trial = if adaptive {
             let remaining = stride - tick % stride;
             while proposal > remaining {
@@ -544,12 +580,26 @@ pub fn run(
                 stride,
                 &mut stats,
                 tolerance,
+                mode >= 4,
+                mode == 5,
             )
         } else {
             advance(state, stride).map(|step| [Some(step), None])
         };
-        let steps = trial.map_err(|e| format!("loaded ports at tick {}: {e:?}", 8 * tick))?;
-        frame_ns += start.elapsed().as_nanos();
+        let elapsed = start.elapsed().as_nanos();
+        frame_ns += elapsed;
+        block_ns += elapsed;
+        let steps = trial.map_err(|e| {
+            if frames == 128 {
+                let fallbacks: usize = models
+                    .iter()
+                    .flatten()
+                    .map(|m| m.fallback_calls.get())
+                    .sum();
+                eprintln!("STOP,{},{block_ns},{fallbacks}", tick / 512);
+            }
+            format!("loaded ports at tick {}: {e:?}", 8 * tick)
+        })?;
         for step in steps.into_iter().flatten() {
             tick += step.stride;
             state = step.end;
@@ -565,9 +615,14 @@ pub fn run(
     }
     let builds: usize = models.iter().flatten().map(|m| m.builds.get()).sum();
     let reused: usize = models.iter().flatten().map(|m| m.reused.get()).sum();
+    let fallbacks: usize = models
+        .iter()
+        .flatten()
+        .map(|m| m.fallback_calls.get())
+        .sum();
     eprintln!(
-        "PORTS,{peak_ns},{max_outer},{max_audio},{max_residual:.17e},{},{},{},{:.17e},{builds},{reused}",
-        stats.solve, stats.defect, stats.switch, stats.worst,
+        "PORTS,{peak_ns},{max_outer},{max_audio},{max_residual:.17e},{},{},{},{:.17e},{builds},{reused},{},{},{},{block_ns},{fallbacks}",
+        stats.solve, stats.defect, stats.switch, stats.worst, stats.trials, stats.reused, stats.whole,
     );
     out.flush()?;
     Ok(())

@@ -562,3 +562,50 @@ positivo excede el presupuesto completo de 1,333 ms por bloque
 de 128 frames. La prueba física del candidato en Desktop queda
 pendiente.
 [Contraste con semilla del biestable](../evidence/rf_d_pilot_closed_returns11.json).
+
+## Subpasos del cruce y bloques de 128 frames
+
+El reloj conserva 20 nV de defecto local para los colectores Q26
+y Q28. Para los demás nodos del biestable usa el límite local de
+0,5 µV del resto del circuito. Si rechaza un tramo y ya resolvió
+su primera mitad desde el mismo estado, reutiliza esa solución al
+subdividir. En las reservas se siguen aplicando 20 µV a las
+tensiones observadas, 2 nA a R59/R60 y el intervalo exacto del
+cruce, además del contraste de J7.
+
+En la ventana de un frame centrada en el cruce, los pasos
+aceptados bajaron de 295 a 252. En toda la reserva positiva
+bajaron de 504 a 466 y las llamadas al solver de 972 a 802.
+El peor frame del mismo pase bajó de 480 a 410 ms. El cruce
+quedó en **319096–319104** y las dos reservas negativas pasaron.
+Aceptar pasos enteros cuando el defecto era pequeño dejó 188
+pasos en la ventana, pero el error en Q26 subió a 31,2 µV.
+[Contraste de relojes](../evidence/rf_d_pilot_closed_returns12.json).
+
+El banco de 128 frames corre la positiva desde el frame 76.
+La negativa comienza en el frame 0 y reproduce la subida
+de KEY en el 16 y su bajada en el 96. La medición nativa
+acumula el tiempo de todas las resoluciones del bloque,
+incluidos los intentos descartados. La preparación de los
+mapas y la escritura del trazado quedan fuera de ese tiempo.
+El presupuesto para 128 frames a 48 kHz es 1,333 ms con el
+mismo margen de las pruebas de tiempo real.
+
+La primera corrida agotó las iteraciones de interfaz de la
+positiva al completar 78 frames. La rama negativa agotó las
+iteraciones del receptor reducido antes de avanzar su primer
+frame. Ambos rechazos se reprodujeron con el mismo trazado.
+[Rechazos del bloque](../evidence/rf_d_pilot_closed_returns13.json).
+
+Con un presupuesto mayor de iteraciones de interfaz y el
+receptor nodal disponible si se agota el reducido, se
+completaron y contrastaron los dos bloques de 128 frames.
+El caso positivo tardó 4,31 s con 610 llamadas al receptor
+nodal. El negativo tardó 1,11 s con 10 llamadas. Ambas
+trayectorias pasaron sus límites y el cruce quedó en
+**319096–319104**. El peor error de R59/R60 fue 0,178 pA.
+Estos tiempos corresponden a la configuración de diagnóstico.
+El tramo positivo de referencia posterior al frame 128 se
+calculó con el solver fino y se conservaron sólo los endpoints
+del host y los intervalos del biestable.
+[Diagnóstico de 128 frames](../evidence/rf_d_pilot_closed_returns15.json).

@@ -5,6 +5,7 @@ use super::{voltage, Accepted, Failure, History, LOAD};
 pub(super) struct Tolerances {
     voltage: f64,
     latch: f64,
+    other_latch: Option<f64>,
     relative: f64,
     current: f64,
     phase: f64,
@@ -13,6 +14,7 @@ pub(super) struct Tolerances {
 pub(super) const STRICT: Tolerances = Tolerances {
     voltage: 2e-9,
     latch: 2e-9,
+    other_latch: None,
     relative: 2e-10,
     current: 2e-11,
     phase: 1e-11,
@@ -22,6 +24,7 @@ pub(super) const STRICT: Tolerances = Tolerances {
 pub(super) const PORTS: Tolerances = Tolerances {
     voltage: 5e-7,
     latch: 5e-7,
+    other_latch: None,
     relative: 0.,
     current: 5e-11,
     phase: 1e-8,
@@ -30,6 +33,11 @@ pub(super) const PORTS: Tolerances = Tolerances {
 pub(super) const LATCH: Tolerances = Tolerances {
     latch: 2e-8,
     ..PORTS
+};
+
+pub(super) const COLLECTORS: Tolerances = Tolerances {
+    other_latch: Some(PORTS.latch),
+    ..LATCH
 };
 
 fn currents(state: History) -> [f64; 2] {
@@ -43,8 +51,19 @@ fn defect(coarse: &Accepted, fine: &Accepted, tolerance: Tolerances) -> f64 {
     let (a, b) = (coarse.end, fine.end);
     let phase = (a.phase - b.phase).abs();
     let mut error = phase.min(1. - phase) / tolerance.phase;
-    for (x, y) in a.contour.latch.0.into_iter().zip(b.contour.latch.0) {
-        error = error.max((x - y).abs() / (tolerance.latch + tolerance.relative * y.abs()));
+    for (i, (x, y)) in a
+        .contour
+        .latch
+        .0
+        .into_iter()
+        .zip(b.contour.latch.0)
+        .enumerate()
+    {
+        let limit = match super::CORE[i] {
+            26 | 28 => tolerance.latch,
+            _ => tolerance.other_latch.unwrap_or(tolerance.latch),
+        };
+        error = error.max((x - y).abs() / (limit + tolerance.relative * y.abs()));
     }
     for (x, y) in a.contour.timers.into_iter().zip(b.contour.timers) {
         error = error.max(distance(x, y));
@@ -83,6 +102,9 @@ pub(super) struct Stats {
     pub defect: usize,
     pub switch: usize,
     pub worst: f64,
+    pub trials: usize,
+    pub reused: usize,
+    pub whole: usize,
 }
 
 pub(super) fn advance(
@@ -92,26 +114,41 @@ pub(super) fn advance(
     max_span: usize,
     stats: &mut Stats,
     tolerance: Tolerances,
+    reuse_left: bool,
+    accept_whole: bool,
 ) -> Result<[Option<Accepted>; 2], Failure> {
+    let mut cached = None;
     loop {
         let span = *proposal;
+        let mut solve = |old, width| {
+            stats.trials += 1;
+            step(old, width)
+        };
         if span == 1 {
-            let result = step(old, span)?;
+            let result = match cached.take() {
+                Some(result) => {
+                    stats.reused += 1;
+                    result
+                }
+                None => solve(old, span)?,
+            };
             *proposal = 2.min(max_span);
             return Ok([Some(result), None]);
         }
         let half = span / 2;
         let trial = (|| {
-            let coarse = step(old, span)?;
-            let left = step(old, half)?;
-            let right = step(left.end, half)?;
+            let coarse = match cached.take() {
+                Some(coarse) => coarse,
+                None => solve(old, span)?,
+            };
+            let left = solve(old, half)?;
+            let right = solve(left.end, half);
             Ok::<_, Failure>((coarse, left, right))
         })();
         match trial {
-            Ok((coarse, left, right)) => {
+            Ok((coarse, left, Ok(right))) => {
                 let error = defect(&coarse, &right, tolerance);
-                // The stage signs also guard switches that could be hidden
-                // by comparing endpoints alone.
+                // A possible change of order still requires an eight-tick step.
                 let crossing =
                     switch(old, &coarse) || switch(old, &left) || switch(left.end, &right);
                 if crossing && half > 1 {
@@ -121,9 +158,24 @@ pub(super) fn advance(
                     if error < 0.0625 && !crossing {
                         *proposal = (2 * span).min(max_span);
                     }
+                    if accept_whole && !crossing && error <= 0.25 {
+                        stats.whole += 1;
+                        return Ok([Some(coarse), None]);
+                    }
                     return Ok([Some(left), Some(right)]);
                 } else {
                     stats.defect += 1;
+                }
+                if reuse_left {
+                    cached = Some(left);
+                    stats.reused += usize::from(half > 1);
+                }
+            }
+            Ok((_, left, Err(_))) => {
+                stats.solve += 1;
+                if reuse_left {
+                    cached = Some(left);
+                    stats.reused += usize::from(half > 1);
                 }
             }
             Err(_) => stats.solve += 1,

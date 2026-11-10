@@ -27,6 +27,25 @@ fn read(path: &str) -> Result<Vec<f64>, Box<dyn Error>> {
 }
 
 pub fn capture(path: &str, start: usize, frames: usize, key: f64) -> Result<(), Box<dyn Error>> {
+    capture_at(path, start, frames, key, false)
+}
+
+pub fn capture_endpoints(
+    path: &str,
+    start: usize,
+    frames: usize,
+    key: f64,
+) -> Result<(), Box<dyn Error>> {
+    capture_at(path, start, frames, key, true)
+}
+
+fn capture_at(
+    path: &str,
+    start: usize,
+    frames: usize,
+    key: f64,
+    endpoints_only: bool,
+) -> Result<(), Box<dyn Error>> {
     let data = read(path)?;
     assert_eq!(data.len(), 2 * ROW + 1);
     let mut state = voice::State {
@@ -51,6 +70,7 @@ pub fn capture(path: &str, start: usize, frames: usize, key: f64) -> Result<(), 
         Ok(())
     };
     write(&state)?;
+    let order = |x: &voice::State| x.high[26] + x.low[26] >= x.high[28] + x.low[28];
     for i in 0..frames * 512 {
         model.time = (start * 512 + i) as f64 * H;
         let q = voice::radau(
@@ -64,10 +84,21 @@ pub fn capture(path: &str, start: usize, frames: usize, key: f64) -> Result<(), 
             80,
         )
         .map_err(|e| format!("reference {start}/{i}: {e:?}"))?;
-        for row in &q.stages.chain {
-            write(&row.now)?;
+        let next = q.stages.chain[1].now;
+        if endpoints_only {
+            if order(&state) != order(&next) {
+                let tick = start * 4096 + 8 * i;
+                eprintln!("SWITCH,{tick},{},{}", tick + 8, usize::from(order(&next)));
+            }
+            if (i + 1) % 512 == 0 {
+                write(&next)?;
+            }
+        } else {
+            for row in &q.stages.chain {
+                write(&row.now)?;
+            }
         }
-        state = q.stages.chain[1].now;
+        state = next;
         phase = q.stages.phase[1];
     }
     out.flush()?;
