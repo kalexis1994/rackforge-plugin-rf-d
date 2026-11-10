@@ -102,7 +102,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--receiver-only", action="store_true",
                         help="check and time the admitted positive receiver without recapturing contours")
+    parser.add_argument("--block-roots", action="store_true",
+                        help="try grouped 4/2/3/8 directions with the full nonlinear residual")
     args = parser.parse_args()
+    if args.block_roots and not args.receiver_only:
+        parser.error("--block-roots requires --receiver-only")
     assert not list(AREA.iterdir())
     sequence = 1
     while (out := ROOT / f"evidence/rf_d_pilot_split_returns{sequence:02}.json").exists():
@@ -115,7 +119,8 @@ def main():
                   r59_r60_range_v=OPEN_RANGE, off_bias_v=CLOSED, **sources.fields(),
                   compiler_sha256=sha(Path(COMPILER)), library_sha256=sha(LIB), rates={},
                   receiver_only=args.receiver_only, frames=HOST_FRAMES, budget_ns=BUDGET_NS,
-                  native_receiver_realtime=False, load_limit_v=LOAD_LIMIT_V)
+                  native_receiver_realtime=False, load_limit_v=LOAD_LIMIT_V,
+                  block_roots=args.block_roots)
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
     flags = [COMPILER, "--edition=2021", "-C", "opt-level=3", "-C", "target-feature=+fma",
              "-A", "dead_code", "-C", "link-arg=-Wl,--stack,33554432"]
@@ -172,7 +177,7 @@ def main():
             checks = emit_data(bank, 1. / clock, split=case, center=OPEN, limits=OPEN_RANGE,
                                split_ladder=ladder)
             exe = AREA / "pilot-split-probe.exe"
-            roots = [] if ladder else ["--cfg", "pilot_block_roots"]
+            roots = ["--cfg", "pilot_block_roots"] if args.block_roots or not ladder else []
             result = run([*flags, "--cfg", "pilot_returns", "--cfg", "pilot_split_returns",
                           *roots, src, "-o", exe])
             assert result.returncode == 0, result.stderr.decode(errors="replace")

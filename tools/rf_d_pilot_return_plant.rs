@@ -171,11 +171,14 @@ fn full_direction(residual: &[f64; JUNCTIONS], slope: &[f64; JUNCTIONS]) -> Resu
 
 #[cfg(pilot_block_roots)]
 fn block_direction(residual: &[f64; JUNCTIONS], slope: &[f64; JUNCTIONS]) -> Result<[f64; JUNCTIONS / 2], Error> {
-    const { assert!(JUNCTIONS == 18) };
+    const { assert!(JUNCTIONS == 18 || JUNCTIONS == 34) };
     let mut direction = [0.; JUNCTIONS / 2];
     solve_group::<4>(0, residual, slope, &mut direction)?;
     solve_group::<2>(4, residual, slope, &mut direction)?;
     solve_group::<3>(6, residual, slope, &mut direction)?;
+    if JUNCTIONS == 34 {
+        solve_group::<8>(9, residual, slope, &mut direction)?;
+    }
     Ok(direction)
 }
 

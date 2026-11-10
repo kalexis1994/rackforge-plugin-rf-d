@@ -2073,3 +2073,37 @@ y 256 pasos internos. La señal y las tensiones de
 contorno están impuestas. Los generadores, contornos,
 FIR y RackForge requieren medición al integrarse.
 [Puertos y banco de 128 frames](../evidence/rf_d_pilot_split_returns02.json).
+
+
+### Dirección agrupada para las 34 junturas
+
+La variante extiende los grupos 4/2/3 del piloto con
+un grupo de ocho pares para el ladder superior.
+Las dos primeras direcciones usan ese precondicionador.
+Ante un fallo de factorización, y desde la tercera
+iteración, se usa la dirección completa. La aceptación
+conserva el residuo de las 34 leyes y todos los límites
+anteriores de audio y cargas.
+
+Pasaron el refinamiento y el contraste positivo. Los
+errores máximos de las dos cargas fueron los mismos
+0,526 pV y 2,01 nV del ensayo anterior. J7 quedó en
+0,00787 % RMS, con los retornos dentro de 2 nA.
+En 64 bloques nativos la mediana fue 1,026 ms y el
+máximo 1,216 ms, con cero asignaciones. Son pases
+independientes del control de dirección completa.
+La medición sigue cubriendo el receptor con fuentes
+impuestas y deja 0,118 ms frente al margen del banco.
+[Variante de dirección](../evidence/rf_d_pilot_split_returns03.json).
+
+El control de interfaz volvió a contrastar el piloto
+nativo de 18 junturas a 192 kHz. Pasaron las escenas
+de volumen, filtro y ambas entradas contra Radau y
+su refinamiento. La partitura de 48.128 frames
+reprodujo por bits la partición en bloques de 64/128,
+con cero asignaciones. El hash de J7 f32 coincidió
+con el control anterior de este perfil. La admisión
+del receptor acoplado y su coste en RackForge siguen
+pendientes.
+[Regresión del piloto](../evidence/rf_d_pilot_returns14.json),
+[control anterior](../evidence/rf_d_pilot_returns13.json).

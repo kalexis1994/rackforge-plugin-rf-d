@@ -120,3 +120,16 @@ y máximo frente al margen de 1,333333… ms. Esta
 medición cubre el receptor con señal y tensiones de
 contorno impuestas. La integración incluye después
 el coste de los generadores, contornos, FIR y host.
+
+
+El ensayo `--receiver-only --block-roots` divide la dirección
+inicial del receptor de 34 junturas en grupos de 4/2/3/8
+pares BE/BC. Conserva el orden de las leyes del piloto y
+añade las ocho junturas BE del ladder superior al final.
+Durante las dos primeras iteraciones usa estos grupos
+como precondicionador. Un fallo de factorización devuelve
+la dirección completa y desde la tercera iteración se
+usa la dirección completa. Cada aceptación exige el
+residuo de las 34 leyes con el mismo límite de 2e−13.
+Los límites de puertos, J7 y temporales anteriores se
+aplican también a este ensayo.
