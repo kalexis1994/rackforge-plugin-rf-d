@@ -1,12 +1,12 @@
 //! Bounded post-event projection and algebraic readout of the volume latch.
 use crate::{
     bistable::{self, Drive, State},
-    clock::PERIOD_S,
     timer::{CAPACITANCE_F, RESISTANCE_OHM},
     StepError,
 };
 
 pub const POINTS: usize = 129;
+const PERIOD_S: f64 = 1. / 96_000.;
 const NODES: usize = 15;
 const RADAU_A: [[f64; 2]; 2] = [[5. / 12., -1. / 12.], [3. / 4., 1. / 4.]];
 const C2_TOLERANCE_V: f64 = 1e-12;

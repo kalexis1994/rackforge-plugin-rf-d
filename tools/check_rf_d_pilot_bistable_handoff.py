@@ -28,6 +28,7 @@ DELAYED_CONTROL = "evidence/rf_d_pilot_bistable_handoff04.json"
 NATIVE_CONTROL = "evidence/rf_d_pilot_bistable_handoff05.json"
 C2_CONTROL = "evidence/rf_d_pilot_bistable_handoff06.json"
 AUDIO_CONTROL = "evidence/rf_d_pilot_bistable_handoff07.json"
+RECIPROCAL_CONTROL = "evidence/rf_d_pilot_bistable_handoff08.json"
 NATIVE = ("tools/rf_d_pilot_bistable_handoff.rs", "tools/rf_d_pilot_bistable_handoff_probe.rs")
 TIMERS = (5, 38)
 NODES = (*b.NODES, *b.LOAD_NODES)
@@ -107,6 +108,51 @@ def close_r59(case, replay, assemble, reference, mask):
     return result
 
 
+def stage_feedback(case, run, replay, inputs, coarse_rows, event=None, profiles=b""):
+    expected = case.stages[coarse_rows]
+    stages = np.concatenate((inputs, expected[:, :, [17, 24, 14]]), axis=2)
+    mask = np.ones(coarse_rows.shape, dtype=bool)
+    slot = None
+    if event is None:
+        event = [-1., 0., 0., 0., 0.]
+    else:
+        slot = int(event[0])
+        mask = np.arange(mask.size).reshape(mask.shape) >= 2 * slot + 1
+        stages[slot+1, :, 0] = 0.  # The projected interval owns its C2 stages.
+    stages[:, :, 2][mask] = 0.  # The latch owns all cathodes after the handoff.
+    payload = (np.r_[case.anchor(0), event].astype("<f8").tobytes() + profiles
+               + stages.astype("<f8").tobytes())
+    result = dict(passed=False)
+    values = replay([case.target, "audio-readout-feedback"], payload, result)
+    if values is None:
+        return result
+    rows = values[4:].reshape(len(stages), 55)
+    latch = rows[:, 13:].reshape(len(stages), 2, 21)
+    assert not np.any(latch[~mask])
+    received = inputs.copy()
+    received[:, :, 0][mask] = latch[mask, 20]
+    received[:, :, 2][mask] = latch[mask, 2]
+    result["latch"] = assess(latch[mask, :20], expected[mask])
+    result["audio"] = audio.assess_readout(rows[:, :13], audio.endpoint_reference(expected[:, 1]),
+                                          expected, received[:, :, :2], received[:, :, 2])
+    max_iterations, load_error, r59_error, evaluations = values[:4]
+    result.update(max_iterations=int(max_iterations), max_load_error_v=float(load_error),
+                  r59_mismatch_a=float(r59_error), latch_evaluations=int(evaluations), active_stages=int(mask.sum()))
+    result["passed"] = bool(result["latch"]["passed"] and result["audio"]["passed"]
+                            and load_error <= 1e-10 and r59_error <= 2e-12)
+    if slot is not None:
+        c2_error = float(abs(latch[slot+1, :, 20] - expected[slot+1, :, 5]).max())
+        result["projected_c2_error_v"] = c2_error
+        result["passed"] &= c2_error <= 2e-6
+    if result["passed"]:
+        raw = run([case.target, "audio-readout-feedback-bench"], payload)
+        result["timing"] = dict(zip(("windows", "median_ns", "p99_ns", "max_ns"),
+                                    map(int, raw.decode().strip().split(",")), strict=True))
+    else:
+        result["failure_input"] = packed(payload)
+    return result
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     reentry = parser.add_mutually_exclusive_group()
@@ -116,7 +162,9 @@ def main():
     reentry.add_argument("--native-c2", action="store_true", help="close C2 during the projected interval in Rust")
     reentry.add_argument("--audio", action="store_true", help="feed the native stages into the loaded audio receiver")
     reentry.add_argument("--reciprocal-r59", action="store_true", help="return the two receiver VCA base stages to the latch")
+    reentry.add_argument("--stage-feedback", action="store_true", help="close receiver and latch in the same Radau step")
     args = parser.parse_args()
+    args.reciprocal_r59 |= args.stage_feedback
     args.audio |= args.reciprocal_r59
     args.native_c2 |= args.audio
     args.native_reentry |= args.native_c2
@@ -132,6 +180,8 @@ def main():
         native_sources += (*audio.SOURCES, C2_CONTROL)
     if args.reciprocal_r59:
         native_sources += (AUDIO_CONTROL,)
+    if args.stage_feedback:
+        native_sources += (audio.FEEDBACK, RECIPROCAL_CONTROL, *(path for _, path in audio.FEEDBACK_MODULES))
     sources = Sources((*b.SOURCES, *c.ALL_SOURCES, c.OWN, c.CANDIDATE, c.PROBE, c.PORTS,
                        OWN, PREVIOUS, CLOCK_CONTROL, *SOURCE_NAMES, C4_CLOCK, TIMER_CARRY, TIMER_NATIVE,
                        TIMER_NATIVE_PROBE, "tools/rf_d_pilot_timer_rc.rs", *native_sources))
@@ -141,7 +191,7 @@ def main():
                   first_reentry_substeps=2 if args.half_reentry else 1,
                   delayed_reentry=args.delay_reentry, native_reentry=args.native_reentry,
                   closed_c2=args.native_c2, audio_readout=args.audio,
-                  reciprocal_r59=args.reciprocal_r59, calibration=[], cases={})
+                  reciprocal_r59=args.reciprocal_r59, stage_feedback=args.stage_feedback, calibration=[], cases={})
     if args.audio:
         report["audio_boundaries"] = dict(filter_sum_x34="reference at both stages",
                                           volume_latch_vca_base="reference",
@@ -199,7 +249,7 @@ def main():
         run([*build, *native_flags, c.ROOT / TIMER_NATIVE_PROBE, "-o", clock])
         run([*build, *flags, c.ROOT / b.PROBE, "-o", closed])
         refs, report["reference_inputs"] = c.references()
-        exe, _ = prepare_reference(run, report, with_audio=args.audio)
+        exe, _ = prepare_reference(run, report, with_audio=args.audio, stage_feedback=args.stage_feedback)
         anchor = c.AREA / "handoff.anchor"
         prior = c.read(PREVIOUS)["cases"]
         clock_control = c.read(CLOCK_CONTROL)["reserves"]
@@ -300,6 +350,9 @@ def main():
                         mask = np.ones(coarse_rows.shape, dtype=bool)
                         item["reciprocal"] = close_r59(case, replay, assemble, expected[1:], mask)
                         item["passed"] &= item["reciprocal"]["passed"]
+                    if args.stage_feedback and item["passed"]:
+                        item["stage_feedback"] = stage_feedback(case, run, replay, inputs, coarse_rows)
+                        item["passed"] &= item["stage_feedback"]["passed"]
                 print(name, "negative", item["passed"], flush=True)
                 continue
             if predicted is None or predicted.shape != (7,):
@@ -470,6 +523,11 @@ def main():
 
                                         mask = np.arange(coarse_rows.size).reshape(coarse_rows.shape) >= 2 * slot + 1
                                         item["reciprocal"] = close_r59(case, replay, assemble, want, mask)
+                                        if args.stage_feedback and item["reciprocal"]["passed"]:
+                                            event = np.r_[slot, seconds, c2, weights]
+                                            profiles = packed_profile(models[129]) + packed_profile(delayed)
+                                            item["stage_feedback"] = stage_feedback(
+                                                case, run, replay, inputs, coarse_rows, event, profiles)
                                 else:
                                     closed_c2["timing"] = timings("bench-native-handoff-c2", payload)
                             else:
@@ -480,10 +538,11 @@ def main():
                                   and (not args.native_reentry or item.get("native", {}).get("passed", False))
                                   and (not args.native_c2 or item.get("native_c2", {}).get("passed", False))
                                   and (not args.audio or item.get("audio", {}).get("passed", False))
-                                  and (not args.reciprocal_r59 or item.get("reciprocal", {}).get("passed", False)))
+                                  and (not args.reciprocal_r59 or item.get("reciprocal", {}).get("passed", False))
+                                  and (not args.stage_feedback or item.get("stage_feedback", {}).get("passed", False)))
             print(name, "event error ns", item["event_error_ns"], "timer error V", timer_error,
                   {label: trial["passed"] for label, trial in item.items()
-                   if label.startswith("predicted") or label in ("native", "native_c2", "audio", "reciprocal")},
+                   if label.startswith("predicted") or label in ("native", "native_c2", "audio", "reciprocal", "stage_feedback")},
                   flush=True)
         report["passed"] = bool(report["cases"]) and all(item["passed"] for item in report["cases"].values())
         sources.unchanged()

@@ -309,7 +309,7 @@ def attack_sweep(run, target):
                 input_sha256=c.digest(data), output_sha256=c.digest(raw))
 
 
-def prepare_reference(run, report, with_audio=False):
+def prepare_reference(run, report, with_audio=False, stage_feedback=False):
     table, *_ = c.materialize(c.read_oracle())
     table_path = c.AREA / c.TABLE
     report["table_sha256"] = c.digest(table)
@@ -324,8 +324,10 @@ def prepare_reference(run, report, with_audio=False):
     extra = []
     if with_audio:
         from rf_d_pilot_audio_readout import prepare
-        probe = prepare(probe, report)
+        probe = prepare(probe, report, stage_feedback)
         extra = ["--cfg", "pilot_closed_cv", "--cfg", "pilot_audio_readout"]
+        if stage_feedback:
+            extra += ["--cfg", "pilot_stage_feedback"]
     run([*build, "-C", "link-arg=-Wl,--stack,33554432", "--cfg", "laboratory",
          "--cfg", "pilot_loaded_filter", *extra, "-A", "dead_code", probe,
          "--extern", f"rf_d_circuit={c.LIB}", "-o", exe])

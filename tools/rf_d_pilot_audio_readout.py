@@ -11,6 +11,12 @@ from validate_vco_family_voice_bus import BUS, J7
 
 MODEL = "tools/rf_d_pilot_audio_readout.rs"
 PARENT = "tools/rf_d_pilot_closed_returns.rs"
+FEEDBACK = "tools/rf_d_pilot_audio_feedback.rs"
+FEEDBACK_MODULES = (("attack_cell", "tools/rf_d_pilot_attack_cell.rs"),
+                    ("bistable", "tools/rf_d_pilot_bistable_return.rs"),
+                    ("handoff", "tools/rf_d_pilot_bistable_handoff.rs"),
+                    ("q15", "tools/rf_d_pilot_q15_return.rs"),
+                    ("timer", "tools/rf_d_pilot_timer_rc.rs"))
 SOURCES = ("tools/rf_d_pilot_audio_readout.py", MODEL, PARENT,
            "tools/check_rf_d_pilot_closed_returns.py", "tools/rf_d_pilot_contour_clock.rs",
            "tools/rf_d_pilot_reduced_audio.rs", "tools/rf_d_reduced_contour_live.py",
@@ -21,7 +27,7 @@ LOADS = [54, 55]
 CR6_SCALE_V = 1.5 * (1.380649e-23 * 298.15 / 1.602176634e-19)
 
 
-def prepare(probe, report):
+def prepare(probe, report, stage_feedback=False):
     devices, underflow = radau_devices()
     report["audio_devices"] = dict(sha256=c.sha(devices), unit_bias_underflow_columns=underflow)
     code = c.once(probe.read_text(encoding="utf8"), '        Some("ports") => ports(),', '''
@@ -35,7 +41,43 @@ def prepare(probe, report):
         Some("audio-readout-cv-bench") => closed_returns::run_audio_readout(true, true, true),''')
     code += f'\n#[path = "{(c.ROOT / PARENT).as_posix()}"] mod closed_returns;\n'
     code += f'#[path = "{devices.as_posix()}"] mod radau_devices;\n'
+    if stage_feedback:
+        code = c.once(code, '        Some("ports") => ports(),', '''
+        Some("ports") => ports(),
+        Some("audio-readout-feedback") => closed_returns::run_audio_feedback(false),
+        Some("audio-readout-feedback-bench") => closed_returns::run_audio_feedback(true),''')
+        code += '\nuse latch_charge as latch_charge_driver;\n'
+        for name, path in FEEDBACK_MODULES:
+            code += f'\n#[path = "{(c.ROOT / path).as_posix()}"] mod {name};\n'
     return c.emit(probe.name, code)
+
+
+def endpoint_reference(reference):
+    return np.column_stack((reference[:, J7], (reference[:, 3] - reference[:, 54]) / 68_000.,
+                            (reference[:, 55] - reference[:, 37]) / 680., reference[:, [3, 37, *LOADS]]))
+
+
+def assess_readout(rows, wanted, expected_stages, drives, cathode=None):
+    assert rows[:, :7].shape == wanted.shape and np.isfinite(rows).all()
+    error = rows[:, :7] - wanted
+    max_error = abs(error).max(axis=0)
+    rms = float(np.linalg.norm(error[:, 0]) / np.linalg.norm(wanted[:, 0]))
+    peak = float(max_error[0] / abs(wanted[:, 0]).max())
+    mean = float(abs(np.mean(error[:, 0])))
+    result = dict(passed=bool(rms <= .001 and peak <= .003 and mean <= 1e-6
+                              and max_error[1:3].max() <= 2e-9 and max_error[3:].max() <= 20e-6),
+                  max_error=max_error.tolist(), j7_rms_relative=rms, j7_peak_relative=peak, j7_mean_v=mean)
+    if cathode is not None:
+        cv, wanted_cathode = expected_stages[..., 4], expected_stages[..., 27]
+        wanted_cr6 = 1e-8 * np.expm1((cv - wanted_cathode) / CR6_SCALE_V)
+        voltage_error = float(abs(rows[:, 7:9] - cv).max())
+        current_error = float(abs(rows[:, 9:11] - wanted_cr6).max())
+        result.update(max_x4_error_v=voltage_error, max_cr6_error_a=current_error,
+                      max_stage_c2_error_v=float(abs(drives[:, 0, 0] - expected_stages[:, 0, 5]).max()),
+                      max_x27_error_v=float(abs(cathode - wanted_cathode).max()),
+                      reference_cr6_range_a=[float(wanted_cr6.min()), float(wanted_cr6.max())])
+        result["passed"] &= voltage_error <= 20e-6 and current_error <= 2e-9
+    return result
 
 
 @dataclass
@@ -70,10 +112,7 @@ class Case:
         slot = np.arange(first, first + count)
         indices = slot[:, None] * FINE_ROWS + np.array([FINE_ROWS // 3, FINE_ROWS])
         reference = self.stages[indices[:, 1]]
-        wanted = np.column_stack((reference[:, J7],
-                                  (reference[:, 3] - reference[:, 54]) / 68_000.,
-                                  (reference[:, 55] - reference[:, 37]) / 680.,
-                                  reference[:, [3, 37, *LOADS]]))
+        wanted = endpoint_reference(reference)
         assert np.linalg.norm(wanted[:, 0]) > 0.
         cv = self.stages[indices, 4]
         oracle = self.stages[indices[:, 1] - FINE_ROWS, :][:, DRIVES]
@@ -98,27 +137,9 @@ class Case:
                 return dict(result, error=raw.stderr.decode(errors="replace").strip(), failure_input=packed(data))
             values = np.frombuffer(raw.stdout, "<f8")
             rows = values[3:].reshape(-1, 7 if cathode is None else 11)
-            assert rows[:, :7].shape == wanted.shape and np.isfinite(values).all()
-            error = rows[:, :7] - wanted
-            max_error = abs(error).max(axis=0)
-            rms = float(np.linalg.norm(error[:, 0]) / np.linalg.norm(wanted[:, 0]))
-            peak = float(max_error[0] / abs(wanted[:, 0]).max())
-            mean = float(abs(np.mean(error[:, 0])))
-            result.update(passed=bool(rms <= .001 and peak <= .003 and mean <= 1e-6
-                                      and max_error[1:3].max() <= 2e-9 and max_error[3:].max() <= 20e-6),
-                          max_error=max_error.tolist(), j7_rms_relative=rms, j7_peak_relative=peak,
-                          j7_mean_v=mean, max_load_iterations=int(values[0]),
-                          max_load_mismatch_v=float(values[1]), checked_nodal_proposals=int(values[2]))
-            if cathode is not None:
-                wanted_cathode = self.stages[indices, 27]
-                wanted_cr6 = 1e-8 * np.expm1((cv - wanted_cathode) / CR6_SCALE_V)
-                voltage_error = float(abs(rows[:, 7:9] - cv).max())
-                current_error = float(abs(rows[:, 9:11] - wanted_cr6).max())
-                result.update(max_x4_error_v=voltage_error, max_cr6_error_a=current_error,
-                              max_stage_c2_error_v=float(abs(drives[:, 0, 0] - self.stages[indices[:, 0], 5]).max()),
-                              max_x27_error_v=float(abs(cathode - wanted_cathode).max()),
-                              reference_cr6_range_a=[float(wanted_cr6.min()), float(wanted_cr6.max())])
-                result["passed"] &= voltage_error <= 20e-6 and current_error <= 2e-9
+            result.update(assess_readout(rows, wanted, self.stages[indices], drives, cathode),
+                          max_load_iterations=int(values[0]), max_load_mismatch_v=float(values[1]),
+                          checked_nodal_proposals=int(values[2]))
             if not result["passed"]:
                 result["failure_input"] = packed(data)
             if timing:

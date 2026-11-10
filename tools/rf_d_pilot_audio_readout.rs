@@ -10,6 +10,12 @@ use std::{
     time::Instant,
 };
 
+#[cfg(pilot_stage_feedback)]
+#[path = "rf_d_pilot_audio_feedback.rs"]
+mod feedback;
+#[cfg(pilot_stage_feedback)]
+pub use feedback::run as run_feedback;
+
 const H: f64 = 1. / 96_000.;
 const LOAD_TOLERANCE_V: f64 = 1e-10;
 const LOAD_PROBE_V: f64 = 1e-6;
@@ -148,6 +154,17 @@ fn advance_joint(
     stages: [Stage; 2],
     closed_cv: bool,
 ) -> Result<(History, Output, usize, f64), String> {
+    advance_joint_with(old, map, family, collector, closed_cv, |_| Ok(stages))
+}
+
+fn advance_joint_with(
+    old: History,
+    map: &Audio,
+    family: &Family,
+    collector: f64,
+    closed_cv: bool,
+    mut stages_at: impl FnMut([[f64; 2]; 2]) -> Result<[Stage; 2], String>,
+) -> Result<(History, Output, usize, f64), String> {
     let reduced = map.reduced.as_ref().expect("audio map");
     let anchor = reduced.anchor();
     let (base, offset) = reduced.joint_history(old.audio);
@@ -159,6 +176,7 @@ fn advance_joint(
     const BUDGET: usize = 16;
     for iteration in 1..=BUDGET {
         let loads = x.map(|row| LOAD.map(|k| voltage(anchor, k) + row[k]));
+        let stages = stages_at(loads)?;
         let mut slope = [0.; 4];
         for i in 0..2 {
             let [c2, sum, drive] = stages[i];
@@ -313,13 +331,39 @@ fn run_mode(
     closed_cv: bool,
     stage_loads: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    let values = read_values()?;
+    let (initial, map, family, collector, rows) = prepare(&values)?;
+    assert!(!rows.is_empty() && rows.len() % 6 == 0);
+    let stages: Vec<[Stage; 2]> = rows
+        .chunks_exact(6)
+        .map(|row| [row[..3].try_into().unwrap(), row[3..].try_into().unwrap()])
+        .collect();
+    render_fixture(
+        initial,
+        &map,
+        &family,
+        collector,
+        &stages,
+        bench,
+        joint,
+        closed_cv,
+        stage_loads,
+    )
+}
+
+fn read_values() -> Result<Vec<f64>, Box<dyn std::error::Error>> {
     let mut bytes = Vec::new();
     std::io::stdin().read_to_end(&mut bytes)?;
     assert_eq!(bytes.len() % 8, 0);
-    let values = bytes
+    Ok(bytes
         .chunks_exact(8)
         .map(|x| f64::from_le_bytes(x.try_into().unwrap()))
-        .collect::<Vec<_>>();
+        .collect())
+}
+
+fn prepare(
+    values: &[f64],
+) -> Result<(History, Audio, Family, f64, &[f64]), Box<dyn std::error::Error>> {
     let (high, rest) = values.split_at(graph::N);
     let (low, rest) = rest.split_at(graph::N);
     let x = |k| high[k] + low[k];
@@ -336,11 +380,6 @@ fn run_mode(
         phase = (phase + (0.75 * f1 + 0.25 * f2) * (H / 768.)).rem_euclid(1.);
     }
     let rows = &rest[2 + 2 * fine_steps..];
-    assert!(!rows.is_empty() && rows.len() % 6 == 0);
-    let stages: Vec<[Stage; 2]> = rows
-        .chunks_exact(6)
-        .map(|row| [row[..3].try_into().unwrap(), row[3..].try_into().unwrap()])
-        .collect();
     let initial = History {
         audio: chain::State {
             high: std::array::from_fn(|k| high[graph::chain_index(k)]),
@@ -366,6 +405,20 @@ fn run_mode(
         true,
     )
     .map_err(|e| format!("audio factor: {e:?}"))?;
+    Ok((initial, map, family, x(2), rows))
+}
+
+fn render_fixture(
+    initial: History,
+    map: &Audio,
+    family: &Family,
+    collector: f64,
+    stages: &[[Stage; 2]],
+    bench: bool,
+    joint: bool,
+    closed_cv: bool,
+    stage_loads: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
     if bench {
         const RUNS: usize = 200;
         let mut times = [[0; RUNS]; 2];
@@ -378,10 +431,10 @@ fn run_mode(
                 let start = Instant::now();
                 render(
                     black_box(initial),
-                    &map,
-                    &family,
-                    x(2),
-                    &stages,
+                    map,
+                    family,
+                    collector,
+                    stages,
                     candidate,
                     closed_cv,
                     |row| {
@@ -408,10 +461,10 @@ fn run_mode(
         let mut samples = Vec::with_capacity(stages.len());
         let (outer, mismatch) = render(
             initial,
-            &map,
-            &family,
-            x(2),
-            &stages,
+            map,
+            family,
+            collector,
+            stages,
             joint,
             closed_cv,
             |row| samples.push(row),

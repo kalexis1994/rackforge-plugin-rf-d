@@ -1742,3 +1742,36 @@ C2 y la rama negativa usan las fronteras
 de referencia. El coste del receptor y el
 cierre por etapa en el motor quedan pendientes.
 [Retorno recíproco de R59](../evidence/rf_d_pilot_bistable_handoff08.json).
+
+### Cierre de R59 en cada paso del receptor
+
+Las dos bases del VCA de cada candidato del
+receptor alimentan al biestable dentro del
+mismo paso de Radau. El biestable vuelve a
+evaluar sus dos etapas desde el mismo estado
+anterior. C2 y x27 vuelven al receptor, que
+comprueba la solución nodal y las corrientes.
+Se aceptan juntas las historias de audio y
+del biestable. En positivo, el reloj previo
+suministra el evento y sus etapas anteriores.
+
+Pasaron las cinco reservas y los tres cruces
+conservaron sus intervalos de ocho ticks. La
+diferencia máxima entre las dos evaluaciones
+de la corriente de R59 fue 1,47 aA. Contra
+la referencia, los máximos de J7, R59 y R60
+fueron 0,320 µV, 2,36 pA y 1,65 fA.
+
+En 200 repeticiones por escena, las medianas
+positivas fueron 1,495–1,716 ms y el máximo
+fue 1,830 ms para cinco frames, sin sumar el
+reloj previo de C4. Cada ventana positiva
+evaluó el biestable entre 44 y 58 veces.
+El ensayo usa x34, x17, x24 y x14 impuestos,
+y C2 de referencia tras el intervalo
+proyectado y en la rama negativa.
+[Contraste y coste por paso](../evidence/rf_d_pilot_bistable_handoff10.json).
+El primer ensamblado falló por un alias del
+módulo de carga. El registro conserva ese
+fallo de compilación.
+[Compilación inicial](../evidence/rf_d_pilot_bistable_handoff09.json).
