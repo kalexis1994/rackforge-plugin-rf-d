@@ -24,6 +24,11 @@ controles y mide dos pases a 128 frames. Desde la raíz, ejecutá
 `python -B tools/check_rf_d_playable_pilot.py` para regenerar el paquete local.
 [Protocolo](docs/VOZ_PILOTO_JUGABLE_PROTOCOLO.md).
 
+Para Raspberry Pi, el perfil `artifacts/rf-d-pilot-0.3.1.rfplugin` usa
+96 kHz internos y conserva la salida del host a 48 kHz. Se regenera con
+`python -B tools/check_rf_d_pi_pilot.py`.
+[Resultados en la Pi](docs/VOZ_PILOTO_RETORNOS_RESULTADOS.md#perfil-raspberry-pi-031).
+
 ## Estado actual — 2026-10-12
 
 | Ruta | Resultado disponible | Alcance pendiente |

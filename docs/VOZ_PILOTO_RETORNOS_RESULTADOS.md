@@ -240,3 +240,38 @@ con un bloque de 1,500 ms.
 [Empaquetado](../evidence/rf_d_playable_pilot08.json),
 [comparación y replay](../evidence/rf_d_playable_pilot10.json),
 [primer pase después del ajuste](../evidence/rf_d_playable_pilot11.json).
+
+## Perfil Raspberry Pi 0.3.1
+
+En la Pi 4, el paquete 0.3.0 tardaba unos 5 ms
+por período de 128 frames, frente a 2,666 ms
+disponibles. RackForge recuperaba XRUN de forma
+repetida. El perfil 0.3.1 mantiene la salida del host
+a 48 kHz y baja el reloj del circuito de 192 a
+96 kHz. Regenera los mapas FOH a esa tasa y conserva
+las 18 leyes, las cargas, R59/R60 y el límite de
+residuo de 2e−13. La dirección de Newton se arma
+por grupos 4/2/3 como precondicionador y vuelve a
+la dirección completa si hace falta. Reutiliza la
+realimentación ya calculada del último paso aceptado.
+[Planta](../tools/rf_d_pilot_return_plant.rs).
+
+El FIR de 193 coeficientes conserva el corte de
+22 kHz, la ventana Kaiser original y 48 frames
+de retardo. La banda de paso hasta 20 kHz quedó
+dentro de 0,001 dB y el rechazo desde 24 kHz superó
+102 dB. Contra Radau a 768 kHz, el peor RMS de J7
+fue 0,064 %. Las dos corrientes quedaron dentro de
+2 nA. En la partitura completa con seis controles,
+la diferencia RMS respecto de 0.3.0 fue 0,244 %.
+[Generador y comprobaciones](../tools/check_rf_d_pi_pilot.py).
+
+En la Scarlett, el primer intervalo registró un
+XRUN y cinco excesos. En cinco intervalos
+siguientes, incluidos dos tonos sostenidos con
+ajustes distintos, el máximo fue 2,146 ms y se
+registraron cero XRUN y cero excesos en esas
+ventanas. El paquete usa el mismo panel y el mismo
+formato de estado. Los contornos físicos continúan
+en el laboratorio.
+[Medición física](../evidence/rf_d_pi_live01.json).

@@ -87,8 +87,10 @@ impl<const FACTOR: usize> Voice<FACTOR> {
     pub fn new() -> Self {
         #[cfg(not(pilot_returns))]
         assert!(matches!(FACTOR, 4 | 8));
-        #[cfg(pilot_returns)]
+        #[cfg(all(pilot_returns, not(pilot_pi)))]
         assert_eq!(FACTOR, 4);
+        #[cfg(pilot_pi)]
+        assert_eq!(FACTOR, 2);
         Self {
             circuit: plant::State::dc(1).unwrap(),
             held: 0,
@@ -118,6 +120,9 @@ impl<const FACTOR: usize> Voice<FACTOR> {
     }
 
     fn next(&mut self, #[cfg(pilot_returns)] panel: Panel) -> Result<Frame, Error> {
+        #[cfg(pilot_pi)]
+        let kernel = &crate::pi_coefficients::H96000[..];
+        #[cfg(not(pilot_pi))]
         let kernel = if FACTOR == 4 {
             &coefficients::H192000[..]
         } else {

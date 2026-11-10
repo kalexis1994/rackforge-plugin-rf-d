@@ -1,0 +1,696 @@
+{
+  "passed": true,
+  "wide": false,
+  "cutoff_laws": false,
+  "full_contours_integrated": false,
+  "physical_measured": false,
+  "source_sha256": {
+    "crates/rf-d-circuit/src/chain_charge.rs": "39499f27fc4b8d9ecdd760962d40001b9cc2bee5161f51b12b60f7b133c5dadc",
+    "crates/rf-d-circuit/src/circuit66.rs": "bc91fef2b06923cdb358fe0bb5ef1843ccbc62bdeee3273b6bbf65e097c75ff1",
+    "crates/rf-d-circuit/src/cutoff.rs": "1df0970230244c1e2a2c27ba42bbdba12a35e7272fcdb8e5b8cfaf9db80f925b",
+    "crates/rf-d-circuit/src/j7_antialias_coefficients.rs": "302845b308d59f7cfe6f21d40d69f00dfd4b9354cdd75acd3afe10b5fd017921",
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+    "docs/VOZ_PILOTO_RETORNOS_PROTOCOLO.md": "373f8c8b1806b42551f0f8d23ddeda6da48bfd2be275dca26722f02b8d1c71a6",
+    "tools/check_rf_d_pilot_returns.py": "4e1b11443f57939d7773186f0dc87d008323d4bcb00b9e3449a372fec4d35147",
+    "tools/check_rf_d_reduced_voice.py": "93e71b34bf2a2d659137613fa75738e5c6ee690475f59314770b9ded19d289db",
+    "tools/prepare_charge_reduced.py": "4d3ad4c06e3bb8c7ced7406409442db88b95737012742541eec75e4394a5f1ca",
+    "tools/prepare_rf_d_pilot_returns.py": "6442e18489f2d2326b6151edbec47f95c0414a397fcf1281beff12c2bb27abb1",
+    "tools/recovery_cost_exp_data.rs": "ac365fa541d84e6ad84370e29d9a39923d253924b8e74da5056d9f23109d643d",
+    "tools/recovery_cost_exp_kernel.rs": "bd750b1e0fd2e06a0cab0595a2e4628d0eafc5b476d788fc959dcd4995fd641b",
+    "tools/recovery_port_input_model.py": "38cc12456a5f79c4faf183277c47116f96852f583ff6e2de0e8eae353199d307",
+    "tools/rf_d_pilot_return_plant.rs": "da6dfc6906bd9a50afa5827ae308e37e3555aec7ae3843bbb9767b7930c5566b",
+    "tools/rf_d_pilot_returns_oracle.rs": "407afed099a58067e41d4b17a9e45937f35b1d51ea6bb2320748970b55fa5ca2",
+    "tools/rf_d_pilot_returns_probe.rs": "6cdfc485248a766e371e5eb11f672909d3226dfd8763b8b6d4b0ac265f607f1c",
+    "tools/rf_d_pilot_returns_scene.rs": "0fa0fd3c16dea7e6aa4d2e4b75bd7656f5f5bf94c506e88bf48bd6d9462c337e",
+    "tools/rf_d_reduced_voice.rs": "d59e92a6caf32fd8afafd4f16503f1edfa3f47675464981644c78d54560e2e25",
+    "tools/rf_d_reduced_voice_probe.rs": "5b0ec366bf6b779a6e3475b5930e856a2504ae81109c0b2de96e6889ea5b020c",
+    "tools/vco_cv_load_linear.rs": "945cc14ddf61986b2772968d13d8cc84c11ae38e87b4ef5b74597c57691055a1",
+    "tools/vco_family_voice_bus_latch_lu_timing.rs": "17bf899780704ad87b57d1e45f63b6fd88a8fdfd2d2d8fb19e6940193ad1100f"
+  },
+  "source_manifest": {
+    "crates/rf-d-circuit/src/chain_charge.rs": {
+      "storage": "git",
+      "commit": "5b32fc847d15776c5e4efd387772b7e1b61fa422",
+      "path": "crates/rf-d-circuit/src/chain_charge.rs",
+      "sha256": "39499f27fc4b8d9ecdd760962d40001b9cc2bee5161f51b12b60f7b133c5dadc",
+      "git_sha256": "39499f27fc4b8d9ecdd760962d40001b9cc2bee5161f51b12b60f7b133c5dadc",
+      "materialization": "exact"
+    },
+    "crates/rf-d-circuit/src/circuit66.rs": {
+      "storage": "git",
+      "commit": "5b32fc847d15776c5e4efd387772b7e1b61fa422",
+      "path": "crates/rf-d-circuit/src/circuit66.rs",
+      "sha256": "bc91fef2b06923cdb358fe0bb5ef1843ccbc62bdeee3273b6bbf65e097c75ff1",
+      "git_sha256": "bc91fef2b06923cdb358fe0bb5ef1843ccbc62bdeee3273b6bbf65e097c75ff1",
+      "materialization": "exact"
+    },
+    "crates/rf-d-circuit/src/cutoff.rs": {
+      "storage": "git",
+      "commit": "5b32fc847d15776c5e4efd387772b7e1b61fa422",
+      "path": "crates/rf-d-circuit/src/cutoff.rs",
+      "sha256": "1df0970230244c1e2a2c27ba42bbdba12a35e7272fcdb8e5b8cfaf9db80f925b",
+      "git_sha256": "1df0970230244c1e2a2c27ba42bbdba12a35e7272fcdb8e5b8cfaf9db80f925b",
+      "materialization": "exact"
+    },
+    "crates/rf-d-circuit/src/j7_antialias_coefficients.rs": {
+      "storage": "git",
+      "commit": "5b32fc847d15776c5e4efd387772b7e1b61fa422",
+      "path": "crates/rf-d-circuit/src/j7_antialias_coefficients.rs",
+      "sha256": "302845b308d59f7cfe6f21d40d69f00dfd4b9354cdd75acd3afe10b5fd017921",
+      "git_sha256": "302845b308d59f7cfe6f21d40d69f00dfd4b9354cdd75acd3afe10b5fd017921",
+      "materialization": "exact"
+    },
+    "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs": {
+      "storage": "git",
+      "commit": "5b32fc847d15776c5e4efd387772b7e1b61fa422",
+      "path": "crates/rf-d-circuit/tests/support/mixer_chain_lab.rs",
+      "sha256": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+      "git_sha256": "b378428f991e129412799a146b166cbc32a7551d2a1a6c501a67e3f218ec3e99",
+      "materialization": "exact"
+    },
+    "docs/VOZ_PILOTO_RETORNOS_PROTOCOLO.md": {
+      "storage": "image",
+      "sha256": "373f8c8b1806b42551f0f8d23ddeda6da48bfd2be275dca26722f02b8d1c71a6"
+    },
+    "tools/check_rf_d_pilot_returns.py": {
+      "storage": "image",
+      "sha256": "4e1b11443f57939d7773186f0dc87d008323d4bcb00b9e3449a372fec4d35147"
+    },
+    "tools/check_rf_d_reduced_voice.py": {
+      "storage": "git",
+      "commit": "5b32fc847d15776c5e4efd387772b7e1b61fa422",
+      "path": "tools/check_rf_d_reduced_voice.py",
+      "sha256": "93e71b34bf2a2d659137613fa75738e5c6ee690475f59314770b9ded19d289db",
+      "git_sha256": "93e71b34bf2a2d659137613fa75738e5c6ee690475f59314770b9ded19d289db",
+      "materialization": "exact"
+    },
+    "tools/prepare_charge_reduced.py": {
+      "storage": "git",
+      "commit": "5b32fc847d15776c5e4efd387772b7e1b61fa422",
+      "path": "tools/prepare_charge_reduced.py",
+      "sha256": "4d3ad4c06e3bb8c7ced7406409442db88b95737012742541eec75e4394a5f1ca",
+      "git_sha256": "4d3ad4c06e3bb8c7ced7406409442db88b95737012742541eec75e4394a5f1ca",
+      "materialization": "exact"
+    },
+    "tools/prepare_rf_d_pilot_returns.py": {
+      "storage": "git",
+      "commit": "5b32fc847d15776c5e4efd387772b7e1b61fa422",
+      "path": "tools/prepare_rf_d_pilot_returns.py",
+      "sha256": "6442e18489f2d2326b6151edbec47f95c0414a397fcf1281beff12c2bb27abb1",
+      "git_sha256": "6442e18489f2d2326b6151edbec47f95c0414a397fcf1281beff12c2bb27abb1",
+      "materialization": "exact"
+    },
+    "tools/recovery_cost_exp_data.rs": {
+      "storage": "git",
+      "commit": "5b32fc847d15776c5e4efd387772b7e1b61fa422",
+      "path": "tools/recovery_cost_exp_data.rs",
+      "sha256": "ac365fa541d84e6ad84370e29d9a39923d253924b8e74da5056d9f23109d643d",
+      "git_sha256": "ac365fa541d84e6ad84370e29d9a39923d253924b8e74da5056d9f23109d643d",
+      "materialization": "exact"
+    },
+    "tools/recovery_cost_exp_kernel.rs": {
+      "storage": "git",
+      "commit": "5b32fc847d15776c5e4efd387772b7e1b61fa422",
+      "path": "tools/recovery_cost_exp_kernel.rs",
+      "sha256": "bd750b1e0fd2e06a0cab0595a2e4628d0eafc5b476d788fc959dcd4995fd641b",
+      "git_sha256": "bd750b1e0fd2e06a0cab0595a2e4628d0eafc5b476d788fc959dcd4995fd641b",
+      "materialization": "exact"
+    },
+    "tools/recovery_port_input_model.py": {
+      "storage": "git",
+      "commit": "5b32fc847d15776c5e4efd387772b7e1b61fa422",
+      "path": "tools/recovery_port_input_model.py",
+      "sha256": "38cc12456a5f79c4faf183277c47116f96852f583ff6e2de0e8eae353199d307",
+      "git_sha256": "38cc12456a5f79c4faf183277c47116f96852f583ff6e2de0e8eae353199d307",
+      "materialization": "exact"
+    },
+    "tools/rf_d_pilot_return_plant.rs": {
+      "storage": "image",
+      "sha256": "da6dfc6906bd9a50afa5827ae308e37e3555aec7ae3843bbb9767b7930c5566b"
+    },
+    "tools/rf_d_pilot_returns_oracle.rs": {
+      "storage": "git",
+      "commit": "5b32fc847d15776c5e4efd387772b7e1b61fa422",
+      "path": "tools/rf_d_pilot_returns_oracle.rs",
+      "sha256": "407afed099a58067e41d4b17a9e45937f35b1d51ea6bb2320748970b55fa5ca2",
+      "git_sha256": "407afed099a58067e41d4b17a9e45937f35b1d51ea6bb2320748970b55fa5ca2",
+      "materialization": "exact"
+    },
+    "tools/rf_d_pilot_returns_probe.rs": {
+      "storage": "git",
+      "commit": "5b32fc847d15776c5e4efd387772b7e1b61fa422",
+      "path": "tools/rf_d_pilot_returns_probe.rs",
+      "sha256": "6cdfc485248a766e371e5eb11f672909d3226dfd8763b8b6d4b0ac265f607f1c",
+      "git_sha256": "6cdfc485248a766e371e5eb11f672909d3226dfd8763b8b6d4b0ac265f607f1c",
+      "materialization": "exact"
+    },
+    "tools/rf_d_pilot_returns_scene.rs": {
+      "storage": "git",
+      "commit": "5b32fc847d15776c5e4efd387772b7e1b61fa422",
+      "path": "tools/rf_d_pilot_returns_scene.rs",
+      "sha256": "0fa0fd3c16dea7e6aa4d2e4b75bd7656f5f5bf94c506e88bf48bd6d9462c337e",
+      "git_sha256": "0fa0fd3c16dea7e6aa4d2e4b75bd7656f5f5bf94c506e88bf48bd6d9462c337e",
+      "materialization": "exact"
+    },
+    "tools/rf_d_reduced_voice.rs": {
+      "storage": "image",
+      "sha256": "d59e92a6caf32fd8afafd4f16503f1edfa3f47675464981644c78d54560e2e25"
+    },
+    "tools/rf_d_reduced_voice_probe.rs": {
+      "storage": "image",
+      "sha256": "5b0ec366bf6b779a6e3475b5930e856a2504ae81109c0b2de96e6889ea5b020c"
+    },
+    "tools/vco_cv_load_linear.rs": {
+      "storage": "git",
+      "commit": "5b32fc847d15776c5e4efd387772b7e1b61fa422",
+      "path": "tools/vco_cv_load_linear.rs",
+      "sha256": "945cc14ddf61986b2772968d13d8cc84c11ae38e87b4ef5b74597c57691055a1",
+      "git_sha256": "945cc14ddf61986b2772968d13d8cc84c11ae38e87b4ef5b74597c57691055a1",
+      "materialization": "exact"
+    },
+    "tools/vco_family_voice_bus_latch_lu_timing.rs": {
+      "storage": "git",
+      "commit": "5b32fc847d15776c5e4efd387772b7e1b61fa422",
+      "path": "tools/vco_family_voice_bus_latch_lu_timing.rs",
+      "sha256": "17bf899780704ad87b57d1e45f63b6fd88a8fdfd2d2d8fb19e6940193ad1100f",
+      "git_sha256": "17bf899780704ad87b57d1e45f63b6fd88a8fdfd2d2d8fb19e6940193ad1100f",
+      "materialization": "exact"
+    }
+  },
+  "source_images": {
+    "codec": "gzip-base64-v1",
+    "raw_sha256": "dd482a7076889c00626bbccc9b367a5341a70475d8d88b77e8dc780bafbd83bd",
+    "raw_bytes": 48649,
+    "payload_base64": "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"
+  },
+  "compiler_sha256": "fd6232f90a981e28472ce6900232946a1f1bcad8ec8270cd5ae6a3a357208b98",
+  "library_sha256": "9dbada9779f30c4972b057befe092524d091d3444ea777206b618d701236385d",
+  "builds": {
+    "candidate": {
+      "command": [
+        "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+        "--edition=2021",
+        "-C",
+        "opt-level=3",
+        "-C",
+        "target-feature=+fma",
+        "-A",
+        "dead_code",
+        "-C",
+        "link-arg=-Wl,--stack,33554432",
+        "--cfg",
+        "pilot_returns",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\returns-probe.rs",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\pilot-returns.exe"
+      ],
+      "exit_code": 0,
+      "stderr": {
+        "codec": "gzip-base64-v1",
+        "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "raw_bytes": 0,
+        "payload_base64": "H4sIAAAAAAACCgMAAAAAAAAAAAA="
+      },
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 0
+    },
+    "oracle": {
+      "command": [
+        "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+        "--edition=2021",
+        "-C",
+        "opt-level=3",
+        "-C",
+        "target-feature=+fma",
+        "-A",
+        "dead_code",
+        "-C",
+        "link-arg=-Wl,--stack,33554432",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tools\\rf_d_pilot_returns_oracle.rs",
+        "--extern",
+        "rf_d_circuit=C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\references-local\\voice-assembly-public01\\librf_d_circuit.rlib",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\pilot-returns-oracle.exe"
+      ],
+      "exit_code": 0,
+      "stderr": {
+        "codec": "gzip-base64-v1",
+        "raw_sha256": "fc5dddc1a290ae3d27e12d20a6f7fbd2415b8f0ad7c0081bc4a7327154ec33e1",
+        "raw_bytes": 1026,
+        "payload_base64": "H4sIAAAAAAACCsWSwU7DMAyG730KS1w2qZ00TUMoCA6DA5xAQpwItKZxt4g2qRKHgYB3J6WVtsG4cMGHqrUT9/8/e43OaLMUEEzwpEA3rXUsoPCshGDdkBCXxjMaLhLIslM4E/LWk/PyCWt6kVeGzp1+Jnluy9CQYS8dlk+VdUvK2jostclclSnJ1tZeTiaydMgUT8VkVmpXBs0yJuJFH9ru77LRL+TycoXa5DU+TpwXMzFPAN6TGbxDFAo/5R13deji4Ud8XQU4AWOZormDu3X0Peo9571nP74vYNSiY7DVtyOxNAZr4PEVFFUYak6S9V5yPna/RocNcWRUpFBoo1ljnUeRTF3CM7X5WvMqp6ZdodfdMTSqr/wr5aOB8tFAckd7Cp2+/rmrP4WFDUahe01hYz7dP5D+c9+UYCu2ZvcL6Qj6xtbP5BZBLanbzn8ENz0U8w5dZDc9HFbUVbnKhw5CvG3AAHq4IFTtyhra4gXbfj6Ov9rB32Jn+TcAZzC8eqBGM5NKkk8JPDLgAgQAAA=="
+      },
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 0
+    },
+    "baseline": {
+      "command": [
+        "C:/Users/kalex/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/rustc.exe",
+        "--edition=2021",
+        "-C",
+        "opt-level=3",
+        "-C",
+        "target-feature=+fma",
+        "-A",
+        "dead_code",
+        "-C",
+        "link-arg=-Wl,--stack,33554432",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\baseline.rs",
+        "-o",
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\pilot-baseline.exe"
+      ],
+      "exit_code": 0,
+      "stderr": {
+        "codec": "gzip-base64-v1",
+        "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "raw_bytes": 0,
+        "payload_base64": "H4sIAAAAAAACCgMAAAAAAAAAAAA="
+      },
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 0
+    }
+  },
+  "scenes": {
+    "volume": {
+      "candidate": {
+        "command": [
+          "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\pilot-returns.exe",
+          "electrical"
+        ],
+        "exit_code": 0,
+        "stderr": {
+          "codec": "gzip-base64-v1",
+          "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "raw_bytes": 0,
+          "payload_base64": "H4sIAAAAAAACCgMAAAAAAAAAAAA="
+        },
+        "stdout_sha256": "2d42db4503f7e9843ca3a01b9823efb6cbc52149391ad2f502becc730856afd2",
+        "stdout_bytes": 24576
+      },
+      "reference": {
+        "2": {
+          "command": [
+            "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\pilot-returns-oracle.exe",
+            "384000"
+          ],
+          "exit_code": 0,
+          "stderr": {
+            "codec": "gzip-base64-v1",
+            "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "raw_bytes": 0,
+            "payload_base64": "H4sIAAAAAAACCgMAAAAAAAAAAAA="
+          },
+          "stdout_sha256": "9547a50e0c68db299647ea41545587a026eb24f86db6ce97982ed8376b6096d4",
+          "stdout_bytes": 49152
+        },
+        "4": {
+          "command": [
+            "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\pilot-returns-oracle.exe",
+            "768000"
+          ],
+          "exit_code": 0,
+          "stderr": {
+            "codec": "gzip-base64-v1",
+            "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "raw_bytes": 0,
+            "payload_base64": "H4sIAAAAAAACCgMAAAAAAAAAAAA="
+          },
+          "stdout_sha256": "dbe394442bd68ce09765ae9d8f1042f835c2b72b90b9ac798a062b9f49c9134d",
+          "stdout_bytes": 98304
+        }
+      },
+      "refinement": {
+        "passed": true,
+        "maximum": [
+          3.2975311258508585e-12,
+          4.006473972029134e-14,
+          4.1522341120980855e-14,
+          1.0207805805598387e-18,
+          1.4272928677708588e-17,
+          3.2610768469290563e-19
+        ],
+        "limits": [
+          0.0,
+          2.4264131096467432e-05,
+          2.0977243117479266e-05,
+          1.1203100850588133e-08,
+          2e-09,
+          2e-09
+        ],
+        "j7_rms_relative": 3.613355768602644e-08,
+        "j7_peak_relative": 1.8962244069324057e-07,
+        "j7_mean_v": 2.885407605239402e-14
+      },
+      "comparison": {
+        "passed": true,
+        "maximum": [
+          6.684874641312629e-10,
+          7.248904599949264e-10,
+          7.466380846921084e-10,
+          1.8468546769161766e-14,
+          1.68360503761001e-17,
+          1.7958792547685676e-17
+        ],
+        "limits": [
+          0.0,
+          2.4264131096467432e-05,
+          2.0977243117479266e-05,
+          1.1203100850588133e-08,
+          2e-09,
+          2e-09
+        ],
+        "j7_rms_relative": 3.238202126158723e-05,
+        "j7_peak_relative": 3.8440948601720135e-05,
+        "j7_mean_v": 1.4928148498026282e-10
+      },
+      "drive_peak_v": [
+        0.06542384905724806,
+        0.0126294522416033,
+        0.0
+      ],
+      "reference_return_range_a": [
+        [
+          2.1969894457078485e-06,
+          2.228343220976814e-06
+        ],
+        [
+          6.8248985090263775e-06,
+          6.824898509026704e-06
+        ]
+      ]
+    },
+    "filter": {
+      "candidate": {
+        "command": [
+          "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\pilot-returns.exe",
+          "electrical"
+        ],
+        "exit_code": 0,
+        "stderr": {
+          "codec": "gzip-base64-v1",
+          "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "raw_bytes": 0,
+          "payload_base64": "H4sIAAAAAAACCgMAAAAAAAAAAAA="
+        },
+        "stdout_sha256": "204d32f085a34dea7c2beeee8ba3a6bd3c35269b6e818efbcf5fc8fd07b58a82",
+        "stdout_bytes": 24576
+      },
+      "reference": {
+        "2": {
+          "command": [
+            "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\pilot-returns-oracle.exe",
+            "384000"
+          ],
+          "exit_code": 0,
+          "stderr": {
+            "codec": "gzip-base64-v1",
+            "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "raw_bytes": 0,
+            "payload_base64": "H4sIAAAAAAACCgMAAAAAAAAAAAA="
+          },
+          "stdout_sha256": "a87e40e75053c5c5b22207b5b3a7935a1aea21e8b600ec7c4c3a3b8e85147e8d",
+          "stdout_bytes": 49152
+        },
+        "4": {
+          "command": [
+            "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\pilot-returns-oracle.exe",
+            "768000"
+          ],
+          "exit_code": 0,
+          "stderr": {
+            "codec": "gzip-base64-v1",
+            "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "raw_bytes": 0,
+            "payload_base64": "H4sIAAAAAAACCgMAAAAAAAAAAAA="
+          },
+          "stdout_sha256": "b2cfe440ce7dff72c8aaef983fa1d3f331dc34f9750a2409c03d63a07238eb1d",
+          "stdout_bytes": 98304
+        }
+      },
+      "refinement": {
+        "passed": true,
+        "maximum": [
+          6.852622193805945e-14,
+          4.0054114539000985e-14,
+          4.1300296516055823e-14,
+          1.0205688223230251e-18,
+          0.0,
+          3.944883157115664e-15
+        ],
+        "limits": [
+          0.0,
+          2.4264230740012817e-05,
+          2.0977243402036088e-05,
+          1.1203096050831867e-08,
+          2e-09,
+          2e-09
+        ],
+        "j7_rms_relative": 1.606400260271438e-09,
+        "j7_peak_relative": 5.434038943692285e-09,
+        "j7_mean_v": 3.5353014061012366e-15
+      },
+      "comparison": {
+        "passed": true,
+        "maximum": [
+          7.951684256416602e-09,
+          7.272923351346779e-10,
+          7.466689488921929e-10,
+          1.8529741087952627e-14,
+          2.5597335666024956e-18,
+          4.6614212488276375e-12
+        ],
+        "limits": [
+          0.0,
+          2.4264230740012817e-05,
+          2.0977243402036088e-05,
+          1.1203096050831867e-08,
+          2e-09,
+          2e-09
+        ],
+        "j7_rms_relative": 0.0006599644627203179,
+        "j7_peak_relative": 0.0006305580651501517,
+        "j7_mean_v": 1.3055742620277117e-09
+      },
+      "drive_peak_v": [
+        0.06542384905724806,
+        0.0,
+        0.0008339370301405987
+      ],
+      "reference_return_range_a": [
+        [
+          2.213838205050644e-06,
+          2.213838205050644e-06
+        ],
+        [
+          6.81949647305293e-06,
+          6.832889409941527e-06
+        ]
+      ]
+    },
+    "both": {
+      "candidate": {
+        "command": [
+          "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\pilot-returns.exe",
+          "electrical"
+        ],
+        "exit_code": 0,
+        "stderr": {
+          "codec": "gzip-base64-v1",
+          "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "raw_bytes": 0,
+          "payload_base64": "H4sIAAAAAAACCgMAAAAAAAAAAAA="
+        },
+        "stdout_sha256": "6fac4407cac40dd81ce0666032513395104d27bcc24aeb74a41cef58f5b73760",
+        "stdout_bytes": 24576
+      },
+      "reference": {
+        "2": {
+          "command": [
+            "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\pilot-returns-oracle.exe",
+            "384000"
+          ],
+          "exit_code": 0,
+          "stderr": {
+            "codec": "gzip-base64-v1",
+            "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "raw_bytes": 0,
+            "payload_base64": "H4sIAAAAAAACCgMAAAAAAAAAAAA="
+          },
+          "stdout_sha256": "59048053d060f5e17942be5dd4b1d9940137c5e332797b4ea85c1a904e8266a3",
+          "stdout_bytes": 49152
+        },
+        "4": {
+          "command": [
+            "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\pilot-returns-oracle.exe",
+            "768000"
+          ],
+          "exit_code": 0,
+          "stderr": {
+            "codec": "gzip-base64-v1",
+            "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "raw_bytes": 0,
+            "payload_base64": "H4sIAAAAAAACCgMAAAAAAAAAAAA="
+          },
+          "stdout_sha256": "788089db929b35a892dd27b3c2d82bd753b20b335debd3b53e091a63a3857978",
+          "stdout_bytes": 98304
+        }
+      },
+      "refinement": {
+        "passed": true,
+        "maximum": [
+          3.2273812968770396e-12,
+          4.0006951744497865e-14,
+          4.1300296516055823e-14,
+          1.0192982729021437e-18,
+          1.4272928677708588e-17,
+          3.9497815486496356e-15
+        ],
+        "limits": [
+          0.0,
+          2.4264230713452964e-05,
+          2.097724340268446e-05,
+          1.1203096050983787e-08,
+          2e-09,
+          2e-09
+        ],
+        "j7_rms_relative": 3.6038307488364506e-08,
+        "j7_peak_relative": 1.8558692936214437e-07,
+        "j7_mean_v": 3.87508768251911e-14
+      },
+      "comparison": {
+        "passed": true,
+        "maximum": [
+          8.259712654933455e-09,
+          7.272923003317881e-10,
+          7.466685048029831e-10,
+          1.852974018798012e-14,
+          1.68360503761001e-17,
+          4.66142092187292e-12
+        ],
+        "limits": [
+          0.0,
+          2.4264230713452964e-05,
+          2.097724340268446e-05,
+          1.1203096050983787e-08,
+          2e-09,
+          2e-09
+        ],
+        "j7_rms_relative": 0.0004191044493195816,
+        "j7_peak_relative": 0.0004749654806905039,
+        "j7_mean_v": 1.3868553226072954e-09
+      },
+      "drive_peak_v": [
+        0.06542384905724806,
+        0.0126294522416033,
+        0.0008339370301405987
+      ],
+      "reference_return_range_a": [
+        [
+          2.1969894457078485e-06,
+          2.228343220976814e-06
+        ],
+        [
+          6.819496473052604e-06,
+          6.8328894099412e-06
+        ]
+      ]
+    }
+  },
+  "native": {
+    "baseline": {
+      "command": [
+        "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\pilot-baseline.exe",
+        "128"
+      ],
+      "exit_code": 0,
+      "stderr": {
+        "codec": "gzip-base64-v1",
+        "raw_sha256": "6e710bf7fc1a5bc5d814f923a8abd10b783994863372573c0c1eec729f888a5e",
+        "raw_bytes": 37,
+        "payload_base64": "H4sIAAAAAAACCgvw9PEP0THRMTSy0DE2NwPSZiaW5gYGBjqmJmYWQAoIuQDIvyq+JQAAAA=="
+      },
+      "stdout_sha256": "2cd90ad6cc5a1e909ac396fafbc3c712781f40dbc0c10423d32272a8934e2761",
+      "stdout_bytes": 1540096
+    },
+    "zero_128": {
+      "run": {
+        "command": [
+          "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\pilot-returns.exe",
+          "zero",
+          "128"
+        ],
+        "exit_code": 0,
+        "stderr": {
+          "codec": "gzip-base64-v1",
+          "raw_sha256": "18d2a063c4a8272f170ff11c4413f77422c88d49eff43da2a8ed3dad985f956b",
+          "raw_bytes": 27,
+          "payload_base64": "H4sIAAAAAAACCgvw9PEPiQ/wDwoJ1jE0stCxNDYxMzDQAUIuAIvFoqEbAAAA"
+        },
+        "stdout_sha256": "5e98a615eb4ae3665436790b147a0f24bd6134ba4d8a7c63729e18b0c8fc2aff",
+        "stdout_bytes": 2310144
+      },
+      "max_ns": 934600,
+      "over_margin": 0,
+      "allocations": 0
+    },
+    "driven_128": {
+      "run": {
+        "command": [
+          "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\pilot-returns.exe",
+          "driven",
+          "128"
+        ],
+        "exit_code": 0,
+        "stderr": {
+          "codec": "gzip-base64-v1",
+          "raw_sha256": "5d6d9a91743a1765346c31b991e100a1f2e090bc360488c9aaa30d4fbb2f39b0",
+          "raw_bytes": 27,
+          "payload_base64": "H4sIAAAAAAACCgvw9PEPiQ/wDwoJ1jE0stCxMDQ1MzDQAUIuADXeonMbAAAA"
+        },
+        "stdout_sha256": "eacafb7a2cce5e55b85793539686ed1d2aa71cb6b9c9bd33c6260bf9d3201acc",
+        "stdout_bytes": 2310144
+      },
+      "max_ns": 815600,
+      "over_margin": 0,
+      "allocations": 0
+    },
+    "driven_64": {
+      "run": {
+        "command": [
+          "C:\\Users\\kalex\\OneDrive\\Documents\\rackforge-plugin-rf-d\\tmp\\lab-current\\pilot-returns.exe",
+          "driven",
+          "64"
+        ],
+        "exit_code": 0,
+        "stderr": {
+          "codec": "gzip-base64-v1",
+          "raw_sha256": "939a0fda1c43f6b38d9ff5aa8048937a3809745d2541e55271c594524e6383a8",
+          "raw_bytes": 26,
+          "payload_base64": "H4sIAAAAAAACCgvw9PEPiQ/wDwoJ1jEz0TE3NTY3MNABQi4AlPsmRhoAAAA="
+        },
+        "stdout_sha256": "eacafb7a2cce5e55b85793539686ed1d2aa71cb6b9c9bd33c6260bf9d3201acc",
+        "stdout_bytes": 2310144
+      },
+      "max_ns": 753700,
+      "over_margin": 0,
+      "allocations": 0
+    },
+    "host_expected_j7_f32_sha256": "b212ff0750c6c396f5e8679b1b18a78d5d02a69441e7a490a16fe8892f6a66bc"
+  },
+  "maps": {
+    "map_checks": {
+      "projection_error": 9.454148555306753e-14,
+      "charge_error": 5.551115123125783e-17,
+      "semigroup_error": 0.0
+    },
+    "maps_sha256": "e0dc412c052fefd698f034a7352a06def47b949ef395fee3093613f4105faa39",
+    "wave_sha256": "ac6823d8b1ed52a5afbfdb62e1b068fdbf309ac7f2b41bbbc04211dbc4fbfe4c",
+    "h128_sha256": "accc39be49cc829bf9028e4d235eed875fe14c92043caf4973f8186875f8df8d"
+  },
+  "affinity": {
+    "cpu": 9,
+    "mask": 512,
+    "original_mask": 4095
+  },
+  "pilot_zero_drive_max_error": 4.610327805352793e-10,
+  "split_bit_exact": true
+}

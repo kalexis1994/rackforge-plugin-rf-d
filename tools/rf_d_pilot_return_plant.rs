@@ -31,6 +31,8 @@ pub struct State {
     q: [f64; 18],
     input: [f64; 3],
     defects: [f64; JUNCTIONS],
+    #[cfg(pilot_block_roots)]
+    feedback: [f64; JUNCTIONS],
 }
 
 #[derive(Clone, Copy)]
@@ -47,7 +49,8 @@ impl State {
         if index != 1 {
             return Err(Error::Input);
         }
-        Ok(Self { q: [0.; 18], input: [0.; 3], defects: [0.; JUNCTIONS] })
+        Ok(Self { q: [0.; 18], input: [0.; 3], defects: [0.; JUNCTIONS],
+                  #[cfg(pilot_block_roots)] feedback: [0.; JUNCTIONS] })
     }
 }
 
@@ -106,6 +109,72 @@ mod wasm {
     }
 }
 
+#[cfg(pilot_block_roots)]
+fn solve_group<const SIZE: usize>(
+    start: usize,
+    residual: &[f64; JUNCTIONS],
+    slope: &[f64; JUNCTIONS],
+    direction: &mut [f64; JUNCTIONS / 2],
+) -> Result<(), Error> {
+    let mut a: [[f64; SIZE]; SIZE] = std::array::from_fn(|i| {
+        let row = 2 * (start + i);
+        std::array::from_fn(|j| {
+            let col = 2 * (start + j);
+            f64::from(i == j) + map::P[row][col] * slope[col]
+        })
+    });
+    let mut b: [f64; SIZE] = std::array::from_fn(|i| {
+        let row = 2 * (start + i);
+        (0..start).fold(residual[row], |r, j| {
+            r - map::P[row][2 * j] * slope[2 * j] * direction[j]
+        })
+    });
+    for k in 0..SIZE {
+        let mut pivot = k;
+        for i in k + 1..SIZE {
+            if a[i][k].abs() > a[pivot][k].abs() {
+                pivot = i;
+            }
+        }
+        if a[pivot][k].abs() < 1e-28 {
+            return Err(Error::Singular);
+        }
+        a.swap(k, pivot);
+        b.swap(k, pivot);
+        for i in k + 1..SIZE {
+            let factor = a[i][k] / a[k][k];
+            for j in k + 1..SIZE {
+                a[i][j] -= factor * a[k][j];
+            }
+            b[i] -= factor * b[k];
+        }
+    }
+    for i in (0..SIZE).rev() {
+        let rhs = (i + 1..SIZE).fold(b[i], |v, j| v - a[i][j] * direction[start + j]);
+        direction[start + i] = rhs / a[i][i];
+    }
+    Ok(())
+}
+
+fn full_direction(residual: &[f64; JUNCTIONS], slope: &[f64; JUNCTIONS]) -> Result<[f64; JUNCTIONS / 2], Error> {
+    solve(
+        std::array::from_fn(|i| std::array::from_fn(|j| {
+            f64::from(i == j) + map::P[2 * i][2 * j] * slope[2 * j]
+        })),
+        std::array::from_fn(|i| residual[2 * i]),
+    )
+}
+
+#[cfg(pilot_block_roots)]
+fn block_direction(residual: &[f64; JUNCTIONS], slope: &[f64; JUNCTIONS]) -> Result<[f64; JUNCTIONS / 2], Error> {
+    const { assert!(JUNCTIONS == 18) };
+    let mut direction = [0.; JUNCTIONS / 2];
+    solve_group::<4>(0, residual, slope, &mut direction)?;
+    solve_group::<2>(4, residual, slope, &mut direction)?;
+    solve_group::<3>(6, residual, slope, &mut direction)?;
+    Ok(direction)
+}
+
 pub fn step(state: &mut State, signal: f64, drive: Drive) -> Result<Ports, Error> {
     if !drive.valid() || !signal.is_finite() || signal.abs() > 0.08 {
         return Err(Error::Input);
@@ -118,9 +187,12 @@ pub fn step(state: &mut State, signal: f64, drive: Drive) -> Result<Ports, Error
     });
     let history = product(&ZH, &base);
     let predictor: [f64; JUNCTIONS] = std::array::from_fn(|i| history[i] + dot(&map::ZU[i], &input));
+    #[cfg(not(pilot_block_roots))]
     let previous = product(&P, &state.defects);
+    #[cfg(pilot_block_roots)]
+    let previous = state.feedback;
     let mut z = std::array::from_fn(|i| predictor[i] - previous[i]);
-    for _ in 0..12 {
+    for _iteration in 0..12 {
         let (defects, slope) = law(z)?;
         let feedback = product(&P, &defects);
         let residual: [f64; JUNCTIONS] = std::array::from_fn(|i| z[i] - predictor[i] + feedback[i]);
@@ -133,19 +205,21 @@ pub fn step(state: &mut State, signal: f64, drive: Drive) -> Result<Ports, Error
             if q.iter().chain(&[j7_v, bus_v, base_v, vca_base, tail, collector]).any(|v| !v.is_finite()) {
                 return Err(Error::Domain);
             }
-            *state = State { q, input, defects };
+            *state = State { q, input, defects, #[cfg(pilot_block_roots)] feedback };
             return Ok(Ports {
                 j7_v, bus_v, base_v, panel_a: (bus_v - 0.5 * signal) / 39_250.,
                 returns_a: [(2. + drive.volume_delta_v - vca_base) / 68_000., (tail - collector) / 680.],
             });
         }
         // Same modified-Newton preconditioner as the original pilot.
-        let even = solve(
-            std::array::from_fn(|i| std::array::from_fn(|j| {
-                f64::from(i == j) + map::P[2 * i][2 * j] * slope[2 * j]
-            })),
-            std::array::from_fn(|i| residual[2 * i]),
-        )?;
+        #[cfg(not(pilot_block_roots))]
+        let even = full_direction(&residual, &slope)?;
+        #[cfg(pilot_block_roots)]
+        let even = if _iteration < 2 {
+            block_direction(&residual, &slope).or_else(|_| full_direction(&residual, &slope))?
+        } else {
+            full_direction(&residual, &slope)?
+        };
         for i in 0..JUNCTIONS / 2 {
             let mut odd = residual[2 * i + 1];
             for j in 0..JUNCTIONS / 2 {

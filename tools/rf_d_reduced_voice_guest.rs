@@ -1,9 +1,14 @@
 use rackforge_plugin_sdk::{export_processor, MidiEvent, ParameterEvent, Processor};
 use voice::{Event, Frame, Message, Voice};
 
+#[cfg(pilot_pi)]
+const PILOT_FACTOR: usize = 2;
+#[cfg(not(pilot_pi))]
+const PILOT_FACTOR: usize = 4;
+
 #[derive(Default)]
 struct Guest {
-    voice: Option<Voice<4>>,
+    voice: Option<Voice<PILOT_FACTOR>>,
     #[cfg(pilot_returns)]
     controls: Controls,
     #[cfg(pilot_returns)]

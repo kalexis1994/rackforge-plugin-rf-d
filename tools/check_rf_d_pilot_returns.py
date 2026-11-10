@@ -39,7 +39,8 @@ LENGTH = 48_128
 RATE = 192_000
 
 
-def generate(cutoff_laws=False):
+def generate(cutoff_laws=False, rate=RATE):
+    assert rate in (96_000, RATE)
     table, logs, models, *_ = materialize(read_oracle())
     assert digest(table) == read(MODEL)["table_sha256"]
     z = prediction(logs, models, -1.6, 0.)["c"][0].copy()
@@ -48,7 +49,7 @@ def generate(cutoff_laws=False):
     wave = emit("pilot-wave.rs", "pub const SAW:[f64;4096]=[" +
                 ",".join(f"{v:.17e}" for v in cycle / max(abs(cycle))) + "];\n")
     bank = AREA / "pilot-return-maps.rs"
-    checks = emit_data(bank, 1. / RATE, cutoff_laws)
+    checks = emit_data(bank, 1. / rate, cutoff_laws)
     old = (ROOT / PLANT).read_text(encoding="utf8")
     start, end = old.index("pub fn law("), old.index("// The physical state")
     law = once(old[start:end], "index:usize,", "")
@@ -67,6 +68,11 @@ def generate(cutoff_laws=False):
                           "pub const SCENE:[Event;8]=[" + ",".join(events) + "];\n")
     parts = dict(wave=wave, return_maps=bank, pilot_law=law, score=compiled_score, voice=ROOT / VOICE,
                  coefficients=ROOT / FIR, scene=ROOT / SCENE, plant=ROOT / PORT_PLANT)
+    if rate == 96_000:
+        from prepare_long_note_aa import taps
+        fir = taps(rate)
+        parts["pi_coefficients"] = emit("pilot-pi-fir.rs", f"pub const H96000:[f64;{len(fir)}]=[\n" +
+                                        "".join(f"    {value:.17e},\n" for value in fir) + "];\n")
     code = "".join(f'#[path = "{path.as_posix()}"] mod {name};\n' for name, path in parts.items())
     return code, dict(map_checks=checks, maps_sha256=sha(bank), wave_sha256=sha(wave), h128_sha256=digest(table))
 
