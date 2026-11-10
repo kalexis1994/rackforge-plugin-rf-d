@@ -94,7 +94,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     #[cfg(pilot_native_handoff)]
     let native = matches!(
         mode.as_deref(),
-        Some("native-handoff" | "bench-native-handoff")
+        Some(
+            "native-handoff"
+                | "bench-native-handoff"
+                | "native-handoff-c2"
+                | "bench-native-handoff-c2"
+        )
     );
     #[cfg(not(pilot_native_handoff))]
     let native = false;
@@ -134,7 +139,14 @@ fn main() -> Result<(), Box<dyn Error>> {
         return handoff_probe::run(
             values,
             || render(&family, &event, &post, initial, |_, _, _| {}, |_| {}),
-            mode.as_deref() == Some("bench-native-handoff"),
+            matches!(
+                mode.as_deref(),
+                Some("bench-native-handoff" | "bench-native-handoff-c2")
+            ),
+            matches!(
+                mode.as_deref(),
+                Some("native-handoff-c2" | "bench-native-handoff-c2")
+            ),
         );
     }
     if mode.as_deref() == Some("bench") {

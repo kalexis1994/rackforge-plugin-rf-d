@@ -24,6 +24,7 @@ OWN = "tools/check_rf_d_pilot_bistable_handoff.py"
 PREVIOUS = "evidence/rf_d_pilot_bistable_return_seeded01.json"
 CLOCK_CONTROL = "evidence/rf_d_pilot_cv_readout_pos03.json"
 DELAYED_CONTROL = "evidence/rf_d_pilot_bistable_handoff04.json"
+NATIVE_CONTROL = "evidence/rf_d_pilot_bistable_handoff05.json"
 NATIVE = ("tools/rf_d_pilot_bistable_handoff.rs", "tools/rf_d_pilot_bistable_handoff_probe.rs")
 TIMERS = (5, 38)
 NODES = (*b.NODES, *b.LOAD_NODES)
@@ -63,13 +64,17 @@ def main():
     reentry.add_argument("--half-reentry", action="store_true", help="split only the first interval after handoff")
     reentry.add_argument("--delay-reentry", action="store_true", help="carry the post-event surface for one extra interval")
     reentry.add_argument("--native-reentry", action="store_true", help="run the C4 clock and delayed transfer together in Rust")
+    reentry.add_argument("--native-c2", action="store_true", help="close C2 during the projected interval in Rust")
     args = parser.parse_args()
+    args.native_reentry |= args.native_c2
     args.delay_reentry |= args.native_reentry
     assert c.AREA.is_dir() and not list(c.AREA.iterdir())
     seq = 1
     while (out := c.ROOT / f"evidence/rf_d_pilot_bistable_handoff{seq:02}.json").exists():
         seq += 1
     native_sources = (*NATIVE, DELAYED_CONTROL) if args.native_reentry else ()
+    if args.native_c2:
+        native_sources += (NATIVE_CONTROL,)
     sources = Sources((*b.SOURCES, *c.ALL_SOURCES, c.OWN, c.CANDIDATE, c.PROBE, c.PORTS,
                        OWN, PREVIOUS, CLOCK_CONTROL, *SOURCE_NAMES, C4_CLOCK, TIMER_CARRY, TIMER_NATIVE,
                        TIMER_NATIVE_PROBE, "tools/rf_d_pilot_timer_rc.rs", *native_sources))
@@ -77,7 +82,8 @@ def main():
                   **sources.fields(), compiler_sha256=c.sha(Path(c.COMPILER)), library_sha256=c.sha(c.LIB),
                   imposed_ports=(5, 54, 17, 24, 14), post_grids=DENSITIES,
                   first_reentry_substeps=2 if args.half_reentry else 1,
-                  delayed_reentry=args.delay_reentry, native_reentry=args.native_reentry, calibration=[], cases={})
+                  delayed_reentry=args.delay_reentry, native_reentry=args.native_reentry,
+                  closed_c2=args.native_c2, calibration=[], cases={})
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
     clock = c.AREA / "handoff-clock.exe"
     closed = c.AREA / "handoff-return.exe"
@@ -104,6 +110,10 @@ def main():
         assert np.isfinite(values).all()
         return values
 
+    def timings(mode, data):
+        results = list(map(int, run([clock, mode], data).decode().strip().split(",")))
+        return dict(zip(("passes", "median_ns", "p99_ns", "max_ns"), results, strict=True))
+
     def restart(data, expected, item, mode):
         got = replay([closed, mode, b.PILOT_RATE], data, item)
         if got is None:
@@ -129,6 +139,7 @@ def main():
         prior = c.read(PREVIOUS)["cases"]
         clock_control = c.read(CLOCK_CONTROL)["reserves"]
         delayed_control = c.read(DELAYED_CONTROL)["cases"] if args.native_reentry else {}
+        native_control = c.read(NATIVE_CONTROL)["cases"] if args.native_c2 else {}
 
         def capture(branch, start, frames, key, offset):
             phase, _, _, state = refs[branch][1][start]
@@ -182,6 +193,9 @@ def main():
                 item["passed"] = restart(data, expected, item.setdefault("negative", {}), "loads")
                 if args.native_reentry:
                     native = replay([clock, "native-handoff"], clock_data, item.setdefault("native", {}))
+                    item["passed"] = item["passed"] and native is not None and native.size == 0
+                if args.native_c2:
+                    native = replay([clock, "native-handoff-c2"], clock_data, item.setdefault("native_c2", {}))
                     item["passed"] = item["passed"] and native is not None and native.size == 0
                 print(name, "negative", item["passed"], flush=True)
                 continue
@@ -279,8 +293,9 @@ def main():
                     assert np.array_equal(rest[0], control_rows[1])
                     python = np.vstack((first_row, *control_rows, rest[1:]))
                     ports = (*b.PORTS[:4], 14)
-                    stage_drives = stages[coarse_rows[..., None], ports].astype("<f8").tobytes()
-                    payload = clock_data + packed_profile(models[129]) + packed_profile(delayed) + stage_drives
+                    stage_drives = stages[coarse_rows[..., None], ports].astype("<f8")
+                    tables = clock_data + packed_profile(models[129]) + packed_profile(delayed)
+                    payload = tables + stage_drives.tobytes()
                     native = item["native"] = {}
                     values = replay([clock, "native-handoff"], payload, native)
                     if values is not None:
@@ -294,19 +309,46 @@ def main():
                         native.update(python_delta_v=voltage, python_delta_a=current,
                                       passed=native["passed"] and voltage <= 5e-11 and current <= 5e-14)
                         if native["passed"]:
-                            timing = list(map(int, run([clock, "bench-native-handoff"], payload).decode().strip().split(",")))
-                            native["timing"] = dict(zip(("passes", "median_ns", "p99_ns", "max_ns"), timing, strict=True))
+                            if args.native_c2:
+                                assert native["output_sha256"] == native_control[name]["native"]["output_sha256"]
+                            else:
+                                native["timing"] = timings("bench-native-handoff", payload)
                         else:
                             native["failure_input"] = packed(payload)
                     else:
                         native["passed"] = False
+                    if args.native_c2 and native["passed"]:
+                        stage_drives[slot+1, :, 0] = 0.  # Both projected C2 stages must be generated.
+                        payload = tables + stage_drives.tobytes()
+                        closed_c2 = item["native_c2"] = {}
+                        values = replay([clock, "native-handoff-c2"], payload, closed_c2)
+                        closed_c2["passed"] = False
+                        if values is not None:
+                            assert np.array_equal(values[:7], predicted)
+                            rows = values[7:].reshape(len(want), python.shape[1] + 1)
+                            closed_c2.update(assess(rows[:, :-1], want))
+                            np.testing.assert_array_equal(rows[3:, -1], want[3:, 5])
+                            timer = rows[1:3, -1]
+                            c2_error = abs(rows[:3, -1] - want[:3, 5])
+                            current = ((rows[1:3, [13, 16, 5]] - timer[:, None]) / [1000., 10_000., 10_000.]).sum(axis=1)
+                            moved = np.array([(5. * current[0] - current[1]) / 12.,
+                                              (3. * current[0] + current[1]) / 4.]) / b.PILOT_RATE
+                            charge_error = abs((timer - rows[0, -1]) * 10e-6 - moved)
+                            closed_c2.update(c2_error_v=c2_error.tolist(), charge_error_c=charge_error.tolist(),
+                                             passed=bool(closed_c2["passed"] and c2_error.max() <= 2e-6
+                                                         and charge_error.max() <= 1.01e-17))
+                            if closed_c2["passed"]:
+                                closed_c2["timing"] = timings("bench-native-handoff-c2", payload)
+                            else:
+                                closed_c2["failure_input"] = packed(payload)
             item["passed"] = bool(event_matches and timer_error.max() <= 2e-6
                                   and item["predicted129"].get("handoff", {}).get("passed", False)
                                   and chosen["passed"]
-                                  and (not args.native_reentry or item.get("native", {}).get("passed", False)))
+                                  and (not args.native_reentry or item.get("native", {}).get("passed", False))
+                                  and (not args.native_c2 or item.get("native_c2", {}).get("passed", False)))
             print(name, "event error ns", item["event_error_ns"], "timer error V", timer_error,
                   {label: trial["passed"] for label, trial in item.items()
-                   if label.startswith("predicted") or label == "native"},
+                   if label.startswith("predicted") or label in ("native", "native_c2")},
                   flush=True)
         report["passed"] = bool(report["cases"]) and all(item["passed"] for item in report["cases"].values())
         sources.unchanged()

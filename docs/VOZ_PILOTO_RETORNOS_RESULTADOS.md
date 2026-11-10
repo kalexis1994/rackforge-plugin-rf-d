@@ -1651,3 +1651,37 @@ bloque siguen impuestas durante el intervalo
 adicional y la continuación. Esta medición
 excluye el receptor y el plazo de RackForge.
 [Contraste y coste nativos](../evidence/rf_d_pilot_bistable_handoff05.json).
+
+### C2 calculado durante el intervalo proyectado
+
+El C2 de 10 µF parte del voltaje que entrega el
+reloj de C4 al final del cruce. Las dos etapas
+del intervalo siguiente satisfacen
+'Vᵢ = V₀ + (h/C2) Σⱼ Aᵢⱼ Iⱼ', con la matriz
+de Radau de dos etapas. La corriente que entra
+a C2 suma las ramas de x8, x11 y x0 por
+1 kΩ, 10 kΩ y 10 kΩ. En cada iteración se
+vuelven a resolver Q16, Q17/Q18 y el seguidor.
+El cierre admite hasta cuatro iteraciones y
+acepta las tensiones de etapa con 1 pV de
+residuo máximo en el balance. El banco retira
+ambas entradas de C2 de ese intervalo y calcula
+el residuo de carga de forma independiente.
+[Red nominal y puertos](CONTORNO_VOLUMEN_CIRCUITO.md).
+
+Pasaron las cinco reservas con los tres cruces
+en sus intervalos de ocho ticks. El mayor error
+de C2 en las dos etapas nuevas fue 1,777 µV.
+El desequilibrio de carga máximo fue 0,418 aC.
+El control con C2 impuesto reprodujo las salidas
+del ensayo nativo anterior bit a bit.
+
+En 2.000 repeticiones por escena, las medianas
+fueron 200,1–217,8 µs por ventana de cinco
+frames. El pico fue 2,597 ms en C2 alto.
+La rama negativa, los demás puertos y el C2
+posterior al intervalo proyectado conservan
+las fronteras del banco. Queda acoplar el
+receptor y medir J7, R59/R60 y el plazo
+en RackForge.
+[Contraste de C2 y coste](../evidence/rf_d_pilot_bistable_handoff06.json).

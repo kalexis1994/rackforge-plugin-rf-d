@@ -34,6 +34,7 @@ fn advance(
     front: &Profile,
     tail: &Profile,
     drives: &[[Drive; 2]],
+    close_c2: bool,
     mut emit: impl FnMut(State, Drive),
 ) -> Result<State, StepError> {
     let [slot, seconds, c2, _, _, a, b] = event;
@@ -49,9 +50,19 @@ fn advance(
     let weights = [a, b];
     let edge = front.at(PERIOD_S - seconds, weights, start)?;
     emit(edge, start);
-    let [u1, u2] = *extra;
-    let stage = tail.at((1. + 1. / 3.) * PERIOD_S - seconds, weights, u1)?;
-    let mut state = tail.at(2. * PERIOD_S - seconds, weights, u2)?;
+    let ages = [(1. + 1. / 3.) * PERIOD_S - seconds, 2. * PERIOD_S - seconds];
+    let ([stage, mut state], [u1, u2]) = if close_c2 {
+        tail.project_c2(c2, ages, weights, *extra)?
+    } else {
+        let [u1, u2] = *extra;
+        (
+            [
+                tail.at(ages[0], weights, u1)?,
+                tail.at(ages[1], weights, u2)?,
+            ],
+            *extra,
+        )
+    };
     emit(stage, u1);
     emit(state, u2);
     for &drive in rest {
@@ -67,6 +78,7 @@ pub fn run(
     mut values: impl ExactSizeIterator<Item = f64>,
     clock: impl Fn() -> Option<[f64; 7]>,
     bench: bool,
+    close_c2: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     const TABLE: usize = POINTS * (1 + 15 * 5);
     let Some(event) = clock() else {
@@ -90,8 +102,15 @@ pub fn run(
             let begin = Instant::now();
             let event = black_box(clock()).ok_or("unstable C4 event")?;
             black_box(
-                advance(event, &front, &tail, black_box(&drives), |_, _| {})
-                    .map_err(|e| format!("handoff: {e:?}"))?,
+                advance(
+                    event,
+                    &front,
+                    &tail,
+                    black_box(&drives),
+                    close_c2,
+                    |_, _| {},
+                )
+                .map_err(|e| format!("handoff: {e:?}"))?,
             );
             *elapsed = begin.elapsed().as_nanos();
         }
@@ -104,8 +123,11 @@ pub fn run(
         );
     } else {
         let mut rows = Vec::new();
-        advance(event, &front, &tail, &drives, |state, drive| {
+        advance(event, &front, &tail, &drives, close_c2, |state, drive| {
             rows.extend(bistable::observations(state, drive));
+            if close_c2 {
+                rows.push(drive.c2);
+            }
         })
         .map_err(|e| format!("handoff: {e:?}"))?;
         let mut out = std::io::BufWriter::new(std::io::stdout().lock());
