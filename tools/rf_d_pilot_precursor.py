@@ -26,16 +26,20 @@ def family(traces, points=POINTS):
     low = max(columns[0] for columns, _ in traces)
     columns = np.geomspace(low, GUARD, points)
     table = np.array([[np.interp(columns, c, v) for v in values.T] for c, values in traces])
+    return columns, *load_surface(table)
+
+
+def load_surface(table):
     nominal, c2_up, c2_down, c5_up, c5_down, diag_up, diag_down = table
     slope = np.array([(c2_up - c2_down) / 2., (c5_up - c5_down) / 2.])
     curvature = np.array([(c2_up + c2_down) / 2. - nominal,
                           (c5_up + c5_down) / 2. - nominal])
     mixed = nominal + curvature.sum(axis=0) - (diag_up + diag_down) / 2.
-    return columns, nominal, slope, curvature, mixed
+    return nominal, slope, curvature, mixed
 
 
-def advance(model, observed, order, quadratic_anchor=False):
-    """From the left 96 kHz state, estimate the next C4 guard if it is in this interval."""
+def conditioned_path(model, observed, order, quadratic_anchor=False):
+    """Anchor the electrical curve once at the supplied latch and timer voltages."""
     c, nominal, slope, curvature, mixed = model
     start = observed[26]
     if not c[0] <= start < GUARD or not start < observed[28]:
@@ -85,8 +89,116 @@ def advance(model, observed, order, quadratic_anchor=False):
     ratio = np.ones_like(relative)
     nonzero = relative != 0.
     ratio[nonzero] = np.log1p(relative[nonzero]) / relative[nonzero]
-    time = float(R28_C4_S * np.sum(charge_delta / gap[:-1] * ratio))
+    times = R28_C4_S * charge_delta / gap[:-1] * ratio
+    return select, values, weights, gap, times
+
+
+def advance(model, observed, order, quadratic_anchor=False):
+    """Estimate the next C4 guard if it is inside the current 96 kHz interval."""
+    path = conditioned_path(model, observed, order, quadratic_anchor)
+    if path is None:
+        return None
+    _, values, weights, _, times = path
+    time = float(np.sum(times))
     if not 0. < time < INTERVAL_S:
         return None
     guard = np.r_[GUARD, values[[1, 3, 4, C2, 6], -1]]
-    return dict(time_s=time, point=guard.tolist(), load_weights=weights.tolist(), intervals=len(charge_delta))
+    return dict(time_s=time, point=guard.tolist(), load_weights=weights.tolist(), intervals=len(times))
+
+
+def carry(model, observed, order=2):
+    """Run C4 from a single initial state through every 96 kHz boundary."""
+    path = conditioned_path(model, observed, order, quadratic_anchor=True)
+    if path is None:
+        return None
+    return clock_path(*path)
+
+
+def clock_path(collector, values, weights, gap, times):
+    boundaries = np.r_[0., np.cumsum(times)]
+    duration = float(boundaries[-1])
+    if not 0. < duration < 64. * INTERVAL_S:
+        return None
+    clock = np.arange(int(duration * CLOCK) + 1) * INTERVAL_S
+    index = np.minimum(np.searchsorted(boundaries, clock, side="right") - 1, len(times) - 1)
+    elapsed_fraction = (clock - boundaries[index]) / times[index]
+    relative = (gap[index+1] - gap[index]) / gap[index]
+    fraction = elapsed_fraction.copy()
+    varying = relative != 0.
+    fraction[varying] = np.expm1(np.log1p(relative[varying]) * elapsed_fraction[varying]) / relative[varying]
+    state = values[:, index] + fraction * (values[:, index+1] - values[:, index])
+    voltage = collector[index] + fraction * (collector[index+1] - collector[index])
+    guard = np.r_[GUARD, values[[1, 3, 4, C2, 6], -1]]
+    return dict(time_s=duration - clock[-1], point=guard.tolist(), load_weights=weights.tolist(),
+                slot=len(clock) - 1, state=np.column_stack((voltage, state.T)),
+                end_c4_v=float(values[0, -1]))
+
+
+def charge_trace(stages):
+    """Resolve the precursor against C4's monotonically decreasing plate voltage."""
+    index = int(np.flatnonzero(stages[:, 26] >= GUARD)[0])
+    a, b = stages[index-1:index+1]
+    weight = (GUARD - a[26]) / (b[26] - a[26])
+    end = a + weight * (b - a)
+    values = np.vstack((stages[:index, [26, *NODES]], end[[26, *NODES]]))
+    values[-1, 0] = GUARD
+    values[:, 1] -= values[:, 2]
+    charge = values[0, 1] - values[:, 1]
+    assert (np.diff(charge) > 0.).all()
+    return charge / charge[-1], values
+
+
+def charge_family(traces, points=POINTS):
+    progress = np.linspace(0., 1., points)
+    table = np.array([[np.interp(progress, u, v) for v in values.T] for u, values in traces])
+    return progress, *load_surface(table)
+
+
+def carry_charge(model, observed, coupled):
+    """Condition the fixed curve in C4 charge instead of collector voltage."""
+    if not 0. <= observed[26] < GUARD or not observed[26] < observed[28]:
+        return None
+    progress, nominal, slope, curvature, mixed = model
+    before = observed[[26, *NODES]].copy()
+    before[1] -= before[2]
+    if not nominal[1, -1] < before[1] <= nominal[1, 0] + 1e-12:
+        return None
+    phase = np.interp(before[1], nominal[1, ::-1], progress[::-1])
+    timers = [C2 + 1, C5 + 1]
+    coupling = mixed if coupled else np.zeros_like(mixed)
+
+    def at(table, u):
+        return np.array([np.interp(u, progress, row) for row in table])
+
+    for _ in range(4):
+        a = np.array([at(axis[timers], phase) for axis in slope]).T
+        b = np.array([at(axis[timers], phase) for axis in curvature]).T
+        c = at(coupling[timers], phase)
+        wanted = before[timers] - at(nominal[timers], phase)
+        load = np.linalg.solve(a, wanted)
+        for _ in range(3):
+            error = a @ load + b @ (load ** 2) + c * load.prod() - wanted
+            tangent = a + 2. * b * load + c[:, None] * load[::-1]
+            load -= np.linalg.solve(tangent, error)
+        if abs(load).max() > 1.05:
+            return None
+        fitted = (nominal + np.einsum("i,ijk->jk", load, slope)
+                  + np.einsum("i,ijk->jk", load ** 2, curvature) + coupling * load.prod())
+        if (np.diff(fitted[1]) >= 0.).any() or not fitted[1, -1] < before[1] <= fitted[1, 0] + 1e-12:
+            return None
+        phase = np.interp(before[1], fitted[1, ::-1], progress[::-1])
+
+    after = np.searchsorted(progress, phase, side="right")
+    state = np.column_stack((at(fitted, phase), fitted[:, after:]))
+    state[1:] += (before[1:] - state[1:, 0])[:, None]
+    state[0, 0] = before[0]
+    gap = state[1] + state[2] - state[3]
+    delta = -np.diff(state[1])
+    if (gap <= 0.).any() or (delta <= 0.).any() or state[7, -1] <= GUARD:
+        return None
+    relative = np.diff(gap) / gap[:-1]
+    ratio = np.ones_like(relative)
+    nonzero = relative != 0.
+    ratio[nonzero] = np.log1p(relative[nonzero]) / relative[nonzero]
+    times = R28_C4_S * delta / gap[:-1] * ratio
+    return clock_path(state[0], state[1:], load, gap, times)

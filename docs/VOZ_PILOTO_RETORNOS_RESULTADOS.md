@@ -946,3 +946,32 @@ cola. Las observaciones a 96 kHz provienen del
 solver. Queda generarlas en la voz y contrastar
 R59/R60, J7 y el plazo del bloque de audio antes
 de probar en Desktop. [Medición nativa](../evidence/rf_d_pilot_precursor03.json).
+
+## C4 desde un único estado inicial
+
+El banco avanza entre los bordes de 96 kHz con la
+corriente de R28 y el voltaje entre las placas de C4.
+Al atravesar un tramo se integra el tiempo de manera
+analítica. Para un borde dentro del tramo se invierte
+esa misma expresión y se conserva la carga resultante.
+El modelo genera el colector, sus vecinos y los
+voltajes de los temporizadores sobre la curva cargada.
+Las dos corrientes de ataque que forman la rampa
+del evento se obtienen de esos estados generados.
+
+Parametrizar la curva por x26 pasó en nominal, pero
+la variante densa dejó 31,29 ns de error al arrancar
+la reserva de C2 bajo desde el ancla original. El
+voltaje del colector aún reflejaba el estado previo a
+la perturbación de carga. La reserva pasó al arrancar
+medio frame después. [Arranque indexado por x26](../evidence/rf_d_pilot_precursor04.json).
+
+La curva indexada por el voltaje de C4 se calibra con
+las mismas escenas y usa una sola observación inicial.
+Con 65 puntos y los términos cuadráticos de C2 y C5,
+pasaron las tres escenas desde el ancla original y
+desde medio frame después. El peor error temporal
+fue 4,03 ns y el peor error de C2 atribuible al
+intervalo del evento fue 1,921 µV. Los dos flancos
+negativos no activaron el recorrido de subida.
+[Contraste con memoria de C4](../evidence/rf_d_pilot_precursor05.json).

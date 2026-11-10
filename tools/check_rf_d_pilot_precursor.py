@@ -10,11 +10,13 @@ import numpy as np
 from affine_evidence import Sources
 import check_rf_d_pilot_contours as c
 from check_rf_d_pilot_timer_rc import (
-    ATTACK, ATTACK_ORBIT, CROSSING, CROSSING_PROBE, LATCH_CHARGE,
+    ATTACK, ATTACK_ORBIT, ATTACK_PROBE, CROSSING, CROSSING_PROBE, LATCH_CHARGE, MODEL,
     OHMS, TIMER_NODES, prepare_reference, project_stages,
 )
 from rf_d_pilot_attack_orbit import crossing_profile, extract, landmarks
-from rf_d_pilot_precursor import CLOCK, GUARD, NODES, advance, family, trace
+from rf_d_pilot_precursor import (
+    CLOCK, GUARD, NODES, advance, carry, carry_charge, charge_family, charge_trace, family, trace,
+)
 
 CALIBRATION = ((0., 0.), (.075, 0.), (-.075, 0.), (0., .075), (0., -.075),
                (.075, -.075), (-.075, .075))
@@ -88,6 +90,51 @@ def compare(run, native, shape, observations, stages, slot, edge, target, start,
     return dict(passed=bool(passes), events=events, incomplete_guards=skipped)
 
 
+def carried_trial(run, native, attack, model, shape, initial, stages, slot, edge, target, start, expected, guard_s, first):
+    result = model(shape, initial)
+    if result is None:
+        return dict(passed=False, reason="initial state outside rising C4 path")
+    states = result.pop("state")
+    event_slot = first + result["slot"]
+    data = np.r_[native[1], result["point"], result["time_s"], 0., 0.].astype("<f8").tobytes()
+    output = run([native[0], "maybe"], data)
+    assert output == run([native[0], "maybe"], data)
+    if not output or len(states) < 2:
+        return dict(passed=False, reason="incomplete event or missing causal attack slope", guard=result)
+    time_s, cross_v, *values, tail_a = np.frombuffer(output, "<f8")
+    tick = (event_slot / CLOCK + time_s) / TICK_S
+    absolute = start * 4096 + tick
+    # Generate both attack currents from the carried C2 and x26, with C5
+    # and x40 as the companion cell's inputs.
+    pre = states[-2:]
+    control = np.column_stack((pre[:, 0], pre[:, 6], np.full(2, 8.3), pre[:, 8]))
+    raw = run([attack], control.astype("<f8").tobytes())
+    currents = np.frombuffer(raw, "<f8").reshape(2, 2, 4)[:, 0, 2]
+    fraction = time_s * CLOCK
+    m0 = np.expm1(X * fraction) * np.exp(-X) / MOVED
+    m1 = (X * fraction * np.exp(X * fraction) - np.expm1(X * fraction)) * np.exp(-X) / (X * MOVED)
+    average = m0 * currents[1] + m1 * (currents[1] - currents[0]) + tail_a
+    stage_current = np.column_stack((stages[1:, 8] - stages[1:, 5],
+                                     stages[1:, 44] - stages[1:, 38])) / OHMS[:, 0]
+    wanted = project_stages(stage_current[..., None], (1. / OHMS[:, 1:]).sum(axis=1), TICKS)[slot, 0, 0]
+    timer_error = abs(average - wanted) * MOVED / C2_GAIN if event_slot == slot else None
+    reference = stages[2 * STEPS * first:2 * STEPS * (event_slot + 1):2 * STEPS, NODES].copy()
+    reference[:, 0] -= reference[:, 1]
+    errors = abs(states[:, 1:] - reference).max(axis=0)
+    event_error = (event_slot / CLOCK + time_s - (slot / CLOCK + target["time"])) * 1e9
+    guard_error = (event_slot / CLOCK + result["time_s"] - guard_s) * 1e9
+    bracket = bool(expected[0] <= absolute <= expected[1])
+    return dict(passed=bool(bracket and timer_error is not None and timer_error <= 2e-6),
+                first_slot=first, event_slot=event_slot, guard=result, predicted_tick=float(absolute),
+                historical_bracket=bracket, refined_bracket=bool(edge * TICKS <= tick <= (edge + 1) * TICKS),
+                guard_error_ns=float(guard_error), time_error_ns=float(event_error),
+                c2_event_error_v=timer_error, max_state_error_v=dict(zip(NODES, errors.tolist())),
+                crossing_v=float(cross_v), crossing_state_error_v=abs(np.asarray(values) - target["crossing"]).tolist(),
+                modeled_attack_a=float(average), reference_attack_a=float(wanted),
+                generated_states=len(states), states_sha256=c.digest(states.astype("<f8").tobytes()),
+                input_sha256=c.digest(data), output_sha256=c.digest(output))
+
+
 def native_trial(run, target, prefix, model, observations, result):
     assert result["passed"] and len(result["events"]) == 1
     event = result["events"][0]
@@ -114,6 +161,7 @@ def native_trial(run, target, prefix, model, observations, result):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--native", action="store_true", help="verify and time the bounded Rust guard and event")
+    parser.add_argument("--carry", action="store_true", help="advance C4 from one initial state")
     args_main = parser.parse_args()
     assert c.AREA.is_dir() and not list(c.AREA.iterdir())
     seq = 1
@@ -121,9 +169,11 @@ def main():
         seq += 1
     previous = "evidence/rf_d_pilot_timer_rc10.json"
     native_sources = (NATIVE, NATIVE_PROBE) if args_main.native else ()
+    if args_main.carry:
+        native_sources += (ATTACK_PROBE, MODEL)
     sources = Sources((*c.ALL_SOURCES, c.OWN, c.CANDIDATE, c.PROBE, c.PORTS,
                        "tools/rf_d_pilot_step_profile.rs", previous, *SOURCE_NAMES, *native_sources))
-    report = dict(passed=False, rack_integrated=False, clock_hz=CLOCK, native=args_main.native, calibration=[],
+    report = dict(passed=False, rack_integrated=False, clock_hz=CLOCK, native=args_main.native, carry=args_main.carry, calibration=[],
                   reserves={}, **sources.fields(), compiler_sha256=c.sha(Path(c.COMPILER)),
                   library_sha256=c.sha(c.LIB))
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
@@ -144,6 +194,9 @@ def main():
         if args_main.native:
             run([*build, "-A", "dead_code", c.ROOT / NATIVE_PROBE, "--extern",
                  f"rf_d_circuit={c.LIB}", "-o", native_guard])
+        attack = c.AREA / "pilot-attack.exe"
+        if args_main.carry:
+            run([*build, "-A", "dead_code", c.ROOT / ATTACK_PROBE, "-o", attack])
         anchor = c.AREA / "precursor-anchor.bin"
 
         def capture(branch, start, frames, key, offset):
@@ -159,14 +212,27 @@ def main():
 
         start, frames, key = c.WINDOWS[0][2:]
         paths = []
+        charge_paths = []
         for offset in CALIBRATION:
             stages, item = capture("positive", start, frames, key, offset)
             report["calibration"].append(item)
             paths.append(trace(stages))
+            if args_main.carry:
+                charge_paths.append(charge_trace(stages))
             if offset == (0., 0.):
                 nominal = stages
         model = family(paths)
         dense = family(paths, 257)
+        if args_main.carry:
+            phase_model = charge_family(charge_paths)
+            phase_dense = charge_family(charge_paths, 257)
+            carry_modes = (
+                ("65", carry, model), ("257", carry, dense),
+                ("q65_axis", lambda m, s: carry_charge(m, s, False), phase_model),
+                ("q65_coupled", lambda m, s: carry_charge(m, s, True), phase_model),
+                ("q257_axis", lambda m, s: carry_charge(m, s, False), phase_dense),
+                ("q257_coupled", lambda m, s: carry_charge(m, s, True), phase_dense),
+            )
         _, _, path = timing_reference(nominal)
         rise = np.column_stack(crossing_profile(path))
         _, tail = landmarks(path, 24)
@@ -206,6 +272,18 @@ def main():
                 item["native_trial"] = native_trial(run, native_guard, native_args[1], model, observations,
                                                    modes["quadratic_local_quadratic"])
                 print("NATIVE_C4", name, item["native_trial"], flush=True)
+            if args_main.carry:
+                trials = item["carried"] = {}
+                for mode, advance_model, shape in carry_modes:
+                    series = trials[mode] = []
+                    for first in range(2):
+                        carried_args = (run, native_args, attack, advance_model, shape, observations[first], stages,
+                                        slot, edge, target, start, expected, guard_s, first)
+                        trial = carried_trial(*carried_args)
+                        assert trial == carried_trial(*carried_args)
+                        series.append(trial)
+                print("CARRY", name, {mode: [(x.get("time_error_ns"), x.get("c2_event_error_v"), x["passed"])
+                                            for x in group] for mode, group in trials.items()}, flush=True)
             item.update(reference_event=expected, reference_slot=slot, unchanged_replay=True)
             report["reserves"][name] = item
             print(name, {label: [(round(e["time_error_ns"], 3), e["historical_bracket"],
@@ -217,11 +295,18 @@ def main():
             item["false_guard"] = any(advance(shape, x, order, local_quad) is not None
                                       for x in observations for _, shape, order, local_quad in cases)
             assert not item["false_guard"]
+            if args_main.carry:
+                item["false_carried"] = any(advance_model(shape, observations[0]) is not None for _, advance_model, shape in carry_modes)
+                assert not item["false_carried"]
             report["reserves"][label] = item
         report["passed"] = True
         report["modes_admitted_in_bank"] = [label for label, *_ in cases
                                             if all(report["reserves"][name]["modes"][label]["passed"]
                                                    for name in NAMES)]
+        if args_main.carry:
+            report["carried_modes_admitted"] = [
+                mode for mode, _, _ in carry_modes
+                if all(report["reserves"][name]["carried"][mode][0]["passed"] for name in NAMES)]
         sources.unchanged()
     except Exception:
         report["failure"] = traceback.format_exc()
