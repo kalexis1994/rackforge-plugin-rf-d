@@ -17,6 +17,9 @@ DOC = "docs/VOZ_PILOTO_RETORNOS_PROTOCOLO.md"
 ATTACK = "tools/rf_d_pilot_attack_cell.rs"
 ATTACK_PROBE = "tools/rf_d_pilot_attack_cell_probe.rs"
 ATTACK_ORBIT = "tools/rf_d_pilot_attack_orbit.py"
+CROSSING = "tools/rf_d_pilot_crossing.rs"
+CROSSING_PROBE = "tools/rf_d_pilot_crossing_probe.rs"
+LATCH_CHARGE = "tools/latch_charge_driver.rs"
 ORBIT_RESERVES = (("positive_c2_up", "positive", 76, 5, 0., (+.05, -.05)),
                   ("positive_c2_down", "positive", 76, 5, 0., (-.05, +.05)))
 ATTACK_INPUTS = [[26, 5], [40, 38]]
@@ -118,7 +121,7 @@ def attack_results(run, target, stages, changed=False):
 
 
 def crossing_charge(ports, stages, regular, changes, orbit=None, ticks=FINE_TICKS,
-                    predict=False):
+                    predict=False, native=None):
     """Separate a two-level current model from the need to locate the event."""
     assert len(changes) == 1
     capacitance = 10e-6
@@ -257,6 +260,31 @@ def crossing_charge(ports, stages, regular, changes, orbit=None, ticks=FINE_TICK
                         mean[slot, 0] = split_ramps(local_time * 96_000)[0] + tail["correction_a"]
                         tail.update(error(mean))
                     trial["tail"] = tail
+                    if native is not None and threshold == .35 and mode == "offset":
+                        from rf_d_pilot_attack_orbit import landmarks
+
+                        run, executable, fixtures = native
+                        _, tail_knots = landmarks(saved[0], 24)
+                        rising = np.column_stack(profile)
+                        observation = endpoints[guard, [26, 25, 27, 9, 5, 28]]
+                        guard_s = (guard - regular[slot]) * ticks * tick_s
+                        data = np.r_[rising.ravel(), tail_knots[24:].ravel(), observation, guard_s,
+                                     post[0], post_slope[0]].astype("<f8").tobytes()
+                        digest = c.digest(data)
+                        fixtures[digest] = data
+                        result = run([executable], data)
+                        got = np.frombuffer(result, "<f8")
+                        assert got.shape == (7,) and np.isfinite(got).all()
+                        expected_native = np.r_[local_time, trial["collector_v"],
+                                                predicted_state, tail["correction_a"]]
+                        diff = abs(got - expected_native)
+                        assert diff[0] <= 1e-12 and diff[1:6].max() <= 1e-10 and diff[6] <= 1e-10
+                        mean = at_event.copy()
+                        mean[slot, 0] = split_ramps(got[0] * 96_000)[0] + got[6]
+                        report["native_event"] = dict(
+                            error(mean), max_error_against_python=diff.tolist(),
+                            predicted_tick=float(regular[slot] * ticks + got[0] / tick_s),
+                            input_sha256=digest, output_sha256=c.digest(result))
     return report
 
 
@@ -293,7 +321,10 @@ def main():
                         help="repeat the collector comparison at one-third the reference step")
     parser.add_argument("--predict-crossing", action="store_true",
                         help="derive the event from a pre-crossing collector observation")
+    parser.add_argument("--native-crossing", action="store_true",
+                        help="contrast and time the fixed-budget Rust event kernel")
     args = parser.parse_args()
+    assert not args.native_crossing or args.predict_crossing
     assert not args.predict_crossing or args.refine_orbit
     assert not args.refine_orbit or args.collector_orbit
     assert not args.crossing_charge or args.attack_cells
@@ -305,6 +336,8 @@ def main():
     added_sources = (ATTACK, ATTACK_PROBE) if args.attack_cells else ()
     if args.collector_orbit:
         added_sources += (ATTACK_ORBIT,)
+    if args.native_crossing:
+        added_sources += (CROSSING, CROSSING_PROBE, LATCH_CHARGE)
     sources = Sources((*c.ALL_SOURCES, c.OWN, c.CANDIDATE, c.PROBE, c.PORTS,
                        "tools/rf_d_pilot_step_profile.rs", OWN, MODEL, PROBE, DOC, *added_sources))
     report = dict(passed=False, coupled=False, rack_integrated=False, clock_hz=96_000,
@@ -312,7 +345,7 @@ def main():
                   timer_limit_v=TIMER_LIMIT_V, load_limit_a=LOAD_LIMIT_A,
                   attack_cells=args.attack_cells, crossing_charge=args.crossing_charge,
                   collector_orbit=args.collector_orbit, refine_orbit=args.refine_orbit,
-                  predict_crossing=args.predict_crossing, windows={}, **sources.fields(), compiler_sha256=c.sha(Path(c.COMPILER)),
+                  predict_crossing=args.predict_crossing, native_crossing=args.native_crossing, windows={}, **sources.fields(), compiler_sha256=c.sha(Path(c.COMPILER)),
                   library_sha256=c.sha(c.LIB))
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
 
@@ -349,6 +382,12 @@ def main():
             windows.extend(ORBIT_RESERVES)
         saved_orbits = []
         refined_orbits = []
+        native = None
+        if args.native_crossing:
+            executable = c.AREA / "pilot-crossing.exe"
+            run([*build, "-A", "dead_code", c.ROOT / CROSSING_PROBE, "--extern",
+                 f"rf_d_circuit={c.LIB}", "-o", executable])
+            native = (run, executable, {})
 
         def evaluate_volume(collector, capacitor):
             data = np.column_stack((collector, capacitor, np.full_like(collector, 8.3), capacitor)).astype("<f8")
@@ -422,7 +461,7 @@ def main():
                         fine_ports, fine_check = attack_results(run, attack, fine, changed)
                         assert fine_check["passed"]
                         args_fine = (fine_ports, fine, 3 * regular, edges,
-                                     (evaluate_volume, refined_orbits), FINE_TICKS / 3, args.predict_crossing)
+                                     (evaluate_volume, refined_orbits), FINE_TICKS / 3, args.predict_crossing, native)
                         refined_charge = crossing_charge(*args_fine)
                         assert refined_charge == crossing_charge(*args_fine)
                         item["refined_crossing_charge"] = dict(
@@ -430,6 +469,15 @@ def main():
                             bracket_ticks=[base + FINE_TICKS / 3 * (int(edges[0]) + k) for k in (0, 1)])
                         lo, hi = item["refined_crossing_charge"]["bracket_ticks"]
                         assert events[0][0] <= lo < hi <= events[0][1]
+                        if args.native_crossing:
+                            event = refined_charge["native_event"]
+                            tick = base + event["predicted_tick"]
+                            event["historical_bracket"] = events[0][0] <= tick <= events[0][1]
+                            assert event["passed"] and event["historical_bracket"]
+                            data = native[2][event["input_sha256"]]
+                            cost = list(map(int, run([native[1], "bench"], data).decode().strip().split(",")))
+                            event["isolated_timing"] = dict(zip(("events", "median_ns", "p99_ns", "max_ns"), cost))
+                            print("NATIVE_EVENT", label, event, flush=True)
                         if args.predict_crossing:
                             prediction = refined_charge["crossing_predictions"]
                             for modes in prediction.values():

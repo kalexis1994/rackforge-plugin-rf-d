@@ -877,3 +877,17 @@ en los cuatro voltajes predichos fue 0,629 mV. El
 banco sigue suministrando la observación temprana,
 las rampas exteriores y las demás cargas de C2/C5.
 [Predicción y cola](../evidence/rf_d_pilot_timer_rc09.json).
+
+El núcleo Rust usa tablas de tamaño fijo, ocho puntos
+por tramo y la capacitancia de juntura de la biblioteca
+del circuito. Reproduce el instante y el área de la
+variante de laboratorio y pasó los mismos tres
+contrastes. En 2.000 repeticiones por caso, las medianas
+fueron 94,5–97,6 µs y el máximo observado fue 141,3 µs
+por evento, incluyendo la búsqueda del cruce y la
+integración de la cola. Es el coste del evento aislado.
+Sigue pendiente generar su estado de entrada dentro
+del piloto y verificar R59/R60, J7 y el plazo del
+bloque completo antes de probar en Desktop.
+[Núcleo Rust](../tools/rf_d_pilot_crossing.rs),
+[contraste y coste](../evidence/rf_d_pilot_timer_rc10.json).
