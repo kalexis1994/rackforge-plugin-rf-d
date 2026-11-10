@@ -1,4 +1,5 @@
 """Contrast a coarse-clock C4 guard against refined Model D reserves."""
+import argparse
 import os
 import subprocess
 import traceback
@@ -13,7 +14,7 @@ from check_rf_d_pilot_timer_rc import (
     OHMS, TIMER_NODES, prepare_reference, project_stages,
 )
 from rf_d_pilot_attack_orbit import crossing_profile, extract, landmarks
-from rf_d_pilot_precursor import CLOCK, GUARD, advance, family, trace
+from rf_d_pilot_precursor import CLOCK, GUARD, NODES, advance, family, trace
 
 CALIBRATION = ((0., 0.), (.075, 0.), (-.075, 0.), (0., .075), (0., -.075),
                (.075, -.075), (-.075, .075))
@@ -25,6 +26,8 @@ TICKS = 8. / 3.
 C2_GAIN = (1. / OHMS[0, 1:]).sum()
 X = C2_GAIN / (10e-6 * CLOCK)
 MOVED = -np.expm1(-X)
+NATIVE = "tools/rf_d_pilot_precursor.rs"
+NATIVE_PROBE = "tools/rf_d_pilot_precursor_probe.rs"
 SOURCE_NAMES = ("tools/check_rf_d_pilot_precursor.py", "tools/rf_d_pilot_precursor.py",
                 "tools/check_rf_d_pilot_timer_rc.py", ATTACK, ATTACK_ORBIT, CROSSING,
                 CROSSING_PROBE, LATCH_CHARGE)
@@ -78,21 +81,49 @@ def compare(run, native, shape, observations, stages, slot, edge, target, start,
                            refined_bracket=bool(edge * TICKS <= tick <= (edge + 1) * TICKS),
                            crossing_state_error_v=abs(np.asarray(values) - target["crossing"]).tolist(),
                            c2_error_v=timer_error, modeled_attack_a=float(average),
+                           event_time_s=float(time_s), tail_a=float(tail_a),
                            reference_attack_a=float(ref), input_sha256=c.digest(data),
                            output_sha256=c.digest(output)))
     passes = len(events) == 1 and events[0]["historical_bracket"] and events[0]["c2_error_v"] is not None and events[0]["c2_error_v"] <= 2e-6
     return dict(passed=bool(passes), events=events, incomplete_guards=skipped)
 
 
+def native_trial(run, target, prefix, model, observations, result):
+    assert result["passed"] and len(result["events"]) == 1
+    event = result["events"][0]
+    columns, nominal, linear, quadratic, _ = model
+    table = np.column_stack((columns, nominal.T, linear[0].T, linear[1].T,
+                             quadratic[0].T, quadratic[1].T))
+    source = observations[1:, [26, *NODES]]
+    rows = np.vstack((source, np.tile(source[-1], (256 - len(source), 1))))
+    data = np.r_[prefix, table.ravel(), rows.ravel()].astype("<f8").tobytes()
+    output = run([target], data)
+    assert output == run([target], data)
+    got = np.frombuffer(output, "<f8")
+    wanted = np.array([event["slot"] - 1, event["guard"]["time_s"],
+                       event["event_time_s"], event["tail_a"]])
+    assert got.shape == wanted.shape and np.isfinite(got).all()
+    error = abs(got - wanted)
+    assert error[0] == 0 and error[1:3].max() <= 1e-12 and error[3] <= 1e-10
+    timing = list(map(int, run([target, "bench"], data).decode().strip().split(",")))
+    return dict(passed=True, max_error=error.tolist(), host_frames=128, includes_audio=False,
+                input_sha256=c.digest(data), output_sha256=c.digest(output),
+                timing=dict(zip(("blocks", "median_ns", "p99_ns", "max_ns"), timing)))
+
+
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--native", action="store_true", help="verify and time the bounded Rust guard and event")
+    args_main = parser.parse_args()
     assert c.AREA.is_dir() and not list(c.AREA.iterdir())
     seq = 1
     while (out := c.ROOT / f"evidence/rf_d_pilot_precursor{seq:02}.json").exists():
         seq += 1
     previous = "evidence/rf_d_pilot_timer_rc10.json"
+    native_sources = (NATIVE, NATIVE_PROBE) if args_main.native else ()
     sources = Sources((*c.ALL_SOURCES, c.OWN, c.CANDIDATE, c.PROBE, c.PORTS,
-                       "tools/rf_d_pilot_step_profile.rs", previous, *SOURCE_NAMES))
-    report = dict(passed=False, rack_integrated=False, clock_hz=CLOCK, calibration=[],
+                       "tools/rf_d_pilot_step_profile.rs", previous, *SOURCE_NAMES, *native_sources))
+    report = dict(passed=False, rack_integrated=False, clock_hz=CLOCK, native=args_main.native, calibration=[],
                   reserves={}, **sources.fields(), compiler_sha256=c.sha(Path(c.COMPILER)),
                   library_sha256=c.sha(c.LIB))
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
@@ -109,6 +140,10 @@ def main():
         native = c.AREA / "pilot-crossing.exe"
         run([*build, "-A", "dead_code", c.ROOT / CROSSING_PROBE, "--extern",
              f"rf_d_circuit={c.LIB}", "-o", native])
+        native_guard = c.AREA / "pilot-precursor.exe"
+        if args_main.native:
+            run([*build, "-A", "dead_code", c.ROOT / NATIVE_PROBE, "--extern",
+                 f"rf_d_circuit={c.LIB}", "-o", native_guard])
         anchor = c.AREA / "precursor-anchor.bin"
 
         def capture(branch, start, frames, key, offset):
@@ -167,6 +202,10 @@ def main():
                 args = run, native_args, shape, observations, stages, slot, edge, target, start, expected, order, local_quad, guard_s
                 modes[label] = compare(*args)
                 assert modes[label] == compare(*args)
+            if args_main.native:
+                item["native_trial"] = native_trial(run, native_guard, native_args[1], model, observations,
+                                                   modes["quadratic_local_quadratic"])
+                print("NATIVE_C4", name, item["native_trial"], flush=True)
             item.update(reference_event=expected, reference_slot=slot, unchanged_replay=True)
             report["reserves"][name] = item
             print(name, {label: [(round(e["time_error_ns"], 3), e["historical_bracket"],

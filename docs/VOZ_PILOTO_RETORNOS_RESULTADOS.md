@@ -933,3 +933,16 @@ reservas. El término mixto se contrastó con otras
 dos perturbaciones de calibración y la variante
 cuadrática por carga pasó sin depender de ese término.
 [Contraste del reloj de C4](../evidence/rf_d_pilot_precursor02.json).
+
+El núcleo Rust reproduce el reloj cuadrático de C4
+y alimenta directamente el predictor y la cola.
+El banco recorre 256 observaciones por bloque de
+128 frames a 48 kHz, con un cruce y un estado
+asentado al completar el bloque. En 2.000 bloques
+por cada uno de los tres casos, las medianas fueron
+98–101 µs y el máximo observado fue 145,4 µs.
+El tiempo cubre C4, la búsqueda del cruce y la
+cola. Las observaciones a 96 kHz provienen del
+solver. Queda generarlas en la voz y contrastar
+R59/R60, J7 y el plazo del bloque de audio antes
+de probar en Desktop. [Medición nativa](../evidence/rf_d_pilot_precursor03.json).
