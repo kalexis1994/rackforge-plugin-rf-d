@@ -1462,3 +1462,29 @@ se detuvieron en el cuarto paso. Se conservaron
 las entradas y la repetición de esos rechazos.
 [Reservas](../evidence/rf_d_pilot_bistable_return_windows01.json),
 [regresión de Q15](../evidence/rf_d_pilot_q15_audit02.json).
+
+### Eliminación de la placa x23
+
+Con `v = x23 − x25` y `β = R28·C4/h`, las dos
+etapas satisfacen `(I + βB) Δv = x17 − x25 − v_anterior`.
+Se reconstruye x23 en cada etapa y se conserva su
+valor junto con x25 al aceptar el paso. La corriente
+que entra en la fila de x25 se obtiene de R28,
+incluidas las derivadas entre etapas. El sistema
+de Newton pasa de diez a ocho incógnitas.
+
+Las cinco reservas pasaron de nuevo con las mismas
+entradas y los mismos intervalos de ocho ticks.
+El error máximo en la carga de C4 frente a la voz
+de referencia fue 1,25 aC. Los tres positivos
+volvieron a detenerse en el cuarto paso a 96 kHz.
+[Contraste de reservas](../evidence/rf_d_pilot_bistable_return_windows02.json).
+
+Los recorridos de polaridad fija pasaron a 96 kHz.
+En 100 repeticiones alternadas por caso, las medianas
+bajaron 11,0 % en inversa y 6,5 % en directa. Los
+máximos fueron 2,47 ms y 2,92 ms para 128 frames
+del bloque aislado con los seis puertos impuestos.
+Queda cerrar x6 y x9 y contrastar la voz continua
+con el receptor de audio.
+[Coste y contraste eléctrico](../evidence/rf_d_pilot_bistable_return_active02.json).

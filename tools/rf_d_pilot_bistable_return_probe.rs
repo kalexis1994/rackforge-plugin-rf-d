@@ -28,6 +28,7 @@ const PORTS: [usize; 6] = [5, 29, 17, 24, 6, 9];
 const PAIR: usize = 2 * NODES.len();
 type Values = [f64; 10];
 type Row = [f64; 12];
+type Solve = fn(State, [Drive; 2], Option<f64>) -> Result<[State; 2], StepError>;
 
 fn unpack(x: Values) -> State {
     State {
@@ -164,10 +165,9 @@ fn run(
     mut state: State,
     inputs: &[[Drive; 2]],
     h: f64,
-    split: bool,
+    solve: Solve,
     mut emit: impl FnMut([State; 2], [Drive; 2]),
 ) -> Result<State, String> {
-    let solve = if split { bistable::step } else { oracle };
     for (i, &drive) in inputs.iter().enumerate() {
         let stages = solve(state, drive, Some(h)).map_err(|e| format!("step {i}: {e:?}"))?;
         emit(stages, drive);
@@ -203,37 +203,49 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             ]
         })
         .collect();
-    if mode == "bench" {
-        let mut times = [0; 100];
-        for ns in &mut times {
-            let start = Instant::now();
-            black_box(run(
-                black_box(seed),
-                black_box(&inputs),
-                rate.recip(),
-                true,
-                |_, _| {},
-            )?);
-            *ns = start.elapsed().as_nanos();
+    if mode == "bench" || mode == "bench-plate" {
+        let paired = mode == "bench-plate";
+        let mut times = [[0; 100]; 2];
+        for i in 0..100 {
+            for candidate in [paired && i % 2 == 1, paired && i % 2 == 0]
+                .into_iter()
+                .take(if paired { 2 } else { 1 })
+            {
+                let solve = if candidate {
+                    bistable::condensed_step
+                } else {
+                    bistable::step
+                };
+                let start = Instant::now();
+                black_box(run(
+                    black_box(seed),
+                    black_box(&inputs),
+                    rate.recip(),
+                    solve,
+                    |_, _| {},
+                )?);
+                times[usize::from(candidate)][i] = start.elapsed().as_nanos();
+            }
         }
-        times.sort_unstable();
-        println!("{},{},{},{}", times.len(), times[50], times[98], times[99]);
+        for group in times.iter_mut().take(if paired { 2 } else { 1 }) {
+            group.sort_unstable();
+            println!("{},{},{},{}", group.len(), group[50], group[98], group[99]);
+        }
         return Ok(());
     }
-    assert!(mode == "split" || mode == "oracle");
+    let solve: Solve = match mode.as_str() {
+        "split" => bistable::step,
+        "plate" => bistable::condensed_step,
+        "oracle" => oracle,
+        _ => return Err("unsupported mode".into()),
+    };
     let mut rows = Vec::with_capacity(2 * inputs.len() + 1);
     rows.push(row(seed, start));
-    run(
-        seed,
-        &inputs,
-        rate.recip(),
-        mode == "split",
-        |stages, drives| {
-            for i in 0..2 {
-                rows.push(row(stages[i], drives[i]));
-            }
-        },
-    )?;
+    run(seed, &inputs, rate.recip(), solve, |stages, drives| {
+        for i in 0..2 {
+            rows.push(row(stages[i], drives[i]));
+        }
+    })?;
     let mut out = std::io::BufWriter::new(std::io::stdout().lock());
     for value in rows.into_iter().flatten() {
         out.write_all(&value.to_le_bytes())?;

@@ -78,7 +78,9 @@ def active_fixture(name, rate):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--active", action="store_true", help="contrast controlled forward and reverse CR6 loads")
+    parser.add_argument("--plate", action="store_true", help="eliminate the x23 stage voltages analytically")
     args = parser.parse_args()
+    mode = "plate" if args.plate else "split"
     assert c.AREA.is_dir() and not list(c.AREA.iterdir())
     seq = 1
     kind = "active" if args.active else "windows"
@@ -88,7 +90,7 @@ def main():
                                            "tools/check_rf_d_pilot_timer_rc.py",
                                            "evidence/rf_d_pilot_cv_readout_pos03.json")
     sources = Sources((*SOURCES, *full_sources))
-    report = dict(passed=False, rack_integrated=False, mode=kind, sample_columns=LABELS,
+    report = dict(passed=False, rack_integrated=False, mode=kind, plate_eliminated=args.plate, sample_columns=LABELS,
                   **sources.fields(), compiler_sha256=c.sha(Path(c.COMPILER)),
                   library_sha256=c.sha(c.LIB), cases={})
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
@@ -125,7 +127,7 @@ def main():
             for name in ("reverse", "forward"):
                 item = report["cases"][name] = {}
                 data = active_fixture(name, PILOT_RATE)
-                test = evaluate("split", PILOT_RATE, data, item, settle=True)
+                test = evaluate(mode, PILOT_RATE, data, item, settle=True)
                 matched = evaluate("oracle", PILOT_RATE, data, item, settle=True)
                 low, high = (evaluate("oracle", rate, active_fixture(name, rate), item, settle=True)
                              for rate in (384_000, 768_000))
@@ -138,8 +140,16 @@ def main():
                     polarity = cr6[0] > 0. if name == "forward" else cr6[1] < 0.
                     item.update(same_clock=same, refinement=refined, accuracy=fine, cr6_range_a=cr6,
                                 passed=all(t["passed"] for t in (same, refined, fine)) and polarity)
-                    timing = map(int, run([target, "bench", PILOT_RATE, "dc"], data).decode().split(","))
-                    item["timing"] = dict(zip(("blocks", "median_ns", "p99_ns", "max_ns"), timing, strict=True))
+                    bench = "bench-plate" if args.plate else "bench"
+                    rows = run([target, bench, PILOT_RATE, "dc"], data).decode().splitlines()
+                    fields = ("blocks", "median_ns", "p99_ns", "max_ns")
+                    timings = [dict(zip(fields, map(int, row.split(",")), strict=True)) for row in rows]
+                    if args.plate:
+                        before, after = timings
+                        item["timing"] = dict(alternating=True, uncondensed=before, condensed=after,
+                                              median_speedup=before["median_ns"] / after["median_ns"])
+                    else:
+                        item["timing"], = timings
                 print(name, {k: v for k, v in item.items() if k in
                              ("passed", "accuracy", "cr6_range_a", "timing") or isinstance(v, dict) and "error" in v}, flush=True)
         else:
@@ -163,7 +173,7 @@ def main():
                 known = [previous["reserves"][label]["reference_event"]] if branch == "positive" else []
                 item = report["cases"][label] = dict(passed=False, expected_events=known, offset_v=offset,
                     reference_sha256=c.digest(raw), anchor_sha256=c.sha(anchor), start_frame=start, frames=frames)
-                test = evaluate("split", clock, payload(full[0, NODES], full[0, PORTS], full[1:, PORTS]), item)
+                test = evaluate(mode, clock, payload(full[0, NODES], full[0, PORTS], full[1:, PORTS]), item)
                 want = observe(full)
                 if test is not None:
                     result = contrast(test, want)
@@ -177,7 +187,7 @@ def main():
                 stride = clock // PILOT_RATE
                 stage_rows = (2 * stride * np.arange(frames * 2)[:, None] + [2 * stride // 3, 2 * stride])
                 assert stride % 3 == 0
-                coarse = evaluate("split", PILOT_RATE, payload(full[0, NODES], full[0, PORTS],
+                coarse = evaluate(mode, PILOT_RATE, payload(full[0, NODES], full[0, PORTS],
                                   full[stage_rows[:, :, None], PORTS]), item)
                 if coarse is not None:
                     item["coarse_diagnostic"] = contrast(coarse[::2], want[::2 * stride])

@@ -36,6 +36,8 @@ pub(crate) struct Stage {
     pub(crate) jacobian: [[f64; N]; N],
     pub(crate) charge: [f64; N],
     pub(crate) mass: [[f64; N]; N],
+    base_charge: f64,
+    base_mass: f64,
 }
 
 pub(crate) fn stage(old: State, state: State, u: Drive) -> Result<Stage, StepError> {
@@ -117,40 +119,114 @@ pub(crate) fn stage(old: State, state: State, u: Drive) -> Result<Stage, StepErr
         jacobian,
         charge,
         mass,
+        base_charge: q25_charge[0],
+        base_mass: q25_mass[0][0],
     })
 }
 
-fn evaluate(
+// The x23 row is linear at both Radau stages. Eliminate its
+// voltages from the solve while carrying C4 from the previous state.
+struct Plate {
+    inverse: [[f64; 2]; 2],
+    slope: [[f64; 2]; 2],
+}
+
+impl Plate {
+    fn new(inv: f64) -> Result<Self, StepError> {
+        let beta = R28 * C4 * inv;
+        let determinant = 1. + beta * (4. + 6. * beta);
+        if !determinant.is_finite() {
+            return Err(StepError::InvalidInput);
+        }
+        let inverse = [
+            [(1. + 2.5 * beta) / determinant, -0.5 * beta / determinant],
+            [4.5 * beta / determinant, (1. + 1.5 * beta) / determinant],
+        ];
+        let slope = std::array::from_fn(|i| {
+            std::array::from_fn(|j| beta * (B[i][0] * inverse[0][j] + B[i][1] * inverse[1][j]))
+        });
+        Ok(Self { inverse, slope })
+    }
+
+    fn readout(&self, old: State, trial: &mut [State; 2], drive: [Drive; 2]) {
+        let c4 = old.nodes[4] - old.nodes[0];
+        let rhs: [f64; 2] = std::array::from_fn(|i| drive[i].x17 - trial[i].nodes[0] - c4);
+        for (i, s) in trial.iter_mut().enumerate() {
+            let moved = self.inverse[i][0] * rhs[0] + self.inverse[i][1] * rhs[1];
+            s.nodes[4] = s.nodes[0] + c4 + moved;
+        }
+    }
+}
+
+fn evaluate<const DIM: usize, const SIZE: usize>(
     old: State,
-    trial: [State; 2],
+    mut trial: [State; 2],
     drive: [Drive; 2],
     inv: f64,
-) -> Result<([State; 2], [f64; PAIR], [[f64; PAIR]; PAIR]), StepError> {
+    plate: Option<&Plate>,
+) -> Result<([State; 2], [f64; SIZE], [[f64; SIZE]; SIZE]), StepError> {
+    if let Some(plate) = plate {
+        plate.readout(old, &mut trial, drive);
+    }
     let stage = [
         stage(old, trial[0], drive[0])?,
         stage(old, trial[1], drive[1])?,
     ];
     let residual = std::array::from_fn(|k| {
-        let (i, r) = (k / N, k % N);
-        stage[i].current[r] + inv * (B[i][0] * stage[0].charge[r] + B[i][1] * stage[1].charge[r])
+        let (i, r) = (k / DIM, k % DIM);
+        if plate.is_some() && r == 0 {
+            let c4_current = (stage[i].state.nodes[4] - drive[i].x17) / R28;
+            stage[i].current[r]
+                + c4_current
+                + inv * (B[i][0] * stage[0].base_charge + B[i][1] * stage[1].base_charge)
+        } else {
+            stage[i].current[r]
+                + inv * (B[i][0] * stage[0].charge[r] + B[i][1] * stage[1].charge[r])
+        }
     });
     let jacobian = std::array::from_fn(|k| {
-        let (i, r) = (k / N, k % N);
+        let (i, r) = (k / DIM, k % DIM);
         std::array::from_fn(|l| {
-            let (j, c) = (l / N, l % N);
+            let (j, c) = (l / DIM, l % DIM);
             let dc = if i == j { stage[i].jacobian[r][c] } else { 0. };
-            dc + inv * B[i][j] * stage[j].mass[r][c]
+            if let Some(plate) = plate.filter(|_| r == 0 && c == 0) {
+                dc + inv * B[i][j] * stage[j].base_mass + plate.slope[i][j] / R28
+            } else {
+                dc + inv * B[i][j] * stage[j].mass[r][c]
+            }
         })
     });
     Ok((stage.map(|s| s.state), residual, jacobian))
 }
 
 pub fn step(old: State, drive: [Drive; 2], h: Option<f64>) -> Result<[State; 2], StepError> {
+    solve::<N, PAIR>(old, drive, h)
+}
+
+pub fn condensed_step(
+    old: State,
+    drive: [Drive; 2],
+    h: Option<f64>,
+) -> Result<[State; 2], StepError> {
+    solve::<4, 8>(old, drive, h)
+}
+
+fn solve<const DIM: usize, const SIZE: usize>(
+    old: State,
+    drive: [Drive; 2],
+    h: Option<f64>,
+) -> Result<[State; 2], StepError> {
     let inv = h.map_or(0., |h| h.recip());
     if !inv.is_finite() || inv < 0. {
         return Err(StepError::InvalidInput);
     }
-    let mut trial = evaluate(old, [old; 2], drive, inv)?;
+    let plate = if DIM < N {
+        Some(Plate::new(inv)?)
+    } else {
+        None
+    };
+    let evaluate = |states| evaluate::<DIM, SIZE>(old, states, drive, inv, plate.as_ref());
+    let mut trial = evaluate([old; 2])?;
     for _ in 0..20 {
         let (states, residual, jacobian) = trial;
         let change = Lu::factor(jacobian)?.solve(residual)?;
@@ -162,10 +238,10 @@ pub fn step(old: State, drive: [Drive; 2], h: Option<f64>) -> Result<[State; 2],
         for half in 0..12 {
             let scale = 0.5_f64.powi(half);
             let mut proposal = states;
-            for k in 0..PAIR {
-                proposal[k / N].nodes[k % N] -= scale * change[k];
+            for k in 0..SIZE {
+                proposal[k / DIM].nodes[k % DIM] -= scale * change[k];
             }
-            if let Ok(next) = evaluate(old, proposal, drive, inv) {
+            if let Ok(next) = evaluate(proposal) {
                 if maximum(&next.1) < error {
                     accepted = Some(next);
                     break;
