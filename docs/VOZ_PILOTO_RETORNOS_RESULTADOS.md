@@ -725,3 +725,56 @@ modelo de conmutación y de los puertos cargados. Los
 ocho ticks quedan como referencia del biestable. El
 contraste de R59/R60 y J7, el plazo de la voz completa
 y la prueba en Desktop corresponden al candidato acoplado.
+
+## Generación de corriente de ataque desde los colectores
+
+Los transistores PNP de ataque toman los colectores x26
+y x40 y el voltaje instantáneo de C2 o C5. El modelo
+devuelve la corriente que entra a cada capacitor y la
+que vuelve al colector por 3,3 kΩ. Se eliminan x6/x7/x8
+y x43/x44 de las incógnitas externas. Se mantienen
+la fuente de 9,3 V, el resistor de base de 560 Ω y
+el camino de 1,1 kΩ o 100 Ω hacia el capacitor. Los
+valores proceden de los [stamps del gatillo cargado](../tools/rf_d_pilot_trigger.rs)
+de la revisión CA3046 de la [voz de referencia](CONTORNOS_CADENA_PROTOCOLO.md).
+
+El transporte nominal conserva la juntura inversa
+también en saturación. Despejar la corriente directa
+a partir del colector convierte la ecuación de base
+en una raíz escalar monótona. Su variable es el logit
+de la posición del colector entre el límite inferior
+del capacitor y el límite de saturación. Newton con
+bracket tiene un máximo de 16 iteraciones y rechaza
+entradas fuera de 0–9,3 V en el colector del biestable
+y 0–8 V en C2/C5. El dominio corresponde a los
+dispositivos nominales a 298,15 K y al ajuste nominal
+de ambos ataques.
+
+El barrido dio un error KCL máximo de 3,39 fA en
+12.231 puntos por celda. Con los colectores y
+capacitores de la referencia fina, el peor error
+de las corrientes devueltas fue 1,22 fA. Proyectar
+esas dos cargas generadas a 96 kHz conservó los
+resultados de C2/C5 en las tres ventanas. Retener
+un voltaje de ataque por paso excedió el límite de
+2 nA al liberar KEY en la negativa y durante el
+cruce positivo. [Contraste de las dos celdas](../evidence/rf_d_pilot_timer_rc03.json).
+
+La actualización a reloj fijo retiene la corriente de
+ataque, evaluada con el estado propio de C2/C5, y
+conserva las resistencias de los otros dos puertos de
+cada capacitor. El banco impone esos cuatro puertos
+y entrega los colectores al inicio de cada paso de
+96 kHz. Pasaron ambos flancos negativos. El C5 positivo
+también pasó, pero el error de C2 en esa ventana fue
+1,052 mV al retener la corriente a través de la caída
+del camino de ataque de volumen.
+
+Los dos caminos de ataque más C2/C5 tardaron 63,3 µs
+de mediana y 90,7 µs de máximo en 2.000 bloques de
+128 frames. Se conserva la reproducción exacta del
+rechazo positivo. Queda modelar la carga integrada
+durante la caída del ataque de volumen, contrastar
+el evento del biestable y cerrar R59/R60 y J7 antes
+de medir la voz completa y probar en Desktop.
+[Banco a 96 kHz](../evidence/rf_d_pilot_timer_rc04.json).

@@ -68,3 +68,40 @@ impl Step {
             .sum()
     }
 }
+
+/// Clock update with the attack branch expressed as a held current.
+/// The two remaining paths keep their physical resistances.
+pub struct CurrentStep {
+    conductance: [[f64; 2]; 2],
+    amp_to_volt: [f64; 2],
+}
+
+impl CurrentStep {
+    pub fn new(seconds: f64) -> Self {
+        let conductance =
+            RESISTANCE_OHM.map(|[_, decay, follower]| [decay.recip(), follower.recip()]);
+        let amp_to_volt = conductance.map(|[decay, follower]| {
+            let total = decay + follower;
+            -(-total * seconds / CAPACITANCE_F).exp_m1() / total
+        });
+        Self {
+            conductance,
+            amp_to_volt,
+        }
+    }
+
+    pub fn advance(
+        &self,
+        capacitor_v: [f64; 2],
+        attack_a: [f64; 2],
+        ports_v: [[f64; 2]; 2],
+    ) -> [f64; 2] {
+        std::array::from_fn(|i| {
+            let v = capacitor_v[i];
+            let [decay, follower] = ports_v[i];
+            let [g_decay, g_follower] = self.conductance[i];
+            let current = attack_a[i] + g_decay * (decay - v) + g_follower * (follower - v);
+            v + self.amp_to_volt[i] * current
+        })
+    }
+}

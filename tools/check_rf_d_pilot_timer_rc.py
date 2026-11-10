@@ -1,4 +1,5 @@
 """Contrast the fixed-cost C2/C5 update with the full circuit, at imposed loads."""
+import argparse
 import os
 import subprocess
 import traceback
@@ -13,6 +14,11 @@ OWN = "tools/check_rf_d_pilot_timer_rc.py"
 MODEL = "tools/rf_d_pilot_timer_rc.rs"
 PROBE = "tools/rf_d_pilot_timer_rc_probe.rs"
 DOC = "docs/VOZ_PILOTO_RETORNOS_PROTOCOLO.md"
+ATTACK = "tools/rf_d_pilot_attack_cell.rs"
+ATTACK_PROBE = "tools/rf_d_pilot_attack_cell_probe.rs"
+ATTACK_INPUTS = [[26, 5], [40, 38]]
+ATTACK_BASES = [6, 43]
+ATTACK_COLLECTOR_OHM = [1100., 100.]
 TIMER_NODES = [5, 38]
 LOAD_NODES = [[8, 11, 0], [44, 47, 29]]
 OHMS = np.array([[1_000, 10_000, 10_000], [100, 1_000, 10_000]])
@@ -26,14 +32,16 @@ def fixture(first, ticks, loads):
     return np.r_[first, np.column_stack((ticks, loads.reshape(-1, 6))).ravel()].astype("<f8").tobytes()
 
 
-def project_loads(stages):
-    """Form six effective hold voltages per 96 kHz interval from reference loads."""
+def project_loads(stages, first_path=0):
+    """Project the selected load ports with their summed conductance."""
+    stage_values = stages[1:, np.array(LOAD_NODES)[:, first_path:]]
+    conductance = (1. / OHMS[:, first_path:]).sum(axis=1)
     steps = HALF_FRAME_TICKS // FINE_TICKS
-    x = (1. / OHMS).sum(axis=1) * FINE_TICKS / (10e-6 * 48_000 * 4096)
+    x = conductance * FINE_TICKS / (10e-6 * 48_000 * 4096)
     # The original fine oracle uses two-stage Radau. Its final row weights
     # the two load stages in the ratio 4.5:(1.5+x) for this linear network.
     w1 = 4.5 / (6. + x)
-    stage_loads = stages[1:, LOAD_NODES].reshape(-1, steps, 2, 2, 3)
+    stage_loads = stage_values.reshape(-1, steps, 2, 2, 3 - first_path)
     local = w1[:, None] * stage_loads[:, :, 0] + (1. - w1[:, None]) * stage_loads[:, :, 1]
     age = np.arange(steps - 1, -1, -1)
     weights = np.exp(-age[:, None] * x)
@@ -49,10 +57,14 @@ def replay(run, target, nodes, indices, projected=None):
     data = fixture(np.r_[timers[0], loads[0].ravel()], FINE_TICKS * np.diff(indices),
                    projected if held else loads[1:])
     cmd = [target, "held"] if held else [target]
+    return timer_result(run, cmd, data, timers[1:])
+
+
+def timer_result(run, cmd, data, expected):
     raw = run(cmd, data)
     got = np.frombuffer(raw, "<f8").reshape(-1, 2)
-    assert got.shape == timers[1:].shape and np.isfinite(got).all()
-    error = abs(got - timers[1:])
+    assert got.shape == expected.shape and np.isfinite(got).all()
+    error = abs(got - expected)
     peak = error.max(axis=0)
     # The reference loads are imposed. This reports the change in the six
     # resistor currents due to the timer update with those loads held equal.
@@ -66,17 +78,72 @@ def replay(run, target, nodes, indices, projected=None):
     return item
 
 
+def current_fixture(initial, inputs):
+    return np.r_[initial, inputs.ravel()].astype("<f8").tobytes()
+
+
+def attack_fixture(nodes):
+    return nodes[:, ATTACK_INPUTS].astype("<f8").tobytes()
+
+
+def attack_results(run, target, stages):
+    data = attack_fixture(stages)
+    raw = run([target], data)
+    ports = np.frombuffer(raw, "<f8").reshape(-1, 2, 4)
+    assert len(ports) == len(stages) and np.isfinite(ports).all()
+    timer = stages[:, TIMER_NODES]
+    port = stages[:, np.array(LOAD_NODES)[:, 0]]
+    base = stages[:, ATTACK_BASES]
+    control = stages[:, np.array(ATTACK_INPUTS)[:, 0]]
+    ref = np.stack((base, port, (port - timer) / OHMS[:, 0],
+                    (base - control) / 3300.), axis=2)
+    peak = abs(ports - ref).max(axis=0)
+    passes = bool(peak[:, :2].max() <= TIMER_LIMIT_V and peak[:, 2:].max() <= LOAD_LIMIT_A)
+    item = dict(passed=passes, stages=len(ports), max_error=peak.tolist(),
+                input_sha256=c.digest(data), output_sha256=c.digest(raw))
+    if not passes:
+        assert run([target], data) == raw
+        item["unchanged_replay"] = True
+    return ports, item
+
+
+def attack_sweep(run, target):
+    collector, timer = np.meshgrid(np.linspace(0., 9.3, 151), np.linspace(0., 8., 81))
+    inputs = np.tile(np.column_stack((collector.ravel(), timer.ravel())), (1, 2))
+    data = inputs.astype("<f8").tobytes()
+    raw = run([target], data)
+    base, timer_port, into_timer, into_latch = np.frombuffer(raw, "<f8").reshape(-1, 2, 4).transpose(2, 0, 1)
+    collector = collector.reshape(-1, 1)
+    timer = timer.reshape(-1, 1)
+    junction_collector = timer + ATTACK_COLLECTOR_OHM * into_timer
+    vt = 1.380649e-23 * 298.15 / 1.602176634e-19
+    forward = 1e-14 * np.expm1((9.3 - base) / vt)
+    reverse = 1e-14 * np.expm1((junction_collector - base) / vt)
+    base_kcl = (base - 9.3) / 560. + into_latch - forward / 100. - reverse / 5.
+    collector_kcl = into_timer - forward + 1.2 * reverse
+    port_kcl = (timer_port - timer) / OHMS[:, 0] - into_timer
+    latch_kcl = (base - collector) / 3300. - into_latch
+    peak = [float(abs(x).max()) for x in (base_kcl, collector_kcl, port_kcl, latch_kcl)]
+    return dict(passed=max(peak) <= 2e-13, points_per_cell=len(inputs), max_kcl_a=peak,
+                input_sha256=c.digest(data), output_sha256=c.digest(raw))
+
+
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--attack-cells", action="store_true",
+                        help="generate the attack branches from latch and timer voltages")
+    args = parser.parse_args()
     assert c.AREA.is_dir() and not list(c.AREA.iterdir())
     seq = 1
     while (out := c.ROOT / f"evidence/rf_d_pilot_timer_rc{seq:02}.json").exists():
         seq += 1
+    added_sources = (ATTACK, ATTACK_PROBE) if args.attack_cells else ()
     sources = Sources((*c.ALL_SOURCES, c.OWN, c.CANDIDATE, c.PROBE, c.PORTS,
-                       "tools/rf_d_pilot_step_profile.rs", OWN, MODEL, PROBE, DOC))
+                       "tools/rf_d_pilot_step_profile.rs", OWN, MODEL, PROBE, DOC, *added_sources))
     report = dict(passed=False, coupled=False, rack_integrated=False, clock_hz=96_000,
                   timer_nodes=TIMER_NODES, load_nodes=LOAD_NODES, load_ohms=OHMS.tolist(),
                   timer_limit_v=TIMER_LIMIT_V, load_limit_a=LOAD_LIMIT_A,
-                  windows={}, **sources.fields(), compiler_sha256=c.sha(Path(c.COMPILER)),
+                  attack_cells=args.attack_cells, windows={}, **sources.fields(), compiler_sha256=c.sha(Path(c.COMPILER)),
                   library_sha256=c.sha(c.LIB))
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
 
@@ -102,6 +169,10 @@ def main():
              "--cfg", "pilot_loaded_filter", "-A", "dead_code", c.component(kernel),
              "--extern", f"rf_d_circuit={c.LIB}", "-o", exe])
         run([*build, "-A", "dead_code", c.ROOT / PROBE, "-o", timer])
+        if args.attack_cells:
+            attack = c.AREA / "pilot-attack-cells.exe"
+            run([*build, c.ROOT / ATTACK_PROBE, "-o", attack])
+            report["attack_sweep"] = attack_sweep(run, attack)
         anchor = c.AREA / "timer-anchor.bin"
         archived = c.read(c.CLOCK)["trials"]["positive"]["64"]["expected_brackets"]
         for label, branch, start, frames, key in c.WINDOWS:
@@ -124,20 +195,59 @@ def main():
             results = {mode: replay(run, timer, nodes, indices) for mode, indices in modes.items()}
             projected = project_loads(stages)
             results["projected_hold"] = replay(run, timer, nodes, regular, projected)
-            report["windows"][label] = dict(anchor_sha256=c.sha(anchor), reference_sha256=c.digest(raw),
+            item = report["windows"][label] = dict(anchor_sha256=c.sha(anchor), reference_sha256=c.digest(raw),
                                              reference_events=events, key_v=key, start_frame=start,
                                              frames=frames, modes=results)
-            print(label, results, flush=True)
+            if args.attack_cells:
+                ports, item["attack_ports"] = attack_results(run, attack, stages)
+                mixed = stages.copy()
+                mixed[:, np.array(LOAD_NODES)[:, 0]] = ports[:, :, 1]
+                generated = project_loads(mixed)
+                results["generated_attack_projection"] = replay(run, timer, nodes, regular, generated)
+                # A separate check on a causal held boundary per interval.
+                # Only the two generated attack voltages differ from the
+                # ideal projection of the original six loads.
+                held = projected.copy()
+                held[:, :, 0] = ports[regular[:-1] * 2, :, 1]
+                results["generated_attack_held_at_start"] = replay(run, timer, nodes, regular, held)
+                controls = nodes[regular[:-1]][:, np.array(ATTACK_INPUTS)[:, 0], None]
+                inputs = np.concatenate((controls, project_loads(stages, first_path=1)), axis=2)
+                initial = nodes[0, TIMER_NODES]
+                data = current_fixture(initial, inputs)
+                results["generated_attack_current"] = timer_result(
+                    run, [attack, "current"], data, nodes[regular[1:]][:, TIMER_NODES])
+                print(label, item["attack_ports"], results["generated_attack_projection"],
+                      results["generated_attack_current"], flush=True)
+            else:
+                print(label, results, flush=True)
             if branch == "positive":
                 loads = nodes[regular][:, LOAD_NODES]
-                inputs = np.tile(projected, (256 // len(projected) + 1, 1, 1))[:256]
+                bench_ports = np.tile(projected, (256 // len(projected) + 1, 1, 1))[:256]
                 data = fixture(np.r_[nodes[0, TIMER_NODES], loads[0].ravel()],
-                               np.full(256, HALF_FRAME_TICKS), inputs)
+                               np.full(256, HALF_FRAME_TICKS), bench_ports)
                 measurements = list(map(int, run([timer, "bench-held"], data).decode().strip().split(",")))
+                if args.attack_cells:
+                    branch_data = np.tile(nodes[regular][:-1, ATTACK_INPUTS], (26, 1, 1))[:256].astype("<f8").tobytes()
+                    cell_cost = list(map(int, run([attack, "bench"], branch_data).decode().strip().split(",")))
+                    report["attack_benchmark"] = dict(
+                        zip(("blocks", "median_ns", "p99_ns", "max_ns"), cell_cost),
+                        host_frames=128, input_sha256=c.digest(branch_data), includes_audio=False)
+                    bench_data = current_fixture(initial, np.tile(inputs, (26, 1, 1))[:256])
+                    combined = list(map(int, run([attack, "bench-current"], bench_data).decode().strip().split(",")))
+                    report["attack_timer_benchmark"] = dict(
+                        zip(("blocks", "median_ns", "p99_ns", "max_ns"), combined),
+                        host_frames=128, input_sha256=c.digest(bench_data), includes_audio=False)
                 report["isolated_timer_benchmark"] = dict(
                     zip(("blocks", "median_ns", "p99_ns", "max_ns"), measurements),
                     host_frames=128, input_sha256=c.digest(data), includes_audio=False)
         report["passed"] = all(w["modes"]["projected_hold"]["passed"] for w in report["windows"].values())
+        if args.attack_cells:
+            report["passed"] &= report["attack_sweep"]["passed"] and all(
+                w["attack_ports"]["passed"] and w["modes"]["generated_attack_projection"]["passed"]
+                for w in report["windows"].values())
+            report["passed"] &= all(
+                report["windows"][name]["modes"]["generated_attack_current"]["passed"]
+                for name in ("negative_key_on", "negative_key_off"))
         sources.unchanged()
     except Exception:
         report["failure"] = traceback.format_exc()
