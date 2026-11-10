@@ -1,0 +1,155 @@
+"""Validate the C7-clocked negative timer carry with held-out C2/C5 loads."""
+import argparse
+import os
+import subprocess
+import traceback
+from pathlib import Path
+
+import numpy as np
+
+from affine_evidence import Sources
+import check_rf_d_pilot_contours as c
+from check_rf_d_pilot_timer_rc import ATTACK, ATTACK_PROBE, MODEL, OHMS, TIMER_NODES, prepare_reference
+from rf_d_pilot_negative_timers import family, key_side, run as render, trace
+
+CALIBRATION = ((0., 0.), (.01, 0.), (-.01, 0.), (0., .01), (0., -.01))
+RESERVES = ((0., 0.), (.005, -.005), (-.005, .005))
+SOURCE_NAMES = (
+    "tools/check_rf_d_pilot_negative_timers.py", "tools/rf_d_pilot_negative_timers.py",
+    "tools/rf_d_pilot_timer_carry.py", "tools/rf_d_pilot_precursor.py",
+    "tools/check_rf_d_pilot_timer_rc.py", ATTACK, ATTACK_PROBE, MODEL,
+)
+NATIVE = "tools/rf_d_pilot_negative_timers_probe.rs"
+NATIVE_SOURCES = (NATIVE, "tools/rf_d_pilot_negative_timers.rs", "tools/rf_d_pilot_timer_carry.rs",
+                  "tools/rf_d_pilot_c4_clock.rs", "tools/rf_d_pilot_crossing.rs",
+                  "tools/rf_d_pilot_precursor.rs", "tools/latch_charge_driver.rs")
+
+
+def compare(evaluate, model, stages, seed, key, frames, native=None):
+    reference = stages[::1536]
+    output = render(evaluate, model, reference[0], seed, key, frames)
+    if output is None:
+        return dict(passed=False, reason="outside negative C7 path")
+    timers, nodes, c7 = output
+    attack = evaluate(nodes[:, 1:3], timers)
+    passive = (nodes[:, 5:].reshape(-1, 2, 2) - timers[:, :, None]) / OHMS[:, 1:]
+    currents = np.concatenate((attack[..., None], passive), axis=2)
+    wanted = (reference[:, [[8, 11, 0], [44, 47, 29]]] - reference[:, TIMER_NODES, None]) / OHMS
+    # Compare the first resolved 96 kHz boundary and all later ones.
+    current = abs(currents[1:] - wanted[1:]).max(axis=0)
+    timer = abs(timers - reference[:, TIMER_NODES]).max(axis=0)
+    c7_error = float(abs(c7 - reference[:, 21]).max())
+    x22_error = float(abs(key_side(c7, key)[1:] - reference[1:, 22]).max())
+    quiet = bool((nodes[:, 1] > nodes[:, 3]).all() and (nodes[:, 2] > nodes[:, 4]).all())
+    item = dict(passed=bool(quiet and timer.max() <= 2e-6 and current.max() <= 2e-9 and c7_error <= 20e-6),
+                no_crossing=quiet, max_timer_error_v=timer.tolist(), max_current_error_a=current.tolist(),
+                max_c7_error_v=c7_error, max_key_port_error_v=x22_error,
+                output_sha256=c.digest(np.column_stack((timers, c7, nodes)).astype("<f8").tobytes()))
+    if native is not None:
+        run, target = native
+        direction, progress, center, linear, quadratic = model
+        table = np.column_stack((progress, center.T, linear[0].T, linear[1].T,
+                                 quadratic[0].T, quadratic[1].T))
+        initial = reference[0, [5, 38, 21, 26, 28, 40, 42]]
+        data = np.r_[direction, seed[TIMER_NODES], table.ravel(), initial, key, frames * 2].astype("<f8").tobytes()
+        raw = run([target], data)
+        assert raw == run([target], data)
+        got = np.frombuffer(raw, "<f8").reshape(-1, 10)
+        expected = np.column_stack((timers, c7, key_side(c7, key), currents.reshape(-1, 6)))
+        assert got.shape == expected.shape and np.isfinite(got).all()
+        delta = abs(got - expected).max(axis=0)
+        assert delta[:4].max() <= 1e-12 and delta[4:].max() <= 1e-14
+        solved_current = abs(got[1:, 4:].reshape(-1, 2, 3) - wanted[1:]).max()
+        assert solved_current <= 2e-9
+        assert abs(got[:, :2] - reference[:, TIMER_NODES]).max() <= 2e-6
+        timing = list(map(int, run([target, "bench"], data).decode().strip().split(",")))
+        item["native"] = dict(passed=True, max_difference_python=delta.tolist(),
+                              input_sha256=c.digest(data), output_sha256=c.digest(raw),
+                              timing=dict(zip(("edges", "median_ns", "p99_ns", "max_ns"), timing)))
+    return item
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--native", action="store_true", help="verify and time the bounded Rust C7 clock")
+    args = parser.parse_args()
+    assert c.AREA.is_dir() and not list(c.AREA.iterdir())
+    seq = 1
+    while (out := c.ROOT / f"evidence/rf_d_pilot_negative_timers{seq:02}.json").exists():
+        seq += 1
+    native_sources = NATIVE_SOURCES if args.native else ()
+    sources = Sources((*c.ALL_SOURCES, c.OWN, c.CANDIDATE, c.PROBE, c.PORTS,
+                       "tools/rf_d_pilot_step_profile.rs", *SOURCE_NAMES, *native_sources))
+    report = dict(passed=False, rack_integrated=False, clock_hz=96_000, native=args.native, edges={},
+                  **sources.fields(), compiler_sha256=c.sha(Path(c.COMPILER)), library_sha256=c.sha(c.LIB))
+    env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
+
+    def run(command, data=None):
+        proc = subprocess.run(list(map(str, command)), cwd=c.ROOT, env=env, input=data,
+                              capture_output=True, timeout=240)
+        assert proc.returncode == 0, proc.stderr.decode(errors="replace")
+        return proc.stdout
+
+    try:
+        refs, report["reference_inputs"] = c.references()
+        oracle, build = prepare_reference(run, report)
+        attack = c.AREA / "pilot-negative-attack.exe"
+        run([*build, "-A", "dead_code", c.ROOT / ATTACK_PROBE, "-o", attack])
+        native = None
+        if args.native:
+            executable = c.AREA / "pilot-negative-timers.exe"
+            run([*build, "-A", "dead_code", c.ROOT / NATIVE, "--extern",
+                 f"rf_d_circuit={c.LIB}", "-o", executable])
+            native = run, executable
+        anchor = c.AREA / "negative-timers.bin"
+
+        def evaluate(latch, timer):
+            data = np.stack((latch, timer), axis=-1).astype("<f8").tobytes()
+            result = np.frombuffer(run([attack], data), "<f8").reshape(-1, 2, 4)
+            return result[:, :, 2]
+
+        def capture(branch, start, frames, key, offset):
+            phase, _, _, state = refs[branch][1][start]
+            state = state.copy()
+            state[0, TIMER_NODES] += offset
+            anchor.write_bytes(np.asarray(np.r_[state.ravel(), phase], "<f8").tobytes())
+            raw = run([oracle, "contour-capture-refined", anchor, start, frames, key])
+            stages = np.frombuffer(raw, "<f8").reshape(-1, c.N)
+            assert stages.shape[0] == 1 + frames * 3072 and np.isfinite(stages).all()
+            return stages, dict(anchor_sha256=c.sha(anchor), reference_sha256=c.digest(raw), offset_v=offset,
+                                start_frame=start, frames=frames, key_v=key)
+
+        for label, branch, start, frames, key in c.WINDOWS[1:]:
+            item = report["edges"][label] = dict(calibration=[], trials=[])
+            curves = []
+            for offset in CALIBRATION:
+                stages, meta = capture(branch, start, frames + 1, key, offset)
+                curves.append(trace(stages))
+                item["calibration"].append(meta)
+                if offset == (0., 0.):
+                    seed = stages[0].copy()
+            model = family(curves)
+            for offset in RESERVES:
+                stages, meta = capture(branch, start, frames, key, offset)
+                trace(stages)  # Preserve the reference branch on the held-out scene.
+                result = compare(evaluate, model, stages, seed, key, frames)
+                assert result == compare(evaluate, model, stages, seed, key, frames)
+                if native is not None:
+                    result = compare(evaluate, model, stages, seed, key, frames, native)
+                item["trials"].append(dict(meta, **result, unchanged_replay=True))
+                print(label, offset, result, flush=True)
+        report["passed"] = all(trial["passed"] for edge in report["edges"].values() for trial in edge["trials"])
+        sources.unchanged()
+    except Exception:
+        report["failure"] = traceback.format_exc()
+        raise
+    finally:
+        for path in c.AREA.iterdir():
+            assert path.is_file() and path.resolve().parent == c.AREA.resolve()
+            path.unlink()
+        c.write(out, report)
+    raise SystemExit(0 if report["passed"] else 1)
+
+
+if __name__ == "__main__":
+    main()

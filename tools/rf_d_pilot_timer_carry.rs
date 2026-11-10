@@ -43,7 +43,7 @@ pub enum Sample {
     Event { seconds: f64, timers: [f64; 2] },
 }
 
-fn weights(duration: f64) -> ([f64; 2], [f64; 2]) {
+pub(crate) fn weights(duration: f64) -> ([f64; 2], [f64; 2]) {
     let x = RATES.map(|rate| rate * duration);
     let moved = x.map(|v| -(-v).exp_m1());
     let w = std::array::from_fn(|i| {
@@ -57,13 +57,17 @@ fn ports(state: &[f64; STATE]) -> Ports {
     [[state[10], state[11]], [state[12], state[13]]]
 }
 
-fn attack(state: &State, timer: [f64; 2]) -> Option<[f64; 2]> {
+fn latch(state: &State) -> [f64; 2] {
+    [state[0], state[9]]
+}
+
+pub(crate) fn cell_attack(latch: [f64; 2], timer: [f64; 2]) -> Option<[f64; 2]> {
     Some([
         AttackCell::Volume
-            .evaluate(state[0], timer[0])?
+            .evaluate(latch[0], timer[0])?
             .into_timer_a,
         AttackCell::Filter
-            .evaluate(state[9], timer[1])?
+            .evaluate(latch[1], timer[1])?
             .into_timer_a,
     ])
 }
@@ -72,7 +76,14 @@ fn lerp(a: Ports, b: Ports, f: f64) -> Ports {
     std::array::from_fn(|i| std::array::from_fn(|k| a[i][k] + f * (b[i][k] - a[i][k])))
 }
 
-fn project(result: &mut Ports, from: Ports, to: Ports, begin: f64, end: f64, full: [f64; 2]) {
+pub(crate) fn project(
+    result: &mut Ports,
+    from: Ports,
+    to: Ports,
+    begin: f64,
+    end: f64,
+    full: [f64; 2],
+) {
     if end <= begin {
         return;
     }
@@ -85,10 +96,10 @@ fn project(result: &mut Ports, from: Ports, to: Ports, begin: f64, end: f64, ful
     }
 }
 
-fn continuous_step(
+pub(crate) fn continuous_step(
     timer: [f64; 2],
     left_attack: [f64; 2],
-    end: &State,
+    end: [f64; 2],
     duration: f64,
     passive: Ports,
 ) -> Option<[f64; 2]> {
@@ -96,7 +107,7 @@ fn continuous_step(
     let update = CurrentStep::new(duration);
     let mut predicted = update.advance(timer, left_attack, passive);
     for _ in 0..2 {
-        let right_attack = attack(end, predicted)?;
+        let right_attack = cell_attack(end, predicted)?;
         let mean =
             std::array::from_fn(|i| left_attack[i] + w[i] * (right_attack[i] - left_attack[i]));
         predicted = update.advance(timer, mean, passive);
@@ -156,7 +167,7 @@ impl<'a> Carry<'a> {
         Some(Self {
             clock,
             timers,
-            attack: attack(&initial, timers)?,
+            attack: cell_attack(latch(&initial), timers)?,
             previous_attack: None,
             slope: [[0.; 2]; 2],
             full: weights(PERIOD_S).0,
@@ -204,9 +215,10 @@ impl<'a> Carry<'a> {
         self.slope = slope;
         match step {
             Step::Boundary(state) => {
-                self.timers = continuous_step(self.timers, self.attack, &state, PERIOD_S, passive)?;
+                self.timers =
+                    continuous_step(self.timers, self.attack, latch(&state), PERIOD_S, passive)?;
                 self.previous_attack = Some(self.attack);
-                self.attack = attack(&state, self.timers)?;
+                self.attack = cell_attack(latch(&state), self.timers)?;
                 Some(Sample::Boundary)
             }
             Step::Guard(mut point, guard_s) => {
@@ -218,8 +230,13 @@ impl<'a> Carry<'a> {
                         let factor = full[i] / moved[i] * (RATES[i] * (PERIOD_S - guard_s)).exp();
                         passive[i].map(|v| v * factor)
                     });
-                    point.neighbors[3] =
-                        continuous_step(self.timers, self.attack, &guard, guard_s, guard_ports)?[0];
+                    point.neighbors[3] = continuous_step(
+                        self.timers,
+                        self.attack,
+                        latch(&guard),
+                        guard_s,
+                        guard_ports,
+                    )?[0];
                 } else {
                     point.neighbors[3] = self.timers[0];
                 }

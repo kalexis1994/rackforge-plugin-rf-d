@@ -1087,3 +1087,44 @@ medianas de 112,3–124,5 µs y un máximo de 198,9 µs.
 El banco no ejecuta la voz ni la salida de audio.
 Las anclas negativas no disparan el núcleo positivo.
 [Medición nativa](../evidence/rf_d_pilot_precursor11.json).
+
+### Rama negativa gobernada por C7
+
+Para los flancos negativos de KEY, la coordenada de
+memoria es el voltaje x21 de C7 de 100 nF. Se usa
+la KCL original con R55 de 47 kΩ desde x20 y el
+camino de 100 kΩ a x22. El puerto x22 se resuelve
+con el diodo de KEY y su corriente inversa.
+[Stamp del gatillo](../tools/rf_d_pilot_trigger.rs).
+
+La curva parametrizada por C7 genera los colectores
+de ataque y las cargas de decay y seguidores a partir
+de una sola semilla. C2 y C5 conservan sus voltajes y
+avanzan por sus corrientes. Se calibraron ambos
+sentidos de KEY con perturbaciones independientes de
+±10 mV en C2 y C5. Las reservas combinadas de ±5 mV
+se mantienen fuera de la calibración. La comparación
+abarca dos frames de host por caso a 48 kHz, con
+avance interno a 96 kHz. Se compara la corriente
+desde el primer borde resuelto después del flanco.
+
+Los seis casos conservaron el orden de ambos
+biestables. El peor error fue 2,04 nV en C2/C5,
+3,22 pA en sus corrientes y 15,01 nV en C7. Rust
+reprodujo los voltajes de C2/C5 y comparte con la
+rama positiva la actualización de corrientes y la
+proyección de cargas. En 2.000 repeticiones por
+caso, las medianas fueron 15,5–16,4 µs y el máximo
+fue 140,9 µs por flanco aislado. La medición incluye
+la inicialización y los cuatro intervalos internos
+del contraste. Queda validar R59/R60 y J7 en la
+voz acoplada y medir el plazo del bloque de audio.
+[Contraste de laboratorio](../evidence/rf_d_pilot_negative_timers01.json),
+[contraste y coste en Rust](../evidence/rf_d_pilot_negative_timers02.json).
+
+Al compartir la actualización de corrientes con el
+tramo de C7, la repetición positiva conservó la salida
+binaria de los seis recorridos y los ocho ticks. Las
+medianas fueron 112,6–124,4 µs y el máximo observado
+fue 605,1 µs, con un p99 de hasta 157,1 µs por caso.
+[Repetición con el actualizador compartido](../evidence/rf_d_pilot_precursor12.json).
