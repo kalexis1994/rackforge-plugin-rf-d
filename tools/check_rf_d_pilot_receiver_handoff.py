@@ -28,11 +28,14 @@ RATE = 96_000
 STEPS = 2 * HOST_FRAMES
 CHARGES = 17
 CHARGE_LIMIT_C = 1e-20
+TANGENT_ABSOLUTE = 1e-6
+TANGENT_RELATIVE = .001
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--branch", choices=("positive", "negative"), default="positive")
+    parser.add_argument("--tangents", action="store_true")
     args = parser.parse_args()
     negative = args.branch == "negative"
     center, limits = (CLOSED, CLOSED_RANGE) if negative else (OPEN, OPEN_RANGE)
@@ -43,13 +46,15 @@ def main():
         seq += 1
     extra_sources = (*CONTOUR_SOURCES, OFF_OWN, "tools/check_vco_family_voice_bus_cost.py") if negative else ()
     sources = Sources((*SOURCES, OWN, ANCHOR_SOURCE, "tools/check_rf_d_pilot_split_returns.py",
-                       "tools/affine_evidence.py", "tools/check_hybrid_voice.py", *extra_sources))
+                       "tools/affine_evidence.py", "tools/check_hybrid_voice.py",
+                       "tools/rf_d_reduced_engine_lu.rs", *extra_sources))
     report = dict(passed=False, native_receiver_realtime=False, rack_integrated=False,
                   contour_feedback=False, internal_rate_hz=RATE, frames=HOST_FRAMES,
                   warmup_frames=HOST_FRAMES, budget_ns=BUDGET_NS,
                   charge_limit_c=CHARGE_LIMIT_C, load_limit_v=LOAD_LIMIT_V,
                   branch=args.branch, bias_v=center, drive_range_v=limits,
                   normalized_defects=negative,
+                  port_tangents=args.tangents,
                   imposed_sources=("signal", "R59 voltage", "R60 voltage"),
                   **sources.fields(), compiler_sha256=sha(Path(COMPILER)), library_sha256=sha(LIB))
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
@@ -96,11 +101,16 @@ def main():
         checks = emit_data(bank, 1. / RATE, split=case, center=center, limits=limits,
                            split_ladder=True, normalize_defects=negative, state_transfer=True)
         report["maps"] = dict(checks=checks, sha256=sha(bank))
+        port_flags = []
+        if args.tangents:
+            code += ('pub use rf_d_circuit::StepError;\n'
+                     f'#[path = "{(ROOT / "tools/rf_d_reduced_engine_lu.rs").as_posix()}"] mod port_lu;\n')
+            port_flags = ["--cfg", "pilot_receiver_ports", "--extern", f"rf_d_circuit={LIB}"]
         src = emit("receiver-handoff.rs", code + f'#[path = "{(ROOT / PROBE).as_posix()}"] mod probe;\n'
                    "fn main() -> Result<(), Box<dyn std::error::Error>> { probe::main() }\n")
         exe = AREA / "receiver-handoff.exe"
         floats([*flags, "--cfg", "pilot_returns", "--cfg", "pilot_split_returns",
-                "--cfg", "pilot_receiver_handoff", "--cfg", "pilot_block_roots", src, "-o", exe], None)
+                "--cfg", "pilot_receiver_handoff", "--cfg", "pilot_block_roots", *port_flags, src, "-o", exe], None)
 
         fine, prefixes = {}, {}
         for factor in (4, 8):
@@ -153,6 +163,67 @@ def main():
                                 maximum_v=load_error.tolist(), closure_error_a=closure_error.tolist())
         report.update(input_sha256=digest(payload), output_sha256=digest(packed(resumed)), unchanged_replay=True)
 
+        if args.tangents:
+            tangent_raw = floats([exe, "electrical-resume-tangent-fd"], payload, repeat=True)
+            assert np.array_equal(tangent_raw[:CHARGES], charge)
+            tangent_rows = tangent_raw[CHARGES:].reshape(STEPS, 20)
+            assert tangent_rows[:, :8].tobytes() == rows.tobytes()
+            analytical, difference, half = (tangent_rows[:, offset:offset + 4].reshape(-1, 2, 2)
+                                           for offset in (8, 12, 16))
+
+            def tangent_error(candidate, wanted):
+                error = abs(candidate - wanted)
+                limit = TANGENT_ABSOLUTE + TANGENT_RELATIVE * abs(wanted)
+                return dict(passed=bool(np.all(error <= limit)), maximum=float(error.max()),
+                            maximum_scaled=float((error / limit).max()))
+
+            tangent = dict(absolute_limit=TANGENT_ABSOLUTE, relative_limit=TANGENT_RELATIVE,
+                           fixed_history=True, output_bit_exact=True, unchanged_replay=True,
+                           internal_difference=tangent_error(analytical, half),
+                           internal_refinement=tangent_error(difference, half),
+                           output_sha256=digest(packed(tangent_raw)))
+            oracle_tangents = {}
+            for factor, epsilon in ((4, 1e-5), (8, 1e-5), (8, 5e-6)):
+                jacobian = np.empty((2, 2))
+                fraction = (np.arange(factor)[:, None] + [1. / 3., 1.]) / factor
+                for column in range(2):
+                    endpoints = []
+                    for sign in (-1, 1):
+                        target = coarse[STEPS].copy()
+                        target[column + 1] += sign * epsilon
+                        stages = initial_drive + fraction[..., None] * (target - initial_drive)
+                        stages += [0., *center]
+                        reference = floats([oracle, RATE * factor, "split"],
+                                           packed(np.r_[snapshot, stages.ravel()])).reshape(-1, 6)[-1]
+                        endpoints.append(np.array([center[0] + target[1] - 68_000. * reference[4],
+                                                   center[1] + target[2] + 680. * reference[5]]))
+                    jacobian[:, column] = (endpoints[1] - endpoints[0]) / (2. * epsilon)
+                oracle_tangents[f"{factor}_{epsilon}"] = jacobian
+            coarse_jacobian = oracle_tangents["4_1e-05"]
+            fine_jacobian = oracle_tangents["8_1e-05"]
+            refined_jacobian = oracle_tangents["8_5e-06"]
+            tangent.update(oracle_difference=tangent_error(analytical[0], refined_jacobian),
+                           oracle_rate_refinement=tangent_error(coarse_jacobian, fine_jacobian),
+                           oracle_difference_refinement=tangent_error(fine_jacobian, refined_jacobian),
+                           first_analytical=analytical[0].tolist(),
+                           first_reference=refined_jacobian.tolist())
+            tangent["passed"] = all(tangent[key]["passed"] for key in
+                                     ("internal_difference", "internal_refinement", "oracle_difference",
+                                      "oracle_rate_refinement", "oracle_difference_refinement"))
+            measured = run([exe, "electrical-resume-tangent-bench", RATE], payload)
+            assert measured.returncode == 0, measured.stderr.decode(errors="replace")
+            tangent["timing"] = dict(zip(("blocks", "median_ns", "p99_ns", "max_ns", "allocations"),
+                                         map(int, measured.stdout.decode().strip().split(",")), strict=True))
+            measured_once = run([exe, "electrical-resume-tangent-once-bench", RATE], payload)
+            assert measured_once.returncode == 0, measured_once.stderr.decode(errors="replace")
+            tangent["one_query_per_block_timing"] = dict(zip(
+                ("blocks", "median_ns", "p99_ns", "max_ns", "allocations"),
+                map(int, measured_once.stdout.decode().strip().split(",")), strict=True))
+            report["tangents"] = tangent
+            report["native_tangent_realtime"] = (tangent["passed"] and tangent["timing"]["allocations"] == 0
+                                                   and tangent["timing"]["max_ns"] <= BUDGET_NS)
+            print("TANGENT", tangent, flush=True)
+
         continuous = floats([exe, "electrical-ports"], packed(coarse)).reshape(-1, 8)
         report["resume_vs_uninterrupted"] = compare(rows[:, :6], continuous[STEPS:, :6])
         zero_header = np.r_[case["DC"], 0., 0., 0.]
@@ -183,6 +254,8 @@ def main():
         report["timed_scope"] = "128-frame receiver continuation from imported state, excluding state import"
         report["passed"] = all(report[key]["passed"] for key in
                                ("charge", "refinement", "comparison", "loads", "resume_vs_uninterrupted"))
+        if args.tangents:
+            report["passed"] = report["passed"] and report["tangents"]["passed"]
         report["native_receiver_realtime"] = (report["passed"] and report["timing"]["allocations"] == 0
                                                and report["timing"]["max_ns"] <= BUDGET_NS)
         if not report["passed"]:

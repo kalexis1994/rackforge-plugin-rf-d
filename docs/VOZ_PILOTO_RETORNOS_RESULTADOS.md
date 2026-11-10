@@ -2180,3 +2180,45 @@ cero asignaciones. Ese máximo excedió el margen de
 campaña. La prueba conserva las fuentes impuestas
 y prepara la importación antes del cronómetro.
 [Continuidad negativa y exceso temporal](../evidence/rf_d_pilot_receiver_handoff02.json).
+
+
+### Trial y tangentes de carga del receptor rápido
+
+La interfaz entrega un estado candidato, sus puertos y
+las cuatro derivadas de base del VCA y TAIL respecto
+de las fuentes R59/R60. La historia anterior se copia
+y permanece fija durante el trial. El Jacobiano usa
+las 34 leyes completas y sus derivadas BE/BC. El
+llamador confirma el candidato después de cerrar sus
+puertos vecinos.
+
+En la rama positiva pasaron las diferencias centradas
+de 10/5 µV durante los 256 pasos internos. La mayor
+diferencia analítica frente a la perturbación del
+propio receptor fue 1,73e−10 V/V. La primera matriz
+pasó además contra el receptor nodal original con
+interpolación FOH y refinamiento 384/768 kHz. El
+máximo de ese contraste fue 5,58e−9 V/V, dentro del
+límite de 1e−6 V/V más 0,1 % de la referencia.
+Las dos derivadas directas iniciales fueron
+0,909366 V/V en la base del VCA y 0,315500 V/V
+en TAIL.
+
+Los ocho canales reprodujeron por bits la ruta que
+avanza sin solicitar las tangentes. Esa ruta conservó
+también los mismos bytes de entrada y salida de la
+transferencia positiva anterior. Los límites de J7,
+R59/R60 y conservación de las 17 memorias volvieron
+a pasar.
+
+En 64 bloques, consultar la matriz en cada paso tuvo
+mediana 2,987 ms y máximo 3,698 ms. Consultarla una
+vez al inicio del bloque tuvo mediana 1,054 ms y
+máximo 1,134 ms. Ambas mediciones tuvieron cero
+asignaciones. El control de avance ordinario dio
+1,077 ms de mediana y 1,240 ms de máximo en su
+pase separado. Estos tiempos cubren el receptor.
+La frecuencia de actualización de la tangente y
+el cierre dinámico con los contornos requieren
+validación conjunta.
+[Trial, derivadas y coste](../evidence/rf_d_pilot_receiver_handoff03.json).

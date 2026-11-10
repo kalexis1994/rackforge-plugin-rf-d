@@ -181,3 +181,41 @@ importación reconstruye el resto adimensional que usa
 ese mapa y todas las 17 memorias retenidas. Se aplican
 los mismos límites de carga, audio, retornos y tiempo,
 incluido el control que detecta un reinicio de memoria.
+
+
+## Tangentes de carga del receptor FOH
+
+El trial copia el estado anterior y entrega un candidato,
+los puertos y la matriz de derivadas de base del VCA y
+TAIL respecto de las dos tensiones de fuente R59/R60.
+La historia q, la entrada anterior y los defectos anteriores
+se mantienen fijos durante la diferenciación. El llamador
+puede confirmar el candidato después de cerrar sus vecinos.
+
+Para z = ZH·base + ZU·u − P·n(z), se factoriza
+J = I + P·diag(dn/dz), con las 34 leyes BE/BC completas.
+Cada columna resuelve J·dz/du = ZH·U1 + ZU. La derivada
+nodal es XQ·U1 + XU − XD·diag(dn/dz)·dz/du. Las dos
+filas de salida corresponden a base del VCA y TAIL.
+La entrada u está en voltios y la matriz se expresa en V/V.
+
+Contrastar las cuatro entradas de la matriz durante
+256 pasos internos desde un estado importado. Usar
+perturbaciones centradas de 10 y 5 µV, copiando la
+misma historia para ambos signos y cada fuente. Exigir
+el mismo audio y cargas por bits al solicitar la tangente.
+La primera matriz se compara además con el receptor
+nodal original a 384/768 kHz. En ese contraste se interpola
+la entrada dentro del intervalo FOH y se usa el mismo
+snapshot inicial. El límite para cada derivada es
+1e−6 V/V + 0,001·abs(derivada de referencia), tanto
+para el contraste como para los refinamientos de paso
+y perturbación. Los límites de audio y corriente previos
+se conservan.
+
+Medir aparte 64 bloques con consulta en cada paso y
+64 bloques con una consulta al inicio del bloque.
+Contar asignaciones y conservar los picos frente a
+1,333333… ms. Estas mediciones observan el coste de
+la interfaz. El cierre dinámico con los contornos debe
+validar la frecuencia de actualización de la tangente.

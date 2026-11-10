@@ -50,12 +50,15 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     if matches!(mode.as_str(), "electrical" | "electrical-ports" | "electrical-bench")
         || (cfg!(all(pilot_split_returns, pilot_receiver_handoff))
             && matches!(mode.as_str(), "electrical-resume" | "electrical-resume-bench"))
+        || (cfg!(all(pilot_split_returns, pilot_receiver_handoff, pilot_receiver_ports))
+            && matches!(mode.as_str(), "electrical-resume-tangent" | "electrical-resume-tangent-fd"
+                | "electrical-resume-tangent-bench" | "electrical-resume-tangent-once-bench"))
     {
         let mut raw = Vec::new();
         std::io::stdin().lock().read_to_end(&mut raw)?;
         let mut state = plant::State::dc(1).unwrap();
         #[cfg(all(pilot_split_returns, pilot_receiver_handoff))]
-        if matches!(mode.as_str(), "electrical-resume" | "electrical-resume-bench") {
+        if mode.starts_with("electrical-resume") {
             const HEADER: usize = 139 * 8;
             assert!(raw.len() >= HEADER);
             let read = |k| f64::from_le_bytes(raw[8 * k..8 * (k + 1)].try_into().unwrap());
@@ -66,7 +69,7 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
                 Drive { volume_delta_v: read(137), filter_delta_v: read(138) },
             ).map_err(|e| format!("handoff: {e:?}"))?;
             raw.drain(..HEADER);
-            if mode == "electrical-resume" {
+            if !mode.ends_with("-bench") {
                 for value in state.capacitor_charge_offsets_c() {
                     out.write_all(&value.to_le_bytes())?;
                 }
@@ -89,7 +92,17 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
                 let before = ALLOCS.load(Relaxed);
                 let begin = Instant::now();
                 let mut state = initial;
-                for &(signal, drive) in &inputs {
+                for (index, &(signal, drive)) in inputs.iter().enumerate() {
+                    #[cfg(pilot_receiver_ports)]
+                    if mode == "electrical-resume-tangent-bench"
+                        || (mode == "electrical-resume-tangent-once-bench" && index == 0)
+                    {
+                        let trial = plant::trial_with_load_tangent(state, std::hint::black_box(signal), drive)
+                            .map_err(|e| format!("tangent trial: {e:?}"))?;
+                        state = trial.state;
+                        std::hint::black_box(trial);
+                        continue;
+                    }
                     let ports = plant::step(&mut state, std::hint::black_box(signal), drive)
                         .map_err(|e| format!("{e:?}"))?;
                     std::hint::black_box(ports);
@@ -108,6 +121,43 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         for row in raw.chunks_exact(24) {
             let read = |k| f64::from_le_bytes(row[k..k + 8].try_into().unwrap());
+            #[cfg(pilot_receiver_ports)]
+            if matches!(mode.as_str(), "electrical-resume-tangent" | "electrical-resume-tangent-fd") {
+                let signal = read(0);
+                let drive = Drive { volume_delta_v: read(8), filter_delta_v: read(16) };
+                let old = state;
+                let trial = plant::trial_with_load_tangent(old, signal, drive)
+                    .map_err(|e| format!("tangent trial: {e:?}"))?;
+                state = trial.state;
+                let p = trial.ports;
+                write(&mut out, [p.j7_v, p.bus_v, p.base_v - p.bus_v, p.panel_a, p.returns_a[0], p.returns_a[1]])?;
+                for value in p.loads_v.into_iter().chain(trial.load_jacobian.into_iter().flatten()) {
+                    out.write_all(&value.to_le_bytes())?;
+                }
+                if mode.ends_with("-fd") {
+                    for epsilon in [1e-5, 5e-6] {
+                        let mut difference = [[0.; 2]; 2];
+                        for column in 0..2 {
+                            let mut shifted = [drive; 2];
+                            for (drive, sign) in shifted.iter_mut().zip([-1., 1.]) {
+                                if column == 0 { drive.volume_delta_v += sign * epsilon; }
+                                else { drive.filter_delta_v += sign * epsilon; }
+                            }
+                            let mut low = old;
+                            let mut high = old;
+                            let a = plant::step(&mut low, signal, shifted[0]).map_err(|e| format!("FD low: {e:?}"))?;
+                            let b = plant::step(&mut high, signal, shifted[1]).map_err(|e| format!("FD high: {e:?}"))?;
+                            for row in 0..2 {
+                                difference[row][column] = (b.loads_v[row] - a.loads_v[row]) / (2. * epsilon);
+                            }
+                        }
+                        for value in difference.into_iter().flatten() {
+                            out.write_all(&value.to_le_bytes())?;
+                        }
+                    }
+                }
+                continue;
+            }
             let p = plant::step(&mut state, read(0), Drive {
                 volume_delta_v: read(8), filter_delta_v: read(16),
             }).map_err(|e| format!("{e:?}"))?;

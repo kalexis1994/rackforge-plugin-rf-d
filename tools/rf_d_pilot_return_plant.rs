@@ -48,6 +48,42 @@ pub struct Ports {
     pub loads_v: [f64; 2], // VCA base and ladder TAIL, at the accepted endpoint.
 }
 
+#[cfg(pilot_receiver_ports)]
+pub struct Trial {
+    pub state: State,
+    pub ports: Ports,
+    /// Rows are VCA base/TAIL, columns are R59/R60 source voltage, in V/V.
+    pub load_jacobian: [[f64; 2]; 2],
+}
+
+#[cfg(pilot_receiver_ports)]
+pub fn trial_with_load_tangent(old: State, signal: f64, drive: Drive) -> Result<Trial, Error> {
+    let mut state = old;
+    let (ports, junction) = step_with_junction(&mut state, signal, drive)?;
+    let (_, slope) = law(junction)?;
+    let jacobian = std::array::from_fn(|i| {
+        std::array::from_fn(|j| f64::from(i == j) + map::P[i][j] * slope[j])
+    });
+    let factor = crate::port_lu::Lu::<JUNCTIONS>::factor(jacobian).map_err(|_| Error::Singular)?;
+    let mut load_jacobian = [[0.; 2]; 2];
+    for column in 0..2 {
+        let input = column + 1;
+        let charge_drive: [f64; CHARGES] = std::array::from_fn(|i| map::U1[i][input]);
+        let right = std::array::from_fn(|i| dot(&map::ZH[i], &charge_drive) + map::ZU[i][input]);
+        let direction = factor.solve(right).map_err(|_| Error::Singular)?;
+        let defect_drive = std::array::from_fn(|i| slope[i] * direction[i]);
+        for row in 0..2 {
+            let node = row + 3;
+            load_jacobian[row][column] = dot(&map::XQ[node], &charge_drive)
+                + map::XU[node][input] - dot(&map::XD[node], &defect_drive);
+        }
+    }
+    if load_jacobian.iter().flatten().any(|v| !v.is_finite()) {
+        return Err(Error::Domain);
+    }
+    Ok(Trial { state, ports, load_jacobian })
+}
+
 impl State {
     pub fn dc(index: usize) -> Result<Self, Error> {
         if index != 1 {
@@ -223,6 +259,10 @@ fn block_direction(residual: &[f64; JUNCTIONS], slope: &[f64; JUNCTIONS]) -> Res
 }
 
 pub fn step(state: &mut State, signal: f64, drive: Drive) -> Result<Ports, Error> {
+    step_with_junction(state, signal, drive).map(|(ports, _)| ports)
+}
+
+fn step_with_junction(state: &mut State, signal: f64, drive: Drive) -> Result<(Ports, [f64; JUNCTIONS]), Error> {
     if !drive.valid() || !signal.is_finite() || signal.abs() > 0.08 {
         return Err(Error::Input);
     }
@@ -257,11 +297,11 @@ pub fn step(state: &mut State, signal: f64, drive: Drive) -> Result<Ports, Error
             let r59_source = 2. + drive.volume_delta_v;
             #[cfg(pilot_split_returns)]
             let r59_source = map::SPLIT_CENTER[0] + drive.volume_delta_v;
-            return Ok(Ports {
+            return Ok((Ports {
                 j7_v, bus_v, base_v, panel_a: (bus_v - 0.5 * signal) / 39_250.,
                 returns_a: [(r59_source - vca_base) / 68_000., (tail - collector) / 680.],
                 loads_v: [vca_base, tail],
-            });
+            }, z));
         }
         // Same modified-Newton preconditioner as the original pilot.
         #[cfg(not(pilot_block_roots))]
