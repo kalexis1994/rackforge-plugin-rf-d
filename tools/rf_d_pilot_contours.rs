@@ -6,12 +6,15 @@ use crate::{
 };
 
 pub const TIMER_NODES: [usize; 2] = [5, 38];
+#[cfg(not(pilot_loaded_filter))]
 pub const C5_PORTS: [usize; 4] = [44, 47, 30, 32];
 const CAP_F: f64 = 10e-6;
 // Decay switch on, with board R16 loading C2 through Q3.
 const C2_G: [f64; 3] = [1. / 1000., 1. / 10_000., 1. / 10_000.];
 const C5_G: [f64; 3] = [1. / 100., 1. / 1000., 1. / 10_000.];
 const C2: usize = 1;
+#[cfg(pilot_loaded_filter)]
+const C5: usize = latch::pin(38) - N;
 const X8: usize = 2;
 const X11: usize = 5;
 const _: () = assert!(PORTS[C2] == TIMER_NODES[0] && CORE[X8] == 8 && CORE[X11] == 11);
@@ -29,6 +32,7 @@ pub struct Ports {
     pub latch: Boundary,
     pub volume: [f64; 3],
     pub filter: [f64; 2],
+    #[cfg(not(pilot_loaded_filter))]
     pub c5: [f64; 4],
 }
 
@@ -57,6 +61,10 @@ pub fn step(
     previous_change: [f64; N],
 ) -> Result<[Loaded; 2], StepError> {
     previous.volts[C2] = old.timers[0];
+    #[cfg(pilot_loaded_filter)]
+    {
+        previous.volts[C5] = old.timers[1];
+    }
     let mut boundary = input.map(|p| p.latch);
     let mut c2 = radau(
         old.timers[0],
@@ -71,9 +79,16 @@ pub fn step(
         C2_G,
         h,
     );
+    #[cfg(not(pilot_loaded_filter))]
+    let c5_load = |i: usize, _: State| [input[i].c5[0], input[i].c5[1]];
+    #[cfg(pilot_loaded_filter)]
+    let c5_load = |_: usize, stage: State| [stage.0[latch::pin(44)], stage.0[latch::pin(47)]];
     let mut c5 = radau(
         old.timers[1],
-        input.map(|p| [p.c5[0], p.c5[1], old.q22_base]),
+        std::array::from_fn(|i| {
+            let [attack, decay] = c5_load(i, old.latch);
+            [attack, decay, old.q22_base]
+        }),
         C5_G,
         h,
     );
@@ -83,12 +98,24 @@ pub fn step(
     for _ in 0..3 {
         for i in 0..2 {
             boundary[i].volts[C2] = c2[i];
+            #[cfg(pilot_loaded_filter)]
+            {
+                boundary[i].volts[C5] = c5[i];
+            }
             trial[i].returns.volume =
                 ports::volume(trial[i].returns.volume, c2[i], input[i].volume)?;
-            let [_, _, collector, emitter] = input[i].c5;
-            trial[i].q22_base = ports::q22_base(trial[i].q22_base, c5[i], [collector, emitter])?;
+            #[cfg(not(pilot_loaded_filter))]
+            {
+                let [_, _, collector, emitter] = input[i].c5;
+                trial[i].q22_base =
+                    ports::q22_base(trial[i].q22_base, c5[i], [collector, emitter])?;
+            }
         }
         let stages = latch::step(old.latch, boundary, h, previous, previous_change)?;
+        #[cfg(pilot_loaded_filter)]
+        for (trial, stage) in trial.iter_mut().zip(stages) {
+            trial.q22_base = stage.0[latch::pin(29)];
+        }
         let next_c2 = radau(
             old.timers[0],
             std::array::from_fn(|i| {
@@ -103,7 +130,10 @@ pub fn step(
         );
         let next_c5 = radau(
             old.timers[1],
-            std::array::from_fn(|i| [input[i].c5[0], input[i].c5[1], trial[i].q22_base]),
+            std::array::from_fn(|i| {
+                let [attack, decay] = c5_load(i, stages[i]);
+                [attack, decay, trial[i].q22_base]
+            }),
             C5_G,
             h,
         );
@@ -113,7 +143,15 @@ pub fn step(
             for i in 0..2 {
                 trial[i].timers = [next_c2[i], next_c5[i]];
                 trial[i].latch = stages[i];
-                trial[i].returns.filter = ports::filter(old.returns.filter, input[i].filter)?;
+                #[cfg(not(pilot_loaded_filter))]
+                {
+                    trial[i].returns.filter = ports::filter(old.returns.filter, input[i].filter)?;
+                }
+                #[cfg(pilot_loaded_filter)]
+                {
+                    trial[i].returns.filter =
+                        ports::FILTER_NODES.map(|k| stages[i].0[latch::pin(k)]);
+                }
             }
             return Ok(trial);
         }

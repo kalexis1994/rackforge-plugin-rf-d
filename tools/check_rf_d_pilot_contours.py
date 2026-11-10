@@ -1,4 +1,5 @@
 """Contrast loaded pilot timer states and locate the audio-domain boundary."""
+import argparse
 import os
 import subprocess
 import traceback
@@ -21,6 +22,8 @@ PROBE = "tools/rf_d_pilot_contours_probe.rs"
 PORTS = "tools/rf_d_pilot_contour_ports.rs"
 CORE = (6, 7, 8, 9, 10, 11, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 53)
 TIMERS = (5, 38)
+LOAD_NODES = (13, 14, 15, *range(29, 38), *range(39, 51), 52)
+LOAD_CURRENTS = ("sustain_diode", "reset_diode", "c5_attack", "c5_decay", "c5_q22")
 R59_RANGE = (1.985, 2.015)
 R59_LIMIT_A = 2e-9
 MARGIN_NS = 128e9 / (2 * 48_000)
@@ -30,6 +33,11 @@ MODES = (
     ("all_at_192khz", (2, 4, 14, 30, 32, 34, 41, 44, 47, 48, 52, 54, 55)),
 )
 SENSITIVITY = tuple((f"x{node}_at_192khz", (node,)) for node in (14, 41, 48, 52))
+LOADED_MODES = (
+    ("fine", ()),
+    ("tail_at_96khz", (55,)),
+    ("all_at_96khz", (2, 4, 54, 55)),
+)
 
 
 def component(kernel):
@@ -38,8 +46,8 @@ def component(kernel):
         Some("ports") => ports(),
         Some("contour-capture") if args.len() == 6 =>
             contour_probe::capture(&args[2], args[3].parse()?, args[4].parse()?, args[5].parse()?),
-        Some("contour-replay") if args.len() == 5 =>
-            contour_probe::replay(&args[2], args[3].parse()?, args[4].parse()?),''')
+        Some("contour-replay") if (5..=6).contains(&args.len()) =>
+            contour_probe::replay(&args[2], args[3].parse()?, args[4].parse()?, args.get(5).map_or(Ok(128), |s| s.parse())?),''')
     for name, path in (("pilot_contours", CANDIDATE), ("contour_probe", PROBE), ("contour_ports", PORTS)):
         code += f'\n#[path = "{(ROOT / path).as_posix()}"] mod {name};\n'
     return emit(probe.name, code)
@@ -61,11 +69,12 @@ def domain(raw):
                 r59_domain_passed=bool(max(error) <= R59_LIMIT_A))
 
 
-def assess(raw, start, frames, expected):
+def assess(raw, start, frames, expected, loaded=False):
     lines = raw.decode().splitlines()
     tag, steps, window_ns, sample_ns = lines.pop(0).split(",")
     assert tag == "COST" and int(steps) == frames * 512
-    error, events, returns = {}, [], []
+    error, events, returns, loads = {}, [], [], []
+    direction_ratio = None
     for line in lines:
         tag, *fields = line.split(",")
         if tag == "NODE":
@@ -73,26 +82,39 @@ def assess(raw, start, frames, expected):
             error[int(node)] = float(volts)
         elif tag == "RETURNS":
             returns = list(map(float, fields))
+        elif tag == "DIRECTION":
+            direction_ratio = float(fields[0])
+        elif tag == "LOAD":
+            loads = list(map(float, fields))
         else:
             assert tag == "SWITCH"
             lo, hi, order = map(int, fields)
             events.append([start * 4096 + lo, start * 4096 + hi, order])
-    assert tuple(error) == CORE + TIMERS and np.isfinite(list(error.values())).all()
+    assert tuple(error) == CORE + (LOAD_NODES if loaded else ()) + TIMERS
+    assert np.isfinite(list(error.values())).all()
     assert len(returns) == 2 and np.isfinite(returns).all()
-    return dict(passed=events == expected and max(error.values()) <= 20e-6 and max(returns) <= R59_LIMIT_A,
+    assert len(loads) == (len(LOAD_CURRENTS) if loaded else 0) and np.isfinite(loads).all()
+    direction_ok = not loaded or (direction_ratio is not None and 0 <= direction_ratio <= 1)
+    return dict(passed=direction_ok and events == expected and max(error.values()) <= 20e-6
+                and max(returns + loads) <= R59_LIMIT_A,
+                schur_direction_error_ratio=direction_ratio,
+                max_load_error_a=dict(zip(LOAD_CURRENTS, loads)),
                 max_current_error_a=returns,
                 events=events, maximum_by_node_v=error, window_elapsed_ns=int(window_ns),
                 max_compute_per_frame_ns=int(sample_ns), single_frame_over_block_budget=int(sample_ns) > MARGIN_NS)
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--loaded-filter", action="store_true")
+    loaded = parser.parse_args().loaded_filter
     assert AREA.is_dir() and not list(AREA.iterdir())
     seq = 1
     while (out := ROOT / f"evidence/rf_d_pilot_contours{seq:02}.json").exists():
         seq += 1
     sources = Sources((*ALL_SOURCES, OWN, CANDIDATE, PROBE, PORTS,
                        "tools/rf_d_pilot_return_plant.rs"))
-    report = dict(passed=False, promoted=False, rack_integrated=False, **sources.fields(),
+    report = dict(passed=False, promoted=False, rack_integrated=False, loaded_filter=loaded, **sources.fields(),
                   compiler_sha256=sha(Path(COMPILER)), library_sha256=sha(LIB),
                   clock_sha256=sha(ROOT / CLOCK), margin_ns=MARGIN_NS, windows={})
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
@@ -114,8 +136,9 @@ def main():
         kernel = emit("family-kernel.rs", text(KERNEL).replace("H128_VOICE_TABLE_PATH", table_path.as_posix())
                       .replace("VCO_PANEL_PORT_PATH", (ROOT / PANEL).as_posix()))
         exe = AREA / "pilot-contours.exe"
+        profile = ["--cfg", "pilot_loaded_filter"] if loaded else []
         proc, report["build"] = run([COMPILER, "--edition=2021", "-C", "opt-level=3", "-C", "target-feature=+fma",
-                                     "-C", "link-arg=-Wl,--stack,33554432", "--cfg", "laboratory", "-A", "dead_code",
+                                     "-C", "link-arg=-Wl,--stack,33554432", "--cfg", "laboratory", *profile, "-A", "dead_code",
                                      component(kernel), "--extern", f"rf_d_circuit={LIB}", "-o", exe])
         if proc.returncode:
             replay, report["build_replay"] = run(report["build"]["command"])
@@ -138,13 +161,15 @@ def main():
                     for i in np.flatnonzero(order[1:] != order[:-1])] == expected
             item["return_domain"] = domain(proc.stdout)
             trace.write_bytes(proc.stdout)
-            modes = (*MODES, *SENSITIVITY) if expected else MODES
+            modes = LOADED_MODES if loaded else ((*MODES, *SENSITIVITY) if expected else MODES)
+            if loaded and expected:
+                modes = (*modes, *((f"x{node}_at_96khz", (node,)) for node in (2, 4, 54)))
             for mode, coarse in modes:
-                command = [exe, "contour-replay", trace, key, sum(1 << node for node in coarse)]
+                command = [exe, "contour-replay", trace, key, sum(1 << node for node in coarse), 256 if loaded else 128]
                 proc, trial = run(command, store=True)
                 item["modes"][mode] = trial
                 trial["coarse_nodes"] = coarse
-                metrics = trial["metrics"] = (assess(proc.stdout, start, frames, expected) if proc.returncode == 0
+                metrics = trial["metrics"] = (assess(proc.stdout, start, frames, expected, loaded) if proc.returncode == 0
                                                else dict(passed=False))
                 if not metrics["passed"]:
                     replay, trial["unchanged_replay"] = run(command, store=True)
@@ -153,7 +178,7 @@ def main():
                 if proc.returncode == 0:
                     print(label, mode, metrics["passed"], metrics["events"],
                           max(metrics["maximum_by_node_v"].values()), metrics["max_current_error_a"],
-                          metrics["max_compute_per_frame_ns"], flush=True)
+                          metrics["max_load_error_a"], metrics["max_compute_per_frame_ns"], flush=True)
                 else:
                     print(label, mode, proc.stderr.decode().strip(), flush=True)
         report["passed"] = all(w["modes"]["fine"]["metrics"]["passed"] for w in report["windows"].values())

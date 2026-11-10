@@ -275,3 +275,55 @@ ventanas. El paquete usa el mismo panel y el mismo
 formato de estado. Los contornos físicos continúan
 en el laboratorio.
 [Medición física](../evidence/rf_d_pi_live01.json).
+
+## Cierre nominal de C5, sustain y reset hasta R60
+
+El banco `--loaded-filter` calcula ambos sustain, el
+reset y el seguidor desde C5 hasta Q26/Q28 y R60.
+C5 recibe las corrientes de ataque, descarga y base
+Q22. El diodo de x48 devuelve su corriente a x17
+dentro de la misma resolución del biestable. Se
+conservan 100 pF en x48 y x34, 10 nF entre x52 y x39
+y las cargas de juntura x39/x40 y x41/x42. Los
+divisores x12 y x51 se sustituyen por sus equivalentes
+de Thévenin. Amount y los demás controles permanecen
+en el punto nominal de la reserva.
+[Stamps de origen](../crates/rf-d-circuit/src/prepared_contour_residual.rs),
+[seguidor y Amount](../crates/rf-d-circuit/src/prepared_filter_residual.rs),
+[banco](../tools/check_rf_d_pilot_contours.py).
+
+La eliminación algebraica baja el sistema de 44 a
+32 incógnitas por etapa. Al contrastar su dirección
+con el sistema completo, la mayor fracción del
+límite fue 7,03e−10. Con fronteras finas, el
+biestable cambió en **319096–319104** y el peor
+error de tensión fue 0,119 µV. Los máximos de
+corriente fueron 0,029 pA en R59, 0,0000036 pA en
+R60 y 1,261 pA en el diodo de sustain, frente al
+límite de 2 nA por rama. El primer ensayo sin la
+carga de juntura x41/x42 había excedido 5 nA en
+ese diodo aunque conservaba el cruce.
+[Rechazo y replay](../evidence/rf_d_pilot_contours04.json),
+[cierre intermedio](../evidence/rf_d_pilot_contours05.json),
+[contraste del seguidor y R60](../evidence/rf_d_pilot_contours08.json).
+
+Las entradas restantes son x2/x4 y las cargas de
+audio VCA_BASE y TAIL. Interpolar x2 o x4 desde
+96 kHz pasó las reservas en la ventana positiva.
+La misma interpolación en VCA_BASE llevó el
+error de R59 a 11,43 nA. En TAIL, la corriente
+de R60 pasó y el error del colector x37 llegó
+a 2,52 mV. El avance fino del candidato alcanzó
+189,5 ms en un frame de laboratorio. Quedan
+pendientes la reducción temporal y la ampliación
+del rango de R59 para integrar la planta audible
+y contrastar su J7.
+
+Al inicio del bloque, el motor de la Pi reportó
+1.501 bloques a 48 kHz y 128 frames del paquete
+0.3.1 con máximo de 2,158 ms y cero plazos
+perdidos en la ventana consultada. El equipo
+dejó de responder por SSH y HTTP antes del
+nuevo pase con MIDI. La medición disponible
+corresponde al paquete de audición.
+[Observación de la Pi](../evidence/rf_d_pi_contour_control01.json).

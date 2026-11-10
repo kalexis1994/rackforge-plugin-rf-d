@@ -5,20 +5,46 @@ use crate::{
     StepError,
 };
 
-pub const N: usize = 19;
-pub const CORE: [usize; N] = [
+const CORE_BASE: [usize; 19] = [
     6, 7, 8, 9, 10, 11, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 53,
 ];
+#[cfg(not(pilot_loaded_filter))]
+pub const CORE: [usize; 19] = CORE_BASE;
+#[cfg(pilot_loaded_filter)]
+pub const CORE: [usize; 44] = {
+    let mut nodes = [0; 44];
+    let mut i = 0;
+    while i < CORE_BASE.len() {
+        nodes[i] = CORE_BASE[i];
+        i += 1;
+    }
+    let loads = [
+        13, 14, 15, 29, 30, 31, 32, 33, 34, 35, 36, 37, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49,
+        50, 52,
+    ];
+    let mut j = 0;
+    while j < loads.len() {
+        nodes[i + j] = loads[j];
+        j += 1;
+    }
+    nodes
+};
+pub const N: usize = CORE.len();
+#[cfg(not(pilot_loaded_filter))]
 pub const PORTS: [usize; 6] = [4, 5, 14, 41, 48, 52];
+#[cfg(pilot_loaded_filter)]
+pub const PORTS: [usize; 4] = [4, 5, 55, 38];
 const P: usize = PORTS.len();
 const SUPPLY: usize = N + P;
 const MINUS: usize = SUPPLY + 1;
 const GROUND: usize = SUPPLY + 2;
-const KEY: usize = SUPPLY + 3;
+const FIVE: usize = SUPPLY + 3;
+const ONE: usize = SUPPLY + 4;
+const KEY: usize = SUPPLY + 5;
 const PINS: usize = KEY + 1;
 const B: [[f64; 2]; 2] = [[1.5, 0.5], [-4.5, 2.5]];
 
-const fn pin(node: usize) -> usize {
+pub const fn pin(node: usize) -> usize {
     let mut i = 0;
     while i < N {
         if CORE[i] == node {
@@ -36,7 +62,7 @@ const fn pin(node: usize) -> usize {
     panic!("unknown trigger pin");
 }
 
-const R: [(usize, usize, f64); 21] = [
+const R: &[(usize, usize, f64)] = &[
     (SUPPLY, pin(17), 3300.),
     (SUPPLY, pin(18), 3300.),
     (SUPPLY, pin(17), 10_000.), // Filter board load
@@ -58,8 +84,67 @@ const R: [(usize, usize, f64); 21] = [
     (pin(26), pin(27), 33_000.),
     (pin(9), MINUS, 10_000.),
     (pin(9), pin(10), 4700.),
+    #[cfg(pilot_loaded_filter)]
+    (SUPPLY, pin(43), 560.),
+    #[cfg(pilot_loaded_filter)]
+    (SUPPLY, pin(14), 27_000.),
+    // Volume sustain divider x12 has the same Thevenin voltage/resistance as x51.
+    #[cfg(pilot_loaded_filter)]
+    (pin(13), FIVE, 4700. + 1250.),
+    #[cfg(pilot_loaded_filter)]
+    (pin(13), GROUND, 4700.),
+    #[cfg(pilot_loaded_filter)]
+    (pin(15), GROUND, 100.),
+    #[cfg(pilot_loaded_filter)]
+    (pin(42), pin(39), 10_000.),
+    #[cfg(pilot_loaded_filter)]
+    (SUPPLY, pin(42), 10_000.),
+    #[cfg(pilot_loaded_filter)]
+    (pin(40), pin(41), 33_000.),
+    #[cfg(pilot_loaded_filter)]
+    (pin(43), pin(40), 3300.),
+    #[cfg(pilot_loaded_filter)]
+    (pin(44), pin(38), 100.),
+    #[cfg(pilot_loaded_filter)]
+    (pin(45), MINUS, 10_000.),
+    #[cfg(pilot_loaded_filter)]
+    (pin(45), pin(46), 4700.),
+    #[cfg(pilot_loaded_filter)]
+    (pin(47), pin(38), 1000.),
+    #[cfg(pilot_loaded_filter)]
+    (SUPPLY, pin(48), 27_000.),
+    // Exact Thevenin equivalent of x51: two 2.5 kΩ arms to 0 and +10 V.
+    #[cfg(pilot_loaded_filter)]
+    (pin(49), FIVE, 4700. + 1250.),
+    #[cfg(pilot_loaded_filter)]
+    (pin(49), MINUS, 150_000.),
+    #[cfg(pilot_loaded_filter)]
+    (pin(50), GROUND, 100.),
+    #[cfg(pilot_loaded_filter)]
+    (pin(29), pin(38), 10_000.),
+    #[cfg(pilot_loaded_filter)]
+    (pin(31), SUPPLY, 560.),
+    #[cfg(pilot_loaded_filter)]
+    (pin(32), pin(33), 5600.),
+    #[cfg(pilot_loaded_filter)]
+    (pin(33), MINUS, 16_900.),
+    // Nominal cutoff = 0.5, scale = 250 Ω and range = 0.1.
+    #[cfg(pilot_loaded_filter)]
+    (pin(34), GROUND, 201_250.),
+    #[cfg(pilot_loaded_filter)]
+    (pin(34), GROUND, 2050.),
+    #[cfg(pilot_loaded_filter)]
+    (pin(34), GROUND, 100_000.),
+    #[cfg(pilot_loaded_filter)]
+    (pin(34), GROUND, 33_000.),
+    #[cfg(pilot_loaded_filter)]
+    (pin(35), ONE, 68_900.),
+    #[cfg(pilot_loaded_filter)]
+    (pin(36), MINUS, 330.),
+    #[cfg(pilot_loaded_filter)]
+    (pin(37), pin(55), 680.),
 ];
-const TRANSISTORS: [(usize, usize, usize, f64); 7] = [
+const TRANSISTORS: &[(usize, usize, usize, f64)] = &[
     (pin(19), pin(17), GROUND, 1.),
     (pin(20), pin(18), GROUND, 1.),
     (pin(25), pin(26), GROUND, 1.),
@@ -67,20 +152,48 @@ const TRANSISTORS: [(usize, usize, usize, f64); 7] = [
     (pin(6), pin(7), SUPPLY, -1.),
     (pin(26), SUPPLY, pin(9), 1.),
     (pin(10), pin(11), pin(14), 1.),
+    #[cfg(pilot_loaded_filter)]
+    (pin(43), pin(44), SUPPLY, -1.),
+    #[cfg(pilot_loaded_filter)]
+    (pin(13), pin(15), pin(14), -1.),
+    #[cfg(pilot_loaded_filter)]
+    (pin(39), pin(40), GROUND, 1.),
+    #[cfg(pilot_loaded_filter)]
+    (pin(41), pin(42), GROUND, 1.),
+    #[cfg(pilot_loaded_filter)]
+    (pin(40), SUPPLY, pin(45), 1.),
+    #[cfg(pilot_loaded_filter)]
+    (pin(46), pin(47), pin(48), 1.),
+    #[cfg(pilot_loaded_filter)]
+    (pin(49), pin(50), pin(48), -1.),
+    #[cfg(pilot_loaded_filter)]
+    (pin(29), pin(30), pin(32), 1.),
+    #[cfg(pilot_loaded_filter)]
+    (pin(30), pin(32), pin(31), -1.),
+    #[cfg(pilot_loaded_filter)]
+    (pin(34), pin(36), pin(35), -1.),
+    #[cfg(pilot_loaded_filter)]
+    (pin(35), pin(37), GROUND, 1.),
 ];
-const DIODES: [(usize, usize, f64); 6] = [
+const DIODES: &[(usize, usize, f64)] = &[
     (KEY, pin(22), 1e-8),
     (pin(24), pin(27), 1e-8),
     (pin(53), pin(41), 1e-8),
     (pin(4), pin(27), 1e-8),
     (pin(14), pin(17), 1e-12),
     (pin(48), pin(17), 1e-12),
+    #[cfg(pilot_loaded_filter)]
+    (pin(33), pin(41), 1e-8),
 ];
-const CHARGED: [(usize, usize); 4] = [
+const CHARGED: &[(usize, usize)] = &[
     (pin(19), pin(17)),
     (pin(20), pin(18)),
     (pin(25), pin(26)),
     (pin(27), pin(28)),
+    #[cfg(pilot_loaded_filter)]
+    (pin(39), pin(40)),
+    #[cfg(pilot_loaded_filter)]
+    (pin(41), pin(42)),
 ];
 
 #[derive(Clone, Copy)]
@@ -154,6 +267,8 @@ pub fn stamp<const FULL: bool>(
         SUPPLY => 9.3,
         MINUS => -10.,
         GROUND => 0.,
+        FIVE => 5.,
+        ONE => 1.,
         _ => u.key,
     });
     let mut s = Stamp {
@@ -162,18 +277,30 @@ pub fn stamp<const FULL: bool>(
         conductance: [[0.; N]; N],
         capacitance: [[0.; N]; N],
     };
-    for (a, b, ohm) in R {
+    for &(a, b, ohm) in R {
         s.branch::<FULL>(a, b, (x[a] - x[b]) / ohm, 1. / ohm);
+    }
+    #[cfg(pilot_loaded_filter)]
+    {
+        // Exact two-terminal Amount admittance at the nominal midpoint.
+        let d = 47_000. * 50_000. + 25_000. * 25_000.;
+        for (a, b, g) in [
+            (pin(32), pin(34), 25_000. / d),
+            (pin(32), GROUND, 47_000. / d),
+            (pin(34), GROUND, 25_000. / d),
+        ] {
+            s.branch::<FULL>(a, b, (x[a] - x[b]) * g, g);
+        }
     }
     if u.short {
         s.branch::<FULL>(pin(18), GROUND, x[pin(18)] / 220., 1. / 220.);
     }
-    for (a, b, is_a) in DIODES {
+    for &(a, b, is_a) in DIODES {
         let scale = 1.5 * VT;
         let (i, g) = junction((x[a] - x[b]) / scale, is_a, scale)?;
         s.branch::<FULL>(a, b, i, g);
     }
-    for (b, c, e, sign) in TRANSISTORS {
+    for &(b, c, e, sign) in TRANSISTORS {
         let (f, gf) = junction(sign * (x[b] - x[e]) / VT, 1e-14, VT)?;
         let (r, gr) = junction(sign * (x[b] - x[c]) / VT, 1e-14, VT)?;
         let ib = sign * (f / 100. + r / 5.);
@@ -192,7 +319,13 @@ pub fn stamp<const FULL: bool>(
     }
     s.capacitor(pin(21), GROUND, &change, 1e-7);
     s.capacitor(pin(23), pin(25), &change, 1e-8);
-    for (b, c) in CHARGED {
+    #[cfg(pilot_loaded_filter)]
+    s.capacitor(pin(48), GROUND, &change, 100e-12);
+    #[cfg(pilot_loaded_filter)]
+    s.capacitor(pin(52), pin(39), &change, 10e-9);
+    #[cfg(pilot_loaded_filter)]
+    s.capacitor(pin(34), GROUND, &change, 100e-12);
+    for &(b, c) in CHARGED {
         let pair = [b, c];
         let (q, m) = terminal(pair.map(|i| (old.0[i], 0.)), pair.map(|i| (x[i], 0.)))?;
         for i in 0..2 {
@@ -227,30 +360,47 @@ fn evaluate<const FULL: bool>(
     Ok((s, r))
 }
 
+#[cfg(not(pilot_loaded_filter))]
 const ALGEBRAIC: [usize; 4] = [pin(8), pin(22), pin(24), pin(53)];
-const KEPT: [usize; N - ALGEBRAIC.len()] = [
-    pin(6),
-    pin(7),
-    pin(9),
-    pin(10),
-    pin(11),
-    pin(17),
-    pin(18),
-    pin(19),
-    pin(20),
-    pin(21),
-    pin(23),
-    pin(25),
-    pin(26),
-    pin(27),
-    pin(28),
+#[cfg(pilot_loaded_filter)]
+const ALGEBRAIC: [usize; 12] = [
+    pin(8),
+    pin(22),
+    pin(24),
+    pin(53),
+    pin(15),
+    pin(29),
+    pin(31),
+    pin(33),
+    pin(36),
+    pin(37),
+    pin(44),
+    pin(50),
 ];
+const A: usize = ALGEBRAIC.len();
+const KEPT: [usize; N - ALGEBRAIC.len()] = {
+    let mut rows = [0; N - ALGEBRAIC.len()];
+    let mut i = 0;
+    let mut j = 0;
+    while i < N {
+        let mut a = 0;
+        while a < A && i != ALGEBRAIC[a] {
+            a += 1;
+        }
+        if a == A {
+            rows[j] = i;
+            j += 1;
+        }
+        i += 1;
+    }
+    rows
+};
 const K: usize = KEPT.len();
 
 fn direction(s: &[Stamp; 2], r: [f64; 2 * N], h: f64) -> Result<[f64; 2 * N], StepError> {
-    // These four algebraic rows have neither stored charge nor mutual
+    // These algebraic rows have neither stored charge nor mutual
     // coupling. Their exact Schur contribution stays within each stage.
-    let inv_diagonal: [[f64; 4]; 2] =
+    let inv_diagonal: [[f64; A]; 2] =
         std::array::from_fn(|j| ALGEBRAIC.map(|a| 1. / s[j].conductance[a][a]));
     if inv_diagonal
         .iter()
@@ -259,7 +409,7 @@ fn direction(s: &[Stamp; 2], r: [f64; 2 * N], h: f64) -> Result<[f64; 2 * N], St
     {
         return Err(StepError::SingularJacobian);
     }
-    let lift: [[[f64; 4]; K]; 2] = std::array::from_fn(|j| {
+    let lift: [[[f64; A]; K]; 2] = std::array::from_fn(|j| {
         KEPT.map(|a| {
             std::array::from_fn(|g| s[j].conductance[a][ALGEBRAIC[g]] * inv_diagonal[j][g])
         })

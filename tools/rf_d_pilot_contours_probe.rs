@@ -3,8 +3,8 @@ use crate::{
     contour_ports::{Returns, FILTER_NODES, FILTER_PORTS, VOLUME_NODES, VOLUME_PORTS},
     family::Family,
     parameters,
-    pilot_contours::{self as contours, Loaded, Ports, C5_PORTS, TIMER_NODES},
-    pilot_trigger::{Boundary, State, CORE, N, PORTS},
+    pilot_contours::{self as contours, Loaded, Ports, TIMER_NODES},
+    pilot_trigger::{self as latch, Boundary, State, CORE, N, PORTS},
     solver, voice,
 };
 use std::{
@@ -74,8 +74,14 @@ pub fn capture(path: &str, start: usize, frames: usize, key: f64) -> Result<(), 
     Ok(())
 }
 
-pub fn replay(path: &str, key: f64, coarse_ports: u64) -> Result<(), Box<dyn Error>> {
-    let port_stride = if coarse_ports == 0 { 1 } else { 128 };
+pub fn replay(
+    path: &str,
+    key: f64,
+    coarse_ports: u64,
+    stride: usize,
+) -> Result<(), Box<dyn Error>> {
+    assert!(matches!(stride, 128 | 256));
+    let port_stride = if coarse_ports == 0 { 1 } else { stride };
     let data = read(path)?;
     let mut rows = data.chunks_exact(ROW);
     let initial = rows.next().ok_or("empty contour input")?;
@@ -101,6 +107,10 @@ pub fn replay(path: &str, key: f64, coarse_ports: u64) -> Result<(), Box<dyn Err
     let mut max_core = [0_f64; N];
     let mut max_timer = [0_f64; 2];
     let mut max_return = [0_f64; 2];
+    #[cfg(pilot_loaded_filter)]
+    let mut max_load = [0_f64; 5];
+    #[cfg(pilot_loaded_filter)]
+    let mut max_direction_ratio = 0_f64;
     let start = Instant::now();
     let mut elapsed_ns = 0;
     let mut max_sample_ns = 0;
@@ -123,13 +133,20 @@ pub fn replay(path: &str, key: f64, coarse_ports: u64) -> Result<(), Box<dyn Err
         };
         let u = std::array::from_fn(|j| Ports {
             latch: Boundary {
-                volts: PORTS.map(|k| if k == 5 { 0. } else { at(j, k) }),
+                volts: PORTS.map(|k| if matches!(k, 5 | 38) { 0. } else { at(j, k) }),
                 key,
                 short: false,
             },
             volume: VOLUME_PORTS.map(|k| at(j, k)),
-            filter: FILTER_PORTS.map(|k| at(j, k)),
-            c5: C5_PORTS.map(|k| at(j, k)),
+            filter: FILTER_PORTS.map(|k| {
+                if cfg!(pilot_loaded_filter) && k == 34 {
+                    0.
+                } else {
+                    at(j, k)
+                }
+            }),
+            #[cfg(not(pilot_loaded_filter))]
+            c5: contours::C5_PORTS.map(|k| at(j, k)),
         });
         let time = Instant::now();
         let stages = contours::step(state, u, H, previous, previous_change)
@@ -140,6 +157,20 @@ pub fn replay(path: &str, key: f64, coarse_ports: u64) -> Result<(), Box<dyn Err
             elapsed_ns = 0;
         }
         let before = state.latch.order();
+        #[cfg(pilot_loaded_filter)]
+        if i % 64 == 0 || stages[1].latch.order() != before {
+            let boundary = std::array::from_fn(|j| {
+                let mut boundary = u[j].latch;
+                for (node, voltage) in TIMER_NODES.into_iter().zip(stages[j].timers) {
+                    boundary.volts[latch::pin(node) - N] = voltage;
+                }
+                boundary
+            });
+            let error =
+                latch::audit_direction(state.latch, stages.map(|stage| stage.latch), boundary, H)
+                    .map_err(|e| format!("Schur contrast at tick {}: {e:?}", i * 8))?;
+            max_direction_ratio = max_direction_ratio.max(error);
+        }
         if stages[1].latch.order() != before {
             events.push([8 * i, 8 * (i + 1), usize::from(stages[1].latch.order())]);
         }
@@ -156,6 +187,33 @@ pub fn replay(path: &str, key: f64, coarse_ports: u64) -> Result<(), Box<dyn Err
                 .zip(TIMER_NODES.iter().zip(stage.timers))
             {
                 *err = err.max((v - reference[node]).abs());
+            }
+            #[cfg(pilot_loaded_filter)]
+            {
+                let x = |k| stage.latch.0[latch::pin(k)];
+                let c5 = stage.timers[1];
+                let diode = |a: f64, b: f64, saturation: f64| {
+                    saturation * ((a - b) / (1.5 * crate::latch_charge::VT)).exp_m1()
+                };
+                let actual = [
+                    diode(x(48), x(17), 1e-12),
+                    diode(x(33), x(41), 1e-8),
+                    (x(44) - c5) / 100.,
+                    (x(47) - c5) / 1000.,
+                    (stage.q22_base - c5) / 10_000.,
+                ];
+                let expected = [
+                    diode(reference[48], reference[17], 1e-12),
+                    diode(reference[33], reference[41], 1e-8),
+                    (reference[44] - reference[38]) / 100.,
+                    (reference[47] - reference[38]) / 1000.,
+                    (reference[29] - reference[38]) / 10_000.,
+                ];
+                for (err, (actual, expected)) in
+                    max_load.iter_mut().zip(actual.into_iter().zip(expected))
+                {
+                    *err = err.max((actual - expected).abs());
+                }
             }
             let expected = [
                 (reference[3] - reference[54]) / 68_000.,
@@ -182,6 +240,13 @@ pub fn replay(path: &str, key: f64, coarse_ports: u64) -> Result<(), Box<dyn Err
         println!("NODE,{node},{error:.17e}");
     }
     println!("RETURNS,{:.17e},{:.17e}", max_return[0], max_return[1]);
+    #[cfg(pilot_loaded_filter)]
+    println!(
+        "LOAD,{:.17e},{:.17e},{:.17e},{:.17e},{:.17e}",
+        max_load[0], max_load[1], max_load[2], max_load[3], max_load[4]
+    );
+    #[cfg(pilot_loaded_filter)]
+    println!("DIRECTION,{max_direction_ratio:.17e}");
     for [lo, hi, sign] in events {
         println!("SWITCH,{lo},{hi},{sign}");
     }
