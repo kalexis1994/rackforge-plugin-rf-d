@@ -354,3 +354,44 @@ El host informó 483 frames en la ventana medida,
 sin plazos perdidos ni errores de stream. Se
 restauró el instrumento que estaba seleccionado.
 [Medición en Desktop](../evidence/rf_d_desktop_live01.json).
+
+## Puerto de audio para C2/C5 a 96 kHz
+
+El receptor de laboratorio toma la tensión de x3 por R59 (68 kΩ)
+y la del colector x37 por R60 (680 Ω). Devuelve las corrientes con
+los signos del circuito de referencia. El seguidor de C5 conserva
+Q26/Q28 y su capacitor de 100 pF. El receptor conserva 17 estados de
+carga de audio, incluida C27. El reparto viene del circuito de ladder,
+VCA y salida en SVC-9, pp. 19, 13 y 10. [Circuito](../crates/rf-d-circuit/src/circuit66.rs),
+[proyección](../tools/prepare_rf_d_pilot_returns.py).
+
+La reserva positiva cubre 1,8955–1,9180 V para R59 y 1,3227–1,3339 V
+para el colector de R60. Para aislar el receptor se ensayó un bloque
+de 128 frames de host con señales independientes dentro de
+1,91 ± 0,015 V y 1,33 ± 0,010 V. A 96 kHz el piloto local superó
+el límite de 2 nA en R60 y quedó en 9,17 % RMS de error en J7.
+Subir a 192 kHz y usar la misma interpolación en Radau reprodujo el
+desvío. Al conservar las ocho junturas BE y las ocho BC que faltaban
+en el ladder, a 96 kHz el error bajó a 2,95 pA en R60 y 0,0079 %
+RMS en J7. La prueba conserva el límite de 2 nA en ambos retornos y
+el de 0,3 % RMS en J7. El punto de reposo de la rama negativa aún
+necesita un anclaje. [Banco y replay](../evidence/rf_d_pilot_split_returns01.json).
+
+La repetición del solver acoplado conservó el cruce **319096–319104**
+y ninguna conmutación en las dos reservas negativas. En esa ventana
+positiva, reconstruir los puertos por interpolación lineal a 96 kHz
+desplazó x3 hasta 0,856 mV y el colector hasta 2,523 mV. Con los nodos
+receptores fijados a sus valores de referencia, equivalen a 12,6 nA
+en R59 y 3,71 µA en R60. Esta prueba mide el error de imponer
+tensiones interpoladas con la carga congelada. El cierre dinámico
+requiere devolver ambas cargas y resolver la transición localmente.
+[Reserva de los contornos](../evidence/rf_d_pilot_contours08.json),
+[contraste de puertos](../evidence/rf_d_pilot_split_returns01.json).
+
+En Desktop, el paquete de control 0.3.2 produjo señal en ambos
+canales con una nota MIDI virtual. El host reportó 480 frames
+efectivos a 48 kHz, cero plazos perdidos y cero errores de stream
+en sus contadores acumulados. La Pi agotó el tiempo de espera
+por SSH y HTTP. La prueba física del receptor con los contornos
+queda pendiente.
+[Control físico](../evidence/rf_d_contours_live_control02.json).

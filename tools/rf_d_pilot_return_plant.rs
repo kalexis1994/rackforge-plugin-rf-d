@@ -2,10 +2,13 @@
 use crate::{pilot_law::{law, solve}, return_maps as map};
 pub use crate::pilot_law::Error;
 const JUNCTIONS: usize = map::IEXP.len();
-#[cfg(not(pilot_wide_returns))]
+const CHARGES: usize = map::F.len();
+#[cfg(not(any(pilot_wide_returns, pilot_split_returns)))]
 pub const DRIVE_RANGE: [f64; 2] = [0.015, 0.001];
 #[cfg(pilot_wide_returns)]
 pub const DRIVE_RANGE: [f64; 2] = [0.12, 0.003];
+#[cfg(pilot_split_returns)]
+pub const DRIVE_RANGE: [f64; 2] = map::SPLIT_RANGE;
 
 #[derive(Clone, Copy, Default)]
 pub struct Drive {
@@ -28,7 +31,7 @@ impl Drive {
 
 #[derive(Clone, Copy)]
 pub struct State {
-    q: [f64; 18],
+    q: [f64; CHARGES],
     input: [f64; 3],
     defects: [f64; JUNCTIONS],
     #[cfg(pilot_block_roots)]
@@ -49,7 +52,7 @@ impl State {
         if index != 1 {
             return Err(Error::Input);
         }
-        Ok(Self { q: [0.; 18], input: [0.; 3], defects: [0.; JUNCTIONS],
+        Ok(Self { q: [0.; CHARGES], input: [0.; 3], defects: [0.; JUNCTIONS],
                   #[cfg(pilot_block_roots)] feedback: [0.; JUNCTIONS] })
     }
 }
@@ -182,7 +185,7 @@ pub fn step(state: &mut State, signal: f64, drive: Drive) -> Result<Ports, Error
     let input = [signal, drive.volume_delta_v, drive.filter_delta_v];
     let stored = product(&F, &state.q);
     let correction = product(&N0, &state.defects);
-    let base: [f64; 18] = std::array::from_fn(|i| {
+    let base: [f64; CHARGES] = std::array::from_fn(|i| {
         dot(&map::U0[i], &state.input) + dot(&map::U1[i], &input) + stored[i] + correction[i]
     });
     let history = product(&ZH, &base);
@@ -198,7 +201,7 @@ pub fn step(state: &mut State, signal: f64, drive: Drive) -> Result<Ports, Error
         let residual: [f64; JUNCTIONS] = std::array::from_fn(|i| z[i] - predictor[i] + feedback[i]);
         if residual.iter().all(|x| x.abs() <= 2e-13) {
             let charge = product(&N1, &defects);
-            let q: [f64; 18] = std::array::from_fn(|i| base[i] + charge[i]);
+            let q: [f64; CHARGES] = std::array::from_fn(|i| base[i] + charge[i]);
             let [j7_v, bus_v, base_v, vca_base, tail, collector] = std::array::from_fn(|i| {
                 map::DC[i] + dot(&map::XQ[i], &base) + dot(&map::XU[i], &input) - dot(&map::XD[i], &defects)
             });
@@ -206,9 +209,13 @@ pub fn step(state: &mut State, signal: f64, drive: Drive) -> Result<Ports, Error
                 return Err(Error::Domain);
             }
             *state = State { q, input, defects, #[cfg(pilot_block_roots)] feedback };
+            #[cfg(not(pilot_split_returns))]
+            let r59_source = 2. + drive.volume_delta_v;
+            #[cfg(pilot_split_returns)]
+            let r59_source = map::SPLIT_CENTER[0] + drive.volume_delta_v;
             return Ok(Ports {
                 j7_v, bus_v, base_v, panel_a: (bus_v - 0.5 * signal) / 39_250.,
-                returns_a: [(2. + drive.volume_delta_v - vca_base) / 68_000., (tail - collector) / 680.],
+                returns_a: [(r59_source - vca_base) / 68_000., (tail - collector) / 680.],
             });
         }
         // Same modified-Newton preconditioner as the original pilot.

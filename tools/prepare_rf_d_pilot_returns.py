@@ -1,4 +1,4 @@
-"""Add the physical R59 drive and cutoff pin 16 to the pilot FOH model."""
+"""Generate the pilot FOH model with its physical contour drives."""
 import math
 
 import numpy as np
@@ -12,7 +12,12 @@ R16 = 47_000.  # Resistance from board pin 16 in cutoff::reduce_panel.
 BASE_NODES = (61, 66, 6, 32, 5, 65)
 # Q18 and the first VCA's signal pair, in circuit66 coordinates.
 FIRST_VCA = ((32, 28, 29), (25, 30, 27), (26, 31, 27))
+# Ladder junctions above the signal pair, which is already in build().
+# Node 68 represents the fixed 10 V collector in the top two devices.
+UPPER_LADDER = ((3, 9, 8), (2, 10, 9), (1, 11, 10), (0, 68, 11),
+                (3, 13, 12), (2, 14, 13), (1, 15, 14), (0, 68, 15))
 LAWS = 12 + 2 * len(FIRST_VCA)
+SPLIT_LAWS = LAWS + 2 * len(UPPER_LADDER)
 WIDE_LAWS = LAWS + 4
 
 
@@ -37,19 +42,27 @@ def foh(a, b, h):
     return exp[:n, :n], exp[:n, n:n + m] / scale - new, new
 
 
-def model(h, wide=False):
-    raw = build(cases()[1], h)
+def model(h, wide=False, split=None, split_ladder=False):
+    assert split is None or not wide
+    assert not split_ladder or split is not None
+    raw = build(cases()[1] if split is None else split, h)
     a, g, c, d, e = (raw[key] for key in ("a", "g", "c", "d", "e"))
     n, charges = len(g), len(a)
-    sense = np.zeros((2 * len(FIRST_VCA), n))
+    devices = FIRST_VCA + UPPER_LADDER if split_ladder else FIRST_VCA
+    sense = np.zeros((2 * len(devices), n))
     inject = np.zeros((n, len(sense)))
-    for k, (base, collector, emitter) in enumerate(FIRST_VCA):
+    fixed = np.zeros(len(sense))
+    for k, (base, collector, emitter) in enumerate(devices):
         j = 2 * k
         sense[j:j + 2, base] = 1. / VT
         sense[j, emitter] = -1. / VT
-        sense[j + 1, collector] = -1. / VT
-        inject[[base, collector, emitter], j:j + 2] = [[.01, .2], [1., -1.2], [-1.01, 1.]]
-    iexp = np.r_[raw["iexp"], 1e-14 * np.exp(sense @ raw["dc"])]
+        inject[[base, emitter], j:j + 2] = [[.01, .2], [-1.01, 1.]]
+        if collector < n:
+            sense[j + 1, collector] = -1. / VT
+            inject[collector, j:j + 2] = [1., -1.2]
+        else:
+            fixed[j + 1] = -10. / VT
+    iexp = np.r_[raw["iexp"], 1e-14 * np.exp(sense @ raw["dc"] + fixed)]
     d = np.column_stack((d, inject))
     e = np.vstack((e, sense))
     if wide:
@@ -66,7 +79,24 @@ def model(h, wide=False):
         iexp = np.r_[iexp, 1e-14 * np.exp(sense @ raw["dc"])]
         d = np.column_stack((d, inject))
         e = np.vstack((e, sense))
-    inputs = np.column_stack((raw["b"], np.eye(n)[:, 32] / R59, np.eye(n)[:, 62] / R16))
+    if split is None:
+        inputs = np.column_stack((raw["b"], np.eye(n)[:, 32] / R59, np.eye(n)[:, 62] / R16))
+        output = list(BASE_NODES)
+    else:
+        # The contour owns Q26/Q28 and the capacitor at x62. R60 remains
+        # in the TAIL row, with its collector voltage supplied at the port.
+        keep = np.r_[0:62, 66:68]
+        drop = np.arange(62, 66)
+        assert g[5, 65] == -1. / R60
+        assert np.count_nonzero(g[np.ix_(keep, drop)]) == 1
+        assert np.count_nonzero(a[:, drop]) == 1
+        charge = np.flatnonzero(np.any(a[:, keep] != 0., axis=1))
+        assert len(charge) == charges - 1
+        inputs = np.column_stack((raw["b"], np.eye(n)[:, 32] / R59, np.eye(n)[:, 5] / R60))[keep]
+        a, c = a[np.ix_(charge, keep)], c[charge]
+        g, d, e = g[np.ix_(keep, keep)], d[keep], e[:, keep]
+        n, charges = len(keep), len(charge)
+        output = [int(np.flatnonzero(keep == node)[0]) for node in BASE_NODES[:-1]]
     lhs = np.block([[g, a.T * c], [a, np.zeros((charges, charges))]])
     forcing = np.column_stack((inputs, -d))
     rhs = np.block([[np.zeros((n, charges)), forcing],
@@ -83,15 +113,22 @@ def model(h, wide=False):
     xd = -(xn + xq @ w1[:, 3:])
     data = dict(iexp=iexp, f=f, u0=w0[:, :3], u1=w1[:, :3], n0=w0[:, 3:], n1=w1[:, 3:],
                 p=e @ xd, zh=e @ xq, zu=e @ xu,
-                dc=raw["dc"][list(BASE_NODES)], xq=xq[list(BASE_NODES)],
-                xu=xu[list(BASE_NODES)], xd=xd[list(BASE_NODES)])
+                dc=raw["dc"][list(BASE_NODES)], xq=xq[output], xu=xu[output], xd=xd[output])
+    if split is not None:
+        data["xq"] = np.pad(data["xq"], ((0, 1), (0, 0)))
+        data["xu"] = np.vstack((data["xu"], [0., 0., 1.]))
+        data["xd"] = np.pad(data["xd"], ((0, 1), (0, 0)))
     checks = dict(projection_error=projection_error, charge_error=charge_error,
                   semigroup_error=semigroup_error)
     return data, checks
 
 
-def emit_data(path, h, wide=False):
-    data, checks = model(h, wide)
+def emit_data(path, h, wide=False, split=None, center=None, limits=None, split_ladder=False):
+    data, checks = model(h, wide, split, split_ladder)
+    if split is not None:
+        assert center is not None and limits is not None
+        data["split_center"] = np.array(center)
+        data["split_range"] = np.array(limits)
 
     def rust(value):
         return "[" + ",".join(map(rust, value)) + "]" if isinstance(value, list) else f"{value:.17e}"

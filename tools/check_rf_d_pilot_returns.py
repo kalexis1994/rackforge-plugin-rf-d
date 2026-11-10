@@ -39,6 +39,18 @@ LENGTH = 48_128
 RATE = 192_000
 
 
+def generate_law(laws):
+    old = (ROOT / PLANT).read_text(encoding="utf8")
+    start, end = old.index("pub fn law("), old.index("// The physical state")
+    law = once(old[start:end], "index:usize,", "")
+    law = law.replace("data::IEXP[index]", "crate::return_maps::IEXP")
+    law = re.sub(r"\b12\b", str(laws), law)
+    solve = law.index("fn solve(")
+    law = law[:solve] + "pub " + re.sub(r"\b6\b", str(laws // 2), law[solve:])
+    error = next(line for line in old.splitlines() if "pub enum Error" in line)
+    return emit("pilot-law.rs", error + "\n" + law)
+
+
 def generate(cutoff_laws=False, rate=RATE):
     assert rate in (96_000, RATE)
     table, logs, models, *_ = materialize(read_oracle())
@@ -50,16 +62,7 @@ def generate(cutoff_laws=False, rate=RATE):
                 ",".join(f"{v:.17e}" for v in cycle / max(abs(cycle))) + "];\n")
     bank = AREA / "pilot-return-maps.rs"
     checks = emit_data(bank, 1. / rate, cutoff_laws)
-    old = (ROOT / PLANT).read_text(encoding="utf8")
-    start, end = old.index("pub fn law("), old.index("// The physical state")
-    law = once(old[start:end], "index:usize,", "")
-    law = law.replace("data::IEXP[index]", "crate::return_maps::IEXP")
-    laws = WIDE_LAWS if cutoff_laws else LAWS
-    law = re.sub(r"\b12\b", str(laws), law)
-    solve = law.index("fn solve(")
-    law = law[:solve] + "pub " + re.sub(r"\b6\b", str(laws // 2), law[solve:])
-    error = next(line for line in old.splitlines() if "pub enum Error" in line)
-    law = emit("pilot-law.rs", error + "\n" + law)
+    law = generate_law(WIDE_LAWS if cutoff_laws else LAWS)
     events = []
     for at, status, note in score():
         message = {0x90: f"NoteOn({note})", 0x80: f"NoteOff({note})", 0xb0: "AllNotesOff"}[status]
