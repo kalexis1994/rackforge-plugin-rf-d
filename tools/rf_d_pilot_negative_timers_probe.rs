@@ -64,7 +64,16 @@ fn main() -> Result<(), Box<dyn Error>> {
     let key = next();
     let steps = next() as usize;
     let mode = std::env::args().nth(1);
-    if mode.as_deref() == Some("bench") {
+    if mode.as_deref() == Some("stage-sum") {
+        let mut clock = profile.start(initial, key).ok_or("edge outside domain")?;
+        let mut out = std::io::BufWriter::new(std::io::stdout().lock());
+        for _ in 0..steps {
+            let sum = clock.stage_filter_sum().ok_or("stage outside domain")?;
+            out.write_all(&sum.to_le_bytes())?;
+            clock.advance().ok_or("interval outside domain")?;
+        }
+        out.flush()?;
+    } else if mode.as_deref() == Some("bench") {
         const PASSES: usize = 2_000;
         let mut times = [0; PASSES];
         for elapsed in &mut times {

@@ -145,6 +145,12 @@ impl Carry {
         Some((left, cap, nodes))
     }
 
+    pub fn stage_filter_sum(&self) -> Option<f64> {
+        let time = self.slot as f64 * PERIOD_S + PERIOD_S / 3.;
+        let (_, _, nodes) = self.sample(time)?;
+        Some(nodes[9])
+    }
+
     pub fn observe(&self) -> Option<Sample> {
         let (_, c7, nodes) = self.sample(self.slot as f64 * PERIOD_S)?;
         let attack = cell_attack(latch(nodes), self.timers)?;

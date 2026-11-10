@@ -44,7 +44,7 @@ class Case:
         return subprocess.run([str(self.target), mode], cwd=c.ROOT, env=self.env,
                               input=payload, capture_output=True, timeout=60)
 
-    def compare(self, first, generated):
+    def compare(self, first, generated, stage_sum=None):
         if first:
             seed = np.r_[self.stages[first * FINE_ROWS], np.zeros(c.N)]
         else:
@@ -100,5 +100,12 @@ class Case:
 
         results = dict(oracle_stages=measure(self.stages[indices[:, :, None], DRIVES]),
                        oracle_foh=measure(foh(oracle)), generated_foh=measure(foh(generated), timing=True))
-        return dict(passed=all(row["passed"] for row in results.values()),
-                    first_slot=first, reference_peak_j7_v=float(abs(wanted[:, 0]).max()), **results)
+        if stage_sum is None:
+            passed = all(row["passed"] for row in results.values())
+        else:
+            stages = foh(generated)
+            stages[:, 0, 1] = stage_sum
+            results["generated_c7_stage"] = measure(stages, timing=True)
+            passed = results["oracle_stages"]["passed"] and results["generated_c7_stage"]["passed"]
+        return dict(passed=passed, first_slot=first,
+                    reference_peak_j7_v=float(abs(wanted[:, 0]).max()), **results)

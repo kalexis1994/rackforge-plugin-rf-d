@@ -77,7 +77,12 @@ def compare(evaluate, model, stages, seed, key, frames, native=None, readout=Non
             drives = rows[:, [0, 10]]
             item["returns"] = returns.assess(run, readout, reference, drives, 1)
             if audio is not None:
-                item["audio_readout"] = audio.compare(0, drives)
+                command = [target, "stage-sum"]
+                raw_sum = run(command, data)
+                assert raw_sum == run(command, data)
+                stage_sum = np.frombuffer(raw_sum, "<f8")
+                assert stage_sum.shape == (len(drives) - 1,) and np.isfinite(stage_sum).all()
+                item["audio_readout"] = audio.compare(0, drives, stage_sum)
     return item
 
 

@@ -1227,3 +1227,18 @@ positivo fue 1,227 ms para una ventana de cuatro pasos
 a 96 kHz. Incluye las celdas y el receptor con H128.
 El mapa está preparado y los puertos de contorno ya
 están disponibles al empezar la medición.
+
+En la rama negativa, x34 se evalúa en C7 al primer
+tercio del paso, con la misma ley que en los bordes.
+C2 conserva la interpolación entre bordes. Así pasaron
+los seis casos, con 0,0126 % RMS de J7 como máximo y
+0,138 pA de error máximo en R60. La salida binaria de
+C2/C5 se conservó en ambas ramas. En las tres ventanas
+positivas que usaron la verificación nodal se aceptó
+una propuesta por ventana. La negativa no la necesitó.
+[Etapa directa de C7](../evidence/rf_d_pilot_audio_readout_neg03.json).
+
+El cierre local permite contrastar el receptor de
+referencia bajo ambas ramas. Quedan el cierre de x4,
+la transición entre ventanas y la reducción del coste
+antes de medir una voz continua a 128 frames.
