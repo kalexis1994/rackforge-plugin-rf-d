@@ -91,3 +91,32 @@ Comparar la banda de ±3 mV con el mapa de
 y C18 conservan sus incidencias. Esta variante
 debe repetir los tres estímulos, los límites
 de corriente y J7, y la campaña de RackForge.
+
+
+## Cargas del receptor positivo reducido
+
+El receptor FOH de 17 cargas y 34 junturas devuelve la
+base del VCA y TAIL junto a las corrientes R59/R60.
+Se usan las mismas reconstrucciones nodales que generan
+esas corrientes al aceptar el estado del receptor.
+Contrastar ambas tensiones a reloj común contra Radau
+a 768 kHz, con límite absoluto de 20 µV. El refinamiento
+384/768 kHz debe pasar los límites de audio y retornos
+previos. Exigir identidad de los seis canales anteriores
+al leer también las dos cargas y repetir los bytes.
+
+Comprobar el signo de ambos puertos mediante las identidades
+I59 = (Vfuente59 − Vbase) / 68 kΩ e
+I60 = (Vtail − Vfuente60) / 680 Ω, con desacuerdo máximo
+de 2 pA. Las fuentes recorren 1,91 ± 0,015 V y
+1,33 ± 0,010 V, junto al estímulo de BUS ya definido.
+
+Medir 64 repeticiones del receptor a 96 kHz, cada una
+con 256 pasos internos que corresponden a 128 frames
+de host a 48 kHz. Incluir el arranque desde DC y
+consumir todas las salidas. Contar las asignaciones
+dentro del intervalo medido. Registrar mediana, p99
+y máximo frente al margen de 1,333333… ms. Esta
+medición cubre el receptor con señal y tensiones de
+contorno impuestas. La integración incluye después
+el coste de los generadores, contornos, FIR y host.

@@ -45,6 +45,7 @@ pub struct Ports {
     pub base_v: f64,
     pub panel_a: f64,
     pub returns_a: [f64; 2],
+    pub loads_v: [f64; 2], // VCA base and ladder TAIL, at the accepted endpoint.
 }
 
 impl State {
@@ -216,6 +217,7 @@ pub fn step(state: &mut State, signal: f64, drive: Drive) -> Result<Ports, Error
             return Ok(Ports {
                 j7_v, bus_v, base_v, panel_a: (bus_v - 0.5 * signal) / 39_250.,
                 returns_a: [(r59_source - vca_base) / 68_000., (tail - collector) / 680.],
+                loads_v: [vca_base, tail],
             });
         }
         // Same modified-Newton preconditioner as the original pilot.

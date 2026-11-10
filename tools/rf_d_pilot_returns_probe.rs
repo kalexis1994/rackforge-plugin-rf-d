@@ -47,17 +47,54 @@ fn guard() -> Result<(), Box<dyn std::error::Error>> {
 pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mode = std::env::args().nth(1).ok_or("argument")?;
     let mut out = BufWriter::new(std::io::stdout().lock());
-    if mode == "electrical" {
+    if matches!(mode.as_str(), "electrical" | "electrical-ports" | "electrical-bench") {
         let mut raw = Vec::new();
         std::io::stdin().lock().read_to_end(&mut raw)?;
         let mut state = plant::State::dc(1).unwrap();
         assert_eq!(raw.len() % 24, 0);
+        if mode == "electrical-bench" {
+            let rate: usize = std::env::args().nth(2).ok_or("circuit rate")?.parse()?;
+            assert!(matches!(rate, 96_000 | 192_000));
+            assert_eq!(raw.len() / 24, rate * 128 / 48_000);
+            let inputs: Vec<_> = raw.chunks_exact(24).map(|row| {
+                let read = |k| f64::from_le_bytes(row[k..k + 8].try_into().unwrap());
+                (read(0), Drive { volume_delta_v: read(8), filter_delta_v: read(16) })
+            }).collect();
+            const PASSES: usize = 64;
+            let mut times = [0_u128; PASSES];
+            let mut allocations = 0;
+            for pass in 0..=PASSES {
+                let before = ALLOCS.load(Relaxed);
+                let begin = Instant::now();
+                let mut state = plant::State::dc(1).unwrap();
+                for &(signal, drive) in &inputs {
+                    let ports = plant::step(&mut state, std::hint::black_box(signal), drive)
+                        .map_err(|e| format!("{e:?}"))?;
+                    std::hint::black_box(ports);
+                }
+                std::hint::black_box(state);
+                let elapsed = begin.elapsed().as_nanos();
+                if pass > 0 {
+                    allocations += ALLOCS.load(Relaxed) - before;
+                    times[pass - 1] = elapsed;
+                }
+            }
+            times.sort_unstable();
+            writeln!(out, "{PASSES},{},{},{},{allocations}",
+                     times[PASSES / 2], times[PASSES * 99 / 100], times[PASSES - 1])?;
+            return Ok(());
+        }
         for row in raw.chunks_exact(24) {
             let read = |k| f64::from_le_bytes(row[k..k + 8].try_into().unwrap());
             let p = plant::step(&mut state, read(0), Drive {
                 volume_delta_v: read(8), filter_delta_v: read(16),
             }).map_err(|e| format!("{e:?}"))?;
             write(&mut out, [p.j7_v, p.bus_v, p.base_v - p.bus_v, p.panel_a, p.returns_a[0], p.returns_a[1]])?;
+            if mode == "electrical-ports" {
+                for value in p.loads_v {
+                    out.write_all(&value.to_le_bytes())?;
+                }
+            }
         }
     } else {
         guard()?;

@@ -1,7 +1,9 @@
 """Bench the audio side of the C2/C5 interface before allowing feedback."""
+import argparse
 import json
 import os
 import subprocess
+import traceback
 from pathlib import Path
 
 import numpy as np
@@ -11,6 +13,7 @@ from check_rf_d_pilot_returns import (
     AREA, COMPILER, LIB, ORACLE, PROBE, ROOT, SOURCES, compare, emit, generate, generate_law,
 )
 from check_recovery_cost import digest
+from check_hybrid_voice import packed as pack_failure
 import check_rf_d_pilot_contours as contours
 from prepare_charge_reduced import Y
 from prepare_dual_chain import sha, write
@@ -24,6 +27,8 @@ TRIALS = ((96_000, False), (192_000, False), (96_000, True))
 REFERENCE_RATES = (384_000, 768_000)
 HOST_RATE = 48_000
 HOST_FRAMES = 128
+BUDGET_NS = HOST_FRAMES * 1_000_000_000 // (2 * HOST_RATE)
+LOAD_LIMIT_V = 20e-6
 OPEN = (1.91, 1.33)
 OPEN_RANGE = (.015, .01)
 CLOSED = (-.28, 1.45)
@@ -94,6 +99,10 @@ def capture_reserves(run, flags):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--receiver-only", action="store_true",
+                        help="check and time the admitted positive receiver without recapturing contours")
+    args = parser.parse_args()
     assert not list(AREA.iterdir())
     sequence = 1
     while (out := ROOT / f"evidence/rf_d_pilot_split_returns{sequence:02}.json").exists():
@@ -104,7 +113,9 @@ def main():
     report = dict(passed=False, rack_integrated=False, contour_feedback=False,
                   audible_base="0.3.2", channels=CHANNELS, r59_r60_bias_v=OPEN,
                   r59_r60_range_v=OPEN_RANGE, off_bias_v=CLOSED, **sources.fields(),
-                  compiler_sha256=sha(Path(COMPILER)), library_sha256=sha(LIB), rates={})
+                  compiler_sha256=sha(Path(COMPILER)), library_sha256=sha(LIB), rates={},
+                  receiver_only=args.receiver_only, frames=HOST_FRAMES, budget_ns=BUDGET_NS,
+                  native_receiver_realtime=False, load_limit_v=LOAD_LIMIT_V)
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
     flags = [COMPILER, "--edition=2021", "-C", "opt-level=3", "-C", "target-feature=+fma",
              "-A", "dead_code", "-C", "link-arg=-Wl,--stack,33554432"]
@@ -127,6 +138,7 @@ def main():
         assert np.isfinite(data).all()
         return data
 
+    last_payload = None
     try:
         oracle = AREA / "pilot-split-oracle.exe"
         result = run([*flags, ROOT / ORACLE, "--extern", f"rf_d_circuit={LIB}", "-o", oracle])
@@ -150,7 +162,7 @@ def main():
             return floats([oracle, clock, "split"], np.r_[case["DC"], inputs.ravel()]).reshape(-1, 6)
 
         fine = {clock: reference(clock, drives) for clock in REFERENCE_RATES}
-        for clock, ladder in TRIALS:
+        for clock, ladder in (((96_000, True),) if args.receiver_only else TRIALS):
             code, _ = generate(rate=clock)
             if ladder:
                 generate_law(SPLIT_LAWS)
@@ -170,7 +182,8 @@ def main():
             def hold(t):
                 return np.column_stack([np.interp(t, time, column) for column in coarse.T])
 
-            candidate = run([exe, "electrical"], packed(coarse[1:]), repeat=True)
+            last_payload = packed(coarse[1:])
+            candidate = run([exe, "electrical"], last_payload, repeat=True)
             assert candidate.returncode == 0, candidate.stderr.decode(errors="replace")
             trial = np.frombuffer(candidate.stdout, "<f8").reshape(-1, 6)
             sample = {rate: values[rate // clock - 1::rate // clock] for rate, values in fine.items()}
@@ -183,13 +196,50 @@ def main():
                 refinement=compare(low, high), comparison=compare(trial, high),
                 fo_hold_reference_vs_continuous=compare(held, high),
                 candidate_vs_fo_hold_reference=compare(trial, held))
+            if clock == 96_000 and ladder:
+                ports = run([exe, "electrical-ports"], packed(coarse[1:]), repeat=True)
+                assert ports.returncode == 0, ports.stderr.decode(errors="replace")
+                received = np.frombuffer(ports.stdout, "<f8").reshape(-1, 8)
+                assert np.isfinite(received).all() and np.array_equal(received[:, :6], trial)
+                endpoint = coarse[1:, 1:] + OPEN
+                wanted_loads = np.column_stack((endpoint[:, 0] - R59 * high[:, 4],
+                                                endpoint[:, 1] + R60 * high[:, 5]))
+                load_error = abs(received[:, 6:] - wanted_loads).max(axis=0)
+                closure = np.column_stack(((endpoint[:, 0] - received[:, 6]) / R59,
+                                            (received[:, 7] - endpoint[:, 1]) / R60))
+                closure_error = abs(closure - received[:, 4:6]).max(axis=0)
+                item = report["rates"][tag]
+                item["loads"] = dict(passed=bool(load_error.max() <= LOAD_LIMIT_V
+                                                  and closure_error.max() <= 2e-12),
+                                     max_error_v=load_error.tolist(), closure_error_a=closure_error.tolist(),
+                                     names=("vca_base", "tail"), bit_exact_legacy_readout=True,
+                                     bit_exact_replay=True, output_sha256=digest(ports.stdout))
+                timing = run([exe, "electrical-bench", clock], packed(coarse[1:]))
+                assert timing.returncode == 0, timing.stderr.decode(errors="replace")
+                item["timing"] = dict(zip(("blocks", "median_ns", "p99_ns", "max_ns", "allocations"),
+                                          map(int, timing.stdout.decode().strip().split(",")), strict=True))
+                item["timed_scope"] = "receiver from DC with imposed signal and contour voltages"
+                if not item["loads"]["passed"]:
+                    report["failure_input"] = pack_failure(last_payload)
+                print("RECEIVER", item["loads"], item["timing"], flush=True)
             print(tag, report["rates"][tag]["comparison"], flush=True)
-        report["reserves"] = capture_reserves(run, flags)
-        print("CONTOUR_RESERVES", report["reserves"], flush=True)
+        if not args.receiver_only:
+            report["reserves"] = capture_reserves(run, flags)
+            print("CONTOUR_RESERVES", report["reserves"], flush=True)
         admitted = report["rates"]["96000_ladder"]
-        report["positive_receiver_passed"] = admitted["refinement"]["passed"] and admitted["comparison"]["passed"]
+        report["positive_receiver_passed"] = (admitted["refinement"]["passed"]
+                                              and admitted["comparison"]["passed"]
+                                              and admitted["loads"]["passed"])
+        report["native_receiver_realtime"] = (report["positive_receiver_passed"]
+                                               and admitted["timing"]["allocations"] == 0
+                                               and admitted["timing"]["max_ns"] <= BUDGET_NS)
         report["passed"] = False  # Offline ports remain externally driven and the feedback gate is still open.
         sources.unchanged()
+    except Exception:
+        report["failure"] = traceback.format_exc()
+        if last_payload is not None:
+            report["failure_input"] = pack_failure(last_payload)
+        raise
     finally:
         write(out, report)
         for path in AREA.iterdir():

@@ -2045,3 +2045,31 @@ rápido, con el bloque completo como referencia de
 J7, R59/R60 y evento. Su admisión requiere después
 medir el motor de RackForge.
 [Corrección con cierre diferido](../evidence/rf_d_pilot_bistable_block03.json).
+
+
+## Cargas y coste del receptor FOH positivo
+
+El receptor reducido de 17 estados de carga y 34 junturas
+entrega ahora las tensiones de base del VCA y TAIL. Son
+los valores usados por sus ecuaciones de R59/R60 en el
+estado aceptado. Permiten devolver las cargas a los
+contornos desde el mapa FOH. La lectura extendida reprodujo
+por bits los seis canales anteriores y su replay completo.
+
+A 96 kHz pasó el bloque positivo de 128 frames contra
+Radau a 768 kHz, junto al refinamiento 384/768 kHz.
+Los máximos de error de las cargas fueron 0,526 pV en
+la base del VCA y 2,01 nV en TAIL, frente a 20 µV.
+Las identidades de corriente de ambos puertos cerraron
+con desacuerdo observado nulo. J7 tuvo 0,00787 % RMS
+de error, R59 0,00774 fA y R60 2,95 pA. Las fuentes
+estuvieron en 1,91 ± 0,015 V y 1,33 ± 0,010 V.
+
+En 64 repeticiones nativas, la mediana fue 1,102 ms
+y el máximo 1,216 ms. Hubo cero asignaciones. El margen
+frente a 1,333 ms fue 0,118 ms en el peor bloque. El
+cronómetro incluye el arranque del receptor desde DC
+y 256 pasos internos. La señal y las tensiones de
+contorno están impuestas. Los generadores, contornos,
+FIR y RackForge requieren medición al integrarse.
+[Puertos y banco de 128 frames](../evidence/rf_d_pilot_split_returns02.json).
