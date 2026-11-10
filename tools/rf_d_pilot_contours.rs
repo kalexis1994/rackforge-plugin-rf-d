@@ -60,7 +60,7 @@ pub fn step(
     previous: Boundary,
     previous_change: [f64; N],
 ) -> Result<[Loaded; 2], StepError> {
-    step_with_budget(old, input, h, previous, previous_change, 3).map_err(|(_, error)| error)
+    step_with_budget(old, input, h, previous, previous_change, 3, None).map_err(|(_, error)| error)
 }
 
 pub fn step_with_budget(
@@ -70,6 +70,7 @@ pub fn step_with_budget(
     mut previous: Boundary,
     previous_change: [f64; N],
     budget: usize,
+    mut seed: Option<&mut Option<[State; 2]>>,
 ) -> Result<[Loaded; 2], (&'static str, StepError)> {
     previous.volts[C2] = old.timers[0];
     #[cfg(pilot_loaded_filter)]
@@ -123,8 +124,20 @@ pub fn step_with_budget(
                     .map_err(|error| ("C5 Q22", error))?;
             }
         }
-        let stages = latch::step(old.latch, boundary, h, previous, previous_change)
-            .map_err(|error| ("latch", error))?;
+        let mut stages = seed
+            .as_ref()
+            .and_then(|saved| **saved)
+            .and_then(|saved| latch::seeded_step(old.latch, boundary, h, saved).ok());
+        if stages.is_none() {
+            stages = Some(
+                latch::step(old.latch, boundary, h, previous, previous_change)
+                    .map_err(|error| ("latch", error))?,
+            );
+        }
+        let stages = stages.unwrap();
+        if let Some(saved) = seed.as_mut() {
+            **saved = Some(stages);
+        }
         #[cfg(pilot_loaded_filter)]
         for (trial, stage) in trial.iter_mut().zip(stages) {
             trial.q22_base = stage.0[latch::pin(29)];

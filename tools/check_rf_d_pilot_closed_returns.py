@@ -17,8 +17,8 @@ OWN = "tools/check_rf_d_pilot_closed_returns.py"
 MODEL = "tools/rf_d_pilot_closed_returns.rs"
 CLOCK = "tools/rf_d_pilot_contour_clock.rs"
 REDUCED = "tools/rf_d_pilot_reduced_audio.rs"
-MODES = ((256, 8, 0, True, False), (256, 8, 3, True, False),
-         (256, 8, 0, True, True), (256, 8, 3, True, True))
+MODES = ((256, 8, 0, True, True, False), (256, 8, 3, True, True, False),
+         (256, 8, 0, True, True, True), (256, 8, 3, True, True, True))
 POLICIES = {1: 'adaptive', 2: 'port_clock', 3: 'latch_clock'}
 CHANNELS = (c.J7, None, None, 5, 38, 3, 37, 54, 55, 26, 28)
 
@@ -122,8 +122,8 @@ def main():
         probe = c.component(kernel)
         code = c.once(probe.read_text(encoding="utf8"), '        Some("ports") => ports(),', '''
         Some("ports") => ports(),
-        Some("closed-returns") if args.len() == 10 =>
-            closed_returns::run(&args[2], args[3].parse()?, args[4].parse()?, args[5].parse()?, args[6].parse()?, args[7].parse()?, args[8].parse()?, args[9].parse()?),''')
+        Some("closed-returns") if args.len() == 11 =>
+            closed_returns::run(&args[2], args[3].parse()?, args[4].parse()?, args[5].parse()?, args[6].parse()?, args[7].parse()?, args[8].parse()?, args[9].parse()?, args[10].parse()?),''')
         code += f'\n#[path = "{(c.ROOT / MODEL).as_posix()}"] mod closed_returns;\n'
         devices, report["unit_bias_underflow_columns"] = radau_devices()
         report["devices_sha256"] = c.sha(devices)
@@ -143,9 +143,9 @@ def main():
             ref = run([exe, "contour-capture", anchor, start, frames, key])
             assert ref.returncode == 0, ref.stderr.decode(errors="replace")
             entry = report["windows"][label] = dict(reference=inspect_reserve(ref.stdout, info), modes={})
-            for stride, budget, policy, reduced, reuse in MODES:
+            for stride, budget, policy, reduced, reuse, warm in MODES:
                 adaptive = policy != 0
-                cmd = [exe, "closed-returns", anchor, key, frames, stride, budget, policy, str(reduced).lower(), str(reuse).lower()]
+                cmd = [exe, "closed-returns", anchor, key, frames, stride, budget, policy, str(reduced).lower(), str(reuse).lower(), str(warm).lower()]
                 trial = run(cmd)
                 stderr = trial.stderr.decode(errors="replace").strip()
                 result = dict(exit_code=trial.returncode, output_sha256=c.digest(trial.stdout), passed=False)
@@ -154,6 +154,8 @@ def main():
                     mode = 'reduced_' + mode
                 if reuse:
                     mode = 'reuse_' + mode
+                if warm:
+                    mode = 'warm_' + mode
                 entry["modes"][mode] = result
                 if trial.returncode == 0:
                     tag, time, outer, audio, mismatch, solve, defect, switch, worst, builds, reused = stderr.split(",")
@@ -172,7 +174,7 @@ def main():
                     assert trial.returncode == 0 or trial.stderr == replay.stderr
                     result["unchanged_replay"] = True
                 print(label, mode, result, flush=True)
-        report["passed"] = all(entry["modes"]["reduced_latch_clock"]["passed"] and entry["modes"]["reuse_reduced_latch_clock"]["passed"]
+        report["passed"] = all(entry["modes"]["reuse_reduced_latch_clock"]["passed"] and entry["modes"]["warm_reuse_reduced_latch_clock"]["passed"]
                                for entry in report["windows"].values())
         sources.unchanged()
     except Exception:

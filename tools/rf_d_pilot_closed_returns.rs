@@ -44,6 +44,7 @@ struct Audio {
     lu: Lu<PAIR>,
     reduced: Option<reduced_audio::Map>,
     reuse: bool,
+    warm: bool,
     tangent: RefCell<Option<Lu<INTERFACE>>>,
     builds: Cell<usize>,
     reused: Cell<usize>,
@@ -62,6 +63,7 @@ impl Audio {
         wires: [f64; 2],
         reduce_audio: bool,
         reuse: bool,
+        warm: bool,
     ) -> Result<Self, StepError> {
         let mut p = parameters();
         p.boundary.recovery.vca.loudness_v = 0.;
@@ -109,6 +111,7 @@ impl Audio {
             lu,
             reduced,
             reuse,
+            warm,
             tangent: RefCell::new(None),
             builds: Cell::new(0),
             reused: Cell::new(0),
@@ -211,7 +214,12 @@ struct Step<'a> {
 }
 
 impl Step<'_> {
-    fn evaluate(&self, v: [f64; INTERFACE], seed: [chain::State; 2]) -> Result<Closure, Failure> {
+    fn evaluate(
+        &self,
+        v: [f64; INTERFACE],
+        seed: [chain::State; 2],
+        mut contour_seed: Option<[latch::State; 2]>,
+    ) -> Result<Closure, Failure> {
         let mut ports = self.ports;
         for i in 0..2 {
             let [base, tail, cv] = [v[3 * i], v[3 * i + 1], v[3 * i + 2]];
@@ -228,6 +236,7 @@ impl Step<'_> {
             self.previous,
             self.change,
             self.timer_budget,
+            self.model.warm.then_some(&mut contour_seed),
         )?;
         let drive = contour.map(|s| [s.returns.volume[2], s.returns.filter[2]]);
         let (audio, phase, delta, audio_iterations) = self
@@ -267,7 +276,8 @@ impl Step<'_> {
         let norm = maximum(&result.residual);
         for half in 0..attempts {
             let x = std::array::from_fn(|i| v[i] + direction[i] * 0.5_f64.powi(half as i32));
-            if let Ok(trial) = self.evaluate(x, result.delta) {
+            if let Ok(trial) = self.evaluate(x, result.delta, Some(result.contour.map(|s| s.latch)))
+            {
                 let next = maximum(&trial.residual);
                 if next < norm && (attempts > 1 || next <= 1e-10 || next <= 0.5 * norm) {
                     return Ok(Some((x, trial)));
@@ -282,7 +292,7 @@ impl Step<'_> {
         mut v: [f64; INTERFACE],
         seed: [chain::State; 2],
     ) -> Result<(Closure, usize), Failure> {
-        let mut result = self.evaluate(v, seed)?;
+        let mut result = self.evaluate(v, seed, None)?;
         for iteration in 1..=6 {
             if maximum(&result.residual) <= 1e-10 {
                 return Ok((result, iteration));
@@ -304,7 +314,8 @@ impl Step<'_> {
                 let mut x = v;
                 let dv = 1e-6;
                 x[column] += dv;
-                let probe = self.evaluate(x, result.delta)?;
+                let probe =
+                    self.evaluate(x, result.delta, Some(result.contour.map(|s| s.latch)))?;
                 for (row, slopes) in j.iter_mut().enumerate() {
                     slopes[column] =
                         (probe.residual[row] - result.residual[row]) / (x[column] - v[column]);
@@ -429,6 +440,7 @@ pub fn run(
     mode: usize,
     reduce_audio: bool,
     reuse: bool,
+    warm: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     assert!(mode <= 3);
     let adaptive = mode != 0;
@@ -488,8 +500,17 @@ pub fn run(
         let model = if adaptive || span == stride {
             let h = span as f64 / (48_000. * 512.);
             Some(
-                Audio::new(audio, &family, phase, h, [x(3), x(37)], reduce_audio, reuse)
-                    .map_err(|e| format!("audio factor: {e:?}"))?,
+                Audio::new(
+                    audio,
+                    &family,
+                    phase,
+                    h,
+                    [x(3), x(37)],
+                    reduce_audio,
+                    reuse,
+                    warm,
+                )
+                .map_err(|e| format!("audio factor: {e:?}"))?,
             )
         } else {
             None

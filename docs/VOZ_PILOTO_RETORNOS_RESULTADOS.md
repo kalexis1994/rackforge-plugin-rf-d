@@ -546,3 +546,19 @@ por frame. Se conservaron el cruce de ocho ticks, las dos
 reservas negativas a 96 kHz fijos y el límite de 2 nA. El
 peor error de R59/R60 del reloj adaptativo fue 0,146 pA.
 [Contraste con tangente reutilizada](../evidence/rf_d_pilot_closed_returns10.json).
+
+Al resolver los mismos intervalos de C2/C5 con una nueva carga,
+la última solución de las dos etapas del biestable sirve como
+semilla. Las ecuaciones se evalúan desde el mismo estado de
+carga anterior. Si la semilla falla, vuelve a usarse el arranque
+anterior del solver.
+
+Con esa semilla, el pico positivo del mismo pase bajó de
+844 ms a 479 ms por frame. El reloj mantuvo la misma distribución
+de pasos y el cruce **319096–319104**. El peor error de R59/R60
+en las tres reservas adaptativas fue 0,175 pA. La pulsación y la
+liberación negativas pasaron también a 96 kHz fijos. El pico
+positivo excede el presupuesto completo de 1,333 ms por bloque
+de 128 frames. La prueba física del candidato en Desktop queda
+pendiente.
+[Contraste con semilla del biestable](../evidence/rf_d_pilot_closed_returns11.json).

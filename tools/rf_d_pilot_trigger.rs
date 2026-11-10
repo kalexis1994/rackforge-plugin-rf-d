@@ -563,15 +563,35 @@ pub fn trial_diagnostic(
     Ok((maximum(&residual), maximum(&correction)))
 }
 
+pub fn seeded_step(
+    old: State,
+    u: [Boundary; 2],
+    h: f64,
+    seed: [State; 2],
+) -> Result<[State; 2], StepError> {
+    let delta = std::array::from_fn(|i| seed[i / N].0[i % N] - old.0[i % N]);
+    solve_with_seed(old, u, h, delta, false)
+}
+
 fn solve(
     old: State,
     u: [Boundary; 2],
     h: f64,
+    delta: [f64; 2 * N],
+) -> Result<[State; 2], StepError> {
+    solve_with_seed(old, u, h, delta, true)
+}
+
+fn solve_with_seed(
+    old: State,
+    u: [Boundary; 2],
+    h: f64,
     mut delta: [f64; 2 * N],
+    initialize_key: bool,
 ) -> Result<[State; 2], StepError> {
     for j in 0..2 {
         let k = pin(22);
-        if u[j].key - old.0[k] > 0.5 {
+        if initialize_key && u[j].key - old.0[k] > 0.5 {
             delta[j * N + k] = u[j].key - 0.5 - old.0[k];
         }
     }
