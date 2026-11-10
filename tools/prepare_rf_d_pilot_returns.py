@@ -42,9 +42,10 @@ def foh(a, b, h):
     return exp[:n, :n], exp[:n, n:n + m] / scale - new, new
 
 
-def model(h, wide=False, split=None, split_ladder=False, normalize_defects=False):
+def model(h, wide=False, split=None, split_ladder=False, normalize_defects=False, state_transfer=False):
     assert split is None or not wide
     assert not (split_ladder or normalize_defects) or split is not None
+    assert not state_transfer or split is not None
     raw = build(cases()[1] if split is None else split, h)
     a, g, c, d, e = (raw[key] for key in ("a", "g", "c", "d", "e"))
     n, charges = len(g), len(a)
@@ -125,14 +126,21 @@ def model(h, wide=False, split=None, split_ladder=False, normalize_defects=False
         data["xq"] = np.pad(data["xq"], ((0, 1), (0, 0)))
         data["xu"] = np.vstack((data["xu"], [0., 0., 1.]))
         data["xd"] = np.pad(data["xd"], ((0, 1), (0, 0)))
+    if state_transfer:
+        charge_sense = np.zeros((charges, 68))
+        junction_sense = np.zeros((len(iexp), 68))
+        charge_sense[:, keep] = a
+        junction_sense[:, keep] = e
+        data.update(init_charge=charge_sense, init_junction=junction_sense,
+                    init_capacitance=c, init_dc_high=split["DC"][:68], init_dc_low=split["DC"][68:])
     checks = dict(projection_error=projection_error, charge_error=charge_error,
                   semigroup_error=semigroup_error)
     return data, checks
 
 
 def emit_data(path, h, wide=False, split=None, center=None, limits=None, split_ladder=False,
-              normalize_defects=False):
-    data, checks = model(h, wide, split, split_ladder, normalize_defects)
+              normalize_defects=False, state_transfer=False):
+    data, checks = model(h, wide, split, split_ladder, normalize_defects, state_transfer)
     if split is not None:
         assert center is not None and limits is not None
         data["split_center"] = np.array(center)

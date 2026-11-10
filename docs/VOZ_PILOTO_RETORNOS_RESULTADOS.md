@@ -2107,3 +2107,45 @@ del receptor acoplado y su coste en RackForge siguen
 pendientes.
 [Regresión del piloto](../evidence/rf_d_pilot_returns14.json),
 [control anterior](../evidence/rf_d_pilot_returns13.json).
+
+
+### Transferencia desde una trayectoria cargada
+
+El receptor positivo importa las 17 coordenadas de
+capacitor desde los nodos compensados del circuito.
+Reconstruye los restos de las 34 junturas, la entrada
+anterior y la realimentación que usa el precondicionador.
+La importación de DC reprodujo por bits la trayectoria
+previa. Los cuatro controles de entrada inválida se
+rechazaron con replays idénticos.
+
+La referencia avanzó 128 frames desde DC antes de
+entregar su estado. En la importación, las 17 cargas
+relativas al anclaje coincidieron con las incidencias
+originales, con desacuerdo observado nulo frente al
+límite de 1e−20 C. La mayor carga importada fue
+11,7 nC. La continuación de otros 128 frames pasó
+contra Radau a 768 kHz y su refinamiento a 384 kHz.
+El error RMS de J7 fue 0,0454 %, con máximo de
+63,8 nV. R59 quedó en 0,0110 fA y R60 en 3,21 pA.
+Las cargas de base del VCA y TAIL difirieron como
+máximo 0,746 pV y 2,18 nV. Las identidades de
+corriente cerraron con desacuerdo observado nulo.
+
+El control que reinició la memoria tuvo 32,95 % RMS
+de error en J7 y fue rechazado por los mismos límites.
+La continuación importada difirió de la trayectoria
+ininterrumpida del receptor en 0,000713 % RMS.
+En 64 bloques nativos, la mediana fue 1,044 ms y el
+máximo 1,172 ms, con cero asignaciones. La transferencia
+se preparó antes del cronómetro. Las tres fuentes
+siguen impuestas y queda medir el acople con los
+contornos y el host.
+[Transferencia y controles](../evidence/rf_d_pilot_receiver_handoff01.json).
+
+El receptor agrupado anterior, compilado con su
+configuración habitual, volvió a pasar. Sus coeficientes
+y los ocho canales de salida reprodujeron los mismos
+bytes del recibo anterior. Este pase tuvo mediana
+1,035 ms y máximo 1,093 ms, con cero asignaciones.
+[Regresión de la ruta previa](../evidence/rf_d_pilot_split_returns04.json).

@@ -47,12 +47,33 @@ fn guard() -> Result<(), Box<dyn std::error::Error>> {
 pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mode = std::env::args().nth(1).ok_or("argument")?;
     let mut out = BufWriter::new(std::io::stdout().lock());
-    if matches!(mode.as_str(), "electrical" | "electrical-ports" | "electrical-bench") {
+    if matches!(mode.as_str(), "electrical" | "electrical-ports" | "electrical-bench")
+        || (cfg!(all(pilot_split_returns, pilot_receiver_handoff))
+            && matches!(mode.as_str(), "electrical-resume" | "electrical-resume-bench"))
+    {
         let mut raw = Vec::new();
         std::io::stdin().lock().read_to_end(&mut raw)?;
         let mut state = plant::State::dc(1).unwrap();
+        #[cfg(all(pilot_split_returns, pilot_receiver_handoff))]
+        if matches!(mode.as_str(), "electrical-resume" | "electrical-resume-bench") {
+            const HEADER: usize = 139 * 8;
+            assert!(raw.len() >= HEADER);
+            let read = |k| f64::from_le_bytes(raw[8 * k..8 * (k + 1)].try_into().unwrap());
+            state = plant::State::from_nodal(
+                &std::array::from_fn(|k| read(k)),
+                &std::array::from_fn(|k| read(68 + k)),
+                read(136),
+                Drive { volume_delta_v: read(137), filter_delta_v: read(138) },
+            ).map_err(|e| format!("handoff: {e:?}"))?;
+            raw.drain(..HEADER);
+            if mode == "electrical-resume" {
+                for value in state.capacitor_charge_offsets_c() {
+                    out.write_all(&value.to_le_bytes())?;
+                }
+            }
+        }
         assert_eq!(raw.len() % 24, 0);
-        if mode == "electrical-bench" {
+        if mode.ends_with("-bench") {
             let rate: usize = std::env::args().nth(2).ok_or("circuit rate")?.parse()?;
             assert!(matches!(rate, 96_000 | 192_000));
             assert_eq!(raw.len() / 24, rate * 128 / 48_000);
@@ -61,12 +82,13 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
                 (read(0), Drive { volume_delta_v: read(8), filter_delta_v: read(16) })
             }).collect();
             const PASSES: usize = 64;
+            let initial = state;
             let mut times = [0_u128; PASSES];
             let mut allocations = 0;
             for pass in 0..=PASSES {
                 let before = ALLOCS.load(Relaxed);
                 let begin = Instant::now();
-                let mut state = plant::State::dc(1).unwrap();
+                let mut state = initial;
                 for &(signal, drive) in &inputs {
                     let ports = plant::step(&mut state, std::hint::black_box(signal), drive)
                         .map_err(|e| format!("{e:?}"))?;
@@ -90,7 +112,7 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
                 volume_delta_v: read(8), filter_delta_v: read(16),
             }).map_err(|e| format!("{e:?}"))?;
             write(&mut out, [p.j7_v, p.bus_v, p.base_v - p.bus_v, p.panel_a, p.returns_a[0], p.returns_a[1]])?;
-            if mode == "electrical-ports" {
+            if matches!(mode.as_str(), "electrical-ports" | "electrical-resume") {
                 for value in p.loads_v {
                     out.write_all(&value.to_le_bytes())?;
                 }

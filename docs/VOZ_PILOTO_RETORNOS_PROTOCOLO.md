@@ -133,3 +133,39 @@ usa la dirección completa. Cada aceptación exige el
 residuo de las 34 leyes con el mismo límite de 2e−13.
 Los límites de puertos, J7 y temporales anteriores se
 aplican también a este ensayo.
+
+
+## Continuidad desde un estado eléctrico cargado
+
+La transferencia del receptor positivo usa un estado del
+circuito de 68 nodos con sus partes alta y baja, el valor
+de señal y las dos tensiones de fuente del instante anterior.
+El mapa conserva las 17 coordenadas de capacitor retenidas,
+incluida C27. Calcula q = A·δV y los restos exponenciales
+desde E·δV con las mismas incidencias y tarjetas del
+receptor. Guarda también la entrada previa y reconstruye
+la realimentación del precondicionador. Las referencias
+de tensión se restan antes de sumar las partes alta y baja.
+Las coordenadas q están en voltios y C·q expresa la carga
+en coulombs relativa al anclaje. El mapa y el snapshot
+comparten topología, unidades y punto de operación.
+
+Arrancar la referencia desde el reposo positivo admitido,
+avanzar 128 frames con las fuentes existentes e importar
+su estado final. Continuar otros 128 frames a 96 kHz.
+Contrastar cada carga conservada con un máximo de 1e−20 C,
+y J7, R59/R60 y los voltajes de carga con los límites
+anteriores. La referencia usa Radau a 384/768 kHz y
+el refinamiento debe pasar en el tramo continuado.
+Exigir replay idéntico, importación de DC idéntica por
+bits a la ruta previa y contraste con la trayectoria
+ininterrumpida del receptor. Un control que reinicia
+la memoria debe exceder los límites del mismo tramo.
+
+Rechazar nodos o señal no finitos, fuentes fuera del
+dominio y junturas fuera del dominio exponencial.
+Medir 64 continuaciones del receptor desde el estado
+importado, con cero asignaciones y el mismo margen
+de 1,333333… ms. La transferencia inicial se prepara
+antes del intervalo cronometrado. Las fuentes de señal
+y contorno siguen impuestas en este contraste.

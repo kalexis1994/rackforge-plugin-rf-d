@@ -56,6 +56,46 @@ impl State {
         Ok(Self { q: [0.; CHARGES], input: [0.; 3], defects: [0.; JUNCTIONS],
                   #[cfg(pilot_block_roots)] feedback: [0.; JUNCTIONS] })
     }
+
+    #[cfg(all(pilot_split_returns, pilot_receiver_handoff))]
+    pub fn from_nodal(
+        high: &[f64; 68],
+        low: &[f64; 68],
+        signal: f64,
+        drive: Drive,
+    ) -> Result<Self, Error> {
+        if !drive.valid() || !signal.is_finite() || signal.abs() > 0.08
+            || high.iter().chain(low).any(|v| !v.is_finite())
+        {
+            return Err(Error::Input);
+        }
+        let offset = std::array::from_fn(|k| {
+            (high[k] - map::INIT_DC_HIGH[k]) + (low[k] - map::INIT_DC_LOW[k])
+        });
+        let q = map::INIT_CHARGE.each_ref().map(|row| dot(row, &offset));
+        let junction = map::INIT_JUNCTION.each_ref().map(|row| dot(row, &offset));
+        let (defects, _) = law(junction)?;
+        #[cfg(pilot_block_roots)]
+        let feedback = product(&P, &defects);
+        if q.iter().chain(&defects).any(|v| !v.is_finite()) {
+            return Err(Error::Domain);
+        }
+        #[cfg(pilot_block_roots)]
+        if feedback.iter().any(|v| !v.is_finite()) {
+            return Err(Error::Domain);
+        }
+        Ok(Self {
+            q,
+            input: [signal, drive.volume_delta_v, drive.filter_delta_v],
+            defects,
+            #[cfg(pilot_block_roots)] feedback,
+        })
+    }
+
+    #[cfg(all(pilot_split_returns, pilot_receiver_handoff))]
+    pub fn capacitor_charge_offsets_c(&self) -> [f64; CHARGES] {
+        std::array::from_fn(|k| self.q[k] * map::INIT_CAPACITANCE[k])
+    }
 }
 
 fn dot<const N: usize>(a: &[f64; N], b: &[f64; N]) -> f64 {

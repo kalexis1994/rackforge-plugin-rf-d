@@ -158,7 +158,9 @@ fn anchor(mut old: State, target: [f64; 3]) -> Result<State, StepError> {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let clock = std::env::args().nth(1).ok_or("sample rate")?;
-    let split = std::env::args().nth(2).is_some_and(|mode| mode == "split");
+    let mode = std::env::args().nth(2);
+    let snapshot = mode.as_deref() == Some("split-snapshot");
+    let split = snapshot || mode.as_deref() == Some("split");
     let mut bytes = Vec::new();
     std::io::stdin().lock().read_to_end(&mut bytes)?;
     let floats: Vec<_> = bytes
@@ -201,6 +203,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let last: [f64; 3] = row[3..].try_into()?;
         old = step(old, row[..3].try_into()?, last, h, split)
             .map_err(|e| format!("step {i}: {e:?}"))?;
+        if snapshot {
+            continue;
+        }
         let v = |k: usize| old.high[k] + old.low[k];
         for val in [
             v(61),
@@ -211,6 +216,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             (v(TAIL) - v(COLLECTOR)) / 680.,
         ] {
             out.write_all(&val.to_le_bytes())?;
+        }
+    }
+    if snapshot {
+        for value in old.high.into_iter().chain(old.low) {
+            out.write_all(&value.to_le_bytes())?;
         }
     }
     out.flush()?;
