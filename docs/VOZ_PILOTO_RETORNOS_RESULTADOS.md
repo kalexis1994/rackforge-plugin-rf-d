@@ -672,3 +672,56 @@ con `--blocks --verify-reduced --compare-residual`. Los
 bloques siguen fuera del margen de 1,333 ms y la prueba
 del candidato en Desktop queda pendiente.
 [Comparación en orden inverso](../evidence/rf_d_pilot_closed_returns22.json).
+
+## Dos estados de carga a 96 kHz
+
+La reducción del camino de audio empieza por C2 y C5 en
+la revisión nominal CA3046, con los controles y el decay
+de las reservas cargadas. Se conserva un voltaje por
+capacitor de 10 µF y los seis caminos resistivos
+x8/x11/x0 de 1/10/10 kΩ y x44/x47/x29 de 0,1/1/10 kΩ.
+Los valores y el alcance provienen de los
+[contornos cargados](CONTORNOS_CADENA_PROTOCOLO.md) y del
+[stamp de temporizadores](../tools/rf_d_pilot_contours.rs).
+
+Para cada estado, el equivalente resistivo define una
+constante de tiempo C/ΣG. El núcleo integra la carga
+con la respuesta exponencial de ese polo. La prueba
+conserva los límites de 20 µV en los temporizadores y
+2 nA en cada una de sus seis corrientes resistivas
+observadas con los voltajes de carga impuestos.
+
+La interpolación lineal de los seis voltajes a 96 kHz
+pasó los dos flancos negativos. En la ventana positiva,
+el error de C2 llegó a 1,907 mV. Dividir el intervalo
+usando los ticks 319096–319104 del solver lo redujo a
+0,489 mV. Incluso la interpolación lineal cada ocho
+ticks excedió 2 nA en el camino de 1 kΩ en la positiva.
+El banco repitió las salidas rechazadas por bits.
+[Contraste de la interpolación](../evidence/rf_d_pilot_timer_rc01.json).
+
+El banco alternativo proyecta por separado los seis
+voltajes sobre el peso exponencial de cada capacitor.
+Compone las dos evaluaciones de carga de cada paso de
+Radau fino, con pesos proporcionales a 4,5 y 1,5 + hΣG/C.
+Después aplica la caída exponencial al acumularlas en
+un intervalo de 96 kHz. Con ese voltaje efectivo, el
+núcleo ejecuta una sola transición por capacitor.
+El banco obtiene esos voltajes del solver y usa el
+estado del capacitor de la referencia sólo al arrancar.
+[Modelo](../tools/rf_d_pilot_timer_rc.rs),
+[banco](../tools/check_rf_d_pilot_timer_rc.py).
+
+El avance con voltajes efectivos pasó las tres reservas
+a 96 kHz. El mayor error de temporizador fue inferior a
+1e−15 V frente a las etapas del solver. En 2.000 bloques
+nativos de 128 frames a 48 kHz, la mediana del par fue
+1,1 µs y el máximo 3,7 µs. El tiempo incluye dos avances
+por frame y mide sólo el par RC con las entradas ya
+disponibles. [Contraste y coste](../evidence/rf_d_pilot_timer_rc02.json).
+
+La siguiente pieza es obtener la carga transferida del
+modelo de conmutación y de los puertos cargados. Los
+ocho ticks quedan como referencia del biestable. El
+contraste de R59/R60 y J7, el plazo de la voz completa
+y la prueba en Desktop corresponden al candidato acoplado.
