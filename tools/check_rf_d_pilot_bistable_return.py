@@ -15,12 +15,14 @@ from check_rf_d_pilot_timer_rc import prepare_reference
 OWN = "tools/check_rf_d_pilot_bistable_return.py"
 PROBE = "tools/rf_d_pilot_bistable_return_probe.rs"
 SOURCES = (OWN, PROBE, "tools/rf_d_pilot_bistable_return.rs", "tools/rf_d_pilot_q15_return.rs",
-           "tools/rf_d_pilot_contour_ports.rs", "tools/latch_charge_driver.rs",
+           "tools/rf_d_pilot_contour_ports.rs", "tools/rf_d_pilot_attack_cell.rs", "tools/latch_charge_driver.rs",
            "tools/rf_d_reduced_engine_lu.rs", "crates/rf-d-circuit/src/prepared_volume_residual.rs",
            "crates/rf-d-circuit/src/junction_charge.rs")
 NODES = (25, 26, 27, 28, 23, 0, 1, 3, 2, 4)
 PORTS = (5, 54, 17, 24, 6, 9)
 LABELS = (*[f"x{i}" for i in NODES], "cr6_a", "r59_a")
+LOAD_NODES = (6, 8, 9, 10, 11)
+LOAD_LABELS = (*[f"x{i}" for i in LOAD_NODES], "r40_a", "r13_a", "r16_panel_a")
 DIODE_SCALE = 1.5 * (1.380649e-23 * 298.15 / 1.602176634e-19)
 RATE = 24_576_000
 PILOT_RATE = 96_000
@@ -48,6 +50,27 @@ def contrast(got, want):
     return dict(passed=bool(maximum[:10].max() <= 20e-6 and maximum[10:].max() <= 2e-9),
                 maximum=dict(zip(LABELS, maximum.tolist(), strict=True)), worst_voltage_row=worst,
                 max_c4_charge_c=float(c4 * 10e-9))
+
+
+def load_contrast(got, full, mode):
+    want = np.column_stack((full[:, LOAD_NODES], (full[:, 26] - full[:, 6]) / 3300.,
+                            (full[:, 8] - full[:, 5]) / 1000., (full[:, 5] - full[:, 11]) / 10_000.))
+    voltage, current = ([0, 1], [5, 6]) if mode == "attack" else (list(range(5)), [5, 6, 7])
+    maximum = abs(got[:, len(LABELS):] - want).max(axis=0)
+    return dict(passed=bool(maximum[voltage].max() <= 20e-6 and maximum[current].max() <= 2e-9),
+                maximum={LOAD_LABELS[i]: float(maximum[i]) for i in voltage + current})
+
+
+def window_payload(full, stage_rows, mode):
+    if mode in ("attack", "loads"):
+        ports = (*PORTS, 14)
+        stages = full[stage_rows[..., None], ports].copy()
+        # No stage voltages for the internal nodes admitted by this mode.
+        stages[..., 4] = 0.
+        if mode == "loads":
+            stages[..., 5] = 0.
+        return payload(full[0, (*NODES, *LOAD_NODES)], full[0, ports], stages)
+    return payload(full[0, NODES], full[0, PORTS], full[stage_rows[..., None], PORTS])
 
 
 def switches(rows, start_tick, step_ticks):
@@ -79,18 +102,22 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--active", action="store_true", help="contrast controlled forward and reverse CR6 loads")
     parser.add_argument("--plate", action="store_true", help="eliminate the x23 stage voltages analytically")
+    parser.add_argument("--loads", choices=("attack", "loads"), help="close Q16 or Q16 and Q17/Q18 in real windows")
     args = parser.parse_args()
-    mode = "plate" if args.plate else "split"
+    if args.loads and (args.active or not args.plate):
+        parser.error("--loads requires --plate and actual windows")
+    mode = args.loads or ("plate" if args.plate else "split")
     assert c.AREA.is_dir() and not list(c.AREA.iterdir())
     seq = 1
-    kind = "active" if args.active else "windows"
+    kind = args.loads or ("active" if args.active else "windows")
     while (out := c.ROOT / f"evidence/rf_d_pilot_bistable_return_{kind}{seq:02}.json").exists():
         seq += 1
     full_sources = () if args.active else (*c.ALL_SOURCES, c.OWN, c.CANDIDATE, c.PROBE, c.PORTS,
                                            "tools/check_rf_d_pilot_timer_rc.py",
                                            "evidence/rf_d_pilot_cv_readout_pos03.json")
     sources = Sources((*SOURCES, *full_sources))
-    report = dict(passed=False, rack_integrated=False, mode=kind, plate_eliminated=args.plate, sample_columns=LABELS,
+    labels = (*LABELS, *LOAD_LABELS) if args.loads else LABELS
+    report = dict(passed=False, rack_integrated=False, mode=kind, plate_eliminated=args.plate, sample_columns=labels,
                   **sources.fields(), compiler_sha256=c.sha(Path(c.COMPILER)),
                   library_sha256=c.sha(c.LIB), cases={})
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
@@ -115,8 +142,9 @@ def main():
         if raw.returncode:
             result.update(error=raw.stderr.decode(errors="replace").strip(), failure_input=packed(data))
             return None
-        rows = np.frombuffer(raw.stdout, "<f8").reshape(-1, len(LABELS))
-        assert len(rows) == 1 + 2 * ((len(data) // 8 - 16) // 12) and np.isfinite(rows).all()
+        rows = np.frombuffer(raw.stdout, "<f8").reshape(-1, len(labels))
+        header, step = (22, 14) if args.loads else (16, 12)
+        assert len(rows) == 1 + 2 * ((len(data) // 8 - header) // step) and np.isfinite(rows).all()
         return rows
 
     try:
@@ -173,25 +201,30 @@ def main():
                 known = [previous["reserves"][label]["reference_event"]] if branch == "positive" else []
                 item = report["cases"][label] = dict(passed=False, expected_events=known, offset_v=offset,
                     reference_sha256=c.digest(raw), anchor_sha256=c.sha(anchor), start_frame=start, frames=frames)
-                test = evaluate(mode, clock, payload(full[0, NODES], full[0, PORTS], full[1:, PORTS]), item)
+                test = evaluate(mode, clock, window_payload(full, np.arange(1, len(full)), mode), item)
                 want = observe(full)
                 if test is not None:
-                    result = contrast(test, want)
+                    result = contrast(test[:, :len(LABELS)], want)
+                    load_result = load_contrast(test, full, mode) if args.loads else dict(passed=True)
+                    if args.loads:
+                        item["closed_ports"] = load_result
                     # At 3x refinement each endpoint has one-third of an 8-tick step.
                     flips = switches(test, 0, 1)
                     events = [[start * 4096 + (lo // 3) * 8, start * 4096 + (lo // 3 + 1) * 8, sign]
                               for lo, _, sign in flips]
                     assert events == [[start * 4096 + (lo // 3) * 8, start * 4096 + (lo // 3 + 1) * 8, sign]
                                       for lo, _, sign in switches(want, 0, 1)]
-                    item.update(fine=result, events=events, passed=result["passed"] and events == known)
+                    item.update(fine=result, events=events,
+                                passed=result["passed"] and load_result["passed"] and events == known)
                 stride = clock // PILOT_RATE
                 stage_rows = (2 * stride * np.arange(frames * 2)[:, None] + [2 * stride // 3, 2 * stride])
                 assert stride % 3 == 0
-                coarse = evaluate(mode, PILOT_RATE, payload(full[0, NODES], full[0, PORTS],
-                                  full[stage_rows[:, :, None], PORTS]), item)
+                coarse = evaluate(mode, PILOT_RATE, window_payload(full, stage_rows, mode), item)
                 if coarse is not None:
-                    item["coarse_diagnostic"] = contrast(coarse[::2], want[::2 * stride])
-                print(label, {k: v for k, v in item.items() if k in ("passed", "fine", "events", "coarse_diagnostic")
+                    item["coarse_diagnostic"] = contrast(coarse[::2, :len(LABELS)], want[::2 * stride])
+                    if args.loads:
+                        item["coarse_closed_ports"] = load_contrast(coarse[::2], full[::2 * stride], mode)
+                print(label, {k: v for k, v in item.items() if k in ("passed", "fine", "events", "closed_ports", "coarse_diagnostic")
                               or isinstance(v, dict) and "error" in v}, flush=True)
         report["passed"] = bool(report["cases"]) and all(t["passed"] for t in report["cases"].values())
         sources.unchanged()

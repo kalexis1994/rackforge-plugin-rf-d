@@ -197,6 +197,33 @@ fn filter_stamp(x: [f64; 3], sum: f64, tail: f64) -> Result<Stamp<3>, StepError>
 #[cfg(pilot_audio_readout)]
 const JOINT_TOLERANCES: [f64; 2] = [2e-15, 2e-12];
 
+// SVC-9 fig. 9-7. C2 and the sustain emitter are explicit ports.
+#[cfg(pilot_audio_readout)]
+pub(crate) fn volume_decay(
+    initial: [f64; 3],
+    latch_v: f64,
+    c2: f64,
+    sustain_v: f64,
+) -> Result<([f64; 3], Lu<3>), StepError> {
+    solve_factored(
+        initial,
+        |x| {
+            let mut s = Stamp::default();
+            let v = [x[0], x[1], x[2], latch_v, 9.3, sustain_v];
+            s.transistor(&v, [3, 4, 0], 1.)?; // Q17
+            s.transistor(&v, [1, 2, 5], 1.)?; // Q18
+            s.load(0, x[0], -10., 10_000.); // R43
+            s.load(0, x[0], x[1], 4_700.); // R44
+            s.load(1, x[1], x[0], 4_700.);
+            s.j[0][1] -= 1. / 4_700.;
+            s.j[1][0] -= 1. / 4_700.;
+            s.load(2, x[2], c2, 10_000.); // Nominal panel R16
+            Ok(s)
+        },
+        JOINT_TOLERANCES,
+    )
+}
+
 #[cfg(pilot_audio_readout)]
 #[derive(Clone, Copy)]
 pub enum Cv {

@@ -19,6 +19,7 @@ pub struct Ports {
     pub timer_port_v: f64,
     pub into_timer_a: f64,
     pub into_latch_a: f64,
+    pub latch_tangent_s: f64,
 }
 
 impl AttackCell {
@@ -55,6 +56,10 @@ impl AttackCell {
             let exponent = (forward_a / IS).ln();
             let beta = 0.01 + (0.2 / 1.2) * reverse;
             let residual = exponent + base_scale * beta * forward_a - drive;
+            let reverse_slope = reverse * distance * position;
+            let log_current_slope = complement + reverse_slope / conduction;
+            let slope = log_current_slope
+                + base_scale * forward_a * (beta * log_current_slope + (0.2 / 1.2) * reverse_slope);
             if residual.abs() <= 5e-12 {
                 let into_timer_a = limit_a * position + 0.2 * IS;
                 let base_v = SUPPLY - VT * exponent;
@@ -63,12 +68,11 @@ impl AttackCell {
                     timer_port_v: timer_v + timer_ohm * into_timer_a,
                     into_timer_a,
                     into_latch_a: (base_v - latch_v) / BASE_TO_LATCH_OHM,
+                    latch_tangent_s: (1.
+                        - (BASE_TH_OHM / BASE_TO_LATCH_OHM) * log_current_slope / slope)
+                        / BASE_TO_LATCH_OHM,
                 });
             }
-            let reverse_slope = reverse * distance * position;
-            let log_current_slope = complement + reverse_slope / conduction;
-            let slope = log_current_slope
-                + base_scale * forward_a * (beta * log_current_slope + (0.2 / 1.2) * reverse_slope);
             if residual > 0. {
                 hi = s;
             } else {

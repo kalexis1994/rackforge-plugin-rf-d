@@ -1488,3 +1488,57 @@ del bloque aislado con los seis puertos impuestos.
 Queda cerrar x6 y x9 y contrastar la voz continua
 con el receptor de audio.
 [Coste y contraste eléctrico](../evidence/rf_d_pilot_bistable_return_active02.json).
+
+## Cargas de ataque y decay en el colector de Q25
+
+Q16 resuelve x6 y x8 con R41 = 560 Î©, R40 = 3,3 kÎ©
+y R42/R13 de 100 Î©/1 kÎ© en serie. Devuelve a x26
+la corriente de R40 y su tangente a C2 fijo. El
+banco tambiÃ©n comprueba la corriente que entra a C2.
+
+El decay resuelve x9, x10 y x11 con Q17/Q18, R43
+de 10 kÎ© a âˆ’10 V, R44 de 4,7 kÎ© y R16 de panel
+de 10 kÎ© a C2. Se resuelve el Jacobiano local contra
+la derivada de la fila de emisor de Q17 para devolver
+a x26 la corriente de base con su tangente cargada.
+La corriente de R16 sale de C2 hacia x11 con el signo
+usado en el contraste. El estado de carga del
+biestable y C4 sigue en las dos etapas de Radau.
+
+Los valores corresponden al panel nominal del
+[stamp de referencia](../tools/rf_d_pilot_trigger.rs)
+y a la [topologÃ­a SVC-9, Fig. 9-7 p. 9](CONTORNO_VOLUMEN_CIRCUITO.md).
+Q16 mantiene su dominio de 0â€“9,3 V en x26 y 0â€“8 V
+en C2. El contraste cubre las cinco reservas de la
+referencia numÃ©rica a temperatura nominal. Quedan
+por caracterizar las tolerancias fÃ­sicas y el
+recorrido completo de los potenciÃ³metros.
+
+Las dos variantes parten de una semilla por ventana.
+El cierre de ataque retira x6 de las entradas de
+etapa. El cierre conjunto retira ademÃ¡s x9. C2,
+la base del VCA, x17, x24 y el emisor de sustain
+x14 siguen impuestos en el cierre conjunto. El
+caso conjunto pasÃ³ a 73,728 MHz con 0,689 ÂµV de
+error mÃ¡ximo en los puertos cerrados y 0,689 nA
+en la corriente de R13. R40 quedÃ³ en 15,5 pA y
+R16 de panel en 13,2 pA. Los tres cruces positivos
+quedaron en los intervalos de ocho ticks y ambos
+negativos conservaron su orden.
+[Ataque](../evidence/rf_d_pilot_bistable_return_attack01.json),
+[ataque y decay](../evidence/rf_d_pilot_bistable_return_loads02.json).
+
+Los dos negativos tambiÃ©n pasaron el contraste
+a 96 kHz. Los tres positivos repitieron el rechazo
+en el cuarto paso. Se guardaron las entradas de
+replay, y tambiÃ©n el primer fallo de compilaciÃ³n
+del orÃ¡culo por alcance de la configuraciÃ³n Rust.
+El cierre elÃ©ctrico se usa como referencia local
+para el piloto. El reloj positivo a 96 kHz y su
+integraciÃ³n con el receptor de audio quedan abiertos.
+[CompilaciÃ³n inicial](../evidence/rf_d_pilot_bistable_return_loads01.json).
+
+Los recorridos controlados de CR6 con las cargas
+impuestas conservaron sus entradas y salidas bit
+a bit a 96, 384 y 768 kHz.
+[Regresión de polaridad fija](../evidence/rf_d_pilot_bistable_return_active03.json).

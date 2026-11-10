@@ -1,5 +1,7 @@
 //! Q25/Q15 and C4 with CR6 closed through the volume follower.
 use crate::{
+    attack_cell::AttackCell,
+    contour_ports,
     latch_charge_driver::terminal,
     q15::{self, B},
     reduced_lu::{maximum, Lu},
@@ -22,12 +24,15 @@ pub struct Drive {
     pub x24: f64,
     pub x6: f64,
     pub x9: f64,
+    pub x14: f64,
 }
 
 #[derive(Clone, Copy)]
 pub struct State {
     pub nodes: [f64; N],  // x25, x26, x27, x28, x23
     pub volume: [f64; N], // x0, x1, x3, x2, x4
+    pub attack: [f64; 2], // x6, x8
+    pub decay: [f64; 3],  // x9, x10, x11
 }
 
 pub(crate) struct Stage {
@@ -40,7 +45,14 @@ pub(crate) struct Stage {
     base_mass: f64,
 }
 
-pub(crate) fn stage(old: State, state: State, u: Drive) -> Result<Stage, StepError> {
+#[derive(Clone, Copy, PartialEq)]
+enum Loads {
+    Imposed,
+    Attack,
+    AttackAndDecay,
+}
+
+fn stage(old: State, mut state: State, u: Drive, loads: Loads) -> Result<Stage, StepError> {
     let [q25, x26, q15, x28, x23] = state.nodes;
     let q15_state = |s: State| q15::State {
         q15: [s.nodes[2], s.nodes[3]],
@@ -59,11 +71,31 @@ pub(crate) fn stage(old: State, state: State, u: Drive) -> Result<Stage, StepErr
     )?;
     let (f, gf) = q15::junction(q25)?;
     let (r, gr) = q15::junction(q25 - x26)?;
-    let (decay_f, decay_gf) = q15::junction(x26 - u.x9)?;
+    let (attack_current, attack_tangent) = if loads == Loads::Imposed {
+        ((x26 - u.x6) / R40, 1. / R40)
+    } else {
+        let attack = AttackCell::Volume
+            .evaluate(x26, u.c2)
+            .ok_or(StepError::InvalidInput)?;
+        state.attack = [attack.base_v, attack.timer_port_v];
+        (-attack.into_latch_a, attack.latch_tangent_s)
+    };
+    let (decay_emitter, factor) = if loads == Loads::AttackAndDecay {
+        let (nodes, factor) = contour_ports::volume_decay(state.decay, x26, u.c2, u.x14)?;
+        state.decay = nodes;
+        (nodes[0], Some(factor))
+    } else {
+        (u.x9, None)
+    };
+    let (decay_f, decay_gf) = q15::junction(x26 - decay_emitter)?;
     let (decay_r, decay_gr) = q15::junction(x26 - 9.3)?;
+    let emitter_slope = match factor {
+        Some(factor) => factor.solve([1.01 * decay_gf - decay_gr, 0., 0.])?[0],
+        None => 0.,
+    };
     let current = [
         (q25 - x28) / R38 + f / 100. + r / 5.,
-        (x26 - u.x6) / R40 + (x26 - q15) / R56 + f - 1.2 * r + decay_f / 100. + decay_r / 5.,
+        attack_current + (x26 - q15) / R56 + f - 1.2 * r + decay_f / 100. + decay_r / 5.,
         returned.current[0],
         returned.current[1],
         (x23 - u.x17) / R28,
@@ -72,7 +104,11 @@ pub(crate) fn stage(old: State, state: State, u: Drive) -> Result<Stage, StepErr
         [1. / R38 + gf / 100. + gr / 5., -gr / 5., 0., -1. / R38, 0.],
         [
             gf - 1.2 * gr,
-            1. / R40 + 1. / R56 + 1.2 * gr + decay_gf / 100. + decay_gr / 5.,
+            attack_tangent
+                + 1. / R56
+                + 1.2 * gr
+                + decay_gf * (1. - emitter_slope) / 100.
+                + decay_gr / 5.,
             -1. / R56,
             0.,
             0.,
@@ -164,13 +200,14 @@ fn evaluate<const DIM: usize, const SIZE: usize>(
     drive: [Drive; 2],
     inv: f64,
     plate: Option<&Plate>,
+    loads: Loads,
 ) -> Result<([State; 2], [f64; SIZE], [[f64; SIZE]; SIZE]), StepError> {
     if let Some(plate) = plate {
         plate.readout(old, &mut trial, drive);
     }
     let stage = [
-        stage(old, trial[0], drive[0])?,
-        stage(old, trial[1], drive[1])?,
+        stage(old, trial[0], drive[0], loads)?,
+        stage(old, trial[1], drive[1], loads)?,
     ];
     let residual = std::array::from_fn(|k| {
         let (i, r) = (k / DIM, k % DIM);
@@ -200,7 +237,7 @@ fn evaluate<const DIM: usize, const SIZE: usize>(
 }
 
 pub fn step(old: State, drive: [Drive; 2], h: Option<f64>) -> Result<[State; 2], StepError> {
-    solve::<N, PAIR>(old, drive, h)
+    solve::<N, PAIR>(old, drive, h, Loads::Imposed)
 }
 
 pub fn condensed_step(
@@ -208,13 +245,22 @@ pub fn condensed_step(
     drive: [Drive; 2],
     h: Option<f64>,
 ) -> Result<[State; 2], StepError> {
-    solve::<4, 8>(old, drive, h)
+    solve::<4, 8>(old, drive, h, Loads::Imposed)
+}
+
+pub fn attack_step(old: State, drive: [Drive; 2], h: Option<f64>) -> Result<[State; 2], StepError> {
+    solve::<4, 8>(old, drive, h, Loads::Attack)
+}
+
+pub fn loads_step(old: State, drive: [Drive; 2], h: Option<f64>) -> Result<[State; 2], StepError> {
+    solve::<4, 8>(old, drive, h, Loads::AttackAndDecay)
 }
 
 fn solve<const DIM: usize, const SIZE: usize>(
     old: State,
     drive: [Drive; 2],
     h: Option<f64>,
+    loads: Loads,
 ) -> Result<[State; 2], StepError> {
     let inv = h.map_or(0., |h| h.recip());
     if !inv.is_finite() || inv < 0. {
@@ -225,7 +271,7 @@ fn solve<const DIM: usize, const SIZE: usize>(
     } else {
         None
     };
-    let evaluate = |states| evaluate::<DIM, SIZE>(old, states, drive, inv, plate.as_ref());
+    let evaluate = |states| evaluate::<DIM, SIZE>(old, states, drive, inv, plate.as_ref(), loads);
     let mut trial = evaluate([old; 2])?;
     for _ in 0..20 {
         let (states, residual, jacobian) = trial;

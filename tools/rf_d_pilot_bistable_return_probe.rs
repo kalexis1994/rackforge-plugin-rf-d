@@ -1,5 +1,7 @@
 //! Full-stamp comparison for the Q25/Q15/C4 return block.
 pub use rf_d_circuit::StepError;
+#[path = "rf_d_pilot_attack_cell.rs"]
+mod attack_cell;
 #[path = "rf_d_pilot_bistable_return.rs"]
 mod bistable;
 #[path = "rf_d_pilot_contour_ports.rs"]
@@ -34,6 +36,8 @@ fn unpack(x: Values) -> State {
     State {
         nodes: std::array::from_fn(|i| x[i]),
         volume: std::array::from_fn(|i| x[i + 5]),
+        attack: [0.; 2],
+        decay: [0.; 3],
     }
 }
 
@@ -49,6 +53,7 @@ fn drive([c2, vca_base, x17, x24, x6, x9]: [f64; 6]) -> Drive {
         x24,
         x6,
         x9,
+        x14: 0.,
     }
 }
 
@@ -161,6 +166,28 @@ fn row(state: State, u: Drive) -> Row {
     })
 }
 
+fn drive_with_sustain(row: &[f64]) -> Drive {
+    Drive {
+        x14: row[6],
+        ..drive(row[..6].try_into().unwrap())
+    }
+}
+
+fn load_row(state: State, u: Drive) -> [f64; 8] {
+    let [x6, x8] = state.attack;
+    let [x9, x10, x11] = state.decay;
+    [
+        x6,
+        x8,
+        x9,
+        x10,
+        x11,
+        (state.nodes[1] - x6) / 3300.,
+        (x8 - u.c2) / 1000.,
+        (u.c2 - x11) / 10_000.,
+    ]
+}
+
 fn run(
     mut state: State,
     inputs: &[[Drive; 2]],
@@ -188,6 +215,38 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map(|b| f64::from_le_bytes(b.try_into().unwrap()))
         .collect();
     assert_eq!(raw.len(), data.len() * 8);
+    if matches!(mode.as_str(), "attack" | "loads") {
+        let solve = if mode == "attack" {
+            bistable::attack_step
+        } else {
+            bistable::loads_step
+        };
+        assert!(!settle && data.len() >= 36 && (data.len() - 22) % 14 == 0);
+        assert!(data.iter().all(|v| v.is_finite()));
+        let seed = State {
+            attack: data[10..12].try_into()?,
+            decay: data[12..15].try_into()?,
+            ..unpack(data[..10].try_into()?)
+        };
+        let inputs: Vec<_> = data[22..]
+            .chunks_exact(14)
+            .map(|r| [drive_with_sustain(&r[..7]), drive_with_sustain(&r[7..])])
+            .collect();
+        let combine = |state, u| row(state, u).into_iter().chain(load_row(state, u));
+        let mut values = Vec::with_capacity(20 * (1 + 2 * inputs.len()));
+        values.extend(combine(seed, drive_with_sustain(&data[15..22])));
+        run(seed, &inputs, rate.recip(), solve, |stages, drives| {
+            for i in 0..2 {
+                values.extend(combine(stages[i], drives[i]));
+            }
+        })?;
+        let mut out = std::io::BufWriter::new(std::io::stdout().lock());
+        for value in values {
+            out.write_all(&value.to_le_bytes())?;
+        }
+        out.flush()?;
+        return Ok(());
+    }
     assert!(data.len() >= 28 && (data.len() - 16) % 12 == 0 && data.iter().all(|v| v.is_finite()));
     let mut seed = unpack(data[..10].try_into()?);
     let start = drive(data[10..16].try_into()?);
