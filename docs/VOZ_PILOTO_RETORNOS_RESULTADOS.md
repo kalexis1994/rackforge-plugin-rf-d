@@ -1823,3 +1823,24 @@ cinco frames. En negativo fue también el
 tramo más costoso, con 38,3–43,0 %. El control
 y las cinco reservas reprodujeron sus salidas.
 [Perfil por sección](../evidence/rf_d_pilot_bistable_handoff12.json).
+
+### Producto de la respuesta en grupos de cuatro filas
+
+El banco prepara bloques con cuatro filas
+contiguas para cada columna de defectos. Cada
+coeficiente de juntura o del BUS multiplica
+las cuatro entradas juntas. La suma de cada
+fila conserva su orden y usa los mismos
+coeficientes. El armado de bloques se hace
+antes de cronometrar el cierre por paso.
+
+Pasaron las cinco reservas. Las salidas del
+receptor y del biestable y los contadores de
+iteración coincidieron bit a bit con el control.
+En 200 repeticiones alternadas por escena, la
+mediana positiva cayó 31–33 % y quedó en
+0,834–0,868 ms por cinco frames. El peor p99
+positivo fue 1,209 ms y el mayor pico fue
+1,550 ms. El ensayo excluye el reloj previo de
+C4, la preparación de la matriz y el host.
+[Comparación de las dos disposiciones](../evidence/rf_d_pilot_bistable_handoff13.json).

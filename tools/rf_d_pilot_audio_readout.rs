@@ -1,7 +1,7 @@
 //! 96 kHz closure of the reduced audio map and the two return cells.
 use super::{
-    chain, contour_ports, latch::profile, voltage, Audio, Family, Returns, StepError, LOAD, PAIR,
-    SIZE,
+    chain, contour_ports, latch::profile, reduced_audio::DefectBlocks, voltage, Audio, Family,
+    Returns, StepError, LOAD, PAIR, SIZE,
 };
 use crate::{
     graph,
@@ -17,7 +17,7 @@ use std::{
 #[path = "rf_d_pilot_audio_feedback.rs"]
 mod feedback;
 #[cfg(pilot_stage_feedback)]
-pub use feedback::run as run_feedback;
+pub use feedback::{run as run_feedback, run_packed as run_feedback_packed};
 
 const H: f64 = 1. / 96_000.;
 const LOAD_TOLERANCE_V: f64 = 1e-10;
@@ -157,7 +157,9 @@ fn advance_joint(
     stages: [Stage; 2],
     closed_cv: bool,
 ) -> Result<(History, Output, usize, f64), String> {
-    advance_joint_with(old, map, family, collector, closed_cv, |_, _| Ok(stages))
+    advance_joint_with(old, map, family, collector, closed_cv, None, |_, _| {
+        Ok(stages)
+    })
 }
 
 fn advance_joint_with(
@@ -166,6 +168,7 @@ fn advance_joint_with(
     family: &Family,
     collector: f64,
     closed_cv: bool,
+    packed: Option<&DefectBlocks>,
     mut stages_at: impl FnMut([[f64; 2]; 2], bool) -> Result<[Stage; 2], String>,
 ) -> Result<(History, Output, usize, f64), String> {
     let reduced = map.reduced.as_ref().expect("audio map");
@@ -222,7 +225,7 @@ fn advance_joint_with(
                 .defects(&x, family, old.phase, H)
                 .map_err(|error| format!("joint defects: {error:?}"))?;
             timing = profile::split(profile::Part::ReceiverDefects, timing);
-            response = reduced.joint_response(&base, input, &defect);
+            response = reduced.joint_response(&base, input, &defect, packed);
             if !response.iter().all(|v| v.is_finite()) {
                 return Err(format!("joint response: {:?}", StepError::InvalidInput));
             }

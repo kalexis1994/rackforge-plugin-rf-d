@@ -12,6 +12,23 @@ const LAWS: usize = devices::D.len();
 const AFFINE: usize = CAP_COUNT + 5;
 const DEFECT: usize = 2 * (LAWS + 1);
 
+#[cfg(pilot_audio_readout)]
+const GROUP: usize = 4;
+
+#[cfg(pilot_audio_readout)]
+pub(super) struct DefectBlocks([[[f64; GROUP]; DEFECT]; PAIR / GROUP]);
+
+#[cfg(pilot_audio_readout)]
+impl DefectBlocks {
+    fn multiply(&self, correction: &[f64; DEFECT]) -> [f64; PAIR] {
+        let mut response = [0.; PAIR];
+        for (target, block) in response.chunks_exact_mut(GROUP).zip(&self.0) {
+            target.copy_from_slice(&crate::reduced_lu::row_product(correction, block));
+        }
+        response
+    }
+}
+
 pub(super) struct Map {
     anchor: chain::State,
     wires: [f64; 2],
@@ -224,16 +241,30 @@ impl Map {
     }
 
     #[cfg(pilot_audio_readout)]
+    pub(super) fn pack_defects(&self) -> DefectBlocks {
+        DefectBlocks(std::array::from_fn(|group| {
+            std::array::from_fn(|column| {
+                std::array::from_fn(|row| self.defect[group * GROUP + row][column])
+            })
+        }))
+    }
+
+    #[cfg(pilot_audio_readout)]
     pub(super) fn joint_response(
         &self,
         base: &[f64; PAIR],
         input: [[f64; 2]; 2],
         correction: &[f64; DEFECT],
+        packed: Option<&DefectBlocks>,
     ) -> [f64; PAIR] {
         let drives: [f64; 4] = std::array::from_fn(|i| input[i / 2][i % 2] - self.wires[i % 2]);
+        let nonlinear = match packed {
+            Some(blocks) => blocks.multiply(correction),
+            None => self.defect.each_ref().map(|row| dot(row, correction)),
+        };
         std::array::from_fn(|r| {
             let wires: &[f64; 4] = self.affine[r][CAP_COUNT + 1..].try_into().unwrap();
-            base[r] + dot(wires, &drives) + dot(&self.defect[r], correction)
+            base[r] + dot(wires, &drives) + nonlinear[r]
         })
     }
 

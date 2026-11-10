@@ -31,6 +31,7 @@ AUDIO_CONTROL = "evidence/rf_d_pilot_bistable_handoff07.json"
 RECIPROCAL_CONTROL = "evidence/rf_d_pilot_bistable_handoff08.json"
 STEP_CONTROL = "evidence/rf_d_pilot_bistable_handoff10.json"
 FROZEN_CONTROL = "evidence/rf_d_pilot_bistable_handoff11.json"
+PROFILE_CONTROL = "evidence/rf_d_pilot_bistable_handoff12.json"
 NATIVE = ("tools/rf_d_pilot_bistable_handoff.rs", "tools/rf_d_pilot_bistable_handoff_probe.rs")
 TIMERS = (5, 38)
 NODES = (*b.NODES, *b.LOAD_NODES)
@@ -111,7 +112,7 @@ def close_r59(case, replay, assemble, reference, mask):
 
 
 def stage_feedback(case, run, replay, inputs, coarse_rows, event=None, profiles=b"", *, frozen=False,
-                   profile_target=None):
+                   profile_target=None, packed_rows=False):
     expected = case.stages[coarse_rows]
     stages = np.concatenate((inputs, expected[:, :, [17, 24, 14]]), axis=2)
     mask = np.ones(coarse_rows.shape, dtype=bool)
@@ -127,7 +128,8 @@ def stage_feedback(case, run, replay, inputs, coarse_rows, event=None, profiles=
                + stages.astype("<f8").tobytes())
     result = dict(passed=False)
     mode = "audio-readout-feedback"
-    values = replay([case.target, mode + ("-frozen" if frozen else "")], payload, result)
+    suffix = "-packed" if packed_rows else ("-frozen" if frozen else "")
+    values = replay([case.target, mode + suffix], payload, result)
     if values is None:
         return result
     rows = values[4:].reshape(len(stages), 55)
@@ -150,7 +152,7 @@ def stage_feedback(case, run, replay, inputs, coarse_rows, event=None, profiles=
         result["passed"] &= c2_error <= 2e-6
     if frozen and result["passed"]:
         control = result["control"] = {}
-        exact = replay([case.target, mode], payload, control)
+        exact = replay([case.target, mode + ("-frozen" if packed_rows else "")], payload, control)
         if exact is not None:
             exact_rows = exact[4:].reshape(rows.shape)
             delta = abs(rows - exact_rows)
@@ -163,11 +165,18 @@ def stage_feedback(case, run, replay, inputs, coarse_rows, event=None, profiles=
                                  and result["latch_evaluations_saved"] >= 0)
         else:
             result["passed"] = False
+        if packed_rows:
+            result["passed"] &= result["output_sha256"] == control["output_sha256"]
     if result["passed"]:
-        raw = run([case.target, mode + ("-compare" if frozen else "-bench")], payload)
+        bench = "-packed-bench" if packed_rows else ("-compare" if frozen else "-bench")
+        raw = run([case.target, mode + bench], payload)
         keys = ("windows", "median_ns", "p99_ns", "max_ns")
         timings = [dict(zip(keys, map(int, row.split(",")), strict=True)) for row in raw.decode().splitlines()]
-        if frozen:
+        if packed_rows:
+            scalar, packed = timings
+            result["timing"] = dict(alternating=True, scalar_rows=scalar, packed_rows=packed,
+                                    median_speedup=scalar["median_ns"] / packed["median_ns"])
+        elif frozen:
             exact, candidate = timings
             result["timing"] = dict(alternating=True, exact=exact, frozen=candidate,
                                     median_speedup=exact["median_ns"] / candidate["median_ns"])
@@ -198,9 +207,11 @@ def main():
     reentry.add_argument("--reciprocal-r59", action="store_true", help="return the two receiver VCA base stages to the latch")
     reentry.add_argument("--stage-feedback", action="store_true", help="close receiver and latch in the same Radau step")
     reentry.add_argument("--stage-feedback-frozen", action="store_true", help="reuse the latch during preliminary receiver iterations")
-    parser.add_argument("--receiver-profile", action="store_true", help="profile the receiver sections in a separate build")
+    receiver_mode = parser.add_mutually_exclusive_group()
+    receiver_mode.add_argument("--receiver-profile", action="store_true", help="profile the receiver sections in a separate build")
+    receiver_mode.add_argument("--receiver-packed", action="store_true", help="compare receiver products grouped by four output rows")
     args = parser.parse_args()
-    args.stage_feedback_frozen |= args.receiver_profile
+    args.stage_feedback_frozen |= args.receiver_profile or args.receiver_packed
     args.stage_feedback |= args.stage_feedback_frozen
     args.reciprocal_r59 |= args.stage_feedback
     args.audio |= args.reciprocal_r59
@@ -222,8 +233,10 @@ def main():
         native_sources += (audio.FEEDBACK, RECIPROCAL_CONTROL, *(path for _, path in audio.FEEDBACK_MODULES))
     if args.stage_feedback_frozen:
         native_sources += (STEP_CONTROL,)
-    if args.receiver_profile:
+    if args.receiver_profile or args.receiver_packed:
         native_sources += (FROZEN_CONTROL, "tools/rf_d_pilot_step_profile.rs")
+    if args.receiver_packed:
+        native_sources += (PROFILE_CONTROL,)
     sources = Sources((*b.SOURCES, *c.ALL_SOURCES, c.OWN, c.CANDIDATE, c.PROBE, c.PORTS,
                        OWN, PREVIOUS, CLOCK_CONTROL, *SOURCE_NAMES, C4_CLOCK, TIMER_CARRY, TIMER_NATIVE,
                        TIMER_NATIVE_PROBE, "tools/rf_d_pilot_timer_rc.rs", *native_sources))
@@ -235,6 +248,7 @@ def main():
                   closed_c2=args.native_c2, audio_readout=args.audio,
                   reciprocal_r59=args.reciprocal_r59, stage_feedback=args.stage_feedback,
                   frozen_feedback=args.stage_feedback_frozen, receiver_profile=args.receiver_profile,
+                  receiver_packed=args.receiver_packed,
                   calibration=[], cases={})
     if args.audio:
         report["audio_boundaries"] = dict(filter_sum_x34="reference at both stages",
@@ -303,7 +317,8 @@ def main():
         native_control = c.read(NATIVE_CONTROL)["cases"] if args.native_c2 else {}
         c2_control = c.read(C2_CONTROL)["cases"] if args.audio else {}
         audio_control = c.read(AUDIO_CONTROL)["cases"] if args.reciprocal_r59 else {}
-        step_control = c.read(STEP_CONTROL)["cases"] if args.stage_feedback_frozen else {}
+        step_evidence = FROZEN_CONTROL if args.receiver_packed else STEP_CONTROL
+        step_control = c.read(step_evidence)["cases"] if args.stage_feedback_frozen else {}
         frozen_control = c.read(FROZEN_CONTROL)["cases"] if args.receiver_profile else {}
 
         def receiver(branch, start, offset, stages):
@@ -401,7 +416,7 @@ def main():
                     if args.stage_feedback and item["passed"]:
                         item["stage_feedback"] = stage_feedback(case, run, replay, inputs, coarse_rows,
                                                                frozen=args.stage_feedback_frozen,
-                                                               profile_target=profile_target)
+                                                               profile_target=profile_target, packed_rows=args.receiver_packed)
                         if args.stage_feedback_frozen and item["stage_feedback"]["passed"]:
                             assert item["stage_feedback"]["control"]["output_sha256"] == step_control[name]["stage_feedback"]["output_sha256"]
                         if args.receiver_profile and item["stage_feedback"]["passed"]:
@@ -582,7 +597,8 @@ def main():
                                             profiles = packed_profile(models[129]) + packed_profile(delayed)
                                             item["stage_feedback"] = stage_feedback(
                                                 case, run, replay, inputs, coarse_rows, event, profiles,
-                                                frozen=args.stage_feedback_frozen, profile_target=profile_target)
+                                                frozen=args.stage_feedback_frozen, profile_target=profile_target,
+                                                packed_rows=args.receiver_packed)
                                             result = item["stage_feedback"]
                                             if args.stage_feedback_frozen and result["passed"]:
                                                 assert result["control"]["output_sha256"] == step_control[name]["stage_feedback"]["output_sha256"]

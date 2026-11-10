@@ -1,5 +1,8 @@
 //! Close both R59 stage loads while advancing the receiver and latch histories.
-use super::{advance_joint_with, prepare, read_values, Audio, Family, History, Output, Stage, H};
+use super::{
+    advance_joint_with, prepare, read_values, Audio, DefectBlocks, Family, History, Output, Stage,
+    H,
+};
 use crate::{
     bistable::{self, Drive, State},
     graph,
@@ -13,6 +16,13 @@ const OBS: usize = 21;
 
 type Pair = [[f64; 6]; 2]; // C2, x34, x27, x17, x24, x14
 type Latch = [Option<(State, Drive)>; 2];
+
+#[derive(Clone, Copy)]
+enum Candidate<'a> {
+    Exact,
+    Frozen,
+    Packed(&'a DefectBlocks),
+}
 
 struct Event {
     slot: usize,
@@ -89,16 +99,27 @@ fn render(
     collector: f64,
     inputs: &[Pair],
     event: Option<&Event>,
-    frozen: bool,
+    candidate_mode: Candidate<'_>,
     mut emit: impl FnMut(Output, Latch),
 ) -> Result<[f64; 4], String> {
+    let frozen = !matches!(candidate_mode, Candidate::Exact);
+    let packed = match candidate_mode {
+        Candidate::Packed(blocks) => Some(blocks),
+        _ => None,
+    };
     let mut stats = [0_f64; 4];
     for (slot, &input) in inputs.iter().enumerate() {
         let mut previous = None;
         let mut candidate = [None; 2];
         let base_inputs: [Stage; 2] = input.map(|u| [u[0], u[1], u[2]]);
-        let (next, output, iterations, mismatch) =
-            advance_joint_with(audio, map, family, collector, true, |loads, exact| {
+        let (next, output, iterations, mismatch) = advance_joint_with(
+            audio,
+            map,
+            family,
+            collector,
+            true,
+            packed,
+            |loads, exact| {
                 let bases = loads.map(|load| load[0]);
                 if previous.is_none() || ((!frozen || exact) && previous != Some(bases)) {
                     candidate = trial(latch, event, slot, input, bases)
@@ -110,8 +131,9 @@ fn render(
                     Some((state, u)) => [u.c2, input[i][1], state.nodes[2]],
                     None => base_inputs[i],
                 }))
-            })
-            .map_err(|e| format!("coupled step {slot}: {e}"))?;
+            },
+        )
+        .map_err(|e| format!("coupled step {slot}: {e}"))?;
         stats[0] = stats[0].max(iterations as f64);
         stats[1] = stats[1].max(mismatch);
         for (entry, (x3, base)) in candidate
@@ -137,6 +159,19 @@ fn render(
 }
 
 pub fn run(bench: bool, frozen: bool, compare: bool) -> Result<(), Box<dyn std::error::Error>> {
+    run_mode(bench, frozen, compare, false)
+}
+
+pub fn run_packed(bench: bool) -> Result<(), Box<dyn std::error::Error>> {
+    run_mode(bench, true, bench, true)
+}
+
+fn run_mode(
+    bench: bool,
+    frozen: bool,
+    compare: bool,
+    packed: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
     const TABLE: usize = POINTS * (1 + 15 * 5);
     let values = read_values()?;
     let (initial, map, family, collector, rows) = prepare(&values)?;
@@ -186,6 +221,13 @@ pub fn run(bench: bool, frozen: bool, compare: bool) -> Result<(), Box<dyn std::
     {
         return Err("C4 event must precede the projected interval".into());
     }
+    let blocks = packed.then(|| map.reduced.as_ref().expect("receiver map").pack_defects());
+    let control = if packed {
+        Candidate::Frozen
+    } else {
+        Candidate::Exact
+    };
+    let variant = blocks.as_ref().map_or(Candidate::Frozen, Candidate::Packed);
     if bench {
         const PASSES: usize = 200;
         let mut times = [[0; PASSES]; 2];
@@ -203,7 +245,7 @@ pub fn run(bench: bool, frozen: bool, compare: bool) -> Result<(), Box<dyn std::
                     collector,
                     &inputs,
                     event.as_ref(),
-                    candidate,
+                    if candidate { variant } else { control },
                     |_, _| {},
                 )?);
                 times[usize::from(candidate)][i] = begin.elapsed().as_nanos();
@@ -233,7 +275,7 @@ pub fn run(bench: bool, frozen: bool, compare: bool) -> Result<(), Box<dyn std::
             collector,
             &inputs,
             event.as_ref(),
-            frozen,
+            if frozen { variant } else { control },
             |audio, stages| {
                 samples.extend(audio);
                 for stage in stages {
