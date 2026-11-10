@@ -854,3 +854,26 @@ y el instante del cruce en el motor, contrastar R59/R60
 y J7 en el candidato acoplado y medir el bloque de voz
 completa antes de probarlo en Desktop.
 [Comparación de tramos y reservas](../evidence/rf_d_pilot_timer_rc08.json).
+
+## Predicción desde el colector en subida
+
+Se detecta el primer estado aceptado donde x26 pasa
+0,35 V en subida y todavía está por debajo de x28.
+El predictor ajusta la forma nominal de los nodos
+vecinos a esa observación, busca x26 = x28 e integra
+el tiempo con la KCL de Q25. El tramo previo y la
+cola usan la misma ley de transporte y la reacción
+de ataque. Los dos flancos de la rama negativa
+carecieron de un disparo por ese umbral.
+
+Con la forma nominal de 24 tramos, la observación
+antecedió el evento entre 115 y 123 ns. La predicción
+cayó dentro de los ocho ticks en nominal y en las
+dos reservas de carga. El peor error fue 0,22 ns
+frente al cruce interpolado del solver refinado. Al
+usar ese estado e instante para calcular la cola,
+el peor error en C2 fue 1,59 µV. El error máximo
+en los cuatro voltajes predichos fue 0,629 mV. El
+banco sigue suministrando la observación temprana,
+las rampas exteriores y las demás cargas de C2/C5.
+[Predicción y cola](../evidence/rf_d_pilot_timer_rc09.json).

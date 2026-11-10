@@ -28,7 +28,8 @@ def extract(stages, steps):
     assert (np.diff(c[cut]) > 0.).all(), c[cut].tolist()
     values = stages[cut][:, NEIGHBORS]
     return dict(bounds=[low, cross, high], time=float(cross_time),
-                crossing=at[NEIGHBORS], voltages=c[cut], states=values, times=time[cut])
+                crossing=at[NEIGHBORS], voltages=c[cut], states=values, times=time[cut],
+                opposite=stages[cut, 28])
 
 
 def landmarks(path, points):
@@ -99,3 +100,70 @@ def attack_area(target, source, points, evaluate, rate_x, pre, post, pre_slope, 
                 evaluations=len(current), area_c=float(area), start_s=float(target["time"] + from_cross[0]),
                 end_s=float(target["time"] + from_cross[-1]),
                 reference_support_s=[float(want_times[0]), float(want_times[-1])])
+
+
+GUARDS = (.35, .55, .75, .90)
+CROSSING_POINTS = 24
+CROSSING_STOP_V = 1.6
+
+
+def guard_sample(endpoints, threshold):
+    """Return the first upward guard while x26 is still below x28."""
+    c, opposite = endpoints[:, COLLECTOR], endpoints[:, 28]
+    eligible = (c[:-1] < threshold) & (c[1:] >= threshold) & (c[1:] < opposite[1:])
+    found = np.flatnonzero(eligible)
+    return int(found[0] + 1) if len(found) else None
+
+
+def crossing_profile(nominal):
+    c = np.linspace(nominal["bounds"][0], CROSSING_STOP_V, CROSSING_POINTS + 1)
+    nodes = np.column_stack((nominal["states"], nominal["opposite"]))
+    values = np.column_stack([np.interp(c, nominal["voltages"], column) for column in nodes.T])
+    return c, values
+
+
+def predict_crossing(profile, previous, observed, time_s, evaluate, use_slope):
+    """Advance collector charge from the observed rising guard to x26 = x28."""
+    c, values = profile
+    start = float(observed[COLLECTOR])
+    if not c[0] <= start < c[-1]:
+        return dict(reason="guard outside nominal path")
+    nodes = [*NEIGHBORS, 28]
+
+    def sample(v):
+        return np.stack([np.interp(v, c, column) for column in values.T], axis=-1)
+
+    anchor = observed[nodes] - sample(start)
+    slope = np.zeros_like(anchor)
+    if use_slope:
+        before = float(previous[COLLECTOR])
+        if not c[0] <= before < start:
+            return dict(reason="preceding point outside nominal path")
+        slope = (anchor - (previous[nodes] - sample(before))) / (start - before)
+
+    def translated(x):
+        return sample(x) + anchor + np.asarray(x)[..., None] * slope - start * slope
+
+    knot_c = np.r_[start, c[c > start]]
+    knot_values = translated(knot_c)
+    difference = knot_c - knot_values[:, -1]
+    if difference[0] >= 0.:
+        return dict(reason="guard already past crossing")
+    crossings = np.flatnonzero((difference[:-1] < 0.) & (difference[1:] >= 0.))
+    if len(crossings) != 1:
+        return dict(reason="path does not contain one rising crossing")
+    i = int(crossings[0])
+    fraction = -difference[i] / (difference[i+1] - difference[i])
+    crossing = float(knot_c[i] + fraction * (knot_c[i+1] - knot_c[i]))
+    path = np.r_[knot_c[:i+1], crossing]
+    width = np.diff(path)
+    sub = (np.arange(8) + .5) / 8.
+    midpoint = (path[:-1, None] + width[:, None] * sub).ravel()
+    base_slope = np.repeat(np.diff(translated(path)[:, 0]) / width, len(sub))
+    density, _ = collector_density(midpoint, translated(midpoint)[:, :-1], base_slope, evaluate)
+    if not np.isfinite(density).all() or (density <= 0.).any():
+        return dict(reason="nonpositive collector time density")
+    elapsed = float(density @ np.repeat(width / len(sub), len(sub)))
+    state = translated(crossing)[:-1]
+    return dict(time=float(time_s + elapsed), collector_v=crossing,
+                crossing=state.tolist(), evaluations=len(midpoint))

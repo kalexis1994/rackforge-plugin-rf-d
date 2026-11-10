@@ -117,7 +117,8 @@ def attack_results(run, target, stages, changed=False):
     return ports, item
 
 
-def crossing_charge(ports, stages, regular, changes, orbit=None, ticks=FINE_TICKS):
+def crossing_charge(ports, stages, regular, changes, orbit=None, ticks=FINE_TICKS,
+                    predict=False):
     """Separate a two-level current model from the need to locate the event."""
     assert len(changes) == 1
     capacitance = 10e-6
@@ -215,6 +216,47 @@ def crossing_charge(ports, stages, regular, changes, orbit=None, ticks=FINE_TICK
                         trial.update(error(mean), modeled_attack_a=float(mean[slot, 0]),
                                      reference_attack_a=float(exact_current[slot, 0]))
                     trials[f"{points}_tail" if post_only else str(points)] = trial
+        if predict:
+            from rf_d_pilot_attack_orbit import GUARDS, crossing_profile, guard_sample, predict_crossing
+
+            profile = crossing_profile(saved[0])
+            endpoints = stages[::2]
+            predictions = report["crossing_predictions"] = {}
+            tick_s = 1. / (48_000 * 4096)
+            reference_s = regular[slot] * ticks * tick_s + target["time"]
+            for threshold in GUARDS:
+                candidate = predictions[str(threshold)] = {}
+                guard = guard_sample(endpoints, threshold)
+                if guard is None:
+                    candidate.update(reason="no pre-crossing guard observation")
+                    continue
+                for mode, slope in (("offset", False), ("slope", True)):
+                    trial = predict_crossing(profile, endpoints[guard-1], endpoints[guard],
+                                              guard * ticks * tick_s, evaluate, slope)
+                    candidate[mode] = trial
+                    trial["guard_tick"] = float(guard * ticks)
+                    if "time" not in trial:
+                        continue
+                    local_time = trial["time"] - regular[slot] * ticks * tick_s
+                    predicted_state = np.asarray(trial["crossing"])
+                    trial.update(predicted_tick=float(trial["time"] / tick_s),
+                                 time_error_ns=float((trial["time"] - reference_s) * 1e9),
+                                 guard_lead_ns=float((reference_s - guard * ticks * tick_s) * 1e9),
+                                 state_error_v=abs(predicted_state - target["crossing"]).tolist(),
+                                 refined_bracket=bool(change * ticks <= trial["time"] / tick_s
+                                                      <= (change + 1) * ticks))
+                    if not 0. <= local_time * 96_000 <= 1.:
+                        continue
+                    predicted = dict(target, bounds=[target["bounds"][0], trial["collector_v"],
+                                                      target["bounds"][2]],
+                                     time=local_time, crossing=predicted_state)
+                    tail = attack_area(predicted, saved[0], 24, evaluate, x[0], pre[0], post[0],
+                                       pre_slope[0], post_slope[0], post_only=True)
+                    if "correction_a" in tail:
+                        mean = at_event.copy()
+                        mean[slot, 0] = split_ramps(local_time * 96_000)[0] + tail["correction_a"]
+                        tail.update(error(mean))
+                    trial["tail"] = tail
     return report
 
 
@@ -249,7 +291,10 @@ def main():
                         help="evaluate a sparse collector KCL path on nominal and loaded reserves")
     parser.add_argument("--refine-orbit", action="store_true",
                         help="repeat the collector comparison at one-third the reference step")
+    parser.add_argument("--predict-crossing", action="store_true",
+                        help="derive the event from a pre-crossing collector observation")
     args = parser.parse_args()
+    assert not args.predict_crossing or args.refine_orbit
     assert not args.refine_orbit or args.collector_orbit
     assert not args.crossing_charge or args.attack_cells
     assert not args.collector_orbit or args.crossing_charge
@@ -266,7 +311,8 @@ def main():
                   timer_nodes=TIMER_NODES, load_nodes=LOAD_NODES, load_ohms=OHMS.tolist(),
                   timer_limit_v=TIMER_LIMIT_V, load_limit_a=LOAD_LIMIT_A,
                   attack_cells=args.attack_cells, crossing_charge=args.crossing_charge,
-                  collector_orbit=args.collector_orbit, refine_orbit=args.refine_orbit, windows={}, **sources.fields(), compiler_sha256=c.sha(Path(c.COMPILER)),
+                  collector_orbit=args.collector_orbit, refine_orbit=args.refine_orbit,
+                  predict_crossing=args.predict_crossing, windows={}, **sources.fields(), compiler_sha256=c.sha(Path(c.COMPILER)),
                   library_sha256=c.sha(c.LIB))
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
 
@@ -339,6 +385,10 @@ def main():
             item = report["windows"][label] = dict(anchor_sha256=c.sha(anchor), reference_sha256=c.digest(raw),
                                              reference_events=events, capacitor_offset_v=offset, key_v=key, start_frame=start,
                                              frames=frames, modes=results)
+            if args.predict_crossing and not events:
+                from rf_d_pilot_attack_orbit import GUARDS, guard_sample
+                item["false_guard"] = any(guard_sample(nodes, threshold) is not None for threshold in GUARDS)
+                assert not item["false_guard"]
             if args.attack_cells:
                 ports, item["attack_ports"] = attack_results(run, attack, stages, changed)
                 mixed = stages.copy()
@@ -372,7 +422,7 @@ def main():
                         fine_ports, fine_check = attack_results(run, attack, fine, changed)
                         assert fine_check["passed"]
                         args_fine = (fine_ports, fine, 3 * regular, edges,
-                                     (evaluate_volume, refined_orbits), FINE_TICKS / 3)
+                                     (evaluate_volume, refined_orbits), FINE_TICKS / 3, args.predict_crossing)
                         refined_charge = crossing_charge(*args_fine)
                         assert refined_charge == crossing_charge(*args_fine)
                         item["refined_crossing_charge"] = dict(
@@ -380,7 +430,21 @@ def main():
                             bracket_ticks=[base + FINE_TICKS / 3 * (int(edges[0]) + k) for k in (0, 1)])
                         lo, hi = item["refined_crossing_charge"]["bracket_ticks"]
                         assert events[0][0] <= lo < hi <= events[0][1]
-                    if args.collector_orbit:
+                        if args.predict_crossing:
+                            prediction = refined_charge["crossing_predictions"]
+                            for modes in prediction.values():
+                                for trial in modes.values():
+                                    if isinstance(trial, dict) and "predicted_tick" in trial:
+                                        trial["historical_bracket"] = (
+                                            events[0][0] <= base + trial["predicted_tick"] <= events[0][1])
+                            print("PREDICT", label,
+                                  {guard: {mode: (round(trial["time_error_ns"], 2),
+                                                  trial["historical_bracket"],
+                                                  trial.get("tail", {}).get("passed"))
+                                           if "time_error_ns" in trial else trial.get("reason")
+                                           for mode, trial in modes.items() if isinstance(trial, dict)}
+                                   for guard, modes in prediction.items()}, flush=True)
+                    if args.collector_orbit and not args.predict_crossing:
                         for tag, result in (("8tick", charge),
                                             ("refined", item.get("refined_crossing_charge", {}).get("metrics"))):
                             if result is not None:
@@ -388,7 +452,7 @@ def main():
                                 print("ORBIT", label, tag, {key: {name: item.get("max_timer_error_v", item.get("reason"))
                                                                  for name, item in trials.items()}
                                                            for key, trials in modes.items()}, flush=True)
-                    else:
+                    elif not args.predict_crossing:
                         print("CROSSING_CHARGE", charge, flush=True)
                 print(label, item["attack_ports"]["passed"], results["generated_attack_projection"]["passed"],
                       results["generated_attack_current"], flush=True)
