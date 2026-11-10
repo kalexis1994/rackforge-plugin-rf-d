@@ -2008,3 +2008,40 @@ Se conservan como ensayos de banco. Sigue pendiente
 una ruta de menor coste para el piloto jugable y
 su medición en RackForge.
 [Umbrales y controles alternados](../evidence/rf_d_pilot_bistable_block02.json).
+
+### Reutilización del biestable durante la corrección anticipada
+
+La segunda serie conserva el candidato provisional del
+biestable durante las correcciones del receptor y
+lo recalcula con las cargas exactas antes de aceptar
+cada paso. Si cambian sus tensiones, se repite el
+cierre conjunto. La comprobación nodal y sus límites
+se mantienen. La opción de banco `--defer-latch`
+requiere un umbral de corrección explícito.
+
+Los cuatro umbrales pasaron de nuevo la reserva
+positiva de C2 bajo, con 506 evaluaciones del
+biestable por bloque. J7 conservó un error máximo
+de 0,976 µV, R59 de 0,871 pA y R60 de 2,02 fA.
+El error nodal máximo del biestable fue 8,09 µV.
+El cruce coincidió con el mismo intervalo de ocho
+ticks y los replays fueron idénticos por bytes.
+
+Las medianas de los umbrales 1, 2, 4 y 8 fueron
+58,478, 54,989, 48,302 y 32,507 ms. Cada variante
+costó entre 1,23 y 2,23 veces su control alternado.
+El control separado tomó 26,717 ms, con un máximo
+de 27,254 ms en 64 bloques. Diferir las cargas
+redujo el coste del ensayo anterior, pero anticipar
+la corrección siguió siendo más lento que el
+receptor admitido.
+
+La conclusión queda limitada a esta reserva, con
+x34, x17, x24, x14 y el C2 posterior a la proyección
+impuestos. El banco conserva estos ensayos para
+contraste. El siguiente candidato de producción
+debe aprovechar el mapa de cargas del piloto
+rápido, con el bloque completo como referencia de
+J7, R59/R60 y evento. Su admisión requiere después
+medir el motor de RackForge.
+[Corrección con cierre diferido](../evidence/rf_d_pilot_bistable_block03.json).

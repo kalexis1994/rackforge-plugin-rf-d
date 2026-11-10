@@ -26,7 +26,7 @@ enum Candidate<'a> {
     Seeded(&'a DefectBlocks),
     Accelerated(&'a DefectBlocks),
     Vector(&'a DefectBlocks),
-    EarlyNewton(&'a DefectBlocks, usize),
+    EarlyNewton(&'a DefectBlocks, usize, bool), // Threshold and deferred latch refresh.
 }
 
 #[derive(Clone, Copy)]
@@ -36,7 +36,7 @@ enum Matrix {
     Seeded,
     Accelerated,
     Vector,
-    Block(usize),
+    Block(usize, bool),
 }
 
 struct Event {
@@ -123,17 +123,17 @@ fn render(
         | Candidate::Seeded(blocks)
         | Candidate::Accelerated(blocks)
         | Candidate::Vector(blocks)
-        | Candidate::EarlyNewton(blocks, _) => Some(blocks),
+        | Candidate::EarlyNewton(blocks, _, _) => Some(blocks),
         _ => None,
     };
     let seeded = matches!(candidate_mode, Candidate::Seeded(_));
     let accelerate = matches!(candidate_mode, Candidate::Accelerated(_));
     let vector_residual = matches!(
         candidate_mode,
-        Candidate::Vector(_) | Candidate::EarlyNewton(_, _)
+        Candidate::Vector(_) | Candidate::EarlyNewton(_, _, _)
     );
     let newton_after = match candidate_mode {
-        Candidate::EarlyNewton(_, iterations) => iterations,
+        Candidate::EarlyNewton(_, iterations, _) => iterations,
         _ => 0,
     };
     let mut previous_audio = None;
@@ -148,6 +148,7 @@ fn render(
             accelerate,
             vector_residual,
             newton_after,
+            defer_latch: matches!(candidate_mode, Candidate::EarlyNewton(_, _, true)),
         };
         stats[5] += f64::from(guess.previous.is_some() || accelerate);
         let (next, output, iterations, mismatch, candidate) = loop {
@@ -299,11 +300,16 @@ pub fn run_block(bench: bool) -> Result<(), Box<dyn std::error::Error>> {
         }
         None => 0,
     };
+    let defer_latch = match std::env::args().nth(3).as_deref() {
+        Some("--defer-latch") if newton_after > 0 => true,
+        None => false,
+        _ => return Err("expected --defer-latch after Newton threshold".into()),
+    };
     run_mode(
         bench,
         true,
         newton_after > 0 && bench,
-        Matrix::Block(newton_after),
+        Matrix::Block(newton_after, defer_latch),
     )
 }
 
@@ -347,7 +353,7 @@ fn run_mode(
         attack: [6, 8].map(x),
         decay: [9, 10, 11].map(x),
     };
-    let block = matches!(matrix, Matrix::Block(_));
+    let block = matches!(matrix, Matrix::Block(_, _));
     let (clock, rows) = if block {
         let (source, rest) = rows
             .split_at_checked(clock_fixture::WORDS)
@@ -415,11 +421,11 @@ fn run_mode(
         (Matrix::Accelerated, Some(blocks)) => {
             (Candidate::Packed(blocks), Candidate::Accelerated(blocks))
         }
-        (Matrix::Block(iterations), Some(blocks)) if iterations > 0 => (
+        (Matrix::Block(iterations, defer_latch), Some(blocks)) if iterations > 0 => (
             Candidate::Vector(blocks),
-            Candidate::EarlyNewton(blocks, iterations),
+            Candidate::EarlyNewton(blocks, iterations, defer_latch),
         ),
-        (Matrix::Vector | Matrix::Block(_), Some(blocks)) => {
+        (Matrix::Vector | Matrix::Block(_, _), Some(blocks)) => {
             (Candidate::Packed(blocks), Candidate::Vector(blocks))
         }
         _ => (Candidate::Exact, Candidate::Frozen),

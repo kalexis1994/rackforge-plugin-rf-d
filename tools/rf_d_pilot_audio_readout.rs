@@ -161,6 +161,7 @@ struct JointGuess<'a> {
     accelerate: bool,
     vector_residual: bool,
     newton_after: usize,
+    defer_latch: bool,
 }
 
 struct DefectTrial {
@@ -249,7 +250,8 @@ fn advance_joint_with(
     for iteration in 1..=BUDGET {
         let mut timing = profile::start();
         let loads = x.map(|row| LOAD.map(|k| voltage(anchor, k) + row[k]));
-        let exact_stages = use_nodal || iteration == BUDGET;
+        // Deferred trials still refresh the exact latch before accepting a step below.
+        let exact_stages = (use_nodal && !guess.defer_latch) || iteration == BUDGET;
         let stages = stages_at(loads, exact_stages)?;
         timing = profile::split(profile::Part::ReceiverLatch, timing);
         let mut slope = [0.; 4];

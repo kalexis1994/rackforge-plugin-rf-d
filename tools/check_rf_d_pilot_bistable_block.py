@@ -35,8 +35,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--scene", choices=offsets, default="positive_c2_down")
     parser.add_argument("--newton-after", nargs="+", type=int, choices=(1, 2, 4, 8), default=[])
+    parser.add_argument("--defer-latch", action="store_true")
     args = parser.parse_args()
     assert len(set(args.newton_after)) == len(args.newton_after)
+    if args.defer_latch and not args.newton_after:
+        parser.error("--defer-latch requires --newton-after")
     assert c.AREA.is_dir() and not list(c.AREA.iterdir())
     seq = 1
     while (out := c.ROOT / f"evidence/rf_d_pilot_bistable_block{seq:02}.json").exists():
@@ -157,8 +160,10 @@ def main():
         report["candidates"] = {}
         for threshold in (0, *args.newton_after):
             options = [f"--newton-after={threshold}"] if threshold else []
+            if threshold and args.defer_latch:
+                options.append("--defer-latch")
             item = report if not threshold else dict(passed=False, completed=False, realtime=False,
-                                                      newton_after=threshold)
+                                                      newton_after=threshold, defer_latch=args.defer_latch)
             if threshold:
                 report["candidates"][str(threshold)] = item
             got = replay([exe, mode, *options], payload)
