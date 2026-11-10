@@ -237,7 +237,7 @@ fn evaluate<const DIM: usize, const SIZE: usize>(
 }
 
 pub fn step(old: State, drive: [Drive; 2], h: Option<f64>) -> Result<[State; 2], StepError> {
-    solve::<N, PAIR>(old, drive, h, Loads::Imposed)
+    solve::<N, PAIR>(old, [old; 2], drive, h, Loads::Imposed)
 }
 
 pub fn condensed_step(
@@ -245,19 +245,30 @@ pub fn condensed_step(
     drive: [Drive; 2],
     h: Option<f64>,
 ) -> Result<[State; 2], StepError> {
-    solve::<4, 8>(old, drive, h, Loads::Imposed)
+    solve::<4, 8>(old, [old; 2], drive, h, Loads::Imposed)
 }
 
 pub fn attack_step(old: State, drive: [Drive; 2], h: Option<f64>) -> Result<[State; 2], StepError> {
-    solve::<4, 8>(old, drive, h, Loads::Attack)
+    solve::<4, 8>(old, [old; 2], drive, h, Loads::Attack)
 }
 
 pub fn loads_step(old: State, drive: [Drive; 2], h: Option<f64>) -> Result<[State; 2], StepError> {
-    solve::<4, 8>(old, drive, h, Loads::AttackAndDecay)
+    solve::<4, 8>(old, [old; 2], drive, h, Loads::AttackAndDecay)
+}
+
+// Oracle-assisted diagnostic only. The initial guess is separate from history.
+pub fn seeded_loads_step(
+    old: State,
+    initial: [State; 2],
+    drive: [Drive; 2],
+    h: f64,
+) -> Result<[State; 2], StepError> {
+    solve::<4, 8>(old, initial, drive, Some(h), Loads::AttackAndDecay)
 }
 
 fn solve<const DIM: usize, const SIZE: usize>(
     old: State,
+    initial: [State; 2],
     drive: [Drive; 2],
     h: Option<f64>,
     loads: Loads,
@@ -272,7 +283,7 @@ fn solve<const DIM: usize, const SIZE: usize>(
         None
     };
     let evaluate = |states| evaluate::<DIM, SIZE>(old, states, drive, inv, plate.as_ref(), loads);
-    let mut trial = evaluate([old; 2])?;
+    let mut trial = evaluate(initial)?;
     for _ in 0..20 {
         let (states, residual, jacobian) = trial;
         let change = Lu::factor(jacobian)?.solve(residual)?;

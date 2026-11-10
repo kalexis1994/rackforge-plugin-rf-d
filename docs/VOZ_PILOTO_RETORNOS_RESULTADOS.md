@@ -1542,3 +1542,25 @@ Los recorridos controlados de CR6 con las cargas
 impuestas conservaron sus entradas y salidas bit
 a bit a 96, 384 y 768 kHz.
 [Regresión de polaridad fija](../evidence/rf_d_pilot_bistable_return_active03.json).
+
+### Cuarto paso positivo a 96 kHz
+
+Se aisló el intervalo que contiene el cruce para
+cada una de las tres reservas positivas. El banco
+arranca con el historial del solver a 73,728 MHz.
+Repetir ese historial como semilla en ambas etapas
+agotó el presupuesto de Newton en los tres casos.
+Al usar además los dos estados finos como semillas
+de etapa, los tres casos convergieron y conservaron
+el orden de los nodos antes y después del cruce.
+
+Los estados convergidos todavía difirieron del
+solver fino. El peor error fue 106,03 mV en x28,
+23,13 mV en x26 y 5,99 µA en R40. Estas diferencias
+exceden los límites de 20 µV y 2 nA. El contraste
+a reloj fino y los diagnósticos previos conservaron
+sus entradas y salidas. El ensayo con semillas de
+oráculo se limita al laboratorio. Para el piloto
+queda contrastar un avance que trate el evento
+dentro del paso con el reloj de C4.
+[Diagnóstico del cruce](../evidence/rf_d_pilot_bistable_return_seeded01.json).

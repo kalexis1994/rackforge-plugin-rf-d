@@ -41,6 +41,14 @@ fn unpack(x: Values) -> State {
     }
 }
 
+fn unpack_loads(data: &[f64]) -> State {
+    State {
+        attack: data[10..12].try_into().unwrap(),
+        decay: data[12..15].try_into().unwrap(),
+        ..unpack(data[..10].try_into().unwrap())
+    }
+}
+
 fn pack(s: State) -> Values {
     std::array::from_fn(|i| if i < 5 { s.nodes[i] } else { s.volume[i - 5] })
 }
@@ -215,7 +223,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map(|b| f64::from_le_bytes(b.try_into().unwrap()))
         .collect();
     assert_eq!(raw.len(), data.len() * 8);
-    if matches!(mode.as_str(), "attack" | "loads") {
+    if matches!(mode.as_str(), "attack" | "loads" | "loads-seeded") {
+        let seeded = mode == "loads-seeded";
+        let (data, guesses) = if seeded {
+            assert_eq!(data.len(), 66);
+            data.split_at(36)
+        } else {
+            (data.as_slice(), &[][..])
+        };
+        assert!(guesses.iter().all(|v| v.is_finite()));
         let solve = if mode == "attack" {
             bistable::attack_step
         } else {
@@ -223,11 +239,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         };
         assert!(!settle && data.len() >= 36 && (data.len() - 22) % 14 == 0);
         assert!(data.iter().all(|v| v.is_finite()));
-        let seed = State {
-            attack: data[10..12].try_into()?,
-            decay: data[12..15].try_into()?,
-            ..unpack(data[..10].try_into()?)
-        };
+        let seed = unpack_loads(data);
         let inputs: Vec<_> = data[22..]
             .chunks_exact(14)
             .map(|r| [drive_with_sustain(&r[..7]), drive_with_sustain(&r[7..])])
@@ -235,11 +247,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let combine = |state, u| row(state, u).into_iter().chain(load_row(state, u));
         let mut values = Vec::with_capacity(20 * (1 + 2 * inputs.len()));
         values.extend(combine(seed, drive_with_sustain(&data[15..22])));
-        run(seed, &inputs, rate.recip(), solve, |stages, drives| {
+        let mut emit = |stages: [State; 2], drives: [Drive; 2]| {
             for i in 0..2 {
                 values.extend(combine(stages[i], drives[i]));
             }
-        })?;
+        };
+        if seeded {
+            let initial = [unpack_loads(&guesses[..15]), unpack_loads(&guesses[15..])];
+            let stages = bistable::seeded_loads_step(seed, initial, inputs[0], rate.recip())
+                .map_err(|e| format!("step 0: {e:?}"))?;
+            emit(stages, inputs[0]);
+        } else {
+            run(seed, &inputs, rate.recip(), solve, emit)?;
+        }
         let mut out = std::io::BufWriter::new(std::io::stdout().lock());
         for value in values {
             out.write_all(&value.to_le_bytes())?;

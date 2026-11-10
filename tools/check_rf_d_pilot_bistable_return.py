@@ -103,13 +103,16 @@ def main():
     parser.add_argument("--active", action="store_true", help="contrast controlled forward and reverse CR6 loads")
     parser.add_argument("--plate", action="store_true", help="eliminate the x23 stage voltages analytically")
     parser.add_argument("--loads", choices=("attack", "loads"), help="close Q16 or Q16 and Q17/Q18 in real windows")
+    parser.add_argument("--diagnose-crossing", action="store_true", help="isolate the fourth positive step with oracle history and guesses")
     args = parser.parse_args()
+    if args.diagnose_crossing and args.loads != "loads":
+        parser.error("--diagnose-crossing requires --loads loads")
     if args.loads and (args.active or not args.plate):
         parser.error("--loads requires --plate and actual windows")
     mode = args.loads or ("plate" if args.plate else "split")
     assert c.AREA.is_dir() and not list(c.AREA.iterdir())
     seq = 1
-    kind = args.loads or ("active" if args.active else "windows")
+    kind = "seeded" if args.diagnose_crossing else (args.loads or ("active" if args.active else "windows"))
     while (out := c.ROOT / f"evidence/rf_d_pilot_bistable_return_{kind}{seq:02}.json").exists():
         seq += 1
     full_sources = () if args.active else (*c.ALL_SOURCES, c.OWN, c.CANDIDATE, c.PROBE, c.PORTS,
@@ -144,7 +147,8 @@ def main():
             return None
         rows = np.frombuffer(raw.stdout, "<f8").reshape(-1, len(labels))
         header, step = (22, 14) if args.loads else (16, 12)
-        assert len(rows) == 1 + 2 * ((len(data) // 8 - header) // step) and np.isfinite(rows).all()
+        extra = 30 if mode == "loads-seeded" else 0
+        assert len(rows) == 1 + 2 * ((len(data) // 8 - header - extra) // step) and np.isfinite(rows).all()
         return rows
 
     try:
@@ -224,6 +228,25 @@ def main():
                     item["coarse_diagnostic"] = contrast(coarse[::2, :len(LABELS)], want[::2 * stride])
                     if args.loads:
                         item["coarse_closed_ports"] = load_contrast(coarse[::2], full[::2 * stride], mode)
+                if args.diagnose_crossing and branch == "positive":
+                    step = 3
+                    assert coarse is None and item[f"{mode}_{PILOT_RATE}"]["error"] == 'Error: "step 3: IterationBudget"'
+                    initial = 2 * stride * step
+                    indices = np.r_[initial, stage_rows[step]]
+                    rows = full[indices]
+                    data = window_payload(rows, np.array([1, 2]), mode)
+                    trial = rows[1:, (*NODES, *LOAD_NODES)].astype("<f8").tobytes()
+                    check = item["isolated_step"] = dict(step=step, reference_rows=indices.tolist(),
+                        reference_order=(rows[:, 26] >= rows[:, 28]).tolist())
+                    for tag, probe_mode, sample in (("history", mode, data), ("stages", "loads-seeded", data + trial)):
+                        diagnostic = check[tag] = {}
+                        got = evaluate(probe_mode, PILOT_RATE, sample, diagnostic)
+                        if got is not None:
+                            diagnostic.update(order=(got[:, 1] >= got[:, 3]).tolist(),
+                                fine=contrast(got[:, :len(LABELS)], observe(rows)),
+                                closed_ports=load_contrast(got, rows, mode))
+                    print(label, "isolated step", {tag: check[tag][f"{probe_mode}_{PILOT_RATE}"].get("error", "converged")
+                          for tag, probe_mode in (("history", mode), ("stages", "loads-seeded"))}, flush=True)
                 print(label, {k: v for k, v in item.items() if k in ("passed", "fine", "events", "closed_ports", "coarse_diagnostic")
                               or isinstance(v, dict) and "error" in v}, flush=True)
         report["passed"] = bool(report["cases"]) and all(t["passed"] for t in report["cases"].values())
