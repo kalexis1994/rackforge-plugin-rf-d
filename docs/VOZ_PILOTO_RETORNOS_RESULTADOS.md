@@ -1865,3 +1865,33 @@ una en C2 alto. Las medianas positivas fueron
 en las mediciones alternadas. Se conserva la
 variante como diagnóstico de laboratorio.
 [Contraste de la semilla extrapolada](../evidence/rf_d_pilot_bistable_handoff14.json).
+
+### Aceleración con residuos del mismo paso
+
+Se ensayó una mezcla de las dos últimas respuestas
+del mapa, después de corregir sus puertos. Si
+'r' es el residuo de la respuesta actual y 'd'
+es su cambio respecto al anterior, el peso es
+'(r·d)/(d·d)'. Se aplica únicamente entre −1 y 1
+y cuando el residuo predicho baja en norma máxima.
+La comprobación nodal y las tolerancias finales
+se conservan. Si el paso falla, el banco lo repite
+desde la misma historia con la iteración habitual.
+
+Las cinco reservas pasaron y los tres cruces
+conservaron sus intervalos de ocho ticks. Hubo
+4, 6 y 8 iteraciones menos en positivo. En negativo
+se observó una iteración adicional en el ataque
+y el mismo número en la liberación. No hubo
+reintentos. Contra el control, J7 difirió como
+máximo 25 fV y R59/R60 2,71 fA.
+
+El coste de calcular la mezcla absorbió buena
+parte del ahorro de iteraciones. Las medianas
+positivas fueron 0,848–0,911 ms para cinco frames,
+con una variación de −1,9 a +0,2 % frente al
+control alternado. El pico de la variante fue
+1,444 ms. Se conserva como variante del banco.
+La comprobación nodal sigue en la ruta y queda
+medir el bloque completo en RackForge.
+[Contraste de la mezcla de residuos](../evidence/rf_d_pilot_bistable_handoff15.json).

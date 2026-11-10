@@ -23,6 +23,7 @@ enum Candidate<'a> {
     Frozen,
     Packed(&'a DefectBlocks),
     Seeded(&'a DefectBlocks),
+    Accelerated(&'a DefectBlocks),
 }
 
 #[derive(Clone, Copy)]
@@ -30,6 +31,7 @@ enum Matrix {
     Scalar,
     Packed,
     Seeded,
+    Accelerated,
 }
 
 struct Event {
@@ -112,10 +114,13 @@ fn render(
 ) -> Result<[f64; 7], String> {
     let frozen = !matches!(candidate_mode, Candidate::Exact);
     let packed = match candidate_mode {
-        Candidate::Packed(blocks) | Candidate::Seeded(blocks) => Some(blocks),
+        Candidate::Packed(blocks) | Candidate::Seeded(blocks) | Candidate::Accelerated(blocks) => {
+            Some(blocks)
+        }
         _ => None,
     };
     let seeded = matches!(candidate_mode, Candidate::Seeded(_));
+    let accelerate = matches!(candidate_mode, Candidate::Accelerated(_));
     let mut previous_audio = None;
     // Maximum iterations, voltage/current mismatch, latch calls, total iterations, seeds, retries.
     let mut stats = [0_f64; 7];
@@ -125,8 +130,9 @@ fn render(
         let mut guess = JointGuess {
             packed,
             previous: previous_audio.as_ref().filter(|_| predict),
+            accelerate,
         };
-        stats[5] += f64::from(guess.previous.is_some());
+        stats[5] += f64::from(guess.previous.is_some() || accelerate);
         let (next, output, iterations, mismatch, candidate) = loop {
             let mut previous = None;
             let mut candidate = [None; 2];
@@ -155,7 +161,11 @@ fn render(
                 Ok((next, output, iterations, mismatch)) => {
                     break (next, output, iterations, mismatch, candidate)
                 }
-                Err(_) if guess.previous.take().is_some() => stats[6] += 1.,
+                Err(_) if guess.previous.is_some() || guess.accelerate => {
+                    guess.previous = None;
+                    guess.accelerate = false;
+                    stats[6] += 1.;
+                }
                 Err(error) => return Err(format!("coupled step {slot}: {error}")),
             }
         };
@@ -195,6 +205,10 @@ pub fn run_packed(bench: bool) -> Result<(), Box<dyn std::error::Error>> {
 
 pub fn run_seeded(bench: bool) -> Result<(), Box<dyn std::error::Error>> {
     run_mode(bench, true, bench, Matrix::Seeded)
+}
+
+pub fn run_accelerated(bench: bool) -> Result<(), Box<dyn std::error::Error>> {
+    run_mode(bench, true, bench, Matrix::Accelerated)
 }
 
 fn run_mode(
@@ -257,6 +271,9 @@ fn run_mode(
     let (control, variant) = match (matrix, blocks.as_ref()) {
         (Matrix::Packed, Some(blocks)) => (Candidate::Frozen, Candidate::Packed(blocks)),
         (Matrix::Seeded, Some(blocks)) => (Candidate::Packed(blocks), Candidate::Seeded(blocks)),
+        (Matrix::Accelerated, Some(blocks)) => {
+            (Candidate::Packed(blocks), Candidate::Accelerated(blocks))
+        }
         _ => (Candidate::Exact, Candidate::Frozen),
     };
     if bench {
@@ -296,9 +313,14 @@ fn run_mode(
                 group[PASSES - 1]
             );
         }
-        if matches!(matrix, Matrix::Seeded) {
+        let label = match matrix {
+            Matrix::Seeded => Some("SEEDS"),
+            Matrix::Accelerated => Some("MIX"),
+            _ => None,
+        };
+        if let Some(label) = label {
             for group in stats {
-                println!("SEEDS,{},{},{}", group[4], group[5], group[6]);
+                println!("{label},{},{},{}", group[4], group[5], group[6]);
             }
         }
         super::profile::report_receiver();

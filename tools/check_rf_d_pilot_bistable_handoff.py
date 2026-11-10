@@ -113,7 +113,7 @@ def close_r59(case, replay, assemble, reference, mask):
 
 
 def stage_feedback(case, run, replay, inputs, coarse_rows, event=None, profiles=b"", *, frozen=False,
-                   profile_target=None, packed_rows=False, seeded=False):
+                   profile_target=None, packed_rows=False, seeded=False, accelerated=False):
     expected = case.stages[coarse_rows]
     stages = np.concatenate((inputs, expected[:, :, [17, 24, 14]]), axis=2)
     mask = np.ones(coarse_rows.shape, dtype=bool)
@@ -129,7 +129,17 @@ def stage_feedback(case, run, replay, inputs, coarse_rows, event=None, profiles=
                + stages.astype("<f8").tobytes())
     result = dict(passed=False)
     mode = "audio-readout-feedback"
-    suffix = "-seeded" if seeded else ("-packed" if packed_rows else ("-frozen" if frozen else ""))
+    if accelerated:
+        suffix, baseline, bench = "-accelerated", "-packed", "-accelerated-bench"
+    elif seeded:
+        suffix, baseline, bench = "-seeded", "-packed", "-seeded-bench"
+    elif packed_rows:
+        suffix, baseline, bench = "-packed", "-frozen", "-packed-bench"
+    elif frozen:
+        suffix, baseline, bench = "-frozen", "", "-compare"
+    else:
+        suffix, baseline, bench = "", "", "-bench"
+    iteration_trial = seeded or accelerated
     values = replay([case.target, mode + suffix], payload, result)
     if values is None:
         return result
@@ -153,7 +163,6 @@ def stage_feedback(case, run, replay, inputs, coarse_rows, event=None, profiles=
         result["passed"] &= c2_error <= 2e-6
     if frozen and result["passed"]:
         control = result["control"] = {}
-        baseline = "-packed" if seeded else ("-frozen" if packed_rows else "")
         exact = replay([case.target, mode + baseline], payload, control)
         if exact is not None:
             exact_rows = exact[4:].reshape(rows.shape)
@@ -164,30 +173,30 @@ def stage_feedback(case, run, replay, inputs, coarse_rows, event=None, profiles=
                           latch_evaluations_saved=int(exact[3] - values[3]))
             result["passed"] &= (result["j7_delta_v"] <= 1e-12 and result["r59_r60_delta_a"] <= 1e-14
                                  and result["max_observation_delta"] <= 1e-10
-                                 and (seeded or result["latch_evaluations_saved"] >= 0))
+                                 and (iteration_trial or result["latch_evaluations_saved"] >= 0))
         else:
             result["passed"] = False
-        if packed_rows and not seeded:
+        if packed_rows and not iteration_trial:
             result["passed"] &= result["output_sha256"] == control["output_sha256"]
     if result["passed"]:
-        bench = "-seeded-bench" if seeded else ("-packed-bench" if packed_rows else ("-compare" if frozen else "-bench"))
         raw = run([case.target, mode + bench], payload)
         keys = ("windows", "median_ns", "p99_ns", "max_ns")
         lines = raw.decode().splitlines()
-        if seeded:
+        if iteration_trial:
             effort = []
+            tag_expected, counter, variant_key = ("MIX", "accelerated_steps", "accelerated") if accelerated else ("SEEDS", "seeds", "seeded")
             for line in lines[2:]:
                 tag, iterations, seeds, retries = line.split(",")
-                assert tag == "SEEDS"
-                effort.append(dict(iterations=int(iterations), seeds=int(seeds), retries=int(retries)))
+                assert tag == tag_expected
+                effort.append(dict(iterations=int(iterations), retries=int(retries), **{counter: int(seeds)}))
             baseline, variant = effort
-            result["effort"] = dict(packed_rows=baseline, seeded=variant)
+            result["effort"] = dict(packed_rows=baseline, **{variant_key: variant})
             lines = lines[:2]
         timings = [dict(zip(keys, map(int, row.split(",")), strict=True)) for row in lines]
-        if seeded:
-            packed, warm = timings
-            result["timing"] = dict(alternating=True, packed_rows=packed, seeded=warm,
-                                    median_speedup=packed["median_ns"] / warm["median_ns"])
+        if iteration_trial:
+            packed, variant = timings
+            result["timing"] = dict(alternating=True, packed_rows=packed, **{variant_key: variant},
+                                    median_speedup=packed["median_ns"] / variant["median_ns"])
         elif packed_rows:
             scalar, packed = timings
             result["timing"] = dict(alternating=True, scalar_rows=scalar, packed_rows=packed,
@@ -227,8 +236,10 @@ def main():
     receiver_mode.add_argument("--receiver-profile", action="store_true", help="profile the receiver sections in a separate build")
     receiver_mode.add_argument("--receiver-packed", action="store_true", help="compare receiver products grouped by four output rows")
     receiver_mode.add_argument("--receiver-seeded", action="store_true", help="seed the packed receiver with prior endpoint motion")
+    receiver_mode.add_argument("--receiver-accelerated", action="store_true", help="accelerate receiver defects within each step")
     args = parser.parse_args()
-    args.receiver_packed |= args.receiver_seeded
+    iteration_trial = args.receiver_seeded or args.receiver_accelerated
+    args.receiver_packed |= iteration_trial
     args.stage_feedback_frozen |= args.receiver_profile or args.receiver_packed
     args.stage_feedback |= args.stage_feedback_frozen
     args.reciprocal_r59 |= args.stage_feedback
@@ -255,7 +266,7 @@ def main():
         native_sources += (FROZEN_CONTROL, "tools/rf_d_pilot_step_profile.rs")
     if args.receiver_packed:
         native_sources += (PROFILE_CONTROL,)
-    if args.receiver_seeded:
+    if iteration_trial:
         native_sources += (PACKED_CONTROL,)
     sources = Sources((*b.SOURCES, *c.ALL_SOURCES, c.OWN, c.CANDIDATE, c.PROBE, c.PORTS,
                        OWN, PREVIOUS, CLOCK_CONTROL, *SOURCE_NAMES, C4_CLOCK, TIMER_CARRY, TIMER_NATIVE,
@@ -269,6 +280,7 @@ def main():
                   reciprocal_r59=args.reciprocal_r59, stage_feedback=args.stage_feedback,
                   frozen_feedback=args.stage_feedback_frozen, receiver_profile=args.receiver_profile,
                   receiver_packed=args.receiver_packed, receiver_seeded=args.receiver_seeded,
+                  receiver_accelerated=args.receiver_accelerated,
                   calibration=[], cases={})
     if args.audio:
         report["audio_boundaries"] = dict(filter_sum_x34="reference at both stages",
@@ -337,7 +349,7 @@ def main():
         native_control = c.read(NATIVE_CONTROL)["cases"] if args.native_c2 else {}
         c2_control = c.read(C2_CONTROL)["cases"] if args.audio else {}
         audio_control = c.read(AUDIO_CONTROL)["cases"] if args.reciprocal_r59 else {}
-        step_evidence = PACKED_CONTROL if args.receiver_seeded else (FROZEN_CONTROL if args.receiver_packed else STEP_CONTROL)
+        step_evidence = PACKED_CONTROL if iteration_trial else (FROZEN_CONTROL if args.receiver_packed else STEP_CONTROL)
         step_control = c.read(step_evidence)["cases"] if args.stage_feedback_frozen else {}
         frozen_control = c.read(FROZEN_CONTROL)["cases"] if args.receiver_profile else {}
 
@@ -437,7 +449,7 @@ def main():
                         item["stage_feedback"] = stage_feedback(case, run, replay, inputs, coarse_rows,
                                                                frozen=args.stage_feedback_frozen,
                                                                profile_target=profile_target, packed_rows=args.receiver_packed,
-                                                               seeded=args.receiver_seeded)
+                                                               seeded=args.receiver_seeded, accelerated=args.receiver_accelerated)
                         if args.stage_feedback_frozen and item["stage_feedback"]["passed"]:
                             assert item["stage_feedback"]["control"]["output_sha256"] == step_control[name]["stage_feedback"]["output_sha256"]
                         if args.receiver_profile and item["stage_feedback"]["passed"]:
@@ -619,7 +631,8 @@ def main():
                                             item["stage_feedback"] = stage_feedback(
                                                 case, run, replay, inputs, coarse_rows, event, profiles,
                                                 frozen=args.stage_feedback_frozen, profile_target=profile_target,
-                                                packed_rows=args.receiver_packed, seeded=args.receiver_seeded)
+                                                packed_rows=args.receiver_packed, seeded=args.receiver_seeded,
+                                                accelerated=args.receiver_accelerated)
                                             result = item["stage_feedback"]
                                             if args.stage_feedback_frozen and result["passed"]:
                                                 assert result["control"]["output_sha256"] == step_control[name]["stage_feedback"]["output_sha256"]

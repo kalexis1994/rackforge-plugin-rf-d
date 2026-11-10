@@ -18,7 +18,8 @@ use std::{
 mod feedback;
 #[cfg(pilot_stage_feedback)]
 pub use feedback::{
-    run as run_feedback, run_packed as run_feedback_packed, run_seeded as run_feedback_seeded,
+    run as run_feedback, run_accelerated as run_feedback_accelerated,
+    run_packed as run_feedback_packed, run_seeded as run_feedback_seeded,
 };
 
 const H: f64 = 1. / 96_000.;
@@ -155,6 +156,42 @@ fn advance(
 struct JointGuess<'a> {
     packed: Option<&'a DefectBlocks>,
     previous: Option<&'a chain::State>,
+    accelerate: bool,
+}
+
+struct DefectTrial {
+    response: [f64; PAIR],
+    residual: [f64; PAIR],
+}
+
+fn accelerate_defect(
+    history: &mut Option<DefectTrial>,
+    response: &mut [f64; PAIR],
+    current: impl Fn(usize) -> f64,
+) {
+    let residual: [f64; PAIR] = std::array::from_fn(|i| response[i] - current(i));
+    let previous = history.replace(DefectTrial {
+        response: *response,
+        residual,
+    });
+    let Some(previous) = previous else {
+        return;
+    };
+    let change: [f64; PAIR] = std::array::from_fn(|i| residual[i] - previous.residual[i]);
+    let length = crate::reduced_lu::dot(&change, &change);
+    if length <= 0. {
+        return;
+    }
+    let weight = crate::reduced_lu::dot(&residual, &change) / length;
+    if !(-1. ..=1.).contains(&weight) {
+        return;
+    }
+    let predicted: [f64; PAIR] = std::array::from_fn(|i| residual[i] - weight * change[i]);
+    if maximum(&predicted) < maximum(&residual) {
+        for (value, old) in response.iter_mut().zip(previous.response) {
+            *value -= weight * (*value - old);
+        }
+    }
 }
 
 fn advance_joint(
@@ -203,6 +240,7 @@ fn advance_joint_with(
     let mut cv = [[old.cv, 0.]; 2];
     let mut tangent: Option<(Lu<4>, [f64; 4])> = None;
     let mut use_nodal = false;
+    let mut defect_history = None;
     const BUDGET: usize = 16;
     for iteration in 1..=BUDGET {
         let mut timing = profile::start();
@@ -329,6 +367,9 @@ fn advance_joint_with(
             &mut response,
             std::array::from_fn(|i| slope[i] * load_change[i]),
         );
+        if guess.accelerate && !use_nodal {
+            accelerate_defect(&mut defect_history, &mut response, current);
+        }
         for (r, value) in response.into_iter().enumerate() {
             x[r / SIZE][super::local(r % SIZE)] = value;
         }
