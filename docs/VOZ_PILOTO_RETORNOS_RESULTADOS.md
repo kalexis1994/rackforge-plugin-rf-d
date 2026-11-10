@@ -778,3 +778,25 @@ durante la caída del ataque de volumen, contrastar
 el evento del biestable y cerrar R59/R60 y J7 antes
 de medir la voz completa y probar en Desktop.
 [Banco a 96 kHz](../evidence/rf_d_pilot_timer_rc04.json).
+
+## Carga de ataque durante el cruce
+
+En la ventana positiva se compararon dos rampas de
+corriente de ataque separadas por la conmutación.
+Las pendientes se obtuvieron de los intervalos
+adyacentes a 96 kHz. Cortar en el centro de los ocho
+ticks de referencia dejó 74,4 µV de error en C2.
+El promedio ponderado de ataque fue 4,581 mA en
+esa variante, frente a los 4,652 mA de referencia.
+
+Ajustar sólo el área ponderada del pulso con la
+referencia dejó 1,49 nV de error de C2 en toda la
+ventana. Para el modelo de dos rampas, esa área
+equivale a cortar 131,7 ns después del centro del
+intervalo del cruce. Es una medida de la carga que
+transfiere la transición en esta reserva. El
+intervalo del evento del biestable sigue en
+319096–319104. Falta obtener esa área del estado
+eléctrico durante la caída del ataque y validarla
+con otras cargas.
+[Contraste del área de ataque](../evidence/rf_d_pilot_timer_rc05.json).

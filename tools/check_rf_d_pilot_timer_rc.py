@@ -36,12 +36,16 @@ def project_loads(stages, first_path=0):
     """Project the selected load ports with their summed conductance."""
     stage_values = stages[1:, np.array(LOAD_NODES)[:, first_path:]]
     conductance = (1. / OHMS[:, first_path:]).sum(axis=1)
+    return project_stages(stage_values, conductance)
+
+
+def project_stages(stage_values, conductance):
     steps = HALF_FRAME_TICKS // FINE_TICKS
     x = conductance * FINE_TICKS / (10e-6 * 48_000 * 4096)
     # The original fine oracle uses two-stage Radau. Its final row weights
     # the two load stages in the ratio 4.5:(1.5+x) for this linear network.
     w1 = 4.5 / (6. + x)
-    stage_loads = stage_values.reshape(-1, steps, 2, 2, 3 - first_path)
+    stage_loads = stage_values.reshape(-1, steps, 2, *stage_values.shape[1:])
     local = w1[:, None] * stage_loads[:, :, 0] + (1. - w1[:, None]) * stage_loads[:, :, 1]
     age = np.arange(steps - 1, -1, -1)
     weights = np.exp(-age[:, None] * x)
@@ -107,6 +111,83 @@ def attack_results(run, target, stages):
     return ports, item
 
 
+def crossing_charge(ports, stages, regular, changes):
+    """Separate a two-level current model from the need to locate the event."""
+    assert len(changes) == 1
+    capacitance = 10e-6
+    conductance = 1. / OHMS[:, 1:]
+    total = conductance.sum(axis=1)
+    x = total / (96_000 * capacitance)
+    moved = -np.expm1(-x)
+    end_weight = (1. - moved / x) / moved
+    other = project_loads(stages, first_path=1)
+    exact_current = project_stages(ports[1:, :, 2, None], total)[:, :, 0]
+    endpoints = ports[regular * 2, :, 2]
+    affine_current = endpoints[:-1] + end_weight * np.diff(endpoints, axis=0)
+    change = int(changes[0])
+    slot = int(np.searchsorted(regular, change, side="right") - 1)
+    width = int(regular[slot+1] - regular[slot])
+    bracket = (np.array([change, change + 1]) - regular[slot]) / width
+    fraction = bracket.mean()
+    # Extend the preceding and following 96 kHz ramps into the event interval.
+    # The bracket and slopes come from the reference in this diagnostic.
+    pre = endpoints[slot]
+    post = endpoints[slot+1]
+    pre_slope = endpoints[slot] - endpoints[slot-1]
+    post_slope = endpoints[slot+2] - endpoints[slot+1]
+
+    def moment(t):
+        return np.expm1(x * t) * np.exp(-x) / moved
+
+    def first_moment(t):
+        return (x * t * np.exp(x * t) - np.expm1(x * t)) * np.exp(-x) / (x * moved)
+
+    def split_ramps(f):
+        before = moment(f)
+        weighted_time = first_moment(f)
+        return (before * pre + (1. - before) * post
+                + weighted_time * pre_slope
+                + (end_weight - weighted_time - (1. - before)) * post_slope)
+
+    at_event = affine_current.copy()
+    at_event[slot] = split_ramps(fraction)
+    # Recover the area-equivalent event time for volume only. The result is
+    # a diagnostic of a step-plus-ramps surrogate, not a time estimate at runtime.
+    lo, hi = 0., 1.
+    assert split_ramps(lo)[0] < exact_current[slot, 0] < split_ramps(hi)[0]
+    for _ in range(48):
+        middle = (lo + hi) / 2.
+        if split_ramps(middle)[0] < exact_current[slot, 0]:
+            lo = middle
+        else:
+            hi = middle
+    effective = (lo + hi) / 2.
+    at_effective = at_event.copy()
+    at_effective[slot, 0] = split_ramps(effective)[0]
+
+    expected = stages[regular * 2][:, TIMER_NODES]
+    def error(current):
+        state = expected[0].copy()
+        errors = []
+        for i, (attack, loads) in enumerate(zip(current, other)):
+            state += moved / total * (attack + ((loads - state[:, None]) * conductance).sum(axis=1))
+            errors.append(abs(state - expected[i+1]))
+        peak = np.asarray(errors).max(axis=0)
+        load_error = peak[:, None] / OHMS
+        return dict(passed=bool(peak.max() <= TIMER_LIMIT_V and load_error.max() <= LOAD_LIMIT_A),
+                    max_timer_error_v=peak.tolist(), max_load_error_a=load_error.tolist())
+
+    ideal = error(exact_current)
+    assert ideal["passed"]
+    return dict(oracle_projected=ideal, coarse_affine=error(affine_current),
+                split_reference_crossing=error(at_event), split_area_equivalent=error(at_effective),
+                event_interval=int(slot), reference_fraction=bracket.tolist(),
+                area_equivalent_fraction=float(effective),
+                area_equivalent_minus_crossing_ns=float((effective - fraction) * 1e9 / 96_000),
+                effective_attack_a=exact_current[slot].tolist(),
+                predicted_attack_at_reference_event_a=at_event[slot].tolist())
+
+
 def attack_sweep(run, target):
     collector, timer = np.meshgrid(np.linspace(0., 9.3, 151), np.linspace(0., 8., 81))
     inputs = np.tile(np.column_stack((collector.ravel(), timer.ravel())), (1, 2))
@@ -132,7 +213,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--attack-cells", action="store_true",
                         help="generate the attack branches from latch and timer voltages")
+    parser.add_argument("--crossing-charge", action="store_true",
+                        help="diagnose current area versus the eight-tick reference event")
     args = parser.parse_args()
+    assert not args.crossing_charge or args.attack_cells
     assert c.AREA.is_dir() and not list(c.AREA.iterdir())
     seq = 1
     while (out := c.ROOT / f"evidence/rf_d_pilot_timer_rc{seq:02}.json").exists():
@@ -143,7 +227,7 @@ def main():
     report = dict(passed=False, coupled=False, rack_integrated=False, clock_hz=96_000,
                   timer_nodes=TIMER_NODES, load_nodes=LOAD_NODES, load_ohms=OHMS.tolist(),
                   timer_limit_v=TIMER_LIMIT_V, load_limit_a=LOAD_LIMIT_A,
-                  attack_cells=args.attack_cells, windows={}, **sources.fields(), compiler_sha256=c.sha(Path(c.COMPILER)),
+                  attack_cells=args.attack_cells, crossing_charge=args.crossing_charge, windows={}, **sources.fields(), compiler_sha256=c.sha(Path(c.COMPILER)),
                   library_sha256=c.sha(c.LIB))
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
 
@@ -216,7 +300,12 @@ def main():
                 data = current_fixture(initial, inputs)
                 results["generated_attack_current"] = timer_result(
                     run, [attack, "current"], data, nodes[regular[1:]][:, TIMER_NODES])
-                print(label, item["attack_ports"], results["generated_attack_projection"],
+                if args.crossing_charge and len(changes):
+                    charge = crossing_charge(ports, stages, regular, changes)
+                    assert charge == crossing_charge(ports, stages, regular, changes)
+                    item["crossing_charge"] = dict(charge, unchanged_replay=True)
+                    print("CROSSING_CHARGE", charge, flush=True)
+                print(label, item["attack_ports"]["passed"], results["generated_attack_projection"]["passed"],
                       results["generated_attack_current"], flush=True)
             else:
                 print(label, results, flush=True)
