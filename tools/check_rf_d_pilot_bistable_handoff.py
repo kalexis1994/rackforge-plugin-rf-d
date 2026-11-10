@@ -10,6 +10,7 @@ import numpy as np
 from affine_evidence import Sources
 import check_rf_d_pilot_bistable_return as b
 import check_rf_d_pilot_contours as c
+import rf_d_pilot_audio_readout as audio
 from check_hybrid_voice import packed
 from check_rf_d_pilot_precursor import (
     CALIBRATION, C4_CLOCK, SOURCE_NAMES, STEPS, TICK_S, TIMER_CARRY, TIMER_NATIVE,
@@ -25,6 +26,7 @@ PREVIOUS = "evidence/rf_d_pilot_bistable_return_seeded01.json"
 CLOCK_CONTROL = "evidence/rf_d_pilot_cv_readout_pos03.json"
 DELAYED_CONTROL = "evidence/rf_d_pilot_bistable_handoff04.json"
 NATIVE_CONTROL = "evidence/rf_d_pilot_bistable_handoff05.json"
+C2_CONTROL = "evidence/rf_d_pilot_bistable_handoff06.json"
 NATIVE = ("tools/rf_d_pilot_bistable_handoff.rs", "tools/rf_d_pilot_bistable_handoff_probe.rs")
 TIMERS = (5, 38)
 NODES = (*b.NODES, *b.LOAD_NODES)
@@ -58,6 +60,19 @@ def assess(got, expected):
     return dict(passed=base["passed"] and loads["passed"], state=base, loads=loads)
 
 
+def receiver_stages(reference, coarse_rows, clock_rows, legacy, native, slot):
+    # C2 and x27 before the edge come from the existing native clock.
+    inputs = reference[coarse_rows[..., None], (5, 34, 27)].copy()
+    inputs[:slot+1, :, 2] = clock_rows[:, :2]
+    inputs[:slot+1, 0, 0] = clock_rows[:, 2]
+    inputs[:slot, 1, 0] = legacy[4:].reshape(slot+1, 8)[1:, 0]
+    # The native handoff owns the edge and the following stage pairs.
+    inputs[slot, 1, [0, 2]] = native[0, [-1, 2]]
+    inputs[slot+1:, :, 0] = native[1:, -1].reshape(-1, 2)
+    inputs[slot+1:, :, 2] = native[1:, 2].reshape(-1, 2)
+    return inputs
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     reentry = parser.add_mutually_exclusive_group()
@@ -65,7 +80,9 @@ def main():
     reentry.add_argument("--delay-reentry", action="store_true", help="carry the post-event surface for one extra interval")
     reentry.add_argument("--native-reentry", action="store_true", help="run the C4 clock and delayed transfer together in Rust")
     reentry.add_argument("--native-c2", action="store_true", help="close C2 during the projected interval in Rust")
+    reentry.add_argument("--audio", action="store_true", help="feed the native stages into the loaded audio receiver")
     args = parser.parse_args()
+    args.native_c2 |= args.audio
     args.native_reentry |= args.native_c2
     args.delay_reentry |= args.native_reentry
     assert c.AREA.is_dir() and not list(c.AREA.iterdir())
@@ -75,6 +92,8 @@ def main():
     native_sources = (*NATIVE, DELAYED_CONTROL) if args.native_reentry else ()
     if args.native_c2:
         native_sources += (NATIVE_CONTROL,)
+    if args.audio:
+        native_sources += (*audio.SOURCES, C2_CONTROL)
     sources = Sources((*b.SOURCES, *c.ALL_SOURCES, c.OWN, c.CANDIDATE, c.PROBE, c.PORTS,
                        OWN, PREVIOUS, CLOCK_CONTROL, *SOURCE_NAMES, C4_CLOCK, TIMER_CARRY, TIMER_NATIVE,
                        TIMER_NATIVE_PROBE, "tools/rf_d_pilot_timer_rc.rs", *native_sources))
@@ -83,7 +102,11 @@ def main():
                   imposed_ports=(5, 54, 17, 24, 14), post_grids=DENSITIES,
                   first_reentry_substeps=2 if args.half_reentry else 1,
                   delayed_reentry=args.delay_reentry, native_reentry=args.native_reentry,
-                  closed_c2=args.native_c2, calibration=[], cases={})
+                  closed_c2=args.native_c2, audio_readout=args.audio, calibration=[], cases={})
+    if args.audio:
+        report["audio_boundaries"] = dict(filter_sum_x34="reference at both stages",
+                                          volume_latch_vca_base="reference",
+                                          c2_after_projected_interval="reference")
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
     clock = c.AREA / "handoff-clock.exe"
     closed = c.AREA / "handoff-return.exe"
@@ -134,12 +157,19 @@ def main():
         run([*build, *native_flags, c.ROOT / TIMER_NATIVE_PROBE, "-o", clock])
         run([*build, *flags, c.ROOT / b.PROBE, "-o", closed])
         refs, report["reference_inputs"] = c.references()
-        exe, _ = prepare_reference(run, report)
+        exe, _ = prepare_reference(run, report, with_audio=args.audio)
         anchor = c.AREA / "handoff.anchor"
         prior = c.read(PREVIOUS)["cases"]
         clock_control = c.read(CLOCK_CONTROL)["reserves"]
         delayed_control = c.read(DELAYED_CONTROL)["cases"] if args.native_reentry else {}
         native_control = c.read(NATIVE_CONTROL)["cases"] if args.native_c2 else {}
+        c2_control = c.read(C2_CONTROL)["cases"] if args.audio else {}
+
+        def receiver(branch, start, offset, stages):
+            phase, _, _, state = refs[branch][1][start]
+            state = state.copy()
+            state[0, TIMERS] += offset
+            return audio.Case(exe, env, state, phase, stages, joint=True, closed_cv=True)
 
         def capture(branch, start, frames, key, offset):
             phase, _, _, state = refs[branch][1][start]
@@ -197,6 +227,14 @@ def main():
                 if args.native_c2:
                     native = replay([clock, "native-handoff-c2"], clock_data, item.setdefault("native_c2", {}))
                     item["passed"] = item["passed"] and native is not None and native.size == 0
+                if args.audio and item["passed"]:
+                    command = [closed, "loads", b.PILOT_RATE]
+                    closed_rows = np.frombuffer(run(command, data), "<f8").reshape(-1, 20)
+                    assert c.digest(closed_rows.astype("<f8").tobytes()) == item["negative"]["output_sha256"]
+                    inputs = stages[coarse_rows[..., None], (5, 34, 27)].copy()
+                    inputs[:, :, 2] = closed_rows[1:, 2].reshape(-1, 2)
+                    item["audio"] = receiver(branch, start, offset, stages).compare(0, exact_stages=inputs)
+                    item["passed"] &= item["audio"]["passed"]
                 print(name, "negative", item["passed"], flush=True)
                 continue
             if predicted is None or predicted.shape != (7,):
@@ -338,17 +376,25 @@ def main():
                                              passed=bool(closed_c2["passed"] and c2_error.max() <= 2e-6
                                                          and charge_error.max() <= 1.01e-17))
                             if closed_c2["passed"]:
-                                closed_c2["timing"] = timings("bench-native-handoff-c2", payload)
+                                if args.audio:
+                                    assert closed_c2["output_sha256"] == c2_control[name]["native_c2"]["output_sha256"]
+                                    clock_cv = item["clock_cv"] = {}
+                                    cv = replay([clock, "cv-stages"], clock_data, clock_cv).reshape(slot+1, 3)
+                                    inputs = receiver_stages(stages, coarse_rows, cv, np.frombuffer(legacy, "<f8"), rows, slot)
+                                    item["audio"] = receiver(branch, start, offset, stages).compare(0, exact_stages=inputs)
+                                else:
+                                    closed_c2["timing"] = timings("bench-native-handoff-c2", payload)
                             else:
                                 closed_c2["failure_input"] = packed(payload)
             item["passed"] = bool(event_matches and timer_error.max() <= 2e-6
                                   and item["predicted129"].get("handoff", {}).get("passed", False)
                                   and chosen["passed"]
                                   and (not args.native_reentry or item.get("native", {}).get("passed", False))
-                                  and (not args.native_c2 or item.get("native_c2", {}).get("passed", False)))
+                                  and (not args.native_c2 or item.get("native_c2", {}).get("passed", False))
+                                  and (not args.audio or item.get("audio", {}).get("passed", False)))
             print(name, "event error ns", item["event_error_ns"], "timer error V", timer_error,
                   {label: trial["passed"] for label, trial in item.items()
-                   if label.startswith("predicted") or label in ("native", "native_c2")},
+                   if label.startswith("predicted") or label in ("native", "native_c2", "audio")},
                   flush=True)
         report["passed"] = bool(report["cases"]) and all(item["passed"] for item in report["cases"].values())
         sources.unchanged()

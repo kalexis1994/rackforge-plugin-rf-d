@@ -51,14 +51,15 @@ class Case:
         return subprocess.run([str(self.target), mode], cwd=c.ROOT, env=self.env,
                               input=payload, capture_output=True, timeout=60)
 
-    def compare(self, first, generated, stage_sum=None, stage_cathode=None, stage_c2=None):
+    def compare(self, first, generated=None, stage_sum=None, stage_cathode=None, stage_c2=None, *, exact_stages=None):
         if first:
             seed = np.r_[self.stages[first * FINE_ROWS], np.zeros(c.N)]
         else:
             seed = self.state.ravel()
         prefix = self.stages[1:first * FINE_ROWS + 1, BUS]
         anchor = np.r_[seed, self.phase, len(prefix) // 2, prefix]
-        slot = np.arange(first, first + len(generated) - 1)
+        count = len(exact_stages) if exact_stages is not None else len(generated) - 1
+        slot = np.arange(first, first + count)
         indices = slot[:, None] * FINE_ROWS + np.array([FINE_ROWS // 3, FINE_ROWS])
         reference = self.stages[indices[:, 1]]
         wanted = np.column_stack((reference[:, J7],
@@ -128,6 +129,14 @@ class Case:
                 else:
                     result["timing"], = timings
             return result
+
+        if exact_stages is not None:
+            assert self.closed_cv and exact_stages.shape == (count, 2, 3) and np.isfinite(exact_stages).all()
+            control = measure(self.stages[indices[:, :, None], DRIVES], joint=True, cathode=self.stages[indices, 27])
+            trial = measure(exact_stages[:, :, :2], timing=True, joint=True, cathode=exact_stages[:, :, 2])
+            return dict(passed=control["passed"] and trial["passed"], first_slot=first,
+                        reference_peak_j7_v=float(abs(wanted[:, 0]).max()),
+                        closed_cv_oracle=control, closed_cv_generated=trial)
 
         results = dict(oracle_stages=measure(self.stages[indices[:, :, None], DRIVES]),
                        oracle_foh=measure(foh(oracle)), generated_foh=measure(foh(generated), timing=True))

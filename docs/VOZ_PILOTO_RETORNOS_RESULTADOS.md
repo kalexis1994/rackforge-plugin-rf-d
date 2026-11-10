@@ -1685,3 +1685,27 @@ las fronteras del banco. Queda acoplar el
 receptor y medir J7, R59/R60 y el plazo
 en RackForge.
 [Contraste de C2 y coste](../evidence/rf_d_pilot_bistable_handoff06.json).
+
+### J7 con las etapas del biestable nativo
+
+El receptor usa las dos etapas de C2 y x27 del
+reloj nativo hasta el cruce y del bloque Q25/Q15
+desde el borde del evento. Conserva una sola
+semilla de audio al inicio de cada ventana.
+La rama negativa aporta x27 del bloque cargado
+y recibe C2 de la referencia. En ambos casos
+x34 se impone en las dos etapas. El receptor
+resuelve R59/R60 y CR6 en su propia red. La
+base del VCA que recibe el biestable todavía
+se impone desde la referencia.
+
+Pasaron las cinco reservas a 96 kHz con las
+mismas entradas y salidas del banco de C4/C2.
+En J7, el error máximo fue 0,320 µV. El pico
+relativo entre las escenas positivas fue
+0,00862 %. Los mayores errores de corriente
+fueron 2,36 pA en R59 y 1,65 fA en R60.
+El receptor solo tuvo medianas de 1,054–1,119 ms
+en las ventanas de cinco frames y un máximo de
+1,722 ms. La prueba no mide el plazo de RackForge.
+[Contraste de J7 y las corrientes](../evidence/rf_d_pilot_bistable_handoff07.json).
