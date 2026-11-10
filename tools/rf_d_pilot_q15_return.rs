@@ -31,6 +31,14 @@ pub(crate) struct Stage {
     pub(crate) mass: [[f64; 2]; 2],
 }
 
+pub(crate) fn junction(v: f64) -> Result<(f64, f64), StepError> {
+    let z = v / VT;
+    if !z.is_finite() || z > 45. {
+        return Err(StepError::ExponentialDomain);
+    }
+    Ok((1e-14 * z.exp_m1(), 1e-14 * z.exp() / VT))
+}
+
 pub(crate) fn stage(old: State, state: State, drive: Drive) -> Result<Stage, StepError> {
     let [base, collector] = state.q15;
     let (volume, factor) = close_volume(state.volume, drive.c2, base, drive.vca_base)?;
@@ -40,13 +48,6 @@ pub(crate) fn stage(old: State, state: State, drive: Drive) -> Result<Stage, Ste
     let dx4 = factor.solve([0., 0., 0., 0., gd6])?[4];
     let cr6_tangent = gd6 * (dx4 - 1.);
     let (cr8, gd8) = germanium(drive.cr8_anode - base)?;
-    let junction = |v: f64| -> Result<(f64, f64), StepError> {
-        let z = v / VT;
-        if !z.is_finite() || z > 45. {
-            return Err(StepError::ExponentialDomain);
-        }
-        Ok((1e-14 * z.exp_m1(), 1e-14 * z.exp() / VT))
-    };
     let (f, gf) = junction(base)?;
     let (r, gr) = junction(base - collector)?;
     let current = [

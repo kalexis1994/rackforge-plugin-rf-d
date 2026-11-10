@@ -1428,3 +1428,37 @@ Se mantuvieron J7, R59/R60 y los ocho ticks de las
 reservas positivas.
 [Control positivo](../evidence/rf_d_pilot_cv_readout_pos03.json),
 [control negativo](../evidence/rf_d_pilot_cv_readout_neg03.json).
+
+## Q25 y Q15 con C4 y el retorno de CR6
+
+El modelo integra x25, x26, x27, x28 y x23.
+Conserva las dos cargas BE/BC y la carga orientada
+de C4 de 10 nF. R28 de 10 kΩ conecta x23 al reset,
+R38 de 10 kΩ y R56 de 33 kΩ cierran los retornos
+entre los dos transistores. R40 de 3,3 kΩ lleva la
+carga de ataque desde x6 y la base de Q17 ve x9.
+El seguidor, R59 y CR6 se resuelven en cada etapa.
+[Topología SVC-9, Fig. 9-7 p. 9](CONTORNO_VOLUMEN_CIRCUITO.md),
+[modelo](../tools/rf_d_pilot_bistable_return.rs).
+
+El banco conserva C2, base del VCA, x17, x24, x6
+y x9 como fronteras. En dos recorridos de 128 frames
+con una semilla DC, el candidato a 96 kHz pasó
+contra el stamp de diez nodos y su refinamiento a
+768 kHz. El error nodal máximo fue 12,63 nV. En
+directa, CR6 condujo entre 336 y 364 µA, con un
+error máximo de 0,178 pA. Los picos nativos fueron
+2,49 ms en inversa y 3,22 ms en directa.
+[Recorridos controlados](../evidence/rf_d_pilot_bistable_return_active01.json).
+
+El replay de las cinco reservas de la voz usa una
+sola semilla transitoria por ventana y las etapas
+refinadas del solver en los seis puertos. Pasó en
+ambas etapas, con 28,7 nV de error nodal máximo.
+Los tres positivos conservaron sus intervalos de
+ocho ticks y ambos negativos su orden. Al usar
+96 kHz con los mismos puertos, los tres positivos
+se detuvieron en el cuarto paso. Se conservaron
+las entradas y la repetición de esos rechazos.
+[Reservas](../evidence/rf_d_pilot_bistable_return_windows01.json),
+[regresión de Q15](../evidence/rf_d_pilot_q15_audit02.json).
