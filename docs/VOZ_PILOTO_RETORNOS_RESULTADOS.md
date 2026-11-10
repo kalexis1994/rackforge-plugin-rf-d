@@ -975,3 +975,24 @@ fue 4,03 ns y el peor error de C2 atribuible al
 intervalo del evento fue 1,921 µV. Los dos flancos
 negativos no activaron el recorrido de subida.
 [Contraste con memoria de C4](../evidence/rf_d_pilot_precursor05.json).
+
+El límite de 2 µV anterior se aplica al aporte de
+ataque en el intervalo del evento, con las demás
+cargas del contraste fijadas. El máximo sobre los
+bordes generados antes del evento fue 4,933 µV en
+el voltaje de C2 y 38,962 µV en el de C4. La
+comparación de la trayectoria completa queda
+separada de la aceptación del intervalo del cruce.
+
+El núcleo Rust conserva el estado de C4 entre llamadas
+y entrega al predictor el umbral dentro de su intervalo.
+Los seis recorridos reprodujeron los estados y el área
+del banco. Los dos anclajes de la rama negativa
+quedaron sin evento en Rust. En 2.000 repeticiones por
+recorrido positivo, las medianas del arranque a la cola
+fueron 99,0–102,3 µs y el máximo fue 164,4 µs. La
+medición incluye la inicialización, el avance hasta el
+umbral, el cruce y la carga de ataque. La voz acoplada
+con R59/R60, J7 y el bloque de audio sigue pendiente.
+[Núcleo de C4](../tools/rf_d_pilot_c4_clock.rs),
+[contraste y coste](../evidence/rf_d_pilot_precursor06.json).

@@ -18,7 +18,7 @@ pub struct Knot {
 
 pub struct Profile(pub [Knot; POINTS]);
 
-fn solve(columns: [[f64; 2]; 2], [a, b]: [f64; 2]) -> Option<[f64; 2]> {
+pub(crate) fn solve(columns: [[f64; 2]; 2], [a, b]: [f64; 2]) -> Option<[f64; 2]> {
     let [[c, d], [e, f]] = columns;
     let determinant = c * f - d * e;
     if !determinant.is_finite() || determinant.abs() < 1e-12 {

@@ -30,6 +30,8 @@ X = C2_GAIN / (10e-6 * CLOCK)
 MOVED = -np.expm1(-X)
 NATIVE = "tools/rf_d_pilot_precursor.rs"
 NATIVE_PROBE = "tools/rf_d_pilot_precursor_probe.rs"
+C4_CLOCK = "tools/rf_d_pilot_c4_clock.rs"
+C4_PROBE = "tools/rf_d_pilot_c4_clock_probe.rs"
 SOURCE_NAMES = ("tools/check_rf_d_pilot_precursor.py", "tools/rf_d_pilot_precursor.py",
                 "tools/check_rf_d_pilot_timer_rc.py", ATTACK, ATTACK_ORBIT, CROSSING,
                 CROSSING_PROBE, LATCH_CHARGE)
@@ -128,11 +130,36 @@ def carried_trial(run, native, attack, model, shape, initial, stages, slot, edge
                 first_slot=first, event_slot=event_slot, guard=result, predicted_tick=float(absolute),
                 historical_bracket=bracket, refined_bracket=bool(edge * TICKS <= tick <= (edge + 1) * TICKS),
                 guard_error_ns=float(guard_error), time_error_ns=float(event_error),
-                c2_event_error_v=timer_error, max_state_error_v=dict(zip(NODES, errors.tolist())),
+                event_time_s=float(time_s), c2_event_error_v=timer_error, max_state_error_v=dict(zip(NODES, errors.tolist())),
                 crossing_v=float(cross_v), crossing_state_error_v=abs(np.asarray(values) - target["crossing"]).tolist(),
                 modeled_attack_a=float(average), reference_attack_a=float(wanted),
                 generated_states=len(states), states_sha256=c.digest(states.astype("<f8").tobytes()),
                 input_sha256=c.digest(data), output_sha256=c.digest(output))
+
+
+def carried_fixture(prefix, model, initial):
+    _, nominal, linear, quadratic, _ = model
+    table = np.column_stack((nominal.T, linear[0].T, linear[1].T,
+                             quadratic[0].T, quadratic[1].T))
+    return np.r_[prefix, table.ravel(), initial[[26, *NODES]]].astype("<f8").tobytes()
+
+
+def carried_native(run, target, prefix, model, initial, expected):
+    data = carried_fixture(prefix, model, initial)
+    raw = run([target], data)
+    assert raw == run([target], data)
+    got = np.frombuffer(raw, "<f8")
+    oracle = carry_charge(model, initial, False)
+    want = np.r_[oracle["slot"], oracle["time_s"], expected["event_time_s"],
+                 expected["modeled_attack_a"], oracle["state"].ravel()]
+    assert got.shape == want.shape and np.isfinite(got).all()
+    difference = abs(got - want)
+    assert difference[0] == 0 and difference[1:3].max() <= 1e-12 and difference[3:].max() <= 1e-10
+    timing = list(map(int, run([target, "bench"], data).decode().strip().split(",")))
+    return dict(passed=expected["passed"], max_error=difference[:4].tolist(),
+                max_state_error_v=float(difference[4:].max()),
+                input_sha256=c.digest(data), output_sha256=c.digest(raw),
+                timing=dict(zip(("events", "median_ns", "p99_ns", "max_ns"), timing)))
 
 
 def native_trial(run, target, prefix, model, observations, result):
@@ -162,7 +189,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--native", action="store_true", help="verify and time the bounded Rust guard and event")
     parser.add_argument("--carry", action="store_true", help="advance C4 from one initial state")
+    parser.add_argument("--carry-native", action="store_true", help="verify and time the stateful Rust C4 clock")
     args_main = parser.parse_args()
+    assert not args_main.carry_native or args_main.carry
     assert c.AREA.is_dir() and not list(c.AREA.iterdir())
     seq = 1
     while (out := c.ROOT / f"evidence/rf_d_pilot_precursor{seq:02}.json").exists():
@@ -171,9 +200,11 @@ def main():
     native_sources = (NATIVE, NATIVE_PROBE) if args_main.native else ()
     if args_main.carry:
         native_sources += (ATTACK_PROBE, MODEL)
+    if args_main.carry_native:
+        native_sources += (C4_CLOCK, C4_PROBE, NATIVE)
     sources = Sources((*c.ALL_SOURCES, c.OWN, c.CANDIDATE, c.PROBE, c.PORTS,
                        "tools/rf_d_pilot_step_profile.rs", previous, *SOURCE_NAMES, *native_sources))
-    report = dict(passed=False, rack_integrated=False, clock_hz=CLOCK, native=args_main.native, carry=args_main.carry, calibration=[],
+    report = dict(passed=False, rack_integrated=False, clock_hz=CLOCK, native=args_main.native, carry=args_main.carry, carry_native=args_main.carry_native, calibration=[],
                   reserves={}, **sources.fields(), compiler_sha256=c.sha(Path(c.COMPILER)),
                   library_sha256=c.sha(c.LIB))
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
@@ -197,6 +228,10 @@ def main():
         attack = c.AREA / "pilot-attack.exe"
         if args_main.carry:
             run([*build, "-A", "dead_code", c.ROOT / ATTACK_PROBE, "-o", attack])
+        clock = c.AREA / "pilot-c4-clock.exe"
+        if args_main.carry_native:
+            run([*build, "-A", "dead_code", c.ROOT / C4_PROBE, "--extern",
+                 f"rf_d_circuit={c.LIB}", "-o", clock])
         anchor = c.AREA / "precursor-anchor.bin"
 
         def capture(branch, start, frames, key, offset):
@@ -282,6 +317,11 @@ def main():
                         trial = carried_trial(*carried_args)
                         assert trial == carried_trial(*carried_args)
                         series.append(trial)
+                if args_main.carry_native:
+                    item["carried_native"] = [
+                        carried_native(run, clock, native_args[1], phase_model, observations[i], result)
+                        for i, result in enumerate(trials["q65_axis"])]
+                    print("NATIVE_CARRY", name, item["carried_native"], flush=True)
                 print("CARRY", name, {mode: [(x.get("time_error_ns"), x.get("c2_event_error_v"), x["passed"])
                                             for x in group] for mode, group in trials.items()}, flush=True)
             item.update(reference_event=expected, reference_slot=slot, unchanged_replay=True)
@@ -298,6 +338,10 @@ def main():
             if args_main.carry:
                 item["false_carried"] = any(advance_model(shape, observations[0]) is not None for _, advance_model, shape in carry_modes)
                 assert not item["false_carried"]
+            if args_main.carry_native:
+                data = carried_fixture(native_args[1], phase_model, observations[0])
+                item["native_false_carried"] = bool(run([clock], data))
+                assert not item["native_false_carried"]
             report["reserves"][label] = item
         report["passed"] = True
         report["modes_admitted_in_bank"] = [label for label, *_ in cases
