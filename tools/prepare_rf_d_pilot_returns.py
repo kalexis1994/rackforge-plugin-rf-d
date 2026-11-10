@@ -42,9 +42,9 @@ def foh(a, b, h):
     return exp[:n, :n], exp[:n, n:n + m] / scale - new, new
 
 
-def model(h, wide=False, split=None, split_ladder=False):
+def model(h, wide=False, split=None, split_ladder=False, normalize_defects=False):
     assert split is None or not wide
-    assert not split_ladder or split is not None
+    assert not (split_ladder or normalize_defects) or split is not None
     raw = build(cases()[1] if split is None else split, h)
     a, g, c, d, e = (raw[key] for key in ("a", "g", "c", "d", "e"))
     n, charges = len(g), len(a)
@@ -97,6 +97,12 @@ def model(h, wide=False, split=None, split_ladder=False):
         g, d, e = g[np.ix_(keep, keep)], d[keep], e[:, keep]
         n, charges = len(keep), len(charge)
         output = [int(np.flatnonzero(keep == node)[0]) for node in BASE_NODES[:-1]]
+    if normalize_defects:
+        # Project the current at each junction's own exponential bias.
+        # The plant then solves the dimensionless exponential remainder,
+        # without asking the off VCA to respond to a one-ampere defect.
+        d = d * iexp
+        iexp = np.ones_like(iexp)
     lhs = np.block([[g, a.T * c], [a, np.zeros((charges, charges))]])
     forcing = np.column_stack((inputs, -d))
     rhs = np.block([[np.zeros((n, charges)), forcing],
@@ -109,7 +115,8 @@ def model(h, wide=False, split=None, split_ladder=False):
     projection_error = float(np.max(abs(lhs @ projection - rhs)))
     semigroup_error = float(np.max(abs(f2 @ f2 - f)))
     charge_error = float(np.max(abs(a @ projection[:n] - rhs[n:])))
-    assert projection_error < 1e-8 and charge_error < 1e-11 and semigroup_error < 1e-10
+    assert projection_error < 1e-8 and charge_error < 1e-11 and semigroup_error < 1e-10, (
+        projection_error, charge_error, semigroup_error)
     xd = -(xn + xq @ w1[:, 3:])
     data = dict(iexp=iexp, f=f, u0=w0[:, :3], u1=w1[:, :3], n0=w0[:, 3:], n1=w1[:, 3:],
                 p=e @ xd, zh=e @ xq, zu=e @ xu,
@@ -123,8 +130,9 @@ def model(h, wide=False, split=None, split_ladder=False):
     return data, checks
 
 
-def emit_data(path, h, wide=False, split=None, center=None, limits=None, split_ladder=False):
-    data, checks = model(h, wide, split, split_ladder)
+def emit_data(path, h, wide=False, split=None, center=None, limits=None, split_ladder=False,
+              normalize_defects=False):
+    data, checks = model(h, wide, split, split_ladder, normalize_defects)
     if split is not None:
         assert center is not None and limits is not None
         data["split_center"] = np.array(center)

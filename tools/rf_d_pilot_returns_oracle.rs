@@ -119,38 +119,39 @@ fn step(
     Err(StepError::IterationBudget)
 }
 
-fn anchor(mut old: State, target: [f64; 3]) -> Result<State, StepError> {
+fn settle_anchor(mut state: State, u: [f64; 3]) -> Result<State, StepError> {
     let dt = 1e-6;
+    let zero = State::from_nodes([0.; N]);
+    for _ in 0..24 {
+        let q = stage(state, zero, u, dt, true)?;
+        let change = linear::solve_linear_sparse(q.dc_jacobian, q.dc.map(|x| -x))?;
+        if max(&q.dc) <= 1e-13 && max(&change) <= 2e-9 {
+            return Ok(state);
+        }
+        let mut scale = 1.;
+        let mut accepted = None;
+        for _ in 0..24 {
+            let trial = state.advanced(change.map(|x| scale * x));
+            if let Ok(next) = stage(trial, zero, u, dt, true) {
+                if max(&next.dc) < max(&q.dc) {
+                    accepted = Some(trial);
+                    break;
+                }
+            }
+            scale *= 0.5;
+        }
+        state = accepted.ok_or(StepError::NoDecrease)?;
+    }
+    Err(StepError::IterationBudget)
+}
+
+fn anchor(mut old: State, target: [f64; 3]) -> Result<State, StepError> {
     let start = [0., 2., old.high[COLLECTOR] + old.low[COLLECTOR]];
     // The continuation starts at the already admitted pilot bias.
     for i in 1..=128 {
         let fraction = f64::from(i) / 128.;
         let u = std::array::from_fn(|k| start[k] + fraction * (target[k] - start[k]));
-        let mut converged = false;
-        for _ in 0..24 {
-            let q = stage(old, State::from_nodes([0.; N]), u, dt, true)?;
-            let change = linear::solve_linear_sparse(q.dc_jacobian, q.dc.map(|x| -x))?;
-            if max(&q.dc) <= 1e-13 && max(&change) <= 2e-9 {
-                converged = true;
-                break;
-            }
-            let mut scale = 1.;
-            let mut accepted = None;
-            for _ in 0..24 {
-                let trial = old.advanced(change.map(|x| scale * x));
-                if let Ok(next) = stage(trial, State::from_nodes([0.; N]), u, dt, true) {
-                    if max(&next.dc) < max(&q.dc) {
-                        accepted = Some(trial);
-                        break;
-                    }
-                }
-                scale *= 0.5;
-            }
-            old = accepted.ok_or(StepError::NoDecrease)?;
-        }
-        if !converged {
-            return Err(StepError::IterationBudget);
-        }
+        old = settle_anchor(old, u)?;
     }
     Ok(old)
 }
@@ -172,9 +173,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
     let mut out = BufWriter::new(std::io::stdout().lock());
     let payload = &floats[2 * N..];
-    if clock == "anchor" {
+    if matches!(clock.as_str(), "anchor" | "anchor-direct") {
         let target: [f64; 3] = payload.try_into()?;
-        let x = anchor(old, target).map_err(|e| format!("split anchor: {e:?}"))?;
+        let x = if clock == "anchor" {
+            anchor(old, target)
+        } else {
+            settle_anchor(old, target)
+        }
+        .map_err(|e| format!("split anchor: {e:?}"))?;
         let stamp = stage(x, State::from_nodes([0.; N]), target, 1e-6, true)
             .map_err(|e| format!("split stamp: {e:?}"))?;
         for value in x

@@ -420,8 +420,7 @@ Con x2 y x4 cargados, pasaron la inversión positiva y ambas
 reservas negativas de KEY. El cruce positivo volvió a quedar en
 **319096–319104** y el peor error en cualquiera de los retornos
 fue de 0,146 pA frente al límite de 2 nA. El mayor error absoluto
-de J7 fue de 3,96 pV. El arranque directo desde reposo del receptor
-aislado es una condición inicial distinta que queda pendiente.
+de J7 fue de 3,96 pV.
 [Reservas acopladas](../evidence/rf_d_pilot_closed_returns03.json).
 
 El avance directo a 96 kHz pasó la reserva de pulsación negativa.
@@ -434,3 +433,28 @@ El control 0.3.2 en Desktop sostuvo señal en ambos canales en tres
 lecturas durante una nota, con 480 frames efectivos a 48 kHz y cero
 plazos perdidos o errores de stream entre las consultas. La Pi agotó
 el tiempo de espera por SSH y HTTP. [Control en hosts](../evidence/rf_d_contours_live_control03.json).
+
+## Arranque del receptor en la rama negativa
+
+El generador parte del estado inicial negativo de la referencia y
+resuelve el punto de reposo del receptor con R59 a −0,28 V,
+colector de R60 a 1,45 V y estímulo de BUS nulo. El residual fue
+de 2,0 × 10⁻¹⁸ A. La continuación desde el punto positivo volvió
+a rechazar ese estado. [Arranque y contraste](../evidence/rf_d_pilot_off_anchor02.json).
+
+En la proyección de carga, forzar las columnas de defecto con 1 A
+produjo un residual de 1,26 × 10⁻⁶. Cerca del corte del VCA esas
+columnas piden cancelaciones del orden de 10⁹. En el nuevo mapa,
+la corriente de polarización de cada juntura multiplica su columna
+de incidencia y el núcleo evalúa el resto exponencial adimensional.
+El producto representa la misma corriente. El residual bajó a
+7,45 × 10⁻¹⁷ con los límites previos. [Proyección](../tools/prepare_rf_d_pilot_returns.py),
+[rechazo reproducido y mapa normalizado](../evidence/rf_d_pilot_off_anchor02.json).
+
+El receptor aislado a 96 kHz pasó un bloque de 128 frames de host
+contra Radau a 384 y 768 kHz. Las excitaciones independientes
+cubrieron ±5 mV en R59 y ±1 mV en el colector de R60. El error de
+R60 fue 0,032 pA y el RMS relativo de J7 fue 0,0044 %. El J7 de
+referencia tuvo 50 pV de pico en esta prueba de corte. La
+conmutación de la voz completa sigue bajo el banco acoplado.
+[Contraste del receptor negativo](../evidence/rf_d_pilot_off_anchor02.json).
