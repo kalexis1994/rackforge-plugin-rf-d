@@ -126,7 +126,6 @@ fn advance_joint(
     family: &Family,
     collector: f64,
     stages: [Stage; 2],
-    audit: bool,
 ) -> Result<(History, Output, usize, f64), String> {
     let reduced = map.reduced.as_ref().expect("audio map");
     let anchor = reduced.anchor();
@@ -134,54 +133,64 @@ fn advance_joint(
     let mut x = [offset; 2];
     let mut cells = [old.cells; 2];
     let mut tangent: Option<(Lu<4>, [f64; 4])> = None;
+    let mut use_nodal = false;
     const BUDGET: usize = 16;
     for iteration in 1..=BUDGET {
         let loads = x.map(|row| LOAD.map(|k| voltage(anchor, k) + row[k]));
         solve_cells(&mut cells, stages, loads, collector)?;
         let input = cells.map(|s| [s.volume[2], s.filter[2]]);
-        let (defect, phase) = reduced
-            .defects(&x, family, old.phase, H)
-            .map_err(|error| format!("joint defects: {error:?}"))?;
-        let mut response = reduced.joint_response(&base, input, &defect);
-        if !response.iter().all(|v| v.is_finite()) {
-            return Err(format!("joint response: {:?}", StepError::InvalidInput));
+        let current = |r: usize| x[r / SIZE][super::local(r % SIZE)];
+        let mut response = [0.; PAIR];
+        if !use_nodal {
+            let (defect, _) = reduced
+                .defects(&x, family, old.phase, H)
+                .map_err(|error| format!("joint defects: {error:?}"))?;
+            response = reduced.joint_response(&base, input, &defect);
+            if !response.iter().all(|v| v.is_finite()) {
+                return Err(format!("joint response: {:?}", StepError::InvalidInput));
+            }
+            let error = std::array::from_fn::<_, PAIR, _>(|r| response[r] - current(r));
+            use_nodal = maximum(&error) <= 2e-12;
         }
-        let residual: [f64; PAIR] =
-            std::array::from_fn(|r| response[r] - x[r / SIZE][super::local(r % SIZE)]);
-        let load_error = std::array::from_fn(|i| residual[i / 2 * SIZE + LOAD[i % 2]]);
-        let mismatch = maximum(&load_error);
-        let settled = maximum(&residual) <= 2e-12;
-        if settled || (iteration == BUDGET && mismatch <= LOAD_TOLERANCE_V) {
-            let now = x.map(|row| anchor.advanced(row));
-            let phase = if audit || !settled {
-                let delta = now.map(|v| chain::State::from_nodes(v.difference(old.audio)));
-                let (_, checked_phase) = map
-                    .verify(old.audio, input, family, old.phase, H, delta)
-                    .map_err(|error| format!("joint nodal check: {error:?}"))?;
-                if settled {
-                    phase
-                } else {
-                    map.checked_proposals.set(map.checked_proposals.get() + 1);
-                    checked_phase
-                }
-            } else {
-                phase
-            };
-            let [base, tail] = loads[1];
-            let [r59, r60] = cells[1].currents(base, tail);
-            let [x3, x37] = input[1];
-            let row = [voltage(now[1], 61), r59, r60, x3, x37, base, tail];
-            return Ok((
-                History {
-                    audio: now[1],
-                    cells: cells[1],
-                    phase,
-                },
-                row,
-                iteration,
-                mismatch,
-            ));
+        if use_nodal || iteration == BUDGET {
+            let delta =
+                x.map(|row| chain::State::from_nodes(anchor.advanced(row).difference(old.audio)));
+            let (now, phase, current_error, direction) = map
+                .direction(old.audio, input, family, old.phase, H, delta)
+                .map_err(|error| format!("joint nodal direction: {error:?}"))?;
+            let load_error: [f64; 4] =
+                std::array::from_fn(|i| direction[i / 2 * SIZE + LOAD[i % 2]]);
+            let mismatch = maximum(&load_error);
+            if current_error <= 2e-13 && maximum(&direction) <= 2e-9 && mismatch <= LOAD_TOLERANCE_V
+            {
+                let [base, tail] = loads[1];
+                let [r59, r60] = cells[1].currents(base, tail);
+                let [x3, x37] = input[1];
+                let row = [voltage(now[1], 61), r59, r60, x3, x37, base, tail];
+                return Ok((
+                    History {
+                        audio: now[1],
+                        cells: cells[1],
+                        phase,
+                    },
+                    row,
+                    iteration,
+                    mismatch,
+                ));
+            }
+            if iteration == BUDGET {
+                return Err(format!(
+                    "joint KCL: {current_error:.6e} A, direction {:.6e} V, loads {mismatch:.6e} V",
+                    maximum(&direction)
+                ));
+            }
+            map.checked_proposals.set(map.checked_proposals.get() + 1);
+            response = std::array::from_fn(|r| current(r) + direction[r]);
         }
+        let load_error = std::array::from_fn(|i| {
+            let row = i / 2 * SIZE + LOAD[i % 2];
+            response[row] - current(row)
+        });
         if tangent.is_none() {
             tangent = Some(load_tangent(map, cells, stages, loads, input, collector)?);
         }
@@ -207,14 +216,13 @@ fn render(
     collector: f64,
     stages: &[[Stage; 2]],
     joint: bool,
-    audit: bool,
     mut emit: impl FnMut(Output),
 ) -> Result<(usize, f64), String> {
     let mut outer = 0;
     let mut closure_error = 0_f64;
     for (i, &row) in stages.iter().enumerate() {
         let result = if joint {
-            advance_joint(state, map, family, collector, row, audit)
+            advance_joint(state, map, family, collector, row)
         } else {
             advance(state, map, family, collector, row)
         };
@@ -297,7 +305,6 @@ pub fn run(bench: bool, joint: bool) -> Result<(), Box<dyn std::error::Error>> {
                     x(2),
                     &stages,
                     candidate,
-                    false,
                     |row| {
                         black_box(row);
                     },
@@ -316,10 +323,9 @@ pub fn run(bench: bool, joint: bool) -> Result<(), Box<dyn std::error::Error>> {
         }
     } else {
         let mut samples = Vec::with_capacity(stages.len());
-        let (outer, mismatch) =
-            render(initial, &map, &family, x(2), &stages, joint, joint, |row| {
-                samples.push(row)
-            })?;
+        let (outer, mismatch) = render(initial, &map, &family, x(2), &stages, joint, |row| {
+            samples.push(row)
+        })?;
         let mut out = std::io::BufWriter::new(std::io::stdout().lock());
         for value in [outer as f64, mismatch, map.checked_proposals.get() as f64]
             .into_iter()

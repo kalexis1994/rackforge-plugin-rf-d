@@ -177,13 +177,27 @@ impl Audio {
         h: f64,
         delta: [chain::State; 2],
     ) -> Result<([chain::State; 2], f64), StepError> {
-        let (now, angle, residual) = self.residual(old, input, family, phase, h, delta)?;
-        let correction = self.lu.solve(residual.map(|v| -v))?;
-        if maximum(&residual) <= 2e-13 && maximum(&correction) <= 2e-9 {
+        let (now, angle, current, correction) =
+            self.direction(old, input, family, phase, h, delta)?;
+        if current <= 2e-13 && maximum(&correction) <= 2e-9 {
             Ok((now, angle))
         } else {
             Err(StepError::IterationBudget)
         }
+    }
+
+    fn direction(
+        &self,
+        old: chain::State,
+        input: [[f64; 2]; 2],
+        family: &Family,
+        phase: f64,
+        h: f64,
+        delta: [chain::State; 2],
+    ) -> Result<([chain::State; 2], f64, f64, [f64; PAIR]), StepError> {
+        let (now, angle, residual) = self.residual(old, input, family, phase, h, delta)?;
+        let correction = self.lu.solve(residual.map(|v| -v))?;
+        Ok((now, angle, maximum(&residual), correction))
     }
 
     fn step(

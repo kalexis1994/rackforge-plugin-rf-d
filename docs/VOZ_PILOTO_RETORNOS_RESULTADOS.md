@@ -1265,3 +1265,15 @@ que se ejecutó aparte de la medición. Se conservaron
 las entradas y el replay de esos rechazos.
 [Positivos](../evidence/rf_d_pilot_audio_readout_pos03.json),
 [negativos](../evidence/rf_d_pilot_audio_readout_neg04.json).
+
+El segundo pase incluyó la comprobación nodal en la
+medición. Cuando la respuesta reducida se asentaba,
+se resolvía la dirección de la KCL original con la
+factorización ya disponible. Las correcciones se
+acoplaban a las cuatro cargas por el mismo Schur.
+Los seis positivos volvieron a pasar. Las reservas
+negativas avanzaron uno o dos pasos y quedaron
+limitadas por 2,38–2,84 nV de corrección nodal frente
+a 2 nV. Se conservan las métricas y los replays.
+[Positivos con comprobación incluida](../evidence/rf_d_pilot_audio_readout_pos04.json),
+[rechazos negativos](../evidence/rf_d_pilot_audio_readout_neg05.json).
