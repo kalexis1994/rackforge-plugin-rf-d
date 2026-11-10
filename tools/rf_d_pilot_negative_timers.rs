@@ -7,7 +7,7 @@ use crate::{
 };
 
 pub const POINTS: usize = 65;
-pub const NODES: usize = 9;
+pub const NODES: usize = 10;
 const CAP_C7: f64 = 100e-9;
 const R55: f64 = 47_000.;
 const R60_TRIGGER: f64 = 100_000.;
@@ -44,6 +44,7 @@ pub struct Sample {
     pub timers: [f64; 2],
     pub c7: f64,
     pub key_port: f64,
+    pub filter_sum: f64,
     pub currents: [[f64; 3]; 2],
 }
 
@@ -159,6 +160,7 @@ impl Carry {
             timers: self.timers,
             c7,
             key_port: key_side(c7, self.key),
+            filter_sum: nodes[9],
             currents,
         })
     }

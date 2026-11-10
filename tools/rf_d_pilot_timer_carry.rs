@@ -6,7 +6,7 @@ use crate::{
     timer::{CurrentStep, CAPACITANCE_F, RESISTANCE_OHM},
 };
 
-pub const STATE: usize = 14;
+pub const STATE: usize = 15;
 pub const POINTS: usize = 161;
 pub const POST_POINTS: usize = 33;
 const RATES: [f64; 2] = [
@@ -23,6 +23,7 @@ pub struct PostKnot {
     pub nominal: Ports,
     pub linear: [Ports; 2],
     pub quadratic: [Ports; 2],
+    pub sum: [f64; 5],
 }
 
 pub struct PostProfile(pub [PostKnot; POST_POINTS]);
@@ -40,7 +41,11 @@ pub struct Carry<'a> {
 
 pub enum Sample {
     Boundary,
-    Event { seconds: f64, timers: [f64; 2] },
+    Event {
+        seconds: f64,
+        timers: [f64; 2],
+        filter_sum: f64,
+    },
 }
 
 pub(crate) fn weights(duration: f64) -> ([f64; 2], [f64; 2]) {
@@ -128,6 +133,21 @@ impl PostKnot {
 }
 
 impl PostProfile {
+    fn filter_sum(&self, duration: f64, [a, b]: [f64; 2]) -> Option<f64> {
+        let i = self.0.partition_point(|row| row.time <= duration);
+        if i == 0 || i == POST_POINTS {
+            return None;
+        }
+        let left = self.0[i - 1];
+        let right = self.0[i];
+        let at = |row: PostKnot| {
+            let [center, da, db, aa, bb] = row.sum;
+            center + (a * da + b * db) + (a * a * aa + b * b * bb)
+        };
+        let u = (duration - left.time) / (right.time - left.time);
+        Some(at(left) + u * (at(right) - at(left)))
+    }
+
     fn project(&self, passive: &mut Ports, cross: f64, full: [f64; 2], load: [f64; 2]) {
         let duration = PERIOD_S - cross;
         let mut last = self.0[0];
@@ -173,6 +193,10 @@ impl<'a> Carry<'a> {
             full: weights(PERIOD_S).0,
             finished: false,
         })
+    }
+
+    pub fn filter_sum(&self) -> f64 {
+        self.clock.state()[14]
     }
 
     /// The two voltages, followed by attack, decay and follower current per timer.
@@ -257,12 +281,15 @@ impl<'a> Carry<'a> {
                     std::array::from_fn(|k| from[i][k] + (cross - guard_s) * self.slope[i][k])
                 });
                 project(&mut passive, from, end, guard_s, cross, full);
-                post.project(&mut passive, cross, full, self.clock.load_weights());
+                let load = self.clock.load_weights();
+                post.project(&mut passive, cross, full, load);
+                let filter_sum = post.filter_sum(PERIOD_S - cross, load)?;
                 self.timers = CurrentStep::new(PERIOD_S).advance(self.timers, mean, passive);
                 self.finished = true;
                 Some(Sample::Event {
                     seconds: cross,
                     timers: self.timers,
+                    filter_sum,
                 })
             }
         }

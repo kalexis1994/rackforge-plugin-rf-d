@@ -9,6 +9,7 @@ import numpy as np
 
 from affine_evidence import Sources
 import check_rf_d_pilot_contours as c
+import rf_d_pilot_return_readout as returns
 from check_rf_d_pilot_timer_rc import (
     ATTACK, ATTACK_ORBIT, ATTACK_PROBE, CROSSING, CROSSING_PROBE, LATCH_CHARGE, MODEL,
     OHMS, TIMER_NODES, prepare_reference, project_stages,
@@ -195,12 +196,12 @@ def timer_native_fixture(prefix, shape, post, initial):
     phase, nominal, linear, quadratic, _ = shape
     table = np.column_stack((nominal.T, linear[0].T, linear[1].T, quadratic[0].T, quadratic[1].T))
     time, nominal, linear, quadratic, _ = post
-    after = np.column_stack((time, nominal[1:].T, linear[0, 1:].T, linear[1, 1:].T,
-                             quadratic[0, 1:].T, quadratic[1, 1:].T))
-    return np.r_[prefix, phase, table.ravel(), after.ravel(), initial[[26, *NODES, *PORTS]]].astype("<f8").tobytes()
+    values = np.array([nominal, *linear, *quadratic])
+    after = np.column_stack((time, *(row[1:-1].T for row in values), values[:, -1].T))
+    return np.r_[prefix, phase, table.ravel(), after.ravel(), initial[[26, *NODES, *PORTS, 34]]].astype("<f8").tobytes()
 
 
-def timer_native_trial(run, target, prefix, shape, post, initial, observations, start, expected, first, shifted, python):
+def timer_native_trial(run, target, prefix, shape, post, initial, observations, start, expected, first, shifted, python, readout=None):
     assert python["passed"]
     data = timer_native_fixture(prefix, shape, post, initial)
     raw = run([target], data)
@@ -223,11 +224,22 @@ def timer_native_trial(run, target, prefix, shape, post, initial, observations, 
     passed = expected[0] <= tick <= expected[1] and error.max() <= 2e-6 and current.max() <= 2e-9
     assert passed
     timing = list(map(int, run([target, "bench"], data).decode().strip().split(",")))
-    return dict(passed=bool(passed), predicted_tick=float(tick), max_before_v=error[:-1].max(axis=0).tolist(),
+    item = dict(passed=bool(passed), predicted_tick=float(tick), max_before_v=error[:-1].max(axis=0).tolist(),
                 event_endpoint_v=error[-1].tolist(), max_current_error_a=current.tolist(),
                 max_event_difference_python_v=float(end_delta),
                 input_sha256=c.digest(data), output_sha256=c.digest(raw),
                 timing=dict(zip(("events", "median_ns", "p99_ns", "max_ns"), timing)))
+    if readout is not None:
+        command = [target, "returns"]
+        with_sum = run(command, data)
+        assert with_sum == run(command, data)
+        extra = np.frombuffer(with_sum, "<f8")
+        body = extra[5:].reshape(-1, 9)
+        assert np.array_equal(extra[:4], got[:4]) and np.array_equal(body[:, :8], before)
+        drives = np.vstack((body[:, [0, 8]], extra[[2, 4]]))
+        item["returns"] = returns.assess(run, readout, reference, drives, skip)
+        print("RETURN", start, first, item["returns"], flush=True)
+    return item
 
 
 def carried_fixture(prefix, model, initial):
@@ -288,7 +300,9 @@ def main():
                         help="contrast startup-refined timer paths and pre-event load projection")
     parser.add_argument("--timers-native", action="store_true",
                         help="run the Rust timer carry and the reference C4 replay")
+    parser.add_argument("--returns", action="store_true", help="contrast return readout at imposed receiver loads")
     args_main = parser.parse_args()
+    assert not args_main.returns or args_main.timers_native
     assert not args_main.timers_native or args_main.timer_grid_refine
     assert not args_main.timer_grid_refine or args_main.timers
     assert not args_main.carry_native or args_main.carry
@@ -306,10 +320,12 @@ def main():
         native_sources += (TIMER_CARRY, ATTACK_PROBE, MODEL)
     if args_main.timers_native:
         native_sources += (TIMER_NATIVE, TIMER_NATIVE_PROBE, C4_CLOCK, NATIVE)
+    if args_main.returns:
+        native_sources += ("tools/rf_d_pilot_return_readout.py", *returns.SOURCES)
     sources = Sources((*c.ALL_SOURCES, c.OWN, c.CANDIDATE, c.PROBE, c.PORTS,
                        "tools/rf_d_pilot_step_profile.rs", previous, *SOURCE_NAMES, *native_sources))
     report = dict(passed=False, rack_integrated=False, clock_hz=CLOCK, native=args_main.native, carry=args_main.carry, carry_native=args_main.carry_native, timers=args_main.timers, timer_grid_refine=args_main.timer_grid_refine, timers_native=args_main.timers_native, calibration=[],
-                  reserves={}, **sources.fields(), compiler_sha256=c.sha(Path(c.COMPILER)),
+                  returns=args_main.returns, reserves={}, **sources.fields(), compiler_sha256=c.sha(Path(c.COMPILER)),
                   library_sha256=c.sha(c.LIB))
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
 
@@ -340,6 +356,7 @@ def main():
         if args_main.timers_native:
             run([*build, "-A", "dead_code", c.ROOT / TIMER_NATIVE_PROBE, "--extern",
                  f"rf_d_circuit={c.LIB}", "-o", native_timer])
+        readout = returns.prepare(run, build) if args_main.returns else None
         anchor = c.AREA / "precursor-anchor.bin"
 
         def capture(branch, start, frames, key, offset):
@@ -359,6 +376,7 @@ def main():
         if args_main.timers:
             from rf_d_pilot_timer_carry import PORTS, post_family, post_trace
             timer_paths, post_paths = [], []
+            native_paths, native_post = [], []
         for offset in CALIBRATION:
             stages, item = capture("positive", start, frames, key, offset)
             report["calibration"].append(item)
@@ -368,7 +386,11 @@ def main():
             if args_main.timers:
                 timer_paths.append(charge_trace(stages, PORTS))
                 slot, _, at = timing_reference(stages)
-                post_paths.append(post_trace(stages, slot / CLOCK + at["time"], STEPS))
+                time, values = post_trace(stages, slot / CLOCK + at["time"], STEPS, (34,))
+                post_paths.append((time, values[:-1]))
+                if args_main.timers_native:
+                    native_paths.append(charge_trace(stages, (*PORTS, 34)))
+                    native_post.append((time, values))
             if offset == (0., 0.):
                 nominal = stages
         model = family(paths)
@@ -414,6 +436,8 @@ def main():
                 )
                 if args_main.timers_native:
                     timer_modes = (timer_modes[-2],)
+                    native_grid = charge_family(native_paths, quarter)
+                    native_after = post_family(native_post)
         for name, offset in zip(NAMES, ((0., 0.), *RESERVES)):
             if name == NAMES[0]:
                 stages, item = nominal, report["calibration"][0].copy()
@@ -477,8 +501,8 @@ def main():
                         timers[mode].append(result)
                 if args_main.timers_native:
                     item["native_timers"] = [
-                        timer_native_trial(run, native_timer, native_args[1], grid25, post_shape,
-                                           observations[i], observations, start, expected, i, any(offset), result)
+                        timer_native_trial(run, native_timer, native_args[1], native_grid, native_after,
+                                           observations[i], observations, start, expected, i, any(offset), result, readout)
                         for i, result in enumerate(timers["startup25_event"])]
                     print("NATIVE_TIMERS", name, item["native_timers"], flush=True)
                 print("OWN_TIMERS", name,
@@ -504,7 +528,7 @@ def main():
                 item["native_false_carried"] = bool(run([clock], data))
                 assert not item["native_false_carried"]
             if args_main.timers_native:
-                data = timer_native_fixture(native_args[1], grid25, post_shape, observations[0])
+                data = timer_native_fixture(native_args[1], native_grid, native_after, observations[0])
                 item["native_false_timer_event"] = bool(run([native_timer], data))
                 assert not item["native_false_timer_event"]
             report["reserves"][label] = item
@@ -520,6 +544,10 @@ def main():
             report["own_timer_modes_admitted"] = [
                 mode for mode, *_ in timer_modes
                 if all(trial["passed"] for name in NAMES for trial in report["reserves"][name]["own_timers"][mode])]
+        if args_main.returns:
+            report["return_readout_passed"] = all(
+                trial["returns"]["passed"] for name in NAMES for trial in report["reserves"][name]["native_timers"])
+            report["passed"] &= report["return_readout_passed"]
         sources.unchanged()
     except Exception:
         report["failure"] = traceback.format_exc()

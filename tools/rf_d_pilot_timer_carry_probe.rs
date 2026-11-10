@@ -26,16 +26,20 @@ fn render(
     profile: &crossing::Profile,
     post: &carry::PostProfile,
     initial: [f64; carry::STATE],
-    mut emit: impl FnMut([f64; 2], [[f64; 3]; 2]),
-) -> Option<[f64; 4]> {
+    mut emit: impl FnMut([f64; 2], [[f64; 3]; 2], f64),
+) -> Option<[f64; 5]> {
     let mut voice = carry::Carry::start(family, initial)?;
     for slot in 0..64 {
         let (timers, currents) = voice.observe()?;
-        emit(timers, currents);
+        emit(timers, currents, voice.filter_sum());
         match voice.advance(profile, post)? {
             carry::Sample::Boundary => (),
-            carry::Sample::Event { seconds, timers } => {
-                return Some([slot as f64, seconds, timers[0], timers[1]]);
+            carry::Sample::Event {
+                seconds,
+                timers,
+                filter_sum,
+            } => {
+                return Some([slot as f64, seconds, timers[0], timers[1], filter_sum]);
             }
         }
     }
@@ -47,7 +51,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     std::io::stdin().read_to_end(&mut raw)?;
     let length = (crossing::POINTS * 10
         + carry::POINTS * (carry::STATE * 5 + 1)
-        + carry::POST_POINTS * 21
+        + carry::POST_POINTS * 26
         + carry::STATE)
         * 8;
     assert_eq!(raw.len(), length);
@@ -78,15 +82,17 @@ fn main() -> Result<(), Box<dyn Error>> {
         quadratic: std::array::from_fn(|_| {
             std::array::from_fn(|_| std::array::from_fn(|_| next()))
         }),
+        sum: std::array::from_fn(|_| next()),
     }));
     let initial = std::array::from_fn(|_| next());
-    if std::env::args().nth(1).as_deref() == Some("bench") {
+    let mode = std::env::args().nth(1);
+    if mode.as_deref() == Some("bench") {
         const PASSES: usize = 2_000;
         let mut times = [0; PASSES];
         for elapsed in &mut times {
             let begin = Instant::now();
             black_box(
-                render(&family, &event, &post, black_box(initial), |_, _| {})
+                render(&family, &event, &post, black_box(initial), |_, _, _| {})
                     .expect("event outside domain"),
             );
             *elapsed = begin.elapsed().as_nanos();
@@ -100,11 +106,20 @@ fn main() -> Result<(), Box<dyn Error>> {
         );
     } else {
         let mut states = Vec::new();
-        if let Some(event) = render(&family, &event, &post, initial, |timer, currents| {
+        let with_returns = mode.as_deref() == Some("returns");
+        if let Some(event) = render(&family, &event, &post, initial, |timer, currents, sum| {
             states.extend(timer.into_iter().chain(currents.into_iter().flatten()));
+            if with_returns {
+                states.push(sum);
+            }
         }) {
             let mut out = std::io::stdout().lock();
-            for value in event.into_iter().chain(states) {
+            let header = if with_returns {
+                &event[..]
+            } else {
+                &event[..4]
+            };
+            for value in header.iter().copied().chain(states) {
                 out.write_all(&value.to_le_bytes())?;
             }
         }

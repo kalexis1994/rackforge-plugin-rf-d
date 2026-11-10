@@ -3,7 +3,7 @@ import numpy as np
 
 from rf_d_pilot_timer_carry import MOVE, PERIOD, continuous_step, project_passive
 
-NODES = (20, 26, 40, 28, 42, 11, 0, 47, 29)
+NODES = (20, 26, 40, 28, 42, 11, 0, 47, 29, 34)
 POINTS = 65
 PERTURBATION_V = .01
 CAP_C7 = 100e-9
@@ -81,9 +81,9 @@ def run(evaluate, model, initial, nominal_seed, key, frames):
     memory = c7[i] + frac * (c7[i+1] - c7[i])
     outputs = [timers.copy()]
     for k in range(len(clock) - 1):
-        left = nodes[1:3, k], nodes[5:, k].reshape(2, 2)
-        right = nodes[1:3, k+1], nodes[5:, k+1].reshape(2, 2)
-        passive = project_passive(times, values[5:], clock[k], clock[k+1], clock[k+1], MOVE)
+        left = nodes[1:3, k], nodes[5:9, k].reshape(2, 2)
+        right = nodes[1:3, k+1], nodes[5:9, k+1].reshape(2, 2)
+        passive = project_passive(times, values[5:9], clock[k], clock[k+1], clock[k+1], MOVE)
         timers = continuous_step(evaluate, timers, left, right, PERIOD, passive)
         outputs.append(timers)
     timers = np.array(outputs)

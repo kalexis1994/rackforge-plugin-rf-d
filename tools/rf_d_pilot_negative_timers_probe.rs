@@ -63,7 +63,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     let initial = std::array::from_fn(|_| next());
     let key = next();
     let steps = next() as usize;
-    if std::env::args().nth(1).as_deref() == Some("bench") {
+    let mode = std::env::args().nth(1);
+    if mode.as_deref() == Some("bench") {
         const PASSES: usize = 2_000;
         let mut times = [0; PASSES];
         for elapsed in &mut times {
@@ -94,6 +95,9 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .chain(sample.currents.into_iter().flatten())
             {
                 out.write_all(&value.to_le_bytes())?;
+            }
+            if mode.as_deref() == Some("returns") {
+                out.write_all(&sample.filter_sum.to_le_bytes())?;
             }
         }
     }

@@ -1128,3 +1128,44 @@ binaria de los seis recorridos y los ocho ticks. Las
 medianas fueron 112,6–124,4 µs y el máximo observado
 fue 605,1 µs, con un p99 de hasta 157,1 µs por caso.
 [Repetición con el actualizador compartido](../evidence/rf_d_pilot_precursor12.json).
+
+## Lectura de R59/R60 desde los relojes de carga
+
+La lectura reutiliza las celdas físicas de Q3/Q2 y
+Q26/Q28. En volumen, C2 alimenta la celda y x2 se
+resuelve con R15. En filtro, los relojes de C4 y C7
+generan x34, la entrada de Q26. En el primer borde
+posterior al cruce positivo, x34 sale del perfil
+calibrado respecto del evento predicho por el
+biestable. Así se puede contrastar x3 y x37 en el
+mismo reloj de 96 kHz que los temporizadores.
+[Stamps de las celdas](../tools/rf_d_pilot_contour_ports.rs),
+[protocolo de circuito](CONTORNOS_CADENA_PROTOCOLO.md).
+
+El banco fija x4, la base del VCA y TAIL a sus
+valores de Radau. Las dos celdas empiezan con sus
+voltajes nodales del ancla y usan su propia solución
+anterior para inicializar la siguiente. El voltaje x2
+de Radau sólo inicializa Newton. El control usa C2 y
+x34 de Radau con las mismas cargas y las mismas
+celdas. Se exige un error máximo de 2 nA en cada
+retorno en los bordes resueltos. Los dos flancos de
+KEY y sus reservas de ±5 mV pasaron, con máximos de
+0,286 fA en R59 y 0,233 fA en R60. Los seis recorridos
+de los temporizadores conservaron su salida binaria.
+[Contraste negativo](../evidence/rf_d_pilot_negative_timers03.json).
+
+Los seis recorridos positivos, desde el ancla
+original y desde el primer borde asentado, pasaron
+hasta el primer borde posterior al cruce. El mayor
+error fue de 28,6 pA en R59 y 53,2 pA en R60. El
+error máximo en x34 fue de 20,7 nV. Se conservaron
+los ocho ticks de cada reserva y las salidas
+binarias de los temporizadores. El control con C2 y
+x34 de Radau quedó por debajo de 0,001 fA en ambos
+retornos. [Contraste positivo](../evidence/rf_d_pilot_precursor13.json).
+
+La lectura mide los retornos con el receptor fijado
+a la referencia. Queda realimentar el receptor con
+esos retornos, devolver base y TAIL a los contornos,
+y contrastar J7 y el plazo de la voz completa.

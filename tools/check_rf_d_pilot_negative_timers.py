@@ -9,6 +9,7 @@ import numpy as np
 
 from affine_evidence import Sources
 import check_rf_d_pilot_contours as c
+import rf_d_pilot_return_readout as returns
 from check_rf_d_pilot_timer_rc import ATTACK, ATTACK_PROBE, MODEL, OHMS, TIMER_NODES, prepare_reference
 from rf_d_pilot_negative_timers import family, key_side, run as render, trace
 
@@ -25,14 +26,14 @@ NATIVE_SOURCES = (NATIVE, "tools/rf_d_pilot_negative_timers.rs", "tools/rf_d_pil
                   "tools/rf_d_pilot_precursor.rs", "tools/latch_charge_driver.rs")
 
 
-def compare(evaluate, model, stages, seed, key, frames, native=None):
+def compare(evaluate, model, stages, seed, key, frames, native=None, readout=None):
     reference = stages[::1536]
     output = render(evaluate, model, reference[0], seed, key, frames)
     if output is None:
         return dict(passed=False, reason="outside negative C7 path")
     timers, nodes, c7 = output
     attack = evaluate(nodes[:, 1:3], timers)
-    passive = (nodes[:, 5:].reshape(-1, 2, 2) - timers[:, :, None]) / OHMS[:, 1:]
+    passive = (nodes[:, 5:9].reshape(-1, 2, 2) - timers[:, :, None]) / OHMS[:, 1:]
     currents = np.concatenate((attack[..., None], passive), axis=2)
     wanted = (reference[:, [[8, 11, 0], [44, 47, 29]]] - reference[:, TIMER_NODES, None]) / OHMS
     # Compare the first resolved 96 kHz boundary and all later ones.
@@ -44,7 +45,7 @@ def compare(evaluate, model, stages, seed, key, frames, native=None):
     item = dict(passed=bool(quiet and timer.max() <= 2e-6 and current.max() <= 2e-9 and c7_error <= 20e-6),
                 no_crossing=quiet, max_timer_error_v=timer.tolist(), max_current_error_a=current.tolist(),
                 max_c7_error_v=c7_error, max_key_port_error_v=x22_error,
-                output_sha256=c.digest(np.column_stack((timers, c7, nodes)).astype("<f8").tobytes()))
+                output_sha256=c.digest(np.column_stack((timers, c7, nodes[:, :9])).astype("<f8").tobytes()))
     if native is not None:
         run, target = native
         direction, progress, center, linear, quadratic = model
@@ -66,21 +67,33 @@ def compare(evaluate, model, stages, seed, key, frames, native=None):
         item["native"] = dict(passed=True, max_difference_python=delta.tolist(),
                               input_sha256=c.digest(data), output_sha256=c.digest(raw),
                               timing=dict(zip(("edges", "median_ns", "p99_ns", "max_ns"), timing)))
+        if readout is not None:
+            cmd = [target, "returns"]
+            with_sum = run(cmd, data)
+            assert with_sum == run(cmd, data)
+            rows = np.frombuffer(with_sum, "<f8").reshape(-1, 11)
+            assert np.array_equal(rows[:, :10], got)
+            assert abs(rows[:, 10] - nodes[:, 9]).max() <= 1e-12
+            item["returns"] = returns.assess(run, readout, reference, rows[:, [0, 10]], 1)
     return item
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--native", action="store_true", help="verify and time the bounded Rust C7 clock")
+    parser.add_argument("--returns", action="store_true", help="contrast return readout at imposed receiver loads")
     args = parser.parse_args()
+    assert not args.returns or args.native
     assert c.AREA.is_dir() and not list(c.AREA.iterdir())
     seq = 1
     while (out := c.ROOT / f"evidence/rf_d_pilot_negative_timers{seq:02}.json").exists():
         seq += 1
     native_sources = NATIVE_SOURCES if args.native else ()
+    if args.returns:
+        native_sources += ("tools/rf_d_pilot_return_readout.py", *returns.SOURCES)
     sources = Sources((*c.ALL_SOURCES, c.OWN, c.CANDIDATE, c.PROBE, c.PORTS,
                        "tools/rf_d_pilot_step_profile.rs", *SOURCE_NAMES, *native_sources))
-    report = dict(passed=False, rack_integrated=False, clock_hz=96_000, native=args.native, edges={},
+    report = dict(passed=False, rack_integrated=False, clock_hz=96_000, native=args.native, returns=args.returns, edges={},
                   **sources.fields(), compiler_sha256=c.sha(Path(c.COMPILER)), library_sha256=c.sha(c.LIB))
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
 
@@ -101,6 +114,7 @@ def main():
             run([*build, "-A", "dead_code", c.ROOT / NATIVE, "--extern",
                  f"rf_d_circuit={c.LIB}", "-o", executable])
             native = run, executable
+        readout = returns.prepare(run, build) if args.returns else None
         anchor = c.AREA / "negative-timers.bin"
 
         def evaluate(latch, timer):
@@ -135,10 +149,14 @@ def main():
                 result = compare(evaluate, model, stages, seed, key, frames)
                 assert result == compare(evaluate, model, stages, seed, key, frames)
                 if native is not None:
-                    result = compare(evaluate, model, stages, seed, key, frames, native)
+                    result = compare(evaluate, model, stages, seed, key, frames, native, readout)
                 item["trials"].append(dict(meta, **result, unchanged_replay=True))
                 print(label, offset, result, flush=True)
         report["passed"] = all(trial["passed"] for edge in report["edges"].values() for trial in edge["trials"])
+        if args.returns:
+            report["return_readout_passed"] = all(
+                trial["returns"]["passed"] for edge in report["edges"].values() for trial in edge["trials"])
+            report["passed"] &= report["return_readout_passed"]
         sources.unchanged()
     except Exception:
         report["failure"] = traceback.format_exc()
