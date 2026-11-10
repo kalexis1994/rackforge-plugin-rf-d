@@ -1363,3 +1363,68 @@ Quedan la realimentación de CR6 hacia el estado de
 Q15 en conducción directa, la transición entre
 ventanas y la medición continua a 128 frames.
 [Repetición negativa](../evidence/rf_d_pilot_cv_readout_neg02.json).
+
+## Retorno de CR6 a las junturas de Q15
+
+El bloque de dos nodos integra la base x27 y el
+colector x28 con sus cargas BE/BC. En cada etapa
+resuelve Q3/Q2 y x4 por el seguidor de cinco nodos.
+La corriente de CR6 sale de x4 y entra en x27.
+R56, R38, R39, CR8 y los terminales de Q15 mantienen
+sus ramas. El complemento de Schur conserva la
+derivada del cátodo a través de x4 y R24.
+[SVC-9 Fig. 9-7 p. 9 y topología](CONTORNO_VOLUMEN_CIRCUITO.md),
+[stamp completo](../crates/rf-d-circuit/src/prepared_volume_residual.rs).
+
+Cada recorrido local parte de una única solución DC
+y dura 128 frames a 48 kHz. C2, la base del VCA, la
+base y el colector de Q25 y el ánodo de CR8 se
+imponen como puertos suaves. El oráculo conserva
+los siete nodos sin condensar y usa la misma ley de
+carga de Q15. Los límites son 20 µV y 2 nA, además
+de 20 zC de diferencia en las cargas al mismo reloj.
+El primer adaptador del oráculo llevó al PNP Q16
+fuera de dominio en filas ajenas al puerto. Se
+repitió el rechazo y se corrigieron sus terminales
+fijos. [Rechazo de inicialización](../evidence/rf_d_pilot_q15_return01.json).
+
+A 96 kHz pasaron los recorridos de polaridad fija
+contra el oráculo refinado a 768 kHz. El máximo
+error de x27 en inversa fue 3,33 µV. En directa
+CR6 condujo entre 338 y 366 µA, con un máximo error
+de 33,6 fA. En la trayectoria mixta el modelo reducido
+coincidió al mismo reloj, pero el error temporal
+de x28 llegó a 12,75 mV y el de CR6 a 10,85 nA.
+[Contraste a 96 kHz](../evidence/rf_d_pilot_q15_return02.json).
+
+El recorrido mixto a 3,072 MHz quedó en 20,68 µV
+frente al límite de 20 µV en x28. A 6,144 MHz pasó,
+con 3,03 µV y 3,58 pA en CR6 contra Radau a
+24,576 MHz. Las dos inversiones de orden quedaron
+en los mismos intervalos de 32 ticks del candidato.
+[Rechazo a 3,072 MHz](../evidence/rf_d_pilot_q15_return03.json),
+[contraste a 6,144 MHz](../evidence/rf_d_pilot_q15_return04.json).
+
+El reloj fino caracteriza la referencia local. Los
+peores bloques nativos de 128 frames del candidato
+a 96 kHz fueron 1,48 ms en inversa y 2,20 ms en
+directa, con los otros puertos ya disponibles.
+Queda conectar este retorno a la dinámica de Q25
+y al receptor de audio en una voz continua.
+
+El Jacobiano reducido se contrastó con el Schur
+del stamp completo en las dos etapas de cada paso.
+El peor error de conductancia fue 5,21 aS. Las
+cargas y las matrices de capacitancia coincidieron
+en los tres recorridos. El rechazo inicial se
+reprodujo con entradas de 176 bytes y conserva el
+hash del recorrido completo.
+[Auditoría](../evidence/rf_d_pilot_q15_audit01.json).
+
+La regresión de la voz con x4 cerrado repitió los
+doce casos. C2/C5 y los receptores con x4 impuesto
+y calculado conservaron sus salidas bit a bit.
+Se mantuvieron J7, R59/R60 y los ocho ticks de las
+reservas positivas.
+[Control positivo](../evidence/rf_d_pilot_cv_readout_pos03.json),
+[control negativo](../evidence/rf_d_pilot_cv_readout_neg03.json).

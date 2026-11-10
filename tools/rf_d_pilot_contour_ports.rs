@@ -163,15 +163,20 @@ pub fn cv_return_residual(x4: f64, x3: f64, x27: f64) -> Result<f64, StepError> 
 
 #[cfg(pilot_closed_cv)]
 fn cv_law(x4: f64, x3: f64, x27: f64) -> Result<(f64, f64, f64), StepError> {
-    let vt = 1.5 * VT;
-    let z = (x4 - x27) / vt;
+    let (diode, conductance) = germanium(x4 - x27)?;
+    let residual = (x4 + 10.) / R27 + (x4 - x3) / R24 + diode;
+    let slope = 1. / R27 + 1. / R24 + conductance;
+    Ok((residual, slope, diode))
+}
+
+#[cfg(pilot_closed_cv)]
+pub(crate) fn germanium(voltage: f64) -> Result<(f64, f64), StepError> {
+    let scale = 1.5 * VT;
+    let z = voltage / scale;
     if !z.is_finite() || z > 45. {
         return Err(StepError::ExponentialDomain);
     }
-    let diode = 1e-8 * z.exp_m1();
-    let residual = (x4 + 10.) / R27 + (x4 - x3) / R24 + diode;
-    let slope = 1. / R27 + 1. / R24 + 1e-8 * z.exp() / vt;
-    Ok((residual, slope, diode))
+    Ok((1e-8 * z.exp_m1(), 1e-8 * z.exp() / scale))
 }
 
 pub fn filter(initial: [f64; 3], [sum, tail]: [f64; 2]) -> Result<[f64; 3], StepError> {
@@ -221,6 +226,20 @@ fn closed_volume_stamp(
 }
 
 #[cfg(pilot_audio_readout)]
+pub(crate) fn close_volume(
+    initial: [f64; 5],
+    c2: f64,
+    cathode: f64,
+    base: f64,
+) -> Result<([f64; 5], Lu<5>), StepError> {
+    solve_factored(
+        initial,
+        |x| closed_volume_stamp(x, c2, cathode, base),
+        JOINT_TOLERANCES,
+    )
+}
+
+#[cfg(pilot_audio_readout)]
 pub fn joint_cells(
     cells: Returns,
     [c2, sum]: [f64; 2],
@@ -246,11 +265,8 @@ pub fn joint_cells(
             ([q3, q2, x3], slope, [x4, 0.])
         }
         Cv::Closed { seed, cathode } => {
-            let ([q3, q2, x3, _, x4], factor) = solve_factored(
-                [q3, q2, x3, collector, seed],
-                |x| closed_volume_stamp(x, c2, cathode, base),
-                JOINT_TOLERANCES,
-            )?;
+            let ([q3, q2, x3, _, x4], factor) =
+                close_volume([q3, q2, x3, collector, seed], c2, cathode, base)?;
             let slope = if tangent {
                 factor.solve([0., 0., 1. / R59, 0., 0.])?[2]
             } else {
