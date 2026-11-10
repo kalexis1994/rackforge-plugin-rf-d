@@ -2222,3 +2222,42 @@ La frecuencia de actualización de la tangente y
 el cierre dinámico con los contornos requieren
 validación conjunta.
 [Trial, derivadas y coste](../evidence/rf_d_pilot_receiver_handoff03.json).
+
+
+### Tangentes en la rama negativa y regresión del piloto
+
+La rama negativa normalizada pasó las cuatro derivadas.
+Las diferencias centradas del propio receptor durante
+256 pasos difirieron como máximo 3,55e−10 V/V de la
+matriz analítica. El contraste de la primera matriz
+contra el receptor nodal original a 768 kHz tuvo un
+máximo de 1,58e−6 V/V, dentro de 1e−6 V/V más
+0,1 % de la referencia. Pasaron los refinamientos
+de tasa y de perturbación. Las derivadas directas
+iniciales fueron 1,000000 V/V en la base del VCA
+y 0,842629 V/V en TAIL.
+
+La consulta conservó los ocho canales por bits y la
+ruta ordinaria reprodujo la entrada y salida de la
+transferencia negativa anterior. El nuevo pase tuvo
+0,782 ms de mediana y 0,919 ms de máximo en el avance
+ordinario. La campaña anterior conserva su exceso
+observado de 1,566 ms.
+
+Consultar las tangentes en cada paso tuvo mediana
+2,725 ms y máximo 2,959 ms. Una consulta al inicio
+del bloque tuvo mediana 0,771 ms y máximo 0,976 ms.
+Se observaron cero asignaciones en ambas rutas.
+La frecuencia de consulta requiere validación dentro
+del cierre de contornos. Estas cifras corresponden
+al receptor con fuentes impuestas.
+[Contraste de la rama negativa](../evidence/rf_d_pilot_receiver_handoff04.json).
+
+La regresión del piloto de 18 junturas volvió a pasar
+las tres escenas eléctricas y el refinamiento contra
+Radau. La partitura completa reprodujo por bits los
+bloques de 64/128 y el hash anterior de J7 f32. Hubo
+cero asignaciones. Las máximas nativas fueron 0,745 ms
+con controles neutros y 0,567 ms con retornos activos
+a 128 frames. Este control usa el perfil de 192 kHz.
+[Regresión tras el cambio de interfaz](../evidence/rf_d_pilot_returns15.json).
