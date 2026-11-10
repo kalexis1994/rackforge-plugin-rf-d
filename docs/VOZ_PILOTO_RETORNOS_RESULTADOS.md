@@ -1895,3 +1895,16 @@ control alternado. El pico de la variante fue
 La comprobación nodal sigue en la ruta y queda
 medir el bloque completo en RackForge.
 [Contraste de la mezcla de residuos](../evidence/rf_d_pilot_bistable_handoff15.json).
+
+### Desglose de la comprobación nodal
+
+El perfil se repitió con el producto agrupado
+del receptor. Los tiempos del residuo y del LU
+son subtotales dentro de la comprobación nodal.
+En las ventanas positivas de cinco frames,
+armar el residuo ocupó 25,9–27,3 % del tiempo
+instrumentado y resolver el LU, 6,5–6,8 %.
+El residuo tomó 235–239 µs por ventana y el
+LU, 59 µs. La compilación sin instrumentación
+reprodujo bit a bit las cinco reservas.
+[Perfil del residuo y del LU](../evidence/rf_d_pilot_bistable_handoff16.json).

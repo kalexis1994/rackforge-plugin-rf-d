@@ -214,8 +214,10 @@ def stage_feedback(case, run, replay, inputs, coarse_rows, event=None, profiles=
                 tag, name, elapsed, calls = line.split(",")
                 assert tag == "RECEIVER" and name not in measured
                 measured[name] = dict(total_ns=int(elapsed), calls=int(calls))
-            assert len(measured) == 7 and all(x["calls"] > 0 for x in measured.values())
-            result["profile"] = dict(timing=dict(zip(keys, map(int, timing.split(",")), strict=True)), parts=measured)
+            assert len(measured) == 9 and all(x["calls"] > 0 for x in measured.values())
+            assert measured["nodal"]["calls"] == measured["residual"]["calls"] == measured["lu"]["calls"]
+            result["profile"] = dict(layout="packed", timing=dict(zip(keys, map(int, timing.split(",")), strict=True)),
+                                     parts=measured)
     else:
         result["failure_input"] = packed(payload)
     return result
@@ -239,7 +241,7 @@ def main():
     receiver_mode.add_argument("--receiver-accelerated", action="store_true", help="accelerate receiver defects within each step")
     args = parser.parse_args()
     iteration_trial = args.receiver_seeded or args.receiver_accelerated
-    args.receiver_packed |= iteration_trial
+    args.receiver_packed |= iteration_trial or args.receiver_profile
     args.stage_feedback_frozen |= args.receiver_profile or args.receiver_packed
     args.stage_feedback |= args.stage_feedback_frozen
     args.reciprocal_r59 |= args.stage_feedback
@@ -266,7 +268,7 @@ def main():
         native_sources += (FROZEN_CONTROL, "tools/rf_d_pilot_step_profile.rs")
     if args.receiver_packed:
         native_sources += (PROFILE_CONTROL,)
-    if iteration_trial:
+    if iteration_trial or args.receiver_profile:
         native_sources += (PACKED_CONTROL,)
     sources = Sources((*b.SOURCES, *c.ALL_SOURCES, c.OWN, c.CANDIDATE, c.PROBE, c.PORTS,
                        OWN, PREVIOUS, CLOCK_CONTROL, *SOURCE_NAMES, C4_CLOCK, TIMER_CARRY, TIMER_NATIVE,
@@ -351,7 +353,7 @@ def main():
         audio_control = c.read(AUDIO_CONTROL)["cases"] if args.reciprocal_r59 else {}
         step_evidence = PACKED_CONTROL if iteration_trial else (FROZEN_CONTROL if args.receiver_packed else STEP_CONTROL)
         step_control = c.read(step_evidence)["cases"] if args.stage_feedback_frozen else {}
-        frozen_control = c.read(FROZEN_CONTROL)["cases"] if args.receiver_profile else {}
+        profile_control = c.read(PACKED_CONTROL)["cases"] if args.receiver_profile else {}
 
         def receiver(branch, start, offset, stages):
             phase, _, _, state = refs[branch][1][start]
@@ -453,7 +455,7 @@ def main():
                         if args.stage_feedback_frozen and item["stage_feedback"]["passed"]:
                             assert item["stage_feedback"]["control"]["output_sha256"] == step_control[name]["stage_feedback"]["output_sha256"]
                         if args.receiver_profile and item["stage_feedback"]["passed"]:
-                            assert item["stage_feedback"]["output_sha256"] == frozen_control[name]["stage_feedback"]["output_sha256"]
+                            assert item["stage_feedback"]["output_sha256"] == profile_control[name]["stage_feedback"]["output_sha256"]
                         item["passed"] &= item["stage_feedback"]["passed"]
                 print(name, "negative", item["passed"], flush=True)
                 continue
@@ -637,7 +639,7 @@ def main():
                                             if args.stage_feedback_frozen and result["passed"]:
                                                 assert result["control"]["output_sha256"] == step_control[name]["stage_feedback"]["output_sha256"]
                                             if args.receiver_profile and result["passed"]:
-                                                assert result["output_sha256"] == frozen_control[name]["stage_feedback"]["output_sha256"]
+                                                assert result["output_sha256"] == profile_control[name]["stage_feedback"]["output_sha256"]
                                 else:
                                     closed_c2["timing"] = timings("bench-native-handoff-c2", payload)
                             else:

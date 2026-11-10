@@ -203,6 +203,10 @@ pub fn run_packed(bench: bool) -> Result<(), Box<dyn std::error::Error>> {
     run_mode(bench, true, bench, Matrix::Packed)
 }
 
+pub fn run_packed_profile() -> Result<(), Box<dyn std::error::Error>> {
+    run_mode(true, true, false, Matrix::Packed)
+}
+
 pub fn run_seeded(bench: bool) -> Result<(), Box<dyn std::error::Error>> {
     run_mode(bench, true, bench, Matrix::Seeded)
 }

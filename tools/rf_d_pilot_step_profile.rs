@@ -11,6 +11,8 @@ pub enum Part {
     ReceiverDefects,
     ReceiverProduct,
     ReceiverNodal,
+    ReceiverResidual,
+    ReceiverLu,
     ReceiverInterface,
 }
 
@@ -61,6 +63,8 @@ mod enabled {
             "defects",
             "product",
             "nodal",
+            "residual",
+            "lu",
             "interface",
         ]
         .into_iter()

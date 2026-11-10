@@ -195,8 +195,11 @@ impl Audio {
         h: f64,
         delta: [chain::State; 2],
     ) -> Result<([chain::State; 2], f64, f64, [f64; PAIR]), StepError> {
+        let timer = latch::profile::start();
         let (now, angle, residual) = self.residual(old, input, family, phase, h, delta)?;
+        let timer = latch::profile::split(latch::profile::Part::ReceiverResidual, timer);
         let correction = self.lu.solve(residual.map(|v| -v))?;
+        latch::profile::split(latch::profile::Part::ReceiverLu, timer);
         Ok((now, angle, maximum(&residual), correction))
     }
 
@@ -698,5 +701,6 @@ mod audio_readout;
 pub use audio_readout::{run as run_audio_readout, run_stage_loads as run_audio_stage_loads};
 #[cfg(pilot_stage_feedback)]
 pub use audio_readout::{run_feedback as run_audio_feedback, run_feedback_packed as run_audio_feedback_packed,
+    run_feedback_packed_profile as run_audio_feedback_packed_profile,
     run_feedback_seeded as run_audio_feedback_seeded,
     run_feedback_accelerated as run_audio_feedback_accelerated};

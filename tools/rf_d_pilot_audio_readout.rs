@@ -19,7 +19,8 @@ mod feedback;
 #[cfg(pilot_stage_feedback)]
 pub use feedback::{
     run as run_feedback, run_accelerated as run_feedback_accelerated,
-    run_packed as run_feedback_packed, run_seeded as run_feedback_seeded,
+    run_packed as run_feedback_packed, run_packed_profile as run_feedback_packed_profile,
+    run_seeded as run_feedback_seeded,
 };
 
 const H: f64 = 1. / 96_000.;
