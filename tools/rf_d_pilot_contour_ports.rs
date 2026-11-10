@@ -289,3 +289,74 @@ pub fn q22_base(mut base: f64, c5: f64, [collector, emitter]: [f64; 2]) -> Resul
     }
     Err(StepError::IterationBudget)
 }
+
+#[cfg(all(test, pilot_audio_readout))]
+mod tests {
+    use super::*;
+
+    const C2: f64 = 9.3;
+    const VOLUME: [f64; 4] = [9.22, 8.65, 7.99, 8.65];
+
+    fn split_solution(cathode: f64, base: f64) -> [f64; 3] {
+        // Independent scalar bracket using the original imposed-x4 stamp.
+        let row = |cv| {
+            let (volume, _) =
+                solve_factored(VOLUME, |x| volume_stamp(x, C2, cv, base), JOINT_TOLERANCES)
+                    .unwrap();
+            let diode = 1e-8 * ((cv - cathode) / (1.5 * VT)).exp_m1();
+            let balance = (cv + 10.) / 16_900. + (cv - volume[2]) / 6800. + diode;
+            (balance, [volume[2], cv, diode])
+        };
+        let [mut lo, mut hi] = [0., 1.4];
+        assert!(row(lo).0 < 0. && row(hi).0 > 0.);
+        for _ in 0..56 {
+            let mid = (lo + hi) * 0.5;
+            if row(mid).0 < 0. {
+                lo = mid;
+            } else {
+                hi = mid;
+            }
+        }
+        row((lo + hi) * 0.5).1
+    }
+
+    #[test]
+    fn cv_closure_preserves_forward_cr6_current_and_r59_tangent() {
+        let step = 1e-4;
+        // Forward-bias DC vectors from circuit71_port_vectors, R61 = 200 Ω.
+        for (cathode, base, x4, current) in [
+            (
+                0.01,
+                4.306692675075283,
+                0.42662327616933227,
+                0.0004953573547700882,
+            ),
+            (
+                0.7,
+                4.307742421921254,
+                1.1046024119902107,
+                0.00036262045377491393,
+            ),
+        ] {
+            let [q3, q2, x3, x2] = VOLUME;
+            let (x, factor) = solve_factored(
+                [q3, q2, x3, x2, cathode + 0.42],
+                |x| closed_volume_stamp(x, C2, cathode, base),
+                JOINT_TOLERANCES,
+            )
+            .unwrap();
+            let (_, _, diode) = cv_law(x[4], x[2], cathode).unwrap();
+            let expected = split_solution(cathode, base);
+            assert!((x[2] - expected[0]).abs() <= 2e-12);
+            assert!((x[4] - expected[1]).abs() <= 2e-12);
+            assert!((diode - expected[2]).abs() <= 2e-15);
+            assert!((x[4] - x4).abs() <= 1e-9);
+            assert!(diode > 0. && (diode - current).abs() <= 1e-12);
+
+            let slope = factor.solve([0., 0., 1. / R59, 0., 0.]).unwrap()[2];
+            let low = split_solution(cathode, base - step)[0];
+            let high = split_solution(cathode, base + step)[0];
+            assert!((slope - (high - low) / (2. * step)).abs() <= 2e-8);
+        }
+    }
+}

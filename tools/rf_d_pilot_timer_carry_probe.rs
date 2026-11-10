@@ -27,14 +27,14 @@ fn render(
     post: &carry::PostProfile,
     initial: [f64; carry::STATE],
     mut emit: impl FnMut([f64; 2], [[f64; 3]; 2], f64),
-    mut emit_cv: impl FnMut([f64; 2]),
+    mut emit_cv: impl FnMut([f64; 3]),
 ) -> Option<[f64; 5]> {
     let mut voice = carry::Carry::start(family, initial)?;
     for slot in 0..64 {
         let (timers, currents) = voice.observe()?;
         emit(timers, currents, voice.filter_sum());
         let sample = voice.advance(profile, post)?;
-        emit_cv(voice.cathode());
+        emit_cv(voice.cv_stages());
         match sample {
             carry::Sample::Boundary => (),
             carry::Sample::Event {

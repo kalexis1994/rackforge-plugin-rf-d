@@ -241,12 +241,14 @@ def timer_native_trial(run, target, prefix, shape, post, initial, observations, 
         print("RETURN", start, first, item["returns"], flush=True)
         if audio is not None:
             cathode = None
+            stage_c2 = None
             if audio.closed_cv:
                 command = [target, "cv-stages"]
                 raw_cv = run(command, data)
                 assert raw_cv == run(command, data)
-                cathode = np.frombuffer(raw_cv, "<f8").reshape(len(drives) - 1, 2)
-            item["audio_readout"] = audio.compare(first, drives, stage_cathode=cathode)
+                rows = np.frombuffer(raw_cv, "<f8").reshape(len(drives) - 1, 3)
+                cathode, stage_c2 = rows[:, :2], rows[:, 2]
+            item["audio_readout"] = audio.compare(first, drives, stage_cathode=cathode, stage_c2=stage_c2)
             print("AUDIO", start, first, {key: (trial.get("error"), trial.get("max_error"))
                                          for key, trial in item["audio_readout"].items()
                                          if isinstance(trial, dict)}, flush=True)

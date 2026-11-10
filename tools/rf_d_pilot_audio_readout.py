@@ -51,7 +51,7 @@ class Case:
         return subprocess.run([str(self.target), mode], cwd=c.ROOT, env=self.env,
                               input=payload, capture_output=True, timeout=60)
 
-    def compare(self, first, generated, stage_sum=None, stage_cathode=None):
+    def compare(self, first, generated, stage_sum=None, stage_cathode=None, stage_c2=None):
         if first:
             seed = np.r_[self.stages[first * FINE_ROWS], np.zeros(c.N)]
         else:
@@ -106,6 +106,7 @@ class Case:
                 voltage_error = float(abs(rows[:, 7:9] - cv).max())
                 current_error = float(abs(rows[:, 9:11] - wanted_cr6).max())
                 result.update(max_x4_error_v=voltage_error, max_cr6_error_a=current_error,
+                              max_stage_c2_error_v=float(abs(drives[:, 0, 0] - self.stages[indices[:, 0], 5]).max()),
                               max_x27_error_v=float(abs(cathode - wanted_cathode).max()),
                               reference_cr6_range_a=[float(wanted_cr6.min()), float(wanted_cr6.max())])
                 result["passed"] &= voltage_error <= 20e-6 and current_error <= 2e-9
@@ -142,7 +143,11 @@ class Case:
             passed &= results["generated_joint"]["passed"]
         if self.closed_cv:
             assert stage_cathode.shape == cv.shape and np.isfinite(stage_cathode).all()
-            results["closed_cv_oracle"] = measure(stages, joint=True, cathode=self.stages[indices, 27])
+            results["closed_cv_oracle"] = measure(
+                self.stages[indices[:, :, None], DRIVES], joint=True, cathode=self.stages[indices, 27])
+            if stage_c2 is not None:
+                assert stage_c2.shape == cv[:, 0].shape and np.isfinite(stage_c2).all()
+                stages[:, 0, 0] = stage_c2
             results["closed_cv_generated"] = measure(stages, timing=True, joint=True, cathode=stage_cathode)
             passed &= results["closed_cv_oracle"]["passed"] and results["closed_cv_generated"]["passed"]
         return dict(passed=passed, first_slot=first,

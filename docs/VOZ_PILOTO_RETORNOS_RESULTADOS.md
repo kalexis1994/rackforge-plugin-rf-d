@@ -1330,3 +1330,36 @@ retornos pasaron, pero x4 llegó a 335 µV de error
 también con x27 exacto. Se conservaron los replays.
 [Negativos](../evidence/rf_d_pilot_cv_readout_neg01.json),
 [rechazo positivo](../evidence/rf_d_pilot_cv_readout_pos01.json).
+
+La prueba de conducción directa usa los vectores DC
+de C2 a 9,3 V, x27 a 0,01 V y 0,7 V y R61 a 200 Ω.
+El cierre reproduce 495,36 µA y 362,62 µA de CR6 con
+un error inferior a 1 pA. Un bracket escalar de x4
+con la celda original de cuatro nodos confirma los
+voltajes y la derivada de R59 frente a una diferencia
+central. [Vectores de referencia](../evidence/circuit71_port_vectors.json),
+[contexto de las cargas de reset](PUERTO_CONTORNO_CADENA_71.md).
+
+En positivo se proyectan las cargas resistivas y de
+ataque de C2 hasta el primer tercio del paso con los
+segmentos de C4. Se conserva el avance de C2/C5
+hasta el borde y el instante del biestable. Así se
+elimina el error de interpolar C2 a través del
+evento. El peor error de C2 en la primera etapa
+fue 76,8 nV. Los seis positivos pasaron con x27
+generado, con 1,41 µV en x4, 2,63 pA en R59, 53,2 pA
+en R60 y 0,0192 % RMS en J7.
+[Contraste positivo](../evidence/rf_d_pilot_cv_readout_pos02.json).
+
+La repetición negativa pasó los seis casos y dio
+0,431 nV en x4. Las dos campañas conservan por bytes
+las salidas de C2/C5 y del banco con x4 impuesto.
+CR6 devolvió −10 nA en las ventanas dinámicas,
+igual que la referencia. Los máximos del receptor
+fueron 0,559 ms en positivo y 0,823 ms en negativo
+para ventanas de tres o cuatro pasos a 96 kHz, con
+el mapa preparado y los contornos ya calculados.
+Quedan la realimentación de CR6 hacia el estado de
+Q15 en conducción directa, la transición entre
+ventanas y la medición continua a 128 frames.
+[Repetición negativa](../evidence/rf_d_pilot_cv_readout_neg02.json).

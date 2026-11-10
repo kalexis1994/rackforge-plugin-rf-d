@@ -40,6 +40,7 @@ pub struct Carry<'a> {
     full: [f64; 2],
     finished: bool,
     cathode: [f64; 2],
+    stage_c2: Option<f64>,
 }
 
 pub enum Sample {
@@ -92,12 +93,24 @@ pub(crate) fn project(
     end: f64,
     full: [f64; 2],
 ) {
+    project_until(result, from, to, begin, end, PERIOD_S, full);
+}
+
+fn project_until(
+    result: &mut Ports,
+    from: Ports,
+    to: Ports,
+    begin: f64,
+    end: f64,
+    horizon: f64,
+    full: [f64; 2],
+) {
     if end <= begin {
         return;
     }
     let (moved, w) = weights(end - begin);
     for i in 0..2 {
-        let factor = moved[i] / full[i] * (-RATES[i] * (PERIOD_S - end)).exp();
+        let factor = moved[i] / full[i] * (-RATES[i] * (horizon - end)).exp();
         for k in 0..2 {
             result[i][k] += factor * (from[i][k] + w[i] * (to[i][k] - from[i][k]));
         }
@@ -196,11 +209,16 @@ impl<'a> Carry<'a> {
             full: weights(PERIOD_S).0,
             finished: false,
             cathode: [initial[CATHODE]; 2],
+            stage_c2: None,
         })
     }
 
-    pub fn cathode(&self) -> [f64; 2] {
-        self.cathode
+    pub fn cv_stages(&self) -> [f64; 3] {
+        [
+            self.cathode[0],
+            self.cathode[1],
+            self.stage_c2.unwrap_or(f64::NAN),
+        ]
     }
 
     pub fn filter_sum(&self) -> f64 {
@@ -235,10 +253,28 @@ impl<'a> Carry<'a> {
         let full = self.full;
         let mut slope = self.slope;
         let mut cathode = None;
+        let mut stage_latch = None;
+        let mut stage_ports = [[0.; 2]; 2];
+        let stage_weights = weights(STAGE_S).0;
         let step = self.clock.advance_projected(|start, end, from, to| {
-            if start <= STAGE_S && STAGE_S <= end && end > start {
-                let u = (STAGE_S - start) / (end - start);
-                cathode = Some(from[CATHODE] + u * (to[CATHODE] - from[CATHODE]));
+            if start < STAGE_S && end > start {
+                let stop = end.min(STAGE_S);
+                let u = (stop - start) / (end - start);
+                project_until(
+                    &mut stage_ports,
+                    ports(from),
+                    lerp(ports(from), ports(to), u),
+                    start,
+                    stop,
+                    STAGE_S,
+                    stage_weights,
+                );
+                if stop == STAGE_S {
+                    cathode = Some(from[CATHODE] + u * (to[CATHODE] - from[CATHODE]));
+                    let a = latch(from);
+                    let b = latch(to);
+                    stage_latch = Some(std::array::from_fn(|i| a[i] + u * (b[i] - a[i])));
+                }
             }
             let from = ports(from);
             let to = ports(to);
@@ -250,6 +286,9 @@ impl<'a> Carry<'a> {
             }
         })?;
         self.slope = slope;
+        self.stage_c2 = stage_latch
+            .and_then(|end| continuous_step(self.timers, self.attack, end, STAGE_S, stage_ports))
+            .map(|timers| timers[0]);
         match step {
             Step::Boundary(state) => {
                 self.cathode = [cathode?, state[CATHODE]];
@@ -301,7 +340,25 @@ impl<'a> Carry<'a> {
                 let first_cathode = match cathode {
                     Some(value) => value,
                     None if STAGE_S < cross => {
-                        let u = (STAGE_S - guard_s) / (cross - guard_s);
+                        let elapsed = STAGE_S - guard_s;
+                        let u = elapsed / (cross - guard_s);
+                        let stage_end = std::array::from_fn(|i| {
+                            std::array::from_fn(|k| from[i][k] + elapsed * self.slope[i][k])
+                        });
+                        project_until(
+                            &mut stage_ports,
+                            from,
+                            stage_end,
+                            guard_s,
+                            STAGE_S,
+                            STAGE_S,
+                            stage_weights,
+                        );
+                        let left = latch(&guard);
+                        let end = [left[0] + u * (event.point.collector - left[0]), left[1]];
+                        self.stage_c2 =
+                            continuous_step(self.timers, self.attack, end, STAGE_S, stage_ports)
+                                .map(|timers| timers[0]);
                         guard[CATHODE] + u * (event.point.neighbors[1] - guard[CATHODE])
                     }
                     None => post.readout(1, STAGE_S - cross, load)?,
