@@ -395,3 +395,42 @@ en sus contadores acumulados. La Pi agotó el tiempo de espera
 por SSH y HTTP. La prueba física del receptor con los contornos
 queda pendiente.
 [Control físico](../evidence/rf_d_contours_live_control02.json).
+
+## Cierre bidireccional a la resolución del solver
+
+El banco separa los contornos cargados y la cadena de audio en las
+dos etapas de Radau. La etapa de audio conserva la carga de C27,
+el VCO H128 sobre BUS y las reacciones de R59 y R60. C2 entrega x3
+al VCA y C5 entrega x37 al ladder. Audio devuelve la base del VCA y
+TAIL a los mismos terminales que usa la ecuación de cada contorno.
+Se resuelve también x4 con R24, R27 y CR6. El colector x2 conserva
+R15 y las corrientes de Q2 y Q3. [Circuito](../crates/rf-d-circuit/src/prepared_volume_residual.rs),
+[receptor acoplado](../tools/rf_d_pilot_closed_returns.rs).
+
+Cada ventana comienza en un único estado reservado, incluidas las
+cargas de los capacitores y la fase del VCO. El candidato avanza
+con los valores de KEY de la escena. Las tensiones del solver de
+referencia se usan al comparar la salida. En el primer intento
+TAIL seguía fijo en el seguidor de C5 y R60 excedió 10 µA de error
+en la reserva positiva. Corregir el terminal dejó un error de
+238 µV en x3 con x2/x4 fijos. [Primer rechazo](../evidence/rf_d_pilot_closed_returns01.json),
+[contraste con TAIL corregido](../evidence/rf_d_pilot_closed_returns02.json).
+
+Con x2 y x4 cargados, pasaron la inversión positiva y ambas
+reservas negativas de KEY. El cruce positivo volvió a quedar en
+**319096–319104** y el peor error en cualquiera de los retornos
+fue de 0,146 pA frente al límite de 2 nA. El mayor error absoluto
+de J7 fue de 3,96 pV. El arranque directo desde reposo del receptor
+aislado es una condición inicial distinta que queda pendiente.
+[Reservas acopladas](../evidence/rf_d_pilot_closed_returns03.json).
+
+El avance directo a 96 kHz pasó la reserva de pulsación negativa.
+Agotó las iteraciones en el primer paso de la reserva positiva
+y en el de liberación negativa. El reloj fino es una prueba de
+laboratorio. Aún hace falta una reducción que pueda correr en
+RackForge y conservar los mismos eventos y corrientes.
+
+El control 0.3.2 en Desktop sostuvo señal en ambos canales en tres
+lecturas durante una nota, con 480 frames efectivos a 48 kHz y cero
+plazos perdidos o errores de stream entre las consultas. La Pi agotó
+el tiempo de espera por SSH y HTTP. [Control en hosts](../evidence/rf_d_contours_live_control03.json).

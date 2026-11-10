@@ -27,18 +27,26 @@ impl Returns {
     }
 }
 
-#[derive(Default)]
-struct Stamp {
-    f: [f64; 3],
-    j: [[f64; 3]; 3],
+struct Stamp<const N: usize> {
+    f: [f64; N],
+    j: [[f64; N]; N],
 }
 
-impl Stamp {
+impl<const N: usize> Default for Stamp<N> {
+    fn default() -> Self {
+        Self {
+            f: [0.; N],
+            j: [[0.; N]; N],
+        }
+    }
+}
+
+impl<const N: usize> Stamp<N> {
     fn row(&mut self, i: usize, a: f64, entries: [(usize, f64); 3]) {
-        if i < 3 {
+        if i < N {
             self.f[i] += a;
             for (k, g) in entries {
-                if k < 3 {
+                if k < N {
                     self.j[i][k] += g;
                 }
             }
@@ -77,10 +85,10 @@ impl Stamp {
     }
 }
 
-fn solve(
-    mut x: [f64; 3],
-    stamp: impl Fn([f64; 3]) -> Result<Stamp, StepError>,
-) -> Result<[f64; 3], StepError> {
+fn solve<const N: usize>(
+    mut x: [f64; N],
+    stamp: impl Fn([f64; N]) -> Result<Stamp<N>, StepError>,
+) -> Result<[f64; N], StepError> {
     for _ in 0..12 {
         let Stamp { f, j } = stamp(x)?;
         let d = Lu::factor(j)?.solve(f)?;
@@ -92,6 +100,7 @@ fn solve(
     Err(StepError::IterationBudget)
 }
 
+#[cfg(not(pilot_closed_cv))]
 pub fn volume(
     initial: [f64; 3],
     c2: f64,
@@ -109,6 +118,41 @@ pub fn volume(
     })
 }
 
+#[cfg(pilot_closed_cv)]
+pub fn volume(
+    initial: [f64; 3],
+    c2: f64,
+    [collector_seed, cv_return, vca_base]: [f64; 3],
+) -> Result<[f64; 3], StepError> {
+    let [base, emitter, loudness] = initial;
+    let [base, emitter, loudness, _collector] =
+        solve([base, emitter, loudness, collector_seed], |x| {
+            let mut s = Stamp::default();
+            s.transistor(&x, [0, 3, 1], 1.)?;
+            s.transistor(&x, [1, 3, 2], 1.)?;
+            s.load(0, x[0], c2, 10_000.);
+            s.load(2, x[2], cv_return, 6800.);
+            s.load(2, x[2], vca_base, R59);
+            s.load(3, x[3], 9.3, 560.); // R15 supplies both collectors at x2.
+            Ok(s)
+        })?;
+    Ok([base, emitter, loudness])
+}
+
+#[cfg(pilot_closed_cv)]
+pub fn cv_return_residual(x4: f64, x3: f64, x27: f64) -> Result<f64, StepError> {
+    let vt = 1.5 * VT;
+    let z = (x4 - x27) / vt;
+    if !z.is_finite() || z > 45. {
+        return Err(StepError::ExponentialDomain);
+    }
+    // The two resistors and CR6 are the complete x4 KCL. Scale it
+    // by its local conductance to use a voltage tolerance at the interface.
+    let f = (x4 + 10.) / 16_900. + (x4 - x3) / 6800. + 1e-8 * z.exp_m1();
+    let g = 1. / 16_900. + 1. / 6800. + 1e-8 * z.exp() / vt;
+    Ok(f / g)
+}
+
 pub fn filter(initial: [f64; 3], [sum, tail]: [f64; 2]) -> Result<[f64; 3], StepError> {
     solve(initial, |x| {
         let mut s = Stamp::default();
@@ -124,7 +168,7 @@ pub fn filter(initial: [f64; 3], [sum, tail]: [f64; 2]) -> Result<[f64; 3], Step
 
 pub fn q22_base(mut base: f64, c5: f64, [collector, emitter]: [f64; 2]) -> Result<f64, StepError> {
     for _ in 0..12 {
-        let mut s = Stamp::default();
+        let mut s = Stamp::<3>::default();
         s.transistor(&[base, 0., 0., collector, emitter], [0, 3, 4], 1.)?;
         s.load(0, base, c5, 10_000.);
         let correction = s.f[0] / s.j[0][0];
