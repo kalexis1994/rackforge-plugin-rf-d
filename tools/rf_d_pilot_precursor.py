@@ -134,13 +134,14 @@ def clock_path(collector, values, weights, gap, times):
                 end_c4_v=float(values[0, -1]))
 
 
-def charge_trace(stages):
+def charge_trace(stages, extra_nodes=()):
     """Resolve the precursor against C4's monotonically decreasing plate voltage."""
     index = int(np.flatnonzero(stages[:, 26] >= GUARD)[0])
     a, b = stages[index-1:index+1]
     weight = (GUARD - a[26]) / (b[26] - a[26])
     end = a + weight * (b - a)
-    values = np.vstack((stages[:index, [26, *NODES]], end[[26, *NODES]]))
+    nodes = [26, *NODES, *extra_nodes]
+    values = np.vstack((stages[:index, nodes], end[nodes]))
     values[-1, 0] = GUARD
     values[:, 1] -= values[:, 2]
     charge = values[0, 1] - values[:, 1]
@@ -149,17 +150,17 @@ def charge_trace(stages):
 
 
 def charge_family(traces, points=POINTS):
-    progress = np.linspace(0., 1., points)
+    progress = np.linspace(0., 1., points) if isinstance(points, int) else points
     table = np.array([[np.interp(progress, u, v) for v in values.T] for u, values in traces])
     return progress, *load_surface(table)
 
 
-def carry_charge(model, observed, coupled):
+def carry_charge(model, observed, coupled, extra_nodes=()):
     """Condition the fixed curve in C4 charge instead of collector voltage."""
     if not 0. <= observed[26] < GUARD or not observed[26] < observed[28]:
         return None
     progress, nominal, slope, curvature, mixed = model
-    before = observed[[26, *NODES]].copy()
+    before = observed[[26, *NODES, *extra_nodes]].copy()
     before[1] -= before[2]
     if not nominal[1, -1] < before[1] <= nominal[1, 0] + 1e-12:
         return None
@@ -201,4 +202,9 @@ def carry_charge(model, observed, coupled):
     nonzero = relative != 0.
     ratio[nonzero] = np.log1p(relative[nonzero]) / relative[nonzero]
     times = R28_C4_S * delta / gap[:-1] * ratio
-    return clock_path(state[0], state[1:], load, gap, times)
+    result = clock_path(state[0], state[1:], load, gap, times)
+    if result is not None and extra_nodes:
+        result["guard_loads"] = state[-len(extra_nodes):, -1]
+        result["load_times"] = np.r_[0., np.cumsum(times)]
+        result["load_path"] = state[-len(extra_nodes):]
+    return result

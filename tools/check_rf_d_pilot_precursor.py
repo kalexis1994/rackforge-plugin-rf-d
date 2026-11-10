@@ -32,6 +32,7 @@ NATIVE = "tools/rf_d_pilot_precursor.rs"
 NATIVE_PROBE = "tools/rf_d_pilot_precursor_probe.rs"
 C4_CLOCK = "tools/rf_d_pilot_c4_clock.rs"
 C4_PROBE = "tools/rf_d_pilot_c4_clock_probe.rs"
+TIMER_CARRY = "tools/rf_d_pilot_timer_carry.py"
 SOURCE_NAMES = ("tools/check_rf_d_pilot_precursor.py", "tools/rf_d_pilot_precursor.py",
                 "tools/check_rf_d_pilot_timer_rc.py", ATTACK, ATTACK_ORBIT, CROSSING,
                 CROSSING_PROBE, LATCH_CHARGE)
@@ -137,6 +138,55 @@ def carried_trial(run, native, attack, model, shape, initial, stages, slot, edge
                 input_sha256=c.digest(data), output_sha256=c.digest(output))
 
 
+def timer_trial(run, native, attack, shape, post, initial, observations, start, expected,
+                first, coupled, mode, path_projection, shifted):
+    from rf_d_pilot_timer_carry import OHMS, run as render
+
+    def evaluate(latch, timer):
+        data = np.stack((latch, timer), axis=-1).astype("<f8").tobytes()
+        result = np.frombuffer(run([attack], data), "<f8").reshape(-1, 2, 4)
+        return result[:, :, 2]
+
+    def event(guard, time_s):
+        data = np.r_[native[1], guard, time_s, 0., 0.].astype("<f8").tobytes()
+        raw = run([native[0], "maybe"], data)
+        return np.frombuffer(raw, "<f8") if raw else None
+
+    result = render(evaluate, event, shape, post, initial, coupled, mode, path_projection)
+    if result is None:
+        return dict(passed=False, reason="no event within the supported interval")
+    end = first + result["slot"] + 1
+    reference = observations[first:end+1]
+    timer = result["timer"]
+    states = result["states"]
+    assert reference.shape[0] == timer.shape[0] and np.isfinite(timer).all()
+    error = abs(timer - reference[:, TIMER_NODES])
+    tick = start * 4096 + ((end - 1) / CLOCK + result["crossing_s"]) / TICK_S
+    current = evaluate(states[:, [0, 9]], timer[:-1])
+    ref_attack = (reference[:-1, [8, 44]] - reference[:-1, TIMER_NODES]) / OHMS[:, 0]
+    passive = (states[:, 10:14].reshape(-1, 2, 2) - timer[:-1, :, None]) / OHMS[:, 1:]
+    ref_passive = ((reference[:-1, [11, 0, 47, 29]].reshape(-1, 2, 2)
+                   - reference[:-1, TIMER_NODES, None]) / OHMS[:, 1:])
+    current_error = np.concatenate((abs(current - ref_attack)[..., None], abs(passive - ref_passive)), axis=2)
+    # The injected capacitor voltages at the original shifted anchor
+    # precede the algebraic reinitialization of the reference ports.
+    skip = int(shifted and first == 0)
+    max_currents = current_error[skip:].max(axis=0)
+    bracket = bool(expected[0] <= tick <= expected[1])
+    result = dict(passed=bool(bracket and error.max() <= 2e-6 and max_currents.max() <= 2e-9),
+                first_slot=first, historical_bracket=bracket, predicted_tick=float(tick),
+                max_before_v=error[:-1].max(axis=0).tolist(), event_endpoint_v=error[-1].tolist(),
+                max_current_error_a=max_currents.tolist(), current_gate=bool(max_currents.max() <= 2e-9),
+                generated_before=states.shape[0],
+                max_c4_v=float(abs(states[:, 1] - (reference[:-1, 23] - reference[:-1, 25])).max()),
+                max_filter_decay_port_v=float(abs(states[:, 12] - reference[:-1, 47]).max()),
+                output_sha256=c.digest(timer.astype("<f8").tobytes()),
+                modeled_event_attack_a=result["attack"].tolist(), modeled_event_passive_v=result["passive"].tolist())
+    if skip:
+        result["anchor_algebraic_error_a"] = current_error[0].tolist()
+    return result
+
+
 def carried_fixture(prefix, model, initial):
     _, nominal, linear, quadratic, _ = model
     table = np.column_stack((nominal.T, linear[0].T, linear[1].T,
@@ -190,7 +240,11 @@ def main():
     parser.add_argument("--native", action="store_true", help="verify and time the bounded Rust guard and event")
     parser.add_argument("--carry", action="store_true", help="advance C4 from one initial state")
     parser.add_argument("--carry-native", action="store_true", help="verify and time the stateful Rust C4 clock")
+    parser.add_argument("--timers", action="store_true", help="advance C2 and C5 with generated currents and passive loads")
+    parser.add_argument("--timer-grid-refine", action="store_true",
+                        help="contrast startup-refined timer paths and pre-event load projection")
     args_main = parser.parse_args()
+    assert not args_main.timer_grid_refine or args_main.timers
     assert not args_main.carry_native or args_main.carry
     assert c.AREA.is_dir() and not list(c.AREA.iterdir())
     seq = 1
@@ -202,9 +256,11 @@ def main():
         native_sources += (ATTACK_PROBE, MODEL)
     if args_main.carry_native:
         native_sources += (C4_CLOCK, C4_PROBE, NATIVE)
+    if args_main.timers:
+        native_sources += (TIMER_CARRY, ATTACK_PROBE, MODEL)
     sources = Sources((*c.ALL_SOURCES, c.OWN, c.CANDIDATE, c.PROBE, c.PORTS,
                        "tools/rf_d_pilot_step_profile.rs", previous, *SOURCE_NAMES, *native_sources))
-    report = dict(passed=False, rack_integrated=False, clock_hz=CLOCK, native=args_main.native, carry=args_main.carry, carry_native=args_main.carry_native, calibration=[],
+    report = dict(passed=False, rack_integrated=False, clock_hz=CLOCK, native=args_main.native, carry=args_main.carry, carry_native=args_main.carry_native, timers=args_main.timers, timer_grid_refine=args_main.timer_grid_refine, calibration=[],
                   reserves={}, **sources.fields(), compiler_sha256=c.sha(Path(c.COMPILER)),
                   library_sha256=c.sha(c.LIB))
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
@@ -226,7 +282,7 @@ def main():
             run([*build, "-A", "dead_code", c.ROOT / NATIVE_PROBE, "--extern",
                  f"rf_d_circuit={c.LIB}", "-o", native_guard])
         attack = c.AREA / "pilot-attack.exe"
-        if args_main.carry:
+        if args_main.carry or args_main.timers:
             run([*build, "-A", "dead_code", c.ROOT / ATTACK_PROBE, "-o", attack])
         clock = c.AREA / "pilot-c4-clock.exe"
         if args_main.carry_native:
@@ -248,12 +304,19 @@ def main():
         start, frames, key = c.WINDOWS[0][2:]
         paths = []
         charge_paths = []
+        if args_main.timers:
+            from rf_d_pilot_timer_carry import PORTS, post_family, post_trace
+            timer_paths, post_paths = [], []
         for offset in CALIBRATION:
             stages, item = capture("positive", start, frames, key, offset)
             report["calibration"].append(item)
             paths.append(trace(stages))
             if args_main.carry:
                 charge_paths.append(charge_trace(stages))
+            if args_main.timers:
+                timer_paths.append(charge_trace(stages, PORTS))
+                slot, _, at = timing_reference(stages)
+                post_paths.append(post_trace(stages, slot / CLOCK + at["time"], STEPS))
             if offset == (0., 0.):
                 nominal = stages
         model = family(paths)
@@ -273,6 +336,30 @@ def main():
         _, tail = landmarks(path, 24)
         native_args = native, np.r_[rise.ravel(), tail[24:].ravel()]
         prior = c.read(previous)["windows"]
+        if args_main.timers:
+            timer_shape = charge_family(timer_paths)
+            timer_mid = charge_family(timer_paths, 129)
+            timer_dense = charge_family(timer_paths, 257)
+            post_shape = post_family(post_paths)
+            timer_modes = (("held", timer_shape, False, "hold", False),
+                           ("axis", timer_shape, False, "projected", False),
+                           ("coupled", timer_shape, True, "projected", False),
+                           ("path", timer_shape, False, "projected", True),
+                           ("path129", timer_mid, False, "projected", True),
+                           ("path257", timer_dense, False, "projected", True))
+            if args_main.timer_grid_refine:
+                quarter = np.r_[np.arange(64) / 256., np.arange(32, 129) / 128.]
+                half = np.r_[np.arange(128) / 256., np.arange(64, 129) / 128.]
+                grid25 = charge_family(timer_paths, quarter)
+                grid50 = charge_family(timer_paths, half)
+                timer_modes = (
+                    ("path257", timer_dense, False, "projected", True),
+                    ("event257", timer_dense, False, "projected_path", True),
+                    ("startup25", grid25, False, "projected", True),
+                    ("startup50", grid50, False, "projected", True),
+                    ("startup25_event", grid25, False, "projected_path", True),
+                    ("startup50_event", grid50, False, "projected_path", True),
+                )
         for name, offset in zip(NAMES, ((0., 0.), *RESERVES)):
             if name == NAMES[0]:
                 stages, item = nominal, report["calibration"][0].copy()
@@ -324,6 +411,20 @@ def main():
                     print("NATIVE_CARRY", name, item["carried_native"], flush=True)
                 print("CARRY", name, {mode: [(x.get("time_error_ns"), x.get("c2_event_error_v"), x["passed"])
                                             for x in group] for mode, group in trials.items()}, flush=True)
+            if args_main.timers:
+                timers = item["own_timers"] = {}
+                for mode, model_timers, coupled, strategy, path_projection in timer_modes:
+                    timers[mode] = []
+                    for first in range(2):
+                        args = (run, native_args, attack, model_timers, post_shape, observations[first],
+                                observations, start, expected, first, coupled, strategy, path_projection, any(offset))
+                        result = timer_trial(*args)
+                        assert result == timer_trial(*args)
+                        timers[mode].append(result)
+                print("OWN_TIMERS", name,
+                      {mode: [(x.get("max_before_v"), x.get("event_endpoint_v"),
+                               x.get("current_gate"), x["passed"]) for x in group]
+                       for mode, group in timers.items()}, flush=True)
             item.update(reference_event=expected, reference_slot=slot, unchanged_replay=True)
             report["reserves"][name] = item
             print(name, {label: [(round(e["time_error_ns"], 3), e["historical_bracket"],
@@ -351,6 +452,10 @@ def main():
             report["carried_modes_admitted"] = [
                 mode for mode, _, _ in carry_modes
                 if all(report["reserves"][name]["carried"][mode][0]["passed"] for name in NAMES)]
+        if args_main.timers:
+            report["own_timer_modes_admitted"] = [
+                mode for mode, *_ in timer_modes
+                if all(trial["passed"] for name in NAMES for trial in report["reserves"][name]["own_timers"][mode])]
         sources.unchanged()
     except Exception:
         report["failure"] = traceback.format_exc()

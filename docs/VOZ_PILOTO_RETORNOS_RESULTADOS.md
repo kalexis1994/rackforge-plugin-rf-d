@@ -996,3 +996,76 @@ umbral, el cruce y la carga de ataque. La voz acoplada
 con R59/R60, J7 y el bloque de audio sigue pendiente.
 [Núcleo de C4](../tools/rf_d_pilot_c4_clock.rs),
 [contraste y coste](../evidence/rf_d_pilot_precursor06.json).
+
+## C2 y C5 con sus propias corrientes
+
+El modelo transporta dos voltajes de capacitor a
+96 kHz. Las celdas PNP calculan el ataque a partir
+de x26/x40 y de los voltajes que realmente lleva
+cada capacitor. Los puertos resistivos de descarga
+y seguidores se generan sobre la curva cargada de
+C4 antes del cruce. Sus incidencias conservan los
+caminos x11/x0 de 10/10 kΩ y x47/x29 de 1/10 kΩ.
+Los valores salen del [modelo de temporizadores](../tools/rf_d_pilot_timer_rc.rs)
+de la [referencia CA3046 cargada](CONTORNOS_CADENA_PROTOCOLO.md).
+
+El intervalo de conmutación usa el área de ataque
+del núcleo Rust y una proyección de los cuatro
+puertos resistivos posteriores al cruce. Esa curva
+se calibra con las mismas perturbaciones de ±75 mV
+y se contrasta en las dos reservas de ±50 mV. La
+curva se referencia al evento predicho por el
+modelo. Cada candidato parte de una sola semilla.
+Las comparaciones miden C2 y C5, los ocho ticks y
+las corrientes en los bordes previos al evento.
+
+En el primer pase, proyectar el intervalo del
+evento pasó desde las anclas asentadas. Retener las
+cargas durante el cruce dejó hasta 42,7 µV de error
+en C5 nominal. Con perturbaciones desde el ancla
+original, interpolar las cargas sólo entre los
+bordes de 96 kHz dejó hasta 16,6 µV antes del
+evento. [Primer contraste](../evidence/rf_d_pilot_precursor07.json).
+
+Para el arranque perturbado se proyectan las cargas
+sobre cada tramo de la curva de C4. La proyección
+pondera cada tramo por su duración y por la respuesta
+exponencial del capacitor que lo recibe. Al comparar
+corrientes se registra aparte el ancla artificial
+anterior a la resolución algebraica de los puertos.
+Los voltajes se contrastan desde el primer intervalo.
+
+Con 65 puntos, el peor error en los dos voltajes
+quedó por debajo de 2 µV desde ambas anclas.
+El error del puerto de descarga x47 alcanzó 27,93 nA
+en los bordes resueltos. El criterio conjunto exige
+2 nA por camino, además de 2 µV y los ocho ticks.
+[Proyección por tramos](../evidence/rf_d_pilot_precursor08.json).
+
+La tabla uniforme de 257 puntos bajó el error máximo
+de corriente de 27,93 a 1,928 nA y conservó los ocho
+ticks en los seis casos. Cinco pasaron también el
+límite de voltaje. En la reserva de C2 alto desde
+el ancla asentada, el error de C2 en el borde
+posterior al cruce fue 2,013 µV frente al límite de
+2 µV. [Comparación de densidades](../evidence/rf_d_pilot_precursor09.json).
+
+La variante de 161 puntos concentra el espaciado
+de 1/256 en el primer cuarto de la curva de C4
+y usa 1/128 en el resto. Con la proyección hasta
+el umbral durante el intervalo del cruce, pasó los
+seis recorridos. Los máximos al cerrar el evento
+fueron 1,976 µV en C2 y 0,119 µV en C5. El peor
+error de corriente en los bordes previos resueltos
+fue 1,963 nA. Todos los eventos quedaron dentro de
+sus ocho ticks. Proyectar hasta el umbral redujo
+el error de C5 respecto de extrapolar las cargas
+previas durante todo el intervalo.
+
+El banco ejecuta la actualización de los
+temporizadores y su proyección en Python. Las
+celdas de ataque y el evento se evalúan en Rust.
+Queda trasladar la actualización al motor nativo,
+extenderla a la rama negativa y medir R59/R60, J7
+y la voz completa antes de probar en Desktop.
+[Arranque y proyección hasta el umbral](../evidence/rf_d_pilot_precursor10.json).
