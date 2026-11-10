@@ -891,3 +891,45 @@ del piloto y verificar R59/R60, J7 y el plazo del
 bloque completo antes de probar en Desktop.
 [Núcleo Rust](../tools/rf_d_pilot_crossing.rs),
 [contraste y coste](../evidence/rf_d_pilot_timer_rc10.json).
+
+## Reloj de C4 hasta el umbral del colector
+
+Se genera la observación previa al cruce desde un
+estado del borde de 96 kHz. Se parametrizan por x26
+el voltaje entre placas de C4 y las tensiones vecinas.
+El tiempo hasta x26 = 0,35 V se obtiene de la ley de
+R28/C4, con R28 de 10 kΩ y C4 de 10 nF. En cada tramo
+lineal se integra exactamente la razón entre el
+cambio de carga y la caída x23 − x17. Los valores
+proceden del [stamp cargado](../tools/rf_d_pilot_trigger.rs)
+y de la [referencia CA3046](CONTORNOS_CADENA_PROTOCOLO.md).
+El estado generado alimenta el núcleo Rust que
+predice el cruce e integra la cola de ataque.
+
+La familia se calibra con la escena nominal y
+perturbaciones independientes de ±75 mV de C2 y C5.
+Las dos reservas combinadas de ±50 mV se excluyen de
+la calibración. El banco lee las observaciones
+eléctricas a 96 kHz del solver y usa dos bordes
+anteriores para estimar la rampa de ataque. Para
+aislar el efecto en C2, conserva las otras cargas
+de referencia y mide el error de la corriente
+ponderada del intervalo del evento.
+
+En el primer ensayo, la familia lineal ubicó los tres
+eventos dentro de sus brackets de ocho ticks. El
+error de C2 en el intervalo fue 9,20 µV en nominal
+y 2,97 y 9,02 µV en las dos reservas. Los dos flancos
+negativos carecieron de un disparo falso.
+[Primer contraste](../evidence/rf_d_pilot_precursor01.json).
+
+Con 65 puntos se mejoró la interpolación del
+estado inicial con tres puntos locales. La familia
+cuadrática por carga pasó los tres casos a 96 kHz.
+El peor error temporal fue 1,58 ns y los errores de
+C2 fueron 0,184, 1,135 y 1,053 µV. La familia lineal
+con 257 puntos siguió fuera del límite de C2 en las
+reservas. El término mixto se contrastó con otras
+dos perturbaciones de calibración y la variante
+cuadrática por carga pasó sin depender de ese término.
+[Contraste del reloj de C4](../evidence/rf_d_pilot_precursor02.json).

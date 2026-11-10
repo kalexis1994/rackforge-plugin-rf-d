@@ -309,6 +309,23 @@ def attack_sweep(run, target):
                 input_sha256=c.digest(data), output_sha256=c.digest(raw))
 
 
+def prepare_reference(run, report):
+    table, *_ = c.materialize(c.read_oracle())
+    table_path = c.AREA / c.TABLE
+    report["table_sha256"] = c.digest(table)
+    assert report["table_sha256"] == c.read(c.MODEL)["table_sha256"]
+    table_path.write_bytes(table)
+    kernel = c.emit("family-kernel.rs", c.text(c.KERNEL)
+                    .replace("H128_VOICE_TABLE_PATH", table_path.as_posix())
+                    .replace("VCO_PANEL_PORT_PATH", (c.ROOT / c.PANEL).as_posix()))
+    exe = c.AREA / "pilot-reference.exe"
+    build = [c.COMPILER, "--edition=2021", "-C", "opt-level=3", "-C", "target-feature=+fma"]
+    run([*build, "-C", "link-arg=-Wl,--stack,33554432", "--cfg", "laboratory",
+         "--cfg", "pilot_loaded_filter", "-A", "dead_code", c.component(kernel),
+         "--extern", f"rf_d_circuit={c.LIB}", "-o", exe])
+    return exe, build
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--attack-cells", action="store_true",
@@ -357,19 +374,8 @@ def main():
 
     try:
         references, report["reference_inputs"] = c.references()
-        table, *_ = c.materialize(c.read_oracle())
-        table_path = c.AREA / c.TABLE
-        report["table_sha256"] = c.digest(table)
-        assert report["table_sha256"] == c.read(c.MODEL)["table_sha256"]
-        table_path.write_bytes(table)
-        kernel = c.emit("family-kernel.rs", c.text(c.KERNEL)
-                        .replace("H128_VOICE_TABLE_PATH", table_path.as_posix())
-                        .replace("VCO_PANEL_PORT_PATH", (c.ROOT / c.PANEL).as_posix()))
-        exe, timer = (c.AREA / name for name in ("pilot-reference.exe", "pilot-timer.exe"))
-        build = [c.COMPILER, "--edition=2021", "-C", "opt-level=3", "-C", "target-feature=+fma"]
-        run([*build, "-C", "link-arg=-Wl,--stack,33554432", "--cfg", "laboratory",
-             "--cfg", "pilot_loaded_filter", "-A", "dead_code", c.component(kernel),
-             "--extern", f"rf_d_circuit={c.LIB}", "-o", exe])
+        exe, build = prepare_reference(run, report)
+        timer = c.AREA / "pilot-timer.exe"
         run([*build, "-A", "dead_code", c.ROOT / PROBE, "-o", timer])
         if args.attack_cells:
             attack = c.AREA / "pilot-attack-cells.exe"

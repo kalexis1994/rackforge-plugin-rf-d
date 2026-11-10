@@ -36,18 +36,15 @@ fn main() -> Result<(), Box<dyn Error>> {
     let observed = point(&mut next);
     let time = next();
     let post = [next(), next()];
-    let advance = || {
-        profile
-            .advance(black_box(observed), time, post)
-            .expect("event outside domain")
-    };
-    if std::env::args().nth(1).as_deref() == Some("bench") {
+    let advance = || profile.advance(black_box(observed), time, post);
+    let mode = std::env::args().nth(1);
+    if mode.as_deref() == Some("bench") {
         const BLOCKS: usize = 2_000;
         let mut times = [0; BLOCKS];
-        black_box(advance());
+        black_box(advance().expect("event outside domain"));
         for elapsed in &mut times {
             let begin = Instant::now();
-            black_box(advance());
+            black_box(advance().expect("event outside domain"));
             *elapsed = begin.elapsed().as_nanos();
         }
         times.sort_unstable();
@@ -62,7 +59,11 @@ fn main() -> Result<(), Box<dyn Error>> {
             time_s,
             point,
             tail_correction_a,
-        } = advance();
+        } = match advance() {
+            Some(event) => event,
+            None if mode.as_deref() == Some("maybe") => return Ok(()),
+            None => return Err("event outside domain".into()),
+        };
         let mut out = std::io::stdout().lock();
         for v in [
             time_s,
