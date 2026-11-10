@@ -1775,3 +1775,32 @@ El primer ensamblado falló por un alias del
 módulo de carga. El registro conserva ese
 fallo de compilación.
 [Compilación inicial](../evidence/rf_d_pilot_bistable_handoff09.json).
+
+### Reuso del biestable durante la iteración del receptor
+
+Las iteraciones preliminares usan C2 y x27 de
+la primera evaluación del paso. La comprobación
+nodal vuelve a resolver el biestable con ambas
+bases del VCA. Si al refrescar cambian los
+puertos, el receptor verifica el candidato
+exacto antes de avanzar cualquiera de las dos
+historias. El criterio de corriente de R59
+sigue evaluándose en ambas etapas.
+
+Pasaron las cinco reservas y se reprodujo bit
+a bit el control con evaluación en cada
+iteración. Entre variantes, la diferencia
+máxima fue 0,066 fV en J7 y 0,210 aA en las
+corrientes de salida R59/R60. En las ventanas
+positivas se hicieron 14 evaluaciones del
+biestable, frente a 44–58 en el control.
+
+En 200 repeticiones alternadas por variante y
+escena, la mediana positiva bajó entre 18 y
+25 %. El peor tiempo de la variante fue
+1,621 ms por cinco frames. La medición
+excluye el reloj previo de C4 y el host.
+El receptor aún excede en esas ventanas
+el presupuesto de 1,333 ms de un bloque
+de 128 frames.
+[Contraste y tiempos alternados](../evidence/rf_d_pilot_bistable_handoff11.json).

@@ -154,7 +154,7 @@ fn advance_joint(
     stages: [Stage; 2],
     closed_cv: bool,
 ) -> Result<(History, Output, usize, f64), String> {
-    advance_joint_with(old, map, family, collector, closed_cv, |_| Ok(stages))
+    advance_joint_with(old, map, family, collector, closed_cv, |_, _| Ok(stages))
 }
 
 fn advance_joint_with(
@@ -163,7 +163,7 @@ fn advance_joint_with(
     family: &Family,
     collector: f64,
     closed_cv: bool,
-    mut stages_at: impl FnMut([[f64; 2]; 2]) -> Result<[Stage; 2], String>,
+    mut stages_at: impl FnMut([[f64; 2]; 2], bool) -> Result<[Stage; 2], String>,
 ) -> Result<(History, Output, usize, f64), String> {
     let reduced = map.reduced.as_ref().expect("audio map");
     let anchor = reduced.anchor();
@@ -176,7 +176,8 @@ fn advance_joint_with(
     const BUDGET: usize = 16;
     for iteration in 1..=BUDGET {
         let loads = x.map(|row| LOAD.map(|k| voltage(anchor, k) + row[k]));
-        let stages = stages_at(loads)?;
+        let exact_stages = use_nodal || iteration == BUDGET;
+        let stages = stages_at(loads, exact_stages)?;
         let mut slope = [0.; 4];
         for i in 0..2 {
             let [c2, sum, drive] = stages[i];
@@ -230,6 +231,11 @@ fn advance_joint_with(
             let mismatch = maximum(&load_error);
             if current_error <= 2e-13 && maximum(&direction) <= 2e-9 && mismatch <= LOAD_TOLERANCE_V
             {
+                // An approximate stage is useful for the defect iteration only.
+                // Recheck the exact drivers before publishing either history.
+                if !exact_stages && stages_at(loads, true)? != stages {
+                    continue;
+                }
                 let [base, tail] = loads[1];
                 let [r59, r60] = cells[1].currents(base, tail);
                 let [x3, x37] = input[1];

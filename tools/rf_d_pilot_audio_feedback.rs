@@ -89,6 +89,7 @@ fn render(
     collector: f64,
     inputs: &[Pair],
     event: Option<&Event>,
+    frozen: bool,
     mut emit: impl FnMut(Output, Latch),
 ) -> Result<[f64; 4], String> {
     let mut stats = [0_f64; 4];
@@ -97,9 +98,9 @@ fn render(
         let mut candidate = [None; 2];
         let base_inputs: [Stage; 2] = input.map(|u| [u[0], u[1], u[2]]);
         let (next, output, iterations, mismatch) =
-            advance_joint_with(audio, map, family, collector, true, |loads| {
+            advance_joint_with(audio, map, family, collector, true, |loads, exact| {
                 let bases = loads.map(|load| load[0]);
-                if previous != Some(bases) {
+                if previous.is_none() || ((!frozen || exact) && previous != Some(bases)) {
                     candidate = trial(latch, event, slot, input, bases)
                         .map_err(|e| format!("latch step {slot}: {e:?}"))?;
                     previous = Some(bases);
@@ -135,7 +136,7 @@ fn render(
     Ok(stats)
 }
 
-pub fn run(bench: bool) -> Result<(), Box<dyn std::error::Error>> {
+pub fn run(bench: bool, frozen: bool) -> Result<(), Box<dyn std::error::Error>> {
     const TABLE: usize = POINTS * (1 + 15 * 5);
     let values = read_values()?;
     let (initial, map, family, collector, rows) = prepare(&values)?;
@@ -187,28 +188,36 @@ pub fn run(bench: bool) -> Result<(), Box<dyn std::error::Error>> {
     }
     if bench {
         const PASSES: usize = 200;
-        let mut times = [0; PASSES];
-        for elapsed in &mut times {
-            let begin = Instant::now();
-            black_box(render(
-                black_box(initial),
-                latch,
-                &map,
-                &family,
-                collector,
-                &inputs,
-                event.as_ref(),
-                |_, _| {},
-            )?);
-            *elapsed = begin.elapsed().as_nanos();
+        let mut times = [[0; PASSES]; 2];
+        for i in 0..PASSES {
+            for candidate in [frozen && i % 2 == 1, frozen && i % 2 == 0]
+                .into_iter()
+                .take(if frozen { 2 } else { 1 })
+            {
+                let begin = Instant::now();
+                black_box(render(
+                    black_box(initial),
+                    latch,
+                    &map,
+                    &family,
+                    collector,
+                    &inputs,
+                    event.as_ref(),
+                    candidate,
+                    |_, _| {},
+                )?);
+                times[usize::from(candidate)][i] = begin.elapsed().as_nanos();
+            }
         }
-        times.sort_unstable();
-        println!(
-            "{PASSES},{},{},{}",
-            times[PASSES / 2],
-            times[PASSES * 99 / 100],
-            times[PASSES - 1]
-        );
+        for group in times.iter_mut().take(if frozen { 2 } else { 1 }) {
+            group.sort_unstable();
+            println!(
+                "{PASSES},{},{},{}",
+                group[PASSES / 2],
+                group[PASSES * 99 / 100],
+                group[PASSES - 1]
+            );
+        }
     } else {
         let mut samples = Vec::new();
         let stats = render(
@@ -219,6 +228,7 @@ pub fn run(bench: bool) -> Result<(), Box<dyn std::error::Error>> {
             collector,
             &inputs,
             event.as_ref(),
+            frozen,
             |audio, stages| {
                 samples.extend(audio);
                 for stage in stages {
