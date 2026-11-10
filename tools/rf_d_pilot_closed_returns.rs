@@ -8,7 +8,10 @@ use crate::{
     reduced_lu::{maximum, Lu},
     voice, StepError,
 };
-use std::io::{BufWriter, Read, Write};
+use std::{
+    cell::{Cell, RefCell},
+    io::{BufWriter, Read, Write},
+};
 
 #[path = "../crates/rf-d-circuit/src/prepared_chain_charge.rs"]
 mod chain;
@@ -40,6 +43,10 @@ struct Audio {
     params: chain::Parameters,
     lu: Lu<PAIR>,
     reduced: Option<reduced_audio::Map>,
+    reuse: bool,
+    tangent: RefCell<Option<Lu<INTERFACE>>>,
+    builds: Cell<usize>,
+    reused: Cell<usize>,
 }
 
 fn voltage(state: chain::State, node: usize) -> f64 {
@@ -54,6 +61,7 @@ impl Audio {
         h: f64,
         wires: [f64; 2],
         reduce_audio: bool,
+        reuse: bool,
     ) -> Result<Self, StepError> {
         let mut p = parameters();
         p.boundary.recovery.vca.loudness_v = 0.;
@@ -100,6 +108,10 @@ impl Audio {
             params,
             lu,
             reduced,
+            reuse,
+            tangent: RefCell::new(None),
+            builds: Cell::new(0),
+            reused: Cell::new(0),
         })
     }
 
@@ -244,6 +256,27 @@ impl Step<'_> {
         })
     }
 
+    fn improve(
+        &self,
+        v: [f64; INTERFACE],
+        result: &Closure,
+        tangent: &Lu<INTERFACE>,
+        attempts: usize,
+    ) -> Result<Option<([f64; INTERFACE], Closure)>, StepError> {
+        let direction = tangent.solve(result.residual.map(|r| -r))?;
+        let norm = maximum(&result.residual);
+        for half in 0..attempts {
+            let x = std::array::from_fn(|i| v[i] + direction[i] * 0.5_f64.powi(half as i32));
+            if let Ok(trial) = self.evaluate(x, result.delta) {
+                let next = maximum(&trial.residual);
+                if next < norm && (attempts > 1 || next <= 1e-10 || next <= 0.5 * norm) {
+                    return Ok(Some((x, trial)));
+                }
+            }
+        }
+        Ok(None)
+    }
+
     fn solve(
         &self,
         mut v: [f64; INTERFACE],
@@ -253,6 +286,16 @@ impl Step<'_> {
         for iteration in 1..=6 {
             if maximum(&result.residual) <= 1e-10 {
                 return Ok((result, iteration));
+            }
+            if self.model.reuse {
+                let cached = self.model.tangent.borrow();
+                if let Some(factor) = cached.as_ref() {
+                    if let Ok(Some(next)) = self.improve(v, &result, factor, 1) {
+                        (v, result) = next;
+                        self.model.reused.set(self.model.reused.get() + 1);
+                        continue;
+                    }
+                }
             }
             // Differentiate the complete two-stage reaction. Both perturbations
             // reuse the same accepted capacitor history and VCO phase.
@@ -267,20 +310,15 @@ impl Step<'_> {
                         (probe.residual[row] - result.residual[row]) / (x[column] - v[column]);
                 }
             }
-            let direction = Lu::factor(j)
-                .and_then(|lu| lu.solve(result.residual.map(|r| -r)))
-                .map_err(|error| ("interface tangent", error))?;
-            let mut accepted = None;
-            for half in 0..12 {
-                let x = std::array::from_fn(|i| v[i] + direction[i] * 0.5_f64.powi(half));
-                if let Ok(trial) = self.evaluate(x, result.delta) {
-                    if maximum(&trial.residual) < maximum(&result.residual) {
-                        accepted = Some((x, trial));
-                        break;
-                    }
-                }
+            self.model.builds.set(self.model.builds.get() + 1);
+            let factor = Lu::factor(j).map_err(|error| ("interface tangent", error))?;
+            (v, result) = self
+                .improve(v, &result, &factor, 12)
+                .map_err(|error| ("interface tangent", error))?
+                .ok_or(("interface descent", StepError::NoDecrease))?;
+            if self.model.reuse {
+                self.model.tangent.replace(Some(factor));
             }
-            (v, result) = accepted.ok_or(("interface descent", StepError::NoDecrease))?;
         }
         Err(("interface", StepError::IterationBudget))
     }
@@ -390,6 +428,7 @@ pub fn run(
     timer_budget: usize,
     mode: usize,
     reduce_audio: bool,
+    reuse: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     assert!(mode <= 3);
     let adaptive = mode != 0;
@@ -449,7 +488,7 @@ pub fn run(
         let model = if adaptive || span == stride {
             let h = span as f64 / (48_000. * 512.);
             Some(
-                Audio::new(audio, &family, phase, h, [x(3), x(37)], reduce_audio)
+                Audio::new(audio, &family, phase, h, [x(3), x(37)], reduce_audio, reuse)
                     .map_err(|e| format!("audio factor: {e:?}"))?,
             )
         } else {
@@ -503,8 +542,10 @@ pub fn run(
             frame_ns = 0;
         }
     }
+    let builds: usize = models.iter().flatten().map(|m| m.builds.get()).sum();
+    let reused: usize = models.iter().flatten().map(|m| m.reused.get()).sum();
     eprintln!(
-        "PORTS,{peak_ns},{max_outer},{max_audio},{max_residual:.17e},{},{},{},{:.17e}",
+        "PORTS,{peak_ns},{max_outer},{max_audio},{max_residual:.17e},{},{},{},{:.17e},{builds},{reused}",
         stats.solve, stats.defect, stats.switch, stats.worst,
     );
     out.flush()?;

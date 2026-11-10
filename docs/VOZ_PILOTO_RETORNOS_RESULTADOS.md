@@ -532,3 +532,17 @@ conservó **319096–319104** y el peor error entre R59/R60 fue
 3,92 s por frame con el mapa y 5,55 s con el audio nodal.
 El mapa reducido se contrastó como parte del banco.
 [Comparación del receptor acoplado](../evidence/rf_d_pilot_closed_returns09.json).
+
+La variante con tangente reutilizada propone una dirección a
+partir de la última factorización del mismo tamaño de paso. Sólo
+la conserva si el residual real baja al menos a la mitad o
+alcanza la tolerancia de la interfaz. Ante un rechazo arma la
+tangente de nuevo. Las pruebas de paso del reloj conservan el
+estado eléctrico aceptado como punto de partida.
+
+En la reserva positiva, los armados de tangente bajaron de
+1.650 a 9. El máximo del mismo pase bajó de 3,55 s a 0,862 s
+por frame. Se conservaron el cruce de ocho ticks, las dos
+reservas negativas a 96 kHz fijos y el límite de 2 nA. El
+peor error de R59/R60 del reloj adaptativo fue 0,146 pA.
+[Contraste con tangente reutilizada](../evidence/rf_d_pilot_closed_returns10.json).
