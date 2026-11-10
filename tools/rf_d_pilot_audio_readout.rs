@@ -1,5 +1,8 @@
 //! 96 kHz closure of the reduced audio map and the two return cells.
-use super::{chain, contour_ports, voltage, Audio, Family, Returns, StepError, LOAD, PAIR, SIZE};
+use super::{
+    chain, contour_ports, latch::profile, voltage, Audio, Family, Returns, StepError, LOAD, PAIR,
+    SIZE,
+};
 use crate::{
     graph,
     reduced_lu::{maximum, Lu},
@@ -166,8 +169,10 @@ fn advance_joint_with(
     mut stages_at: impl FnMut([[f64; 2]; 2], bool) -> Result<[Stage; 2], String>,
 ) -> Result<(History, Output, usize, f64), String> {
     let reduced = map.reduced.as_ref().expect("audio map");
+    let timing = profile::start();
     let anchor = reduced.anchor();
     let (base, offset) = reduced.joint_history(old.audio);
+    profile::split(profile::Part::ReceiverHistory, timing);
     let mut x = [offset; 2];
     let mut cells = [old.cells; 2];
     let mut cv = [[old.cv, 0.]; 2];
@@ -175,9 +180,11 @@ fn advance_joint_with(
     let mut use_nodal = false;
     const BUDGET: usize = 16;
     for iteration in 1..=BUDGET {
+        let mut timing = profile::start();
         let loads = x.map(|row| LOAD.map(|k| voltage(anchor, k) + row[k]));
         let exact_stages = use_nodal || iteration == BUDGET;
         let stages = stages_at(loads, exact_stages)?;
+        timing = profile::split(profile::Part::ReceiverLatch, timing);
         let mut slope = [0.; 4];
         for i in 0..2 {
             let [c2, sum, drive] = stages[i];
@@ -206,6 +213,7 @@ fn advance_joint_with(
         if tangent.is_none() {
             tangent = Some((load_factor(map, slope)?, slope));
         }
+        timing = profile::split(profile::Part::ReceiverReturns, timing);
         let input = cells.map(|s| [s.volume[2], s.filter[2]]);
         let current = |r: usize| x[r / SIZE][super::local(r % SIZE)];
         let mut response = [0.; PAIR];
@@ -213,12 +221,14 @@ fn advance_joint_with(
             let (defect, _) = reduced
                 .defects(&x, family, old.phase, H)
                 .map_err(|error| format!("joint defects: {error:?}"))?;
+            timing = profile::split(profile::Part::ReceiverDefects, timing);
             response = reduced.joint_response(&base, input, &defect);
             if !response.iter().all(|v| v.is_finite()) {
                 return Err(format!("joint response: {:?}", StepError::InvalidInput));
             }
             let error = std::array::from_fn::<_, PAIR, _>(|r| response[r] - current(r));
             use_nodal = maximum(&error) <= 2e-12;
+            timing = profile::split(profile::Part::ReceiverProduct, timing);
         }
         if use_nodal || iteration == BUDGET {
             let delta =
@@ -226,6 +236,7 @@ fn advance_joint_with(
             let (now, phase, current_error, direction) = map
                 .direction(old.audio, input, family, old.phase, H, delta)
                 .map_err(|error| format!("joint nodal direction: {error:?}"))?;
+            timing = profile::split(profile::Part::ReceiverNodal, timing);
             let load_error: [f64; 4] =
                 std::array::from_fn(|i| direction[i / 2 * SIZE + LOAD[i % 2]]);
             let mismatch = maximum(&load_error);
@@ -233,8 +244,12 @@ fn advance_joint_with(
             {
                 // An approximate stage is useful for the defect iteration only.
                 // Recheck the exact drivers before publishing either history.
-                if !exact_stages && stages_at(loads, true)? != stages {
-                    continue;
+                if !exact_stages {
+                    let refresh = stages_at(loads, true)?;
+                    timing = profile::split(profile::Part::ReceiverLatch, timing);
+                    if refresh != stages {
+                        continue;
+                    }
                 }
                 let [base, tail] = loads[1];
                 let [r59, r60] = cells[1].currents(base, tail);
@@ -255,6 +270,7 @@ fn advance_joint_with(
                     input[0][0],
                     loads[0][0],
                 ];
+                profile::split(profile::Part::ReceiverInterface, timing);
                 return Ok((
                     History {
                         audio: now[1],
@@ -291,6 +307,7 @@ fn advance_joint_with(
         for (r, value) in response.into_iter().enumerate() {
             x[r / SIZE][super::local(r % SIZE)] = value;
         }
+        profile::split(profile::Part::ReceiverInterface, timing);
     }
     Err(format!("joint interface: {:?}", StepError::IterationBudget))
 }

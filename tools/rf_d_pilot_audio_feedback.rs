@@ -136,7 +136,7 @@ fn render(
     Ok(stats)
 }
 
-pub fn run(bench: bool, frozen: bool) -> Result<(), Box<dyn std::error::Error>> {
+pub fn run(bench: bool, frozen: bool, compare: bool) -> Result<(), Box<dyn std::error::Error>> {
     const TABLE: usize = POINTS * (1 + 15 * 5);
     let values = read_values()?;
     let (initial, map, family, collector, rows) = prepare(&values)?;
@@ -190,9 +190,9 @@ pub fn run(bench: bool, frozen: bool) -> Result<(), Box<dyn std::error::Error>> 
         const PASSES: usize = 200;
         let mut times = [[0; PASSES]; 2];
         for i in 0..PASSES {
-            for candidate in [frozen && i % 2 == 1, frozen && i % 2 == 0]
+            for candidate in [if compare { i % 2 == 1 } else { frozen }, i % 2 == 0]
                 .into_iter()
-                .take(if frozen { 2 } else { 1 })
+                .take(if compare { 2 } else { 1 })
             {
                 let begin = Instant::now();
                 black_box(render(
@@ -209,7 +209,11 @@ pub fn run(bench: bool, frozen: bool) -> Result<(), Box<dyn std::error::Error>> 
                 times[usize::from(candidate)][i] = begin.elapsed().as_nanos();
             }
         }
-        for group in times.iter_mut().take(if frozen { 2 } else { 1 }) {
+        for group in times
+            .iter_mut()
+            .skip(usize::from(frozen && !compare))
+            .take(if compare { 2 } else { 1 })
+        {
             group.sort_unstable();
             println!(
                 "{PASSES},{},{},{}",
@@ -218,6 +222,7 @@ pub fn run(bench: bool, frozen: bool) -> Result<(), Box<dyn std::error::Error>> 
                 group[PASSES - 1]
             );
         }
+        super::profile::report_receiver();
     } else {
         let mut samples = Vec::new();
         let stats = render(

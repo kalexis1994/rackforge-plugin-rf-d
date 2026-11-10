@@ -309,7 +309,7 @@ def attack_sweep(run, target):
                 input_sha256=c.digest(data), output_sha256=c.digest(raw))
 
 
-def prepare_reference(run, report, with_audio=False, stage_feedback=False):
+def prepare_reference(run, report, with_audio=False, stage_feedback=False, receiver_profile=None):
     table, *_ = c.materialize(c.read_oracle())
     table_path = c.AREA / c.TABLE
     report["table_sha256"] = c.digest(table)
@@ -328,9 +328,12 @@ def prepare_reference(run, report, with_audio=False, stage_feedback=False):
         extra = ["--cfg", "pilot_closed_cv", "--cfg", "pilot_audio_readout"]
         if stage_feedback:
             extra += ["--cfg", "pilot_stage_feedback"]
-    run([*build, "-C", "link-arg=-Wl,--stack,33554432", "--cfg", "laboratory",
-         "--cfg", "pilot_loaded_filter", *extra, "-A", "dead_code", probe,
-         "--extern", f"rf_d_circuit={c.LIB}", "-o", exe])
+    command = [*build, "-C", "link-arg=-Wl,--stack,33554432", "--cfg", "laboratory",
+               "--cfg", "pilot_loaded_filter", *extra, "-A", "dead_code", probe,
+               "--extern", f"rf_d_circuit={c.LIB}"]
+    run([*command, "-o", exe])
+    if receiver_profile is not None:
+        run([*command, "--cfg", "pilot_profile_steps", "-o", receiver_profile])
     return exe, build
 
 

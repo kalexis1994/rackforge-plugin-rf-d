@@ -1804,3 +1804,22 @@ El receptor aún excede en esas ventanas
 el presupuesto de 1,333 ms de un bloque
 de 128 frames.
 [Contraste y tiempos alternados](../evidence/rf_d_pilot_bistable_handoff11.json).
+
+### Perfil del receptor con el biestable reutilizado
+
+La compilación de perfil separa el armado de
+historia, biestable, retornos, defectos de
+juntura y BUS, producto de la respuesta,
+comprobación nodal y corrección de la interfaz.
+Las cifras de plazo provienen de una compilación
+sin cronómetros internos.
+
+En 200 ventanas por escena, el producto de la
+respuesta tomó entre 44,4 y 46,1 % del tiempo
+instrumentado en positivo. La comprobación
+nodal tomó entre 22,8 y 25,0 %. El producto se
+ejecutó entre 81 y 87 veces por ventana de
+cinco frames. En negativo fue también el
+tramo más costoso, con 38,3–43,0 %. El control
+y las cinco reservas reprodujeron sus salidas.
+[Perfil por sección](../evidence/rf_d_pilot_bistable_handoff12.json).
