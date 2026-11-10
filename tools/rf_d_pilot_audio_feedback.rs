@@ -26,6 +26,7 @@ enum Candidate<'a> {
     Seeded(&'a DefectBlocks),
     Accelerated(&'a DefectBlocks),
     Vector(&'a DefectBlocks),
+    EarlyNewton(&'a DefectBlocks, usize),
 }
 
 #[derive(Clone, Copy)]
@@ -35,7 +36,7 @@ enum Matrix {
     Seeded,
     Accelerated,
     Vector,
-    Block,
+    Block(usize),
 }
 
 struct Event {
@@ -121,12 +122,20 @@ fn render(
         Candidate::Packed(blocks)
         | Candidate::Seeded(blocks)
         | Candidate::Accelerated(blocks)
-        | Candidate::Vector(blocks) => Some(blocks),
+        | Candidate::Vector(blocks)
+        | Candidate::EarlyNewton(blocks, _) => Some(blocks),
         _ => None,
     };
     let seeded = matches!(candidate_mode, Candidate::Seeded(_));
     let accelerate = matches!(candidate_mode, Candidate::Accelerated(_));
-    let vector_residual = matches!(candidate_mode, Candidate::Vector(_));
+    let vector_residual = matches!(
+        candidate_mode,
+        Candidate::Vector(_) | Candidate::EarlyNewton(_, _)
+    );
+    let newton_after = match candidate_mode {
+        Candidate::EarlyNewton(_, iterations) => iterations,
+        _ => 0,
+    };
     let mut previous_audio = None;
     // Maximum iterations, voltage/current mismatch, latch calls, total iterations, seeds, retries.
     let mut stats = [0_f64; 7];
@@ -138,6 +147,7 @@ fn render(
             previous: previous_audio.as_ref().filter(|_| predict),
             accelerate,
             vector_residual,
+            newton_after,
         };
         stats[5] += f64::from(guess.previous.is_some() || accelerate);
         let (next, output, iterations, mismatch, candidate) = loop {
@@ -276,7 +286,25 @@ fn render_driven(
 }
 
 pub fn run_block(bench: bool) -> Result<(), Box<dyn std::error::Error>> {
-    run_mode(bench, true, false, Matrix::Block)
+    let newton_after = match std::env::args().nth(2) {
+        Some(value) => {
+            let iterations: usize = value
+                .strip_prefix("--newton-after=")
+                .ok_or("expected --newton-after=N")?
+                .parse()?;
+            if !(1..=16).contains(&iterations) {
+                return Err("Newton threshold must be between 1 and 16".into());
+            }
+            iterations
+        }
+        None => 0,
+    };
+    run_mode(
+        bench,
+        true,
+        newton_after > 0 && bench,
+        Matrix::Block(newton_after),
+    )
 }
 
 pub fn run(bench: bool, frozen: bool, compare: bool) -> Result<(), Box<dyn std::error::Error>> {
@@ -319,7 +347,7 @@ fn run_mode(
         attack: [6, 8].map(x),
         decay: [9, 10, 11].map(x),
     };
-    let block = matches!(matrix, Matrix::Block);
+    let block = matches!(matrix, Matrix::Block(_));
     let (clock, rows) = if block {
         let (source, rest) = rows
             .split_at_checked(clock_fixture::WORDS)
@@ -387,7 +415,11 @@ fn run_mode(
         (Matrix::Accelerated, Some(blocks)) => {
             (Candidate::Packed(blocks), Candidate::Accelerated(blocks))
         }
-        (Matrix::Vector | Matrix::Block, Some(blocks)) => {
+        (Matrix::Block(iterations), Some(blocks)) if iterations > 0 => (
+            Candidate::Vector(blocks),
+            Candidate::EarlyNewton(blocks, iterations),
+        ),
+        (Matrix::Vector | Matrix::Block(_), Some(blocks)) => {
             (Candidate::Packed(blocks), Candidate::Vector(blocks))
         }
         _ => (Candidate::Exact, Candidate::Frozen),

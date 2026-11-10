@@ -1982,3 +1982,29 @@ con una entrada mínima. La repetición
 anterior convirtió ese valor a un booleano
 de JSON y conservó los límites eléctricos.
 [Registro del adaptador](../evidence/rf_d_pilot_bistable_block_adapter01.json).
+
+### Corrección nodal anticipada en el bloque completo
+
+Se contrastó el inicio de la corrección nodal después de
+1, 2, 4 y 8 iteraciones del receptor. La dirección emplea
+el LU preparado del mismo circuito. Se conservan el
+residuo máximo de 0,2 pA, la dirección de 2 nV y el
+cierre de cargas de 0,1 nV antes de aceptar cada paso.
+Cada candidato se repitió por bytes y se midió en
+64 bloques alternados con el control.
+
+Pasaron los cuatro candidatos en la reserva positiva
+de C2 bajo. El mayor error de J7 siguió en 0,976 µV
+y el cruce conservó el intervalo de ocho ticks.
+El máximo de iteraciones bajó de 16 a 14, pero las
+reevaluaciones del biestable subieron de 506 a
+2124, 1862, 1354 y 628, respectivamente.
+
+Las medianas fueron 79,136, 72,550, 59,017 y
+34,136 ms. El control tomó 26,258 ms en su pase
+separado. Frente a cada control alternado, los
+candidatos costaron entre 1,29 y 3,01 veces más.
+Se conservan como ensayos de banco. Sigue pendiente
+una ruta de menor coste para el piloto jugable y
+su medición en RackForge.
+[Umbrales y controles alternados](../evidence/rf_d_pilot_bistable_block02.json).

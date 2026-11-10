@@ -34,7 +34,9 @@ def main():
     offsets = dict(bistable.POSITIVE_LOADS)
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--scene", choices=offsets, default="positive_c2_down")
+    parser.add_argument("--newton-after", nargs="+", type=int, choices=(1, 2, 4, 8), default=[])
     args = parser.parse_args()
+    assert len(set(args.newton_after)) == len(args.newton_after)
     assert c.AREA.is_dir() and not list(c.AREA.iterdir())
     seq = 1
     while (out := c.ROOT / f"evidence/rf_d_pilot_bistable_block{seq:02}.json").exists():
@@ -152,49 +154,66 @@ def main():
         report["short_receiver_control_sha256"] = c.digest(short_output)
         mode = "audio-readout-feedback-block"
         print("Native block", args.scene, flush=True)
-        got = replay([exe, mode], payload)
-        report.update(exit_code=got.returncode, input_sha256=c.digest(payload),
-                      output_sha256=c.digest(got.stdout), unchanged_replay=True)
-        if got.returncode:
-            report.update(error=got.stderr.decode(errors="replace").strip(), failure_input=packed(payload))
-            print(report["error"], flush=True)
-        else:
-            report["completed"] = True
-            values = np.frombuffer(got.stdout, "<f8")
-            assert np.isfinite(values).all()
-            slot, seconds, c2, a, b = values[:5]
-            np.testing.assert_array_equal(values[:5], event[[0, 1, 2, 5, 6]])
-            tick = start * 4096 + (slot / bistable.PILOT_RATE + seconds) / TICK_S
-            active = np.arange(FRAMES * 4).reshape(-1, 2) >= 2 * int(slot) + 1
-            rows = values[9:].reshape(-1, 55)
-            latch = rows[:, 13:].reshape(-1, 2, 21)
-            assert not np.any(latch[~active])
-            stage_input = expected[..., (5, 34, 27)].copy()
-            stage_input[..., 0][active] = latch[active, 20]
-            stage_input[..., 2][active] = latch[active, 2]
-            # Before the handoff the cathode/C2 diagnostic needs the actual clock stages.
-            stage_input[:int(slot)+1, 0, 0] = clock_cv[:, 2]
-            stage_input[:int(slot), 1, 0] = legacy[4:].reshape(int(slot)+1, 8)[1:, 0]
-            stage_input[..., 2][~active] = clock_cv[:, :2].ravel()[:-1]
-            audio_error = audio.assess_readout(rows[:, :13], audio.endpoint_reference(expected[:, 1]),
-                                               expected, stage_input[..., :2], stage_input[..., 2])
-            contour_error = handoff.assess(latch[active, :20], expected[active])
-            c2_error = float(abs(latch[int(slot)+1, :, 20] - expected[int(slot)+1, :, 5]).max())
-            max_iterations, load_error, r59_error, evaluations = values[5:9]
-            report.update(predicted_tick=float(tick), event_matches=bool(events[0][0] <= tick <= events[0][1]),
-                          order_preserved=bool((latch[active, 1] >= latch[active, 3]).all()),
-                          audio=audio_error, latch=contour_error, projected_c2_error_v=c2_error,
-                          max_iterations=int(max_iterations), max_load_error_v=float(load_error),
-                          r59_mismatch_a=float(r59_error), latch_evaluations=int(evaluations))
-            report["passed"] = bool(report["event_matches"] and report["order_preserved"] and audio_error["passed"]
-                                    and contour_error["passed"] and c2_error <= 2e-6
-                                    and load_error <= 1e-10 and r59_error <= 2e-12)
-            if not report["passed"]:
+        report["candidates"] = {}
+        for threshold in (0, *args.newton_after):
+            options = [f"--newton-after={threshold}"] if threshold else []
+            item = report if not threshold else dict(passed=False, completed=False, realtime=False,
+                                                      newton_after=threshold)
+            if threshold:
+                report["candidates"][str(threshold)] = item
+            got = replay([exe, mode, *options], payload)
+            item.update(exit_code=got.returncode, input_sha256=c.digest(payload),
+                          output_sha256=c.digest(got.stdout), unchanged_replay=True)
+            if got.returncode:
+                item.update(error=got.stderr.decode(errors="replace").strip())
                 report["failure_input"] = packed(payload)
-            timing = run([exe, mode + "-bench"], payload).decode().strip().split(",")
-            report["timing"] = dict(zip(("blocks", "median_ns", "p99_ns", "max_ns"), map(int, timing), strict=True))
-            report["realtime"] = report["passed"] and report["timing"]["max_ns"] <= BUDGET_NS
-            print("Timing", report["timing"], "electrical", report["passed"], flush=True)
+                print(item["error"], flush=True)
+            else:
+                item["completed"] = True
+                values = np.frombuffer(got.stdout, "<f8")
+                assert np.isfinite(values).all()
+                slot, seconds, c2, a, b = values[:5]
+                np.testing.assert_array_equal(values[:5], event[[0, 1, 2, 5, 6]])
+                tick = start * 4096 + (slot / bistable.PILOT_RATE + seconds) / TICK_S
+                active = np.arange(FRAMES * 4).reshape(-1, 2) >= 2 * int(slot) + 1
+                rows = values[9:].reshape(-1, 55)
+                latch = rows[:, 13:].reshape(-1, 2, 21)
+                assert not np.any(latch[~active])
+                stage_input = expected[..., (5, 34, 27)].copy()
+                stage_input[..., 0][active] = latch[active, 20]
+                stage_input[..., 2][active] = latch[active, 2]
+                # Before the handoff the cathode/C2 diagnostic needs the actual clock stages.
+                stage_input[:int(slot)+1, 0, 0] = clock_cv[:, 2]
+                stage_input[:int(slot), 1, 0] = legacy[4:].reshape(int(slot)+1, 8)[1:, 0]
+                stage_input[..., 2][~active] = clock_cv[:, :2].ravel()[:-1]
+                audio_error = audio.assess_readout(rows[:, :13], audio.endpoint_reference(expected[:, 1]),
+                                                   expected, stage_input[..., :2], stage_input[..., 2])
+                contour_error = handoff.assess(latch[active, :20], expected[active])
+                c2_error = float(abs(latch[int(slot)+1, :, 20] - expected[int(slot)+1, :, 5]).max())
+                max_iterations, load_error, r59_error, evaluations = values[5:9]
+                item.update(predicted_tick=float(tick), event_matches=bool(events[0][0] <= tick <= events[0][1]),
+                              order_preserved=bool((latch[active, 1] >= latch[active, 3]).all()),
+                              audio=audio_error, latch=contour_error, projected_c2_error_v=c2_error,
+                              max_iterations=int(max_iterations), max_load_error_v=float(load_error),
+                              r59_mismatch_a=float(r59_error), latch_evaluations=int(evaluations))
+                item["passed"] = bool(item["event_matches"] and item["order_preserved"] and audio_error["passed"]
+                                        and contour_error["passed"] and c2_error <= 2e-6
+                                        and load_error <= 1e-10 and r59_error <= 2e-12)
+                if not item["passed"]:
+                    report["failure_input"] = packed(payload)
+                timing = run([exe, mode + "-bench", *options], payload).decode().strip().splitlines()
+                assert len(timing) == (2 if threshold else 1)
+                def decode_timing(row):
+                    return dict(zip(("blocks", "median_ns", "p99_ns", "max_ns"),
+                                    map(int, row.split(",")), strict=True))
+                item["timing"] = decode_timing(timing[-1])
+                if threshold:
+                    item["alternating_control_timing"] = decode_timing(timing[0])
+                    item["median_ratio_to_control"] = (item["timing"]["median_ns"] /
+                                                          item["alternating_control_timing"]["median_ns"])
+                item["realtime"] = item["passed"] and item["timing"]["max_ns"] <= BUDGET_NS
+                print("Timing", threshold, item["timing"], "electrical", item["passed"], flush=True)
+        report["all_candidates_passed"] = all(item["passed"] for item in report["candidates"].values())
         sources.unchanged()
     except Exception:
         report["failure"] = traceback.format_exc()
@@ -204,7 +223,7 @@ def main():
             assert path.is_file() and path.resolve().parent == c.AREA.resolve()
             path.unlink()
         c.write(out, report)
-    raise SystemExit(0 if report["passed"] else 1)
+    raise SystemExit(0 if report["passed"] and report["all_candidates_passed"] else 1)
 
 
 if __name__ == "__main__":

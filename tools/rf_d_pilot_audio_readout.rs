@@ -160,6 +160,7 @@ struct JointGuess<'a> {
     previous: Option<&'a chain::State>,
     accelerate: bool,
     vector_residual: bool,
+    newton_after: usize,
 }
 
 struct DefectTrial {
@@ -293,7 +294,8 @@ fn advance_joint_with(
                 return Err(format!("joint response: {:?}", StepError::InvalidInput));
             }
             let error = std::array::from_fn::<_, PAIR, _>(|r| response[r] - current(r));
-            use_nodal = maximum(&error) <= 2e-12;
+            use_nodal = maximum(&error) <= 2e-12
+                || (guess.newton_after > 0 && iteration >= guess.newton_after);
             timing = profile::split(profile::Part::ReceiverProduct, timing);
         }
         if use_nodal || iteration == BUDGET {
