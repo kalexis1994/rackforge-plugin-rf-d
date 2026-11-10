@@ -77,7 +77,7 @@ class Case:
             if raw.returncode:
                 return dict(result, error=raw.stderr.decode(errors="replace").strip(), failure_input=packed(data))
             values = np.frombuffer(raw.stdout, "<f8")
-            rows = values[1:].reshape(-1, 7)
+            rows = values[3:].reshape(-1, 7)
             assert rows.shape == wanted.shape and np.isfinite(values).all()
             error = rows - wanted
             max_error = abs(error).max(axis=0)
@@ -87,7 +87,10 @@ class Case:
             result.update(passed=bool(rms <= .001 and peak <= .003 and mean <= 1e-6
                                       and max_error[1:3].max() <= 2e-9 and max_error[3:].max() <= 20e-6),
                           max_error=max_error.tolist(), j7_rms_relative=rms, j7_peak_relative=peak,
-                          j7_mean_v=mean, max_load_iterations=int(values[0]))
+                          j7_mean_v=mean, max_load_iterations=int(values[0]),
+                          max_load_mismatch_v=float(values[1]), checked_nodal_proposals=int(values[2]))
+            if not result["passed"]:
+                result["failure_input"] = packed(data)
             if timing:
                 measured = self.run("audio-readout-bench", data)
                 assert measured.returncode == 0, measured.stderr.decode(errors="replace")

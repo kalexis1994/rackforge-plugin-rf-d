@@ -1199,3 +1199,31 @@ rechazos se reprodujeron por bytes incluso al usar
 C2 y x34 del solver en ambas etapas.
 [Rama negativa](../evidence/rf_d_pilot_audio_readout_neg01.json),
 [rama positiva](../evidence/rf_d_pilot_audio_readout_pos01.json).
+
+La corrección conjunta usa cuatro tensiones de carga,
+base y TAIL en las dos etapas. La dirección se obtiene
+del mapa lineal de Radau y de la respuesta local de
+cada celda a 1 µV. El residual se vuelve a medir con
+la respuesta no lineal. El peor cierre aceptado usó
+cinco iteraciones. Un candidato que agotó la iteración
+interna del mapa se acepta únicamente si pasa las
+tolerancias del stamp nodal y su corrección lineal.
+
+En los seis positivos con puertos generados, el máximo
+de J7 fue 0,0192 % RMS relativo, con 2,60 pA en R59 y
+53,2 pA en R60. Los ocho ticks se conservaron.
+Con C2/x34 exactos en ambas etapas, los seis negativos
+también pasaron J7, con un máximo de 0,0126 % RMS. La
+interpolación desde bordes de los puertos generados
+dejó dos reservas negativas en 0,191 % y 0,180 % RMS,
+frente a 0,1 %. Las corrientes sí pasaron. Interpolar
+los bordes del solver reprodujo el rechazo, lo que
+localiza la diferencia en la primera etapa del paso.
+[Positivos](../evidence/rf_d_pilot_audio_readout_pos02.json),
+[negativos](../evidence/rf_d_pilot_audio_readout_neg02.json).
+
+El mayor tiempo nativo en 200 repeticiones por caso
+positivo fue 1,227 ms para una ventana de cuatro pasos
+a 96 kHz. Incluye las celdas y el receptor con H128.
+El mapa está preparado y los puertos de contorno ya
+están disponibles al empezar la medición.

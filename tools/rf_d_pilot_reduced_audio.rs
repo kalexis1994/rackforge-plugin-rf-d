@@ -159,6 +159,14 @@ impl Map {
         })
     }
 
+    #[cfg(pilot_audio_readout)]
+    pub(super) fn load_response(&self) -> [[f64; 4]; 4] {
+        std::array::from_fn(|row| {
+            let output = row / 2 * SIZE + LOAD[row % 2];
+            std::array::from_fn(|column| self.affine[output][CAP_COUNT + 1 + column])
+        })
+    }
+
     pub(super) fn step(
         &self,
         old: chain::State,
