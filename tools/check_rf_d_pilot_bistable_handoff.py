@@ -13,7 +13,7 @@ import check_rf_d_pilot_contours as c
 import rf_d_pilot_audio_readout as audio
 from check_hybrid_voice import packed
 from check_rf_d_pilot_precursor import (
-    CALIBRATION, C4_CLOCK, SOURCE_NAMES, STEPS, TICK_S, TIMER_CARRY, TIMER_NATIVE,
+    CALIBRATION, C4_CLOCK, CLOCK_FIXTURE, SOURCE_NAMES, STEPS, TICK_S, TIMER_CARRY, TIMER_NATIVE,
     TIMER_NATIVE_PROBE, timer_native_fixture, timing_reference,
 )
 from check_rf_d_pilot_timer_rc import prepare_reference
@@ -288,7 +288,7 @@ def main():
                            "crates/rf-d-circuit/src/prepared_audio_stamp.rs")
     sources = Sources((*b.SOURCES, *c.ALL_SOURCES, c.OWN, c.CANDIDATE, c.PROBE, c.PORTS,
                        OWN, PREVIOUS, CLOCK_CONTROL, *SOURCE_NAMES, C4_CLOCK, TIMER_CARRY, TIMER_NATIVE,
-                       TIMER_NATIVE_PROBE, "tools/rf_d_pilot_timer_rc.rs", *native_sources))
+                       TIMER_NATIVE_PROBE, CLOCK_FIXTURE, "tools/rf_d_pilot_timer_rc.rs", *native_sources))
     report = dict(passed=False, rack_integrated=False, rate_hz=b.PILOT_RATE, refinement=STEPS,
                   **sources.fields(), compiler_sha256=c.sha(Path(c.COMPILER)), library_sha256=c.sha(c.LIB),
                   imposed_ports=(5, 54, 17, 24, 14), post_grids=DENSITIES,

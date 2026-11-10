@@ -711,4 +711,4 @@ pub use audio_readout::{run_feedback as run_audio_feedback, run_feedback_packed 
     run_feedback_packed_profile as run_audio_feedback_packed_profile,
     run_feedback_seeded as run_audio_feedback_seeded,
     run_feedback_accelerated as run_audio_feedback_accelerated,
-    run_feedback_vector as run_audio_feedback_vector};
+    run_feedback_vector as run_audio_feedback_vector, run_feedback_block as run_audio_feedback_block};

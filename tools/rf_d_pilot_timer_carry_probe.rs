@@ -5,6 +5,8 @@ mod attack;
 mod carry;
 #[path = "rf_d_pilot_c4_clock.rs"]
 mod clock;
+#[path = "rf_d_pilot_clock_fixture.rs"]
+mod clock_fixture;
 #[path = "rf_d_pilot_crossing.rs"]
 mod crossing;
 #[path = "latch_charge_driver.rs"]
@@ -45,51 +47,10 @@ use std::{
     time::Instant,
 };
 
-fn render(
-    family: &clock::Family<{ carry::STATE }, { carry::POINTS }>,
-    profile: &crossing::Profile,
-    post: &carry::PostProfile,
-    initial: [f64; carry::STATE],
-    mut emit: impl FnMut([f64; 2], [[f64; 3]; 2], f64),
-    mut emit_cv: impl FnMut([f64; 3]),
-) -> Option<[f64; 7]> {
-    let mut voice = carry::Carry::start(family, initial)?;
-    for slot in 0..64 {
-        let (timers, currents) = voice.observe()?;
-        emit(timers, currents, voice.filter_sum());
-        let sample = voice.advance(profile, post)?;
-        emit_cv(voice.cv_stages());
-        match sample {
-            carry::Sample::Boundary => (),
-            carry::Sample::Event {
-                seconds,
-                timers,
-                filter_sum,
-            } => {
-                let [c2_weight, c5_weight] = voice.load_weights();
-                return Some([
-                    slot as f64,
-                    seconds,
-                    timers[0],
-                    timers[1],
-                    filter_sum,
-                    c2_weight,
-                    c5_weight,
-                ]);
-            }
-        }
-    }
-    None
-}
-
 fn main() -> Result<(), Box<dyn Error>> {
     let mut raw = Vec::new();
     std::io::stdin().read_to_end(&mut raw)?;
-    let length = (crossing::POINTS * 10
-        + carry::POINTS * (carry::STATE * 5 + 1)
-        + carry::POST_POINTS * 31
-        + carry::STATE)
-        * 8;
+    let length = clock_fixture::WORDS * 8;
     let mode = std::env::args().nth(1);
     #[cfg(pilot_native_handoff)]
     let native = matches!(
@@ -107,38 +68,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut values = raw
         .chunks_exact(8)
         .map(|x| f64::from_le_bytes(x.try_into().unwrap()));
-    let mut next = || values.next().unwrap();
-    let event = crossing::Profile {
-        rising: std::array::from_fn(|_| crossing::Point {
-            collector: next(),
-            neighbors: std::array::from_fn(|_| next()),
-        }),
-        tail: std::array::from_fn(|_| std::array::from_fn(|_| next())),
-    };
-    let phase = std::array::from_fn(|_| next());
-    let family = clock::Family {
-        phase,
-        knots: std::array::from_fn(|_| clock::Knot {
-            nominal: std::array::from_fn(|_| next()),
-            linear: std::array::from_fn(|_| std::array::from_fn(|_| next())),
-            quadratic: std::array::from_fn(|_| std::array::from_fn(|_| next())),
-        }),
-    };
-    let post = carry::PostProfile(std::array::from_fn(|_| carry::PostKnot {
-        time: next(),
-        nominal: std::array::from_fn(|_| std::array::from_fn(|_| next())),
-        linear: std::array::from_fn(|_| std::array::from_fn(|_| std::array::from_fn(|_| next()))),
-        quadratic: std::array::from_fn(|_| {
-            std::array::from_fn(|_| std::array::from_fn(|_| next()))
-        }),
-        readout: std::array::from_fn(|_| std::array::from_fn(|_| next())),
-    }));
-    let initial = std::array::from_fn(|_| next());
+    let fixture = clock_fixture::Fixture::read(&mut values);
     #[cfg(pilot_native_handoff)]
     if native {
         return handoff_probe::run(
             values,
-            || render(&family, &event, &post, initial, |_, _, _| {}, |_| {}),
+            || fixture.render(|_, _, _| {}, |_| {}),
             matches!(
                 mode.as_deref(),
                 Some("bench-native-handoff" | "bench-native-handoff-c2")
@@ -155,15 +90,9 @@ fn main() -> Result<(), Box<dyn Error>> {
         for elapsed in &mut times {
             let begin = Instant::now();
             black_box(
-                render(
-                    &family,
-                    &event,
-                    &post,
-                    black_box(initial),
-                    |_, _, _| {},
-                    |_| {},
-                )
-                .expect("event outside domain"),
+                black_box(&fixture)
+                    .render(|_, _, _| {}, |_| {})
+                    .expect("event outside domain"),
             );
             *elapsed = begin.elapsed().as_nanos();
         }
@@ -178,11 +107,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         let mut states = Vec::new();
         let with_returns = mode.as_deref() == Some("returns");
         let mut cathodes = Vec::new();
-        if let Some(event) = render(
-            &family,
-            &event,
-            &post,
-            initial,
+        if let Some(event) = fixture.render(
             |timer, currents, sum| {
                 states.extend(timer.into_iter().chain(currents.into_iter().flatten()));
                 if with_returns {

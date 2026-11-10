@@ -17,6 +17,13 @@ use std::{
 const H: f64 = 1. / (48_000. * 512.);
 const ROW: usize = voice::N;
 
+#[derive(Clone, Copy)]
+enum Capture {
+    Stages,
+    Frames,
+    AudioStages,
+}
+
 fn read(path: &str) -> Result<Vec<f64>, Box<dyn Error>> {
     let bytes = fs::read(path)?;
     assert_eq!(bytes.len() % 8, 0);
@@ -27,7 +34,7 @@ fn read(path: &str) -> Result<Vec<f64>, Box<dyn Error>> {
 }
 
 pub fn capture(path: &str, start: usize, frames: usize, key: f64) -> Result<(), Box<dyn Error>> {
-    capture_at(path, start, frames, key, 1, false)
+    capture_at(path, start, frames, key, 1, Capture::Stages)
 }
 
 pub fn capture_endpoints(
@@ -36,7 +43,7 @@ pub fn capture_endpoints(
     frames: usize,
     key: f64,
 ) -> Result<(), Box<dyn Error>> {
-    capture_at(path, start, frames, key, 1, true)
+    capture_at(path, start, frames, key, 1, Capture::Frames)
 }
 
 pub fn capture_refined(
@@ -45,7 +52,16 @@ pub fn capture_refined(
     frames: usize,
     key: f64,
 ) -> Result<(), Box<dyn Error>> {
-    capture_at(path, start, frames, key, 3, false)
+    capture_at(path, start, frames, key, 3, Capture::Stages)
+}
+
+pub fn capture_audio_stages(
+    path: &str,
+    start: usize,
+    frames: usize,
+    key: f64,
+) -> Result<(), Box<dyn Error>> {
+    capture_at(path, start, frames, key, 3, Capture::AudioStages)
 }
 
 fn capture_at(
@@ -54,7 +70,7 @@ fn capture_at(
     frames: usize,
     key: f64,
     subdivisions: usize,
-    endpoints_only: bool,
+    selection: Capture,
 ) -> Result<(), Box<dyn Error>> {
     let data = read(path)?;
     assert_eq!(data.len(), 2 * ROW + 1);
@@ -97,18 +113,24 @@ fn capture_at(
         )
         .map_err(|e| format!("reference {start}/{i}: {e:?}"))?;
         let next = q.stages.chain[1].now;
-        if endpoints_only {
-            if order(&state) != order(&next) {
-                let tick = start * 4096 + 8 * i;
-                eprintln!("SWITCH,{tick},{},{}", tick + 8, usize::from(order(&next)));
+        if !matches!(selection, Capture::Stages) && order(&state) != order(&next) {
+            let tick = start * 4096 + 8 * (i / subdivisions);
+            eprintln!("SWITCH,{tick},{},{}", tick + 8, usize::from(order(&next)));
+        }
+        match selection {
+            Capture::Stages => {
+                for row in &q.stages.chain {
+                    write(&row.now)?;
+                }
             }
-            if (i + 1) % steps_per_frame == 0 {
-                write(&next)?;
+            Capture::Frames if (i + 1) % steps_per_frame == 0 => write(&next)?,
+            Capture::AudioStages => {
+                let slot = steps_per_frame / 2;
+                if matches!((i + 1) % slot, 0) || (i + 1) % slot == slot / 3 {
+                    write(&next)?;
+                }
             }
-        } else {
-            for row in &q.stages.chain {
-                write(&row.now)?;
-            }
+            _ => (),
         }
         state = next;
         phase = q.stages.phase[1];

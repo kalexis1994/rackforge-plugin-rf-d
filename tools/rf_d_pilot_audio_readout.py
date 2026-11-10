@@ -16,7 +16,12 @@ FEEDBACK_MODULES = (("attack_cell", "tools/rf_d_pilot_attack_cell.rs"),
                     ("bistable", "tools/rf_d_pilot_bistable_return.rs"),
                     ("handoff", "tools/rf_d_pilot_bistable_handoff.rs"),
                     ("q15", "tools/rf_d_pilot_q15_return.rs"),
-                    ("timer", "tools/rf_d_pilot_timer_rc.rs"))
+                    ("timer", "tools/rf_d_pilot_timer_rc.rs"),
+                    ("carry", "tools/rf_d_pilot_timer_carry.rs"),
+                    ("clock", "tools/rf_d_pilot_c4_clock.rs"),
+                    ("crossing", "tools/rf_d_pilot_crossing.rs"),
+                    ("precursor", "tools/rf_d_pilot_precursor.rs"),
+                    ("clock_fixture", "tools/rf_d_pilot_clock_fixture.rs"))
 SOURCES = ("tools/rf_d_pilot_audio_readout.py", MODEL, PARENT,
            "tools/check_rf_d_pilot_closed_returns.py", "tools/rf_d_pilot_contour_clock.rs",
            "tools/rf_d_pilot_reduced_audio.rs", "tools/rf_d_reduced_contour_live.py",
@@ -57,8 +62,10 @@ def prepare(probe, report, stage_feedback=False):
         Some("audio-readout-feedback-accelerated-bench") => closed_returns::run_audio_feedback_accelerated(true),
         Some("audio-readout-feedback-vector") => closed_returns::run_audio_feedback_vector(false, false),
         Some("audio-readout-feedback-vector-bench") => closed_returns::run_audio_feedback_vector(true, true),
-        Some("audio-readout-feedback-vector-profile") => closed_returns::run_audio_feedback_vector(true, false),''')
-        code += '\nuse latch_charge as latch_charge_driver;\n'
+        Some("audio-readout-feedback-vector-profile") => closed_returns::run_audio_feedback_vector(true, false),
+        Some("audio-readout-feedback-block") => closed_returns::run_audio_feedback_block(false),
+        Some("audio-readout-feedback-block-bench") => closed_returns::run_audio_feedback_block(true),''')
+        code += '\nuse latch_charge as latch_charge_driver;\nuse attack_cell as attack;\n'
         for name, path in FEEDBACK_MODULES:
             code += f'\n#[path = "{(c.ROOT / path).as_posix()}"] mod {name};\n'
     return c.emit(probe.name, code)

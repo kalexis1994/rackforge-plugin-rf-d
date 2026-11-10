@@ -5,7 +5,7 @@ use super::{
 };
 use crate::{
     bistable::{self, Drive, State},
-    graph,
+    clock_fixture, graph,
     handoff::{Knot, Profile, POINTS},
     StepError,
 };
@@ -13,6 +13,7 @@ use std::{hint::black_box, io::Write, time::Instant};
 
 const R59: f64 = 68_000.;
 const OBS: usize = 21;
+const BLOCK_STEPS: usize = 256;
 
 type Pair = [[f64; 6]; 2]; // C2, x34, x27, x17, x24, x14
 type Latch = [Option<(State, Drive)>; 2];
@@ -34,6 +35,7 @@ enum Matrix {
     Seeded,
     Accelerated,
     Vector,
+    Block,
 }
 
 struct Event {
@@ -200,6 +202,83 @@ fn render(
     Ok(stats)
 }
 
+fn render_driven(
+    audio: History,
+    latch: State,
+    map: &Audio,
+    family: &Family,
+    collector: f64,
+    inputs: &[Pair],
+    event: Option<&mut Event>,
+    clock: Option<&clock_fixture::Fixture>,
+    candidate: Candidate<'_>,
+    emit: impl FnMut(Output, Latch),
+) -> Result<[f64; 7], String> {
+    let Some(clock) = clock else {
+        return render(
+            audio,
+            latch,
+            map,
+            family,
+            collector,
+            inputs,
+            event.as_deref(),
+            candidate,
+            emit,
+        );
+    };
+    let event = event.ok_or("missing block profiles")?;
+    let mut boundary = [0.; 64];
+    let mut cv = [[0.; 3]; 64];
+    let mut count = 0;
+    let mut stages = 0;
+    let [slot, seconds, c2, _, _, a, b] = clock
+        .render(
+            |timers, _, _| {
+                boundary[count] = timers[0];
+                count += 1;
+            },
+            |row| {
+                cv[stages] = row;
+                stages += 1;
+            },
+        )
+        .ok_or("C4 event outside block domain")?;
+    let slot = slot as usize;
+    if slot + 1 != count || count != stages || !cv[..count].iter().flatten().all(|v| v.is_finite())
+    {
+        return Err("C4 stages incomplete at block handoff".into());
+    }
+    event.slot = slot;
+    event.seconds = seconds;
+    event.c2 = c2;
+    event.weights = [a, b];
+    let mut driven: [Pair; BLOCK_STEPS] = inputs.try_into().map_err(|_| "expected 128 frames")?;
+    for i in 0..=slot {
+        driven[i][0][0] = cv[i][2];
+        driven[i][0][2] = cv[i][0];
+        if i < slot {
+            driven[i][1][0] = boundary[i + 1];
+            driven[i][1][2] = cv[i][1];
+        }
+    }
+    render(
+        audio,
+        latch,
+        map,
+        family,
+        collector,
+        &driven,
+        Some(event),
+        candidate,
+        emit,
+    )
+}
+
+pub fn run_block(bench: bool) -> Result<(), Box<dyn std::error::Error>> {
+    run_mode(bench, true, false, Matrix::Block)
+}
+
 pub fn run(bench: bool, frozen: bool, compare: bool) -> Result<(), Box<dyn std::error::Error>> {
     run_mode(bench, frozen, compare, Matrix::Scalar)
 }
@@ -240,20 +319,38 @@ fn run_mode(
         attack: [6, 8].map(x),
         decay: [9, 10, 11].map(x),
     };
-    let [slot, seconds, c2, a, b] = rows[..5].try_into()?;
-    let (event, rows) = if slot == -1. {
+    let block = matches!(matrix, Matrix::Block);
+    let (clock, rows) = if block {
+        let (source, rest) = rows
+            .split_at_checked(clock_fixture::WORDS)
+            .ok_or("missing clock fixture")?;
+        (
+            Some(clock_fixture::Fixture::read(source.iter().copied())),
+            rest,
+        )
+    } else {
+        (None, rows)
+    };
+    let [slot, seconds, c2, a, b] = if block {
+        [0.; 5]
+    } else {
+        rows[..5].try_into()?
+    };
+    let metadata = if block { 0 } else { 5 };
+    let (mut event, rows) = if slot == -1. {
         (None, &rows[5..])
     } else {
         if !(0. ..H).contains(&seconds)
             || slot < 0.
             || slot != slot.floor()
-            || rows.len() < 5 + 2 * TABLE
+            || rows.len() < metadata + 2 * TABLE
         {
             return Err("invalid C4 event".into());
         }
-        let front = profile(&rows[5..5 + TABLE], 1).map_err(|e| format!("front: {e:?}"))?;
-        let tail =
-            profile(&rows[5 + TABLE..5 + 2 * TABLE], 2).map_err(|e| format!("tail: {e:?}"))?;
+        let front =
+            profile(&rows[metadata..metadata + TABLE], 1).map_err(|e| format!("front: {e:?}"))?;
+        let tail = profile(&rows[metadata + TABLE..metadata + 2 * TABLE], 2)
+            .map_err(|e| format!("tail: {e:?}"))?;
         (
             Some(Event {
                 slot: slot as usize,
@@ -263,7 +360,7 @@ fn run_mode(
                 front,
                 tail,
             }),
-            &rows[5 + 2 * TABLE..],
+            &rows[metadata + 2 * TABLE..],
         )
     };
     if rows.is_empty() || rows.len() % 12 != 0 || !rows.iter().all(|v| v.is_finite()) {
@@ -279,6 +376,9 @@ fn run_mode(
     {
         return Err("C4 event must precede the projected interval".into());
     }
+    if block && inputs.len() != BLOCK_STEPS {
+        return Err("expected 128 frames at 48 kHz".into());
+    }
     let blocks = (!matches!(matrix, Matrix::Scalar))
         .then(|| map.reduced.as_ref().expect("receiver map").pack_defects());
     let (control, variant) = match (matrix, blocks.as_ref()) {
@@ -287,27 +387,31 @@ fn run_mode(
         (Matrix::Accelerated, Some(blocks)) => {
             (Candidate::Packed(blocks), Candidate::Accelerated(blocks))
         }
-        (Matrix::Vector, Some(blocks)) => (Candidate::Packed(blocks), Candidate::Vector(blocks)),
+        (Matrix::Vector | Matrix::Block, Some(blocks)) => {
+            (Candidate::Packed(blocks), Candidate::Vector(blocks))
+        }
         _ => (Candidate::Exact, Candidate::Frozen),
     };
     if bench {
         const PASSES: usize = 200;
+        let passes = if block { 64 } else { PASSES };
         let mut times = [[0; PASSES]; 2];
         let mut stats = [[0.; 7]; 2];
-        for i in 0..PASSES {
+        for i in 0..passes {
             for candidate in [if compare { i % 2 == 1 } else { frozen }, i % 2 == 0]
                 .into_iter()
                 .take(if compare { 2 } else { 1 })
             {
                 let begin = Instant::now();
-                stats[usize::from(candidate)] = black_box(render(
+                stats[usize::from(candidate)] = black_box(render_driven(
                     black_box(initial),
                     latch,
                     &map,
                     &family,
                     collector,
                     &inputs,
-                    event.as_ref(),
+                    event.as_mut(),
+                    clock.as_ref(),
                     if candidate { variant } else { control },
                     |_, _| {},
                 )?);
@@ -319,12 +423,13 @@ fn run_mode(
             .skip(usize::from(frozen && !compare))
             .take(if compare { 2 } else { 1 })
         {
+            let group = &mut group[..passes];
             group.sort_unstable();
             println!(
-                "{PASSES},{},{},{}",
-                group[PASSES / 2],
-                group[PASSES * 99 / 100],
-                group[PASSES - 1]
+                "{passes},{},{},{}",
+                group[passes / 2],
+                group[passes * 99 / 100],
+                group[passes - 1]
             );
         }
         let label = match matrix {
@@ -340,14 +445,15 @@ fn run_mode(
         super::profile::report_receiver();
     } else {
         let mut samples = Vec::new();
-        let stats = render(
+        let stats = render_driven(
             initial,
             latch,
             &map,
             &family,
             collector,
             &inputs,
-            event.as_ref(),
+            event.as_mut(),
+            clock.as_ref(),
             if frozen { variant } else { control },
             |audio, stages| {
                 samples.extend(audio);
@@ -362,6 +468,18 @@ fn run_mode(
             },
         )?;
         let mut out = std::io::BufWriter::new(std::io::stdout().lock());
+        if block {
+            let event = event.as_ref().unwrap();
+            for value in [
+                event.slot as f64,
+                event.seconds,
+                event.c2,
+                event.weights[0],
+                event.weights[1],
+            ] {
+                out.write_all(&value.to_le_bytes())?;
+            }
+        }
         for value in stats.into_iter().take(4).chain(samples) {
             out.write_all(&value.to_le_bytes())?;
         }

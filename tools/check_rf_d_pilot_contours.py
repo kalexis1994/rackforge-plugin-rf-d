@@ -46,6 +46,8 @@ def component(kernel):
         Some("ports") => ports(),
         Some("contour-capture") if args.len() == 6 =>
             contour_probe::capture(&args[2], args[3].parse()?, args[4].parse()?, args[5].parse()?),
+        Some("contour-capture-audio-stages") if args.len() == 6 =>
+            contour_probe::capture_audio_stages(&args[2], args[3].parse()?, args[4].parse()?, args[5].parse()?),
         Some("contour-capture-refined") if args.len() == 6 =>
             contour_probe::capture_refined(&args[2], args[3].parse()?, args[4].parse()?, args[5].parse()?),
         Some("contour-replay") if (5..=6).contains(&args.len()) =>

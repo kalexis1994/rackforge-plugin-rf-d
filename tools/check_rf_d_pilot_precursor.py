@@ -36,6 +36,7 @@ C4_PROBE = "tools/rf_d_pilot_c4_clock_probe.rs"
 TIMER_CARRY = "tools/rf_d_pilot_timer_carry.py"
 TIMER_NATIVE = "tools/rf_d_pilot_timer_carry.rs"
 TIMER_NATIVE_PROBE = "tools/rf_d_pilot_timer_carry_probe.rs"
+CLOCK_FIXTURE = "tools/rf_d_pilot_clock_fixture.rs"
 SOURCE_NAMES = ("tools/check_rf_d_pilot_precursor.py", "tools/rf_d_pilot_precursor.py",
                 "tools/check_rf_d_pilot_timer_rc.py", ATTACK, ATTACK_ORBIT, CROSSING,
                 CROSSING_PROBE, LATCH_CHARGE)
@@ -341,7 +342,7 @@ def main():
     if args_main.timers:
         native_sources += (TIMER_CARRY, ATTACK_PROBE, MODEL)
     if args_main.timers_native:
-        native_sources += (TIMER_NATIVE, TIMER_NATIVE_PROBE, C4_CLOCK, NATIVE)
+        native_sources += (TIMER_NATIVE, TIMER_NATIVE_PROBE, CLOCK_FIXTURE, C4_CLOCK, NATIVE)
     if args_main.returns:
         native_sources += ("tools/rf_d_pilot_return_readout.py", *returns.SOURCES)
     if args_main.audio:

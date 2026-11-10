@@ -1939,3 +1939,46 @@ medición cubre ventanas cortas sin el reloj
 previo de C4 ni el host.
 [Primer contraste](../evidence/rf_d_pilot_bistable_handoff17.json).
 [Perfil de las dos rutas en la misma compilación](../evidence/rf_d_pilot_bistable_handoff18.json).
+
+### Bloque nativo de 128 frames con C4 y receptor
+
+Se midió la reserva positiva de C2 bajo a
+48 kHz. Cada repetición genera el cruce con el
+reloj de C4 y ejecuta los 256 pasos internos
+a 96 kHz con el biestable y el receptor.
+La preparación de tablas queda fuera del
+cronómetro. x34, x17, x24, x14 y el C2
+posterior a la proyección provienen de la
+referencia.
+
+El solver refinado entrega 513 filas en
+memoria. En la ventana corta, la selección de
+filas coincidió bit a bit con la captura
+completa. El receptor de cinco frames
+reprodujo también la salida admitida anterior.
+Los intermedios se retiraron al terminar.
+
+En los 128 frames, el cruce quedó en el
+intervalo 319224–319232. Los máximos de
+error fueron 0,976 µV en J7, 0,871 pA en R59
+y 2,14 fA en R60. El mayor error nodal del
+biestable fue 8,09 µV. El receptor alcanzó
+el límite de 16 iteraciones en al menos un
+paso y completó el bloque.
+
+En 64 repeticiones la mediana fue 26,271 ms
+y el máximo 27,065 ms. Son 19,7 y 20,3
+veces el presupuesto de 1,333 ms. Es la
+medición nativa del banco para una reserva
+positiva. Queda cerrar las fronteras e
+integrar un candidato de menor coste en
+RackForge.
+[Bloque y contraste eléctrico](../evidence/rf_d_pilot_bistable_block01.json).
+
+La primera repetición completó el bloque
+pero su recibo se detuvo al serializar un
+booleano de NumPy. El rechazo se reprodujo
+con una entrada mínima. La repetición
+anterior convirtió ese valor a un booleano
+de JSON y conservó los límites eléctricos.
+[Registro del adaptador](../evidence/rf_d_pilot_bistable_block_adapter01.json).
