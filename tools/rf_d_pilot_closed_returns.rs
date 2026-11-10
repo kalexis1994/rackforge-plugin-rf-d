@@ -50,6 +50,8 @@ struct Audio {
     reused: Cell<usize>,
     diagnostic_recovery: bool,
     fallback_calls: Cell<usize>,
+    verify_reduced: bool,
+    checked_proposals: Cell<usize>,
 }
 
 fn voltage(state: chain::State, node: usize) -> f64 {
@@ -67,6 +69,7 @@ impl Audio {
         reuse: bool,
         warm: bool,
         diagnostic_recovery: bool,
+        verify_reduced: bool,
     ) -> Result<Self, StepError> {
         let mut p = parameters();
         p.boundary.recovery.vca.loudness_v = 0.;
@@ -120,7 +123,49 @@ impl Audio {
             reused: Cell::new(0),
             diagnostic_recovery,
             fallback_calls: Cell::new(0),
+            verify_reduced,
+            checked_proposals: Cell::new(0),
         })
+    }
+
+    fn residual(
+        &self,
+        old: chain::State,
+        input: [[f64; 2]; 2],
+        family: &Family,
+        phase: f64,
+        h: f64,
+        delta: [chain::State; 2],
+    ) -> Result<([chain::State; 2], f64, [f64; PAIR]), StepError> {
+        let now = delta.map(|d| old.advanced(d.high).advanced(d.low));
+        let bus = now.map(|x| voltage(x, chain::BUS));
+        let f = bus.map(|x| family.frequency(x).map(|pair| pair.0));
+        let f = [
+            f[0].as_ref().map_err(|_| StepError::InvalidInput)?,
+            f[1].as_ref().map_err(|_| StepError::InvalidInput)?,
+        ];
+        let stages = A.map(|row| (phase + h * (row[0] * f[0] + row[1] * f[1])).rem_euclid(1.));
+        let mut p = [
+            chain::linearize_prevalidated::<false>(self.params, [0.; 5], old, delta[0], h, now[0])?,
+            chain::linearize_prevalidated::<false>(self.params, [0.; 5], old, delta[1], h, now[1])?,
+        ];
+        for i in 0..2 {
+            for (j, resistance) in [R59, R60].into_iter().enumerate() {
+                let node = LOAD[j];
+                p[i].dc[node] +=
+                    ((now[i].high[node] - input[i][j]) + now[i].low[node]) / resistance;
+            }
+            p[i].dc[chain::BUS] += family
+                .observe(bus[i], stages[i])
+                .map_err(|_| StepError::InvalidInput)?
+                .currents_a[2];
+        }
+        let residual = std::array::from_fn(|r| {
+            let i = r / SIZE;
+            let row = local(r % SIZE);
+            p[i].dc[row] + B[i][0] * p[0].charge_over_h[row] + B[i][1] * p[1].charge_over_h[row]
+        });
+        Ok((now, stages[1], residual))
     }
 
     fn step(
@@ -133,59 +178,31 @@ impl Audio {
         mut delta: [chain::State; 2],
     ) -> Result<([chain::State; 2], f64, [chain::State; 2], usize), StepError> {
         if let Some(map) = &self.reduced {
-            let result = map.step(old, input, family, phase, h, delta);
-            if !self.diagnostic_recovery || !matches!(result, Err(StepError::IterationBudget)) {
-                return result;
+            match map.step(old, input, family, phase, h, delta) {
+                Ok((now, angle, next, iteration, true)) => {
+                    return Ok((now, angle, next, iteration))
+                }
+                Ok((_, _, next, iteration, false)) if self.verify_reduced => {
+                    let (now, angle, residual) =
+                        self.residual(old, input, family, phase, h, next)?;
+                    let correction = self.lu.solve(residual.map(|v| -v))?;
+                    if maximum(&residual) <= 2e-13 && maximum(&correction) <= 2e-9 {
+                        self.checked_proposals.set(self.checked_proposals.get() + 1);
+                        return Ok((now, angle, next, iteration));
+                    }
+                    return Err(StepError::IterationBudget);
+                }
+                Err(error) if !matches!(error, StepError::IterationBudget) => return Err(error),
+                _ if !self.diagnostic_recovery => return Err(StepError::IterationBudget),
+                _ => self.fallback_calls.set(self.fallback_calls.get() + 1),
             }
-            self.fallback_calls.set(self.fallback_calls.get() + 1);
         }
         let budget = if self.diagnostic_recovery { 24 } else { 12 };
         for iteration in 1..=budget {
-            let now = delta.map(|d| old.advanced(d.high).advanced(d.low));
-            let bus = now.map(|x| voltage(x, chain::BUS));
-            let f = bus.map(|x| family.frequency(x).map(|pair| pair.0));
-            let f = [
-                f[0].as_ref().map_err(|_| StepError::InvalidInput)?,
-                f[1].as_ref().map_err(|_| StepError::InvalidInput)?,
-            ];
-            let stages = A.map(|row| (phase + h * (row[0] * f[0] + row[1] * f[1])).rem_euclid(1.));
-            let mut p = [
-                chain::linearize_prevalidated::<false>(
-                    self.params,
-                    [0.; 5],
-                    old,
-                    delta[0],
-                    h,
-                    now[0],
-                )?,
-                chain::linearize_prevalidated::<false>(
-                    self.params,
-                    [0.; 5],
-                    old,
-                    delta[1],
-                    h,
-                    now[1],
-                )?,
-            ];
-            for i in 0..2 {
-                for (j, resistance) in [R59, R60].into_iter().enumerate() {
-                    let node = LOAD[j];
-                    p[i].dc[node] +=
-                        ((now[i].high[node] - input[i][j]) + now[i].low[node]) / resistance;
-                }
-                p[i].dc[chain::BUS] += family
-                    .observe(bus[i], stages[i])
-                    .map_err(|_| StepError::InvalidInput)?
-                    .currents_a[2];
-            }
-            let residual = std::array::from_fn(|r| {
-                let i = r / SIZE;
-                let row = local(r % SIZE);
-                p[i].dc[row] + B[i][0] * p[0].charge_over_h[row] + B[i][1] * p[1].charge_over_h[row]
-            });
+            let (now, end_phase, residual) = self.residual(old, input, family, phase, h, delta)?;
             let change = self.lu.solve(residual.map(|v| -v))?;
             if maximum(&residual) <= 2e-13 && maximum(&change) <= 2e-9 {
-                return Ok((now, stages[1], delta, iteration));
+                return Ok((now, end_phase, delta, iteration));
             }
             for i in 0..2 {
                 let d = std::array::from_fn(|k| match k {
@@ -303,7 +320,7 @@ impl Step<'_> {
         seed: [chain::State; 2],
     ) -> Result<(Closure, usize), Failure> {
         let mut result = self.evaluate(v, seed, None)?;
-        let budget = if self.model.diagnostic_recovery {
+        let budget = if self.model.diagnostic_recovery || self.model.verify_reduced {
             12
         } else {
             6
@@ -346,7 +363,9 @@ impl Step<'_> {
                 self.model.tangent.replace(Some(factor));
             }
         }
-        if self.model.diagnostic_recovery && maximum(&result.residual) <= 1e-10 {
+        if (self.model.diagnostic_recovery || self.model.verify_reduced)
+            && maximum(&result.residual) <= 1e-10
+        {
             return Ok((result, budget + 1));
         }
         Err(("interface", StepError::IterationBudget))
@@ -461,6 +480,7 @@ pub fn run(
     reuse: bool,
     warm: bool,
     diagnostic_recovery: bool,
+    verify_reduced: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     assert!(mode <= 5);
     let adaptive = mode != 0;
@@ -533,6 +553,7 @@ pub fn run(
                     reuse,
                     warm,
                     diagnostic_recovery,
+                    verify_reduced,
                 )
                 .map_err(|e| format!("audio factor: {e:?}"))?,
             )
@@ -596,7 +617,12 @@ pub fn run(
                     .flatten()
                     .map(|m| m.fallback_calls.get())
                     .sum();
-                eprintln!("STOP,{},{block_ns},{fallbacks}", tick / 512);
+                let checks: usize = models
+                    .iter()
+                    .flatten()
+                    .map(|m| m.checked_proposals.get())
+                    .sum();
+                eprintln!("STOP,{},{block_ns},{fallbacks},{checks}", tick / 512);
             }
             format!("loaded ports at tick {}: {e:?}", 8 * tick)
         })?;
@@ -620,8 +646,13 @@ pub fn run(
         .flatten()
         .map(|m| m.fallback_calls.get())
         .sum();
+    let checks: usize = models
+        .iter()
+        .flatten()
+        .map(|m| m.checked_proposals.get())
+        .sum();
     eprintln!(
-        "PORTS,{peak_ns},{max_outer},{max_audio},{max_residual:.17e},{},{},{},{:.17e},{builds},{reused},{},{},{},{block_ns},{fallbacks}",
+        "PORTS,{peak_ns},{max_outer},{max_audio},{max_residual:.17e},{},{},{},{:.17e},{builds},{reused},{},{},{},{block_ns},{fallbacks},{checks}",
         stats.solve, stats.defect, stats.switch, stats.worst, stats.trials, stats.reused, stats.whole,
     );
     out.flush()?;

@@ -54,7 +54,7 @@ def radau_devices():
 
 def telemetry(stderr):
     (tag, peak, outer, audio, mismatch, solve, defect, switch, worst, builds, reused,
-     trials, reused_substeps, whole, elapsed, fallbacks) = stderr.split(",")
+     trials, reused_substeps, whole, elapsed, fallbacks, checks) = stderr.split(",")
     assert tag == "PORTS"
     return dict(max_frame_ns=int(peak), max_outer_iterations=int(outer),
                 max_audio_iterations=int(audio), max_port_mismatch_v=float(mismatch),
@@ -63,7 +63,7 @@ def telemetry(stderr):
                 interface_factorizations=int(builds), reused_directions=int(reused),
                 clock_trials=int(trials), reused_substeps=int(reused_substeps),
                 whole_steps=int(whole), compute_ns=int(elapsed),
-                nodal_fallbacks=int(fallbacks))
+                nodal_fallbacks=int(fallbacks), checked_proposals=int(checks))
 
 
 def output_columns(samples):
@@ -119,7 +119,7 @@ def validate(raw, reference, info, stride, adaptive):
                 stride_histogram=histogram, accepted_steps=len(steps), near_crossing_steps=nearby)
 
 
-def benchmark_blocks(run, exe, anchor, refs, prior, mode, recover):
+def benchmark_blocks(run, exe, anchor, refs, prior, mode, recover, verify):
     result = {}
     # The local positive map begins just before the switch. The continuous
     # negative case includes both keyboard edges in the same callback.
@@ -129,17 +129,17 @@ def benchmark_blocks(run, exe, anchor, refs, prior, mode, recover):
         phase, _, _, state = grid[start]
         anchor.write_bytes(packed(np.r_[state.ravel(), phase]))
         item = result[name] = dict(start_frame=start, frames=BLOCK, budget_ns=BUDGET_NS,
-                                   anchor_sha256=c.sha(anchor), completed=False, realtime=False, diagnostic_recovery=recover)
-        cmd = [exe, "closed-returns", anchor, key, BLOCK, 256, 8, mode, "true", "true", "true", str(recover).lower()]
+                                   anchor_sha256=c.sha(anchor), completed=False, realtime=False, diagnostic_recovery=recover, verify_reduced=verify)
+        cmd = [exe, "closed-returns", anchor, key, BLOCK, 256, 8, mode, "true", "true", "true", str(recover).lower(), str(verify).lower()]
         trial = run(cmd)
         item.update(exit_code=trial.returncode, output_sha256=c.digest(trial.stdout))
         stderr = trial.stderr.decode(errors="replace").strip()
         if trial.returncode:
             lines = stderr.splitlines()
-            tag, frames, elapsed, fallbacks = lines[0].split(",")
+            tag, frames, elapsed, fallbacks, checks = lines[0].split(",")
             assert tag == "STOP"
             item.update(completed_frames=int(frames), partial_compute_ns=int(elapsed), nodal_fallbacks=int(fallbacks),
-                        error="\n".join(lines[1:]))
+                        checked_proposals=int(checks), error="\n".join(lines[1:]))
             replay = run(cmd)
             assert replay.returncode == trial.returncode and replay.stdout == trial.stdout
             assert replay.stderr.decode(errors="replace").strip().splitlines()[1:] == lines[1:]
@@ -199,8 +199,10 @@ def main():
     parser.add_argument("--blocks", action="store_true", help="time uninterrupted 128-frame solver blocks")
     parser.add_argument("--policy", type=int, choices=(3, 4, 5), default=4)
     parser.add_argument("--diagnostic-recovery", action="store_true")
+    parser.add_argument("--verify-reduced", action="store_true", help="verify the last reduced proposal with nodal KCL")
     args = parser.parse_args()
-    assert args.blocks or not args.diagnostic_recovery
+    assert args.blocks or not (args.diagnostic_recovery or args.verify_reduced)
+    assert not (args.diagnostic_recovery and args.verify_reduced)
     assert not list(c.AREA.iterdir())
     seq = 1
     while (out := c.ROOT / f"evidence/rf_d_pilot_closed_returns{seq:02}.json").exists():
@@ -231,8 +233,8 @@ def main():
         Some("ports") => ports(),
         Some("contour-endpoints") if args.len() == 6 =>
             contour_probe::capture_endpoints(&args[2], args[3].parse()?, args[4].parse()?, args[5].parse()?),
-        Some("closed-returns") if args.len() == 12 =>
-            closed_returns::run(&args[2], args[3].parse()?, args[4].parse()?, args[5].parse()?, args[6].parse()?, args[7].parse()?, args[8].parse()?, args[9].parse()?, args[10].parse()?, args[11].parse()?),''')
+        Some("closed-returns") if args.len() == 13 =>
+            closed_returns::run(&args[2], args[3].parse()?, args[4].parse()?, args[5].parse()?, args[6].parse()?, args[7].parse()?, args[8].parse()?, args[9].parse()?, args[10].parse()?, args[11].parse()?, args[12].parse()?),''')
         code += f'\n#[path = "{(c.ROOT / MODEL).as_posix()}"] mod closed_returns;\n'
         devices, report["unit_bias_underflow_columns"] = radau_devices()
         report["devices_sha256"] = c.sha(devices)
@@ -245,7 +247,7 @@ def main():
         assert built.returncode == 0, built.stderr.decode(errors="replace")
         anchor = c.AREA / "closed-returns.anchor"
         if args.blocks:
-            report["blocks"] = benchmark_blocks(run, exe, anchor, refs, prior, args.policy, args.diagnostic_recovery)
+            report["blocks"] = benchmark_blocks(run, exe, anchor, refs, prior, args.policy, args.diagnostic_recovery, args.verify_reduced)
             report["passed"] = all(item.get("comparison_passed", False)
                                    for item in report["blocks"].values())
         else:
@@ -259,7 +261,7 @@ def main():
                 entry = report["windows"][label] = dict(reference=inspect_reserve(ref.stdout, info), modes={})
                 for stride, budget, policy, reduced, reuse, warm in MODES:
                     adaptive = policy != 0
-                    cmd = [exe, "closed-returns", anchor, key, frames, stride, budget, policy, str(reduced).lower(), str(reuse).lower(), str(warm).lower(), "false"]
+                    cmd = [exe, "closed-returns", anchor, key, frames, stride, budget, policy, str(reduced).lower(), str(reuse).lower(), str(warm).lower(), "false", "false"]
                     trial = run(cmd)
                     stderr = trial.stderr.decode(errors="replace").strip()
                     result = dict(exit_code=trial.returncode, output_sha256=c.digest(trial.stdout), passed=False)

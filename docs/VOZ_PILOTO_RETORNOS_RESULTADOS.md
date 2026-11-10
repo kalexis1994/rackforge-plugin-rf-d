@@ -609,3 +609,18 @@ El tramo positivo de referencia posterior al frame 128 se
 calculó con el solver fino y se conservaron sólo los endpoints
 del host y los intervalos del biestable.
 [Diagnóstico de 128 frames](../evidence/rf_d_pilot_closed_returns15.json).
+
+La variante siguiente conserva la última propuesta del receptor
+reducido si su criterio de desplazamiento no converge. Comprueba
+KCL y la corrección con los límites que ya usa el receptor nodal,
+0,2 pA y 2 nV, en esa propuesta. La comprobación cuenta en la
+medición y se conserva el estado sólo si pasa.
+
+Los bloques tardaron 4,20 s y 1,14 s. La comprobación admitió
+610 propuestas en la rama positiva y 9 en la negativa, sin
+iteraciones de rescate del receptor nodal. Se contrastaron los
+128 endpoints de cada bloque, con 0,178 pA como peor error de
+R59/R60. El cruce quedó en **319096–319104**. Ambos tiempos
+superan el presupuesto y la prueba física del candidato en
+Desktop queda pendiente.
+[Medición a 128 frames](../evidence/rf_d_pilot_closed_returns16.json).

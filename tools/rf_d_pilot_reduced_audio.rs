@@ -167,7 +167,7 @@ impl Map {
         phase: f64,
         h: f64,
         seed: [chain::State; 2],
-    ) -> Result<([chain::State; 2], f64, [chain::State; 2], usize), StepError> {
+    ) -> Result<([chain::State; 2], f64, [chain::State; 2], usize, bool), StepError> {
         let old_offset = old.difference(self.anchor);
         let mut x = seed.map(|delta| {
             old.advanced(delta.high)
@@ -186,7 +186,8 @@ impl Map {
             }
         });
         let linear = self.affine.each_ref().map(|row| dot(row, &state));
-        for iteration in 1..=12 {
+        let budget = 12;
+        for iteration in 1..=budget {
             let bus = x.map(|row| voltage(self.anchor, chain::BUS) + row[chain::BUS]);
             let f = bus.map(|v| {
                 family
@@ -220,14 +221,15 @@ impl Map {
             for r in 0..PAIR {
                 x[r / SIZE][local(r % SIZE)] = response[r];
             }
-            if iteration >= 2 && maximum(&error) <= 2e-12 && response.iter().all(|v| v.is_finite())
-            {
+            let settled = iteration >= 2 && maximum(&error) <= 2e-12;
+            if (settled || iteration == budget) && response.iter().all(|v| v.is_finite()) {
                 let now = x.map(|v| self.anchor.advanced(v));
                 return Ok((
                     now,
                     angles[1],
                     now.map(|v| chain::State::from_nodes(v.difference(old))),
                     iteration,
+                    settled,
                 ));
             }
         }
