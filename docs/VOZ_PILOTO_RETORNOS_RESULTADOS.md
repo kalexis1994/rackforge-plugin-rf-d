@@ -1628,3 +1628,26 @@ La prueba usa ventanas de hasta cinco frames
 y deja abierta la medición de 128 frames en el
 host.
 [Transferencia un intervalo más tarde](../evidence/rf_d_pilot_bistable_handoff04.json).
+
+### Transferencia y continuación nativas
+
+El banco ejecuta en un mismo proceso Rust el reloj
+de C4, la transferencia en el borde del cruce,
+las dos etapas del intervalo proyectado y el
+reinicio de Radau a 96 kHz. La proyección evalúa
+sólo los dos puntos vecinos de cada edad. Valida
+las tablas al cargarlas y limita los pesos al
+dominio del reloj. Conserva x23 − x25 al reconstruir
+las dos tensiones de la placa de C4.
+
+Las tensiones y corrientes coincidieron bit a bit
+con el adaptador Python en las tres escenas
+positivas. Los dos negativos quedaron sin cruces.
+La prueba cronometró 2.000 repeticiones por escena
+positiva. Las medianas de la ruta nativa fueron
+192,5–198,3 µs y el máximo observado fue 317,1 µs
+por ventana de cinco frames. Las fronteras del
+bloque siguen impuestas durante el intervalo
+adicional y la continuación. Esta medición
+excluye el receptor y el plazo de RackForge.
+[Contraste y coste nativos](../evidence/rf_d_pilot_bistable_handoff05.json).

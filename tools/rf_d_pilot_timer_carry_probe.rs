@@ -13,6 +13,30 @@ mod latch_charge;
 mod precursor;
 #[path = "rf_d_pilot_timer_rc.rs"]
 mod timer;
+#[cfg(pilot_native_handoff)]
+use attack as attack_cell;
+#[cfg(pilot_native_handoff)]
+use latch_charge as latch_charge_driver;
+#[cfg(pilot_native_handoff)]
+pub use rf_d_circuit::StepError;
+#[cfg(pilot_native_handoff)]
+#[path = "rf_d_pilot_bistable_return.rs"]
+mod bistable;
+#[cfg(pilot_native_handoff)]
+#[path = "rf_d_pilot_contour_ports.rs"]
+mod contour_ports;
+#[cfg(pilot_native_handoff)]
+#[path = "rf_d_pilot_bistable_handoff.rs"]
+mod handoff;
+#[cfg(pilot_native_handoff)]
+#[path = "rf_d_pilot_bistable_handoff_probe.rs"]
+mod handoff_probe;
+#[cfg(pilot_native_handoff)]
+#[path = "rf_d_pilot_q15_return.rs"]
+mod q15;
+#[cfg(pilot_native_handoff)]
+#[path = "rf_d_reduced_engine_lu.rs"]
+mod reduced_lu;
 
 use std::{
     error::Error,
@@ -66,7 +90,15 @@ fn main() -> Result<(), Box<dyn Error>> {
         + carry::POST_POINTS * 31
         + carry::STATE)
         * 8;
-    assert_eq!(raw.len(), length);
+    let mode = std::env::args().nth(1);
+    #[cfg(pilot_native_handoff)]
+    let native = matches!(
+        mode.as_deref(),
+        Some("native-handoff" | "bench-native-handoff")
+    );
+    #[cfg(not(pilot_native_handoff))]
+    let native = false;
+    assert!(raw.len() == length || native && raw.len() > length && raw.len() % 8 == 0);
     let mut values = raw
         .chunks_exact(8)
         .map(|x| f64::from_le_bytes(x.try_into().unwrap()));
@@ -97,7 +129,14 @@ fn main() -> Result<(), Box<dyn Error>> {
         readout: std::array::from_fn(|_| std::array::from_fn(|_| next())),
     }));
     let initial = std::array::from_fn(|_| next());
-    let mode = std::env::args().nth(1);
+    #[cfg(pilot_native_handoff)]
+    if native {
+        return handoff_probe::run(
+            values,
+            || render(&family, &event, &post, initial, |_, _, _| {}, |_| {}),
+            mode.as_deref() == Some("bench-native-handoff"),
+        );
+    }
     if mode.as_deref() == Some("bench") {
         const PASSES: usize = 2_000;
         let mut times = [0; PASSES];

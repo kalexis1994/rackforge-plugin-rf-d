@@ -35,6 +35,37 @@ pub struct State {
     pub decay: [f64; 3],  // x9, x10, x11
 }
 
+pub fn observations(state: State, drive: Drive) -> [f64; 20] {
+    let [x25, x26, x27, x28, x23] = state.nodes;
+    let [x0, x1, x3, x2, x4] = state.volume;
+    let [x6, x8] = state.attack;
+    let [x9, x10, x11] = state.decay;
+    let cr6 = 1e-8 * ((x4 - x27) / (1.5 * crate::latch_charge_driver::VT)).exp_m1();
+    let r59 = (x3 - drive.vca_base) / 68_000.;
+    [
+        x25,
+        x26,
+        x27,
+        x28,
+        x23,
+        x0,
+        x1,
+        x3,
+        x2,
+        x4,
+        cr6,
+        r59,
+        x6,
+        x8,
+        x9,
+        x10,
+        x11,
+        (x26 - x6) / R40,
+        (x8 - drive.c2) / 1000.,
+        (drive.c2 - x11) / 10_000.,
+    ]
+}
+
 pub(crate) struct Stage {
     pub(crate) state: State,
     pub(crate) current: [f64; N],

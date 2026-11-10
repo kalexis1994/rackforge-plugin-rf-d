@@ -164,14 +164,7 @@ fn oracle(old: State, u: [Drive; 2], h: Option<f64>) -> Result<[State; 2], StepE
 }
 
 fn row(state: State, u: Drive) -> Row {
-    let x = pack(state);
-    let cr6 = 1e-8 * ((x[9] - x[2]) / (1.5 * latch_charge_driver::VT)).exp_m1();
-    let r59 = (x[7] - u.vca_base) / 68_000.;
-    std::array::from_fn(|i| match i {
-        10 => cr6,
-        11 => r59,
-        _ => x[i],
-    })
+    bistable::observations(state, u)[..12].try_into().unwrap()
 }
 
 fn drive_with_sustain(row: &[f64]) -> Drive {
@@ -179,21 +172,6 @@ fn drive_with_sustain(row: &[f64]) -> Drive {
         x14: row[6],
         ..drive(row[..6].try_into().unwrap())
     }
-}
-
-fn load_row(state: State, u: Drive) -> [f64; 8] {
-    let [x6, x8] = state.attack;
-    let [x9, x10, x11] = state.decay;
-    [
-        x6,
-        x8,
-        x9,
-        x10,
-        x11,
-        (state.nodes[1] - x6) / 3300.,
-        (x8 - u.c2) / 1000.,
-        (u.c2 - x11) / 10_000.,
-    ]
 }
 
 fn run(
@@ -257,12 +235,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .chunks_exact(14)
             .map(|r| [drive_with_sustain(&r[..7]), drive_with_sustain(&r[7..])])
             .collect();
-        let combine = |state, u| row(state, u).into_iter().chain(load_row(state, u));
         let mut values = Vec::with_capacity(20 * (1 + 2 * inputs.len()));
-        values.extend(combine(seed, start));
+        values.extend(bistable::observations(seed, start));
         let mut emit = |stages: [State; 2], drives: [Drive; 2]| {
             for i in 0..2 {
-                values.extend(combine(stages[i], drives[i]));
+                values.extend(bistable::observations(stages[i], drives[i]));
             }
         };
         if seeded {
