@@ -721,3 +721,16 @@ comparten la historia aceptada del tick. Exigir
 igualdad por bits en el núcleo de carga, en toda
 la trayectoria y en las cargas finales frente
 al control con el mismo predictor.
+
+Con `--reuse-q15-endpoint`, conservar en la semilla
+verificada el incremento exacto BE/BC, su tangente
+en F y las filas de conducción previas a CR6.
+La primera evaluación cargada recibe el mismo par
+de voltajes y las mismas fuentes Q25/CR8 del tick.
+Aplicar la corriente y la pendiente de CR6 del
+seguidor cerrado y comprobar las filas completas.
+Descartar el cálculo provisional si se reintenta
+con otros voltajes o desde la historia aceptada.
+El perfil cuenta los usos y el tiempo de armar
+las filas cargadas. Exigir igualdad por bits y
+conservar las reservas del control.

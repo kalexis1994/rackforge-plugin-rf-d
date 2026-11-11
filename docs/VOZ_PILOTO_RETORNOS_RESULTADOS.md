@@ -3092,3 +3092,33 @@ El primer intento se detuvo al compilar el
 oráculo por una llave de cierre sobrante. La
 corrección quedó aplicada antes de los pases.
 [Intento de compilación](../evidence/rf_d_pilot_fast_r5971.json).
+
+### Reúso de la carga y la conducción al cerrar Q15
+
+El cálculo verificado de la semilla se reutilizó
+en los 256 ticks de cada bloque y la conducción
+incorporó la corriente y la pendiente de CR6 del
+seguidor cerrado. El armado cargado instrumentado
+consumió 7,5 µs por bloque en ambas ramas.
+
+Se conservaron por bits la trayectoria y la carga
+frente al control y al pase anterior. Pasaron Radau,
+la auditoría nodal y la partición 64/128. Hubo
+cero asignaciones.
+
+En positivo, la mediana pareada bajó 0,97 % a
+1,497 ms. El pico de los tres lotes fue 1,728 ms.
+[Reúso positivo](../evidence/rf_d_pilot_fast_r5974.json).
+
+En negativo, la mediana pareada bajó 3,36 % a
+1,063 ms. Los picos fueron 1,275, 1,177 y
+1,536 ms. El plazo de 1,333 ms sigue abierto
+en el banco nativo.
+[Reúso negativo](../evidence/rf_d_pilot_fast_r5975.json).
+
+La ruta de Q15 con seguidor impuesto pasó la
+auditoría en polarización directa, inversa y mixta.
+La diferencia máxima de corriente fue 4,34e−19 A
+y la de la matriz Schur, 5,20e−18 S. La carga y la
+matriz de capacitancias coincidieron por bits.
+[Auditoría del puerto Q15](../evidence/rf_d_pilot_q15_audit04.json).

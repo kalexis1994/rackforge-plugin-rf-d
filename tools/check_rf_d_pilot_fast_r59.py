@@ -36,7 +36,7 @@ RETURN_LIMIT_A = 2e-9
 RESET_TANGENT_LIMIT_S = 2e-11
 PROFILE_STAGES = ("initial_follower", "receiver_history", "receiver_root", "loaded_follower",
                   "follower_response", "receiver_tangent", "receiver_reconstruction",
-                  "affine_follower_seed", "q15_seed", "q15_terminal_history")
+                  "affine_follower_seed", "q15_seed", "q15_terminal_history", "q15_loaded_stamp")
 
 
 def profile_statistics(lines, read_timing, exact):
@@ -46,11 +46,13 @@ def profile_statistics(lines, read_timing, exact):
     for name, line in zip(PROFILE_STAGES, lines[1:-1], strict=True):
         calls, elapsed_ns = map(int, line.split(","))
         stages[name] = dict(calls=calls, elapsed_ns=elapsed_ns, mean_per_block_ns=elapsed_ns / blocks)
-    evaluations, reused, fallbacks, prediction_fallbacks = map(int, lines[-1].split(","))
+    evaluations, reused, fallbacks, prediction_fallbacks, q15_reused = map(int, lines[-1].split(","))
     assert 0 <= reused <= min(stages["receiver_root"]["calls"], evaluations)
+    assert 0 <= q15_reused <= stages["q15_loaded_stamp"]["calls"]
     return dict(bit_exact=exact, instrumented_timing=instrumented, stages=stages,
                 successful_root_evaluations=evaluations, reused_root_evaluations=reused,
-                follower_fallbacks=fallbacks, prediction_fallbacks=prediction_fallbacks)
+                follower_fallbacks=fallbacks, prediction_fallbacks=prediction_fallbacks,
+                q15_reused_endpoints=q15_reused)
 
 
 def dynamic_q15(run, report, joined, exe, control, profiled, dc, bias, center, limits, stimulus, cathode,
@@ -171,7 +173,8 @@ def dynamic_q15(run, report, joined, exe, control, profiled, dc, bias, center, l
                       and crossings(exact_rows[:, 15]) == report["candidate_crossings"])
         key = report["q15_comparison"]
         if key in ("q15_packed_products_comparison", "q15_packed_odd_comparison",
-                   "q15_packed_law_comparison", "q15_prepared_terminal_comparison"):
+                   "q15_packed_law_comparison", "q15_prepared_terminal_comparison",
+                   "q15_reused_endpoint_comparison"):
             passed = passed and raw == exact_raw
         report[key] = dict(
             passed=passed, control_output_sha256=digest(exact_raw), endpoint_audit=exact_audit,
@@ -231,6 +234,8 @@ def main():
                         help="use the last accepted terminal capacitance in the Q15 seed")
     parser.add_argument("--prepare-q15-terminal", action="store_true",
                         help="reuse the exact charge integral's accepted endpoint across Q15 trials")
+    parser.add_argument("--reuse-q15-endpoint", action="store_true",
+                        help="reuse the exact Q15 stamp from the verified seed at the same voltages")
     parser.add_argument("--predict-r59-affine", action="store_true",
                         help="seed R59 by solving the follower with a local affine receiver response")
     parser.add_argument("--predict-r59-junctions", action="store_true",
@@ -254,7 +259,8 @@ def main():
     seed_options.add_argument("--reuse-law", action="store_true",
                               help="reuse the previous trial's law evaluation at the same junctions")
     args = parser.parse_args()
-    if (args.predict_q15_audio or args.predict_q15_cr6 or args.predict_q15_charge) and not args.predict_q15:
+    if (args.predict_q15_audio or args.predict_q15_cr6 or args.predict_q15_charge
+            or args.reuse_q15_endpoint) and not args.predict_q15:
         parser.error("Q15 predictor refinements require --predict-q15")
     if (args.cached_q15_gain or args.predict_q15 or args.q15_retry or args.predict_r59_affine) and not args.dynamic_q15:
         parser.error("Q15 optimizations require --dynamic-q15")
@@ -311,6 +317,7 @@ def main():
                   predict_q15_cr6=args.predict_q15_cr6,
                   predict_q15_charge=args.predict_q15_charge,
                   prepare_q15_terminal=args.prepare_q15_terminal,
+                  reuse_q15_endpoint=args.reuse_q15_endpoint,
                   predict_r59_affine=args.predict_r59_affine,
                   predict_r59_junctions=args.predict_r59_junctions,
                   pack_receiver_law=args.pack_receiver_law,
@@ -462,6 +469,7 @@ def main():
                 (args.pack_receiver_law, "pilot_receiver_packed_law", "q15_packed_law_comparison"),
                 (args.predict_q15_charge, "pilot_r59_predict_q15_charge", "q15_charge_prediction_comparison"),
                 (args.prepare_q15_terminal, "pilot_r59_prepared_terminal", "q15_prepared_terminal_comparison"),
+                (args.reuse_q15_endpoint, "pilot_r59_reuse_q15_endpoint", "q15_reused_endpoint_comparison"),
             )
             enabled = [(flag, key) for selected, flag, key in refinements if selected]
             gain_control = None

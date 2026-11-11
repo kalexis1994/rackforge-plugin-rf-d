@@ -63,11 +63,12 @@ pub(crate) fn write_profile(out: &mut impl Write, profile: &fast_r59::Profile) -
     }
     writeln!(
         out,
-        "{},{},{},{}",
+        "{},{},{},{},{}",
         profile.successful_root_evaluations,
         profile.reused_root_evaluations,
         profile.follower_fallbacks,
-        profile.prediction_fallbacks
+        profile.prediction_fallbacks,
+        profile.q15_reused_endpoints
     )
 }
 

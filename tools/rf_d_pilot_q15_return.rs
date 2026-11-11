@@ -59,26 +59,48 @@ pub(crate) fn stage(old: State, state: State, drive: Drive) -> Result<Stage, Ste
 }
 
 pub(crate) fn conduction(
-    [base, collector]: [f64; 2],
+    q15_v: [f64; 2],
     drive: Drive,
     cr6: f64,
     cr6_tangent: f64,
 ) -> Result<([f64; 2], [[f64; 2]; 2]), StepError> {
-    let (cr8, gd8) = germanium(drive.cr8_anode - base)?;
+    Ok(conduction_without_cr6(q15_v, [drive.q25_base, drive.q25_collector, drive.cr8_anode])?
+        .with_cr6([cr6, cr6_tangent]))
+}
+
+#[derive(Clone, Copy)]
+pub(crate) struct Conduction {
+    current: [f64; 2],
+    jacobian: [[f64; 2]; 2],
+}
+
+impl Conduction {
+    pub(crate) fn with_cr6(mut self, [current, tangent]: [f64; 2]) -> ([f64; 2], [[f64; 2]; 2]) {
+        self.current[0] -= current;
+        self.jacobian[0][0] -= tangent;
+        (self.current, self.jacobian)
+    }
+}
+
+pub(crate) fn conduction_without_cr6(
+    [base, collector]: [f64; 2],
+    [q25_base, q25_collector, cr8_anode]: [f64; 3],
+) -> Result<Conduction, StepError> {
+    let (cr8, gd8) = germanium(cr8_anode - base)?;
     let (f, gf) = junction(base)?;
     let (r, gr) = junction(base - collector)?;
     let current = [
-        (base - drive.q25_collector) / 33_000. + f / 100. + r / 5. - cr8 - cr6,
-        (collector - 9.3) / 10_000. + (collector - drive.q25_base) / 10_000. + f - 1.2 * r,
+        (base - q25_collector) / 33_000. + f / 100. + r / 5. - cr8,
+        (collector - 9.3) / 10_000. + (collector - q25_base) / 10_000. + f - 1.2 * r,
     ];
     let jacobian = [
         [
-            1. / 33_000. + gf / 100. + gr / 5. + gd8 - cr6_tangent,
+            1. / 33_000. + gf / 100. + gr / 5. + gd8,
             -gr / 5.,
         ],
         [gf - 1.2 * gr, 2. / 10_000. + 1.2 * gr],
     ];
-    Ok((current, jacobian))
+    Ok(Conduction { current, jacobian })
 }
 
 fn evaluate(
