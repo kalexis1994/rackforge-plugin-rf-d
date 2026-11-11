@@ -747,3 +747,15 @@ y verifica el límite de residual de 2e−13 en cada
 raíz proyectada del bloque. Exigir también las
 reservas del mismo reloj y la igualdad entre
 las compilaciones instrumentada y ordinaria.
+
+Con `--predict-r59-base-drift`, guardar al aceptar
+el paso el cambio de la base del VCA menos la
+respuesta afín debida al cambio de fuente R59.
+Sumar ese cambio en V al intercepto de la semilla
+del paso siguiente. La pendiente de R59 y la
+estimación de este cambio se usan sólo para
+sembrar el seguidor. La raíz del receptor y el
+cierre cargado conservan sus ecuaciones completas.
+Comparar contra el mismo cierre afín, medir
+cuántos intentos de R59 quedan y exigir la
+reserva de cargas del mismo reloj.

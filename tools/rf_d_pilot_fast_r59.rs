@@ -18,6 +18,8 @@ pub struct State {
     pub volume: [f64; 5], // Q3 base, Q2 base, loudness, collector, reset return.
     pub vca_base: f64,
     pub gradient: Option<f64>,
+    #[cfg(pilot_r59_predict_base_drift)]
+    pub(crate) base_drift_v: f64,
     #[cfg(pilot_r59_junction_predictor)]
     pub(crate) junction_direction: Option<plant::JunctionDirection>,
     #[cfg(pilot_r59_predict_follower)]
@@ -178,11 +180,15 @@ pub fn advance(
     {
         #[cfg(pilot_r59_predict_affine)]
         let affine = measure!(profile, 7, old.gradient.and_then(|gain| {
+            #[cfg(pilot_r59_predict_base_drift)]
+            let seed_base = old.vca_base + old.base_drift_v;
+            #[cfg(not(pilot_r59_predict_base_drift))]
+            let seed_base = old.vca_base;
             crate::contour_ports::predict_volume(
                 volume,
                 drive[1],
                 drive[2],
-                [old.volume[2], old.vca_base, gain],
+                [old.volume[2], seed_base, gain],
             )
             .ok()
         }));
@@ -386,6 +392,10 @@ fn advance_inner(
                 volume,
                 vca_base: ports.loads_v[0],
                 gradient,
+                #[cfg(pilot_r59_predict_base_drift)]
+                base_drift_v: gradient.map_or(0., |gain| {
+                    (ports.loads_v[0] - old.vca_base) - gain * (volume[2] - old.volume[2])
+                }),
                 #[cfg(pilot_r59_junction_predictor)]
                 junction_direction,
                 #[cfg(pilot_r59_predict_follower)]

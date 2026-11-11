@@ -101,6 +101,8 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
         volume: [seed[0], seed[1], seed[3], seed[2], seed[4]],
         vca_base: values[32] + values[100],
         gradient: None,
+        #[cfg(pilot_r59_predict_base_drift)]
+        base_drift_v: 0.,
         #[cfg(pilot_r59_junction_predictor)]
         junction_direction: None,
         #[cfg(pilot_r59_predict_follower)]

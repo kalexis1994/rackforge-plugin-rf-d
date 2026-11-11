@@ -3144,3 +3144,22 @@ por bits. Las medianas del candidato variaron entre
 1,086 y 1,405 ms. Para esta rama se conserva el
 predictor directo en los pases siguientes.
 [Proyección de historia negativa](../evidence/rf_d_pilot_fast_r5977.json).
+
+### Cambio de la base del VCA en la semilla del seguidor
+
+En positivo, la semilla eliminó 189 reintentos de
+R59. El bloque pasó de 445 a 256 raíces y de
+1146 a 957 evaluaciones del residual de junturas.
+La diferencia de carga final del receptor fue
+5,56e−21 C frente a la reserva de 1e−20 C.
+Pasaron Radau, la auditoría nodal, los cruces y la
+partición. La mediana pareada bajó 9,21 % a
+1,387 ms y el pico fue 2,139 ms.
+[Base del VCA positiva](../evidence/rf_d_pilot_fast_r5978.json).
+
+En negativo se mantuvieron 256 raíces por bloque
+y coincidieron la salida de audio y las cargas.
+La mediana pareada subió 0,51 % y el pico fue
+2,552 ms. Se conserva la semilla previa en esta
+rama. Ambos pases registraron cero asignaciones.
+[Base del VCA negativa](../evidence/rf_d_pilot_fast_r5979.json).
