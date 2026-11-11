@@ -46,13 +46,17 @@ def profile_statistics(lines, read_timing, exact):
     for name, line in zip(PROFILE_STAGES, lines[1:-1], strict=True):
         calls, elapsed_ns = map(int, line.split(","))
         stages[name] = dict(calls=calls, elapsed_ns=elapsed_ns, mean_per_block_ns=elapsed_ns / blocks)
-    evaluations, reused, fallbacks, prediction_fallbacks, q15_reused = map(int, lines[-1].split(","))
+    counters = lines[-1].split(",")
+    evaluations, reused, fallbacks, prediction_fallbacks, q15_reused, projected = map(int, counters[:6])
+    projection_error, direct_residual = map(float, counters[6:])
     assert 0 <= reused <= min(stages["receiver_root"]["calls"], evaluations)
     assert 0 <= q15_reused <= stages["q15_loaded_stamp"]["calls"]
+    assert 0 <= projected <= stages["receiver_root"]["calls"]
     return dict(bit_exact=exact, instrumented_timing=instrumented, stages=stages,
                 successful_root_evaluations=evaluations, reused_root_evaluations=reused,
                 follower_fallbacks=fallbacks, prediction_fallbacks=prediction_fallbacks,
-                q15_reused_endpoints=q15_reused)
+                q15_reused_endpoints=q15_reused, r59_projected_histories=projected,
+                r59_projection_error=projection_error, r59_direct_residual=direct_residual)
 
 
 def dynamic_q15(run, report, joined, exe, control, profiled, dc, bias, center, limits, stimulus, cathode,
@@ -194,8 +198,9 @@ def dynamic_q15(run, report, joined, exe, control, profiled, dc, bias, center, l
         lines = run([profiled, "bench"], payload).decode().splitlines()
         profile = profile_statistics(lines, read_timing, exact)
         report["profile"] = profile
-        report["passed"] = report["passed"] and exact
-        report["realtime"] = report["realtime"] and exact
+        profile_passed = exact and profile["r59_direct_residual"] <= 2e-13
+        report["passed"] = report["passed"] and profile_passed
+        report["realtime"] = report["realtime"] and profile_passed
         print("Q15 profile", profile, flush=True)
     print("Q15", report["passed"], report["contrast"], report["max_q15_residual_a"], timing, flush=True)
 
@@ -236,6 +241,8 @@ def main():
                         help="reuse the exact charge integral's accepted endpoint across Q15 trials")
     parser.add_argument("--reuse-q15-endpoint", action="store_true",
                         help="reuse the exact Q15 stamp from the verified seed at the same voltages")
+    parser.add_argument("--project-r59-history", action="store_true",
+                        help="reuse the linear junction predictor for same-history R59 retries")
     parser.add_argument("--predict-r59-affine", action="store_true",
                         help="seed R59 by solving the follower with a local affine receiver response")
     parser.add_argument("--predict-r59-junctions", action="store_true",
@@ -270,6 +277,10 @@ def main():
         parser.error("--pack-receiver-law requires --dynamic-q15")
     if args.prepare_q15_terminal and not args.dynamic_q15:
         parser.error("--prepare-q15-terminal requires --dynamic-q15")
+    if args.project_r59_history and not args.dynamic_q15:
+        parser.error("--project-r59-history requires --dynamic-q15")
+    if args.project_r59_history:
+        args.profile = True
     if args.dynamic_q15:
         args.schur_follower = args.predict_follower = args.predict_cathode = args.tight_follower = True
     if args.packed_odd and not args.packed_products:
@@ -318,6 +329,7 @@ def main():
                   predict_q15_charge=args.predict_q15_charge,
                   prepare_q15_terminal=args.prepare_q15_terminal,
                   reuse_q15_endpoint=args.reuse_q15_endpoint,
+                  project_r59_history=args.project_r59_history,
                   predict_r59_affine=args.predict_r59_affine,
                   predict_r59_junctions=args.predict_r59_junctions,
                   pack_receiver_law=args.pack_receiver_law,
@@ -470,6 +482,7 @@ def main():
                 (args.predict_q15_charge, "pilot_r59_predict_q15_charge", "q15_charge_prediction_comparison"),
                 (args.prepare_q15_terminal, "pilot_r59_prepared_terminal", "q15_prepared_terminal_comparison"),
                 (args.reuse_q15_endpoint, "pilot_r59_reuse_q15_endpoint", "q15_reused_endpoint_comparison"),
+                (args.project_r59_history, "pilot_r59_project_history", "r59_projected_history_comparison"),
             )
             enabled = [(flag, key) for selected, flag, key in refinements if selected]
             gain_control = None

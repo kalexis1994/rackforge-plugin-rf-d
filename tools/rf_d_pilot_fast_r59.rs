@@ -142,6 +142,9 @@ pub struct Profile {
     pub follower_fallbacks: usize,
     pub prediction_fallbacks: usize,
     pub q15_reused_endpoints: usize,
+    pub r59_projected_histories: usize,
+    pub r59_projection_error: f64,
+    pub r59_direct_residual: f64,
 }
 
 macro_rules! measure {
@@ -326,6 +329,12 @@ fn advance_inner(
         #[cfg(all(pilot_r59_profile, pilot_r59_reuse_law))]
         {
             profile.reused_root_evaluations += usize::from(root.reused_evaluation);
+        }
+        #[cfg(all(pilot_r59_profile, pilot_r59_project_history))]
+        if let Some([error, direct_residual]) = root.history_audit {
+            profile.r59_projected_histories += 1;
+            profile.r59_projection_error = profile.r59_projection_error.max(error);
+            profile.r59_direct_residual = profile.r59_direct_residual.max(direct_residual);
         }
         #[cfg(pilot_r59_eager)]
         let completed = measure!(profile, 6, root.finish()).map_err(Error::Audio)?;

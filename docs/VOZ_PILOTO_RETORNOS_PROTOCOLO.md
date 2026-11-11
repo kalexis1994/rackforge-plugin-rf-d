@@ -734,3 +734,16 @@ con otros voltajes o desde la historia aceptada.
 El perfil cuenta los usos y el tiempo de armar
 las filas cargadas. Exigir igualdad por bits y
 conservar las reservas del control.
+
+Con `--project-r59-history`, conservar el predictor
+lineal de junturas del primer intento calculado
+directamente. Cuando se repite el cierre con la
+misma historia FOH, señal y R60, sumar al predictor
+original (ZH·U1[:,R59]+ZU[:,R59])·ΔV_R59. Mantener
+el ancla original entre reintentos. Calcular las
+cargas y las lecturas con la expresión original
+de FOH. El perfil recalcula el predictor directo
+y verifica el límite de residual de 2e−13 en cada
+raíz proyectada del bloque. Exigir también las
+reservas del mismo reloj y la igualdad entre
+las compilaciones instrumentada y ordinaria.

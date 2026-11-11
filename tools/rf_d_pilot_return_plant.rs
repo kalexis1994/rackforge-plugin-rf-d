@@ -12,6 +12,22 @@ const JUNCTIONS: usize = map::IEXP.len();
 const CHARGES: usize = map::F.len();
 #[cfg(pilot_r59_junction_predictor)]
 pub(crate) type JunctionDirection = [f64; JUNCTIONS];
+#[cfg(pilot_r59_project_history)]
+const R59_TO_JUNCTION: [f64; JUNCTIONS] = {
+    let mut gain = [0.; JUNCTIONS];
+    let mut row = 0;
+    while row < JUNCTIONS {
+        let mut sum = -0.;
+        let mut charge = 0;
+        while charge < CHARGES {
+            sum += map::ZH[row][charge] * map::U1[charge][1];
+            charge += 1;
+        }
+        gain[row] = sum + map::ZU[row][1];
+        row += 1;
+    }
+    gain
+};
 #[cfg(not(any(pilot_wide_returns, pilot_split_returns)))]
 pub const DRIVE_RANGE: [f64; 2] = [0.015, 0.001];
 #[cfg(pilot_wide_returns)]
@@ -71,6 +87,13 @@ pub(crate) struct Prepared {
     correction: [f64; CHARGES],
 }
 
+#[cfg(pilot_r59_project_history)]
+#[derive(Clone, Copy)]
+struct R59Projection {
+    source_v: f64,
+    predictor: [f64; JUNCTIONS],
+}
+
 impl Prepared {
     pub(crate) fn new(old: State) -> Self {
         Self {
@@ -116,6 +139,30 @@ impl Prepared {
     ) -> Result<Root, Error> {
         let state = &self.old;
         let (base, input) = self.endpoint_terms(signal, drive)?;
+        #[cfg(pilot_r59_project_history)]
+        let (predictor, projection, _projected_history) = {
+            let same_drives = prior.filter(|trial| {
+                input[0].to_bits() == trial.input[0].to_bits()
+                    && input[2].to_bits() == trial.input[2].to_bits()
+            });
+            match same_drives {
+                Some(trial) => {
+                    let anchor = trial.projection;
+                    let delta = input[1] - anchor.source_v;
+                    let predictor = if delta == 0. {
+                        anchor.predictor
+                    } else {
+                        std::array::from_fn(|i| anchor.predictor[i] + R59_TO_JUNCTION[i] * delta)
+                    };
+                    (predictor, anchor, true)
+                }
+                None => {
+                    let predictor = Self::junction_predictor(&base, &input);
+                    (predictor, R59Projection { source_v: input[1], predictor }, false)
+                }
+            }
+        };
+        #[cfg(not(pilot_r59_project_history))]
         let predictor = Self::junction_predictor(&base, &input);
         #[cfg(not(pilot_block_roots))]
         let previous = product(&P, &state.defects);
@@ -156,6 +203,17 @@ impl Prepared {
             let residual: [f64; JUNCTIONS] =
                 std::array::from_fn(|i| z[i] - predictor[i] + feedback[i]);
             if residual.iter().all(|x| x.abs() <= 2e-13) {
+                #[cfg(all(pilot_r59_profile, pilot_r59_project_history))]
+                let history_audit = _projected_history.then(|| {
+                    let direct = Self::junction_predictor(&base, &input);
+                    let mut max_error: f64 = 0.;
+                    let mut max_residual: f64 = 0.;
+                    for i in 0..JUNCTIONS {
+                        max_error = max_error.max((predictor[i] - direct[i]).abs());
+                        max_residual = max_residual.max((z[i] - direct[i] + feedback[i]).abs());
+                    }
+                    [max_error, max_residual]
+                });
                 return Ok(Root {
                     base,
                     input,
@@ -166,6 +224,10 @@ impl Prepared {
                     junction: z,
                     #[cfg(pilot_r59_reuse_law)]
                     slope,
+                    #[cfg(pilot_r59_project_history)]
+                    projection,
+                    #[cfg(all(pilot_r59_profile, pilot_r59_project_history))]
+                    history_audit,
                     #[cfg(pilot_r59_profile)]
                     evaluations: _iteration + 1,
                     #[cfg(all(pilot_r59_profile, pilot_r59_reuse_law))]
@@ -207,6 +269,10 @@ pub(crate) struct Root {
     junction: [f64; JUNCTIONS],
     #[cfg(pilot_r59_reuse_law)]
     slope: [f64; JUNCTIONS],
+    #[cfg(pilot_r59_project_history)]
+    projection: R59Projection,
+    #[cfg(all(pilot_r59_profile, pilot_r59_project_history))]
+    pub(crate) history_audit: Option<[f64; 2]>,
     #[cfg(pilot_r59_profile)]
     pub(crate) evaluations: usize,
     #[cfg(all(pilot_r59_profile, pilot_r59_reuse_law))]

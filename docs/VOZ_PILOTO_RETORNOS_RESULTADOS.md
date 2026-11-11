@@ -3122,3 +3122,25 @@ La diferencia máxima de corriente fue 4,34e−19 A
 y la de la matriz Schur, 5,20e−18 S. La carga y la
 matriz de capacitancias coincidieron por bits.
 [Auditoría del puerto Q15](../evidence/rf_d_pilot_q15_audit04.json).
+
+### Proyección lineal de la historia en los reintentos de R59
+
+En positivo se proyectaron 189 raíces por bloque.
+La diferencia máxima frente al predictor directo
+fue 1,11e−16 en la coordenada adimensional de
+juntura. El mayor residual directo de las raíces
+proyectadas fue 1,963e−13, dentro de 2e−13.
+
+La trayectoria y las cargas coincidieron por bits
+con el control. Pasaron Radau, la auditoría nodal,
+los cruces y la partición 64/128. La mediana
+pareada bajó 1,70 % a 1,465 ms y el pico fue
+1,675 ms. Hubo cero asignaciones.
+[Proyección de historia positiva](../evidence/rf_d_pilot_fast_r5976.json).
+
+En negativo hubo un cierre por tick y cero raíces
+proyectadas. El control y el candidato coincidieron
+por bits. Las medianas del candidato variaron entre
+1,086 y 1,405 ms. Para esta rama se conserva el
+predictor directo en los pases siguientes.
+[Proyección de historia negativa](../evidence/rf_d_pilot_fast_r5977.json).
