@@ -338,19 +338,23 @@ pub(crate) fn predict_volume(
     [previous_source, previous_base, gain]: [f64; 3],
 ) -> Result<([f64; 5], f64), StepError> {
     let load = |source| (previous_base + gain * (source - previous_source), gain);
-    #[cfg(not(pilot_r59_one_affine_correction))]
+    #[cfg(not(any(pilot_r59_one_affine_correction, pilot_r59_two_affine_corrections)))]
     let (volume, _) = close_volume_schur_with_load(initial, c2, cathode, load)?;
-    #[cfg(pilot_r59_one_affine_correction)]
+    #[cfg(any(pilot_r59_one_affine_correction, pilot_r59_two_affine_corrections))]
     let volume = {
-        let (base, load_gain) = load(initial[2]);
-        let (residual, factor) = factor_r59_follower(initial, c2, cathode, base, load_gain)?;
-        let direction = factor.solve(residual)?;
+        let budget = if cfg!(pilot_r59_two_affine_corrections) { 2 } else { 1 };
+        let mut volume = initial;
         let [current, voltage] = R59_TOLERANCES;
-        if maximum(&residual) <= current && maximum(&direction) <= voltage {
-            initial
-        } else {
-            std::array::from_fn(|i| initial[i] - direction[i])
+        for _ in 0..budget {
+            let (base, load_gain) = load(volume[2]);
+            let (residual, factor) = factor_r59_follower(volume, c2, cathode, base, load_gain)?;
+            let direction = factor.solve(residual)?;
+            if maximum(&residual) <= current && maximum(&direction) <= voltage {
+                break;
+            }
+            volume = std::array::from_fn(|i| volume[i] - direction[i]);
         }
+        volume
     };
     Ok((volume, load(volume[2]).0))
 }

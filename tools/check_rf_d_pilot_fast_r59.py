@@ -249,8 +249,11 @@ def main():
                         help="extrapolate the previous nonlinear junction feedback on a cold root")
     parser.add_argument("--predict-r59-affine", action="store_true",
                         help="seed R59 by solving the follower with a local affine receiver response")
-    parser.add_argument("--predict-r59-one-correction", action="store_true",
+    affine_corrections = parser.add_mutually_exclusive_group()
+    affine_corrections.add_argument("--predict-r59-one-correction", action="store_true",
                         help="use one Newton correction for the provisional affine follower")
+    affine_corrections.add_argument("--predict-r59-two-corrections", action="store_true",
+                        help="use up to two Newton corrections for the provisional affine follower")
     parser.add_argument("--predict-r59-junctions", action="store_true",
                         help="project receiver retries along the cached R59 junction tangent")
     parser.add_argument("--pack-receiver-law", action="store_true",
@@ -289,8 +292,8 @@ def main():
         args.profile = True
     if args.predict_r59_base_drift and not args.predict_r59_affine:
         parser.error("--predict-r59-base-drift requires --predict-r59-affine")
-    if args.predict_r59_one_correction and not args.predict_r59_affine:
-        parser.error("--predict-r59-one-correction requires --predict-r59-affine")
+    if (args.predict_r59_one_correction or args.predict_r59_two_corrections) and not args.predict_r59_affine:
+        parser.error("R59 correction limits require --predict-r59-affine")
     if args.predict_receiver_feedback and not args.dynamic_q15:
         parser.error("--predict-receiver-feedback requires --dynamic-q15")
     if args.dynamic_q15:
@@ -346,6 +349,7 @@ def main():
                   predict_receiver_feedback=args.predict_receiver_feedback,
                   predict_r59_affine=args.predict_r59_affine,
                   predict_r59_one_correction=args.predict_r59_one_correction,
+                  predict_r59_two_corrections=args.predict_r59_two_corrections,
                   predict_r59_junctions=args.predict_r59_junctions,
                   pack_receiver_law=args.pack_receiver_law,
                   q15_retry=args.q15_retry,
@@ -503,6 +507,8 @@ def main():
                  "receiver_feedback_prediction_comparison"),
                 (args.predict_r59_one_correction, "pilot_r59_one_affine_correction",
                  "r59_one_affine_correction_comparison"),
+                (args.predict_r59_two_corrections, "pilot_r59_two_affine_corrections",
+                 "r59_two_affine_corrections_comparison"),
             )
             enabled = [(flag, key) for selected, flag, key in refinements if selected]
             gain_control = None

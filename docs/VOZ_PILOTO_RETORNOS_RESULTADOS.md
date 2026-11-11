@@ -3214,3 +3214,18 @@ bajó 5,87 % a 1,011 ms. Los tres picos nativos
 quedaron por debajo de 1,333 ms, con un máximo
 de 1,160 ms y cero asignaciones.
 [Una corrección negativa](../evidence/rf_d_pilot_fast_r5984.json).
+
+Dos correcciones conservaron en positivo los
+256 cierres, la trayectoria por bits y la carga
+final. La semilla instrumentada bajó de 0,176 a
+0,130 ms. La mediana pareada bajó 3,47 % a
+1,099 ms. Los picos pareados fueron 1,274 y
+1,155 ms. El lote inicial alcanzó 1,724 ms.
+[Dos correcciones positivas](../evidence/rf_d_pilot_fast_r5985.json).
+
+La repetición negativa con una corrección
+reprodujo la trayectoria del primer pase por
+bits y redujo la mediana pareada 6,26 % a
+1,011 ms. El mayor pico fue 1,575 ms. En las
+dos ramas sigue abierto el plazo conjunto.
+[Repetición negativa](../evidence/rf_d_pilot_fast_r5986.json).

@@ -780,3 +780,10 @@ provisional al receptor y conservar la iteración
 completa del seguidor y el cierre de R59. Medir
 cuántos intentos se desplazan al cierre completo,
 el coste total y la reserva de carga del mismo reloj.
+
+Con `--predict-r59-two-corrections`, permitir una
+segunda corrección con la tangente recalculada en
+los voltajes provisionales. Conservar la salida
+temprana si pasan las tolerancias y usar como
+semilla el último voltaje provisional. Aplicar
+el mismo contraste y las mismas reservas.
