@@ -797,3 +797,18 @@ Si se usa el factor completo, evaluar CR6 una
 vez en los voltajes convergidos. Los intentos con
 voltajes nuevos siguen evaluando la ley completa.
 Exigir igualdad por bits y las reservas eléctricas.
+
+Con `--rack-replay` y un recibo nativo admitido,
+reconstruir el mapa y las entradas exactas de esa
+rama. Exigir los hashes originales de mapa, entrada
+y trayectoria. Empaquetar temporalmente el componente
+nativo y renderizarlo en un slot de RackForge a 48 kHz,
+128 frames y estéreo. Cada frame del ensayo toma el
+segundo extremo J7 de 96 kHz, convertido a f32 en
+ambos canales. Medir dos lotes de 64 pares de bloques,
+reiniciando el estado fuera del reloj entre pares.
+Comparar por bits ambos bloques y todos los reinicios.
+Alternar el orden nativo/host y registrar el arranque,
+el bloque caliente, los fallos y los plazos del host.
+Este ensayo usa las fuentes impuestas del recibo y
+un render directo del motor de RackForge.

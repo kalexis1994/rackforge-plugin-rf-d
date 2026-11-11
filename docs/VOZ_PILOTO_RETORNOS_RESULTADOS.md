@@ -3273,3 +3273,29 @@ La integración y la medición en RackForge siguen
 pendientes. Los pases nativos usaron señal, C2,
 R60, Q25 y CR8 impuestos.
 [Repetición de CR6 negativa](../evidence/rf_d_pilot_fast_r5990.json).
+
+### Reproducción de las escenas Q15/R59 en RackForge
+
+Las dos escenas cargaron como componentes
+nativos en un slot del motor de RackForge.
+J7 f32 coincidió por bits en ambos canales y
+en todos los reinicios, sin fallos de slot.
+Las entradas, el mapa y la trayectoria nativa
+reprodujeron los hashes admitidos.
+
+En positivo, las medianas calientes del host
+fueron 1,088 y 1,075 ms. El peor arranque fue
+1,521 ms y el peor bloque caliente, 1,571 ms.
+Tres bloques calientes excedieron 1,333 ms.
+[RackForge positivo](../evidence/rf_d_pilot_fast_r5992.json).
+
+En negativo, las medianas calientes del host
+fueron 0,996 y 0,998 ms. El peor arranque fue
+1,713 ms y el peor bloque caliente, 1,782 ms.
+Once bloques calientes excedieron 1,333 ms.
+[RackForge negativo](../evidence/rf_d_pilot_fast_r5993.json).
+
+El primer intento se detuvo al compilar el
+probador del host. Se corrigieron el tipo de
+frames y la referencia a la telemetría.
+[Intento de compilación](../evidence/rf_d_pilot_fast_r5991.json).

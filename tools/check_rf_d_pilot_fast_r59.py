@@ -203,6 +203,7 @@ def dynamic_q15(run, report, joined, exe, control, profiled, dc, bias, center, l
         report["realtime"] = report["realtime"] and profile_passed
         print("Q15 profile", profile, flush=True)
     print("Q15", report["passed"], report["contrast"], report["max_q15_residual_a"], timing, flush=True)
+    return payload, rows
 
 
 def main():
@@ -227,6 +228,8 @@ def main():
                         help="compare the closed R59 reset port tangent against centered differences")
     parser.add_argument("--dynamic-q15", action="store_true",
                         help="close Q15 charge through CR6 and R59 in the joined laboratory circuit")
+    parser.add_argument("--rack-replay", type=Path,
+                        help="render the matching admitted native receipt through RackForge at 128 frames")
     parser.add_argument("--cached-q15-gain", action="store_true",
                         help="reuse the receiver load tangent during Q15 closure")
     parser.add_argument("--predict-q15", action="store_true",
@@ -277,6 +280,14 @@ def main():
     seed_options.add_argument("--reuse-law", action="store_true",
                               help="reuse the previous trial's law evaluation at the same junctions")
     args = parser.parse_args()
+    if args.rack_replay and not args.dynamic_q15:
+        parser.error("--rack-replay requires --dynamic-q15")
+    rack_replay = None
+    rack_sources = ()
+    if args.rack_replay:
+        import rf_d_pilot_q15_rack as rack_lab
+        rack_replay = (ROOT / args.rack_replay).resolve()
+        rack_sources = (*rack_lab.SOURCES, rack_replay.relative_to(ROOT).as_posix())
     if (args.predict_q15_audio or args.predict_q15_cr6 or args.predict_q15_charge
             or args.reuse_q15_endpoint) and not args.predict_q15:
         parser.error("Q15 predictor refinements require --predict-q15")
@@ -331,7 +342,7 @@ def main():
                    "crates/rf-d-circuit/src/junction_charge.rs",
                    "crates/rf-d-circuit/src/prepared_volume_residual.rs") if args.dynamic_q15 else ()
     sources = Sources((*SOURCES, *CONTOUR_SOURCES, OWN, JOINED, *modules.values(),
-                       *q15_sources,
+                       *q15_sources, *rack_sources,
                        "tools/check_rf_d_pilot_split_returns.py", "tools/check_rf_d_pilot_off_anchor.py",
                        "tools/affine_evidence.py", "tools/check_hybrid_voice.py",
                        "tools/rf_d_pilot_packed_products.rs",
@@ -540,8 +551,11 @@ def main():
             profiled = AREA / "r59-q15-profile.exe" if args.profile else None
             if profiled is not None:
                 build(profiled, *q15_cfg, "--cfg", "pilot_r59_profile")
-            dynamic_q15(run, report, joined, exe, gain_control, profiled, dc, bias, center, limits,
-                        stimulus, cathode_v, assess, cr6_crossings)
+            payload, rows = dynamic_q15(run, report, joined, exe, gain_control, profiled, dc, bias, center,
+                                        limits, stimulus, cathode_v, assess, cr6_crossings)
+            if rack_replay is not None and report["passed"]:
+                rack_lab.campaign(run, report, rack_replay, code, flags, q15_cfg, exe, payload, rows)
+                report["passed"] = report["passed"] and report["rack_integrated"]
             sources.unchanged()
             raise SystemExit(0 if report["passed"] else 1)
 
@@ -764,6 +778,7 @@ def main():
             if payload is not None:
                 assert len(payload) <= 512 * 1024
                 report["failure_input"] = pack_bytes(payload)
+            if payload is not None or result.returncode != 0:
                 again = subprocess.run(command, cwd=ROOT, env=env, input=payload, capture_output=True, timeout=240)
                 report["failure_unchanged_replay"] = ((result.returncode, result.stdout, result.stderr)
                                                        == (again.returncode, again.stdout, again.stderr))
@@ -771,8 +786,15 @@ def main():
     finally:
         write(out, report)
         for path in AREA.iterdir():
-            assert path.is_file() and path.resolve().parent == AREA.resolve()
-            path.unlink()
+            assert path.resolve().parent == AREA.resolve()
+            if rack_replay is not None and path.name == rack_lab.PACKAGE:
+                for child in path.iterdir():
+                    assert child.is_file() and child.resolve().parent == path.resolve()
+                    child.unlink()
+                path.rmdir()
+            else:
+                assert path.is_file()
+                path.unlink()
     raise SystemExit(0 if report["passed"] else 1)
 
 

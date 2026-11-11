@@ -39,16 +39,7 @@ fn render(
     Ok(state)
 }
 
-pub fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mode = std::env::args().nth(1).ok_or("64, 128 or bench")?;
-    let mut raw = Vec::new();
-    std::io::stdin().read_to_end(&mut raw)?;
-    assert_eq!(raw.len() % 8, 0);
-    let values: Vec<_> = raw
-        .chunks_exact(8)
-        .map(|b| f64::from_le_bytes(b.try_into().unwrap()))
-        .collect();
-    assert_eq!(values.len(), 149 + 2 * BLOCK * 6);
+pub(crate) fn initial_state(values: &[f64; 149]) -> Result<State, Box<dyn std::error::Error>> {
     let audio = plant::State::from_nodal(
         &values[..68].try_into()?,
         &values[68..136].try_into()?,
@@ -77,7 +68,7 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     )
     .map_err(|e| format!("initial Q15: {e:?}"))?;
     assert!(q15_current_a.iter().all(|i| i.abs() <= 2e-15));
-    let initial = State {
+    Ok(State {
         audio: fast_r59::State {
             audio,
             volume: [q3, q2, loudness, collector, reset],
@@ -95,7 +86,20 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
         previous_charge_increment_c: None,
         #[cfg(pilot_r59_predict_q15_charge)]
         charge_mass_f: None,
-    };
+    })
+}
+
+pub fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let mode = std::env::args().nth(1).ok_or("64, 128 or bench")?;
+    let mut raw = Vec::new();
+    std::io::stdin().read_to_end(&mut raw)?;
+    assert_eq!(raw.len() % 8, 0);
+    let values: Vec<_> = raw
+        .chunks_exact(8)
+        .map(|b| f64::from_le_bytes(b.try_into().unwrap()))
+        .collect();
+    assert_eq!(values.len(), 149 + 2 * BLOCK * 6);
+    let initial = initial_state(values[..149].try_into()?)?;
     let input: Vec<[f64; 6]> = values[149..]
         .chunks_exact(6)
         .map(|b| b.try_into().unwrap())
