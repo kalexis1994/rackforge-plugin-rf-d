@@ -3324,3 +3324,19 @@ de mediana entre slot y ABI directa fueron
 motor con las entradas impuestas del recibo.
 Queda pendiente el ensayo de la salida física.
 [Contraste negativo de las tres rutas](../evidence/rf_d_pilot_fast_r5995.json).
+
+### Escenas continuas de Q15/R59
+
+Cada rama completó 16.384 frames continuos, con
+las entradas reflejadas y la historia acumulada.
+Los dos primeros bloques conservaron los bits
+del recibo original. J7 y los 19 valores de
+estado final comprobados coincidieron al
+particionar el nativo en 64 o 128 frames.
+El slot reprodujo todo J7 por bits, sin
+fallos de slot ni pérdidas del plazo de
+2,667 ms. Los picos de telemetría en el motor
+fueron 1,643 ms en positivo y 1,135 ms en
+negativo.
+[Escena continua positiva](../evidence/rf_d_pilot_fast_r5996.json).
+[Escena continua negativa](../evidence/rf_d_pilot_fast_r5997.json).

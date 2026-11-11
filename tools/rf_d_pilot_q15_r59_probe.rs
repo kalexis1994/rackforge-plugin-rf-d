@@ -15,6 +15,13 @@ use std::{
 };
 
 const BLOCK: usize = 256;
+const STREAM_FRAMES: usize = 128 * 128;
+
+pub(crate) fn continuous_drive(input: &[[f64; 6]; 512], tick: usize) -> [f64; 6] {
+    let last = input.len() - 1;
+    let phase = tick % (2 * last);
+    input[phase.min(2 * last - phase)]
+}
 
 fn render(
     mut state: State,
@@ -90,7 +97,7 @@ pub(crate) fn initial_state(values: &[f64; 149]) -> Result<State, Box<dyn std::e
 }
 
 pub fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mode = std::env::args().nth(1).ok_or("64, 128 or bench")?;
+    let mode = std::env::args().nth(1).ok_or("64, 128, bench, stream-64 or stream-128")?;
     let mut raw = Vec::new();
     std::io::stdin().read_to_end(&mut raw)?;
     assert_eq!(raw.len() % 8, 0);
@@ -107,6 +114,43 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut out = std::io::BufWriter::new(std::io::stdout().lock());
     #[cfg(pilot_r59_profile)]
     let mut profile = fast_r59::Profile::default();
+    if let Some(frames) = mode.strip_prefix("stream-") {
+        let frames: usize = frames.parse()?;
+        assert!(matches!(frames, 64 | 128));
+        let input = input.as_slice().try_into()?;
+        let mut state = initial;
+        let mut drives = [[0.; 6]; BLOCK];
+        for offset in (0..2 * STREAM_FRAMES).step_by(2 * frames) {
+            let block = &mut drives[..2 * frames];
+            for (i, drive) in block.iter_mut().enumerate() {
+                *drive = continuous_drive(input, offset + i);
+            }
+            let mut tick = offset;
+            state = render(
+                state,
+                block,
+                offset,
+                |_, frame, _| {
+                    if tick % 2 == 1 {
+                        let sample = frame.audio.ports.j7_v as f32;
+                        assert!(sample.is_finite());
+                        for _ in 0..2 {
+                            out.write_all(&sample.to_le_bytes())?;
+                        }
+                    }
+                    tick += 1;
+                    Ok(())
+                },
+                #[cfg(pilot_r59_profile)]
+                &mut profile,
+            )?;
+        }
+        for value in state.q15_v.into_iter().chain(state.audio.audio.capacitor_charge_offsets_c()) {
+            assert!(value.is_finite());
+            out.write_all(&value.to_le_bytes())?;
+        }
+        return Ok(());
+    }
     if mode == "bench" {
         let warm = render(
             initial,

@@ -21,6 +21,7 @@ SOURCES = (OWN, SCENE_RUST, PROBE, PLUGIN, "tools/check_rf_d_pilot_returns_rack.
            "tools/check_recovery_host.py")
 PACKAGE = "q15-rack-package"
 REPEATS = 64
+STREAM_FRAMES = 128 * 128
 
 
 def component(code, payload):
@@ -64,7 +65,23 @@ def metrics(raw, expected, margin, peak_key):
                 deadline_misses=misses, faults=faults, times=packed(times.tobytes()), **{peak_key: peak})
 
 
-def campaign(run, report, receipt, code, flags, cfg, exe, payload, rows):
+def stream_check(run, host, path, exe, payload, expected):
+    reference = run([exe, "stream-128"], payload)
+    exact_partition = reference == run([exe, "stream-64"], payload)
+    audio, state = reference[:-19 * 8], reference[-19 * 8:]
+    assert len(audio) == STREAM_FRAMES * 2 * 4 and audio.startswith(expected)
+    samples = np.frombuffer(audio, "<f4")
+    assert np.isfinite(samples).all() and np.isfinite(np.frombuffer(state, "<f8")).all()
+    rendered = run([host, path, "q15-stream"])
+    peak, misses, faults = map(int, np.frombuffer(rendered[-24:], "<u8"))
+    exact_host = rendered[:-24] == audio
+    return dict(passed=exact_partition and exact_host and faults == 0, frames=STREAM_FRAMES,
+                exact_partition=exact_partition, exact_host=exact_host,
+                native_j7_f32_sha256=digest(audio), final_state_sha256=digest(state),
+                host_peak_ns=peak, host_deadline_misses=misses, host_faults=faults)
+
+
+def campaign(run, report, receipt, code, flags, cfg, exe, payload, rows, continuous=False):
     admitted = json.loads(receipt.read_text(encoding="utf8"))
     assert admitted["passed"] and admitted["dynamic_q15"] and admitted["partition_bit_exact"]
     assert admitted["branch"] == report["branch"]
@@ -85,6 +102,8 @@ def campaign(run, report, receipt, code, flags, cfg, exe, payload, rows):
                                  host_sources={name: sha(HOST / name) for name in HOST_SOURCES},
                                  host_compiler_sha256=sha(HOST_COMPILER), pairs=[])
     package(path)
+    if continuous:
+        cfg = [*cfg, "--cfg", "pilot_q15_continuous"]
     run([*flags, *cfg, "-C", "panic=abort", "--crate-type", "cdylib",
          emit("q15-rack-component.rs", component(code, payload)), "--extern", f"rf_d_circuit={LIB}", "-o", dll])
     rack["component_sha256"] = sha(dll)
@@ -118,6 +137,11 @@ def campaign(run, report, receipt, code, flags, cfg, exe, payload, rows):
     rack["warm_realtime"] = report["rack_integrated"] and all(
         pair["host"]["warm"]["over_margin"] == 0 and pair["host"]["deadline_misses"] == 0
         for pair in rack["pairs"])
+    if continuous:
+        rack["continuous"] = stream_check(run, host, path, exe, payload, expected)
+        report["rack_integrated"] &= rack["continuous"]["passed"]
+        rack["warm_realtime"] &= rack["continuous"]["passed"]
+        print("Q15 CONTINUOUS", rack["continuous"], flush=True)
     print("Q15 RACK", report["rack_integrated"], rack["warm_realtime"],
           [(p["native"], p["direct"]["warm"], p["host"]["startup"], p["host"]["warm"],
             p["rack_minus_direct_median_ns"])

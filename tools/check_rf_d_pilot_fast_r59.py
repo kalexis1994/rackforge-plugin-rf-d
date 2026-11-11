@@ -230,6 +230,8 @@ def main():
                         help="close Q15 charge through CR6 and R59 in the joined laboratory circuit")
     parser.add_argument("--rack-replay", type=Path,
                         help="render the matching admitted native receipt through RackForge at 128 frames")
+    parser.add_argument("--rack-continuous", action="store_true",
+                        help="also compare a continuous RackForge render with the native scene")
     parser.add_argument("--cached-q15-gain", action="store_true",
                         help="reuse the receiver load tangent during Q15 closure")
     parser.add_argument("--predict-q15", action="store_true",
@@ -282,6 +284,8 @@ def main():
     args = parser.parse_args()
     if args.rack_replay and not args.dynamic_q15:
         parser.error("--rack-replay requires --dynamic-q15")
+    if args.rack_continuous and not args.rack_replay:
+        parser.error("--rack-continuous requires --rack-replay")
     rack_replay = None
     rack_sources = ()
     if args.rack_replay:
@@ -554,7 +558,8 @@ def main():
             payload, rows = dynamic_q15(run, report, joined, exe, gain_control, profiled, dc, bias, center,
                                         limits, stimulus, cathode_v, assess, cr6_crossings)
             if rack_replay is not None and report["passed"]:
-                rack_lab.campaign(run, report, rack_replay, code, flags, q15_cfg, exe, payload, rows)
+                rack_lab.campaign(run, report, rack_replay, code, flags, q15_cfg, exe, payload, rows,
+                                  continuous=args.rack_continuous)
                 report["passed"] = report["passed"] and report["rack_integrated"]
             sources.unchanged()
             raise SystemExit(0 if report["passed"] else 1)

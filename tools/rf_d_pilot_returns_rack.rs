@@ -8,7 +8,8 @@ use std::{collections::BTreeMap, error::Error, io::{BufWriter, Write}, path::Pat
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<_> = std::env::args().collect();
-    assert!(args.len() == 3 && matches!(args[2].as_str(), "negative" | "positive" | "q15" | "q15-direct"));
+    assert!(args.len() == 3
+        && matches!(args[2].as_str(), "negative" | "positive" | "q15" | "q15-direct" | "q15-stream"));
     let package = PluginPackage::open(Path::new(&args[1]))?;
     let plugin = unsafe { LoadedPlugin::load(&package, None, &BTreeMap::new(), None)? };
     if args[2] == "q15-direct" {
@@ -17,7 +18,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let id = plugin.manifest().id.clone();
     let spec = RackSlotRuntimeSpec {
         slot_id: "rf-d-pilot".into(), plugin_id: id.clone(),
-        state: if args[2] == "q15" {
+        state: if matches!(args[2].as_str(), "q15" | "q15-stream") {
             RackSlotStateLoad::Default
         } else {
             RackSlotStateLoad::LegacyPreset(args[2].clone())
@@ -30,6 +31,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut pool = RenderPool::with_workers(0, telemetry.clone());
     if args[2] == "q15" {
         return q15(&mut rack, &mut pool, &telemetry);
+    }
+    if args[2] == "q15-stream" {
+        return q15_stream(&mut rack, &mut pool, &telemetry);
     }
     let mut output = [0.; 256];
     let mut times = [0_u64; 376];
@@ -50,6 +54,29 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
     for v in audio {
         out.write_all(&v.to_le_bytes())?;
+    }
+    out.flush()?;
+    Ok(())
+}
+
+fn q15_stream(
+    rack: &mut RackEngine,
+    pool: &mut RenderPool,
+    telemetry: &Arc<RenderTelemetry>,
+) -> Result<(), Box<dyn Error>> {
+    let mut output = [0_f32; Q15_STEREO];
+    let mut out = BufWriter::new(std::io::stdout().lock());
+    for _ in 0..128 {
+        rack.render(pool, telemetry, Q15_FRAMES, Q15_DEADLINE_NS, None, &mut output)?;
+        for value in output {
+            out.write_all(&value.to_le_bytes())?;
+        }
+    }
+    let snapshot = telemetry.snapshot_and_reset();
+    assert_eq!(snapshot.block.count, 128);
+    let faults = snapshot.slot_faults.iter().sum::<u64>();
+    for value in [snapshot.block.max_ns, snapshot.deadline_misses, faults] {
+        out.write_all(&value.to_le_bytes())?;
     }
     out.flush()?;
     Ok(())

@@ -821,3 +821,15 @@ el nativo y el slot, en ambos órdenes. Exigir
 la misma salida J7 por bits en las tres rutas.
 Registrar por separado las diferencias de mediana
 entre el nativo, la ABI y el slot.
+
+Con `--rack-continuous`, recorrer las entradas
+admitidas hacia adelante y hacia atrás, sin
+duplicar los extremos. Cada cambio de dirección
+conserva la separación de un tick entre entradas.
+Mantener la historia de Q15/R59 y las cargas del
+receptor durante todo el recorrido. Comparar
+16.384 frames de J7 entre el nativo y el slot,
+y comparar la trayectoria y el estado final al
+particionar el nativo en bloques de 64 y 128.
+Los dos primeros bloques deben reproducir el
+recibo original.
