@@ -50,34 +50,48 @@ pub fn advance(
             volume_delta_v: source - map::SPLIT_CENTER[0],
             filter_delta_v: filter - map::SPLIT_CENTER[1],
         };
-        let (candidate, ports) = if gradient.is_none() {
-            let trial = prepared
-                .trial_with_load_tangent(signal, drive)
-                .map_err(Error::Audio)?;
-            gradient = Some(trial.load_jacobian[0][0]);
-            junction_seed = Some(trial.junction);
+        let refresh_tangent = gradient.is_none();
+        let seed = if refresh_tangent { None } else { junction_seed };
+        let root = prepared
+            .solve_root(signal, drive, seed)
+            .or_else(|error| {
+                if seed.is_some() {
+                    prepared.solve_root(signal, drive, None)
+                } else {
+                    Err(error)
+                }
+            })
+            .map_err(Error::Audio)?;
+        junction_seed = Some(root.junction);
+        #[cfg(pilot_r59_eager)]
+        let completed = root.finish().map_err(Error::Audio)?;
+        if refresh_tangent {
+            gradient = Some(root.load_jacobian().map_err(Error::Audio)?[0][0]);
             tangent_calls += 1;
-            (trial.state, trial.ports)
-        } else {
-            let (candidate, ports, junction) = prepared
-                .step_with_junction(signal, drive, junction_seed)
-                .or_else(|_| prepared.step_with_junction(signal, drive, None))
-                .map_err(Error::Audio)?;
-            junction_seed = Some(junction);
-            (candidate, ports)
-        };
+        }
+        #[cfg(pilot_r59_eager)]
+        let vca_base = completed.1.loads_v[0];
+        #[cfg(not(pilot_r59_eager))]
+        let vca_base = root.vca_base().map_err(Error::Audio)?;
         // The tangent supplies a seed. close_volume checks every original row again.
         let initial = std::array::from_fn(|k| {
-            volume[k] + volume_response[k] * (ports.loads_v[0] - volume_base)
+            volume[k] + volume_response[k] * (vca_base - volume_base)
         });
-        let (next, factor) = contour_ports::close_volume(initial, c2, cathode, ports.loads_v[0])
+        let (next, factor) = contour_ports::close_volume(initial, c2, cathode, vca_base)
             .map_err(Error::Volume)?;
         volume = next;
-        volume_base = ports.loads_v[0];
+        volume_base = vca_base;
         let residual = volume[2] - source;
         let error = residual.abs();
-        let mismatch_a = ((volume[2] - ports.loads_v[0]) / R59 - ports.returns_a[0]).abs();
+        let mismatch_a = ((volume[2] - vca_base) / R59 - (root.r59_source_v() - vca_base) / R59).abs();
         if error <= CLOSURE_V && mismatch_a <= 2e-12 {
+            #[cfg(not(pilot_r59_eager))]
+            let completed = root.finish().map_err(Error::Audio)?;
+            let (candidate, ports) = completed;
+            let mismatch_a = ((volume[2] - ports.loads_v[0]) / R59 - ports.returns_a[0]).abs();
+            if mismatch_a > 2e-12 {
+                return Err(Error::Closure);
+            }
             let state = State {
                 audio: candidate,
                 volume,

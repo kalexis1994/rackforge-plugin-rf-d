@@ -346,3 +346,19 @@ selecciona el agrupado por defecto. Conserva
 --no-packed-products para ejecutar sólo el camino
 escalar. La opción de exponencial compartida sigue
 siendo explícita e independiente.
+
+Cada intento de R59 resuelve el mismo residual de las
+34 junturas del receptor con tolerancia de 2e−13 V.
+Para cerrar el seguidor evalúa la base del VCA con la
+fila 3 de DC + XQ·q + XU·u − XD·defecto. Al aceptar
+el cierre aplica N1 a los defectos, reconstruye las
+17 cargas y las seis salidas, y comprueba la corriente
+de R59 con los puertos que entrega el paso.
+
+Con `--compare-eager`, compilar el control que reconstruye
+el estado completo en cada intento con los demás flags
+idénticos. Comparar los bits de todas las salidas,
+diagnósticos y 17 cargas finales. Aplicar la misma
+comparación al control escalar y a la partición en
+bloques de 64. Alternar el orden de cada pareja de
+mediciones y evaluar el margen con todos los picos.

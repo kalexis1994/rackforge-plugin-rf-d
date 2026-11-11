@@ -142,6 +142,11 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
         for value in stats.into_iter().chain(samples) {
             out.write_all(&value.to_le_bytes())?;
         }
+        if std::env::args().nth(3).as_deref() == Some("--charges") {
+            for charge in state.audio.capacitor_charge_offsets_c() {
+                out.write_all(&charge.to_le_bytes())?;
+            }
+        }
     }
     Ok(())
 }

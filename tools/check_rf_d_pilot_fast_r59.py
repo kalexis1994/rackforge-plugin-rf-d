@@ -27,6 +27,7 @@ PROBE = "tools/rf_d_pilot_fast_r59_probe.rs"
 JOINED = "tools/rf_d_pilot_r59_oracle.rs"
 RATE = 96_000
 STEPS = 256
+CHARGES = 17
 CATHODE_V = 0.
 
 
@@ -36,6 +37,8 @@ def main():
     parser.add_argument("--shared-port-exp", action="store_true")
     parser.add_argument("--packed-products", action=argparse.BooleanOptionalAction, default=True,
                         help="use the four-row layout and verify it against the scalar control")
+    parser.add_argument("--compare-eager", action="store_true",
+                        help="compare with full receiver reconstruction at every closure attempt")
     args = parser.parse_args()
     negative = args.branch == "negative"
     center, limits = (CLOSED, CLOSED_RANGE) if negative else (OPEN, OPEN_RANGE)
@@ -86,6 +89,11 @@ def main():
         return dict(passed=bool(audio["passed"] and voltage.max() <= 20e-6),
                     audio=audio, maximum_voltage_v=voltage.tolist())
 
+    def time_blocks(target, mode, payload):
+        fields = run([target, mode, "bench"], payload).decode().strip().split(",")
+        return dict(zip(("blocks", "median_ns", "p99_ns", "max_ns", "allocations"),
+                        map(int, fields), strict=True))
+
     try:
         isolated, joined = AREA / "r59-isolated.exe", AREA / "r59-joined.exe"
         run([*flags, ROOT / ORACLE, "--extern", f"rf_d_circuit={LIB}", "-o", isolated])
@@ -130,6 +138,9 @@ def main():
         control = AREA / "r59-scalar.exe"
         if args.packed_products:
             run([*flags, *control_cfg, source, "--extern", f"rf_d_circuit={LIB}", "-o", control])
+        eager = AREA / "r59-eager.exe"
+        if args.compare_eager:
+            run([*flags, *cfg, "--cfg", "pilot_r59_eager", source, "--extern", f"rf_d_circuit={LIB}", "-o", eager])
         header = np.r_[dc[:136], bias[:5]]
 
         def controls(time):
@@ -153,53 +164,60 @@ def main():
         payload = packed(np.r_[header, input.ravel()])
         report.update(input_sha256=digest(payload), input=pack_bytes(payload), cases={})
         outputs = {}
-        variants = [("cached", exe, "cached"), ("fresh", exe, "fresh")]
+        controls_to_compare = {}
         if args.packed_products:
-            variants.insert(0, ("scalar", control, "cached"))
+            controls_to_compare["scalar"] = control
+        if args.compare_eager:
+            controls_to_compare["eager"] = eager
+        variants = [(name, target, "cached") for name, target in controls_to_compare.items()]
+        variants.extend((("cached", exe, "cached"), ("fresh", exe, "fresh")))
+        charge_bytes = CHARGES * 8
         for name, target, mode in variants:
-            raw = run([target, mode], payload, repeat=True)
+            raw = run([target, mode, 128, "--charges"], payload, repeat=True)
             got = np.frombuffer(raw, "<f8")
             assert np.isfinite(got).all()
-            stats, rows = got[:4], got[4:].reshape(2 * STEPS, 13)
+            stats, rows = got[:4], got[4:-CHARGES].reshape(2 * STEPS, 13)
             result = assess(rows, fine[8])
             item = dict(comparison=result, max_iterations=int(stats[0]), max_closure_v=float(stats[1]),
                         max_r59_mismatch_a=float(stats[2]), tangent_calls=int(stats[3]),
-                        output_sha256=digest(raw), unchanged_replay=True)
+                        output_sha256=digest(raw[:-charge_bytes]),
+                        final_charge_sha256=digest(raw[-charge_bytes:]), unchanged_replay=True)
             item["r59_source_range_v"] = [float(rows[:, 11].min()), float(rows[:, 11].max())]
             item["passed"] = bool(result["passed"] and stats[1] <= 1e-10 and stats[2] <= 2e-12)
-            timing = run([target, mode, "bench"], payload).decode().strip().split(",")
-            item["timing"] = dict(zip(("blocks", "median_ns", "p99_ns", "max_ns", "allocations"), map(int, timing), strict=True))
+            item["timing"] = time_blocks(target, mode, payload)
             item["realtime"] = item["passed"] and item["timing"]["max_ns"] <= BUDGET_NS and item["timing"]["allocations"] == 0
             report["cases"][name] = item
             outputs[name] = rows
             print(name, item, flush=True)
-        partition = run([exe, "cached", 64], payload, repeat=True)
-        report["partition_bit_exact"] = digest(partition) == report["cases"]["cached"]["output_sha256"]
+        partition = run([exe, "cached", 64, "--charges"], payload, repeat=True)
+        cached = report["cases"]["cached"]
+        report["partition_bit_exact"] = (
+            digest(partition[:-charge_bytes]) == cached["output_sha256"]
+            and digest(partition[-charge_bytes:]) == cached["final_charge_sha256"]
+        )
         report["cached_vs_fresh"] = assess(outputs["cached"], outputs["fresh"])
         report["passed"] = bool(report["refinement"]["passed"] and report["reference_source_domain_passed"] and report["partition_bit_exact"]
                                  and report["cached_vs_fresh"]["passed"] and all(v["passed"] for v in report["cases"].values()))
         report["realtime"] = report["passed"] and report["cases"]["cached"]["realtime"]
-        if args.packed_products:
-            report["packed_bit_exact"] = (report["cases"]["scalar"]["output_sha256"]
-                                           == report["cases"]["cached"]["output_sha256"])
-            report["packed_vs_scalar"] = assess(outputs["cached"], outputs["scalar"])
-            report["passed"] = report["passed"] and report["packed_bit_exact"]
-            report["paired_timing"] = []
-            for order in (("cached", "scalar"), ("scalar", "cached")):
-                pair = {}
-                for name in order:
-                    target = exe if name == "cached" else control
-                    fields = run([target, "cached", "bench"], payload).decode().strip().split(",")
-                    pair[name] = dict(zip(("blocks", "median_ns", "p99_ns", "max_ns", "allocations"),
-                                          map(int, fields), strict=True))
-                report["paired_timing"].append(pair)
-            report["paired_median_ratio"] = float(
-                np.median([pair["cached"]["median_ns"] for pair in report["paired_timing"]])
-                / np.median([pair["scalar"]["median_ns"] for pair in report["paired_timing"]]))
+        for name, target in controls_to_compare.items():
+            exact = all(report["cases"][name][key] == cached[key]
+                        for key in ("output_sha256", "final_charge_sha256"))
+            pairs = [
+                {variant: time_blocks(binary, "cached", payload) for variant, binary in order}
+                for order in ((("cached", exe), (name, target)), ((name, target), ("cached", exe)))
+            ]
+            ratio = float(np.median([pair["cached"]["median_ns"] for pair in pairs])
+                          / np.median([pair[name]["median_ns"] for pair in pairs]))
+            if name == "scalar":
+                report.update(packed_bit_exact=exact, packed_vs_scalar=assess(outputs["cached"], outputs[name]),
+                              paired_timing=pairs, paired_median_ratio=ratio)
+            else:
+                report.update(eager_bit_exact=exact, eager_paired_timing=pairs, eager_median_ratio=ratio)
+            report["passed"] = report["passed"] and exact
             report["realtime"] = bool(report["passed"] and report["realtime"] and all(
                 pair["cached"]["max_ns"] <= BUDGET_NS and pair["cached"]["allocations"] == 0
-                for pair in report["paired_timing"]))
-            print("PACKED", report["packed_bit_exact"], report["paired_median_ratio"], flush=True)
+                for pair in pairs))
+            print(name.upper(), "bit exact", exact, "median ratio", ratio, flush=True)
         sources.unchanged()
     except Exception:
         report["failure"] = traceback.format_exc()

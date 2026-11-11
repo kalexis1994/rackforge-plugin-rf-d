@@ -2423,3 +2423,43 @@ escenas eléctricas, su refinamiento y la partición
 por bits 64/128. El hash de J7 f32 coincidió con el
 recibo anterior y se observaron cero asignaciones.
 [Regresión tras preparar la historia](../evidence/rf_d_pilot_returns17.json).
+
+
+### Reconstrucción del receptor al aceptar R59
+
+El cierre provisional resuelve las 34 junturas y evalúa
+la base del VCA. La reconstrucción de las 17 cargas y
+las seis salidas ocurre una vez por paso aceptado.
+La corriente de R59 se comprueba con los puertos
+entregados por ese paso.
+
+Las ramas positiva y negativa conservaron por bits
+la trayectoria, los diagnósticos y las 17 cargas
+finales frente a la reconstrucción en cada intento,
+el control escalar y la partición 64/128. Coincidieron
+también los hashes de trayectoria de los pases 08 y 09.
+Pasaron el refinamiento de Radau, el contraste nodal y
+la comparación de tangentes. El desacuerdo máximo de
+R59 fue 1,04 fA en positivo y 1,40 fA en negativo.
+
+En positivo, los dos pares alternados dieron una
+reducción del 4,25 % en la mediana frente a reconstruir
+en cada intento. La mediana inicial fue 1,405 ms y el
+pico de los cinco lotes de 64 bloques fue 1,767 ms.
+[Reconstrucción diferida positiva](../evidence/rf_d_pilot_fast_r5910.json).
+
+En negativo, la mediana pareada bajó un 4,84 %. La
+mediana inicial fue 1,278 ms y el pico de los cinco
+lotes fue 1,444 ms. Ambas ramas registraron cero
+asignaciones. Los picos excedieron 1,333 ms a 128
+frames. La medición es nativa con C2, reset y el
+colector de R60 como entradas explícitas.
+[Reconstrucción diferida negativa](../evidence/rf_d_pilot_fast_r5911.json).
+
+La voz de 18 junturas volvió a pasar las tres escenas
+y conservó el hash de J7 f32. La entrega del estado
+cargado y la tangente completa de R59/R60 pasaron el
+contraste independiente. El mayor error de la
+tangente frente a Radau fue 5,58e−9 V/V.
+[Regresión de la voz](../evidence/rf_d_pilot_returns18.json).
+[Estado cargado y tangentes](../evidence/rf_d_pilot_receiver_handoff05.json).
