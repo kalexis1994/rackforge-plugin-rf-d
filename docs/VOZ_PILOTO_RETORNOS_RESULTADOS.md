@@ -2620,3 +2620,27 @@ el pico entre los nueve fue 1,434 ms. El margen de
 nativo. El cátodo variable usa el cierre inicial y
 queda por contrastar con el biestable acoplado.
 [Predictor negativo](../evidence/rf_d_pilot_fast_r5926.json).
+
+
+### Tangente del cátodo con CR6 en directa
+
+Las cinco componentes de la tangente del cátodo
+pasaron las diferencias centradas en los dos
+puntos DC de CR6. La modulación impuesta mantuvo
+CR6 entre 0,3060 y 0,3090 V en directa y R59
+dentro de su dominio en las dos ramas. En cada
+perfil se evitaron los 16.384 cierres iniciales
+después del calentamiento.
+
+En positivo, el contraste de audio contra Radau
+pasó y la mediana pareada bajó 7,77 %. La diferencia
+máxima de las cargas finales frente al control fue
+1,61e−20 C, por encima del límite de 1e−20 C.
+El pase queda rechazado por esa diferencia.
+[Reserva de carga positiva](../evidence/rf_d_pilot_fast_r5927.json).
+
+En negativo, las cargas finales coincidieron por
+bits y el contraste contra Radau pasó. La mediana
+pareada bajó 7,05 % y el pico de los siete lotes
+fue 1,471 ms. Ambas escenas usan un cátodo impuesto.
+[Reserva de carga negativa](../evidence/rf_d_pilot_fast_r5928.json).

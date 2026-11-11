@@ -50,6 +50,10 @@ def main():
                         help="eliminate the reset node from the follower Newton system")
     parser.add_argument("--predict-follower", action="store_true",
                         help="seed the follower from the preceding accepted load and C2 tangents")
+    parser.add_argument("--predict-cathode", action="store_true",
+                        help="include the CR6 cathode tangent in the follower prediction")
+    parser.add_argument("--vary-cathode", action="store_true",
+                        help="drive the reset cathode around a forward-biased CR6 operating point")
     seed_options = parser.add_mutually_exclusive_group()
     seed_options.add_argument("--feedback-seed", action="store_true",
                               help="seed receiver retries with the new predictor and previous trial feedback")
@@ -58,9 +62,17 @@ def main():
     args = parser.parse_args()
     if args.packed_odd and not args.packed_products:
         parser.error("--packed-odd requires --packed-products")
+    if args.predict_cathode and not args.predict_follower:
+        parser.error("--predict-cathode requires --predict-follower")
     negative = args.branch == "negative"
     center, limits = (CLOSED, CLOSED_RANGE) if negative else (OPEN, OPEN_RANGE)
     stimulus = off_drives if negative else drives
+    cathode_v, cathode_amplitude_v = CATHODE_V, 0.
+    if args.vary_cathode:
+        r24, r27 = 6800., 16900.
+        unloaded_reset = (center[0] / r24 - 10. / r27) / (1. / r24 + 1. / r27)
+        cathode_v = unloaded_reset - 0.45
+        cathode_amplitude_v = 0.25 * limits[0]
     assert AREA.is_dir() and not list(AREA.iterdir())
     seq = 1
     while (out := ROOT / f"evidence/rf_d_pilot_fast_r59{seq:02}.json").exists():
@@ -75,7 +87,8 @@ def main():
     report = dict(passed=False, realtime=False, rack_integrated=False, r59_closed=True, branch=args.branch,
                   internal_rate_hz=RATE, frames=128, warmup_frames=128, budget_ns=BUDGET_NS,
                   imposed_sources=("signal", "C2", "reset base", "R60 collector"),
-                  cathode_v=CATHODE_V, receiver_center_v=center, receiver_range_v=limits,
+                  cathode_v=cathode_v, cathode_amplitude_v=cathode_amplitude_v,
+                  receiver_center_v=center, receiver_range_v=limits,
                   shared_port_exp=args.shared_port_exp,
                   packed_products=args.packed_products,
                   packed_odd=args.packed_odd,
@@ -83,6 +96,7 @@ def main():
                   reuse_law=args.reuse_law,
                   schur_follower=args.schur_follower,
                   predict_follower=args.predict_follower,
+                  predict_cathode=args.predict_cathode,
                   **sources.fields(), compiler_sha256=sha(Path(COMPILER)), library_sha256=sha(LIB))
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
     flags = [COMPILER, "--edition=2021", "-C", "opt-level=3", "-C", "target-feature=+fma",
@@ -150,7 +164,7 @@ def main():
         assert 0. <= dc[-1] <= 1e-13
         case = dict(baseline, DC=dc[:136], G=dc[136:-1].reshape(68, 68).copy())
         case["G"][66, 66] -= Y
-        bias = values([joined, "bias"], packed([dc[32] + dc[100], center[0], CATHODE_V]), repeat=True)
+        bias = values([joined, "bias"], packed([dc[32] + dc[100], center[0], cathode_v]), repeat=True)
         assert bias.shape == (6,) and abs(bias[3] - center[0]) <= 1e-12
         report.update(anchor_sha256=digest(packed(dc[:136])), follower_bias_v=bias[:5].tolist(), c2_bias_v=float(bias[5]))
         code, _ = generate(rate=RATE)
@@ -183,13 +197,16 @@ def main():
             cfg.extend(("--cfg", "pilot_receiver_packed_odd"))
         follower_cfg = ["--cfg", "pilot_r59_schur_follower"] if args.schur_follower else []
         prediction_cfg = ["--cfg", "pilot_r59_predict_follower"] if args.predict_follower else []
+        prediction_control_cfg = prediction_cfg.copy() if args.predict_cathode else []
+        if args.predict_cathode:
+            prediction_cfg.extend(("--cfg", "pilot_r59_predict_cathode"))
         candidate_cfg = [*seed_cfg, *follower_cfg, *prediction_cfg]
 
         def build(target, *config):
             run([*flags, *config, source, "--extern", f"rf_d_circuit={LIB}", "-o", target])
 
         build(exe, *cfg, *candidate_cfg)
-        if args.shared_port_exp or args.schur_follower:
+        if args.shared_port_exp or args.schur_follower or args.predict_cathode:
             unit = AREA / "r59-port-tests.exe"
             build(unit, *cfg, *candidate_cfg, "--test")
             report["port_unit_tests"] = run([unit, "contour_ports::tests", "--nocapture"]).decode()
@@ -210,7 +227,7 @@ def main():
             build(follower_control, *cfg, *seed_cfg, *prediction_cfg)
         prediction_control = AREA / "r59-prediction-control.exe"
         if prediction_cfg:
-            build(prediction_control, *cfg, *seed_cfg, *follower_cfg)
+            build(prediction_control, *cfg, *seed_cfg, *follower_cfg, *prediction_control_cfg)
         profile_exe = AREA / "r59-profile.exe"
         seed_control_profile = AREA / "r59-seed-control-profile.exe"
         follower_control_profile = AREA / "r59-follower-control-profile.exe"
@@ -223,13 +240,18 @@ def main():
             if follower_cfg:
                 build(follower_control_profile, *profile_flags, *seed_cfg, *prediction_cfg)
             if prediction_cfg:
-                build(prediction_control_profile, *profile_flags, *seed_cfg, *follower_cfg)
+                build(prediction_control_profile, *profile_flags, *seed_cfg, *follower_cfg, *prediction_control_cfg)
         header = np.r_[dc[:136], bias[:5]]
 
         def controls(time):
             original = stimulus(time)
-            return np.column_stack((original[:, 0], bias[5] + original[:, 1],
-                                    np.full(len(time), CATHODE_V), center[1] + original[:, 2]))
+            if args.vary_cathode:
+                c2_delta = 0.5 * original[:, 1]
+                cathode = cathode_v + cathode_amplitude_v * np.sin(2. * np.pi * 263. * time)
+            else:
+                c2_delta = original[:, 1]
+                cathode = np.full(len(time), cathode_v)
+            return np.column_stack((original[:, 0], bias[5] + c2_delta, cathode, center[1] + original[:, 2]))
 
         fine = {}
         for factor in (4, 8):
@@ -244,6 +266,11 @@ def main():
         report["reference_r59_source_range_v"] = [float(fine[8][:, 11].min()), float(fine[8][:, 11].max())]
         report["reference_source_domain_passed"] = bool(abs(fine[8][:, 11] - center[0]).max() <= limits[0])
         input = controls(np.arange(1, 2 * STEPS + 1) / RATE)
+        cr6 = fine[8][:, 12] - input[:, 2]
+        report["reference_cr6_forward_range_v"] = [float(cr6.min()), float(cr6.max())]
+        report["reference_cathode_gate"] = bool(
+            not args.vary_cathode or (cr6.min() > 0. and np.ptp(input[:, 2]) > 0.)
+        )
         payload = packed(np.r_[header, input.ravel()])
         report.update(input_sha256=digest(payload), input=pack_bytes(payload), cases={})
         outputs, charges = {}, {}
@@ -288,7 +315,8 @@ def main():
             and digest(partition[-charge_bytes:]) == cached["final_charge_sha256"]
         )
         report["cached_vs_fresh"] = assess(outputs["cached"], outputs["fresh"])
-        report["passed"] = bool(report["refinement"]["passed"] and report["reference_source_domain_passed"] and report["partition_bit_exact"]
+        report["passed"] = bool(report["refinement"]["passed"] and report["reference_source_domain_passed"]
+                                 and report["reference_cathode_gate"] and report["partition_bit_exact"]
                                  and report["cached_vs_fresh"]["passed"] and all(v["passed"] for v in report["cases"].values()))
         if args.profile:
             profiles = {"profile": (profile_exe, cached)}

@@ -25,6 +25,27 @@ pub struct FollowerSeed {
     cathode: f64,
     c2_response: [f64; 5],
     base_response: [f64; 5],
+    #[cfg(pilot_r59_predict_cathode)]
+    cathode_response: [f64; 5],
+}
+
+#[cfg(pilot_r59_predict_follower)]
+impl FollowerSeed {
+    fn predict(self, volume: [f64; 5], c2: f64, cathode: f64) -> Option<([f64; 5], [f64; 5])> {
+        #[cfg(not(pilot_r59_predict_cathode))]
+        if self.cathode != cathode {
+            return None;
+        }
+        let predicted = std::array::from_fn(|i| {
+            let voltage = volume[i] + (c2 - self.c2) * self.c2_response[i];
+            #[cfg(pilot_r59_predict_cathode)]
+            if cathode != self.cathode {
+                return voltage + (cathode - self.cathode) * self.cathode_response[i];
+            }
+            voltage
+        });
+        Some((predicted, self.base_response))
+    }
 }
 
 pub struct Frame {
@@ -76,14 +97,15 @@ pub fn advance(
     #[cfg(pilot_r59_profile)] profile: &mut Profile,
 ) -> Result<(State, Frame), Error> {
     #[cfg(pilot_r59_predict_follower)]
-    if let Some(seed) = old.follower.filter(|seed| seed.cathode == drive[2]) {
-        let predicted =
-            std::array::from_fn(|i| old.volume[i] + (drive[1] - seed.c2) * seed.c2_response[i]);
+    if let Some(prediction) = old
+        .follower
+        .and_then(|seed| seed.predict(old.volume, drive[1], drive[2]))
+    {
         if let Ok(result) = advance_inner(
             old,
             drive,
             refresh,
-            Some((predicted, seed.base_response)),
+            Some(prediction),
             #[cfg(pilot_r59_profile)]
             profile,
         ) {
@@ -212,18 +234,24 @@ fn advance_inner(
                 gradient,
                 #[cfg(pilot_r59_predict_follower)]
                 follower: measure!(profile, 4, {
-                    let c2_response =
-                        factor.solve([1. / crate::contour_ports::VOLUME_R16, 0., 0., 0., 0.]);
-                    let base_response = factor.solve([0., 0., 1. / R59, 0., 0.]);
-                    c2_response
-                        .ok()
-                        .zip(base_response.ok())
-                        .map(|(c2_response, base_response)| FollowerSeed {
+                    (|| {
+                        let c2_response = factor
+                            .solve([1. / crate::contour_ports::VOLUME_R16, 0., 0., 0., 0.])
+                            .ok()?;
+                        let base_response = factor.solve([0., 0., 1. / R59, 0., 0.]).ok()?;
+                        #[cfg(pilot_r59_predict_cathode)]
+                        let cathode_response = factor
+                            .solve(crate::contour_ports::cathode_rhs(volume[4], cathode).ok()?)
+                            .ok()?;
+                        Some(FollowerSeed {
                             c2,
                             cathode,
                             c2_response,
                             base_response,
+                            #[cfg(pilot_r59_predict_cathode)]
+                            cathode_response,
                         })
+                    })()
                 }),
             };
             return Ok((

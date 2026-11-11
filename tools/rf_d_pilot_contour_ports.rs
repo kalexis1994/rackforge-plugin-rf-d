@@ -196,6 +196,12 @@ pub(crate) fn germanium(voltage: f64) -> Result<(f64, f64), StepError> {
     Ok((1e-8 * current, 1e-8 * slope / scale))
 }
 
+#[cfg(pilot_r59_predict_cathode)]
+pub(crate) fn cathode_rhs(reset: f64, cathode: f64) -> Result<[f64; 5], StepError> {
+    let (_, conductance) = germanium(reset - cathode)?;
+    Ok([0., 0., 0., 0., conductance])
+}
+
 pub fn filter(initial: [f64; 3], [sum, tail]: [f64; 2]) -> Result<[f64; 3], StepError> {
     solve(initial, |x| filter_stamp(x, sum, tail))
 }
@@ -527,6 +533,23 @@ mod tests {
             let full_direction = full.solve(load).unwrap();
             let delta: [f64; 5] = std::array::from_fn(|i| direction[i] - full_direction[i]);
             assert!(maximum(&delta) <= JOINT_TOLERANCES[1]);
+        }
+    }
+
+    #[cfg(pilot_r59_predict_cathode)]
+    #[test]
+    fn cathode_tangent_matches_centered_difference_at_forward_cr6_points() {
+        let delta = 1e-5;
+        for (cathode, base) in [(0.01, 4.306692675075283), (0.7, 4.307742421921254)] {
+            let [q3, q2, x3, x2] = VOLUME;
+            let initial = [q3, q2, x3, x2, cathode + 0.42];
+            let (x, factor) = close_volume(initial, C2, cathode, base).unwrap();
+            let direction = factor.solve(cathode_rhs(x[4], cathode).unwrap()).unwrap();
+            let (low, _) = close_volume(x, C2, cathode - delta, base).unwrap();
+            let (high, _) = close_volume(x, C2, cathode + delta, base).unwrap();
+            for (k, analytical) in direction.into_iter().enumerate() {
+                assert!((analytical - (high[k] - low[k]) / (2. * delta)).abs() <= 2e-8);
+            }
         }
     }
 }

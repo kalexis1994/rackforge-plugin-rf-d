@@ -438,3 +438,24 @@ iniciales se ejecutan, los reintentos completos
 y el coste de renovar las dos respuestas. Contrastar
 J7, ambos retornos y las cargas finales con el
 control de cierre inicial y con Radau.
+
+Con `--predict-cathode`, añadir la respuesta al
+cátodo del último cierre aceptado. La derivada
+de la fila de reset respecto del cátodo es −g_CR6.
+Resolver J·dV = e_reset·g_CR6 con el mismo factor
+del seguidor y sumar dV·Δcátodo a la semilla.
+La corriente y la pendiente de CR6 usan la misma
+ley y la misma temperatura. Contrastar las cinco
+componentes de la tangente por diferencia centrada
+en los dos puntos DC en directa ya admitidos.
+
+Con `--vary-cathode`, centrar el cátodo 0,45 V por
+debajo del divisor R24/R27 sin corriente de CR6.
+Volver a equilibrar C2 en la referencia conjunta y
+modular el cátodo a 263 Hz con amplitud de un cuarto
+del semirango de R59. Reducir a la mitad la excursión
+de C2 para reservar margen en ese puerto. Exigir CR6
+en directa, el dominio de R59 y los mismos límites
+de Radau en ambas ramas. Comparar contra el predictor
+de C2/R59 que vuelve al cierre inicial cuando cambia
+el cátodo. El estímulo sigue siendo una entrada del banco.
