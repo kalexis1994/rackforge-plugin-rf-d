@@ -705,3 +705,19 @@ la ley exacta y sólo publica su propia carga.
 Comparar con la misma semilla no lineal de CR6,
 la integración Euler/BDF2, el contraste nodal y
 las reservas de carga del mismo reloj.
+
+Con `--prepare-q15-terminal`, preparar una vez por
+tick el extremo anterior aceptado de las integrales
+de depleción BE y BC de Q15. Guardar la capacitancia
+en F y el factor de depleción adimensional. Reusar
+también el término de difusión anterior y conservar
+la diferencia BC compensada en dos partes.
+Para dos extremos bajo el empalme, usar la misma
+integral con `log1p` y `expm1`, su signo y los
+mismos límites. Si un extremo llega al empalme,
+usar la integral por tramos original. La semilla
+verificada, los reintentos y el cierre cargado
+comparten la historia aceptada del tick. Exigir
+igualdad por bits en el núcleo de carga, en toda
+la trayectoria y en las cargas finales frente
+al control con el mismo predictor.

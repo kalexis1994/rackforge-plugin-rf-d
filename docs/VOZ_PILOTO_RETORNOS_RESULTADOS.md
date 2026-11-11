@@ -3062,3 +3062,33 @@ En negativo, la mediana pareada fue 1,314 ms,
 asignaciones en ambas ramas. El límite de
 1,333 ms sigue abierto en el banco nativo.
 [Semilla verificada negativa](../evidence/rf_d_pilot_fast_r5970.json).
+
+### Historia preparada de la carga exacta de Q15
+
+El núcleo conservó los bits en ambos sentidos de
+integración, en el empalme BE/BC y con voltajes
+compensados. En el banco, ambas ramas coincidieron
+por bits con el control y con los hashes de la
+semilla verificada previa. Pasaron Radau, la
+auditoría nodal, los cruces y la partición 64/128.
+La biblioteca actual también pasó los 1280
+vectores de depleción y el ensayo de 10.000
+compañeros de carga con cero asignaciones.
+
+En positivo, la mediana pareada bajó 10,68 % a
+1,531 ms y el pico fue 1,855 ms. El perfil midió
+0,222 ms para la semilla y 0,025 ms para preparar
+la historia, frente a 0,375 ms para la semilla
+anterior.
+[Historia preparada positiva](../evidence/rf_d_pilot_fast_r5972.json).
+
+En negativo, la mediana pareada bajó 16,50 % a
+1,111 ms. Dos lotes dieron picos de 1,280 y
+1,203 ms y el tercero alcanzó 1,538 ms. Hubo cero
+asignaciones en ambas ramas.
+[Historia preparada negativa](../evidence/rf_d_pilot_fast_r5973.json).
+
+El primer intento se detuvo al compilar el
+oráculo por una llave de cierre sobrante. La
+corrección quedó aplicada antes de los pases.
+[Intento de compilación](../evidence/rf_d_pilot_fast_r5971.json).

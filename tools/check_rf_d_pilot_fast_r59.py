@@ -36,7 +36,7 @@ RETURN_LIMIT_A = 2e-9
 RESET_TANGENT_LIMIT_S = 2e-11
 PROFILE_STAGES = ("initial_follower", "receiver_history", "receiver_root", "loaded_follower",
                   "follower_response", "receiver_tangent", "receiver_reconstruction",
-                  "affine_follower_seed", "q15_seed")
+                  "affine_follower_seed", "q15_seed", "q15_terminal_history")
 
 
 def profile_statistics(lines, read_timing, exact):
@@ -171,7 +171,7 @@ def dynamic_q15(run, report, joined, exe, control, profiled, dc, bias, center, l
                       and crossings(exact_rows[:, 15]) == report["candidate_crossings"])
         key = report["q15_comparison"]
         if key in ("q15_packed_products_comparison", "q15_packed_odd_comparison",
-                   "q15_packed_law_comparison"):
+                   "q15_packed_law_comparison", "q15_prepared_terminal_comparison"):
             passed = passed and raw == exact_raw
         report[key] = dict(
             passed=passed, control_output_sha256=digest(exact_raw), endpoint_audit=exact_audit,
@@ -229,6 +229,8 @@ def main():
                         help="retain the nonlinear CR6 law in the provisional reset equation")
     parser.add_argument("--predict-q15-charge", action="store_true",
                         help="use the last accepted terminal capacitance in the Q15 seed")
+    parser.add_argument("--prepare-q15-terminal", action="store_true",
+                        help="reuse the exact charge integral's accepted endpoint across Q15 trials")
     parser.add_argument("--predict-r59-affine", action="store_true",
                         help="seed R59 by solving the follower with a local affine receiver response")
     parser.add_argument("--predict-r59-junctions", action="store_true",
@@ -260,6 +262,8 @@ def main():
         parser.error("--predict-r59-junctions requires --dynamic-q15")
     if args.pack_receiver_law and not args.dynamic_q15:
         parser.error("--pack-receiver-law requires --dynamic-q15")
+    if args.prepare_q15_terminal and not args.dynamic_q15:
+        parser.error("--prepare-q15-terminal requires --dynamic-q15")
     if args.dynamic_q15:
         args.schur_follower = args.predict_follower = args.predict_cathode = args.tight_follower = True
     if args.packed_odd and not args.packed_products:
@@ -288,6 +292,7 @@ def main():
         modules.update(q15="tools/rf_d_pilot_q15_return.rs", q15_r59="tools/rf_d_pilot_q15_r59.rs",
                        q15_probe="tools/rf_d_pilot_q15_r59_probe.rs")
     q15_sources = ("tools/rf_d_pilot_q15_r59_oracle.rs",
+                   "crates/rf-d-circuit/src/junction_charge.rs",
                    "crates/rf-d-circuit/src/prepared_volume_residual.rs") if args.dynamic_q15 else ()
     sources = Sources((*SOURCES, *CONTOUR_SOURCES, OWN, JOINED, *modules.values(),
                        *q15_sources,
@@ -305,6 +310,7 @@ def main():
                   predict_q15_audio=args.predict_q15_audio,
                   predict_q15_cr6=args.predict_q15_cr6,
                   predict_q15_charge=args.predict_q15_charge,
+                  prepare_q15_terminal=args.prepare_q15_terminal,
                   predict_r59_affine=args.predict_r59_affine,
                   predict_r59_junctions=args.predict_r59_junctions,
                   pack_receiver_law=args.pack_receiver_law,
@@ -455,6 +461,7 @@ def main():
                 (args.packed_odd, "pilot_receiver_packed_odd", "q15_packed_odd_comparison"),
                 (args.pack_receiver_law, "pilot_receiver_packed_law", "q15_packed_law_comparison"),
                 (args.predict_q15_charge, "pilot_r59_predict_q15_charge", "q15_charge_prediction_comparison"),
+                (args.prepare_q15_terminal, "pilot_r59_prepared_terminal", "q15_prepared_terminal_comparison"),
             )
             enabled = [(flag, key) for selected, flag, key in refinements if selected]
             gain_control = None
@@ -466,12 +473,17 @@ def main():
                 flag, report["q15_comparison"] = enabled[-1]
                 q15_cfg.extend(("--cfg", flag))
             build(exe, *q15_cfg)
-            if args.pack_receiver_law:
-                tests = AREA / "r59-receiver-law-tests.exe"
+            if args.pack_receiver_law or args.prepare_q15_terminal:
+                tests = AREA / "r59-kernel-tests.exe"
                 build(tests, *q15_cfg, "--test")
+            if args.pack_receiver_law:
                 result = run([tests, "packed_law::tests::retains_scalar_bits_and_domain", "--nocapture"])
                 assert b"1 passed" in result
                 report["receiver_law_unit_test"] = result.decode()
+            if args.prepare_q15_terminal:
+                result = run([tests, "latch_charge::tests::prepared_terminal_preserves_bits", "--nocapture"])
+                assert b"1 passed" in result
+                report["prepared_terminal_unit_test"] = result.decode()
             profiled = AREA / "r59-q15-profile.exe" if args.profile else None
             if profiled is not None:
                 build(profiled, *q15_cfg, "--cfg", "pilot_r59_profile")

@@ -136,7 +136,7 @@ pub enum Error {
 #[cfg(pilot_r59_profile)]
 #[derive(Default)]
 pub struct Profile {
-    pub stages: [(u64, u128); 9],
+    pub stages: [(u64, u128); 10],
     pub successful_root_evaluations: usize,
     pub reused_root_evaluations: usize,
     pub follower_fallbacks: usize,
@@ -158,7 +158,7 @@ macro_rules! measure {
         result
     }};
 }
-#[cfg(pilot_r59_predict_q15)]
+#[cfg(any(pilot_r59_predict_q15, pilot_r59_prepared_terminal))]
 pub(crate) use measure;
 
 pub fn advance(

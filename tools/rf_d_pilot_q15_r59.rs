@@ -1,7 +1,10 @@
 //! Q15 charge at a fixed clock with an endpoint closure through CR6 and R59.
+#[cfg(pilot_r59_prepared_terminal)]
+use crate::latch_charge::PreparedTerminal;
+#[cfg(not(pilot_r59_prepared_terminal))]
+use crate::latch_charge::terminal;
 use crate::{
     fast_r59,
-    latch_charge::terminal,
     q15,
     reduced_lu::{maximum, Lu},
     StepError,
@@ -53,15 +56,25 @@ struct TerminalCharge {
     mass_f: [[f64; 2]; 2],
 }
 
+struct History {
+    state: State,
+    #[cfg(pilot_r59_prepared_terminal)]
+    terminal: PreparedTerminal,
+}
+
 fn equation(
-    old: State,
+    history: &History,
     q15_v: [f64; 2],
     drive: q15::Drive,
     cr6: [f64; 2],
     #[cfg(pilot_r59_predict_q15_charge)] seed_mass_f: Option<[[f64; 2]; 2]>,
 ) -> Result<(TerminalCharge, [f64; 2], [[f64; 2]; 2]), StepError> {
+    let old = &history.state;
     let (current, dc_jacobian) = q15::conduction(q15_v, drive, cr6[0], cr6[1])?;
+    #[cfg(not(pilot_r59_prepared_terminal))]
     let exact = || terminal(old.q15_v.map(|v| (v, 0.)), q15_v.map(|v| (v, 0.)));
+    #[cfg(pilot_r59_prepared_terminal)]
+    let exact = || history.terminal.evaluate(q15_v.map(|v| (v, 0.)));
     #[cfg(pilot_r59_predict_q15_charge)]
     let (increment_c, mass_f) = match seed_mass_f {
         Some(mass) => {
@@ -90,9 +103,10 @@ fn direction(residual: [f64; 2], jacobian: [[f64; 2]; 2]) -> Result<[f64; 2], St
 
 #[cfg(pilot_r59_predict_q15)]
 fn predict(
-    old: State,
+    history: &History,
     [signal, c2, filter, q25_base, q25_collector, cr8_anode]: [f64; 6],
 ) -> Option<[f64; 2]> {
+    let old = &history.state;
     let [reset_at_old_cathode, slope] = fast_r59::predict_reset(old.audio, [signal, c2, filter])?;
     let drive = q15::Drive {
         c2,
@@ -124,7 +138,7 @@ fn predict(
         #[cfg(not(pilot_r59_predict_q15_cr6))]
         let (correction, error, max_correction) = {
             let (_, residual, jacobian) = equation(
-                old,
+                history,
                 q15_v,
                 drive,
                 [current, conductance * (slope - 1.)],
@@ -138,7 +152,7 @@ fn predict(
         #[cfg(pilot_r59_predict_q15_cr6)]
         let (correction, error, max_correction) = {
             let (_, mut residual, mut jacobian) = equation(
-                old,
+                history,
                 q15_v,
                 drive,
                 [current, -conductance],
@@ -179,7 +193,7 @@ fn predict(
 }
 
 fn evaluate(
-    old: State,
+    history: &History,
     q15_v: [f64; 2],
     [signal, c2, filter, q25_base, q25_collector, cr8_anode]: [f64; 6],
     refresh: bool,
@@ -187,6 +201,7 @@ fn evaluate(
     #[cfg(pilot_r59_q15_retry)] prior: Option<&Trial>,
     #[cfg(pilot_r59_profile)] profile: &mut fast_r59::Profile,
 ) -> Result<Trial, Error> {
+    let old = &history.state;
     let audio_drive = [signal, c2, q15_v[0], filter];
     #[cfg(pilot_r59_q15_retry)]
     let warm = prior.and_then(|trial| {
@@ -228,7 +243,7 @@ fn evaluate(
         cr8_anode,
     };
     let (charge, residual_a, jacobian) = equation(
-        old,
+        history,
         q15_v,
         drive,
         [
@@ -260,11 +275,17 @@ pub fn advance(
     refresh: bool,
     #[cfg(pilot_r59_profile)] profile: &mut fast_r59::Profile,
 ) -> Result<(State, Frame), Error> {
+    let history = History {
+        state: old,
+        #[cfg(pilot_r59_prepared_terminal)]
+        terminal: fast_r59::measure!(profile, 9, PreparedTerminal::new(old.q15_v.map(|v| (v, 0.))))
+            .map_err(Error::Q15)?,
+    };
     let mut work = Work::default();
     #[cfg(pilot_r59_predict_q15)]
-    if let Some(seed) = fast_r59::measure!(profile, 8, predict(old, drive)) {
+    if let Some(seed) = fast_r59::measure!(profile, 8, predict(&history, drive)) {
         if let Ok(result) = solve(
-            old,
+            &history,
             drive,
             refresh,
             seed,
@@ -276,7 +297,7 @@ pub fn advance(
         }
     }
     solve(
-        old,
+        &history,
         drive,
         refresh,
         old.q15_v,
@@ -287,7 +308,7 @@ pub fn advance(
 }
 
 fn solve(
-    old: State,
+    history: &History,
     drive: [f64; 6],
     refresh: bool,
     seed: [f64; 2],
@@ -295,7 +316,7 @@ fn solve(
     #[cfg(pilot_r59_profile)] profile: &mut fast_r59::Profile,
 ) -> Result<(State, Frame), Error> {
     let mut trial = evaluate(
-        old,
+        history,
         seed,
         drive,
         refresh,
@@ -325,7 +346,7 @@ fn solve(
             let scale = 0.5_f64.powi(half);
             let q15_v = std::array::from_fn(|i| trial.state.q15_v[i] - scale * direction[i]);
             if let Ok(candidate) = evaluate(
-                old,
+                history,
                 q15_v,
                 drive,
                 refresh,

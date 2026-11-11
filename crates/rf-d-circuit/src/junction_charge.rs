@@ -23,6 +23,42 @@ pub struct Companion {
     pub conductance_s: f64,
 }
 
+/// Fixed beginning of the depletion-charge integral for a series of trials.
+pub struct PreparedIncrement {
+    parameters: Parameters,
+    from_v: f64,
+    previous: Charge,
+    low_factor: Option<f64>,
+}
+
+impl PreparedIncrement {
+    pub fn previous_capacitance_f(&self) -> f64 {
+        self.previous.capacitance_f
+    }
+
+    /// Return (signed charge increment in C, endpoint capacitance in F).
+    pub fn evaluate(&self, to_v: f64) -> Result<(f64, f64), Error> {
+        let p = self.parameters;
+        if let Some(previous_factor) = self.low_factor.filter(|_| to_v < p.splice_voltage()) {
+            p.validate(to_v)?;
+            let log = p.low_log(to_v);
+            let next = p.low_point(log)?;
+            let delta = if to_v > self.from_v {
+                p.low_increment_with_factor(self.from_v, to_v, previous_factor)
+            } else if to_v < self.from_v {
+                -p.low_increment_with_factor(to_v, self.from_v, p.low_factor(log))
+            } else {
+                0.0
+            };
+            if !delta.is_finite() {
+                return Err(Error::NonFiniteResult);
+            }
+            return Ok((delta, next.capacitance_f));
+        }
+        Ok((p.charge_increment(self.from_v, to_v)?, p.charge(to_v)?.capacitance_f))
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error { InvalidInput, NonFiniteResult }
 
@@ -37,33 +73,31 @@ impl Parameters {
         Ok(())
     }
 
+    fn splice_voltage(self) -> f64 {
+        self.forward_fraction * self.potential_v
+    }
+
     fn splice(self) -> (f64, f64, f64) {
-        let v = self.forward_fraction*self.potential_v;
+        let v = self.splice_voltage();
         let c = self.zero_bias_capacitance_f*(1.0-self.forward_fraction).powf(-self.grading);
         let slope = c*self.grading/(self.potential_v*(1.0-self.forward_fraction));
         (v, c, slope)
     }
 
-    fn low_charge(self, v: f64) -> f64 {
-        let exponent = 1.0-self.grading;
-        -self.zero_bias_capacitance_f*self.potential_v/exponent
-            * (exponent*(-v/self.potential_v).ln_1p()).exp_m1()
+    fn low_log(self, v: f64) -> f64 {
+        (-v / self.potential_v).ln_1p()
     }
 
-    pub fn charge(self, v: f64) -> Result<Charge, Error> {
-        self.validate(v)?;
-        if self.zero_bias_capacitance_f == 0.0 {
-            return Ok(Charge { charge_c: 0.0, capacitance_f: 0.0 });
-        }
-        let (vf, cf, slope) = self.splice();
-        let result = if v < vf {
-            Charge { charge_c: self.low_charge(v),
-                capacitance_f: self.zero_bias_capacitance_f
-                    * (-self.grading*(-v/self.potential_v).ln_1p()).exp() }
-        } else {
-            let delta = v-vf;
-            Charge { charge_c: self.low_charge(vf)+delta*(cf+0.5*slope*delta),
-                     capacitance_f: cf+slope*delta }
+    fn low_charge(self, log: f64) -> f64 {
+        let exponent = 1.0-self.grading;
+        -self.zero_bias_capacitance_f*self.potential_v/exponent
+            * (exponent * log).exp_m1()
+    }
+
+    fn low_point(self, log: f64) -> Result<Charge, Error> {
+        let result = Charge {
+            charge_c: self.low_charge(log),
+            capacitance_f: self.zero_bias_capacitance_f * (-self.grading * log).exp(),
         };
         if !result.charge_c.is_finite() || !result.capacitance_f.is_finite() {
             return Err(Error::NonFiniteResult);
@@ -71,12 +105,37 @@ impl Parameters {
         Ok(result)
     }
 
-    fn low_increment(self, from: f64, to: f64) -> f64 {
+    pub fn charge(self, v: f64) -> Result<Charge, Error> {
+        self.validate(v)?;
+        if self.zero_bias_capacitance_f == 0.0 {
+            return Ok(Charge { charge_c: 0.0, capacitance_f: 0.0 });
+        }
+        if v < self.splice_voltage() {
+            return self.low_point(self.low_log(v));
+        }
+        let (vf, cf, slope) = self.splice();
+        let delta = v-vf;
+        let result = Charge { charge_c: self.low_charge(self.low_log(vf))+delta*(cf+0.5*slope*delta),
+                              capacitance_f: cf+slope*delta };
+        if !result.charge_c.is_finite() || !result.capacitance_f.is_finite() {
+            return Err(Error::NonFiniteResult);
+        }
+        Ok(result)
+    }
+
+    fn low_factor(self, log: f64) -> f64 {
+        ((1.0 - self.grading) * log).exp()
+    }
+
+    fn low_increment_with_factor(self, from: f64, to: f64, factor: f64) -> f64 {
         let exponent = 1.0-self.grading;
-        let factor = (-from/self.potential_v).ln_1p();
         let relative = (-(to-from)/(self.potential_v-from)).ln_1p();
         -self.zero_bias_capacitance_f*self.potential_v/exponent
-            * (exponent*factor).exp() * (exponent*relative).exp_m1()
+            * factor * (exponent*relative).exp_m1()
+    }
+
+    fn low_increment(self, from: f64, to: f64) -> f64 {
+        self.low_increment_with_factor(from, to, self.low_factor(self.low_log(from)))
     }
 
     fn high_increment(self, from: f64, to: f64) -> f64 {
@@ -97,6 +156,18 @@ impl Parameters {
             else { self.low_increment(lo, vf)+self.high_increment(vf, hi) };
         if !value.is_finite() { return Err(Error::NonFiniteResult); }
         Ok(value)
+    }
+
+    pub fn prepare_increment(self, from_v: f64) -> Result<PreparedIncrement, Error> {
+        self.validate(from_v)?;
+        let (previous, low_factor) =
+            if self.zero_bias_capacitance_f != 0.0 && from_v < self.splice_voltage() {
+                let log = self.low_log(from_v);
+                (self.low_point(log)?, Some(self.low_factor(log)))
+            } else {
+                (self.charge(from_v)?, None)
+            };
+        Ok(PreparedIncrement { parameters: self, from_v, previous, low_factor })
     }
 
     /// Current enters the anode. The caller retains the same previous_v
