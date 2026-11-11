@@ -21,10 +21,17 @@ fn render(
     input: &[[f64; 6]],
     offset: usize,
     mut observe: impl FnMut(State, Frame, [f64; 6]) -> Result<(), Box<dyn std::error::Error>>,
+    #[cfg(pilot_r59_profile)] profile: &mut fast_r59::Profile,
 ) -> Result<State, Box<dyn std::error::Error>> {
     for (i, &drive) in input.iter().enumerate() {
         let tick = i + offset;
-        let (next, frame) = q15_r59::advance(state, drive, tick % BLOCK == 0)
+        let (next, frame) = q15_r59::advance(
+            state,
+            drive,
+            tick % BLOCK == 0,
+            #[cfg(pilot_r59_profile)]
+            profile,
+        )
             .map_err(|error| format!("Q15 at tick {tick}: {error:?}"))?;
         observe(next, frame, drive)?;
         state = next;
@@ -88,8 +95,19 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map(|b| b.try_into().unwrap())
         .collect();
     let mut out = std::io::BufWriter::new(std::io::stdout().lock());
+    #[cfg(pilot_r59_profile)]
+    let mut profile = fast_r59::Profile::default();
     if mode == "bench" {
-        let warm = render(initial, &input[..BLOCK], 0, |_, _, _| Ok(()))?;
+        let warm = render(
+            initial,
+            &input[..BLOCK],
+            0,
+            |_, _, _| Ok(()),
+            #[cfg(pilot_r59_profile)]
+            &mut profile,
+        )?;
+        #[cfg(pilot_r59_profile)]
+        let mut profile = fast_r59::Profile::default();
         let mut elapsed = [0; 64];
         let mut allocations = 0;
         for time in &mut elapsed {
@@ -103,19 +121,23 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
                     black_box(frame);
                     Ok(())
                 },
+                #[cfg(pilot_r59_profile)]
+                &mut profile,
             )?);
             *time = start.elapsed().as_nanos();
             allocations += ALLOCS.load(Relaxed) - before;
         }
         elapsed.sort_unstable();
         writeln!(out, "64,{},{},{}", elapsed[32], elapsed[63], allocations)?;
+        #[cfg(pilot_r59_profile)]
+        crate::probe::write_profile(&mut out, &profile)?;
         return Ok(());
     }
     let ticks = mode.parse::<usize>()? * 2;
     assert!(matches!(ticks, 128 | 256));
     let mut state = initial;
     for (block, chunk) in input.chunks(ticks).enumerate() {
-        state = render(state, chunk, block * ticks, |next, frame, _| {
+        let mut write_frame = |next: State, frame: Frame, _| {
             let (charge, _) = terminal(initial.q15_v.map(|v| (v, 0.)), next.q15_v.map(|v| (v, 0.)))
                 .map_err(|e| format!("Q15 charge: {e:?}"))?;
             let audio = frame.audio;
@@ -152,7 +174,15 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
                 out.write_all(&value.to_le_bytes())?;
             }
             Ok(())
-        })?;
+        };
+        state = render(
+            state,
+            chunk,
+            block * ticks,
+            &mut write_frame,
+            #[cfg(pilot_r59_profile)]
+            &mut profile,
+        )?;
     }
     for charge in state.audio.audio.capacitor_charge_offsets_c() {
         out.write_all(&charge.to_le_bytes())?;

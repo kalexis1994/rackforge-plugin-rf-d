@@ -145,6 +145,7 @@ fn evaluate(
     refresh: bool,
     work: &mut Work,
     #[cfg(pilot_r59_q15_retry)] prior: Option<&Trial>,
+    #[cfg(pilot_r59_profile)] profile: &mut fast_r59::Profile,
 ) -> Result<Trial, Error> {
     let audio_drive = [signal, c2, q15_v[0], filter];
     #[cfg(pilot_r59_q15_retry)]
@@ -156,6 +157,8 @@ fn evaluate(
             refresh,
             trial.state.audio,
             &trial.audio.receiver_root,
+            #[cfg(pilot_r59_profile)]
+            profile,
         )
         .ok()
     });
@@ -165,7 +168,13 @@ fn evaluate(
         .map_or_else(
             || {
                 work.trials += 1;
-                fast_r59::advance(old.audio, audio_drive, refresh)
+                fast_r59::advance(
+                    old.audio,
+                    audio_drive,
+                    refresh,
+                    #[cfg(pilot_r59_profile)]
+                    profile,
+                )
             },
             Ok,
         )
@@ -201,15 +210,36 @@ fn evaluate(
     })
 }
 
-pub fn advance(old: State, drive: [f64; 6], refresh: bool) -> Result<(State, Frame), Error> {
+pub fn advance(
+    old: State,
+    drive: [f64; 6],
+    refresh: bool,
+    #[cfg(pilot_r59_profile)] profile: &mut fast_r59::Profile,
+) -> Result<(State, Frame), Error> {
     let mut work = Work::default();
     #[cfg(pilot_r59_predict_q15)]
-    if let Some(seed) = predict(old, drive) {
-        if let Ok(result) = solve(old, drive, refresh, seed, &mut work) {
+    if let Some(seed) = fast_r59::measure!(profile, 8, predict(old, drive)) {
+        if let Ok(result) = solve(
+            old,
+            drive,
+            refresh,
+            seed,
+            &mut work,
+            #[cfg(pilot_r59_profile)]
+            profile,
+        ) {
             return Ok(result);
         }
     }
-    solve(old, drive, refresh, old.q15_v, &mut work)
+    solve(
+        old,
+        drive,
+        refresh,
+        old.q15_v,
+        &mut work,
+        #[cfg(pilot_r59_profile)]
+        profile,
+    )
 }
 
 fn solve(
@@ -218,6 +248,7 @@ fn solve(
     refresh: bool,
     seed: [f64; 2],
     work: &mut Work,
+    #[cfg(pilot_r59_profile)] profile: &mut fast_r59::Profile,
 ) -> Result<(State, Frame), Error> {
     let mut trial = evaluate(
         old,
@@ -227,6 +258,8 @@ fn solve(
         work,
         #[cfg(pilot_r59_q15_retry)]
         None,
+        #[cfg(pilot_r59_profile)]
+        profile,
     )?;
     for _ in 0..16 {
         let error = maximum(&trial.residual_a);
@@ -255,6 +288,8 @@ fn solve(
                 work,
                 #[cfg(pilot_r59_q15_retry)]
                 Some(&trial),
+                #[cfg(pilot_r59_profile)]
+                profile,
             ) {
                 if maximum(&candidate.residual_a) < error {
                     accepted = Some(candidate);

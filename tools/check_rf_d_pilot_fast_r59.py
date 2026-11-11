@@ -35,9 +35,26 @@ CR6_SATURATION_A = 1e-8
 RETURN_LIMIT_A = 2e-9
 RESET_TANGENT_LIMIT_S = 2e-11
 PROFILE_STAGES = ("initial_follower", "receiver_history", "receiver_root", "loaded_follower",
-                  "follower_response", "receiver_tangent", "receiver_reconstruction")
+                  "follower_response", "receiver_tangent", "receiver_reconstruction",
+                  "affine_follower_seed", "q15_seed")
 
-def dynamic_q15(run, report, joined, exe, control, dc, bias, center, limits, stimulus, cathode, assess, crossings):
+
+def profile_statistics(lines, read_timing, exact):
+    instrumented = read_timing(lines[0])
+    blocks = instrumented["blocks"]
+    stages = {}
+    for name, line in zip(PROFILE_STAGES, lines[1:-1], strict=True):
+        calls, elapsed_ns = map(int, line.split(","))
+        stages[name] = dict(calls=calls, elapsed_ns=elapsed_ns, mean_per_block_ns=elapsed_ns / blocks)
+    evaluations, reused, fallbacks, prediction_fallbacks = map(int, lines[-1].split(","))
+    assert 0 <= reused <= min(stages["receiver_root"]["calls"], evaluations)
+    return dict(bit_exact=exact, instrumented_timing=instrumented, stages=stages,
+                successful_root_evaluations=evaluations, reused_root_evaluations=reused,
+                follower_fallbacks=fallbacks, prediction_fallbacks=prediction_fallbacks)
+
+
+def dynamic_q15(run, report, joined, exe, control, profiled, dc, bias, center, limits, stimulus, cathode,
+                assess, crossings):
     # Fit the imposed R56 source at DC. CR8 starts in reverse and Q15 BE/BC
     # are both deep reverse, giving a 2 fA collector current at this seed.
     q15_collector = (9.3 + cathode) / 2. - 1e-11
@@ -125,9 +142,12 @@ def dynamic_q15(run, report, joined, exe, control, dc, bias, center, limits, sti
         and report["max_r59_mismatch_v"] <= report["r59_closure_limit_v"]
         and abs(reference[8][:, 11] - center[0]).max() <= limits[0]
     )
-    def measure(binary):
+    def read_timing(line):
         return dict(zip(("blocks", "median_ns", "max_ns", "allocations"),
-                        map(int, run([binary, "bench"], payload).decode().split(",")), strict=True))
+                        map(int, line.split(",")), strict=True))
+
+    def measure(binary):
+        return read_timing(run([binary, "bench"], payload).decode().strip())
 
     timing = measure(exe)
     report["timing"] = timing
@@ -165,6 +185,14 @@ def dynamic_q15(run, report, joined, exe, control, dc, bias, center, limits, sti
         report["realtime"] = report["realtime"] and passed and all(
             pair["cached"]["max_ns"] <= BUDGET_NS and pair["cached"]["allocations"] == 0 for pair in pairs)
         print(key, report[key], flush=True)
+    if profiled is not None:
+        exact = raw == run([profiled, 128], payload, repeat=True)
+        lines = run([profiled, "bench"], payload).decode().splitlines()
+        profile = profile_statistics(lines, read_timing, exact)
+        report["profile"] = profile
+        report["passed"] = report["passed"] and exact
+        report["realtime"] = report["realtime"] and exact
+        print("Q15 profile", profile, flush=True)
     print("Q15", report["passed"], report["contrast"], report["max_q15_residual_a"], timing, flush=True)
 
 
@@ -339,17 +367,7 @@ def main():
         exact = (digest(raw[:-charge_bytes]) == expected["output_sha256"]
                  and digest(raw[-charge_bytes:]) == expected["final_charge_sha256"])
         lines = run([target, "cached", "bench"], payload).decode().splitlines()
-        instrumented = timing(lines[0])
-        blocks = instrumented["blocks"]
-        stages = {}
-        for name, line in zip(PROFILE_STAGES, lines[1:-1], strict=True):
-            calls, elapsed_ns = map(int, line.split(","))
-            stages[name] = dict(calls=calls, elapsed_ns=elapsed_ns, mean_per_block_ns=elapsed_ns / blocks)
-        evaluations, reused, fallbacks, prediction_fallbacks = map(int, lines[-1].split(","))
-        assert 0 <= reused <= min(stages["receiver_root"]["calls"], evaluations)
-        return dict(bit_exact=exact, instrumented_timing=instrumented, stages=stages,
-                    successful_root_evaluations=evaluations, reused_root_evaluations=reused,
-                    follower_fallbacks=fallbacks, prediction_fallbacks=prediction_fallbacks)
+        return profile_statistics(lines, timing, exact)
 
     try:
         isolated, joined = AREA / "r59-isolated.exe", AREA / "r59-joined.exe"
@@ -436,8 +454,11 @@ def main():
                 flag, report["q15_comparison"] = enabled[-1]
                 q15_cfg.extend(("--cfg", flag))
             build(exe, *q15_cfg)
-            dynamic_q15(run, report, joined, exe, gain_control, dc, bias, center, limits, stimulus, cathode_v,
-                        assess, cr6_crossings)
+            profiled = AREA / "r59-q15-profile.exe" if args.profile else None
+            if profiled is not None:
+                build(profiled, *q15_cfg, "--cfg", "pilot_r59_profile")
+            dynamic_q15(run, report, joined, exe, gain_control, profiled, dc, bias, center, limits,
+                        stimulus, cathode_v, assess, cr6_crossings)
             sources.unchanged()
             raise SystemExit(0 if report["passed"] else 1)
 

@@ -136,7 +136,7 @@ pub enum Error {
 #[cfg(pilot_r59_profile)]
 #[derive(Default)]
 pub struct Profile {
-    pub stages: [(u64, u128); 7],
+    pub stages: [(u64, u128); 9],
     pub successful_root_evaluations: usize,
     pub reused_root_evaluations: usize,
     pub follower_fallbacks: usize,
@@ -158,6 +158,8 @@ macro_rules! measure {
         result
     }};
 }
+#[cfg(pilot_r59_predict_q15)]
+pub(crate) use measure;
 
 pub fn advance(
     old: State,
@@ -171,7 +173,7 @@ pub fn advance(
         .and_then(|seed| seed.predict(old.volume, drive[1], drive[2]))
     {
         #[cfg(pilot_r59_predict_affine)]
-        let affine = old.gradient.and_then(|gain| {
+        let affine = measure!(profile, 7, old.gradient.and_then(|gain| {
             crate::contour_ports::predict_volume(
                 volume,
                 drive[1],
@@ -179,7 +181,7 @@ pub fn advance(
                 [old.volume[2], old.vca_base, gain],
             )
             .ok()
-        });
+        }));
         #[cfg(pilot_r59_predict_affine)]
         let (volume, base) = affine.unwrap_or((volume, old.vca_base));
         #[cfg(not(pilot_r59_predict_affine))]
@@ -221,6 +223,7 @@ pub(crate) fn advance_from_trial(
     refresh: bool,
     trial: State,
     root: &plant::Root,
+    #[cfg(pilot_r59_profile)] profile: &mut Profile,
 ) -> Result<(State, Frame), Error> {
     let seed = trial.follower.ok_or(Error::Closure)?;
     let (mut volume, response) = seed
@@ -241,6 +244,8 @@ pub(crate) fn advance_from_trial(
         refresh,
         Some((volume, response, trial.vca_base + base_change)),
         Some(root),
+        #[cfg(pilot_r59_profile)]
+        profile,
     )
 }
 

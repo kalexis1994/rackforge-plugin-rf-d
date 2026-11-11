@@ -56,6 +56,21 @@ fn render(
     Ok((state, stats))
 }
 
+#[cfg(pilot_r59_profile)]
+pub(crate) fn write_profile(out: &mut impl Write, profile: &fast_r59::Profile) -> std::io::Result<()> {
+    for (calls, total_ns) in profile.stages {
+        writeln!(out, "{calls},{total_ns}")?;
+    }
+    writeln!(
+        out,
+        "{},{},{},{}",
+        profile.successful_root_evaluations,
+        profile.reused_root_evaluations,
+        profile.follower_fallbacks,
+        profile.prediction_fallbacks
+    )
+}
+
 pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mode = std::env::args().nth(1).ok_or("cached or fresh")?;
     assert!(matches!(mode.as_str(), "cached" | "fresh"));
@@ -171,19 +186,7 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
             times[32], times[63], times[63]
         )?;
         #[cfg(pilot_r59_profile)]
-        {
-            for (calls, total_ns) in profile.stages {
-                writeln!(out, "{calls},{total_ns}")?;
-            }
-            writeln!(
-                out,
-                "{},{},{},{}",
-                profile.successful_root_evaluations,
-                profile.reused_root_evaluations,
-                profile.follower_fallbacks,
-                profile.prediction_fallbacks
-            )?;
-        }
+        write_profile(&mut out, &profile)?;
     } else {
         let size = 2 * second.parse::<usize>()?;
         assert!(matches!(size, 128 | 256));

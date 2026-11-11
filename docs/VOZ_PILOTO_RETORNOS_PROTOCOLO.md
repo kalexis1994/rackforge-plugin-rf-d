@@ -666,3 +666,11 @@ Radau, la auditoría de carga y el plazo nativo.
 Si se añade `--packed-odd`, el control también usa
 los productos agrupados y el contraste aísla la
 corrección impar de Newton.
+
+Con Q15 dinámico, `--profile` mide los cierres de
+R59, incluida la ruta de reintento de Q15, y las
+semillas de Q15 y del seguidor afín por separado.
+Verificar igualdad por bits del resultado completo
+con el ejecutable sin instrumentar. Excluir el
+calentamiento de los contadores y usar sólo el
+ejecutable sin instrumentación para el plazo.

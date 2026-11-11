@@ -2987,3 +2987,18 @@ subió un 1,71 % y el pico llegó a 2,975 ms. Para
 el candidato positivo se conservó el agrupado
 de productos con la corrección impar original.
 [Corrección impar con Q15](../evidence/rf_d_pilot_fast_r5963.json).
+
+### Perfil de la rama positiva con Q15 dinámico
+
+El ejecutable instrumentado reprodujo por bits la
+trayectoria y las cargas. En 64 bloques midió 448
+raíces de receptor por bloque y una media de 1149
+evaluaciones de su residual. La raíz consumió
+0,818 ms por bloque. La semilla de Q15 consumió
+0,402 ms y el seguidor afín, 0,174 ms. El cierre
+cargado del seguidor consumió 0,116 ms y su
+respuesta, 0,057 ms.
+
+El ejecutable ordinario tuvo una mediana pareada
+de 1,847 ms y un pico de 2,231 ms en los tres lotes.
+[Perfil positivo](../evidence/rf_d_pilot_fast_r5964.json).
