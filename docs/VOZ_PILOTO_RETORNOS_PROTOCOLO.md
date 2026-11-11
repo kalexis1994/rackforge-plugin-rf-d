@@ -278,3 +278,20 @@ se vuelve al predictor de la historia aceptada. La
 semilla se descarta al terminar el paso y conserva
 su función exclusivamente numérica. Contrastar otra
 vez el circuito unido, la partición y el coste.
+
+
+Preparar una sola vez por paso F·q_anterior y
+N0·defecto_anterior del receptor. El objeto preparado
+conserva también el estado anterior y sólo ofrece trials
+que parten de esa misma historia. Cada nuevo extremo
+de fuente se añade con el orden de operaciones previo.
+El candidato se entrega después de resolver su raíz.
+
+La factorización del seguidor calcula además el vector
+dVnodo/dVbase resolviendo J·dV = e_salida/68 kΩ.
+Ese vector predice los cinco voltajes cuando el trial
+de audio entrega una nueva carga. La predicción se usa
+sólo como semilla. Se comprueban de nuevo las cinco
+filas no lineales, con 2e−15 A y 2e−12 V como antes.
+Mantener los límites de cierre y el contraste nodal
+unido en ambas ramas al medir el coste de estos reusos.

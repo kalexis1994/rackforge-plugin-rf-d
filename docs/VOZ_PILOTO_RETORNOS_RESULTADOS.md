@@ -2352,3 +2352,25 @@ y el hash de J7 f32 del control anterior. Hubo cero
 asignaciones y un máximo de 0,718 ms en el pase de
 retornos activos a 128 frames del perfil de 192 kHz.
 [Regresión del solver compartido](../evidence/rf_d_pilot_returns16.json).
+
+
+### Historia preparada y predictor del seguidor
+
+El receptor prepara F·q y N0·defecto una vez por paso
+y conserva el estado aceptado dentro de un contexto
+inmutable. Los trials usan esa misma historia. El
+seguidor usa su Jacobiano para predecir los cinco
+voltajes ante la nueva carga y verifica después las
+cinco filas originales con los límites previos.
+
+La rama positiva pasó el circuito unido, su refinamiento,
+ambas políticas de tangente y la partición 64/128.
+Se mantuvieron dos trials como máximo por paso y un
+desacuerdo máximo de R59 de 1,04 fA. El error RMS
+de J7 fue 0,0373 %, con máximo de 64,2 nV.
+
+En 64 bloques, la tangente por bloque tuvo mediana
+1,960 ms y máximo 2,264 ms. La tangente por paso tuvo
+mediana 3,781 ms y máximo 3,889 ms. Se observaron
+cero asignaciones. El margen de 1,333 ms sigue abierto.
+[Historia compartida y predictor](../evidence/rf_d_pilot_fast_r5905.json).

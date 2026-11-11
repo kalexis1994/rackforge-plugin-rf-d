@@ -33,37 +33,47 @@ pub fn advance(
     [signal, c2, cathode, filter]: [f64; 4],
     refresh: bool,
 ) -> Result<(State, Frame), Error> {
-    let (mut volume, _) = contour_ports::close_volume(old.volume, c2, cathode, old.vca_base)
+    let (mut volume, factor) = contour_ports::close_volume(old.volume, c2, cathode, old.vca_base)
         .map_err(Error::Volume)?;
+    let mut volume_response = factor
+        .solve([0., 0., 1. / R59, 0., 0.])
+        .map_err(Error::Volume)?;
+    let mut volume_base = old.vca_base;
     let mut source = volume[2];
     let mut gradient = if refresh { None } else { old.gradient };
     let mut previous_error = f64::INFINITY;
     let mut tangent_calls = 0;
     let mut junction_seed = None;
+    let prepared = plant::Prepared::new(old.audio);
     for iteration in 1..=8 {
         let drive = plant::Drive {
             volume_delta_v: source - map::SPLIT_CENTER[0],
             filter_delta_v: filter - map::SPLIT_CENTER[1],
         };
         let (candidate, ports) = if gradient.is_none() {
-            let trial =
-                plant::trial_with_load_tangent(old.audio, signal, drive).map_err(Error::Audio)?;
+            let trial = prepared
+                .trial_with_load_tangent(signal, drive)
+                .map_err(Error::Audio)?;
             gradient = Some(trial.load_jacobian[0][0]);
             junction_seed = Some(trial.junction);
             tangent_calls += 1;
             (trial.state, trial.ports)
         } else {
-            let mut candidate = old.audio;
-            let (ports, junction) =
-                plant::step_with_junction(&mut candidate, signal, drive, junction_seed)
-                    .or_else(|_| plant::step_with_junction(&mut candidate, signal, drive, None))
-                    .map_err(Error::Audio)?;
+            let (candidate, ports, junction) = prepared
+                .step_with_junction(signal, drive, junction_seed)
+                .or_else(|_| prepared.step_with_junction(signal, drive, None))
+                .map_err(Error::Audio)?;
             junction_seed = Some(junction);
             (candidate, ports)
         };
-        let (next, factor) = contour_ports::close_volume(volume, c2, cathode, ports.loads_v[0])
+        // The tangent supplies a seed. close_volume checks every original row again.
+        let initial = std::array::from_fn(|k| {
+            volume[k] + volume_response[k] * (ports.loads_v[0] - volume_base)
+        });
+        let (next, factor) = contour_ports::close_volume(initial, c2, cathode, ports.loads_v[0])
             .map_err(Error::Volume)?;
         volume = next;
+        volume_base = ports.loads_v[0];
         let residual = volume[2] - source;
         let error = residual.abs();
         let mismatch_a = ((volume[2] - ports.loads_v[0]) / R59 - ports.returns_a[0]).abs();
@@ -86,9 +96,10 @@ pub fn advance(
                 },
             ));
         }
-        let slope = factor
+        volume_response = factor
             .solve([0., 0., 1. / R59, 0., 0.])
-            .map_err(Error::Volume)?[2];
+            .map_err(Error::Volume)?;
+        let slope = volume_response[2];
         let denominator = 1. - slope * gradient.unwrap();
         if !denominator.is_finite() || denominator.abs() <= 1e-8 {
             return Err(Error::Closure);

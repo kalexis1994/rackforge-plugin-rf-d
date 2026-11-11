@@ -57,32 +57,151 @@ pub struct Trial {
     pub(crate) junction: [f64; JUNCTIONS],
 }
 
-#[cfg(pilot_receiver_ports)]
-pub fn trial_with_load_tangent(old: State, signal: f64, drive: Drive) -> Result<Trial, Error> {
-    let mut state = old;
-    let (ports, junction) = step_with_junction(&mut state, signal, drive, None)?;
-    let (_, slope) = law(junction)?;
-    let jacobian = std::array::from_fn(|i| {
-        std::array::from_fn(|j| f64::from(i == j) + map::P[i][j] * slope[j])
-    });
-    let factor = crate::port_lu::Lu::<JUNCTIONS>::factor(jacobian).map_err(|_| Error::Singular)?;
-    let mut load_jacobian = [[0.; 2]; 2];
-    for column in 0..2 {
-        let input = column + 1;
-        let charge_drive: [f64; CHARGES] = std::array::from_fn(|i| map::U1[i][input]);
-        let right = std::array::from_fn(|i| dot(&map::ZH[i], &charge_drive) + map::ZU[i][input]);
-        let direction = factor.solve(right).map_err(|_| Error::Singular)?;
-        let defect_drive = std::array::from_fn(|i| slope[i] * direction[i]);
-        for row in 0..2 {
-            let node = row + 3;
-            load_jacobian[row][column] = dot(&map::XQ[node], &charge_drive)
-                + map::XU[node][input] - dot(&map::XD[node], &defect_drive);
+pub(crate) struct Prepared {
+    old: State,
+    stored: [f64; CHARGES],
+    correction: [f64; CHARGES],
+}
+
+impl Prepared {
+    pub(crate) fn new(old: State) -> Self {
+        Self {
+            old,
+            stored: product(&F, &old.q),
+            correction: product(&N0, &old.defects),
         }
     }
-    if load_jacobian.iter().flatten().any(|v| !v.is_finite()) {
-        return Err(Error::Domain);
+
+    #[cfg(pilot_receiver_ports)]
+    pub(crate) fn trial_with_load_tangent(
+        &self,
+        signal: f64,
+        drive: Drive,
+    ) -> Result<Trial, Error> {
+        let (state, ports, junction) = self.step_with_junction(signal, drive, None)?;
+        let (_, slope) = law(junction)?;
+        let jacobian = std::array::from_fn(|i| {
+            std::array::from_fn(|j| f64::from(i == j) + map::P[i][j] * slope[j])
+        });
+        let factor =
+            crate::port_lu::Lu::<JUNCTIONS>::factor(jacobian).map_err(|_| Error::Singular)?;
+        let mut load_jacobian = [[0.; 2]; 2];
+        for column in 0..2 {
+            let input = column + 1;
+            let charge_drive: [f64; CHARGES] = std::array::from_fn(|i| map::U1[i][input]);
+            let right =
+                std::array::from_fn(|i| dot(&map::ZH[i], &charge_drive) + map::ZU[i][input]);
+            let direction = factor.solve(right).map_err(|_| Error::Singular)?;
+            let defect_drive = std::array::from_fn(|i| slope[i] * direction[i]);
+            for row in 0..2 {
+                let node = row + 3;
+                load_jacobian[row][column] = dot(&map::XQ[node], &charge_drive)
+                    + map::XU[node][input]
+                    - dot(&map::XD[node], &defect_drive);
+            }
+        }
+        if load_jacobian.iter().flatten().any(|v| !v.is_finite()) {
+            return Err(Error::Domain);
+        }
+        Ok(Trial {
+            state,
+            ports,
+            load_jacobian,
+            junction,
+        })
     }
-    Ok(Trial { state, ports, load_jacobian, junction })
+
+    pub(crate) fn step_with_junction(
+        &self,
+        signal: f64,
+        drive: Drive,
+        seed: Option<[f64; JUNCTIONS]>,
+    ) -> Result<(State, Ports, [f64; JUNCTIONS]), Error> {
+        let state = &self.old;
+        if !drive.valid() || !signal.is_finite() || signal.abs() > 0.08 {
+            return Err(Error::Input);
+        }
+        let input = [signal, drive.volume_delta_v, drive.filter_delta_v];
+        let stored = &self.stored;
+        let correction = &self.correction;
+        let base: [f64; CHARGES] = std::array::from_fn(|i| {
+            dot(&map::U0[i], &state.input) + dot(&map::U1[i], &input) + stored[i] + correction[i]
+        });
+        let history = product(&ZH, &base);
+        let predictor: [f64; JUNCTIONS] =
+            std::array::from_fn(|i| history[i] + dot(&map::ZU[i], &input));
+        #[cfg(not(pilot_block_roots))]
+        let previous = product(&P, &state.defects);
+        #[cfg(pilot_block_roots)]
+        let previous = state.feedback;
+        let mut z = seed.unwrap_or_else(|| std::array::from_fn(|i| predictor[i] - previous[i]));
+        for _iteration in 0..12 {
+            let (defects, slope) = law(z)?;
+            let feedback = product(&P, &defects);
+            let residual: [f64; JUNCTIONS] =
+                std::array::from_fn(|i| z[i] - predictor[i] + feedback[i]);
+            if residual.iter().all(|x| x.abs() <= 2e-13) {
+                let charge = product(&N1, &defects);
+                let q: [f64; CHARGES] = std::array::from_fn(|i| base[i] + charge[i]);
+                let [j7_v, bus_v, base_v, vca_base, tail, collector] = std::array::from_fn(|i| {
+                    map::DC[i] + dot(&map::XQ[i], &base) + dot(&map::XU[i], &input)
+                        - dot(&map::XD[i], &defects)
+                });
+                if q.iter()
+                    .chain(&[j7_v, bus_v, base_v, vca_base, tail, collector])
+                    .any(|v| !v.is_finite())
+                {
+                    return Err(Error::Domain);
+                }
+                let next = State {
+                    q,
+                    input,
+                    defects,
+                    #[cfg(pilot_block_roots)]
+                    feedback,
+                };
+                #[cfg(not(pilot_split_returns))]
+                let r59_source = 2. + drive.volume_delta_v;
+                #[cfg(pilot_split_returns)]
+                let r59_source = map::SPLIT_CENTER[0] + drive.volume_delta_v;
+                return Ok((
+                    next,
+                    Ports {
+                        j7_v,
+                        bus_v,
+                        base_v,
+                        panel_a: (bus_v - 0.5 * signal) / 39_250.,
+                        returns_a: [(r59_source - vca_base) / 68_000., (tail - collector) / 680.],
+                        loads_v: [vca_base, tail],
+                    },
+                    z,
+                ));
+            }
+            // Same modified-Newton preconditioner as the original pilot.
+            #[cfg(not(pilot_block_roots))]
+            let even = full_direction(&residual, &slope)?;
+            #[cfg(pilot_block_roots)]
+            let even = if _iteration < 2 {
+                block_direction(&residual, &slope).or_else(|_| full_direction(&residual, &slope))?
+            } else {
+                full_direction(&residual, &slope)?
+            };
+            for i in 0..JUNCTIONS / 2 {
+                let mut odd = residual[2 * i + 1];
+                for j in 0..JUNCTIONS / 2 {
+                    odd -= map::P[2 * i + 1][2 * j] * slope[2 * j] * even[j];
+                }
+                z[2 * i] -= even[i];
+                z[2 * i + 1] -= odd;
+            }
+        }
+        Err(Error::RootBudget)
+    }
+}
+
+#[cfg(pilot_receiver_ports)]
+pub fn trial_with_load_tangent(old: State, signal: f64, drive: Drive) -> Result<Trial, Error> {
+    Prepared::new(old).trial_with_load_tangent(signal, drive)
 }
 
 impl State {
@@ -263,65 +382,13 @@ pub fn step(state: &mut State, signal: f64, drive: Drive) -> Result<Ports, Error
     step_with_junction(state, signal, drive, None).map(|(ports, _)| ports)
 }
 
-pub(crate) fn step_with_junction(state: &mut State, signal: f64, drive: Drive,
-                               seed: Option<[f64; JUNCTIONS]>) -> Result<(Ports, [f64; JUNCTIONS]), Error> {
-    if !drive.valid() || !signal.is_finite() || signal.abs() > 0.08 {
-        return Err(Error::Input);
-    }
-    let input = [signal, drive.volume_delta_v, drive.filter_delta_v];
-    let stored = product(&F, &state.q);
-    let correction = product(&N0, &state.defects);
-    let base: [f64; CHARGES] = std::array::from_fn(|i| {
-        dot(&map::U0[i], &state.input) + dot(&map::U1[i], &input) + stored[i] + correction[i]
-    });
-    let history = product(&ZH, &base);
-    let predictor: [f64; JUNCTIONS] = std::array::from_fn(|i| history[i] + dot(&map::ZU[i], &input));
-    #[cfg(not(pilot_block_roots))]
-    let previous = product(&P, &state.defects);
-    #[cfg(pilot_block_roots)]
-    let previous = state.feedback;
-    let mut z = seed.unwrap_or_else(|| std::array::from_fn(|i| predictor[i] - previous[i]));
-    for _iteration in 0..12 {
-        let (defects, slope) = law(z)?;
-        let feedback = product(&P, &defects);
-        let residual: [f64; JUNCTIONS] = std::array::from_fn(|i| z[i] - predictor[i] + feedback[i]);
-        if residual.iter().all(|x| x.abs() <= 2e-13) {
-            let charge = product(&N1, &defects);
-            let q: [f64; CHARGES] = std::array::from_fn(|i| base[i] + charge[i]);
-            let [j7_v, bus_v, base_v, vca_base, tail, collector] = std::array::from_fn(|i| {
-                map::DC[i] + dot(&map::XQ[i], &base) + dot(&map::XU[i], &input) - dot(&map::XD[i], &defects)
-            });
-            if q.iter().chain(&[j7_v, bus_v, base_v, vca_base, tail, collector]).any(|v| !v.is_finite()) {
-                return Err(Error::Domain);
-            }
-            *state = State { q, input, defects, #[cfg(pilot_block_roots)] feedback };
-            #[cfg(not(pilot_split_returns))]
-            let r59_source = 2. + drive.volume_delta_v;
-            #[cfg(pilot_split_returns)]
-            let r59_source = map::SPLIT_CENTER[0] + drive.volume_delta_v;
-            return Ok((Ports {
-                j7_v, bus_v, base_v, panel_a: (bus_v - 0.5 * signal) / 39_250.,
-                returns_a: [(r59_source - vca_base) / 68_000., (tail - collector) / 680.],
-                loads_v: [vca_base, tail],
-            }, z));
-        }
-        // Same modified-Newton preconditioner as the original pilot.
-        #[cfg(not(pilot_block_roots))]
-        let even = full_direction(&residual, &slope)?;
-        #[cfg(pilot_block_roots)]
-        let even = if _iteration < 2 {
-            block_direction(&residual, &slope).or_else(|_| full_direction(&residual, &slope))?
-        } else {
-            full_direction(&residual, &slope)?
-        };
-        for i in 0..JUNCTIONS / 2 {
-            let mut odd = residual[2 * i + 1];
-            for j in 0..JUNCTIONS / 2 {
-                odd -= map::P[2 * i + 1][2 * j] * slope[2 * j] * even[j];
-            }
-            z[2 * i] -= even[i];
-            z[2 * i + 1] -= odd;
-        }
-    }
-    Err(Error::RootBudget)
+pub(crate) fn step_with_junction(
+    state: &mut State,
+    signal: f64,
+    drive: Drive,
+    seed: Option<[f64; JUNCTIONS]>,
+) -> Result<(Ports, [f64; JUNCTIONS]), Error> {
+    let (next, ports, junction) = Prepared::new(*state).step_with_junction(signal, drive, seed)?;
+    *state = next;
+    Ok((ports, junction))
 }
