@@ -833,3 +833,18 @@ y comparar la trayectoria y el estado final al
 particionar el nativo en bloques de 64 y 128.
 Los dos primeros bloques deben reproducir el
 recibo original.
+
+Con `--rack-physical`, usar el componente continuo
+en el callback del banco ASIO de RackForge. El
+banco entrega silencio a los buffers físicos
+mientras ejecuta el circuito y mide el callback.
+Verificar el endpoint NVIDIA, el avance efectivo
+de 128 frames y la restauración del perfil ASIO.
+Si falta el perfil del banco, seleccionar el
+monitor NVIDIA presente sólo en ese perfil
+temporal y verificar su eliminación al terminar.
+Registrar un control silente y dos pases de 4.800
+bloques de cada rama con el mismo criterio de
+1,333 ms, asignaciones y fallos. Conservar los
+pases rechazados y distinguir el plazo del
+callback de la comparación de J7 en el motor.

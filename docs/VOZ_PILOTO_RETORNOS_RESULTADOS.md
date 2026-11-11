@@ -3340,3 +3340,40 @@ fueron 1,643 ms en positivo y 1,135 ms en
 negativo.
 [Escena continua positiva](../evidence/rf_d_pilot_fast_r5996.json).
 [Escena continua negativa](../evidence/rf_d_pilot_fast_r5997.json).
+
+### Callback físico de la escena continua
+
+El primer intento enumeró el par genérico
+HD Audio y se detuvo antes de abrir un stream.
+El perfil temporal del banco recuperó el par
+NVIDIA y se retiró al terminar. Se verificó el
+estado previo de los demás perfiles.
+[Consulta inicial](../evidence/rf_d_pilot_fast_r5998.json).
+
+En positivo, el control y ambos pases confirmaron
+128 frames efectivos a 48 kHz y la salida NVIDIA.
+El driver recibió silencio durante la medida.
+El control llegó a 0,038 ms y registró un aviso
+de reset. Los dos pases de 4.800 bloques tuvieron
+medianas de 1,079 y 1,078 ms y picos de 1,704 y
+3,895 ms. Hubo 22 y 68 bloques sobre 1,333 ms.
+El segundo pase perdió seis plazos completos.
+Ambos tuvieron cero asignaciones y fallos de slot.
+
+Ningún ordinal superó el margen en ambos pases.
+El peor bloque del segundo pase tomó 3,892 ms
+dentro del render y 1,086 ms de pared en el
+mismo ordinal del primer pase.
+[Pases físicos positivos](../evidence/rf_d_pilot_fast_r5999.json).
+
+En negativo, el control y ambos pases también
+confirmaron la salida NVIDIA y 128 frames
+efectivos. El control llegó a 0,037 ms y registró
+un aviso de reset. Los pases tuvieron medianas
+de 1,008 y 1,000 ms y picos de 1,494 y 1,556 ms,
+con 5 y 20 bloques sobre el margen. Registraron
+cero plazos perdidos, asignaciones y fallos de
+slot. Los ordinales sobre margen fueron distintos
+entre los dos pases. La selección temporal del
+endpoint se restauró en ambas ramas.
+[Pases físicos negativos](../evidence/rf_d_pilot_fast_r59100.json).

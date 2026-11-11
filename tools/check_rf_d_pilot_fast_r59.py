@@ -2,6 +2,7 @@
 import argparse
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import traceback
 
@@ -232,6 +233,8 @@ def main():
                         help="render the matching admitted native receipt through RackForge at 128 frames")
     parser.add_argument("--rack-continuous", action="store_true",
                         help="also compare a continuous RackForge render with the native scene")
+    parser.add_argument("--rack-physical", action="store_true",
+                        help="measure the continuous scene on the NVIDIA ASIO callback")
     parser.add_argument("--cached-q15-gain", action="store_true",
                         help="reuse the receiver load tangent during Q15 closure")
     parser.add_argument("--predict-q15", action="store_true",
@@ -284,14 +287,17 @@ def main():
     args = parser.parse_args()
     if args.rack_replay and not args.dynamic_q15:
         parser.error("--rack-replay requires --dynamic-q15")
-    if args.rack_continuous and not args.rack_replay:
-        parser.error("--rack-continuous requires --rack-replay")
+    if (args.rack_continuous or args.rack_physical) and not args.rack_replay:
+        parser.error("continuous or physical RackForge measurements require --rack-replay")
     rack_replay = None
     rack_sources = ()
     if args.rack_replay:
         import rf_d_pilot_q15_rack as rack_lab
         rack_replay = (ROOT / args.rack_replay).resolve()
         rack_sources = (*rack_lab.SOURCES, rack_replay.relative_to(ROOT).as_posix())
+        if args.rack_physical:
+            from check_rf_d_pilot_returns_asio import SOURCES as ASIO_SOURCES
+            rack_sources += ASIO_SOURCES
     if (args.predict_q15_audio or args.predict_q15_cr6 or args.predict_q15_charge
             or args.reuse_q15_endpoint) and not args.predict_q15:
         parser.error("Q15 predictor refinements require --predict-q15")
@@ -559,7 +565,8 @@ def main():
                                         limits, stimulus, cathode_v, assess, cr6_crossings)
             if rack_replay is not None and report["passed"]:
                 rack_lab.campaign(run, report, rack_replay, code, flags, q15_cfg, exe, payload, rows,
-                                  continuous=args.rack_continuous)
+                                  continuous=args.rack_continuous or args.rack_physical,
+                                  physical_env=env if args.rack_physical else None)
                 report["passed"] = report["passed"] and report["rack_integrated"]
             sources.unchanged()
             raise SystemExit(0 if report["passed"] else 1)
@@ -797,6 +804,9 @@ def main():
                     assert child.is_file() and child.resolve().parent == path.resolve()
                     child.unlink()
                 path.rmdir()
+            elif args.rack_physical and path.name in ("reduced-asio-control", "pilot-cache"):
+                assert path.is_dir() and not path.is_symlink()
+                shutil.rmtree(path)
             else:
                 assert path.is_file()
                 path.unlink()

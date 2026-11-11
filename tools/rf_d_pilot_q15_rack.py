@@ -81,7 +81,7 @@ def stream_check(run, host, path, exe, payload, expected):
                 host_peak_ns=peak, host_deadline_misses=misses, host_faults=faults)
 
 
-def campaign(run, report, receipt, code, flags, cfg, exe, payload, rows, continuous=False):
+def campaign(run, report, receipt, code, flags, cfg, exe, payload, rows, continuous=False, physical_env=None):
     admitted = json.loads(receipt.read_text(encoding="utf8"))
     assert admitted["passed"] and admitted["dynamic_q15"] and admitted["partition_bit_exact"]
     assert admitted["branch"] == report["branch"]
@@ -104,8 +104,9 @@ def campaign(run, report, receipt, code, flags, cfg, exe, payload, rows, continu
     package(path)
     if continuous:
         cfg = [*cfg, "--cfg", "pilot_q15_continuous"]
-    run([*flags, *cfg, "-C", "panic=abort", "--crate-type", "cdylib",
-         emit("q15-rack-component.rs", component(code, payload)), "--extern", f"rf_d_circuit={LIB}", "-o", dll])
+    source = component(code, payload)
+    component_flags = [*flags, *cfg, "-C", "panic=abort", "--extern", f"rf_d_circuit={LIB}"]
+    run([*component_flags, "--crate-type", "cdylib", emit("q15-rack-component.rs", source), "-o", dll])
     rack["component_sha256"] = sha(dll)
     imports = (Path(COMPILER).parents[4] / ".cargo/registry/src").glob("*/windows_x86_64_msvc-*/lib/*.lib")
     libs = (HOST / "target/release/build").glob("*/out/*.lib")
@@ -146,3 +147,6 @@ def campaign(run, report, receipt, code, flags, cfg, exe, payload, rows, continu
           [(p["native"], p["direct"]["warm"], p["host"]["startup"], p["host"]["warm"],
             p["rack_minus_direct_median_ns"])
            for p in rack["pairs"]], flush=True)
+    if physical_env is not None and report["rack_integrated"]:
+        from check_rf_d_pilot_returns_asio import campaign as physical_campaign
+        physical_campaign(path, source, rack, physical_env, cpu=9, component_flags=component_flags)
