@@ -146,14 +146,7 @@ def dynamic_q15(run, report, joined, exe, control, dc, bias, center, limits, sti
         passed = bool(difference["passed"] and exact_audit["passed"] and max(difference["q15_charge_error_c"]) <= 2e-20
                       and audio_charge_error <= CHARGE_LIMIT_C
                       and crossings(exact_rows[:, 15]) == report["candidate_crossings"])
-        if report["predict_q15_cr6"]:
-            key = "q15_cr6_prediction_comparison"
-        elif report["predict_q15_audio"]:
-            key = "q15_audio_prediction_comparison"
-        elif report["q15_retry"]:
-            key = "q15_retry_comparison"
-        else:
-            key = "q15_predictor_comparison" if report["predict_q15"] else "cached_q15_gain_comparison"
+        key = report["q15_comparison"]
         report[key] = dict(
             passed=passed, control_output_sha256=digest(exact_raw), endpoint_audit=exact_audit,
             contrast=difference, audio_final_charge_error_c=audio_charge_error, bit_exact=raw == exact_raw,
@@ -199,6 +192,8 @@ def main():
                         help="include a provisional receiver readout in the Q15 seed")
     parser.add_argument("--predict-q15-cr6", action="store_true",
                         help="retain the nonlinear CR6 law in the provisional reset equation")
+    parser.add_argument("--predict-r59-affine", action="store_true",
+                        help="seed R59 by solving the follower with a local affine receiver response")
     parser.add_argument("--q15-retry", action="store_true",
                         help="reuse the provisional R59 root and follower during Q15 retries")
     cathode_options = parser.add_mutually_exclusive_group()
@@ -216,7 +211,7 @@ def main():
     args = parser.parse_args()
     if (args.predict_q15_audio or args.predict_q15_cr6) and not args.predict_q15:
         parser.error("Q15 predictor refinements require --predict-q15")
-    if (args.cached_q15_gain or args.predict_q15 or args.q15_retry) and not args.dynamic_q15:
+    if (args.cached_q15_gain or args.predict_q15 or args.q15_retry or args.predict_r59_affine) and not args.dynamic_q15:
         parser.error("Q15 optimizations require --dynamic-q15")
     if args.dynamic_q15:
         args.schur_follower = args.predict_follower = args.predict_cathode = args.tight_follower = True
@@ -261,6 +256,7 @@ def main():
                   predict_q15=args.predict_q15,
                   predict_q15_audio=args.predict_q15_audio,
                   predict_q15_cr6=args.predict_q15_cr6,
+                  predict_r59_affine=args.predict_r59_affine,
                   q15_retry=args.q15_retry,
                   internal_rate_hz=RATE, frames=128, warmup_frames=128, budget_ns=BUDGET_NS,
                   imposed_sources=imposed,
@@ -403,31 +399,23 @@ def main():
 
         if args.dynamic_q15:
             q15_cfg = [*cfg, *candidate_cfg, "--cfg", "pilot_r59_reset_port"]
+            refinements = (
+                (args.cached_q15_gain, "pilot_r59_cached_reset_gain", "cached_q15_gain_comparison"),
+                (args.predict_q15, "pilot_r59_predict_q15", "q15_predictor_comparison"),
+                (args.q15_retry, "pilot_r59_q15_retry", "q15_retry_comparison"),
+                (args.predict_q15_audio, "pilot_r59_predict_q15_audio", "q15_audio_prediction_comparison"),
+                (args.predict_q15_cr6, "pilot_r59_predict_q15_cr6", "q15_cr6_prediction_comparison"),
+                (args.predict_r59_affine, "pilot_r59_predict_affine", "r59_affine_prediction_comparison"),
+            )
+            enabled = [(flag, key) for selected, flag, key in refinements if selected]
             gain_control = None
-            if args.cached_q15_gain and not (args.predict_q15 or args.q15_retry):
-                gain_control = AREA / "r59-q15-exact-gain.exe"
+            if enabled:
+                for flag, _ in enabled[:-1]:
+                    q15_cfg.extend(("--cfg", flag))
+                gain_control = AREA / "r59-q15-control.exe"
                 build(gain_control, *q15_cfg)
-            if args.cached_q15_gain:
-                q15_cfg.extend(("--cfg", "pilot_r59_cached_reset_gain"))
-            if args.predict_q15 and not (args.q15_retry or args.predict_q15_audio or args.predict_q15_cr6):
-                gain_control = AREA / "r59-q15-old-seed.exe"
-                build(gain_control, *q15_cfg)
-            if args.predict_q15:
-                q15_cfg.extend(("--cfg", "pilot_r59_predict_q15"))
-            if args.q15_retry and not (args.predict_q15_audio or args.predict_q15_cr6):
-                gain_control = AREA / "r59-q15-no-retry-seed.exe"
-                build(gain_control, *q15_cfg)
-            if args.q15_retry:
-                q15_cfg.extend(("--cfg", "pilot_r59_q15_retry"))
-            if args.predict_q15_audio and not args.predict_q15_cr6:
-                gain_control = AREA / "r59-q15-no-audio-prediction.exe"
-                build(gain_control, *q15_cfg)
-            if args.predict_q15_audio:
-                q15_cfg.extend(("--cfg", "pilot_r59_predict_q15_audio"))
-            if args.predict_q15_cr6:
-                gain_control = AREA / "r59-q15-linear-reset.exe"
-                build(gain_control, *q15_cfg)
-                q15_cfg.extend(("--cfg", "pilot_r59_predict_q15_cr6"))
+                flag, report["q15_comparison"] = enabled[-1]
+                q15_cfg.extend(("--cfg", flag))
             build(exe, *q15_cfg)
             dynamic_q15(run, report, joined, exe, gain_control, dc, bias, center, limits, stimulus, cathode_v,
                         assess, cr6_crossings)

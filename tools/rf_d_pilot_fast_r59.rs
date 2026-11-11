@@ -160,15 +160,29 @@ pub fn advance(
     #[cfg(pilot_r59_profile)] profile: &mut Profile,
 ) -> Result<(State, Frame), Error> {
     #[cfg(pilot_r59_predict_follower)]
-    if let Some(prediction) = old
+    if let Some((volume, response)) = old
         .follower
         .and_then(|seed| seed.predict(old.volume, drive[1], drive[2]))
     {
+        #[cfg(pilot_r59_predict_affine)]
+        let affine = old.gradient.and_then(|gain| {
+            crate::contour_ports::predict_volume(
+                volume,
+                drive[1],
+                drive[2],
+                [old.volume[2], old.vca_base, gain],
+            )
+            .ok()
+        });
+        #[cfg(pilot_r59_predict_affine)]
+        let (volume, base) = affine.unwrap_or((volume, old.vca_base));
+        #[cfg(not(pilot_r59_predict_affine))]
+        let base = old.vca_base;
         if let Ok(result) = advance_inner(
             old,
             drive,
             refresh,
-            Some((prediction.0, prediction.1, old.vca_base)),
+            Some((volume, response, base)),
             #[cfg(pilot_r59_q15_retry)]
             None,
             #[cfg(pilot_r59_profile)]

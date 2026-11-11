@@ -620,3 +620,15 @@ la semilla, queda disponible el arranque desde el
 estado aceptado. El cierre final conserva el stamp
 completo. Comparar contra la proyección lineal con
 las mismas políticas de R59 y Q15.
+
+Con `--predict-r59-affine`, resolver un seguidor
+provisional con la base del VCA aproximada por
+Vbase_anterior + a·(loudness−loudness_anterior).
+La derivada de la corriente por R59 respecto de
+loudness en esta semilla es (1−a)/R59. Conservar
+las cinco filas del seguidor y CR6. Empezar el
+cierre real en los voltajes provisionales y
+comprobar la base del VCA, el residual y R59 con
+el receptor completo. Ante rechazo de la semilla
+conservar el arranque previo. Comparar ambas ramas
+con la misma semilla no lineal de Q15.

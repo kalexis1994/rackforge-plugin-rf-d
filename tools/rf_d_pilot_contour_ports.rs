@@ -322,16 +322,40 @@ impl R59Factor {
 
 #[cfg(pilot_r59_schur_follower)]
 fn close_volume_schur(
-    mut x: [f64; 5],
+    x: [f64; 5],
     c2: f64,
     cathode: f64,
     base: f64,
+) -> Result<([f64; 5], R59Factor), StepError> {
+    close_volume_schur_with_load(x, c2, cathode, |_| (base, 0.))
+}
+
+#[cfg(pilot_r59_predict_affine)]
+pub(crate) fn predict_volume(
+    initial: [f64; 5],
+    c2: f64,
+    cathode: f64,
+    [previous_source, previous_base, gain]: [f64; 3],
+) -> Result<([f64; 5], f64), StepError> {
+    let load = |source| (previous_base + gain * (source - previous_source), gain);
+    let (volume, _) = close_volume_schur_with_load(initial, c2, cathode, load)?;
+    Ok((volume, load(volume[2]).0))
+}
+
+#[cfg(pilot_r59_schur_follower)]
+fn close_volume_schur_with_load(
+    mut x: [f64; 5],
+    c2: f64,
+    cathode: f64,
+    load: impl Fn(f64) -> (f64, f64),
 ) -> Result<([f64; 5], R59Factor), StepError> {
     let [current, voltage] = R59_TOLERANCES;
     let g24 = 1. / R24;
     for _ in 0..12 {
         let [x0, x1, x2, x3, x4] = x;
+        let (base, load_gain) = load(x2);
         let Stamp { f: [r0, r1, r2, r3], mut j } = volume_stamp([x0, x1, x2, x3], c2, x4, base)?;
+        j[2][2] -= load_gain / R59;
         let (r4, cv_diagonal, _) = cv_law(x4, x2, cathode)?;
         if !cv_diagonal.is_finite() || cv_diagonal <= 0. {
             return Err(StepError::SingularJacobian);

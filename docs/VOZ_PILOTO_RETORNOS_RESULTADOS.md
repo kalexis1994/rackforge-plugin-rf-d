@@ -2878,3 +2878,21 @@ a 1,959 y 1,672 ms. Se observaron máximos de
 plazo sigue abierto.
 [CR6 en la semilla positiva](../evidence/rf_d_pilot_fast_r5950.json).
 [CR6 en la semilla negativa](../evidence/rf_d_pilot_fast_r5951.json).
+
+
+### Seguidor provisional con respuesta afín del receptor
+
+El cierre de R59 pasó de 515 a 259 iteraciones
+en positivo y de 514 a 258 en negativo por bloque.
+Ambas ramas pasaron Radau y la auditoría nodal.
+Con 1e−10 V de tolerancia en R59, la diferencia de
+carga en el receptor positivo fue 4,58e−20 C y el
+pase quedó rechazado por la reserva de 1e−20 C.
+En negativo la diferencia fue 3,31e−24 C y el
+pase eléctrico completo quedó aprobado.
+
+Las medianas pareadas fueron 1,666 y 1,408 ms.
+Los máximos de los tres lotes fueron 2,331 y
+1,529 ms, con cero asignaciones.
+[Carga positiva fuera de reserva](../evidence/rf_d_pilot_fast_r5952.json).
+[Semilla afín negativa](../evidence/rf_d_pilot_fast_r5953.json).
