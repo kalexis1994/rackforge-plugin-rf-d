@@ -143,6 +143,9 @@ impl Prepared {
             if residual.iter().all(|x| x.abs() <= 2e-13) {
                 let charge = product(&N1, &defects);
                 let q: [f64; CHARGES] = std::array::from_fn(|i| base[i] + charge[i]);
+                #[cfg(pilot_receiver_packed)]
+                let [j7_v, bus_v, base_v, vca_base, tail, collector] = packed::readout(&base, &input, &defects);
+                #[cfg(not(pilot_receiver_packed))]
                 let [j7_v, bus_v, base_v, vca_base, tail, collector] = std::array::from_fn(|i| {
                     map::DC[i] + dot(&map::XQ[i], &base) + dot(&map::XU[i], &input)
                         - dot(&map::XD[i], &defects)
@@ -258,13 +261,22 @@ fn dot<const N: usize>(a: &[f64; N], b: &[f64; N]) -> f64 {
     a.iter().zip(b).map(|(x, y)| x * y).sum()
 }
 
-#[cfg(not(pilot_returns_simd))]
+#[cfg(all(not(pilot_returns_simd), not(pilot_receiver_packed)))]
 use map::{F, N0, N1, P, ZH};
 
-#[cfg(not(pilot_returns_simd))]
+#[cfg(all(not(pilot_returns_simd), not(pilot_receiver_packed)))]
 fn product<const R: usize, const C: usize>(matrix: &[[f64; C]; R], input: &[f64; C]) -> [f64; R] {
     matrix.each_ref().map(|row| dot(row, input))
 }
+
+#[cfg(all(pilot_returns_simd, pilot_receiver_packed))]
+compile_error!("Select one receiver matrix layout");
+
+#[cfg(pilot_receiver_packed)]
+#[path = "rf_d_pilot_packed_products.rs"]
+mod packed;
+#[cfg(pilot_receiver_packed)]
+use self::packed::{product, F, N0, N1, P, ZH};
 
 #[cfg(pilot_returns_simd)]
 #[path = "recovery_engine128_broadcast.rs"]

@@ -2374,3 +2374,52 @@ En 64 bloques, la tangente por bloque tuvo mediana
 mediana 3,781 ms y máximo 3,889 ms. Se observaron
 cero asignaciones. El margen de 1,333 ms sigue abierto.
 [Historia compartida y predictor](../evidence/rf_d_pilot_fast_r5905.json).
+
+
+### Exponencial compartida y productos de cuatro filas
+
+El ensayo de exponencial compartida pasó las pruebas
+de cero, umbral, polarización inversa y CR6 en directa.
+Reprodujo los mismos bytes del cierre positivo. Su
+mediana fue 1,939 ms, cercana a los 1,960 ms del pase
+anterior. Se conserva como opción explícita del banco.
+[Ensayo numérico](../evidence/rf_d_pilot_fast_r5906.json).
+
+La primera representación agrupó F, N0, N1, P y ZH
+en cuatro filas. Conservó los bytes completos del
+control y una relación de medianas de 0,741 en los
+pares alternados. La mediana inicial fue 1,449 ms y
+el máximo observado en sus tres lotes de 64 bloques
+fue 2,034 ms.
+[Primer producto agrupado](../evidence/rf_d_pilot_fast_r5907.json).
+
+La segunda representación agrupó también XQ, XU y XD
+para reconstruir las seis salidas. En ambas ramas,
+los 256 frames y todos los diagnósticos coincidieron
+por bits con el control escalar de la misma compilación.
+Pasaron el contraste nodal, el refinamiento y la
+partición 64/128. Se conservaron las dos tangentes
+por trayectoria y dos trials máximos por paso.
+
+En positivo, la mediana inicial fue 1,417 ms y las
+medianas de los pares adicionales fueron 1,430 y
+1,421 ms. La relación frente al control alternado
+fue 0,730, una reducción aproximada del 27 %.
+El máximo entre los tres lotes fue 1,559 ms.
+[Reconstrucción agrupada positiva](../evidence/rf_d_pilot_fast_r5908.json).
+
+En negativo, las medianas fueron 1,303, 1,306 y
+1,328 ms. La relación frente al control fue 0,713,
+una reducción aproximada del 29 %. El máximo fue
+1,749 ms. Hubo cero asignaciones en ambas ramas.
+Los picos conservan abierto el margen de 1,333 ms.
+La mejora corresponde al cierre R59 con C2, reset
+y el colector de R60 impuestos, sin medición del host.
+El agrupado queda como candidato por defecto del banco.
+[Reconstrucción agrupada negativa](../evidence/rf_d_pilot_fast_r5909.json).
+
+La voz previa de 18 junturas pasó de nuevo las tres
+escenas eléctricas, su refinamiento y la partición
+por bits 64/128. El hash de J7 f32 coincidió con el
+recibo anterior y se observaron cero asignaciones.
+[Regresión tras preparar la historia](../evidence/rf_d_pilot_returns17.json).

@@ -295,3 +295,54 @@ sólo como semilla. Se comprueban de nuevo las cinco
 filas no lineales, con 2e−15 A y 2e−12 V como antes.
 Mantener los límites de cierre y el contraste nodal
 unido en ambas ramas al medir el coste de estos reusos.
+
+
+El ensayo opcional de exponencial compartida evalúa e^z
+una vez para corriente y derivada en cada juntura del
+seguidor. Para abs(z) ≥ 1/8 obtiene e^z−1 restando uno.
+Dentro de esa banda conserva expm1(z) para evitar la
+cancelación cerca de cero. La derivada usa siempre e^z,
+incluida la polarización inversa. Se conservan tarjetas,
+incidencias, temperatura y límites de solución.
+
+La prueba numérica compara e^z−1 con expm1 en cero,
+ambos lados del umbral y polarización inversa profunda.
+Exige error relativo máximo de 16 épsilon de f64 y
+los mismos bits de e^z para la pendiente. Se ejecuta
+también el contraste existente de CR6 en directa y
+la tangente de R59. El circuito unido debe pasar de
+nuevo con los mismos gates antes de admitir el ensayo.
+
+
+El producto agrupado del receptor conserva cuatro
+filas por grupo y avanza sus columnas en el mismo
+orden que el producto escalar. Rellena únicamente
+los carriles fuera de las 17 cargas o 34 junturas,
+y descarta esos carriles al devolver el resultado.
+Cada acumulador arranca con el mismo cero negativo
+del sumatorio previo. F, N0, N1, P y ZH conservan
+sus coeficientes. La representación se prepara en
+compilación y el audio usa arrays de tamaño fijo.
+
+Compilar el control escalar y el candidato con los
+mismos flags restantes y el mismo payload. Exigir
+identidad completa por bytes, incluidos los diagnósticos
+de cierre, además de los gates nodales anteriores.
+Medir dos pares adicionales de 64 bloques, alternando
+el orden de las variantes, y conservar todos los picos
+al evaluar el margen de 1,333333… ms.
+
+
+La misma representación puede reconstruir las seis
+salidas con XQ, XU y XD. Calcular por separado los
+productos de carga, fuente y defecto. Conservar después
+el orden DC + carga + fuente − defecto del camino
+escalar. Incluir esas seis salidas en la comprobación
+por bytes y en el contraste de puertos del mismo banco.
+
+
+Después del contraste de ambas ramas, el banco R59
+selecciona el agrupado por defecto. Conserva
+--no-packed-products para ejecutar sólo el camino
+escalar. La opción de exponencial compartida sigue
+siendo explícita e independiente.

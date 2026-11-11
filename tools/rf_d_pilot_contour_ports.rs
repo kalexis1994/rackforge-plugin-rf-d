@@ -15,6 +15,13 @@ const R27: f64 = 16_900.;
 const R59: f64 = 68_000.;
 const R60: f64 = 680.;
 
+#[cfg(pilot_shared_port_exp)]
+fn exponential_pair(z: f64) -> (f64, f64) {
+    let value = z.exp();
+    let remainder = if z.abs() < 0.125 { z.exp_m1() } else { value - 1. };
+    (remainder, value)
+}
+
 #[derive(Clone, Copy)]
 pub struct Returns {
     pub volume: [f64; 3],
@@ -67,7 +74,11 @@ impl<const N: usize> Stamp<N> {
             if !z.is_finite() || z > 45. {
                 return Err(StepError::ExponentialDomain);
             }
-            Ok((1e-14 * z.exp_m1(), 1e-14 * z.exp() / VT))
+            #[cfg(pilot_shared_port_exp)]
+            let (current, slope) = exponential_pair(z);
+            #[cfg(not(pilot_shared_port_exp))]
+            let (current, slope) = (z.exp_m1(), z.exp());
+            Ok((1e-14 * current, 1e-14 * slope / VT))
         };
         let (f, gf) = law(e)?;
         let (r, gr) = law(c)?;
@@ -176,7 +187,11 @@ pub(crate) fn germanium(voltage: f64) -> Result<(f64, f64), StepError> {
     if !z.is_finite() || z > 45. {
         return Err(StepError::ExponentialDomain);
     }
-    Ok((1e-8 * z.exp_m1(), 1e-8 * z.exp() / scale))
+    #[cfg(pilot_shared_port_exp)]
+    let (current, slope) = exponential_pair(z);
+    #[cfg(not(pilot_shared_port_exp))]
+    let (current, slope) = (z.exp_m1(), z.exp());
+    Ok((1e-8 * current, 1e-8 * slope / scale))
 }
 
 pub fn filter(initial: [f64; 3], [sum, tail]: [f64; 2]) -> Result<[f64; 3], StepError> {
@@ -336,6 +351,24 @@ pub fn q22_base(mut base: f64, c5: f64, [collector, emitter]: [f64; 2]) -> Resul
 #[cfg(all(test, pilot_audio_readout))]
 mod tests {
     use super::*;
+
+    #[cfg(pilot_shared_port_exp)]
+    #[test]
+    fn shared_exponential_preserves_zero_and_reverse_bias_slope() {
+        let boundary = 0.125_f64;
+        let samples = [-1000., -740., -40., -1.,
+                       f64::from_bits((-boundary).to_bits() + 1), -boundary,
+                       f64::from_bits((-boundary).to_bits() - 1), -1e-16, -0., 0., 1e-16,
+                       f64::from_bits(boundary.to_bits() - 1), boundary,
+                       f64::from_bits(boundary.to_bits() + 1), 1., 45.];
+        for z in samples {
+            let (current, slope) = exponential_pair(z);
+            let wanted = z.exp_m1();
+            assert!((current - wanted).abs() <= 16. * f64::EPSILON * wanted.abs(), "z={z}");
+            assert_eq!(slope.to_bits(), z.exp().to_bits(), "z={z}");
+            if z == 0. { assert_eq!(current.to_bits(), wanted.to_bits()); }
+        }
+    }
 
     const C2: f64 = 9.3;
     const VOLUME: [f64; 4] = [9.22, 8.65, 7.99, 8.65];
