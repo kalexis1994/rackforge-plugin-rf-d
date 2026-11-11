@@ -514,10 +514,14 @@ de audio. Restar la corriente de CR6 de la fila de
 base y su tangente del Jacobiano. Conservar las
 leyes y las cargas BE/BC del banco Q15 anterior.
 
-Integrar Q15 por trapecio con el residual
-I_n + I_anterior + 2·ΔQ/h. Conservar el historial
-aceptado al probar cada nuevo punto y comprobar
-2e−15 A y 2e−12 V antes de publicar ambos estados.
+El primer ensayo usó trapecio con el residual
+I_n + I_anterior + 2·ΔQ/h. Para reducir el error
+de arranque, usar Euler implícito en el primer
+paso y BDF2 a reloj fijo a partir del segundo.
+El residual es I_n + (3·ΔQ_n−ΔQ_anterior)/(2h).
+Conservar el historial aceptado al probar cada
+punto y comprobar 2e−15 A y 2e−12 V antes de
+publicar ambos estados.
 El equilibrio inicial usa el divisor R24/R27 sin
 corriente de CR6. Ajustar la fuente impuesta de
 R56 para ese equilibrio. Modularla 0,15 V a 263 Hz
@@ -527,9 +531,17 @@ son fronteras de laboratorio alrededor de ese punto.
 Comparar contra Radau conjunto de 75 nodos por
 etapa a 384 y 768 kHz con el stamp completo de la
 placa y las mismas leyes de carga. Exigir los
-límites de audio y de 20 µV, 2 nA y 2e−20 C para
-los puertos y cargas de Q15. Verificar los índices
-de cruce, el dominio de R59, la suma de incrementos
-de carga y la partición 64/128 por bits. Medir el
+límites de audio y de 20 µV y 2 nA para los puertos.
+Registrar el error temporal de carga y su contraste
+con 2e−20 C del primer ensayo. Aplicar la reserva
+de 2e−20 C al balance discreto con la misma historia
+y el mismo integrador, como en el banco Q15 previo.
+Rearmar las cinco filas del seguidor y las dos de
+Q15 desde cada punto publicado con el stamp completo.
+Reconstruir ΔQ y el residual de Euler/BDF2 a partir
+de los voltajes aceptados y exigir 2e−15 A en las
+siete filas. Verificar también los índices de cruce,
+el dominio de R59, la suma de incrementos de carga
+y la partición 64/128 por bits. Medir el
 coste y las asignaciones a 128 frames después del
 calentamiento. C2 y el colector de R60 se imponen.

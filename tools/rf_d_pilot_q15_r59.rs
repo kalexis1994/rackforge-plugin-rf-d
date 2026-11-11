@@ -1,4 +1,4 @@
-//! Trapezoidal Q15 charge with an endpoint closure through CR6 and R59.
+//! Q15 charge at a fixed clock with an endpoint closure through CR6 and R59.
 use crate::{
     fast_r59,
     latch_charge::terminal,
@@ -7,7 +7,7 @@ use crate::{
     StepError,
 };
 
-const TWO_OVER_H: f64 = 192_000.;
+const RATE_HZ: f64 = 96_000.;
 const CURRENT_TOLERANCE_A: f64 = 2e-15;
 const CORRECTION_TOLERANCE_V: f64 = 2e-12;
 
@@ -15,7 +15,7 @@ const CORRECTION_TOLERANCE_V: f64 = 2e-12;
 pub struct State {
     pub audio: fast_r59::State,
     pub q15_v: [f64; 2],
-    pub q15_current_a: [f64; 2],
+    pub previous_charge_increment_c: Option<[f64; 2]>,
 }
 
 pub struct Frame {
@@ -63,16 +63,19 @@ fn evaluate(
     .map_err(Error::Q15)?;
     let (charge, mass) =
         terminal(old.q15_v.map(|v| (v, 0.)), q15_v.map(|v| (v, 0.))).map_err(Error::Q15)?;
-    let residual_a =
-        std::array::from_fn(|k| current[k] + old.q15_current_a[k] + TWO_OVER_H * charge[k]);
+    let (weight, history) = match old.previous_charge_increment_c {
+        Some(previous) => (1.5 * RATE_HZ, previous.map(|q| -0.5 * RATE_HZ * q)),
+        None => (RATE_HZ, [0.; 2]),
+    };
+    let residual_a = std::array::from_fn(|k| current[k] + weight * charge[k] + history[k]);
     let jacobian = std::array::from_fn(|row| {
-        std::array::from_fn(|col| dc_jacobian[row][col] + TWO_OVER_H * mass[row][col])
+        std::array::from_fn(|col| dc_jacobian[row][col] + weight * mass[row][col])
     });
     Ok(Trial {
         state: State {
             audio,
             q15_v,
-            q15_current_a: current,
+            previous_charge_increment_c: Some(charge),
         },
         audio: frame,
         charge_increment_c: charge,

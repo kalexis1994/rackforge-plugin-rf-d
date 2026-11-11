@@ -15,11 +15,29 @@ struct State {
     board: [f64; 7],
 }
 
-fn q15_charge(old: State, now: State) -> Result<([f64; 2], [[f64; 2]; 2]), StepError> {
-    latch_charge_driver::terminal(
-        [(old.board[5], 0.), (old.board[6], 0.)],
-        [(now.board[5], 0.), (now.board[6], 0.)],
-    )
+fn q15_charge(old: &[f64; 7], now: &[f64; 7]) -> Result<([f64; 2], [[f64; 2]; 2]), StepError> {
+    latch_charge_driver::terminal([(old[5], 0.), (old[6], 0.)], [(now[5], 0.), (now[6], 0.)])
+}
+
+fn board_stamp<const FULL: bool>(
+    board: [f64; 7],
+    [_, c2, _, q25_base, q25_collector, cr8_anode]: [f64; 6],
+    [vca_high, vca_low]: [f64; 2],
+) -> Result<original_volume::Stamp<FULL>, StepError> {
+    let mut nodes = [0.; original_volume::N];
+    nodes[6] = 9.3;
+    nodes[7] = 9.3;
+    for (node, voltage) in BOARD.into_iter().zip(board) {
+        nodes[node] = voltage;
+    }
+    nodes[5] = c2;
+    nodes[24] = cr8_anode;
+    nodes[25] = q25_base;
+    nodes[26] = q25_collector;
+    nodes[29] = vca_high;
+    let mut low = [0.; original_volume::N];
+    low[29] = vca_low;
+    original_volume::linearize::<FULL>(nodes, low, 0., true, false)
 }
 
 fn stamp(
@@ -29,7 +47,7 @@ fn stamp(
     h: f64,
 ) -> Result<([State; 2], [f64; PAIR], [[f64; PAIR]; PAIR]), StepError> {
     let stages = [0, 1].map(|i| {
-        let [signal, c2, filter, q25_base, q25_collector, cr8_anode] = input[i];
+        let [signal, _, filter, _, _, _] = input[i];
         let board = trial[i].board;
         let audio = receiver::stage(
             old.audio,
@@ -38,21 +56,12 @@ fn stamp(
             h,
             true,
         )?;
-        let mut nodes = [0.; original_volume::N];
-        nodes[6] = 9.3;
-        nodes[7] = 9.3;
-        for (node, voltage) in BOARD.into_iter().zip(board) {
-            nodes[node] = voltage;
-        }
-        nodes[5] = c2;
-        nodes[24] = cr8_anode;
-        nodes[25] = q25_base;
-        nodes[26] = q25_collector;
-        nodes[29] = audio.candidate.high[32];
-        let mut low = [0.; original_volume::N];
-        low[29] = audio.candidate.low[32];
-        let stamp = original_volume::linearize::<true>(nodes, low, 0., true, false)?;
-        let (charge, mass) = q15_charge(old, trial[i])?;
+        let stamp = board_stamp::<true>(
+            board,
+            input[i],
+            [audio.candidate.high[32], audio.candidate.low[32]],
+        )?;
+        let (charge, mass) = q15_charge(&old.board, &board)?;
         Ok::<_, StepError>((audio, stamp, charge, mass))
     });
     let [first, last] = stages;
@@ -170,8 +179,8 @@ pub(super) fn render(
         let v = |node| state.audio.high[node] + state.audio.low[node];
         let cr6 =
             1e-8 * ((state.board[4] - state.board[5]) / (1.5 * latch_charge_driver::VT)).exp_m1();
-        let (charge, _) =
-            q15_charge(initial, state).map_err(|error| format!("Q15 charge {tick}: {error:?}"))?;
+        let (charge, _) = q15_charge(&initial.board, &state.board)
+            .map_err(|error| format!("Q15 charge {tick}: {error:?}"))?;
         for value in [
             v(61),
             v(66),
@@ -189,6 +198,39 @@ pub(super) fn render(
         {
             out.write_all(&value.to_le_bytes())?;
         }
+    }
+    Ok(())
+}
+
+pub(super) fn audit(
+    values: &[f64],
+    out: &mut impl Write,
+) -> Result<(), Box<dyn std::error::Error>> {
+    assert!(values.len() >= 149 && (values.len() - 149) % 16 == 0);
+    let mut old: [f64; 7] = values[136..143].try_into()?;
+    let mut older: Option<[f64; 2]> = None;
+    for (tick, row) in values[149..].chunks_exact(16).enumerate() {
+        let board = row[7..14].try_into()?;
+        let stamp = board_stamp::<false>(board, row[..6].try_into()?, [row[6], 0.])
+            .map_err(|error| format!("board stamp {tick}: {error:?}"))?;
+        let (delta, _) =
+            q15_charge(&old, &board).map_err(|error| format!("Q15 charge {tick}: {error:?}"))?;
+        let dynamic = match older {
+            Some(previous) => std::array::from_fn(|i| (3. * delta[i] - previous[i]) * 48_000.),
+            None => delta.map(|value| value * 96_000.),
+        };
+        let follower = maximum(&stamp.dc[..5]);
+        for value in [
+            follower,
+            stamp.dc[27] + dynamic[0],
+            stamp.dc[28] + dynamic[1],
+            delta[0] - row[14],
+            delta[1] - row[15],
+        ] {
+            out.write_all(&value.to_le_bytes())?;
+        }
+        older = Some(delta);
+        old = board;
     }
     Ok(())
 }

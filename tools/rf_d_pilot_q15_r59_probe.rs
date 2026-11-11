@@ -79,7 +79,7 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
             follower: None,
         },
         q15_v,
-        q15_current_a,
+        previous_charge_increment_c: None,
     };
     let input: Vec<[f64; 6]> = values[149..]
         .chunks_exact(6)

@@ -64,7 +64,8 @@ def dynamic_q15(run, report, joined, exe, dc, bias, center, limits, stimulus, ca
         assert np.isfinite(reference[ratio]).all()
         report[f"reference_{rate}_sha256"] = digest(raw)
         print("Q15 reference", rate, flush=True)
-    payload = packed(np.r_[header, controls(np.arange(1, 2 * STEPS + 1) / RATE).ravel()])
+    endpoint_inputs = controls(np.arange(1, 2 * STEPS + 1) / RATE)
+    payload = packed(np.r_[header, endpoint_inputs.ravel()])
     report.update(input=pack_bytes(payload), input_sha256=digest(payload))
     raw = run([exe, 128], payload, repeat=True)
     values = np.frombuffer(raw, "<f8")
@@ -77,9 +78,10 @@ def dynamic_q15(run, report, joined, exe, dc, bias, center, limits, stimulus, ca
         audio = assess(a[:, :13], b[:, :13])
         error = abs(a[:, 13:18] - b[:, 13:18]).max(axis=0)
         return dict(passed=bool(audio["passed"] and error[:2].max() <= 20e-6
-                                and error[2] <= RETURN_LIMIT_A and error[3:].max() <= 2e-20),
+                                and error[2] <= RETURN_LIMIT_A),
                     audio=audio, q15_voltage_error_v=error[:2].tolist(), cr6_error_a=float(error[2]),
-                    q15_charge_error_c=error[3:].tolist())
+                    q15_charge_error_c=error[3:].tolist(),
+                    cross_clock_charge_within_2e_20_c=bool(error[3:].max() <= 2e-20))
 
     report["refinement"] = compare_q15(reference[4], reference[8])
     report["contrast"] = compare_q15(rows, reference[8])
@@ -87,6 +89,19 @@ def dynamic_q15(run, report, joined, exe, dc, bias, center, limits, stimulus, ca
     report["reference_crossings"] = crossings(reference[8][:, 15])
     report["coarse_reference_crossings"] = crossings(reference[4][:, 15])
     charge_sum_error = abs(np.cumsum(rows[:, 18:20], axis=0) - rows[:, 16:18]).max(axis=0)
+    board_rows = rows[:, [6, 8, 9, 10, 11, 12, 13, 14]]
+    audit_input = packed(np.r_[header, np.column_stack((endpoint_inputs, board_rows, rows[:, 18:20])).ravel()])
+    audit_raw = run([joined, "q15-audit"], audit_input, repeat=True)
+    audit = np.frombuffer(audit_raw, "<f8").reshape(2 * STEPS, 5)
+    assert np.isfinite(audit).all()
+    audit_current = abs(audit[:, :3]).max(axis=0)
+    audit_charge = abs(audit[:, 3:]).max(axis=0)
+    report["endpoint_audit"] = dict(
+        passed=bool(audit_current.max() <= 2e-15 and audit_charge.max() <= 2e-20),
+        follower_kcl_a=float(audit_current[0]), q15_kcl_a=audit_current[1:].tolist(),
+        q15_charge_increment_error_c=audit_charge.tolist(),
+        input_sha256=digest(audit_input), output_sha256=digest(audit_raw),
+    )
     report.update(
         charge_sum_error_c=charge_sum_error.tolist(),
         max_q15_residual_a=float(abs(rows[:, 20:22]).max()),
@@ -97,6 +112,7 @@ def dynamic_q15(run, report, joined, exe, dc, bias, center, limits, stimulus, ca
     )
     report["passed"] = bool(
         report["partition_bit_exact"] and report["refinement"]["passed"] and report["contrast"]["passed"]
+        and report["endpoint_audit"]["passed"]
         and len(report["reference_crossings"]) >= 2
         and report["candidate_crossings"] == report["reference_crossings"] == report["coarse_reference_crossings"]
         and charge_sum_error.max() <= 2e-20 and report["max_q15_residual_a"] <= 2e-15

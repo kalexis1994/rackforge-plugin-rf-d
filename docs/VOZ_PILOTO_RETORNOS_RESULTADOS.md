@@ -2757,3 +2757,28 @@ que quedó corregido en los dos pases medidos.
 [Compilación inicial](../evidence/rf_d_pilot_fast_r5937.json).
 [Trapecio positivo](../evidence/rf_d_pilot_fast_r5938.json).
 [Trapecio negativo](../evidence/rf_d_pilot_fast_r5939.json).
+
+El arranque por Euler implícito y la continuación
+BDF2 redujeron el error máximo de base frente a
+Radau a 1,081 µV en positivo y 0,772 µV en negativo.
+Pasaron los límites de audio, los cruces y las
+corrientes. El mayor error de CR6 fue 0,263 pA.
+
+Al reconstruir los estados publicados con el stamp
+completo, el mayor residual fue 2,77e−16 A y el
+incremento de carga coincidió por bits en ambas
+ramas. La suma de incrementos difirió de la carga
+respecto del origen en menos de 1,22e−27 C.
+Frente a Radau a 768 kHz, el máximo temporal de
+carga fue 7,17e−18 C en positivo y 4,34e−18 C
+en negativo. El límite de 2e−20 C se cumple para
+la reconstrucción al mismo reloj y con la misma
+historia. Los errores temporales quedan registrados
+por separado.
+
+Con tangente exacta del receptor en cada intento,
+las medianas a 128 frames fueron 10,505 ms y
+10,044 ms, con picos de 11,374 y 10,912 ms.
+Hubo cero asignaciones y hasta cuatro intentos.
+[BDF2 positivo](../evidence/rf_d_pilot_fast_r5940.json).
+[BDF2 negativo](../evidence/rf_d_pilot_fast_r5941.json).

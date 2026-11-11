@@ -183,6 +183,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .collect();
     let mut out = std::io::BufWriter::new(std::io::stdout().lock());
     #[cfg(pilot_r59_q15)]
+    if mode == "q15-audit" {
+        return q15_oracle::audit(&values, &mut out);
+    }
+    #[cfg(pilot_r59_q15)]
     if let Some(rate) = mode.strip_prefix("q15-") {
         return q15_oracle::render(&values, rate.parse()?, &mut out);
     }
