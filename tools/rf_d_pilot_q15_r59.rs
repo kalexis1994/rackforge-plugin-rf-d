@@ -39,6 +39,59 @@ struct Trial {
     jacobian: [[f64; 2]; 2],
 }
 
+fn equation(
+    old: State,
+    q15_v: [f64; 2],
+    drive: q15::Drive,
+    cr6: [f64; 2],
+) -> Result<([f64; 2], [f64; 2], [[f64; 2]; 2]), StepError> {
+    let (current, dc_jacobian) = q15::conduction(q15_v, drive, cr6[0], cr6[1])?;
+    let (charge, mass) = terminal(old.q15_v.map(|v| (v, 0.)), q15_v.map(|v| (v, 0.)))?;
+    let (weight, history) = match old.previous_charge_increment_c {
+        Some(previous) => (1.5 * RATE_HZ, previous.map(|q| -0.5 * RATE_HZ * q)),
+        None => (RATE_HZ, [0.; 2]),
+    };
+    let residual_a = std::array::from_fn(|k| current[k] + weight * charge[k] + history[k]);
+    let jacobian = std::array::from_fn(|row| {
+        std::array::from_fn(|col| dc_jacobian[row][col] + weight * mass[row][col])
+    });
+    Ok((charge, residual_a, jacobian))
+}
+
+fn direction(residual: [f64; 2], jacobian: [[f64; 2]; 2]) -> Result<[f64; 2], StepError> {
+    Lu::factor(jacobian)?.solve(residual)
+}
+
+#[cfg(pilot_r59_predict_q15)]
+fn predict(
+    old: State,
+    [_, c2, _, q25_base, q25_collector, cr8_anode]: [f64; 6],
+) -> Option<[f64; 2]> {
+    let [reset_at_old_cathode, slope] = fast_r59::predict_reset(old.audio, c2)?;
+    let drive = q15::Drive {
+        c2,
+        vca_base: old.audio.vca_base,
+        q25_base,
+        q25_collector,
+        cr8_anode,
+    };
+    let mut q15_v = old.q15_v;
+    for _ in 0..6 {
+        let reset = reset_at_old_cathode + slope * (q15_v[0] - old.q15_v[0]);
+        let (current, conductance) = crate::contour_ports::germanium(reset - q15_v[0]).ok()?;
+        let (_, residual, jacobian) =
+            equation(old, q15_v, drive, [current, conductance * (slope - 1.)]).ok()?;
+        let correction = direction(residual, jacobian).ok()?;
+        if maximum(&residual) <= CURRENT_TOLERANCE_A
+            && maximum(&correction) <= CORRECTION_TOLERANCE_V
+        {
+            return Some(q15_v);
+        }
+        q15_v = std::array::from_fn(|i| q15_v[i] - correction[i]);
+    }
+    None
+}
+
 fn evaluate(
     old: State,
     q15_v: [f64; 2],
@@ -54,23 +107,16 @@ fn evaluate(
         q25_collector,
         cr8_anode,
     };
-    let (current, dc_jacobian) = q15::conduction(
+    let (charge, residual_a, jacobian) = equation(
+        old,
         q15_v,
         drive,
-        frame.reset_port.current_a,
-        frame.reset_port.derivative_a_per_v[1],
+        [
+            frame.reset_port.current_a,
+            frame.reset_port.derivative_a_per_v[1],
+        ],
     )
     .map_err(Error::Q15)?;
-    let (charge, mass) =
-        terminal(old.q15_v.map(|v| (v, 0.)), q15_v.map(|v| (v, 0.))).map_err(Error::Q15)?;
-    let (weight, history) = match old.previous_charge_increment_c {
-        Some(previous) => (1.5 * RATE_HZ, previous.map(|q| -0.5 * RATE_HZ * q)),
-        None => (RATE_HZ, [0.; 2]),
-    };
-    let residual_a = std::array::from_fn(|k| current[k] + weight * charge[k] + history[k]);
-    let jacobian = std::array::from_fn(|row| {
-        std::array::from_fn(|col| dc_jacobian[row][col] + weight * mass[row][col])
-    });
     Ok(Trial {
         state: State {
             audio,
@@ -85,13 +131,28 @@ fn evaluate(
 }
 
 pub fn advance(old: State, drive: [f64; 6], refresh: bool) -> Result<(State, Frame), Error> {
-    let mut trial = evaluate(old, old.q15_v, drive, refresh)?;
-    let mut trials = 1;
+    let mut trials = 0;
+    #[cfg(pilot_r59_predict_q15)]
+    if let Some(seed) = predict(old, drive) {
+        if let Ok(result) = solve(old, drive, refresh, seed, &mut trials) {
+            return Ok(result);
+        }
+    }
+    solve(old, drive, refresh, old.q15_v, &mut trials)
+}
+
+fn solve(
+    old: State,
+    drive: [f64; 6],
+    refresh: bool,
+    seed: [f64; 2],
+    trials: &mut usize,
+) -> Result<(State, Frame), Error> {
+    *trials += 1;
+    let mut trial = evaluate(old, seed, drive, refresh)?;
     for _ in 0..16 {
         let error = maximum(&trial.residual_a);
-        let direction = Lu::factor(trial.jacobian)
-            .and_then(|factor| factor.solve(trial.residual_a))
-            .map_err(Error::Q15)?;
+        let direction = direction(trial.residual_a, trial.jacobian).map_err(Error::Q15)?;
         if error <= CURRENT_TOLERANCE_A && maximum(&direction) <= CORRECTION_TOLERANCE_V {
             return Ok((
                 trial.state,
@@ -99,7 +160,7 @@ pub fn advance(old: State, drive: [f64; 6], refresh: bool) -> Result<(State, Fra
                     audio: trial.audio,
                     charge_increment_c: trial.charge_increment_c,
                     residual_a: trial.residual_a,
-                    trials,
+                    trials: *trials,
                 },
             ));
         }
@@ -107,7 +168,7 @@ pub fn advance(old: State, drive: [f64; 6], refresh: bool) -> Result<(State, Fra
         for half in 0..12 {
             let scale = 0.5_f64.powi(half);
             let q15_v = std::array::from_fn(|i| trial.state.q15_v[i] - scale * direction[i]);
-            trials += 1;
+            *trials += 1;
             if let Ok(candidate) = evaluate(old, q15_v, drive, refresh) {
                 if maximum(&candidate.residual_a) < error {
                     accepted = Some(candidate);

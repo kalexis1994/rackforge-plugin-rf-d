@@ -48,18 +48,23 @@ impl FollowerSeed {
     }
 
     #[cfg(pilot_r59_reset_port)]
-    fn reset_port(self, reset_v: f64, receiver_gain: f64) -> Result<ResetPort, Error> {
-        let (current_a, conductance) =
-            crate::contour_ports::germanium(reset_v - self.cathode).map_err(Error::Volume)?;
+    fn reset_response(self, receiver_gain: f64) -> Result<[f64; 2], Error> {
         let denominator = 1. - receiver_gain * self.base_response[2];
         if !denominator.is_finite() || denominator.abs() <= 1e-8 {
             return Err(Error::Closure);
         }
         // Each imposed voltage affects the receiver only through loudness and R59.
-        let [reset_c2, reset_cathode] = [self.c2_response, self.cathode_response].map(|response| {
+        Ok([self.c2_response, self.cathode_response].map(|response| {
             let base_change = receiver_gain * response[2] / denominator;
             response[4] + self.base_response[4] * base_change
-        });
+        }))
+    }
+
+    #[cfg(pilot_r59_reset_port)]
+    fn reset_port(self, reset_v: f64, receiver_gain: f64) -> Result<ResetPort, Error> {
+        let (current_a, conductance) =
+            crate::contour_ports::germanium(reset_v - self.cathode).map_err(Error::Volume)?;
+        let [reset_c2, reset_cathode] = self.reset_response(receiver_gain)?;
         let derivative_a_per_v = [conductance * reset_c2, conductance * (reset_cathode - 1.)];
         if derivative_a_per_v.iter().any(|value| !value.is_finite()) {
             return Err(Error::Closure);
@@ -69,6 +74,14 @@ impl FollowerSeed {
             derivative_a_per_v,
         })
     }
+}
+
+#[cfg(pilot_r59_predict_q15)]
+pub(crate) fn predict_reset(old: State, c2: f64) -> Option<[f64; 2]> {
+    let seed = old.follower?;
+    let [c2_response, cathode_response] = seed.reset_response(old.gradient?).ok()?;
+    let reset_at_old_cathode = old.volume[4] + c2_response * (c2 - seed.c2);
+    Some([reset_at_old_cathode, cathode_response])
 }
 
 #[cfg(pilot_r59_reset_port)]

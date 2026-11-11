@@ -2799,3 +2799,24 @@ El banco previo de Q15 pasó sus tres auditorías del
 stamp completo tras extraer las ecuaciones de
 conducción compartidas.
 [Regresión de Q15](../evidence/rf_d_pilot_q15_audit03.json).
+
+
+### Semilla de Q15 con la respuesta de reset
+
+El predictor usa la tensión de reset y sus
+tangentes del estado aceptado. Resuelve Euler/BDF2
+con esa aproximación y verifica después el sistema
+completo. Frente al arranque anterior, los cierres
+de audio por bloque medido pasaron de 820 a 420 en
+positivo y de 819 a 419 en negativo.
+
+Pasaron Radau, la auditoría nodal, los cruces y la
+partición por bits. Frente al control al mismo reloj,
+la mayor diferencia de carga fue 1,29e−23 C en Q15
+y 8,84e−24 C al final del receptor.
+
+La mediana pareada bajó 39,20 % en positivo y
+37,39 % en negativo. Los máximos de los tres lotes
+fueron 3,008 y 3,714 ms, con cero asignaciones.
+[Semilla positiva](../evidence/rf_d_pilot_fast_r5944.json).
+[Semilla negativa](../evidence/rf_d_pilot_fast_r5945.json).

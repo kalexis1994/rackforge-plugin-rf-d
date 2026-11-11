@@ -108,6 +108,8 @@ def dynamic_q15(run, report, joined, exe, control, dc, bias, center, limits, sti
         charge_sum_error_c=charge_sum_error.tolist(),
         max_q15_residual_a=float(abs(rows[:, 20:22]).max()),
         max_trials=int(rows[:, 22].max()),
+        receiver_evaluations=int(rows[:, 22].sum()),
+        measured_block_receiver_evaluations=int(rows[STEPS:, 22].sum()),
         max_r59_mismatch_a=float(rows[:, 23].max()),
         max_r59_mismatch_v=float(rows[:, 24].max()),
         reference_r59_range_v=[float(reference[8][:, 11].min()), float(reference[8][:, 11].max())],
@@ -143,15 +145,18 @@ def dynamic_q15(run, report, joined, exe, control, dc, bias, center, limits, sti
         passed = bool(difference["passed"] and exact_audit["passed"] and max(difference["q15_charge_error_c"]) <= 2e-20
                       and audio_charge_error <= CHARGE_LIMIT_C
                       and crossings(exact_rows[:, 15]) == report["candidate_crossings"])
-        report["cached_q15_gain_comparison"] = dict(
+        key = "q15_predictor_comparison" if report["predict_q15"] else "cached_q15_gain_comparison"
+        report[key] = dict(
             passed=passed, control_output_sha256=digest(exact_raw), endpoint_audit=exact_audit,
             contrast=difference, audio_final_charge_error_c=audio_charge_error, bit_exact=raw == exact_raw,
+            control_receiver_evaluations=int(exact_rows[:, 22].sum()),
+            control_measured_block_receiver_evaluations=int(exact_rows[STEPS:, 22].sum()),
             paired_timing=pairs, paired_median_ratio=ratio,
         )
         report["passed"] = report["passed"] and passed
         report["realtime"] = report["realtime"] and passed and all(
             pair["cached"]["max_ns"] <= BUDGET_NS and pair["cached"]["allocations"] == 0 for pair in pairs)
-        print("Q15 cached gain", report["cached_q15_gain_comparison"], flush=True)
+        print(key, report[key], flush=True)
     print("Q15", report["passed"], report["contrast"], report["max_q15_residual_a"], timing, flush=True)
 
 
@@ -179,6 +184,8 @@ def main():
                         help="close Q15 charge through CR6 and R59 in the joined laboratory circuit")
     parser.add_argument("--cached-q15-gain", action="store_true",
                         help="reuse the receiver load tangent during Q15 closure")
+    parser.add_argument("--predict-q15", action="store_true",
+                        help="seed the Q15 closure from the preceding reset response")
     cathode_options = parser.add_mutually_exclusive_group()
     cathode_options.add_argument("--vary-cathode", action="store_true",
                                  help="drive the reset cathode around a forward-biased CR6 operating point")
@@ -192,8 +199,8 @@ def main():
     seed_options.add_argument("--reuse-law", action="store_true",
                               help="reuse the previous trial's law evaluation at the same junctions")
     args = parser.parse_args()
-    if args.cached_q15_gain and not args.dynamic_q15:
-        parser.error("--cached-q15-gain requires --dynamic-q15")
+    if (args.cached_q15_gain or args.predict_q15) and not args.dynamic_q15:
+        parser.error("Q15 optimizations require --dynamic-q15")
     if args.dynamic_q15:
         args.schur_follower = args.predict_follower = args.predict_cathode = args.tight_follower = True
     if args.packed_odd and not args.packed_products:
@@ -234,6 +241,7 @@ def main():
     report = dict(passed=False, realtime=False, rack_integrated=False, r59_closed=True, branch=args.branch,
                   dynamic_q15=args.dynamic_q15,
                   cached_q15_gain=args.cached_q15_gain,
+                  predict_q15=args.predict_q15,
                   internal_rate_hz=RATE, frames=128, warmup_frames=128, budget_ns=BUDGET_NS,
                   imposed_sources=imposed,
                   cathode_v=cathode_v, cathode_amplitude_v=cathode_amplitude_v,
@@ -376,10 +384,15 @@ def main():
         if args.dynamic_q15:
             q15_cfg = [*cfg, *candidate_cfg, "--cfg", "pilot_r59_reset_port"]
             gain_control = None
-            if args.cached_q15_gain:
+            if args.cached_q15_gain and not args.predict_q15:
                 gain_control = AREA / "r59-q15-exact-gain.exe"
                 build(gain_control, *q15_cfg)
+            if args.cached_q15_gain:
                 q15_cfg.extend(("--cfg", "pilot_r59_cached_reset_gain"))
+            if args.predict_q15:
+                gain_control = AREA / "r59-q15-old-seed.exe"
+                build(gain_control, *q15_cfg)
+                q15_cfg.extend(("--cfg", "pilot_r59_predict_q15"))
             build(exe, *q15_cfg)
             dynamic_q15(run, report, joined, exe, gain_control, dc, bias, center, limits, stimulus, cathode_v,
                         assess, cr6_crossings)

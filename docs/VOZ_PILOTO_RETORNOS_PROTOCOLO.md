@@ -556,3 +556,19 @@ ambos, los mismos cruces y diferencias máximas
 de 2e−20 C en Q15 y 1e−20 C en las cargas finales
 del receptor. Medir dos parejas en orden alternado
 y aplicar el plazo a todos los picos del candidato.
+
+Con `--predict-q15`, proyectar la tensión de reset
+desde el último punto aceptado usando las respuestas
+a C2 y a la base de Q15 con R59 cerrado. Aplicar la
+ley completa de CR6 sobre esa tensión provisional y
+resolver la semilla con el mismo residual Euler/BDF2
+de Q15. Verificar después el cierre completo del
+receptor y Q15. Si falta la tangente, falla la semilla
+o se rechaza el cierre, volver al punto anterior
+aceptado con el mismo historial.
+
+Comparar con el arranque anterior, con la misma
+política de tangente del receptor. Contar todas las
+evaluaciones del cierre de audio, incluidas las de
+reintento. Conservar la auditoría nodal, Radau, los
+cruces y las reservas de carga al mismo reloj.
