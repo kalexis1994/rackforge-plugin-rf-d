@@ -2905,3 +2905,18 @@ La rama negativa volvió a pasar con 3,31e−24 C
 de diferencia y un pico de 1,500 ms.
 [Tolerancia de 2e−12 V positiva](../evidence/rf_d_pilot_fast_r5954.json).
 [Tolerancia de 2e−12 V negativa](../evidence/rf_d_pilot_fast_r5955.json).
+
+Con 2e−13 V, ambas ramas pasaron la reserva de
+carga de 1e−20 C. Las diferencias de carga final
+fueron 4,29e−21 C y 3,31e−24 C. Pasaron la
+auditoría nodal, Radau, los cruces y la partición.
+
+En positivo, las iteraciones bajaron de 515 a
+448. La mediana pareada fue 1,878 ms, un 0,46 %
+por encima del control, y el pico fue 2,908 ms.
+En negativo bajaron de 514 a 258. La mediana
+pareada fue 1,395 ms, un 15,83 % por debajo del
+control, y el pico fue 1,555 ms. Hubo cero
+asignaciones. El margen de 1,333 ms sigue abierto.
+[Reserva final positiva](../evidence/rf_d_pilot_fast_r5956.json).
+[Reserva final negativa](../evidence/rf_d_pilot_fast_r5957.json).

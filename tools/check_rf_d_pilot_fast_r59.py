@@ -208,7 +208,7 @@ def main():
     parser.add_argument("--tight-follower", action="store_true",
                         help="require a 2e-14 V follower Newton correction in every variant")
     parser.add_argument("--tight-r59", action="store_true",
-                        help="require 2e-12 V agreement at the closed R59 port in every variant")
+                        help="require 2e-13 V agreement at the closed R59 port in every variant")
     seed_options = parser.add_mutually_exclusive_group()
     seed_options.add_argument("--feedback-seed", action="store_true",
                               help="seed receiver retries with the new predictor and previous trial feedback")
@@ -278,7 +278,7 @@ def main():
                   predict_cathode=args.predict_cathode,
                   cross_cathode=args.cross_cathode,
                   follower_correction_limit_v=2e-14 if args.tight_follower else 2e-12,
-                  r59_closure_limit_v=2e-12 if args.tight_r59 else 1e-10,
+                  r59_closure_limit_v=2e-13 if args.tight_r59 else 1e-10,
                   **sources.fields(), compiler_sha256=sha(Path(COMPILER)), library_sha256=sha(LIB))
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
     flags = [COMPILER, "--edition=2021", "-C", "opt-level=3", "-C", "target-feature=+fma",

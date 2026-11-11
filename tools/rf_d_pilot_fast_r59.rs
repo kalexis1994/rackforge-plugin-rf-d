@@ -7,7 +7,7 @@ use crate::{plant, return_maps as map, StepError};
 
 const R59: f64 = 68_000.;
 const CLOSURE_V: f64 = if cfg!(pilot_r59_tight_closure) {
-    2e-12
+    2e-13
 } else {
     1e-10
 };

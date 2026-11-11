@@ -633,9 +633,9 @@ el receptor completo. Ante rechazo de la semilla
 conservar el arranque previo. Comparar ambas ramas
 con la misma semilla no lineal de Q15.
 
-Con `--tight-r59`, exigir 2e−12 V de acuerdo en
+Con `--tight-r59`, exigir 2e−13 V de acuerdo en
 la fuente de R59 para candidato y control. Mantener
 la reserva de carga del receptor en 1e−20 C y
 verificar ambos cierres. Repetir el contraste afín
-tras el rechazo de la carga positiva para comprobar
-el efecto del criterio de convergencia.
+tras los rechazos de la carga positiva a 1e−10 V y
+2e−12 V para comprobar el efecto de la convergencia.
