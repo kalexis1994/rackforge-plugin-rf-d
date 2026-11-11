@@ -44,7 +44,7 @@ def component(code, payload):
         };""")
 
 
-def metrics(raw, expected, margin):
+def metrics(raw, expected, margin, peak_key):
     header_bytes = (4 + 2 * REPEATS) * 8
     count, peak, misses, faults = map(int, np.frombuffer(raw[:32], "<u8"))
     times = np.frombuffer(raw[32:header_bytes], "<u8").reshape(REPEATS, 2)
@@ -61,7 +61,7 @@ def metrics(raw, expected, margin):
     return dict(startup=phase(times[:, 0]), warm=phase(times[:, 1]), exact_native=audio == expected,
                 j7_f32_sha256=digest(audio),
                 max_difference_f32=float(abs(samples - np.frombuffer(expected, "<f4")).max()),
-                telemetry_max_ns=peak, deadline_misses=misses, faults=faults, times=packed(times.tobytes()))
+                deadline_misses=misses, faults=faults, times=packed(times.tobytes()), **{peak_key: peak})
 
 
 def campaign(run, report, receipt, code, flags, cfg, exe, payload, rows):
@@ -97,22 +97,28 @@ def campaign(run, report, receipt, code, flags, cfg, exe, payload, rows):
 
     expected = np.repeat(rows[1::2, 0].astype("<f4"), 2).tobytes()
     rack["native_j7_f32_sha256"] = digest(expected)
-    for order in (("native", "host"), ("host", "native")):
+    for order in (("native", "direct", "host"), ("host", "direct", "native")):
         pair = {}
         for which in order:
             if which == "native":
                 keys = ("blocks", "median_ns", "max_ns", "allocations")
                 pair[which] = dict(zip(keys, map(int, run([exe, "bench"], payload).split(b",")), strict=True))
             else:
-                pair[which] = metrics(run([host, path, "q15"]), expected, report["budget_ns"])
+                mode, peak = ("q15", "telemetry_max_ns") if which == "host" else ("q15-direct", "process_max_ns")
+                pair[which] = metrics(run([host, path, mode]), expected, report["budget_ns"], peak)
         pair["warm_median_delta_ns"] = pair["host"]["warm"]["median_ns"] - pair["native"]["median_ns"]
+        pair["rack_minus_direct_median_ns"] = pair["host"]["warm"]["median_ns"] - pair["direct"]["warm"]["median_ns"]
+        pair["direct_minus_native_median_ns"] = pair["direct"]["warm"]["median_ns"] - pair["native"]["median_ns"]
         rack["pairs"].append(pair)
     report["rack_integrated"] = all(
-        pair["host"]["exact_native"] and pair["host"]["faults"] == 0 and pair["native"]["allocations"] == 0
+        pair["host"]["exact_native"] and pair["host"]["faults"] == 0
+        and pair["direct"]["exact_native"] and pair["direct"]["faults"] == 0
+        and pair["native"]["allocations"] == 0
         for pair in rack["pairs"])
     rack["warm_realtime"] = report["rack_integrated"] and all(
         pair["host"]["warm"]["over_margin"] == 0 and pair["host"]["deadline_misses"] == 0
         for pair in rack["pairs"])
     print("Q15 RACK", report["rack_integrated"], rack["warm_realtime"],
-          [(p["native"], p["host"]["startup"], p["host"]["warm"], p["warm_median_delta_ns"])
+          [(p["native"], p["direct"]["warm"], p["host"]["startup"], p["host"]["warm"],
+            p["rack_minus_direct_median_ns"])
            for p in rack["pairs"]], flush=True)

@@ -8,9 +8,12 @@ use std::{collections::BTreeMap, error::Error, io::{BufWriter, Write}, path::Pat
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<_> = std::env::args().collect();
-    assert!(args.len() == 3 && matches!(args[2].as_str(), "negative" | "positive" | "q15"));
+    assert!(args.len() == 3 && matches!(args[2].as_str(), "negative" | "positive" | "q15" | "q15-direct"));
     let package = PluginPackage::open(Path::new(&args[1]))?;
     let plugin = unsafe { LoadedPlugin::load(&package, None, &BTreeMap::new(), None)? };
+    if args[2] == "q15-direct" {
+        return q15_direct(&plugin);
+    }
     let id = plugin.manifest().id.clone();
     let spec = RackSlotRuntimeSpec {
         slot_id: "rf-d-pilot".into(), plugin_id: id.clone(),
@@ -57,19 +60,69 @@ fn q15(
     pool: &mut RenderPool,
     telemetry: &Arc<RenderTelemetry>,
 ) -> Result<(), Box<dyn Error>> {
-    const FRAMES: u32 = 128;
-    const STEREO: usize = 2 * FRAMES as usize;
-    const REPEATS: usize = 64;
-    let mut times = [[0_u64; 2]; REPEATS];
-    let mut first = [[0_u32; STEREO]; 2];
-    let mut output = [0_f32; STEREO];
+    let replay = replay_q15(|call| {
+        match call {
+            Q15Call::Reset => rack.reset(),
+            Q15Call::Process(output) => {
+                rack.render(pool, telemetry, Q15_FRAMES, Q15_DEADLINE_NS, None, output)?;
+            }
+        }
+        Ok(())
+    })?;
+    let snapshot = telemetry.snapshot_and_reset();
+    write_q15(replay, [
+        snapshot.block.count,
+        snapshot.block.max_ns,
+        snapshot.deadline_misses,
+        snapshot.slot_faults.iter().sum::<u64>(),
+    ])
+}
+
+fn q15_direct(plugin: &LoadedPlugin) -> Result<(), Box<dyn Error>> {
+    let mut instance = plugin.create_instance()?;
+    instance.activate(48_000., Q15_FRAMES, 0, 2)?;
+    let replay = replay_q15(|call| {
+        match call {
+            Q15Call::Reset => instance.reset()?,
+            Q15Call::Process(output) => {
+                instance.process_wide(&[], output, Q15_FRAMES, 0, 2, &[], &[])?;
+            }
+        }
+        Ok(())
+    })?;
+    let peak = replay.times.iter().flatten().copied().max().unwrap();
+    let misses = replay.times.iter().flatten().filter(|&&ns| ns > Q15_DEADLINE_NS).count() as u64;
+    write_q15(replay, [2 * Q15_REPEATS as u64, peak, misses, 0])
+}
+
+const Q15_FRAMES: u32 = 128;
+const Q15_DEADLINE_NS: u64 = 128 * 1_000_000_000 / 48_000;
+const Q15_STEREO: usize = 2 * Q15_FRAMES as usize;
+const Q15_REPEATS: usize = 64;
+
+enum Q15Call<'a> {
+    Reset,
+    Process(&'a mut [f32]),
+}
+
+struct Q15Replay {
+    times: [[u64; 2]; Q15_REPEATS],
+    first: [[u32; Q15_STEREO]; 2],
+}
+
+fn replay_q15(
+    mut call: impl FnMut(Q15Call<'_>) -> Result<(), Box<dyn Error>>,
+) -> Result<Q15Replay, Box<dyn Error>> {
+    let mut times = [[0_u64; 2]; Q15_REPEATS];
+    let mut first = [[0_u32; Q15_STEREO]; 2];
+    let mut output = [0_f32; Q15_STEREO];
     for (repeat, pair) in times.iter_mut().enumerate() {
         if repeat != 0 {
-            rack.reset();
+            call(Q15Call::Reset)?;
         }
         for (block, time) in pair.iter_mut().enumerate() {
             let start = Instant::now();
-            rack.render(pool, telemetry, FRAMES, 128 * 1_000_000_000 / 48_000, None, &mut output)?;
+            call(Q15Call::Process(&mut output))?;
             *time = start.elapsed().as_nanos().try_into()?;
             let bits = output.map(f32::to_bits);
             if repeat == 0 {
@@ -79,25 +132,18 @@ fn q15(
             }
         }
     }
-    let snapshot = telemetry.snapshot_and_reset();
-    eprintln!(
-        "Q15_RACK,{FRAMES},{REPEATS},{},{},{},{}",
-        snapshot.block.count, snapshot.block.max_ns, snapshot.deadline_misses,
-        snapshot.slot_faults.iter().sum::<u64>()
-    );
+    Ok(Q15Replay { times, first })
+}
+
+fn write_q15(replay: Q15Replay, diagnostics: [u64; 4]) -> Result<(), Box<dyn Error>> {
     let mut out = BufWriter::new(std::io::stdout().lock());
-    for value in [
-        snapshot.block.count,
-        snapshot.block.max_ns,
-        snapshot.deadline_misses,
-        snapshot.slot_faults.iter().sum::<u64>(),
-    ] {
+    for value in diagnostics {
         out.write_all(&value.to_le_bytes())?;
     }
-    for value in times.into_iter().flatten() {
+    for value in replay.times.into_iter().flatten() {
         out.write_all(&value.to_le_bytes())?;
     }
-    for value in first.into_iter().flatten() {
+    for value in replay.first.into_iter().flatten() {
         out.write_all(&value.to_le_bytes())?;
     }
     out.flush()?;

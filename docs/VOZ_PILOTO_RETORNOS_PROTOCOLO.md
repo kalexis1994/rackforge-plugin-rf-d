@@ -812,3 +812,12 @@ Alternar el orden nativo/host y registrar el arranque,
 el bloque caliente, los fallos y los plazos del host.
 Este ensayo usa las fuentes impuestas del recibo y
 un render directo del motor de RackForge.
+
+Medir también el mismo DLL a través de
+`PluginInstance::process_wide`, con la misma
+activación, reinicios y salida estéreo, fuera
+del mezclador. Intercalar esta prueba entre
+el nativo y el slot, en ambos órdenes. Exigir
+la misma salida J7 por bits en las tres rutas.
+Registrar por separado las diferencias de mediana
+entre el nativo, la ABI y el slot.

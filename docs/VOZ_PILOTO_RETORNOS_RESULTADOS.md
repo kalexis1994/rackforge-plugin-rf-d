@@ -3299,3 +3299,28 @@ El primer intento se detuvo al compilar el
 probador del host. Se corrigieron el tipo de
 frames y la referencia a la telemetría.
 [Intento de compilación](../evidence/rf_d_pilot_fast_r5991.json).
+
+### Contraste del nativo, la ABI y el slot
+
+Se usó el mismo DLL en la ABI directa y en el
+slot, con la misma salida J7 por bits en ambas
+rutas y en todos los reinicios. No hubo fallos
+de slot ni pérdidas del plazo completo de 2,667 ms.
+
+En positivo, los dos lotes calientes de RackForge
+cumplieron el margen de 1,333 ms. El mayor pico
+caliente fue 1,178 ms y el de arranque, 1,390 ms.
+En los lotes alternados, el nativo llegó a
+1,586 ms y la ABI directa a 1,428 ms en caliente.
+El slot añadió 6,85 y 28,45 µs a la mediana
+caliente de la ABI directa.
+[Contraste positivo de las tres rutas](../evidence/rf_d_pilot_fast_r5994.json).
+
+En negativo, el peor bloque caliente del slot
+fue 1,511 ms, con un bloque sobre el margen. La
+ABI directa llegó a 1,521 ms. Las diferencias
+de mediana entre slot y ABI directa fueron
+19,95 y −6,95 µs. Las medidas corresponden al
+motor con las entradas impuestas del recibo.
+Queda pendiente el ensayo de la salida física.
+[Contraste negativo de las tres rutas](../evidence/rf_d_pilot_fast_r5995.json).
