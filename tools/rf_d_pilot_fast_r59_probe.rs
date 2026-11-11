@@ -93,6 +93,40 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut out = std::io::BufWriter::new(std::io::stdout().lock());
     #[cfg(pilot_r59_profile)]
     let mut profile = fast_r59::Profile::default();
+    #[cfg(pilot_r59_reset_port)]
+    if second == "reset-port" {
+        let mut state = initial;
+        for (tick, &drive) in input.iter().enumerate() {
+            let mut query = |drive| {
+                fast_r59::advance(
+                    state,
+                    drive,
+                    fresh || tick % STEPS == 0,
+                    #[cfg(pilot_r59_profile)]
+                    &mut profile,
+                )
+                .map_err(|e| format!("reset port at tick {tick}: {e:?}"))
+            };
+            let (next, frame) = query(drive)?;
+            let port = frame.reset_port;
+            for value in [port.current_a].into_iter().chain(port.derivative_a_per_v) {
+                out.write_all(&value.to_le_bytes())?;
+            }
+            for step in [1e-5, 5e-6] {
+                for column in [1, 2] {
+                    let mut low = drive;
+                    let mut high = drive;
+                    low[column] -= step;
+                    high[column] += step;
+                    let low = query(low)?.1.reset_port.current_a;
+                    let high = query(high)?.1.reset_port.current_a;
+                    out.write_all(&((high - low) / (2. * step)).to_le_bytes())?;
+                }
+            }
+            state = next;
+        }
+        return Ok(());
+    }
     if second == "bench" {
         let (warm, _) = render(
             initial,

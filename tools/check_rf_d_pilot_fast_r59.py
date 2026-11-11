@@ -33,6 +33,7 @@ CATHODE_V = 0.
 CR6_SCALE_V = 1.5 * 1.380649e-23 * 298.15 / 1.602176634e-19
 CR6_SATURATION_A = 1e-8
 RETURN_LIMIT_A = 2e-9
+RESET_TANGENT_LIMIT_S = 2e-11
 PROFILE_STAGES = ("initial_follower", "receiver_history", "receiver_root", "loaded_follower",
                   "follower_response", "receiver_tangent", "receiver_reconstruction")
 
@@ -55,6 +56,8 @@ def main():
                         help="seed the follower from the preceding accepted load and C2 tangents")
     parser.add_argument("--predict-cathode", action="store_true",
                         help="include the CR6 cathode tangent in the follower prediction")
+    parser.add_argument("--reset-port", action="store_true",
+                        help="compare the closed R59 reset port tangent against centered differences")
     cathode_options = parser.add_mutually_exclusive_group()
     cathode_options.add_argument("--vary-cathode", action="store_true",
                                  help="drive the reset cathode around a forward-biased CR6 operating point")
@@ -72,6 +75,8 @@ def main():
         parser.error("--packed-odd requires --packed-products")
     if args.predict_cathode and not args.predict_follower:
         parser.error("--predict-cathode requires --predict-follower")
+    if args.reset_port and not args.predict_cathode:
+        parser.error("--reset-port requires --predict-cathode")
     negative = args.branch == "negative"
     center, limits = (CLOSED, CLOSED_RANGE) if negative else (OPEN, OPEN_RANGE)
     stimulus = off_drives if negative else drives
@@ -252,6 +257,9 @@ def main():
         prediction_control = AREA / "r59-prediction-control.exe"
         if prediction_cfg:
             build(prediction_control, *cfg, *seed_cfg, *follower_cfg, *prediction_control_cfg)
+        reset_probe = AREA / "r59-reset-port.exe"
+        if args.reset_port:
+            build(reset_probe, *cfg, *candidate_cfg, "--cfg", "pilot_r59_reset_port")
         profile_exe = AREA / "r59-profile.exe"
         seed_control_profile = AREA / "r59-seed-control-profile.exe"
         follower_control_profile = AREA / "r59-follower-control-profile.exe"
@@ -363,6 +371,27 @@ def main():
         report["passed"] = bool(report["refinement"]["passed"] and report["reference_source_domain_passed"]
                                  and report["reference_cathode_gate"] and report["partition_bit_exact"]
                                  and report["cached_vs_fresh"]["passed"] and all(v["passed"] for v in report["cases"].values()))
+        if args.reset_port:
+            raw = run([reset_probe, "cached", 128, "--charges"], payload, repeat=True)
+            exact = (digest(raw[:-charge_bytes]) == cached["output_sha256"]
+                     and digest(raw[-charge_bytes:]) == cached["final_charge_sha256"])
+            port = values([reset_probe, "cached", "reset-port"], payload, repeat=True).reshape(2 * STEPS, 7)
+            derivative = port[:, 1:3]
+            difference = abs(derivative - port[:, 5:7]).max(axis=0)
+            refinement = abs(port[:, 3:5] - port[:, 5:7]).max(axis=0)
+            current_error = float(abs(port[:, 0] - reference_cr6_current).max())
+            passed = bool(exact and current_error <= RETURN_LIMIT_A
+                          and difference.max() <= RESET_TANGENT_LIMIT_S
+                          and refinement.max() <= RESET_TANGENT_LIMIT_S)
+            report["reset_port"] = dict(
+                passed=passed, trajectory_bit_exact=exact, ticks=len(port),
+                columns=("C2", "Q15 base"), difference_steps_v=(1e-5, 5e-6),
+                derivative_min_s=derivative.min(axis=0).tolist(), derivative_max_s=derivative.max(axis=0).tolist(),
+                derivative_error_s=difference.tolist(), difference_refinement_s=refinement.tolist(),
+                tangent_limit_s=RESET_TANGENT_LIMIT_S, current_error_a=current_error,
+            )
+            report["passed"] = report["passed"] and passed
+            print("RESET PORT", report["reset_port"], flush=True)
         if args.profile:
             profiles = {"profile": (profile_exe, cached)}
             if seed_cfg:

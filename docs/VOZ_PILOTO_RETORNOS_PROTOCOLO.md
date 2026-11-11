@@ -485,3 +485,23 @@ con la ley de germanio del seguidor y exigir el
 límite de retornos de 2 nA. Conservar el dominio
 de R59, la reserva de carga final de 1e−20 C y los
 demás límites del banco.
+
+Con `--reset-port`, exportar la corriente que entra
+en Q15 por CR6 y sus dos derivadas respecto de C2
+y la base de Q15. Mantener fija la historia de audio,
+la señal y la fuente de R60 al diferenciar.
+Sea a la tangente de la base del VCA respecto de
+la fuente R59 en el receptor, s_b la respuesta de
+loudness a la base del VCA y s_p su respuesta al
+puerto p. Con R59 cerrado, la respuesta de la base
+del VCA al puerto es a·s_p/(1−a·s_b). Sumar ese
+efecto a la derivada de la tensión de reset y aplicar
+g_CR6·(dV_reset/dp−1) para el cátodo. Para C2 el
+término directo del cátodo vale cero.
+
+Contrastar ambas columnas en todos los ticks con
+diferencias centradas de 10 y 5 µV desde el mismo
+estado previo. Exigir 20 pS de error y refinamiento,
+2 nA de error de corriente contra Radau y coincidencia
+por bits de la trayectoria y las cargas del banco.
+La consulta de la tangente usa un ejecutable aparte.

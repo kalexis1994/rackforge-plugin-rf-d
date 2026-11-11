@@ -46,6 +46,37 @@ impl FollowerSeed {
         });
         Some((predicted, self.base_response))
     }
+
+    #[cfg(pilot_r59_reset_port)]
+    fn reset_port(self, reset_v: f64, receiver_gain: f64) -> Result<ResetPort, Error> {
+        let (current_a, conductance) =
+            crate::contour_ports::germanium(reset_v - self.cathode).map_err(Error::Volume)?;
+        let denominator = 1. - receiver_gain * self.base_response[2];
+        if !denominator.is_finite() || denominator.abs() <= 1e-8 {
+            return Err(Error::Closure);
+        }
+        // Each imposed voltage affects the receiver only through loudness and R59.
+        let [reset_c2, reset_cathode] = [self.c2_response, self.cathode_response].map(|response| {
+            let base_change = receiver_gain * response[2] / denominator;
+            response[4] + self.base_response[4] * base_change
+        });
+        let derivative_a_per_v = [conductance * reset_c2, conductance * (reset_cathode - 1.)];
+        if derivative_a_per_v.iter().any(|value| !value.is_finite()) {
+            return Err(Error::Closure);
+        }
+        Ok(ResetPort {
+            current_a,
+            derivative_a_per_v,
+        })
+    }
+}
+
+#[cfg(pilot_r59_reset_port)]
+pub struct ResetPort {
+    /// Current entering the Q15 base through CR6.
+    pub current_a: f64,
+    /// Columns are C2 and the Q15 base, at fixed previous audio history.
+    pub derivative_a_per_v: [f64; 2],
 }
 
 pub struct Frame {
@@ -55,6 +86,8 @@ pub struct Frame {
     pub mismatch_v: f64,
     pub mismatch_a: f64,
     pub tangent_calls: usize,
+    #[cfg(pilot_r59_reset_port)]
+    pub reset_port: ResetPort,
 }
 
 #[derive(Debug)]
@@ -254,6 +287,11 @@ fn advance_inner(
                     })()
                 }),
             };
+            #[cfg(pilot_r59_reset_port)]
+            let reset_port = state
+                .follower
+                .ok_or(Error::Closure)?
+                .reset_port(volume[4], root.load_jacobian().map_err(Error::Audio)?[0][0])?;
             return Ok((
                 state,
                 Frame {
@@ -263,6 +301,8 @@ fn advance_inner(
                     mismatch_v: error,
                     mismatch_a,
                     tangent_calls,
+                    #[cfg(pilot_r59_reset_port)]
+                    reset_port,
                 },
             ));
         }

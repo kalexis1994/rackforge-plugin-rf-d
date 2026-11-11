@@ -2710,3 +2710,29 @@ Los picos entre los nueve lotes de cada rama fueron
 durante ambos cruces.
 [Cruces positivos](../evidence/rf_d_pilot_fast_r5933.json).
 [Cruces negativos](../evidence/rf_d_pilot_fast_r5934.json).
+
+
+### Corriente y tangente de CR6 vistas desde Q15
+
+El puerto devuelve la corriente que entra en la base
+de Q15 por CR6 y las derivadas respecto de C2 y del
+cátodo con R59 cerrado. Las dos columnas se comprobaron
+en 512 ticks por rama con diferencias centradas a 10
+y 5 µV desde el mismo estado previo. El error máximo
+de la tangente fue 22,55 fS y el refinamiento difirió
+hasta 73,02 fS, dentro del límite de 20 pS.
+
+El ejecutable de consulta conservó por bits la
+trayectoria y las cargas finales en ambas ramas.
+La corriente frente a Radau difirió como máximo
+2,02 fA en positivo y 0,51 fA en negativo. La
+tangente respecto del cátodo fue negativa en todos
+los puntos de ambas escenas.
+
+En los pases nativos del motor, las medianas
+iniciales fueron 1,269 y 1,083 ms y los picos
+1,858 y 1,444 ms. La consulta de la tangente se
+midió por separado del motor. Queda pendiente el
+cierre dinámico de Q15 con esta corriente de retorno.
+[Tangente positiva](../evidence/rf_d_pilot_fast_r5935.json).
+[Tangente negativa](../evidence/rf_d_pilot_fast_r5936.json).
