@@ -2644,3 +2644,44 @@ bits y el contraste contra Radau pasó. La mediana
 pareada bajó 7,05 % y el pico de los siete lotes
 fue 1,471 ms. Ambas escenas usan un cátodo impuesto.
 [Reserva de carga negativa](../evidence/rf_d_pilot_fast_r5928.json).
+
+
+### Precisión del seguidor con cátodo variable
+
+Se repitieron los mismos estímulos con una corrección
+de Newton máxima de 2e−14 V para el seguidor en todos
+los ejecutables. El límite de carga final siguió en
+1e−20 C. Las dos ramas pasaron Radau y conservaron
+la partición 64/128. El predictor evitó todos los
+cierres iniciales medidos en ambos perfiles.
+
+En positivo, la diferencia de carga final bajó de
+1,61e−20 a 4,67e−22 C. La mayor diferencia en J7
+frente al control fue 1,04e−17 V. La mediana pareada
+bajó 10,10 % y el pico de los siete lotes fue
+1,952 ms.
+[Repetición positiva](../evidence/rf_d_pilot_fast_r5929.json).
+
+En negativo, las cargas finales volvieron a coincidir
+por bits. La mediana pareada subió 2,21 % en esta
+repetición y se registró un pico de 11,259 ms.
+Los resultados temporales corresponden al banco
+nativo con un cátodo modulado externamente.
+[Repetición negativa](../evidence/rf_d_pilot_fast_r5930.json).
+
+Al combinar la tangente del cátodo con el reúso de
+junturas en positivo y el predictor de feedback en
+negativo, ambas ramas volvieron a pasar la reserva.
+Se reprodujeron los errores máximos de carga de
+4,67e−22 C y 0 C, respectivamente. En los perfiles
+no hubo cierres iniciales ni reintentos completos.
+
+Las primeras medianas nativas fueron 1,261 ms en
+positivo y 1,060 ms en negativo. Frente al control
+de cátodo, las medianas pareadas bajaron 10,32 %
+y 12,31 %. Los picos de los nueve lotes por rama
+fueron 1,850 ms y 8,136 ms. El plazo de 1,333 ms
+sigue abierto. El biestable y los contornos autónomos
+quedan pendientes de este banco de retornos.
+[Combinación positiva](../evidence/rf_d_pilot_fast_r5931.json).
+[Combinación negativa](../evidence/rf_d_pilot_fast_r5932.json).

@@ -54,6 +54,8 @@ def main():
                         help="include the CR6 cathode tangent in the follower prediction")
     parser.add_argument("--vary-cathode", action="store_true",
                         help="drive the reset cathode around a forward-biased CR6 operating point")
+    parser.add_argument("--tight-follower", action="store_true",
+                        help="require a 2e-14 V follower Newton correction in every variant")
     seed_options = parser.add_mutually_exclusive_group()
     seed_options.add_argument("--feedback-seed", action="store_true",
                               help="seed receiver retries with the new predictor and previous trial feedback")
@@ -97,6 +99,7 @@ def main():
                   schur_follower=args.schur_follower,
                   predict_follower=args.predict_follower,
                   predict_cathode=args.predict_cathode,
+                  follower_correction_limit_v=2e-14 if args.tight_follower else 2e-12,
                   **sources.fields(), compiler_sha256=sha(Path(COMPILER)), library_sha256=sha(LIB))
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
     flags = [COMPILER, "--edition=2021", "-C", "opt-level=3", "-C", "target-feature=+fma",
@@ -189,6 +192,8 @@ def main():
             seed_cfg = ["--cfg", "pilot_r59_reuse_law"]
         if args.shared_port_exp:
             cfg.extend(("--cfg", "pilot_shared_port_exp"))
+        if args.tight_follower:
+            cfg.extend(("--cfg", "pilot_r59_tight_follower"))
         control_cfg = cfg.copy()
         if args.packed_products:
             cfg.extend(("--cfg", "pilot_receiver_packed"))

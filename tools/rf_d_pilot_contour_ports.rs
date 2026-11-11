@@ -220,6 +220,13 @@ fn filter_stamp(x: [f64; 3], sum: f64, tail: f64) -> Result<Stamp<3>, StepError>
 #[cfg(pilot_audio_readout)]
 const JOINT_TOLERANCES: [f64; 2] = [2e-15, 2e-12];
 
+#[cfg(pilot_audio_readout)]
+const R59_TOLERANCES: [f64; 2] = if cfg!(pilot_r59_tight_follower) {
+    [JOINT_TOLERANCES[0], 2e-14]
+} else {
+    JOINT_TOLERANCES
+};
+
 // SVC-9 fig. 9-7. C2 and the sustain emitter are explicit ports.
 #[cfg(pilot_audio_readout)]
 pub(crate) fn volume_decay(
@@ -285,7 +292,7 @@ pub(crate) fn close_volume(
     solve_factored(
         initial,
         |x| closed_volume_stamp(x, c2, cathode, base),
-        JOINT_TOLERANCES,
+        R59_TOLERANCES,
     )
 }
 
@@ -320,7 +327,7 @@ fn close_volume_schur(
     cathode: f64,
     base: f64,
 ) -> Result<([f64; 5], R59Factor), StepError> {
-    let [current, voltage] = JOINT_TOLERANCES;
+    let [current, voltage] = R59_TOLERANCES;
     let g24 = 1. / R24;
     for _ in 0..12 {
         let [x0, x1, x2, x3, x4] = x;

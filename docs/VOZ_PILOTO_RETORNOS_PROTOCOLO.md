@@ -459,3 +459,11 @@ en directa, el dominio de R59 y los mismos límites
 de Radau en ambas ramas. Comparar contra el predictor
 de C2/R59 que vuelve al cierre inicial cuando cambia
 el cátodo. El estímulo sigue siendo una entrada del banco.
+
+Con `--tight-follower`, exigir una corrección máxima
+de 2e−14 V en el seguidor tanto para el candidato
+como para todos sus controles. Se conservan el
+residual de 2e−15 A, el cierre de R59 y el límite de
+1e−20 C entre cargas finales. Repetir la misma
+modulación tras el rechazo de la reserva positiva
+para medir la sensibilidad al criterio de convergencia.
