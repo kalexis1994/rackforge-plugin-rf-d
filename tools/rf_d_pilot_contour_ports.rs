@@ -175,11 +175,11 @@ pub fn cv_return_residual(x4: f64, x3: f64, x27: f64) -> Result<f64, StepError> 
 }
 
 #[cfg(pilot_closed_cv)]
-fn cv_law(x4: f64, x3: f64, x27: f64) -> Result<(f64, f64, f64), StepError> {
+fn cv_law(x4: f64, x3: f64, x27: f64) -> Result<(f64, f64, [f64; 2]), StepError> {
     let (diode, conductance) = germanium(x4 - x27)?;
     let residual = (x4 + 10.) / R27 + (x4 - x3) / R24 + diode;
     let slope = 1. / R27 + 1. / R24 + conductance;
-    Ok((residual, slope, diode))
+    Ok((residual, slope, [diode, conductance]))
 }
 
 #[cfg(pilot_closed_cv)]
@@ -298,15 +298,28 @@ pub(crate) fn close_volume(
 
 #[cfg(pilot_r59_schur_follower)]
 pub(crate) enum R59Factor {
-    Schur { factor: Lu<4>, cv_diagonal: f64 },
+    Schur {
+        factor: Lu<4>,
+        cv_diagonal: f64,
+        #[cfg(pilot_r59_reuse_cr6)]
+        cr6: [f64; 2],
+    },
     Full(Lu<5>),
 }
 
 #[cfg(pilot_r59_schur_follower)]
 impl R59Factor {
+    #[cfg(pilot_r59_reuse_cr6)]
+    pub(crate) fn cr6_at_closure(&self, reset: f64, cathode: f64) -> Result<[f64; 2], StepError> {
+        match self {
+            Self::Schur { cr6, .. } => Ok(*cr6),
+            Self::Full(_) => germanium(reset - cathode).map(|(current, slope)| [current, slope]),
+        }
+    }
+
     pub(crate) fn solve(&self, [r0, r1, r2, r3, r4]: [f64; 5]) -> Result<[f64; 5], StepError> {
         match self {
-            Self::Schur { factor, cv_diagonal } => {
+            Self::Schur { factor, cv_diagonal, .. } => {
                 let g24 = 1. / R24;
                 let [d0, d1, d2, d3] = factor.solve([r0, r1, r2 + (g24 / cv_diagonal) * r4, r3])?;
                 let d4 = (r4 + g24 * d2) / cv_diagonal;
@@ -369,14 +382,19 @@ fn factor_r59_follower(
 ) -> Result<([f64; 5], R59Factor), StepError> {
     let Stamp { f: [r0, r1, r2, r3], mut j } = volume_stamp([x0, x1, x2, x3], c2, x4, base)?;
     j[2][2] -= load_gain / R59;
-    let (r4, cv_diagonal, _) = cv_law(x4, x2, cathode)?;
+    let (r4, cv_diagonal, _cr6) = cv_law(x4, x2, cathode)?;
     if !cv_diagonal.is_finite() || cv_diagonal <= 0. {
         return Err(StepError::SingularJacobian);
     }
     // The reset node has only one off-diagonal entry, -1/R24 at loudness.
     let g24 = 1. / R24;
     j[2][2] -= g24 * (g24 / cv_diagonal);
-    let factor = R59Factor::Schur { factor: Lu::factor(j)?, cv_diagonal };
+    let factor = R59Factor::Schur {
+        factor: Lu::factor(j)?,
+        cv_diagonal,
+        #[cfg(pilot_r59_reuse_cr6)]
+        cr6: _cr6,
+    };
     Ok(([r0, r1, r2, r3, r4], factor))
 }
 
@@ -445,7 +463,7 @@ pub fn joint_cells(
             } else {
                 0.
             };
-            ([q3, q2, x3], slope, [x4, cv_law(x4, x3, cathode)?.2])
+            ([q3, q2, x3], slope, [x4, cv_law(x4, x3, cathode)?.2[0]])
         }
     };
     let (filter, factor) = solve_factored(
@@ -552,7 +570,7 @@ mod tests {
                 JOINT_TOLERANCES,
             )
             .unwrap();
-            let (_, _, diode) = cv_law(x[4], x[2], cathode).unwrap();
+            let (_, _, [diode, _]) = cv_law(x[4], x[2], cathode).unwrap();
             let expected = split_solution(cathode, base);
             assert!((x[2] - expected[0]).abs() <= 2e-12);
             assert!((x[4] - expected[1]).abs() <= 2e-12);

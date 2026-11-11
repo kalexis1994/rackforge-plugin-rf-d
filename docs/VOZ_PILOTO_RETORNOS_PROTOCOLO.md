@@ -787,3 +787,13 @@ los voltajes provisionales. Conservar la salida
 temprana si pasan las tolerancias y usar como
 semilla el último voltaje provisional. Aplicar
 el mismo contraste y las mismas reservas.
+
+Con `--reuse-follower-cr6`, conservar la corriente
+de CR6 en A y su pendiente en S calculadas en
+el punto de convergencia del seguidor. Usarlas
+para la columna del cátodo, el puerto de reset
+y el extremo anterior de la semilla de Q15.
+Si se usa el factor completo, evaluar CR6 una
+vez en los voltajes convergidos. Los intentos con
+voltajes nuevos siguen evaluando la ley completa.
+Exigir igualdad por bits y las reservas eléctricas.

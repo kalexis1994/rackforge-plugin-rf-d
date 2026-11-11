@@ -131,8 +131,11 @@ fn predict(
     let mut seed_mass_f = old.charge_mass_f;
     #[cfg(pilot_r59_predict_q15_cr6)]
     let (mut reset, shunt, target_current) = {
+        #[cfg(not(pilot_r59_reuse_cr6))]
         let (current, conductance) =
             crate::contour_ports::germanium(old.audio.volume[4] - old.q15_v[0]).ok()?;
+        #[cfg(pilot_r59_reuse_cr6)]
+        let [current, conductance] = old.audio.cr6?;
         // The reset response to the cathode is g_CR6 / (shunt + g_CR6).
         let total = conductance / slope;
         let shunt = total - conductance;

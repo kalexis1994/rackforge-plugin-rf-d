@@ -178,7 +178,7 @@ def dynamic_q15(run, report, joined, exe, control, profiled, dc, bias, center, l
         key = report["q15_comparison"]
         if key in ("q15_packed_products_comparison", "q15_packed_odd_comparison",
                    "q15_packed_law_comparison", "q15_prepared_terminal_comparison",
-                   "q15_reused_endpoint_comparison"):
+                   "q15_reused_endpoint_comparison", "r59_reused_cr6_comparison"):
             passed = passed and raw == exact_raw
         report[key] = dict(
             passed=passed, control_output_sha256=digest(exact_raw), endpoint_audit=exact_audit,
@@ -241,6 +241,8 @@ def main():
                         help="reuse the exact charge integral's accepted endpoint across Q15 trials")
     parser.add_argument("--reuse-q15-endpoint", action="store_true",
                         help="reuse the exact Q15 stamp from the verified seed at the same voltages")
+    parser.add_argument("--reuse-follower-cr6", action="store_true",
+                        help="reuse the accepted follower stamp's CR6 current and slope")
     parser.add_argument("--project-r59-history", action="store_true",
                         help="reuse the linear junction predictor for same-history R59 retries")
     parser.add_argument("--predict-r59-base-drift", action="store_true",
@@ -286,6 +288,8 @@ def main():
         parser.error("--pack-receiver-law requires --dynamic-q15")
     if args.prepare_q15_terminal and not args.dynamic_q15:
         parser.error("--prepare-q15-terminal requires --dynamic-q15")
+    if args.reuse_follower_cr6 and not args.predict_q15_cr6:
+        parser.error("--reuse-follower-cr6 requires --predict-q15-cr6")
     if args.project_r59_history and not args.dynamic_q15:
         parser.error("--project-r59-history requires --dynamic-q15")
     if args.project_r59_history:
@@ -344,6 +348,7 @@ def main():
                   predict_q15_charge=args.predict_q15_charge,
                   prepare_q15_terminal=args.prepare_q15_terminal,
                   reuse_q15_endpoint=args.reuse_q15_endpoint,
+                  reuse_follower_cr6=args.reuse_follower_cr6,
                   project_r59_history=args.project_r59_history,
                   predict_r59_base_drift=args.predict_r59_base_drift,
                   predict_receiver_feedback=args.predict_receiver_feedback,
@@ -509,6 +514,7 @@ def main():
                  "r59_one_affine_correction_comparison"),
                 (args.predict_r59_two_corrections, "pilot_r59_two_affine_corrections",
                  "r59_two_affine_corrections_comparison"),
+                (args.reuse_follower_cr6, "pilot_r59_reuse_cr6", "r59_reused_cr6_comparison"),
             )
             enabled = [(flag, key) for selected, flag, key in refinements if selected]
             gain_control = None

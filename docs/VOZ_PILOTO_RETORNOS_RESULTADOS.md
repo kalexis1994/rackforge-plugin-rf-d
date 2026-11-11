@@ -3229,3 +3229,47 @@ bits y redujo la mediana pareada 6,26 % a
 1,011 ms. El mayor pico fue 1,575 ms. En las
 dos ramas sigue abierto el plazo conjunto.
 [Repetición negativa](../evidence/rf_d_pilot_fast_r5986.json).
+
+### Reúso de la evaluación de CR6 del seguidor
+
+En positivo, la trayectoria y las cargas
+coincidieron por bits con el control de dos
+correcciones. Pasaron Radau y la auditoría nodal,
+con cero asignaciones. Los tres picos nativos
+fueron 1,161, 1,162 y 1,309 ms. La mediana
+pareada fue 1,109 ms, un 2,04 % por encima del
+control. La diferencia de picos entre ejecutables
+no demuestra un ahorro atribuible al reúso.
+[Reúso de CR6 positivo](../evidence/rf_d_pilot_fast_r5987.json).
+
+En negativo, la trayectoria y las cargas
+coincidieron por bits con el control de una
+corrección. La mediana pareada fue 1,002 ms,
+un 0,02 % por encima del control. El mayor
+pico de los tres lotes fue 1,160 ms. Pasaron
+Radau, la auditoría nodal y la partición con
+cero asignaciones.
+[Reúso de CR6 negativo](../evidence/rf_d_pilot_fast_r5988.json).
+
+La auditoría independiente de Q15 con seguidor
+impuesto reprodujo los hashes de las tres
+polarizaciones del pase anterior.
+[Auditoría Q15](../evidence/rf_d_pilot_q15_audit05.json).
+
+La repetición positiva conservó los bits del
+primer pase. Sus máximos por lote fueron 1,283,
+1,146 y 1,316 ms. La mediana pareada bajó 0,62 %
+a 1,088 ms. Los dos pases positivos cumplieron
+el límite nativo de 1,333 ms. El cambio de
+signo entre las medianas pareadas deja abierto
+el ahorro atribuible al reúso.
+[Repetición de CR6 positiva](../evidence/rf_d_pilot_fast_r5989.json).
+
+La repetición negativa también conservó los bits.
+La mediana pareada fue 1,008 ms y los picos
+fueron 1,148, 1,342 y 1,420 ms. Falta confirmar
+el plazo en un segundo pase negativo completo.
+La integración y la medición en RackForge siguen
+pendientes. Los pases nativos usaron señal, C2,
+R60, Q25 y CR8 impuestos.
+[Repetición de CR6 negativa](../evidence/rf_d_pilot_fast_r5990.json).

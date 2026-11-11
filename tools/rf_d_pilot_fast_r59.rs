@@ -18,6 +18,8 @@ pub struct State {
     pub volume: [f64; 5], // Q3 base, Q2 base, loudness, collector, reset return.
     pub vca_base: f64,
     pub gradient: Option<f64>,
+    #[cfg(pilot_r59_reuse_cr6)]
+    pub(crate) cr6: Option<[f64; 2]>,
     #[cfg(pilot_r59_predict_base_drift)]
     pub(crate) base_drift_v: f64,
     #[cfg(pilot_r59_junction_predictor)]
@@ -69,7 +71,13 @@ impl FollowerSeed {
     }
 
     #[cfg(pilot_r59_reset_port)]
-    fn reset_port(self, reset_v: f64, receiver_gain: f64) -> Result<ResetPort, Error> {
+    fn reset_port(
+        self,
+        #[cfg(not(pilot_r59_reuse_cr6))] reset_v: f64,
+        receiver_gain: f64,
+        #[cfg(pilot_r59_reuse_cr6)] [current_a, conductance]: [f64; 2],
+    ) -> Result<ResetPort, Error> {
+        #[cfg(not(pilot_r59_reuse_cr6))]
         let (current_a, conductance) =
             crate::contour_ports::germanium(reset_v - self.cathode).map_err(Error::Volume)?;
         let [reset_c2, reset_cathode] = self.reset_response(receiver_gain)?;
@@ -393,11 +401,15 @@ fn advance_inner(
             if mismatch_a > 2e-12 {
                 return Err(Error::Closure);
             }
+            #[cfg(pilot_r59_reuse_cr6)]
+            let cr6 = factor.cr6_at_closure(volume[4], cathode).map_err(Error::Volume)?;
             let state = State {
                 audio: candidate,
                 volume,
                 vca_base: ports.loads_v[0],
                 gradient,
+                #[cfg(pilot_r59_reuse_cr6)]
+                cr6: Some(cr6),
                 #[cfg(pilot_r59_predict_base_drift)]
                 base_drift_v: gradient.map_or(0., |gain| {
                     (ports.loads_v[0] - old.vca_base) - gain * (volume[2] - old.volume[2])
@@ -411,10 +423,12 @@ fn advance_inner(
                             .solve([1. / crate::contour_ports::VOLUME_R16, 0., 0., 0., 0.])
                             .ok()?;
                         let base_response = factor.solve([0., 0., 1. / R59, 0., 0.]).ok()?;
-                        #[cfg(pilot_r59_predict_cathode)]
+                        #[cfg(all(pilot_r59_predict_cathode, not(pilot_r59_reuse_cr6)))]
                         let cathode_response = factor
                             .solve(crate::contour_ports::cathode_rhs(volume[4], cathode).ok()?)
                             .ok()?;
+                        #[cfg(pilot_r59_reuse_cr6)]
+                        let cathode_response = factor.solve([0., 0., 0., 0., cr6[1]]).ok()?;
                         Some(FollowerSeed {
                             c2,
                             cathode,
@@ -435,7 +449,13 @@ fn advance_inner(
                 state
                     .follower
                     .ok_or(Error::Closure)?
-                    .reset_port(volume[4], gain)?
+                    .reset_port(
+                        #[cfg(not(pilot_r59_reuse_cr6))]
+                        volume[4],
+                        gain,
+                        #[cfg(pilot_r59_reuse_cr6)]
+                        cr6,
+                    )?
             };
             return Ok((
                 state,
