@@ -421,3 +421,20 @@ Contrastar los puertos con Radau en ambas ramas y
 las cargas finales con el control de cinco incógnitas
 con 1e−20 C de diferencia máxima. Medir a 128 frames
 con la misma semilla del receptor en cada pareja.
+
+Con `--predict-follower`, conservar del último cierre
+aceptado las respuestas a C2 por R16 y a la base del
+VCA por R59. Si el cátodo del reset sigue fijo,
+avanzar la semilla del seguidor por ΔC2 antes de
+resolver la primera raíz de audio. Usar la respuesta
+a R59 del mismo punto para sembrar el seguidor cargado.
+Las cinco corrientes y correcciones se comprueban al
+resolver con la carga de cada intento de audio.
+
+Sin semilla, con cambio de cátodo o ante un rechazo
+del paso, usar el cierre inicial completo desde el
+último estado aceptado. Medir cuántos cierres
+iniciales se ejecutan, los reintentos completos
+y el coste de renovar las dos respuestas. Contrastar
+J7, ambos retornos y las cargas finales con el
+control de cierre inicial y con Radau.

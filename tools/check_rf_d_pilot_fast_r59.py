@@ -48,6 +48,8 @@ def main():
                         help="attribute native cost using a separate instrumented executable")
     parser.add_argument("--schur-follower", action="store_true",
                         help="eliminate the reset node from the follower Newton system")
+    parser.add_argument("--predict-follower", action="store_true",
+                        help="seed the follower from the preceding accepted load and C2 tangents")
     seed_options = parser.add_mutually_exclusive_group()
     seed_options.add_argument("--feedback-seed", action="store_true",
                               help="seed receiver retries with the new predictor and previous trial feedback")
@@ -80,6 +82,7 @@ def main():
                   feedback_seed=args.feedback_seed,
                   reuse_law=args.reuse_law,
                   schur_follower=args.schur_follower,
+                  predict_follower=args.predict_follower,
                   **sources.fields(), compiler_sha256=sha(Path(COMPILER)), library_sha256=sha(LIB))
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
     flags = [COMPILER, "--edition=2021", "-C", "opt-level=3", "-C", "target-feature=+fma",
@@ -128,11 +131,11 @@ def main():
         for name, line in zip(PROFILE_STAGES, lines[1:-1], strict=True):
             calls, elapsed_ns = map(int, line.split(","))
             stages[name] = dict(calls=calls, elapsed_ns=elapsed_ns, mean_per_block_ns=elapsed_ns / blocks)
-        evaluations, reused, fallbacks = map(int, lines[-1].split(","))
-        assert 0 <= reused <= stages["receiver_root"]["calls"] <= evaluations
+        evaluations, reused, fallbacks, prediction_fallbacks = map(int, lines[-1].split(","))
+        assert 0 <= reused <= min(stages["receiver_root"]["calls"], evaluations)
         return dict(bit_exact=exact, instrumented_timing=instrumented, stages=stages,
                     successful_root_evaluations=evaluations, reused_root_evaluations=reused,
-                    follower_fallbacks=fallbacks)
+                    follower_fallbacks=fallbacks, prediction_fallbacks=prediction_fallbacks)
 
     try:
         isolated, joined = AREA / "r59-isolated.exe", AREA / "r59-joined.exe"
@@ -179,7 +182,8 @@ def main():
         if args.packed_odd:
             cfg.extend(("--cfg", "pilot_receiver_packed_odd"))
         follower_cfg = ["--cfg", "pilot_r59_schur_follower"] if args.schur_follower else []
-        candidate_cfg = [*seed_cfg, *follower_cfg]
+        prediction_cfg = ["--cfg", "pilot_r59_predict_follower"] if args.predict_follower else []
+        candidate_cfg = [*seed_cfg, *follower_cfg, *prediction_cfg]
 
         def build(target, *config):
             run([*flags, *config, source, "--extern", f"rf_d_circuit={LIB}", "-o", target])
@@ -200,20 +204,26 @@ def main():
             build(odd_control, *odd_control_cfg, *candidate_cfg)
         seed_control = AREA / "r59-seed-control.exe"
         if seed_cfg:
-            build(seed_control, *cfg, *follower_cfg)
+            build(seed_control, *cfg, *follower_cfg, *prediction_cfg)
         follower_control = AREA / "r59-follower-control.exe"
         if follower_cfg:
-            build(follower_control, *cfg, *seed_cfg)
+            build(follower_control, *cfg, *seed_cfg, *prediction_cfg)
+        prediction_control = AREA / "r59-prediction-control.exe"
+        if prediction_cfg:
+            build(prediction_control, *cfg, *seed_cfg, *follower_cfg)
         profile_exe = AREA / "r59-profile.exe"
         seed_control_profile = AREA / "r59-seed-control-profile.exe"
         follower_control_profile = AREA / "r59-follower-control-profile.exe"
+        prediction_control_profile = AREA / "r59-prediction-control-profile.exe"
         if args.profile:
             profile_flags = [*cfg, "--cfg", "pilot_r59_profile"]
             build(profile_exe, *profile_flags, *candidate_cfg)
             if seed_cfg:
-                build(seed_control_profile, *profile_flags, *follower_cfg)
+                build(seed_control_profile, *profile_flags, *follower_cfg, *prediction_cfg)
             if follower_cfg:
-                build(follower_control_profile, *profile_flags, *seed_cfg)
+                build(follower_control_profile, *profile_flags, *seed_cfg, *prediction_cfg)
+            if prediction_cfg:
+                build(prediction_control_profile, *profile_flags, *seed_cfg, *follower_cfg)
         header = np.r_[dc[:136], bias[:5]]
 
         def controls(time):
@@ -248,6 +258,8 @@ def main():
             controls_to_compare["seed_control"] = seed_control
         if follower_cfg:
             controls_to_compare["follower_control"] = follower_control
+        if prediction_cfg:
+            controls_to_compare["prediction_control"] = prediction_control
         variants = [(name, target, "cached") for name, target in controls_to_compare.items()]
         variants.extend((("cached", exe, "cached"), ("fresh", exe, "fresh")))
         charge_bytes = CHARGES * 8
@@ -284,6 +296,8 @@ def main():
                 profiles["seed_control_profile"] = (seed_control_profile, report["cases"]["seed_control"])
             if follower_cfg:
                 profiles["follower_control_profile"] = (follower_control_profile, report["cases"]["follower_control"])
+            if prediction_cfg:
+                profiles["prediction_control_profile"] = (prediction_control_profile, report["cases"]["prediction_control"])
             for key, (target, expected) in profiles.items():
                 measured = profile_blocks(target, payload, expected)
                 report[key] = measured
@@ -318,9 +332,10 @@ def main():
             else:
                 difference = assess(outputs["cached"], outputs[name])
                 maximum_charge = float(abs(charges["cached"] - charges[name]).max())
-                report.update(follower_bit_exact=exact, follower_comparison=difference, follower_paired_timing=pairs,
-                              follower_median_ratio=ratio, follower_maximum_charge_difference_c=maximum_charge,
-                              follower_charge_limit_c=CHARGE_LIMIT_C)
+                prefix = name.removesuffix("_control")
+                report.update({f"{prefix}_{key}": value for key, value in
+                               dict(bit_exact=exact, comparison=difference, paired_timing=pairs, median_ratio=ratio,
+                                    maximum_charge_difference_c=maximum_charge, charge_limit_c=CHARGE_LIMIT_C).items()})
                 passed = difference["passed"] and maximum_charge <= CHARGE_LIMIT_C
             report["passed"] = report["passed"] and passed
             report["realtime"] = bool(report["passed"] and report["realtime"] and all(

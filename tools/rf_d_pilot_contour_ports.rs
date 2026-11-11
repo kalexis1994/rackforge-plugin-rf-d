@@ -11,6 +11,8 @@ pub const VOLUME_PORTS: [usize; 3] = [2, 4, 54];
 pub const FILTER_PORTS: [usize; 2] = [34, 55];
 const R24: f64 = 6800.;
 #[cfg(pilot_closed_cv)]
+pub(crate) const VOLUME_R16: f64 = 10_000.;
+#[cfg(pilot_closed_cv)]
 const R27: f64 = 16_900.;
 const R59: f64 = 68_000.;
 const R60: f64 = 680.;
@@ -159,7 +161,7 @@ fn volume_stamp(x: [f64; 4], c2: f64, cv: f64, vca_base: f64) -> Result<Stamp<4>
     let mut s = Stamp::default();
     s.transistor(&x, [0, 3, 1], 1.)?;
     s.transistor(&x, [1, 3, 2], 1.)?;
-    s.load(0, x[0], c2, 10_000.);
+    s.load(0, x[0], c2, VOLUME_R16);
     s.load(2, x[2], cv, R24);
     s.load(2, x[2], vca_base, R59);
     s.load(3, x[3], 9.3, 560.); // R15 supplies both collectors at x2.

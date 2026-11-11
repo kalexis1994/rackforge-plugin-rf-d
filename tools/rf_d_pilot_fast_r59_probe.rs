@@ -82,6 +82,8 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
         volume: [seed[0], seed[1], seed[3], seed[2], seed[4]],
         vca_base: values[32] + values[100],
         gradient: None,
+        #[cfg(pilot_r59_predict_follower)]
+        follower: None,
     };
     let input: Vec<[f64; 4]> = values[141..]
         .chunks_exact(4)
@@ -139,10 +141,11 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             writeln!(
                 out,
-                "{},{},{}",
+                "{},{},{},{}",
                 profile.successful_root_evaluations,
                 profile.reused_root_evaluations,
-                profile.follower_fallbacks
+                profile.follower_fallbacks,
+                profile.prediction_fallbacks
             )?;
         }
     } else {

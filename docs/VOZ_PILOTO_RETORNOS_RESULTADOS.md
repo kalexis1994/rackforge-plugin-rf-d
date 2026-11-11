@@ -2588,3 +2588,35 @@ El candidato se conserva como opción de laboratorio
 `--schur-follower`, con el margen de 1,333 ms
 pendiente en ambas ramas.
 [Rama negativa](../evidence/rf_d_pilot_fast_r5924.json).
+
+
+### Semilla del seguidor desde las tangentes aceptadas
+
+Con el cátodo a 0 V, el predictor evitó los 16.384
+cierres iniciales de cada perfil después del
+calentamiento. Se resolvieron los 32.768 cierres con
+carga en cada rama. Hubo cero reintentos completos y
+cero asignaciones. Se conservó la partición 64/128
+por bits y ambas ramas pasaron Radau.
+
+Frente al control de cierre inicial, la mayor
+diferencia en J7 fue 1,01e−16 V, la mayor diferencia
+de corriente R59 fue 2,45e−19 A y la mayor diferencia
+de carga final fue 5,99e−21 C. R60 coincidió por bits.
+La rama negativa conservó por bits las cargas finales.
+
+En positivo, con la reducción de cuatro incógnitas y
+el reúso de la ley del receptor, el predictor redujo
+la mediana pareada 8,96 %. El primer lote dio una
+mediana de 1,228 ms y el pico entre los nueve lotes
+fue 1,649 ms.
+[Predictor positivo](../evidence/rf_d_pilot_fast_r5925.json).
+
+En negativo, con la reducción de cuatro incógnitas
+y el predictor de feedback del receptor, la mediana
+pareada bajó 11,28 %. El primer lote dio 1,050 ms y
+el pico entre los nueve fue 1,434 ms. El margen de
+1,333 ms a 128 frames sigue abierto en el banco
+nativo. El cátodo variable usa el cierre inicial y
+queda por contrastar con el biestable acoplado.
+[Predictor negativo](../evidence/rf_d_pilot_fast_r5926.json).

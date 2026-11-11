@@ -14,6 +14,17 @@ pub struct State {
     pub volume: [f64; 5], // Q3 base, Q2 base, loudness, collector, reset return.
     pub vca_base: f64,
     pub gradient: Option<f64>,
+    #[cfg(pilot_r59_predict_follower)]
+    pub follower: Option<FollowerSeed>,
+}
+
+#[cfg(pilot_r59_predict_follower)]
+#[derive(Clone, Copy)]
+pub struct FollowerSeed {
+    c2: f64,
+    cathode: f64,
+    c2_response: [f64; 5],
+    base_response: [f64; 5],
 }
 
 pub struct Frame {
@@ -39,6 +50,7 @@ pub struct Profile {
     pub successful_root_evaluations: usize,
     pub reused_root_evaluations: usize,
     pub follower_fallbacks: usize,
+    pub prediction_fallbacks: usize,
 }
 
 macro_rules! measure {
@@ -59,23 +71,67 @@ macro_rules! measure {
 
 pub fn advance(
     old: State,
-    [signal, c2, cathode, filter]: [f64; 4],
+    drive: [f64; 4],
     refresh: bool,
     #[cfg(pilot_r59_profile)] profile: &mut Profile,
 ) -> Result<(State, Frame), Error> {
-    let (mut volume, factor) = measure!(
-        profile,
-        0,
-        close_volume(old.volume, c2, cathode, old.vca_base)
-    )
-    .map_err(Error::Volume)?;
-    #[cfg(all(pilot_r59_profile, pilot_r59_schur_follower))]
-    {
-        profile.follower_fallbacks +=
-            usize::from(matches!(factor, crate::contour_ports::R59Factor::Full(_)));
+    #[cfg(pilot_r59_predict_follower)]
+    if let Some(seed) = old.follower.filter(|seed| seed.cathode == drive[2]) {
+        let predicted =
+            std::array::from_fn(|i| old.volume[i] + (drive[1] - seed.c2) * seed.c2_response[i]);
+        if let Ok(result) = advance_inner(
+            old,
+            drive,
+            refresh,
+            Some((predicted, seed.base_response)),
+            #[cfg(pilot_r59_profile)]
+            profile,
+        ) {
+            return Ok(result);
+        }
+        #[cfg(pilot_r59_profile)]
+        {
+            profile.prediction_fallbacks += 1;
+        }
     }
-    let mut volume_response =
-        measure!(profile, 4, factor.solve([0., 0., 1. / R59, 0., 0.])).map_err(Error::Volume)?;
+    advance_inner(
+        old,
+        drive,
+        refresh,
+        #[cfg(pilot_r59_predict_follower)]
+        None,
+        #[cfg(pilot_r59_profile)]
+        profile,
+    )
+}
+
+fn advance_inner(
+    old: State,
+    [signal, c2, cathode, filter]: [f64; 4],
+    refresh: bool,
+    #[cfg(pilot_r59_predict_follower)] prediction: Option<([f64; 5], [f64; 5])>,
+    #[cfg(pilot_r59_profile)] profile: &mut Profile,
+) -> Result<(State, Frame), Error> {
+    let mut initial_follower = || {
+        let (volume, factor) = measure!(
+            profile,
+            0,
+            close_volume(old.volume, c2, cathode, old.vca_base)
+        )
+        .map_err(Error::Volume)?;
+        #[cfg(all(pilot_r59_profile, pilot_r59_schur_follower))]
+        {
+            profile.follower_fallbacks +=
+                usize::from(matches!(factor, crate::contour_ports::R59Factor::Full(_)));
+        }
+        let response = measure!(profile, 4, factor.solve([0., 0., 1. / R59, 0., 0.]))
+            .map_err(Error::Volume)?;
+        Ok::<_, Error>((volume, response))
+    };
+    #[cfg(pilot_r59_predict_follower)]
+    let (mut volume, mut volume_response) = prediction.map_or_else(&mut initial_follower, Ok)?;
+    #[cfg(not(pilot_r59_predict_follower))]
+    let (mut volume, mut volume_response) = initial_follower()?;
     let mut volume_base = old.vca_base;
     let mut source = volume[2];
     let mut gradient = if refresh { None } else { old.gradient };
@@ -154,6 +210,21 @@ pub fn advance(
                 volume,
                 vca_base: ports.loads_v[0],
                 gradient,
+                #[cfg(pilot_r59_predict_follower)]
+                follower: measure!(profile, 4, {
+                    let c2_response =
+                        factor.solve([1. / crate::contour_ports::VOLUME_R16, 0., 0., 0., 0.]);
+                    let base_response = factor.solve([0., 0., 1. / R59, 0., 0.]);
+                    c2_response
+                        .ok()
+                        .zip(base_response.ok())
+                        .map(|(c2_response, base_response)| FollowerSeed {
+                            c2,
+                            cathode,
+                            c2_response,
+                            base_response,
+                        })
+                }),
             };
             return Ok((
                 state,
