@@ -3163,3 +3163,34 @@ La mediana pareada subió 0,51 % y el pico fue
 2,552 ms. Se conserva la semilla previa en esta
 rama. Ambos pases registraron cero asignaciones.
 [Base del VCA negativa](../evidence/rf_d_pilot_fast_r5979.json).
+
+### Extrapolación de la realimentación de junturas
+
+En positivo, con la predicción de base del VCA,
+se conservaron 256 raíces por bloque. Las
+evaluaciones del residual bajaron de 957 a 768.
+La diferencia de carga final fue 1,07e−21 C
+frente a la reserva de 1e−20 C. Pasaron Radau,
+la auditoría nodal, los cruces y la partición.
+
+En la primera tanda, la mediana pareada bajó
+17,00 %. El máximo de los tres lotes del
+candidato fue 35,356 ms y el control llegó a
+40,554 ms en los lotes pareados.
+[Primer contraste positivo](../evidence/rf_d_pilot_fast_r5980.json).
+
+En negativo, las evaluaciones bajaron de 768 a
+766, con 256 raíces en ambos casos. La diferencia
+de carga final fue 3,31e−24 C. Pasaron las
+comprobaciones eléctricas y la mediana pareada
+subió 0,92 %. Para esta rama se conserva la
+semilla previa.
+[Contraste negativo](../evidence/rf_d_pilot_fast_r5981.json).
+
+La repetición positiva reprodujo la trayectoria
+y los diagnósticos del primer pase por bits.
+La mediana pareada bajó 14,24 % a 1,143 ms.
+Los picos de los tres lotes fueron 1,315, 1,342 y
+1,702 ms. Hubo cero asignaciones. El máximo
+sigue sobre 1,333 ms a 128 frames.
+[Repetición positiva](../evidence/rf_d_pilot_fast_r5982.json).

@@ -342,8 +342,14 @@ fn advance_inner(
             profile.r59_projection_error = profile.r59_projection_error.max(error);
             profile.r59_direct_residual = profile.r59_direct_residual.max(direct_residual);
         }
+        let finish = || {
+            root.finish(
+                #[cfg(pilot_receiver_feedback_prediction)]
+                &old.audio,
+            )
+        };
         #[cfg(pilot_r59_eager)]
-        let completed = measure!(profile, 6, root.finish()).map_err(Error::Audio)?;
+        let completed = measure!(profile, 6, finish()).map_err(Error::Audio)?;
         if refresh_tangent {
             #[cfg(not(pilot_r59_junction_predictor))]
             {
@@ -381,7 +387,7 @@ fn advance_inner(
             ((volume[2] - vca_base) / R59 - (root.r59_source_v() - vca_base) / R59).abs();
         if error <= CLOSURE_V && mismatch_a <= 2e-12 {
             #[cfg(not(pilot_r59_eager))]
-            let completed = measure!(profile, 6, root.finish()).map_err(Error::Audio)?;
+            let completed = measure!(profile, 6, finish()).map_err(Error::Audio)?;
             let (candidate, ports) = completed;
             let mismatch_a = ((volume[2] - ports.loads_v[0]) / R59 - ports.returns_a[0]).abs();
             if mismatch_a > 2e-12 {

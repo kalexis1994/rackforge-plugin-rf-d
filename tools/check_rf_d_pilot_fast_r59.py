@@ -245,6 +245,8 @@ def main():
                         help="reuse the linear junction predictor for same-history R59 retries")
     parser.add_argument("--predict-r59-base-drift", action="store_true",
                         help="extrapolate the VCA base shift after removing the R59 source response")
+    parser.add_argument("--predict-receiver-feedback", action="store_true",
+                        help="extrapolate the previous nonlinear junction feedback on a cold root")
     parser.add_argument("--predict-r59-affine", action="store_true",
                         help="seed R59 by solving the follower with a local affine receiver response")
     parser.add_argument("--predict-r59-junctions", action="store_true",
@@ -285,6 +287,8 @@ def main():
         args.profile = True
     if args.predict_r59_base_drift and not args.predict_r59_affine:
         parser.error("--predict-r59-base-drift requires --predict-r59-affine")
+    if args.predict_receiver_feedback and not args.dynamic_q15:
+        parser.error("--predict-receiver-feedback requires --dynamic-q15")
     if args.dynamic_q15:
         args.schur_follower = args.predict_follower = args.predict_cathode = args.tight_follower = True
     if args.packed_odd and not args.packed_products:
@@ -335,6 +339,7 @@ def main():
                   reuse_q15_endpoint=args.reuse_q15_endpoint,
                   project_r59_history=args.project_r59_history,
                   predict_r59_base_drift=args.predict_r59_base_drift,
+                  predict_receiver_feedback=args.predict_receiver_feedback,
                   predict_r59_affine=args.predict_r59_affine,
                   predict_r59_junctions=args.predict_r59_junctions,
                   pack_receiver_law=args.pack_receiver_law,
@@ -489,6 +494,8 @@ def main():
                 (args.reuse_q15_endpoint, "pilot_r59_reuse_q15_endpoint", "q15_reused_endpoint_comparison"),
                 (args.project_r59_history, "pilot_r59_project_history", "r59_projected_history_comparison"),
                 (args.predict_r59_base_drift, "pilot_r59_predict_base_drift", "r59_base_drift_comparison"),
+                (args.predict_receiver_feedback, "pilot_receiver_feedback_prediction",
+                 "receiver_feedback_prediction_comparison"),
             )
             enabled = [(flag, key) for selected, flag, key in refinements if selected]
             gain_control = None

@@ -759,3 +759,14 @@ cierre cargado conservan sus ecuaciones completas.
 Comparar contra el mismo cierre afín, medir
 cuántos intentos de R59 quedan y exigir la
 reserva de cargas del mismo reloj.
+
+Con `--predict-receiver-feedback`, guardar al
+aceptar el paso la diferencia de P·defecto frente
+al estado anterior, en coordenadas de juntura.
+En el primer intento del receptor, extrapolar
+P·defecto una diferencia más y usarlo sólo en
+la semilla. El cierre calcula todas las leyes y
+el residual completo. Ante error, reintentar
+con la semilla original y la misma historia.
+Comparar el número de evaluaciones del residual,
+el tiempo y la reserva del mismo reloj.

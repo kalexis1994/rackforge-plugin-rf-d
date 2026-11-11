@@ -61,6 +61,8 @@ pub struct State {
     defects: [f64; JUNCTIONS],
     #[cfg(pilot_block_roots)]
     feedback: [f64; JUNCTIONS],
+    #[cfg(pilot_receiver_feedback_prediction)]
+    feedback_delta: Option<[f64; JUNCTIONS]>,
 }
 
 #[derive(Clone, Copy)]
@@ -181,81 +183,91 @@ impl Prepared {
             _ => std::array::from_fn(|i| predictor[i] - previous[i]),
         };
         #[cfg(pilot_r59_junction_predictor)]
-        let mut z = projected.unwrap_or_else(initial);
+        let z = projected.unwrap_or_else(initial);
         #[cfg(not(pilot_r59_junction_predictor))]
-        let mut z = initial();
+        let z = initial();
         #[cfg(pilot_r59_reuse_law)]
         let reusable = prior;
         #[cfg(all(pilot_r59_reuse_law, pilot_r59_junction_predictor))]
         let reusable = reusable.filter(|_| projected.is_none());
-        for _iteration in 0..12 {
-            let evaluate = || {
-                let (defects, slope) = law(z)?;
-                Ok::<_, Error>((defects, slope, product(&P, &defects)))
-            };
-            #[cfg(pilot_r59_reuse_law)]
-            let (defects, slope, feedback) = match (_iteration, reusable) {
-                (0, Some(trial)) => (trial.defects, trial.slope, trial.feedback),
-                _ => evaluate()?,
-            };
-            #[cfg(not(pilot_r59_reuse_law))]
-            let (defects, slope, feedback) = evaluate()?;
-            let residual: [f64; JUNCTIONS] =
-                std::array::from_fn(|i| z[i] - predictor[i] + feedback[i]);
-            if residual.iter().all(|x| x.abs() <= 2e-13) {
-                #[cfg(all(pilot_r59_profile, pilot_r59_project_history))]
-                let history_audit = _projected_history.then(|| {
-                    let direct = Self::junction_predictor(&base, &input);
-                    let mut max_error: f64 = 0.;
-                    let mut max_residual: f64 = 0.;
-                    for i in 0..JUNCTIONS {
-                        max_error = max_error.max((predictor[i] - direct[i]).abs());
-                        max_residual = max_residual.max((z[i] - direct[i] + feedback[i]).abs());
-                    }
-                    [max_error, max_residual]
-                });
-                return Ok(Root {
-                    base,
-                    input,
-                    defects,
-                    #[cfg(pilot_block_roots)]
-                    feedback,
-                    #[cfg(pilot_receiver_ports)]
-                    junction: z,
-                    #[cfg(pilot_r59_reuse_law)]
-                    slope,
-                    #[cfg(pilot_r59_project_history)]
-                    projection,
+        let close = |mut z: [f64; JUNCTIONS]| {
+            for _iteration in 0..12 {
+                let evaluate = || {
+                    let (defects, slope) = law(z)?;
+                    Ok::<_, Error>((defects, slope, product(&P, &defects)))
+                };
+                #[cfg(pilot_r59_reuse_law)]
+                let (defects, slope, feedback) = match (_iteration, reusable) {
+                    (0, Some(trial)) => (trial.defects, trial.slope, trial.feedback),
+                    _ => evaluate()?,
+                };
+                #[cfg(not(pilot_r59_reuse_law))]
+                let (defects, slope, feedback) = evaluate()?;
+                let residual: [f64; JUNCTIONS] =
+                    std::array::from_fn(|i| z[i] - predictor[i] + feedback[i]);
+                if residual.iter().all(|x| x.abs() <= 2e-13) {
                     #[cfg(all(pilot_r59_profile, pilot_r59_project_history))]
-                    history_audit,
-                    #[cfg(pilot_r59_profile)]
-                    evaluations: _iteration + 1,
-                    #[cfg(all(pilot_r59_profile, pilot_r59_reuse_law))]
-                    reused_evaluation: reusable.is_some(),
-                });
-            }
-            // Same modified-Newton preconditioner as the original pilot.
-            #[cfg(not(pilot_block_roots))]
-            let even = full_direction(&residual, &slope)?;
-            #[cfg(pilot_block_roots)]
-            let even = if _iteration < 2 {
-                block_direction(&residual, &slope).or_else(|_| full_direction(&residual, &slope))?
-            } else {
-                full_direction(&residual, &slope)?
-            };
-            #[cfg(pilot_receiver_packed_odd)]
-            packed::apply_direction(&mut z, &residual, &slope, &even);
-            #[cfg(not(pilot_receiver_packed_odd))]
-            for i in 0..JUNCTIONS / 2 {
-                let mut odd = residual[2 * i + 1];
-                for j in 0..JUNCTIONS / 2 {
-                    odd -= map::P[2 * i + 1][2 * j] * slope[2 * j] * even[j];
+                    let history_audit = _projected_history.then(|| {
+                        let direct = Self::junction_predictor(&base, &input);
+                        let mut max_error: f64 = 0.;
+                        let mut max_residual: f64 = 0.;
+                        for i in 0..JUNCTIONS {
+                            max_error = max_error.max((predictor[i] - direct[i]).abs());
+                            max_residual = max_residual.max((z[i] - direct[i] + feedback[i]).abs());
+                        }
+                        [max_error, max_residual]
+                    });
+                    return Ok(Root {
+                        base,
+                        input,
+                        defects,
+                        #[cfg(pilot_block_roots)]
+                        feedback,
+                        #[cfg(pilot_receiver_ports)]
+                        junction: z,
+                        #[cfg(pilot_r59_reuse_law)]
+                        slope,
+                        #[cfg(pilot_r59_project_history)]
+                        projection,
+                        #[cfg(all(pilot_r59_profile, pilot_r59_project_history))]
+                        history_audit,
+                        #[cfg(pilot_r59_profile)]
+                        evaluations: _iteration + 1,
+                        #[cfg(all(pilot_r59_profile, pilot_r59_reuse_law))]
+                        reused_evaluation: reusable.is_some(),
+                    });
                 }
-                z[2 * i] -= even[i];
-                z[2 * i + 1] -= odd;
+                // Same modified-Newton preconditioner as the original pilot.
+                #[cfg(not(pilot_block_roots))]
+                let even = full_direction(&residual, &slope)?;
+                #[cfg(pilot_block_roots)]
+                let even = if _iteration < 2 {
+                    block_direction(&residual, &slope).or_else(|_| full_direction(&residual, &slope))?
+                } else {
+                    full_direction(&residual, &slope)?
+                };
+                #[cfg(pilot_receiver_packed_odd)]
+                packed::apply_direction(&mut z, &residual, &slope, &even);
+                #[cfg(not(pilot_receiver_packed_odd))]
+                for i in 0..JUNCTIONS / 2 {
+                    let mut odd = residual[2 * i + 1];
+                    for j in 0..JUNCTIONS / 2 {
+                        odd -= map::P[2 * i + 1][2 * j] * slope[2 * j] * even[j];
+                    }
+                    z[2 * i] -= even[i];
+                    z[2 * i + 1] -= odd;
+                }
+            }
+            Err(Error::RootBudget)
+        };
+        #[cfg(pilot_receiver_feedback_prediction)]
+        if let Some(delta) = state.feedback_delta.as_ref().filter(|_| prior.is_none()) {
+            let predicted = std::array::from_fn(|i| z[i] - delta[i]);
+            if let Ok(root) = close(predicted) {
+                return Ok(root);
             }
         }
-        Err(Error::RootBudget)
+        close(z)
     }
 }
 
@@ -343,7 +355,10 @@ impl Root {
         Ok((load_jacobian, directions))
     }
 
-    pub(crate) fn finish(&self) -> Result<(State, Ports), Error> {
+    pub(crate) fn finish(
+        &self,
+        #[cfg(pilot_receiver_feedback_prediction)] old: &State,
+    ) -> Result<(State, Ports), Error> {
         let charge = product(&N1, &self.defects);
         let q: [f64; CHARGES] = std::array::from_fn(|i| self.base[i] + charge[i]);
         #[cfg(pilot_receiver_packed)]
@@ -360,6 +375,8 @@ impl Root {
             defects: self.defects,
             #[cfg(pilot_block_roots)]
             feedback: self.feedback,
+            #[cfg(pilot_receiver_feedback_prediction)]
+            feedback_delta: Some(std::array::from_fn(|i| self.feedback[i] - old.feedback[i])),
         };
         let ports = Ports {
             j7_v,
@@ -388,7 +405,10 @@ pub fn trial_with_load_tangent(old: State, signal: f64, drive: Drive) -> Result<
         #[cfg(pilot_r59_junction_predictor)]
         None,
     )?;
-    let (state, ports) = root.finish()?;
+    let (state, ports) = root.finish(
+        #[cfg(pilot_receiver_feedback_prediction)]
+        &old,
+    )?;
     let load_jacobian = root.load_jacobian()?;
     Ok(Trial {
         state,
@@ -402,8 +422,15 @@ impl State {
         if index != 1 {
             return Err(Error::Input);
         }
-        Ok(Self { q: [0.; CHARGES], input: [0.; 3], defects: [0.; JUNCTIONS],
-                  #[cfg(pilot_block_roots)] feedback: [0.; JUNCTIONS] })
+        Ok(Self {
+            q: [0.; CHARGES],
+            input: [0.; 3],
+            defects: [0.; JUNCTIONS],
+            #[cfg(pilot_block_roots)]
+            feedback: [0.; JUNCTIONS],
+            #[cfg(pilot_receiver_feedback_prediction)]
+            feedback_delta: None,
+        })
     }
 
     #[cfg(all(pilot_split_returns, pilot_receiver_handoff))]
@@ -438,6 +465,8 @@ impl State {
             input: [signal, drive.volume_delta_v, drive.filter_delta_v],
             defects,
             #[cfg(pilot_block_roots)] feedback,
+            #[cfg(pilot_receiver_feedback_prediction)]
+            feedback_delta: None,
         })
     }
 
@@ -589,7 +618,10 @@ pub fn step(state: &mut State, signal: f64, drive: Drive) -> Result<Ports, Error
             #[cfg(pilot_r59_junction_predictor)]
             None,
         )?
-        .finish()?;
+        .finish(
+            #[cfg(pilot_receiver_feedback_prediction)]
+            state,
+        )?;
     *state = next;
     Ok(ports)
 }
