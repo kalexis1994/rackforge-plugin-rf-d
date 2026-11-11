@@ -39,7 +39,11 @@ def main():
                         help="use the four-row layout and verify it against the scalar control")
     parser.add_argument("--compare-eager", action="store_true",
                         help="compare with full receiver reconstruction at every closure attempt")
+    parser.add_argument("--packed-odd", action="store_true",
+                        help="group the odd Newton rows and compare with the original correction")
     args = parser.parse_args()
+    if args.packed_odd and not args.packed_products:
+        parser.error("--packed-odd requires --packed-products")
     negative = args.branch == "negative"
     center, limits = (CLOSED, CLOSED_RANGE) if negative else (OPEN, OPEN_RANGE)
     stimulus = off_drives if negative else drives
@@ -60,6 +64,7 @@ def main():
                   cathode_v=CATHODE_V, receiver_center_v=center, receiver_range_v=limits,
                   shared_port_exp=args.shared_port_exp,
                   packed_products=args.packed_products,
+                  packed_odd=args.packed_odd,
                   **sources.fields(), compiler_sha256=sha(Path(COMPILER)), library_sha256=sha(LIB))
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
     flags = [COMPILER, "--edition=2021", "-C", "opt-level=3", "-C", "target-feature=+fma",
@@ -130,6 +135,9 @@ def main():
         control_cfg = cfg.copy()
         if args.packed_products:
             cfg.extend(("--cfg", "pilot_receiver_packed"))
+        odd_control_cfg = cfg.copy()
+        if args.packed_odd:
+            cfg.extend(("--cfg", "pilot_receiver_packed_odd"))
         run([*flags, *cfg, source, "--extern", f"rf_d_circuit={LIB}", "-o", exe])
         if args.shared_port_exp:
             unit = AREA / "r59-port-tests.exe"
@@ -141,6 +149,9 @@ def main():
         eager = AREA / "r59-eager.exe"
         if args.compare_eager:
             run([*flags, *cfg, "--cfg", "pilot_r59_eager", source, "--extern", f"rf_d_circuit={LIB}", "-o", eager])
+        odd_control = AREA / "r59-odd-control.exe"
+        if args.packed_odd:
+            run([*flags, *odd_control_cfg, source, "--extern", f"rf_d_circuit={LIB}", "-o", odd_control])
         header = np.r_[dc[:136], bias[:5]]
 
         def controls(time):
@@ -169,6 +180,8 @@ def main():
             controls_to_compare["scalar"] = control
         if args.compare_eager:
             controls_to_compare["eager"] = eager
+        if args.packed_odd:
+            controls_to_compare["odd_control"] = odd_control
         variants = [(name, target, "cached") for name, target in controls_to_compare.items()]
         variants.extend((("cached", exe, "cached"), ("fresh", exe, "fresh")))
         charge_bytes = CHARGES * 8
@@ -211,8 +224,10 @@ def main():
             if name == "scalar":
                 report.update(packed_bit_exact=exact, packed_vs_scalar=assess(outputs["cached"], outputs[name]),
                               paired_timing=pairs, paired_median_ratio=ratio)
-            else:
+            elif name == "eager":
                 report.update(eager_bit_exact=exact, eager_paired_timing=pairs, eager_median_ratio=ratio)
+            else:
+                report.update(odd_bit_exact=exact, odd_paired_timing=pairs, odd_median_ratio=ratio)
             report["passed"] = report["passed"] and exact
             report["realtime"] = bool(report["passed"] and report["realtime"] and all(
                 pair["cached"]["max_ns"] <= BUDGET_NS and pair["cached"]["allocations"] == 0

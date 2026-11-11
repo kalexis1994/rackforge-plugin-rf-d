@@ -362,3 +362,13 @@ diagnósticos y 17 cargas finales. Aplicar la misma
 comparación al control escalar y a la partición en
 bloques de 64. Alternar el orden de cada pareja de
 mediciones y evaluar el margen con todos los picos.
+
+Con `--packed-odd`, aplicar la corrección impar de Newton
+en grupos de cuatro filas independientes, como en el
+motor WASM de recuperación. Para cada fila, restar desde
+el residual los mismos productos P·pendiente·dirección
+par, en el mismo orden y con dos multiplicaciones.
+Conservar los pivotes pares, los límites del residual
+y el fallback. Comparar ambas ramas con el control de
+corrección impar original y las mismas matrices agrupadas,
+con identidad de trayectoria, diagnósticos y cargas finales.

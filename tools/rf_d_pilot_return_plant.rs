@@ -120,6 +120,9 @@ impl Prepared {
             } else {
                 full_direction(&residual, &slope)?
             };
+            #[cfg(pilot_receiver_packed_odd)]
+            packed::apply_direction(&mut z, &residual, &slope, &even);
+            #[cfg(not(pilot_receiver_packed_odd))]
             for i in 0..JUNCTIONS / 2 {
                 let mut odd = residual[2 * i + 1];
                 for j in 0..JUNCTIONS / 2 {

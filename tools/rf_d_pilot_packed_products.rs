@@ -33,6 +33,51 @@ const XQ: Matrix<6, CHARGES, 2> = Matrix::new(&map::XQ);
 const XU: Matrix<6, 3, 2> = Matrix::new(&map::XU);
 const XD: Matrix<6, JUNCTIONS, 2> = Matrix::new(&map::XD);
 
+#[cfg(pilot_receiver_packed_odd)]
+const EVEN: usize = JUNCTIONS / 2;
+#[cfg(pilot_receiver_packed_odd)]
+const ODD_GROUPS: usize = (EVEN + 3) / 4;
+#[cfg(pilot_receiver_packed_odd)]
+const ODD: Matrix<EVEN, EVEN, ODD_GROUPS> = {
+    let mut rows = [[0.; EVEN]; EVEN];
+    let mut row = 0;
+    while row < EVEN {
+        let mut column = 0;
+        while column < EVEN {
+            rows[row][column] = map::P[2 * row + 1][2 * column];
+            column += 1;
+        }
+        row += 1;
+    }
+    Matrix::new(&rows)
+};
+
+#[cfg(pilot_receiver_packed_odd)]
+#[inline]
+pub(super) fn apply_direction(
+    junction: &mut [f64; JUNCTIONS],
+    residual: &[f64; JUNCTIONS],
+    slope: &[f64; JUNCTIONS],
+    even: &[f64; EVEN],
+) {
+    for (group, coefficients) in ODD.groups.iter().enumerate() {
+        let start = 4 * group;
+        let mut odd: [f64; 4] = std::array::from_fn(|lane| {
+            residual.get(2 * (start + lane) + 1).copied().unwrap_or(0.)
+        });
+        for (column, coefficient) in coefficients.iter().enumerate() {
+            for lane in 0..4 {
+                odd[lane] -= coefficient[lane] * slope[2 * column] * even[column];
+            }
+        }
+        for (lane, correction) in odd.into_iter().enumerate().take(EVEN - start) {
+            let row = start + lane;
+            junction[2 * row] -= even[row];
+            junction[2 * row + 1] -= correction;
+        }
+    }
+}
+
 pub(super) fn readout(
     base: &[f64; CHARGES],
     input: &[f64; 3],

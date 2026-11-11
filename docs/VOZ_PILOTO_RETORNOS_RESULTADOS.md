@@ -2463,3 +2463,22 @@ contraste independiente. El mayor error de la
 tangente frente a Radau fue 5,58e−9 V/V.
 [Regresión de la voz](../evidence/rf_d_pilot_returns18.json).
 [Estado cargado y tangentes](../evidence/rf_d_pilot_receiver_handoff05.json).
+
+
+### Agrupado de la corrección impar de Newton
+
+El candidato agrupó cuatro filas impares, con el mismo
+residual inicial y el mismo orden de multiplicaciones
+y restas por fila. En ambas ramas coincidieron por
+bits las salidas, los diagnósticos y las 17 cargas
+finales. Pasaron la partición 64/128 y el contraste
+contra Radau.
+
+La mediana pareada subió 3,02 % en positivo y bajó
+0,66 % en negativo. Los picos de los cinco lotes por
+rama fueron 1,759 ms y 1,750 ms, respectivamente.
+El banco conserva la corrección original por defecto
+y el ensayo agrupado queda reproducible con
+`--packed-odd`.
+[Corrección impar positiva](../evidence/rf_d_pilot_fast_r5912.json).
+[Corrección impar negativa](../evidence/rf_d_pilot_fast_r5913.json).
