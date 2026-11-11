@@ -2978,3 +2978,12 @@ El plazo de 1,333 ms a 128 frames sigue abierto
 en el banco nativo. Las medidas corresponden al
 receptor con Q15/CR6 y R59 cerrados, con C2, R60,
 Q25 y CR8 impuestos.
+
+La corrección impar agrupada se contrastó en
+positivo con los productos agrupados en ambos
+binarios. Conservó por bits la trayectoria y la
+carga, con cero asignaciones. La mediana pareada
+subió un 1,71 % y el pico llegó a 2,975 ms. Para
+el candidato positivo se conservó el agrupado
+de productos con la corrección impar original.
+[Corrección impar con Q15](../evidence/rf_d_pilot_fast_r5963.json).
