@@ -639,3 +639,18 @@ la reserva de carga del receptor en 1e−20 C y
 verificar ambos cierres. Repetir el contraste afín
 tras los rechazos de la carga positiva a 1e−10 V y
 2e−12 V para comprobar el efecto de la convergencia.
+
+Con `--predict-r59-junctions`, resolver la columna
+de R59 de la tangente existente del receptor.
+Resolver (I+P·diag(pendiente))·dz/dV_R59 =
+ZH·U1[:,R59]+ZU[:,R59] y guardar la dirección en
+V/V junto con la ganancia de base del VCA. Cuando
+un reintento comparte la historia FOH, la señal y
+R60 de la raíz provisional, iniciar en esa raíz
+más la dirección por el cambio de tensión en R59.
+Evaluar la ley en las junturas proyectadas y
+comprobar el residual completo de 2e−13 V. Ante
+fallo del predictor, conservar el arranque desde
+la historia aceptada. Comparar con el mismo cierre
+de R59, la misma reserva de carga y los mismos
+reintentos de Q15.

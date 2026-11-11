@@ -3,6 +3,8 @@ use crate::{pilot_law::{law, solve}, return_maps as map};
 pub use crate::pilot_law::Error;
 const JUNCTIONS: usize = map::IEXP.len();
 const CHARGES: usize = map::F.len();
+#[cfg(pilot_r59_junction_predictor)]
+pub(crate) type JunctionDirection = [f64; JUNCTIONS];
 #[cfg(not(any(pilot_wide_returns, pilot_split_returns)))]
 pub const DRIVE_RANGE: [f64; 2] = [0.015, 0.001];
 #[cfg(pilot_wide_returns)]
@@ -103,6 +105,7 @@ impl Prepared {
         signal: f64,
         drive: Drive,
         prior: Option<&Root>,
+        #[cfg(pilot_r59_junction_predictor)] direction: Option<&JunctionDirection>,
     ) -> Result<Root, Error> {
         let state = &self.old;
         let (base, input) = self.endpoint_terms(signal, drive)?;
@@ -111,20 +114,33 @@ impl Prepared {
         let previous = product(&P, &state.defects);
         #[cfg(pilot_block_roots)]
         let previous = state.feedback;
-        let mut z = match prior {
+        #[cfg(pilot_r59_junction_predictor)]
+        let projected = prior.zip(direction).and_then(|(trial, direction)| {
+            let delta = input[1] - trial.input[1];
+            (delta != 0.).then(|| std::array::from_fn(|i| trial.junction[i] + direction[i] * delta))
+        });
+        let initial = || match prior {
             #[cfg(all(pilot_receiver_ports, not(pilot_r59_feedback_seed)))]
             Some(trial) => trial.junction,
             #[cfg(pilot_r59_feedback_seed)]
             Some(trial) => std::array::from_fn(|i| predictor[i] - trial.feedback[i]),
             _ => std::array::from_fn(|i| predictor[i] - previous[i]),
         };
+        #[cfg(pilot_r59_junction_predictor)]
+        let mut z = projected.unwrap_or_else(initial);
+        #[cfg(not(pilot_r59_junction_predictor))]
+        let mut z = initial();
+        #[cfg(pilot_r59_reuse_law)]
+        let reusable = prior;
+        #[cfg(all(pilot_r59_reuse_law, pilot_r59_junction_predictor))]
+        let reusable = reusable.filter(|_| projected.is_none());
         for _iteration in 0..12 {
             let evaluate = || {
                 let (defects, slope) = law(z)?;
                 Ok::<_, Error>((defects, slope, product(&P, &defects)))
             };
             #[cfg(pilot_r59_reuse_law)]
-            let (defects, slope, feedback) = match (_iteration, prior) {
+            let (defects, slope, feedback) = match (_iteration, reusable) {
                 (0, Some(trial)) => (trial.defects, trial.slope, trial.feedback),
                 _ => evaluate()?,
             };
@@ -146,7 +162,7 @@ impl Prepared {
                     #[cfg(pilot_r59_profile)]
                     evaluations: _iteration + 1,
                     #[cfg(all(pilot_r59_profile, pilot_r59_reuse_law))]
-                    reused_evaluation: prior.is_some(),
+                    reused_evaluation: reusable.is_some(),
                 });
             }
             // Same modified-Newton preconditioner as the original pilot.
@@ -212,19 +228,34 @@ impl Root {
 
     #[cfg(pilot_receiver_ports)]
     pub(crate) fn load_jacobian(&self) -> Result<[[f64; 2]; 2], Error> {
+        self.load_columns::<2>().map(|(loads, _)| loads)
+    }
+
+    #[cfg(pilot_r59_junction_predictor)]
+    pub(crate) fn r59_tangent(&self) -> Result<(f64, JunctionDirection), Error> {
+        self.load_columns::<1>()
+            .map(|(loads, direction)| (loads[0][0], direction[0]))
+    }
+
+    #[cfg(pilot_receiver_ports)]
+    fn load_columns<const COLUMNS: usize>(
+        &self,
+    ) -> Result<([[f64; COLUMNS]; 2], [[f64; JUNCTIONS]; COLUMNS]), Error> {
         let (_, slope) = law(self.junction)?;
         let jacobian = std::array::from_fn(|i| {
             std::array::from_fn(|j| f64::from(i == j) + map::P[i][j] * slope[j])
         });
         let factor =
             crate::port_lu::Lu::<JUNCTIONS>::factor(jacobian).map_err(|_| Error::Singular)?;
-        let mut load_jacobian = [[0.; 2]; 2];
-        for column in 0..2 {
+        let mut load_jacobian = [[0.; COLUMNS]; 2];
+        let mut directions = [[0.; JUNCTIONS]; COLUMNS];
+        for (column, junction_direction) in directions.iter_mut().enumerate() {
             let input = column + 1;
             let charge_drive: [f64; CHARGES] = std::array::from_fn(|i| map::U1[i][input]);
             let right =
                 std::array::from_fn(|i| dot(&map::ZH[i], &charge_drive) + map::ZU[i][input]);
             let direction = factor.solve(right).map_err(|_| Error::Singular)?;
+            *junction_direction = direction;
             let defect_drive = std::array::from_fn(|i| slope[i] * direction[i]);
             for row in 0..2 {
                 let node = row + 3;
@@ -236,7 +267,7 @@ impl Root {
         if load_jacobian.iter().flatten().any(|v| !v.is_finite()) {
             return Err(Error::Domain);
         }
-        Ok(load_jacobian)
+        Ok((load_jacobian, directions))
     }
 
     pub(crate) fn finish(&self) -> Result<(State, Ports), Error> {
@@ -277,7 +308,13 @@ fn readout_node(node: usize, base: &[f64; CHARGES], input: &[f64; 3], defects: &
 
 #[cfg(pilot_receiver_ports)]
 pub fn trial_with_load_tangent(old: State, signal: f64, drive: Drive) -> Result<Trial, Error> {
-    let root = Prepared::new(old).solve_root(signal, drive, None)?;
+    let root = Prepared::new(old).solve_root(
+        signal,
+        drive,
+        None,
+        #[cfg(pilot_r59_junction_predictor)]
+        None,
+    )?;
     let (state, ports) = root.finish()?;
     let load_jacobian = root.load_jacobian()?;
     Ok(Trial {
@@ -472,7 +509,13 @@ fn block_direction(residual: &[f64; JUNCTIONS], slope: &[f64; JUNCTIONS]) -> Res
 
 pub fn step(state: &mut State, signal: f64, drive: Drive) -> Result<Ports, Error> {
     let (next, ports) = Prepared::new(*state)
-        .solve_root(signal, drive, None)?
+        .solve_root(
+            signal,
+            drive,
+            None,
+            #[cfg(pilot_r59_junction_predictor)]
+            None,
+        )?
         .finish()?;
     *state = next;
     Ok(ports)

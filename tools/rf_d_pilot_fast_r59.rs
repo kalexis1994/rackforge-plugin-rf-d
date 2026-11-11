@@ -18,6 +18,8 @@ pub struct State {
     pub volume: [f64; 5], // Q3 base, Q2 base, loudness, collector, reset return.
     pub vca_base: f64,
     pub gradient: Option<f64>,
+    #[cfg(pilot_r59_junction_predictor)]
+    pub(crate) junction_direction: Option<plant::JunctionDirection>,
     #[cfg(pilot_r59_predict_follower)]
     pub follower: Option<FollowerSeed>,
 }
@@ -273,6 +275,8 @@ fn advance_inner(
     let (mut volume, mut volume_response, mut volume_base) = initial_follower()?;
     let mut source = volume[2];
     let mut gradient = if refresh { None } else { old.gradient };
+    #[cfg(pilot_r59_junction_predictor)]
+    let mut junction_direction = if refresh { None } else { old.junction_direction };
     let mut previous_error = f64::INFINITY;
     let mut tangent_calls = 0;
     let mut prior = None;
@@ -290,17 +294,24 @@ fn advance_inner(
         };
         #[cfg(pilot_r59_q15_retry)]
         let seed = seed.or(retry_root.filter(|_| !refresh_tangent));
-        let root = measure!(
-            profile,
-            2,
-            prepared.solve_root(signal, drive, seed).or_else(|error| {
+        let root = measure!(profile, 2, {
+            let solve = |seed| {
+                prepared.solve_root(
+                    signal,
+                    drive,
+                    seed,
+                    #[cfg(pilot_r59_junction_predictor)]
+                    junction_direction.as_ref(),
+                )
+            };
+            solve(seed).or_else(|error| {
                 if seed.is_some() {
-                    prepared.solve_root(signal, drive, None)
+                    solve(None)
                 } else {
                     Err(error)
                 }
             })
-        )
+        })
         .map_err(Error::Audio)?;
         #[cfg(pilot_r59_profile)]
         {
@@ -313,8 +324,18 @@ fn advance_inner(
         #[cfg(pilot_r59_eager)]
         let completed = measure!(profile, 6, root.finish()).map_err(Error::Audio)?;
         if refresh_tangent {
-            gradient =
-                Some(measure!(profile, 5, root.load_jacobian()).map_err(Error::Audio)?[0][0]);
+            #[cfg(not(pilot_r59_junction_predictor))]
+            {
+                gradient =
+                    Some(measure!(profile, 5, root.load_jacobian()).map_err(Error::Audio)?[0][0]);
+            }
+            #[cfg(pilot_r59_junction_predictor)]
+            {
+                let (gain, direction) =
+                    measure!(profile, 5, root.r59_tangent()).map_err(Error::Audio)?;
+                gradient = Some(gain);
+                junction_direction = Some(direction);
+            }
             tangent_calls += 1;
         }
         #[cfg(pilot_r59_eager)]
@@ -350,6 +371,8 @@ fn advance_inner(
                 volume,
                 vca_base: ports.loads_v[0],
                 gradient,
+                #[cfg(pilot_r59_junction_predictor)]
+                junction_direction,
                 #[cfg(pilot_r59_predict_follower)]
                 follower: measure!(profile, 4, {
                     (|| {
@@ -408,6 +431,10 @@ fn advance_inner(
         }
         if error >= previous_error * 0.5 {
             gradient = None;
+            #[cfg(pilot_r59_junction_predictor)]
+            {
+                junction_direction = None;
+            }
         }
         previous_error = error;
         prior = Some(root);

@@ -76,6 +76,8 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
             volume: [q3, q2, loudness, collector, reset],
             vca_base,
             gradient: None,
+            #[cfg(pilot_r59_junction_predictor)]
+            junction_direction: None,
             follower: None,
         },
         q15_v,

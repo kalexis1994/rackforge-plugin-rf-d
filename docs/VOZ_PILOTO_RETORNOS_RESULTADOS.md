@@ -2920,3 +2920,36 @@ control, y el pico fue 1,555 ms. Hubo cero
 asignaciones. El margen de 1,333 ms sigue abierto.
 [Reserva final positiva](../evidence/rf_d_pilot_fast_r5956.json).
 [Reserva final negativa](../evidence/rf_d_pilot_fast_r5957.json).
+
+### Proyección de junturas en los reintentos de R59
+
+Ambas ramas conservaron el cierre de 2e−13 V,
+la auditoría nodal, los cruces de CR6 y la
+partición 64/128. En positivo, la diferencia de
+carga final del receptor fue 1,30e−21 C y la de
+J7 fue 1,75e−17 V frente al control del mismo
+reloj. Los dos mantuvieron 448 iteraciones de
+R59 por bloque. La mediana pareada del candidato
+fue 1,851 ms, un 2,85 % por debajo del control.
+El pico entre los tres lotes fue 2,351 ms.
+[Proyección positiva](../evidence/rf_d_pilot_fast_r5959.json).
+
+En negativo, la trayectoria y las cargas finales
+coincidieron por bits, con 258 iteraciones en ambos
+casos. Las medianas del candidato variaron de
+1,420 a 2,357 ms entre lotes y el pico fue 9,756 ms.
+El pase eléctrico permite ensayar el predictor,
+y la dispersión deja sin confirmar el ahorro
+negativo. Ambas ramas tuvieron cero asignaciones.
+[Proyección negativa](../evidence/rf_d_pilot_fast_r5960.json).
+
+La tangente completa R59/R60 mantuvo su salida
+por bits y pasó el contraste con diferencias
+centradas y Radau. El mayor error frente a Radau
+fue 5,58e−9 V/V.
+[Regresión de tangentes](../evidence/rf_d_pilot_receiver_handoff06.json).
+
+El primer intento se detuvo al compilar el control
+por un atributo condicional en una asignación.
+La corrección envolvió la asignación en un bloque.
+[Intento de compilación](../evidence/rf_d_pilot_fast_r5958.json).

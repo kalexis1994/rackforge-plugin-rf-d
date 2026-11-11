@@ -198,6 +198,8 @@ def main():
                         help="retain the nonlinear CR6 law in the provisional reset equation")
     parser.add_argument("--predict-r59-affine", action="store_true",
                         help="seed R59 by solving the follower with a local affine receiver response")
+    parser.add_argument("--predict-r59-junctions", action="store_true",
+                        help="project receiver retries along the cached R59 junction tangent")
     parser.add_argument("--q15-retry", action="store_true",
                         help="reuse the provisional R59 root and follower during Q15 retries")
     cathode_options = parser.add_mutually_exclusive_group()
@@ -219,6 +221,8 @@ def main():
         parser.error("Q15 predictor refinements require --predict-q15")
     if (args.cached_q15_gain or args.predict_q15 or args.q15_retry or args.predict_r59_affine) and not args.dynamic_q15:
         parser.error("Q15 optimizations require --dynamic-q15")
+    if args.predict_r59_junctions and not args.dynamic_q15:
+        parser.error("--predict-r59-junctions requires --dynamic-q15")
     if args.dynamic_q15:
         args.schur_follower = args.predict_follower = args.predict_cathode = args.tight_follower = True
     if args.packed_odd and not args.packed_products:
@@ -263,6 +267,7 @@ def main():
                   predict_q15_audio=args.predict_q15_audio,
                   predict_q15_cr6=args.predict_q15_cr6,
                   predict_r59_affine=args.predict_r59_affine,
+                  predict_r59_junctions=args.predict_r59_junctions,
                   q15_retry=args.q15_retry,
                   internal_rate_hz=RATE, frames=128, warmup_frames=128, budget_ns=BUDGET_NS,
                   imposed_sources=imposed,
@@ -415,6 +420,7 @@ def main():
                 (args.predict_q15_audio, "pilot_r59_predict_q15_audio", "q15_audio_prediction_comparison"),
                 (args.predict_q15_cr6, "pilot_r59_predict_q15_cr6", "q15_cr6_prediction_comparison"),
                 (args.predict_r59_affine, "pilot_r59_predict_affine", "r59_affine_prediction_comparison"),
+                (args.predict_r59_junctions, "pilot_r59_junction_predictor", "r59_junction_prediction_comparison"),
             )
             enabled = [(flag, key) for selected, flag, key in refinements if selected]
             gain_control = None
