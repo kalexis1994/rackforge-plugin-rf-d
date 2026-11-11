@@ -227,6 +227,8 @@ def main():
                         help="include a provisional receiver readout in the Q15 seed")
     parser.add_argument("--predict-q15-cr6", action="store_true",
                         help="retain the nonlinear CR6 law in the provisional reset equation")
+    parser.add_argument("--predict-q15-charge", action="store_true",
+                        help="use the last accepted terminal capacitance in the Q15 seed")
     parser.add_argument("--predict-r59-affine", action="store_true",
                         help="seed R59 by solving the follower with a local affine receiver response")
     parser.add_argument("--predict-r59-junctions", action="store_true",
@@ -250,7 +252,7 @@ def main():
     seed_options.add_argument("--reuse-law", action="store_true",
                               help="reuse the previous trial's law evaluation at the same junctions")
     args = parser.parse_args()
-    if (args.predict_q15_audio or args.predict_q15_cr6) and not args.predict_q15:
+    if (args.predict_q15_audio or args.predict_q15_cr6 or args.predict_q15_charge) and not args.predict_q15:
         parser.error("Q15 predictor refinements require --predict-q15")
     if (args.cached_q15_gain or args.predict_q15 or args.q15_retry or args.predict_r59_affine) and not args.dynamic_q15:
         parser.error("Q15 optimizations require --dynamic-q15")
@@ -302,6 +304,7 @@ def main():
                   predict_q15=args.predict_q15,
                   predict_q15_audio=args.predict_q15_audio,
                   predict_q15_cr6=args.predict_q15_cr6,
+                  predict_q15_charge=args.predict_q15_charge,
                   predict_r59_affine=args.predict_r59_affine,
                   predict_r59_junctions=args.predict_r59_junctions,
                   pack_receiver_law=args.pack_receiver_law,
@@ -451,6 +454,7 @@ def main():
                 (args.packed_products, "pilot_receiver_packed", "q15_packed_products_comparison"),
                 (args.packed_odd, "pilot_receiver_packed_odd", "q15_packed_odd_comparison"),
                 (args.pack_receiver_law, "pilot_receiver_packed_law", "q15_packed_law_comparison"),
+                (args.predict_q15_charge, "pilot_r59_predict_q15_charge", "q15_charge_prediction_comparison"),
             )
             enabled = [(flag, key) for selected, flag, key in refinements if selected]
             gain_control = None

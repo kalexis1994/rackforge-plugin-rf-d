@@ -3022,3 +3022,43 @@ En negativo, la mediana pareada bajó 6,13 % a
 1,333 ms y el pico ordinario fue 2,218 ms. El
 plazo de 1,333 ms sigue abierto en ambas ramas.
 [Evaluación AVX negativa](../evidence/rf_d_pilot_fast_r5966.json).
+
+Tras compartir los coeficientes de Horner, la voz
+de 18 junturas pasó las tres escenas eléctricas,
+la partición 64/128 y la regresión del hash de J7 f32.
+[Regresión de la voz](../evidence/rf_d_pilot_returns20.json).
+
+### Capacitancia terminal en la semilla de Q15
+
+El primer ensayo entregó la semilla con la matriz
+de carga congelada. Pasó la auditoría eléctrica y
+la reserva del receptor. Los cierres completos del
+bloque subieron de 259 a 509 en positivo y de 258
+a 507 en negativo. Las medianas pareadas subieron
+11,04 % y 24,44 %, respectivamente. El aumento de
+reintentos motivó recuperar la carga exacta antes
+de entregar la semilla al receptor.
+[Primera semilla positiva](../evidence/rf_d_pilot_fast_r5967.json).
+[Primera semilla negativa](../evidence/rf_d_pilot_fast_r5968.json).
+
+Al restaurar la ley exacta antes de usar la semilla,
+ambas ramas cerraron Q15 una vez por tick, 256 veces
+por bloque. Las iteraciones de R59 bajaron de 448
+a 445 en positivo y de 258 a 256 en negativo.
+Frente al control del mismo reloj, la diferencia
+máxima de carga de Q15 fue 1,16e−23 C y 1,51e−23 C.
+Las diferencias de carga final del receptor fueron
+9,39e−23 C y 0 C. Ambas ramas pasaron Radau, la
+auditoría nodal, los cruces de CR6 y la partición.
+
+En positivo, la mediana pareada fue 1,714 ms,
+3,49 % por debajo del control. El pico fue
+1,950 ms, 1,46 veces el plazo.
+[Semilla verificada positiva](../evidence/rf_d_pilot_fast_r5969.json).
+
+En negativo, la mediana pareada fue 1,314 ms,
+1,44 % por debajo del control. El pico fue
+1,582 ms, 1,19 veces el plazo. Hubo cero
+asignaciones en ambas ramas. El límite de
+1,333 ms sigue abierto en el banco nativo.
+[Semilla verificada negativa](../evidence/rf_d_pilot_fast_r5970.json).

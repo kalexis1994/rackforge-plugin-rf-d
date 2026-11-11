@@ -89,6 +89,8 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
         },
         q15_v,
         previous_charge_increment_c: None,
+        #[cfg(pilot_r59_predict_q15_charge)]
+        charge_mass_f: None,
     };
     let input: Vec<[f64; 6]> = values[149..]
         .chunks_exact(6)

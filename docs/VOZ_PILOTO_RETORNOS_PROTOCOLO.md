@@ -687,3 +687,21 @@ mismo modelo y el mismo agrupado de matrices.
 Exigir igualdad por bits tanto en el ensayo de los
 límites del kernel como en el banco de Q15/R59,
 además de las reservas y el contraste con Radau.
+
+Con `--predict-q15-charge`, guardar la matriz de
+capacitancias terminales de Q15 del paso aceptado,
+en faradios. En la semilla, estimar el incremento
+BE/BC con esa matriz por el cambio de tensión
+de base y colector. Conservar la corriente no
+lineal de CR6 y el historial de carga aceptado.
+El primer paso usa la ley completa en la semilla.
+En pasos posteriores, al converger con la matriz
+congelada, recuperar el incremento y la tangente
+exactos y verificar nuevamente las filas de la
+semilla. Si no se obtiene convergencia dentro del
+presupuesto de la semilla, usar el arranque desde
+el estado aceptado. El cierre cargado también evalúa
+la ley exacta y sólo publica su propia carga.
+Comparar con la misma semilla no lineal de CR6,
+la integración Euler/BDF2, el contraste nodal y
+las reservas de carga del mismo reloj.

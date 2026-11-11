@@ -16,6 +16,8 @@ pub struct State {
     pub audio: fast_r59::State,
     pub q15_v: [f64; 2],
     pub previous_charge_increment_c: Option<[f64; 2]>,
+    #[cfg(pilot_r59_predict_q15_charge)]
+    pub charge_mass_f: Option<[[f64; 2]; 2]>,
 }
 
 pub struct Frame {
@@ -46,23 +48,40 @@ struct Trial {
     jacobian: [[f64; 2]; 2],
 }
 
+struct TerminalCharge {
+    increment_c: [f64; 2],
+    mass_f: [[f64; 2]; 2],
+}
+
 fn equation(
     old: State,
     q15_v: [f64; 2],
     drive: q15::Drive,
     cr6: [f64; 2],
-) -> Result<([f64; 2], [f64; 2], [[f64; 2]; 2]), StepError> {
+    #[cfg(pilot_r59_predict_q15_charge)] seed_mass_f: Option<[[f64; 2]; 2]>,
+) -> Result<(TerminalCharge, [f64; 2], [[f64; 2]; 2]), StepError> {
     let (current, dc_jacobian) = q15::conduction(q15_v, drive, cr6[0], cr6[1])?;
-    let (charge, mass) = terminal(old.q15_v.map(|v| (v, 0.)), q15_v.map(|v| (v, 0.)))?;
+    let exact = || terminal(old.q15_v.map(|v| (v, 0.)), q15_v.map(|v| (v, 0.)));
+    #[cfg(pilot_r59_predict_q15_charge)]
+    let (increment_c, mass_f) = match seed_mass_f {
+        Some(mass) => {
+            let delta = [q15_v[0] - old.q15_v[0], q15_v[1] - old.q15_v[1]];
+            let increment = mass.map(|row| row[0] * delta[0] + row[1] * delta[1]);
+            (increment, mass)
+        }
+        None => exact()?,
+    };
+    #[cfg(not(pilot_r59_predict_q15_charge))]
+    let (increment_c, mass_f) = exact()?;
     let (weight, history) = match old.previous_charge_increment_c {
         Some(previous) => (1.5 * RATE_HZ, previous.map(|q| -0.5 * RATE_HZ * q)),
         None => (RATE_HZ, [0.; 2]),
     };
-    let residual_a = std::array::from_fn(|k| current[k] + weight * charge[k] + history[k]);
+    let residual_a = std::array::from_fn(|k| current[k] + weight * increment_c[k] + history[k]);
     let jacobian = std::array::from_fn(|row| {
-        std::array::from_fn(|col| dc_jacobian[row][col] + weight * mass[row][col])
+        std::array::from_fn(|col| dc_jacobian[row][col] + weight * mass_f[row][col])
     });
-    Ok((charge, residual_a, jacobian))
+    Ok((TerminalCharge { increment_c, mass_f }, residual_a, jacobian))
 }
 
 fn direction(residual: [f64; 2], jacobian: [[f64; 2]; 2]) -> Result<[f64; 2], StepError> {
@@ -83,6 +102,8 @@ fn predict(
         cr8_anode,
     };
     let mut q15_v = old.q15_v;
+    #[cfg(pilot_r59_predict_q15_charge)]
+    let mut seed_mass_f = old.charge_mass_f;
     #[cfg(pilot_r59_predict_q15_cr6)]
     let (mut reset, shunt, target_current) = {
         let (current, conductance) =
@@ -102,15 +123,29 @@ fn predict(
         let (current, conductance) = crate::contour_ports::germanium(reset - q15_v[0]).ok()?;
         #[cfg(not(pilot_r59_predict_q15_cr6))]
         let (correction, error, max_correction) = {
-            let (_, residual, jacobian) =
-                equation(old, q15_v, drive, [current, conductance * (slope - 1.)]).ok()?;
+            let (_, residual, jacobian) = equation(
+                old,
+                q15_v,
+                drive,
+                [current, conductance * (slope - 1.)],
+                #[cfg(pilot_r59_predict_q15_charge)]
+                seed_mass_f,
+            )
+            .ok()?;
             let correction = direction(residual, jacobian).ok()?;
             (correction, maximum(&residual), maximum(&correction))
         };
         #[cfg(pilot_r59_predict_q15_cr6)]
         let (correction, error, max_correction) = {
-            let (_, mut residual, mut jacobian) =
-                equation(old, q15_v, drive, [current, -conductance]).ok()?;
+            let (_, mut residual, mut jacobian) = equation(
+                old,
+                q15_v,
+                drive,
+                [current, -conductance],
+                #[cfg(pilot_r59_predict_q15_charge)]
+                seed_mass_f,
+            )
+            .ok()?;
             let reset_residual = shunt * (reset - old.audio.volume[4]) + current - target_current;
             let error = maximum(&residual).max(reset_residual.abs());
             let reset_diagonal = shunt + conductance;
@@ -131,6 +166,11 @@ fn predict(
             )
         };
         if error <= CURRENT_TOLERANCE_A && max_correction <= CORRECTION_TOLERANCE_V {
+            #[cfg(pilot_r59_predict_q15_charge)]
+            if seed_mass_f.take().is_some() {
+                // Check the provisional root with the exact terminal law before using it.
+                continue;
+            }
             return Some(q15_v);
         }
         q15_v = std::array::from_fn(|i| q15_v[i] - correction[i]);
@@ -195,16 +235,20 @@ fn evaluate(
             frame.reset_port.current_a,
             frame.reset_port.derivative_a_per_v[1],
         ],
+        #[cfg(pilot_r59_predict_q15_charge)]
+        None,
     )
     .map_err(Error::Q15)?;
     Ok(Trial {
         state: State {
             audio,
             q15_v,
-            previous_charge_increment_c: Some(charge),
+            previous_charge_increment_c: Some(charge.increment_c),
+            #[cfg(pilot_r59_predict_q15_charge)]
+            charge_mass_f: Some(charge.mass_f),
         },
         audio: frame,
-        charge_increment_c: charge,
+        charge_increment_c: charge.increment_c,
         residual_a,
         jacobian,
     })
