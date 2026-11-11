@@ -3194,3 +3194,23 @@ Los picos de los tres lotes fueron 1,315, 1,342 y
 1,702 ms. Hubo cero asignaciones. El máximo
 sigue sobre 1,333 ms a 128 frames.
 [Repetición positiva](../evidence/rf_d_pilot_fast_r5982.json).
+
+### Límite de correcciones de la semilla afín
+
+Una corrección redujo el coste de la semilla
+instrumentada positiva de 0,176 a 0,067 ms.
+Los cierres de R59 subieron de 256 a 407 por
+bloque y la mediana pareada subió 3,80 %.
+La diferencia de carga final fue 1,97e−20 C,
+fuera de la reserva de 1e−20 C. Se rechazó este
+candidato para la rama positiva.
+[Una corrección positiva](../evidence/rf_d_pilot_fast_r5983.json).
+
+En negativo se conservaron los 256 cierres por
+bloque y coincidieron las cargas finales del
+receptor. Pasaron Radau, la auditoría nodal,
+los cruces y la partición. La mediana pareada
+bajó 5,87 % a 1,011 ms. Los tres picos nativos
+quedaron por debajo de 1,333 ms, con un máximo
+de 1,160 ms y cero asignaciones.
+[Una corrección negativa](../evidence/rf_d_pilot_fast_r5984.json).

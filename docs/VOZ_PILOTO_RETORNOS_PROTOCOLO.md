@@ -770,3 +770,13 @@ el residual completo. Ante error, reintentar
 con la semilla original y la misma historia.
 Comparar el número de evaluaciones del residual,
 el tiempo y la reserva del mismo reloj.
+
+Con `--predict-r59-one-correction`, formar las cinco
+filas del seguidor afín provisional y aplicar como
+máximo una corrección de Newton. Usar el mismo
+complemento de Schur y la misma pendiente de R59
+del cierre afín de control. Pasar el voltaje
+provisional al receptor y conservar la iteración
+completa del seguidor y el cierre de R59. Medir
+cuántos intentos se desplazan al cierre completo,
+el coste total y la reserva de carga del mismo reloj.

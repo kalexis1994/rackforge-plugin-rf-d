@@ -338,8 +338,42 @@ pub(crate) fn predict_volume(
     [previous_source, previous_base, gain]: [f64; 3],
 ) -> Result<([f64; 5], f64), StepError> {
     let load = |source| (previous_base + gain * (source - previous_source), gain);
+    #[cfg(not(pilot_r59_one_affine_correction))]
     let (volume, _) = close_volume_schur_with_load(initial, c2, cathode, load)?;
+    #[cfg(pilot_r59_one_affine_correction)]
+    let volume = {
+        let (base, load_gain) = load(initial[2]);
+        let (residual, factor) = factor_r59_follower(initial, c2, cathode, base, load_gain)?;
+        let direction = factor.solve(residual)?;
+        let [current, voltage] = R59_TOLERANCES;
+        if maximum(&residual) <= current && maximum(&direction) <= voltage {
+            initial
+        } else {
+            std::array::from_fn(|i| initial[i] - direction[i])
+        }
+    };
     Ok((volume, load(volume[2]).0))
+}
+
+#[cfg(pilot_r59_schur_follower)]
+fn factor_r59_follower(
+    [x0, x1, x2, x3, x4]: [f64; 5],
+    c2: f64,
+    cathode: f64,
+    base: f64,
+    load_gain: f64,
+) -> Result<([f64; 5], R59Factor), StepError> {
+    let Stamp { f: [r0, r1, r2, r3], mut j } = volume_stamp([x0, x1, x2, x3], c2, x4, base)?;
+    j[2][2] -= load_gain / R59;
+    let (r4, cv_diagonal, _) = cv_law(x4, x2, cathode)?;
+    if !cv_diagonal.is_finite() || cv_diagonal <= 0. {
+        return Err(StepError::SingularJacobian);
+    }
+    // The reset node has only one off-diagonal entry, -1/R24 at loudness.
+    let g24 = 1. / R24;
+    j[2][2] -= g24 * (g24 / cv_diagonal);
+    let factor = R59Factor::Schur { factor: Lu::factor(j)?, cv_diagonal };
+    Ok(([r0, r1, r2, r3, r4], factor))
 }
 
 #[cfg(pilot_r59_schur_follower)]
@@ -350,20 +384,9 @@ fn close_volume_schur_with_load(
     load: impl Fn(f64) -> (f64, f64),
 ) -> Result<([f64; 5], R59Factor), StepError> {
     let [current, voltage] = R59_TOLERANCES;
-    let g24 = 1. / R24;
     for _ in 0..12 {
-        let [x0, x1, x2, x3, x4] = x;
-        let (base, load_gain) = load(x2);
-        let Stamp { f: [r0, r1, r2, r3], mut j } = volume_stamp([x0, x1, x2, x3], c2, x4, base)?;
-        j[2][2] -= load_gain / R59;
-        let (r4, cv_diagonal, _) = cv_law(x4, x2, cathode)?;
-        if !cv_diagonal.is_finite() || cv_diagonal <= 0. {
-            return Err(StepError::SingularJacobian);
-        }
-        // The reset node has only one off-diagonal entry, -1/R24 at loudness.
-        j[2][2] -= g24 * (g24 / cv_diagonal);
-        let factor = R59Factor::Schur { factor: Lu::factor(j)?, cv_diagonal };
-        let residual = [r0, r1, r2, r3, r4];
+        let (base, load_gain) = load(x[2]);
+        let (residual, factor) = factor_r59_follower(x, c2, cathode, base, load_gain)?;
         let d = factor.solve(residual)?;
         if maximum(&residual) <= current && maximum(&d) <= voltage {
             return Ok((x, factor));
