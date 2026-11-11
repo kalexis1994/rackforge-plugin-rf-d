@@ -2500,3 +2500,27 @@ una vez por bloque, consumió menos de 0,008 ms.
 La compilación instrumentada se usó para atribuir coste.
 [Perfil positivo](../evidence/rf_d_pilot_fast_r5914.json).
 [Perfil negativo](../evidence/rf_d_pilot_fast_r5915.json).
+
+
+### Predictor del nuevo voltaje con feedback del intento previo
+
+Con la misma historia de cargas, el reintento usa el
+predictor recalculado para su nueva fuente y el
+feedback no lineal que convergió en el intento previo.
+Ambas ramas pasaron Radau, los límites de cierre y la
+partición 64/128. La mayor diferencia de J7 entre
+semillas fue 3,14e−18 V y la de las cargas finales
+fue 6,04e−23 C.
+
+En positivo, las dos semillas requirieron 94.016
+evaluaciones de raíz en 64 bloques instrumentados.
+La mediana pareada subió 0,76 % y el pico nativo del
+candidato fue 1,704 ms entre los cinco lotes.
+[Predictor en positivo](../evidence/rf_d_pilot_fast_r5916.json).
+
+En negativo, el total bajó de 96.512 a 81.920
+evaluaciones. La mediana pareada bajó 12,44 % y el
+pico nativo fue 1,319 ms en los cinco lotes.
+La opción `--feedback-seed` conserva el resultado
+reproducible en el banco con C2 y R60 impuestos.
+[Predictor en negativo](../evidence/rf_d_pilot_fast_r5917.json).

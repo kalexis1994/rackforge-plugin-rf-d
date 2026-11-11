@@ -32,6 +32,7 @@ pub enum Error {
 #[derive(Default)]
 pub struct Profile {
     pub stages: [(u64, u128); 7],
+    pub successful_root_evaluations: usize,
 }
 
 macro_rules! measure {
@@ -69,7 +70,7 @@ pub fn advance(
     let mut gradient = if refresh { None } else { old.gradient };
     let mut previous_error = f64::INFINITY;
     let mut tangent_calls = 0;
-    let mut junction_seed = None;
+    let mut retry_seed = None;
     let prepared = measure!(profile, 1, plant::Prepared::new(old.audio));
     for iteration in 1..=8 {
         let drive = plant::Drive {
@@ -77,7 +78,7 @@ pub fn advance(
             filter_delta_v: filter - map::SPLIT_CENTER[1],
         };
         let refresh_tangent = gradient.is_none();
-        let seed = if refresh_tangent { None } else { junction_seed };
+        let seed = if refresh_tangent { None } else { retry_seed };
         let root = measure!(
             profile,
             2,
@@ -90,7 +91,11 @@ pub fn advance(
             })
         )
         .map_err(Error::Audio)?;
-        junction_seed = Some(root.junction);
+        retry_seed = Some(root.retry_seed());
+        #[cfg(pilot_r59_profile)]
+        {
+            profile.successful_root_evaluations += root.evaluations;
+        }
         #[cfg(pilot_r59_eager)]
         let completed = measure!(profile, 6, root.finish()).map_err(Error::Audio)?;
         if refresh_tangent {

@@ -62,6 +62,13 @@ pub(crate) struct Prepared {
     correction: [f64; CHARGES],
 }
 
+#[derive(Clone, Copy)]
+pub(crate) enum Seed {
+    Junctions([f64; JUNCTIONS]),
+    #[cfg(pilot_r59_feedback_seed)]
+    Feedback([f64; JUNCTIONS]),
+}
+
 impl Prepared {
     pub(crate) fn new(old: State) -> Self {
         Self {
@@ -75,7 +82,7 @@ impl Prepared {
         &self,
         signal: f64,
         drive: Drive,
-        seed: Option<[f64; JUNCTIONS]>,
+        seed: Option<Seed>,
     ) -> Result<Root, Error> {
         let state = &self.old;
         if !drive.valid() || !signal.is_finite() || signal.abs() > 0.08 {
@@ -94,7 +101,12 @@ impl Prepared {
         let previous = product(&P, &state.defects);
         #[cfg(pilot_block_roots)]
         let previous = state.feedback;
-        let mut z = seed.unwrap_or_else(|| std::array::from_fn(|i| predictor[i] - previous[i]));
+        let mut z = match seed {
+            Some(Seed::Junctions(z)) => z,
+            #[cfg(pilot_r59_feedback_seed)]
+            Some(Seed::Feedback(feedback)) => std::array::from_fn(|i| predictor[i] - feedback[i]),
+            None => std::array::from_fn(|i| predictor[i] - previous[i]),
+        };
         for _iteration in 0..12 {
             let (defects, slope) = law(z)?;
             let feedback = product(&P, &defects);
@@ -109,6 +121,8 @@ impl Prepared {
                     feedback,
                     #[cfg(pilot_receiver_ports)]
                     junction: z,
+                    #[cfg(pilot_r59_profile)]
+                    evaluations: _iteration + 1,
                 });
             }
             // Same modified-Newton preconditioner as the original pilot.
@@ -143,10 +157,20 @@ pub(crate) struct Root {
     #[cfg(pilot_block_roots)]
     feedback: [f64; JUNCTIONS],
     #[cfg(pilot_receiver_ports)]
-    pub(crate) junction: [f64; JUNCTIONS],
+    junction: [f64; JUNCTIONS],
+    #[cfg(pilot_r59_profile)]
+    pub(crate) evaluations: usize,
 }
 
 impl Root {
+    #[cfg(pilot_receiver_ports)]
+    pub(crate) fn retry_seed(&self) -> Seed {
+        #[cfg(pilot_r59_feedback_seed)]
+        return Seed::Feedback(self.feedback);
+        #[cfg(not(pilot_r59_feedback_seed))]
+        Seed::Junctions(self.junction)
+    }
+
     #[cfg(any(not(pilot_receiver_packed), pilot_receiver_ports))]
     fn readout_node(&self, node: usize) -> f64 {
         map::DC[node] + dot(&map::XQ[node], &self.base) + dot(&map::XU[node], &self.input)

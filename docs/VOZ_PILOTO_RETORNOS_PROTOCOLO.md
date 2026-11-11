@@ -381,3 +381,13 @@ y la reconstrucción. Contar llamadas y nanosegundos por
 etapa en 64 bloques después del calentamiento. Exigir los
 mismos bits de trayectoria y cargas finales. El límite de
 1,333 ms se aplica a la compilación sin instrumentación.
+
+Con `--feedback-seed`, cada reintento usa como semilla
+el predictor del nuevo voltaje de R59 menos P·defecto
+del intento anterior. El residuo, los límites y el
+predictor de respaldo se conservan. Comparar contra el
+arranque anterior en las mismas ramas, con el contraste
+de puertos y 1e−20 C de diferencia máxima en las cargas
+finales, igual que el banco de entrega del receptor.
+Contar además las evaluaciones de las raíces que llegan
+a converger, tanto en el candidato como en su control.

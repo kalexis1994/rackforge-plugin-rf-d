@@ -133,8 +133,11 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
             times[32], times[63], times[63]
         )?;
         #[cfg(pilot_r59_profile)]
-        for (calls, total_ns) in profile.stages {
-            writeln!(out, "{calls},{total_ns}")?;
+        {
+            for (calls, total_ns) in profile.stages {
+                writeln!(out, "{calls},{total_ns}")?;
+            }
+            writeln!(out, "{}", profile.successful_root_evaluations)?;
         }
     } else {
         let size = 2 * second.parse::<usize>()?;

@@ -28,6 +28,7 @@ JOINED = "tools/rf_d_pilot_r59_oracle.rs"
 RATE = 96_000
 STEPS = 256
 CHARGES = 17
+CHARGE_LIMIT_C = 1e-20
 CATHODE_V = 0.
 PROFILE_STAGES = ("initial_follower", "receiver_history", "receiver_root", "loaded_follower",
                   "follower_response", "receiver_tangent", "receiver_reconstruction")
@@ -45,6 +46,8 @@ def main():
                         help="group the odd Newton rows and compare with the original correction")
     parser.add_argument("--profile", action="store_true",
                         help="attribute native cost using a separate instrumented executable")
+    parser.add_argument("--feedback-seed", action="store_true",
+                        help="seed receiver retries with the new predictor and previous trial feedback")
     args = parser.parse_args()
     if args.packed_odd and not args.packed_products:
         parser.error("--packed-odd requires --packed-products")
@@ -69,6 +72,7 @@ def main():
                   shared_port_exp=args.shared_port_exp,
                   packed_products=args.packed_products,
                   packed_odd=args.packed_odd,
+                  feedback_seed=args.feedback_seed,
                   **sources.fields(), compiler_sha256=sha(Path(COMPILER)), library_sha256=sha(LIB))
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
     flags = [COMPILER, "--edition=2021", "-C", "opt-level=3", "-C", "target-feature=+fma",
@@ -105,6 +109,21 @@ def main():
     def time_blocks(target, mode, payload):
         return timing(run([target, mode, "bench"], payload).decode().strip())
 
+    def profile_blocks(target, payload, expected):
+        raw = run([target, "cached", 128, "--charges"], payload, repeat=True)
+        charge_bytes = CHARGES * 8
+        exact = (digest(raw[:-charge_bytes]) == expected["output_sha256"]
+                 and digest(raw[-charge_bytes:]) == expected["final_charge_sha256"])
+        lines = run([target, "cached", "bench"], payload).decode().splitlines()
+        instrumented = timing(lines[0])
+        blocks = instrumented["blocks"]
+        stages = {}
+        for name, line in zip(PROFILE_STAGES, lines[1:-1], strict=True):
+            calls, elapsed_ns = map(int, line.split(","))
+            stages[name] = dict(calls=calls, elapsed_ns=elapsed_ns, mean_per_block_ns=elapsed_ns / blocks)
+        return dict(bit_exact=exact, instrumented_timing=instrumented, stages=stages,
+                    successful_root_evaluations=int(lines[-1]))
+
     try:
         isolated, joined = AREA / "r59-isolated.exe", AREA / "r59-joined.exe"
         run([*flags, ROOT / ORACLE, "--extern", f"rf_d_circuit={LIB}", "-o", isolated])
@@ -136,6 +155,7 @@ def main():
         cfg = ["--cfg", "pilot_returns", "--cfg", "pilot_split_returns", "--cfg", "pilot_block_roots",
                "--cfg", "pilot_receiver_handoff", "--cfg", "pilot_receiver_ports", "--cfg", "pilot_audio_readout",
                "--cfg", "pilot_closed_cv"]
+        seed_cfg = ["--cfg", "pilot_r59_feedback_seed"] if args.feedback_seed else []
         if args.shared_port_exp:
             cfg.extend(("--cfg", "pilot_shared_port_exp"))
         control_cfg = cfg.copy()
@@ -144,24 +164,30 @@ def main():
         odd_control_cfg = cfg.copy()
         if args.packed_odd:
             cfg.extend(("--cfg", "pilot_receiver_packed_odd"))
-        run([*flags, *cfg, source, "--extern", f"rf_d_circuit={LIB}", "-o", exe])
+        run([*flags, *cfg, *seed_cfg, source, "--extern", f"rf_d_circuit={LIB}", "-o", exe])
         if args.shared_port_exp:
             unit = AREA / "r59-port-tests.exe"
-            run([*flags, *cfg, "--test", source, "--extern", f"rf_d_circuit={LIB}", "-o", unit])
+            run([*flags, *cfg, *seed_cfg, "--test", source, "--extern", f"rf_d_circuit={LIB}", "-o", unit])
             report["port_unit_tests"] = run([unit, "contour_ports::tests"]).decode()
         control = AREA / "r59-scalar.exe"
         if args.packed_products:
-            run([*flags, *control_cfg, source, "--extern", f"rf_d_circuit={LIB}", "-o", control])
+            run([*flags, *control_cfg, *seed_cfg, source, "--extern", f"rf_d_circuit={LIB}", "-o", control])
         eager = AREA / "r59-eager.exe"
         if args.compare_eager:
-            run([*flags, *cfg, "--cfg", "pilot_r59_eager", source, "--extern", f"rf_d_circuit={LIB}", "-o", eager])
+            run([*flags, *cfg, *seed_cfg, "--cfg", "pilot_r59_eager", source, "--extern", f"rf_d_circuit={LIB}", "-o", eager])
         odd_control = AREA / "r59-odd-control.exe"
         if args.packed_odd:
-            run([*flags, *odd_control_cfg, source, "--extern", f"rf_d_circuit={LIB}", "-o", odd_control])
+            run([*flags, *odd_control_cfg, *seed_cfg, source, "--extern", f"rf_d_circuit={LIB}", "-o", odd_control])
+        seed_control = AREA / "r59-seed-control.exe"
+        if args.feedback_seed:
+            run([*flags, *cfg, source, "--extern", f"rf_d_circuit={LIB}", "-o", seed_control])
         profile_exe = AREA / "r59-profile.exe"
+        seed_control_profile = AREA / "r59-seed-control-profile.exe"
         if args.profile:
-            run([*flags, *cfg, "--cfg", "pilot_r59_profile", source, "--extern", f"rf_d_circuit={LIB}",
-                 "-o", profile_exe])
+            profile_flags = [*flags, *cfg, "--cfg", "pilot_r59_profile"]
+            run([*profile_flags, *seed_cfg, source, "--extern", f"rf_d_circuit={LIB}", "-o", profile_exe])
+            if args.feedback_seed:
+                run([*profile_flags, source, "--extern", f"rf_d_circuit={LIB}", "-o", seed_control_profile])
         header = np.r_[dc[:136], bias[:5]]
 
         def controls(time):
@@ -184,7 +210,7 @@ def main():
         input = controls(np.arange(1, 2 * STEPS + 1) / RATE)
         payload = packed(np.r_[header, input.ravel()])
         report.update(input_sha256=digest(payload), input=pack_bytes(payload), cases={})
-        outputs = {}
+        outputs, charges = {}, {}
         controls_to_compare = {}
         if args.packed_products:
             controls_to_compare["scalar"] = control
@@ -192,6 +218,8 @@ def main():
             controls_to_compare["eager"] = eager
         if args.packed_odd:
             controls_to_compare["odd_control"] = odd_control
+        if args.feedback_seed:
+            controls_to_compare["seed_control"] = seed_control
         variants = [(name, target, "cached") for name, target in controls_to_compare.items()]
         variants.extend((("cached", exe, "cached"), ("fresh", exe, "fresh")))
         charge_bytes = CHARGES * 8
@@ -211,6 +239,7 @@ def main():
             item["realtime"] = item["passed"] and item["timing"]["max_ns"] <= BUDGET_NS and item["timing"]["allocations"] == 0
             report["cases"][name] = item
             outputs[name] = rows
+            charges[name] = got[-CHARGES:]
             print(name, item, flush=True)
         partition = run([exe, "cached", 64, "--charges"], payload, repeat=True)
         cached = report["cases"]["cached"]
@@ -222,19 +251,14 @@ def main():
         report["passed"] = bool(report["refinement"]["passed"] and report["reference_source_domain_passed"] and report["partition_bit_exact"]
                                  and report["cached_vs_fresh"]["passed"] and all(v["passed"] for v in report["cases"].values()))
         if args.profile:
-            raw = run([profile_exe, "cached", 128, "--charges"], payload, repeat=True)
-            exact = (digest(raw[:-charge_bytes]) == cached["output_sha256"]
-                     and digest(raw[-charge_bytes:]) == cached["final_charge_sha256"])
-            lines = run([profile_exe, "cached", "bench"], payload).decode().splitlines()
-            instrumented = timing(lines[0])
-            blocks = instrumented["blocks"]
-            stages = {}
-            for name, line in zip(PROFILE_STAGES, lines[1:], strict=True):
-                calls, elapsed_ns = map(int, line.split(","))
-                stages[name] = dict(calls=calls, elapsed_ns=elapsed_ns, mean_per_block_ns=elapsed_ns / blocks)
-            report["profile"] = dict(bit_exact=exact, instrumented_timing=instrumented, stages=stages)
-            report["passed"] = report["passed"] and exact and instrumented["allocations"] == 0
-            print("PROFILE", report["profile"], flush=True)
+            profiles = {"profile": (profile_exe, cached)}
+            if args.feedback_seed:
+                profiles["seed_control_profile"] = (seed_control_profile, report["cases"]["seed_control"])
+            for key, (target, expected) in profiles.items():
+                measured = profile_blocks(target, payload, expected)
+                report[key] = measured
+                report["passed"] = report["passed"] and measured["bit_exact"] and measured["instrumented_timing"]["allocations"] == 0
+                print(key.upper(), measured, flush=True)
         report["realtime"] = report["passed"] and report["cases"]["cached"]["realtime"]
         for name, target in controls_to_compare.items():
             exact = all(report["cases"][name][key] == cached[key]
@@ -250,13 +274,20 @@ def main():
                               paired_timing=pairs, paired_median_ratio=ratio)
             elif name == "eager":
                 report.update(eager_bit_exact=exact, eager_paired_timing=pairs, eager_median_ratio=ratio)
-            else:
+            elif name == "odd_control":
                 report.update(odd_bit_exact=exact, odd_paired_timing=pairs, odd_median_ratio=ratio)
-            report["passed"] = report["passed"] and exact
+            else:
+                difference = assess(outputs["cached"], outputs[name])
+                maximum_charge = float(abs(charges["cached"] - charges[name]).max())
+                report.update(seed_bit_exact=exact, seed_comparison=difference, seed_paired_timing=pairs,
+                              seed_median_ratio=ratio, seed_maximum_charge_difference_c=maximum_charge,
+                              seed_charge_limit_c=CHARGE_LIMIT_C)
+            passed = exact if name != "seed_control" else difference["passed"] and maximum_charge <= CHARGE_LIMIT_C
+            report["passed"] = report["passed"] and passed
             report["realtime"] = bool(report["passed"] and report["realtime"] and all(
                 pair["cached"]["max_ns"] <= BUDGET_NS and pair["cached"]["allocations"] == 0
                 for pair in pairs))
-            print(name.upper(), "bit exact", exact, "median ratio", ratio, flush=True)
+            print(name.upper(), "passed", passed, "bit exact", exact, "median ratio", ratio, flush=True)
         sources.unchanged()
     except Exception:
         report["failure"] = traceback.format_exc()
