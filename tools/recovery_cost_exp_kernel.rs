@@ -9,13 +9,36 @@ pub struct State{pub index:usize,pub q:[f64;18],pub input:f64,pub history:[f64;1
 #[derive(Clone,Copy)]pub struct Ports{pub bus_v:f64,pub base_v:f64,pub j7_v:f64,pub panel_a:f64}
 impl State{pub fn dc(index:usize)->Result<Self,Error>{if index>=3{return Err(Error::Input)}Ok(Self{index,q:[0.;18],input:0.,history:[0.;18],defects:[0.;12]})}}
 pub fn law(index:usize,z:[f64;12])->Result<([f64;12],[f64;12]),Error>{
- let mut n=[0.;12];let mut slope=[0.;12];for k in 0..12{let x=z[k];if !x.is_finite()||x.abs()>40.{return Err(Error::Domain)}
- let(v,em1)=if x.abs()<0.125{
- let poly=1./2.+x*(1./6.+x*(1./24.+x*(1./120.+x*(1./720.+x*(1./5040.+x*(1./40320.+x*(1./362880.+x*(1./3628800.+x*(1./39916800.+x*(1./479001600.))))))))));
- let v=x*x*poly;(v,x+v)
- }else{let em1=x.exp_m1();(em1-x,em1)};
- n[k]=data::IEXP[index][k]*v;slope[k]=data::IEXP[index][k]*em1;}Ok((n,slope))
+    let mut defects = [0.; 12];
+    let mut slopes = [0.; 12];
+    for k in 0..12 {
+        (defects[k], slopes[k]) = defect_at(z[k], data::IEXP[index][k])?;
+    }
+    Ok((defects, slopes))
 }
+
+pub const REMAINDER_COEFFICIENTS: [f64; 11] = [
+    1. / 2., 1. / 6., 1. / 24., 1. / 120., 1. / 720., 1. / 5040., 1. / 40320.,
+    1. / 362880., 1. / 3628800., 1. / 39916800., 1. / 479001600.,
+];
+
+#[inline]
+pub fn defect_at(x: f64, weight: f64) -> Result<(f64, f64), Error> {
+    if !x.is_finite() || x.abs() > 40. {
+        return Err(Error::Domain);
+    }
+    let (defect, em1) = if x.abs() < 0.125 {
+        let (&last, coefficients) = REMAINDER_COEFFICIENTS.split_last().unwrap();
+        let polynomial = coefficients.iter().rev().fold(last, |p, &c| c + x * p);
+        let defect = x * x * polynomial;
+        (defect, x + defect)
+    } else {
+        let em1 = x.exp_m1();
+        (em1 - x, em1)
+    };
+    Ok((weight * defect, weight * em1))
+}
+
 fn solve(mut a:[[f64;6];6],mut b:[f64;6])->Result<[f64;6],Error>{
  for k in 0..6{let mut pivot=k;for j in k+1..6{if a[j][k].abs()>a[pivot][k].abs(){pivot=j}}if a[pivot][k].abs()<1e-28{return Err(Error::Singular)}a.swap(k,pivot);b.swap(k,pivot);for j in k+1..6{let f=a[j][k]/a[k][k];a[j][k]=0.;for l in k+1..6{a[j][l]-=f*a[k][l];}b[j]-=f*b[k];}}
  let mut x=[0.;6];for k in(0..6).rev(){let mut v=b[k];for j in k+1..6{v-=a[k][j]*x[j];}x[k]=v/a[k][k];}Ok(x)

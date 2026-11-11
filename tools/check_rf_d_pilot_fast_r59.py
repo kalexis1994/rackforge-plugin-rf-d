@@ -170,7 +170,8 @@ def dynamic_q15(run, report, joined, exe, control, profiled, dc, bias, center, l
                       and control_mismatch <= report["r59_closure_limit_v"]
                       and crossings(exact_rows[:, 15]) == report["candidate_crossings"])
         key = report["q15_comparison"]
-        if key in ("q15_packed_products_comparison", "q15_packed_odd_comparison"):
+        if key in ("q15_packed_products_comparison", "q15_packed_odd_comparison",
+                   "q15_packed_law_comparison"):
             passed = passed and raw == exact_raw
         report[key] = dict(
             passed=passed, control_output_sha256=digest(exact_raw), endpoint_audit=exact_audit,
@@ -230,6 +231,8 @@ def main():
                         help="seed R59 by solving the follower with a local affine receiver response")
     parser.add_argument("--predict-r59-junctions", action="store_true",
                         help="project receiver retries along the cached R59 junction tangent")
+    parser.add_argument("--pack-receiver-law", action="store_true",
+                        help="evaluate four small-signal receiver junctions together with AVX")
     parser.add_argument("--q15-retry", action="store_true",
                         help="reuse the provisional R59 root and follower during Q15 retries")
     cathode_options = parser.add_mutually_exclusive_group()
@@ -253,6 +256,8 @@ def main():
         parser.error("Q15 optimizations require --dynamic-q15")
     if args.predict_r59_junctions and not args.dynamic_q15:
         parser.error("--predict-r59-junctions requires --dynamic-q15")
+    if args.pack_receiver_law and not args.dynamic_q15:
+        parser.error("--pack-receiver-law requires --dynamic-q15")
     if args.dynamic_q15:
         args.schur_follower = args.predict_follower = args.predict_cathode = args.tight_follower = True
     if args.packed_odd and not args.packed_products:
@@ -287,6 +292,7 @@ def main():
                        "tools/check_rf_d_pilot_split_returns.py", "tools/check_rf_d_pilot_off_anchor.py",
                        "tools/affine_evidence.py", "tools/check_hybrid_voice.py",
                        "tools/rf_d_pilot_packed_products.rs",
+                       "tools/rf_d_pilot_receiver_law.rs",
                        "crates/rf-d-circuit/src/loudness_follower.rs"))
     imposed = ("signal", "C2", "R60 collector", "Q25 base", "Q25 collector", "CR8 anode") if args.dynamic_q15 else (
         "signal", "C2", "reset base", "R60 collector")
@@ -298,6 +304,7 @@ def main():
                   predict_q15_cr6=args.predict_q15_cr6,
                   predict_r59_affine=args.predict_r59_affine,
                   predict_r59_junctions=args.predict_r59_junctions,
+                  pack_receiver_law=args.pack_receiver_law,
                   q15_retry=args.q15_retry,
                   internal_rate_hz=RATE, frames=128, warmup_frames=128, budget_ns=BUDGET_NS,
                   imposed_sources=imposed,
@@ -443,6 +450,7 @@ def main():
                 (args.predict_r59_junctions, "pilot_r59_junction_predictor", "r59_junction_prediction_comparison"),
                 (args.packed_products, "pilot_receiver_packed", "q15_packed_products_comparison"),
                 (args.packed_odd, "pilot_receiver_packed_odd", "q15_packed_odd_comparison"),
+                (args.pack_receiver_law, "pilot_receiver_packed_law", "q15_packed_law_comparison"),
             )
             enabled = [(flag, key) for selected, flag, key in refinements if selected]
             gain_control = None
@@ -454,6 +462,12 @@ def main():
                 flag, report["q15_comparison"] = enabled[-1]
                 q15_cfg.extend(("--cfg", flag))
             build(exe, *q15_cfg)
+            if args.pack_receiver_law:
+                tests = AREA / "r59-receiver-law-tests.exe"
+                build(tests, *q15_cfg, "--test")
+                result = run([tests, "packed_law::tests::retains_scalar_bits_and_domain", "--nocapture"])
+                assert b"1 passed" in result
+                report["receiver_law_unit_test"] = result.decode()
             profiled = AREA / "r59-q15-profile.exe" if args.profile else None
             if profiled is not None:
                 build(profiled, *q15_cfg, "--cfg", "pilot_r59_profile")

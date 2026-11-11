@@ -1,5 +1,12 @@
 //! Pilot charge FOH with two explicit contour-voltage drives.
-use crate::{pilot_law::{law, solve}, return_maps as map};
+use crate::{pilot_law::solve, return_maps as map};
+#[cfg(not(all(pilot_receiver_packed_law, target_arch = "x86_64", target_feature = "avx")))]
+use crate::pilot_law::law;
+#[cfg(all(pilot_receiver_packed_law, target_arch = "x86_64", target_feature = "avx"))]
+#[path = "rf_d_pilot_receiver_law.rs"]
+mod packed_law;
+#[cfg(all(pilot_receiver_packed_law, target_arch = "x86_64", target_feature = "avx"))]
+use packed_law::law;
 pub use crate::pilot_law::Error;
 const JUNCTIONS: usize = map::IEXP.len();
 const CHARGES: usize = map::F.len();

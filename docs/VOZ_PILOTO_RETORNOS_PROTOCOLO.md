@@ -674,3 +674,16 @@ Verificar igualdad por bits del resultado completo
 con el ejecutable sin instrumentar. Excluir el
 calentamiento de los contadores y usar sólo el
 ejecutable sin instrumentación para el plazo.
+
+Con `--pack-receiver-law`, evaluar en cuatro lanes
+AVX el resto exponencial y su pendiente cuando
+todas las junturas del grupo cumplen |z| < 0,125,
+con z adimensional referido al punto de trabajo.
+Compartir los coeficientes desde 1/2! hasta 1/12!
+y el orden de Horner con la evaluación escalar.
+Los grupos mixtos y la cola conservan la evaluación
+escalar y el dominio |z| ≤ 40. El control usa el
+mismo modelo y el mismo agrupado de matrices.
+Exigir igualdad por bits tanto en el ensayo de los
+límites del kernel como en el banco de Q15/R59,
+además de las reservas y el contraste con Radau.

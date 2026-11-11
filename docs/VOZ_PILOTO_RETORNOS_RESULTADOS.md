@@ -3002,3 +3002,23 @@ respuesta, 0,057 ms.
 El ejecutable ordinario tuvo una mediana pareada
 de 1,847 ms y un pico de 2,231 ms en los tres lotes.
 [Perfil positivo](../evidence/rf_d_pilot_fast_r5964.json).
+
+### Evaluación AVX de las junturas del receptor
+
+El ensayo de límites conservó por bits el resto
+exponencial y la pendiente. Ambas ramas conservaron
+por bits la trayectoria, las 17 cargas finales y
+los diagnósticos, incluidos los hashes de los
+pases agrupados previos. Pasaron Radau, los cruces
+de CR6 y la auditoría de carga, con cero asignaciones.
+
+En positivo, la mediana pareada bajó 4,32 % a
+1,782 ms. La raíz instrumentada consumió 0,747 ms
+por bloque, frente a 0,818 ms en el perfil escalar.
+El pico ordinario fue 2,984 ms.
+[Evaluación AVX positiva](../evidence/rf_d_pilot_fast_r5965.json).
+
+En negativo, la mediana pareada bajó 6,13 % a
+1,333 ms y el pico ordinario fue 2,218 ms. El
+plazo de 1,333 ms sigue abierto en ambas ramas.
+[Evaluación AVX negativa](../evidence/rf_d_pilot_fast_r5966.json).
