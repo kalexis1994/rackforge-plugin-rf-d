@@ -288,10 +288,16 @@ fn advance_inner(
                 }),
             };
             #[cfg(pilot_r59_reset_port)]
-            let reset_port = state
-                .follower
-                .ok_or(Error::Closure)?
-                .reset_port(volume[4], root.load_jacobian().map_err(Error::Audio)?[0][0])?;
+            let reset_port = {
+                #[cfg(pilot_r59_cached_reset_gain)]
+                let gain = gradient.ok_or(Error::Closure)?;
+                #[cfg(not(pilot_r59_cached_reset_gain))]
+                let gain = root.load_jacobian().map_err(Error::Audio)?[0][0];
+                state
+                    .follower
+                    .ok_or(Error::Closure)?
+                    .reset_port(volume[4], gain)?
+            };
             return Ok((
                 state,
                 Frame {

@@ -545,3 +545,14 @@ el dominio de R59, la suma de incrementos de carga
 y la partición 64/128 por bits. Medir el
 coste y las asignaciones a 128 frames después del
 calentamiento. C2 y el colector de R60 se imponen.
+
+Con `--cached-q15-gain`, usar en la dirección de
+Newton de Q15 la tangente del receptor que ya
+mantiene el cierre R59. Recalcular la corriente
+de CR6 y el residual completo en todos los intentos.
+Comparar al mismo reloj contra la tangente exacta
+en cada intento. Exigir la auditoría nodal de
+ambos, los mismos cruces y diferencias máximas
+de 2e−20 C en Q15 y 1e−20 C en las cargas finales
+del receptor. Medir dos parejas en orden alternado
+y aplicar el plazo a todos los picos del candidato.

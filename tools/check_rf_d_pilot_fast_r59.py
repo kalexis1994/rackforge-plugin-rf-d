@@ -37,7 +37,7 @@ RESET_TANGENT_LIMIT_S = 2e-11
 PROFILE_STAGES = ("initial_follower", "receiver_history", "receiver_root", "loaded_follower",
                   "follower_response", "receiver_tangent", "receiver_reconstruction")
 
-def dynamic_q15(run, report, joined, exe, dc, bias, center, limits, stimulus, cathode, assess, crossings):
+def dynamic_q15(run, report, joined, exe, control, dc, bias, center, limits, stimulus, cathode, assess, crossings):
     # Fit the imposed R56 source at DC. CR8 starts in reverse and Q15 BE/BC
     # are both deep reverse, giving a 2 fA collector current at this seed.
     q15_collector = (9.3 + cathode) / 2. - 1e-11
@@ -89,19 +89,21 @@ def dynamic_q15(run, report, joined, exe, dc, bias, center, limits, stimulus, ca
     report["reference_crossings"] = crossings(reference[8][:, 15])
     report["coarse_reference_crossings"] = crossings(reference[4][:, 15])
     charge_sum_error = abs(np.cumsum(rows[:, 18:20], axis=0) - rows[:, 16:18]).max(axis=0)
-    board_rows = rows[:, [6, 8, 9, 10, 11, 12, 13, 14]]
-    audit_input = packed(np.r_[header, np.column_stack((endpoint_inputs, board_rows, rows[:, 18:20])).ravel()])
-    audit_raw = run([joined, "q15-audit"], audit_input, repeat=True)
-    audit = np.frombuffer(audit_raw, "<f8").reshape(2 * STEPS, 5)
-    assert np.isfinite(audit).all()
-    audit_current = abs(audit[:, :3]).max(axis=0)
-    audit_charge = abs(audit[:, 3:]).max(axis=0)
-    report["endpoint_audit"] = dict(
-        passed=bool(audit_current.max() <= 2e-15 and audit_charge.max() <= 2e-20),
-        follower_kcl_a=float(audit_current[0]), q15_kcl_a=audit_current[1:].tolist(),
-        q15_charge_increment_error_c=audit_charge.tolist(),
-        input_sha256=digest(audit_input), output_sha256=digest(audit_raw),
-    )
+
+    def endpoint_audit(trajectory):
+        board_rows = trajectory[:, [6, 8, 9, 10, 11, 12, 13, 14]]
+        audit_input = packed(np.r_[header, np.column_stack((endpoint_inputs, board_rows, trajectory[:, 18:20])).ravel()])
+        audit_raw = run([joined, "q15-audit"], audit_input, repeat=True)
+        audit = np.frombuffer(audit_raw, "<f8").reshape(2 * STEPS, 5)
+        assert np.isfinite(audit).all()
+        audit_current = abs(audit[:, :3]).max(axis=0)
+        audit_charge = abs(audit[:, 3:]).max(axis=0)
+        return dict(passed=bool(audit_current.max() <= 2e-15 and audit_charge.max() <= 2e-20),
+                    follower_kcl_a=float(audit_current[0]), q15_kcl_a=audit_current[1:].tolist(),
+                    q15_charge_increment_error_c=audit_charge.tolist(),
+                    input_sha256=digest(audit_input), output_sha256=digest(audit_raw))
+
+    report["endpoint_audit"] = endpoint_audit(rows)
     report.update(
         charge_sum_error_c=charge_sum_error.tolist(),
         max_q15_residual_a=float(abs(rows[:, 20:22]).max()),
@@ -119,10 +121,37 @@ def dynamic_q15(run, report, joined, exe, dc, bias, center, limits, stimulus, ca
         and report["max_r59_mismatch_a"] <= 2e-12 and report["max_r59_mismatch_v"] <= 1e-10
         and abs(reference[8][:, 11] - center[0]).max() <= limits[0]
     )
-    timing = dict(zip(("blocks", "median_ns", "max_ns", "allocations"),
-                      map(int, run([exe, "bench"], payload).decode().split(",")), strict=True))
+    def measure(binary):
+        return dict(zip(("blocks", "median_ns", "max_ns", "allocations"),
+                        map(int, run([binary, "bench"], payload).decode().split(",")), strict=True))
+
+    timing = measure(exe)
     report["timing"] = timing
     report["realtime"] = report["passed"] and timing["max_ns"] <= BUDGET_NS and timing["allocations"] == 0
+    if control is not None:
+        exact_raw = run([control, 128], payload, repeat=True)
+        exact = np.frombuffer(exact_raw, "<f8")
+        assert np.isfinite(exact).all()
+        exact_rows = exact[:-CHARGES].reshape(2 * STEPS, 25)
+        difference = compare_q15(rows, exact_rows)
+        exact_audit = endpoint_audit(exact_rows)
+        audio_charge_error = float(abs(values[-CHARGES:] - exact[-CHARGES:]).max())
+        pairs = [{name: measure(target) for name, target in order}
+                 for order in ((("cached", exe), ("exact", control)), (("exact", control), ("cached", exe)))]
+        ratio = float(np.median([pair["cached"]["median_ns"] for pair in pairs])
+                      / np.median([pair["exact"]["median_ns"] for pair in pairs]))
+        passed = bool(difference["passed"] and exact_audit["passed"] and max(difference["q15_charge_error_c"]) <= 2e-20
+                      and audio_charge_error <= CHARGE_LIMIT_C
+                      and crossings(exact_rows[:, 15]) == report["candidate_crossings"])
+        report["cached_q15_gain_comparison"] = dict(
+            passed=passed, control_output_sha256=digest(exact_raw), endpoint_audit=exact_audit,
+            contrast=difference, audio_final_charge_error_c=audio_charge_error, bit_exact=raw == exact_raw,
+            paired_timing=pairs, paired_median_ratio=ratio,
+        )
+        report["passed"] = report["passed"] and passed
+        report["realtime"] = report["realtime"] and passed and all(
+            pair["cached"]["max_ns"] <= BUDGET_NS and pair["cached"]["allocations"] == 0 for pair in pairs)
+        print("Q15 cached gain", report["cached_q15_gain_comparison"], flush=True)
     print("Q15", report["passed"], report["contrast"], report["max_q15_residual_a"], timing, flush=True)
 
 
@@ -148,6 +177,8 @@ def main():
                         help="compare the closed R59 reset port tangent against centered differences")
     parser.add_argument("--dynamic-q15", action="store_true",
                         help="close Q15 charge through CR6 and R59 in the joined laboratory circuit")
+    parser.add_argument("--cached-q15-gain", action="store_true",
+                        help="reuse the receiver load tangent during Q15 closure")
     cathode_options = parser.add_mutually_exclusive_group()
     cathode_options.add_argument("--vary-cathode", action="store_true",
                                  help="drive the reset cathode around a forward-biased CR6 operating point")
@@ -161,6 +192,8 @@ def main():
     seed_options.add_argument("--reuse-law", action="store_true",
                               help="reuse the previous trial's law evaluation at the same junctions")
     args = parser.parse_args()
+    if args.cached_q15_gain and not args.dynamic_q15:
+        parser.error("--cached-q15-gain requires --dynamic-q15")
     if args.dynamic_q15:
         args.schur_follower = args.predict_follower = args.predict_cathode = args.tight_follower = True
     if args.packed_odd and not args.packed_products:
@@ -200,6 +233,7 @@ def main():
         "signal", "C2", "reset base", "R60 collector")
     report = dict(passed=False, realtime=False, rack_integrated=False, r59_closed=True, branch=args.branch,
                   dynamic_q15=args.dynamic_q15,
+                  cached_q15_gain=args.cached_q15_gain,
                   internal_rate_hz=RATE, frames=128, warmup_frames=128, budget_ns=BUDGET_NS,
                   imposed_sources=imposed,
                   cathode_v=cathode_v, cathode_amplitude_v=cathode_amplitude_v,
@@ -340,8 +374,14 @@ def main():
             run([*flags, *config, source, "--extern", f"rf_d_circuit={LIB}", "-o", target])
 
         if args.dynamic_q15:
-            build(exe, *cfg, *candidate_cfg, "--cfg", "pilot_r59_reset_port")
-            dynamic_q15(run, report, joined, exe, dc, bias, center, limits, stimulus, cathode_v,
+            q15_cfg = [*cfg, *candidate_cfg, "--cfg", "pilot_r59_reset_port"]
+            gain_control = None
+            if args.cached_q15_gain:
+                gain_control = AREA / "r59-q15-exact-gain.exe"
+                build(gain_control, *q15_cfg)
+                q15_cfg.extend(("--cfg", "pilot_r59_cached_reset_gain"))
+            build(exe, *q15_cfg)
+            dynamic_q15(run, report, joined, exe, gain_control, dc, bias, center, limits, stimulus, cathode_v,
                         assess, cr6_crossings)
             sources.unchanged()
             raise SystemExit(0 if report["passed"] else 1)

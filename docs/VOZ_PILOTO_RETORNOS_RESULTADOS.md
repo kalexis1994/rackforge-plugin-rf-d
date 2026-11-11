@@ -2782,3 +2782,20 @@ las medianas a 128 frames fueron 10,505 ms y
 Hubo cero asignaciones y hasta cuatro intentos.
 [BDF2 positivo](../evidence/rf_d_pilot_fast_r5940.json).
 [BDF2 negativo](../evidence/rf_d_pilot_fast_r5941.json).
+
+Al reutilizar la tangente del receptor, las salidas,
+diagnósticos y cargas de ambas ramas coincidieron
+por bits con el control de tangente exacta. Los dos
+ejecutables pasaron la auditoría nodal. Las medianas
+pareadas bajaron 57,07 % en positivo y 59,78 % en
+negativo, a 4,496 y 3,950 ms por bloque. Los máximos
+del candidato en los tres lotes fueron 4,842 y
+4,365 ms, con cero asignaciones. El plazo de 1,333 ms
+sigue abierto para este cierre dinámico.
+[Tangente reutilizada positiva](../evidence/rf_d_pilot_fast_r5942.json).
+[Tangente reutilizada negativa](../evidence/rf_d_pilot_fast_r5943.json).
+
+El banco previo de Q15 pasó sus tres auditorías del
+stamp completo tras extraer las ecuaciones de
+conducción compartidas.
+[Regresión de Q15](../evidence/rf_d_pilot_q15_audit03.json).
