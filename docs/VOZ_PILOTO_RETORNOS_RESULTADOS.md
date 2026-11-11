@@ -2896,3 +2896,12 @@ Los máximos de los tres lotes fueron 2,331 y
 1,529 ms, con cero asignaciones.
 [Carga positiva fuera de reserva](../evidence/rf_d_pilot_fast_r5952.json).
 [Semilla afín negativa](../evidence/rf_d_pilot_fast_r5953.json).
+
+Con 2e−12 V en R59 para candidato y control, la
+diferencia positiva bajó a 1,77e−20 C y siguió
+fuera de la reserva. El candidato conservó una
+iteración de R59 por cierre en el bloque medido.
+La rama negativa volvió a pasar con 3,31e−24 C
+de diferencia y un pico de 1,500 ms.
+[Tolerancia de 2e−12 V positiva](../evidence/rf_d_pilot_fast_r5954.json).
+[Tolerancia de 2e−12 V negativa](../evidence/rf_d_pilot_fast_r5955.json).

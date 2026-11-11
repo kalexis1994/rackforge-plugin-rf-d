@@ -121,7 +121,8 @@ def dynamic_q15(run, report, joined, exe, control, dc, bias, center, limits, sti
         and len(report["reference_crossings"]) >= 2
         and report["candidate_crossings"] == report["reference_crossings"] == report["coarse_reference_crossings"]
         and charge_sum_error.max() <= 2e-20 and report["max_q15_residual_a"] <= 2e-15
-        and report["max_r59_mismatch_a"] <= 2e-12 and report["max_r59_mismatch_v"] <= 1e-10
+        and report["max_r59_mismatch_a"] <= 2e-12
+        and report["max_r59_mismatch_v"] <= report["r59_closure_limit_v"]
         and abs(reference[8][:, 11] - center[0]).max() <= limits[0]
     )
     def measure(binary):
@@ -143,8 +144,10 @@ def dynamic_q15(run, report, joined, exe, control, dc, bias, center, limits, sti
                  for order in ((("cached", exe), ("exact", control)), (("exact", control), ("cached", exe)))]
         ratio = float(np.median([pair["cached"]["median_ns"] for pair in pairs])
                       / np.median([pair["exact"]["median_ns"] for pair in pairs]))
+        control_mismatch = float(exact_rows[:, 24].max())
         passed = bool(difference["passed"] and exact_audit["passed"] and max(difference["q15_charge_error_c"]) <= 2e-20
                       and audio_charge_error <= CHARGE_LIMIT_C
+                      and control_mismatch <= report["r59_closure_limit_v"]
                       and crossings(exact_rows[:, 15]) == report["candidate_crossings"])
         key = report["q15_comparison"]
         report[key] = dict(
@@ -153,6 +156,7 @@ def dynamic_q15(run, report, joined, exe, control, dc, bias, center, limits, sti
             control_receiver_evaluations=int(exact_rows[:, 22].sum()),
             control_measured_block_receiver_evaluations=int(exact_rows[STEPS:, 22].sum()),
             control_measured_block_receiver_iterations=int(exact_rows[STEPS:, 25].sum()),
+            control_max_r59_mismatch_v=control_mismatch,
             paired_timing=pairs, paired_median_ratio=ratio,
         )
         report["passed"] = report["passed"] and passed
@@ -203,6 +207,8 @@ def main():
                                  help="drive CR6 across zero bias in both directions")
     parser.add_argument("--tight-follower", action="store_true",
                         help="require a 2e-14 V follower Newton correction in every variant")
+    parser.add_argument("--tight-r59", action="store_true",
+                        help="require 2e-12 V agreement at the closed R59 port in every variant")
     seed_options = parser.add_mutually_exclusive_group()
     seed_options.add_argument("--feedback-seed", action="store_true",
                               help="seed receiver retries with the new predictor and previous trial feedback")
@@ -272,6 +278,7 @@ def main():
                   predict_cathode=args.predict_cathode,
                   cross_cathode=args.cross_cathode,
                   follower_correction_limit_v=2e-14 if args.tight_follower else 2e-12,
+                  r59_closure_limit_v=2e-12 if args.tight_r59 else 1e-10,
                   **sources.fields(), compiler_sha256=sha(Path(COMPILER)), library_sha256=sha(LIB))
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
     flags = [COMPILER, "--edition=2021", "-C", "opt-level=3", "-C", "target-feature=+fma",
@@ -381,6 +388,8 @@ def main():
             cfg.extend(("--cfg", "pilot_shared_port_exp"))
         if args.tight_follower:
             cfg.extend(("--cfg", "pilot_r59_tight_follower"))
+        if args.tight_r59:
+            cfg.extend(("--cfg", "pilot_r59_tight_closure"))
         control_cfg = cfg.copy()
         if args.packed_products:
             cfg.extend(("--cfg", "pilot_receiver_packed"))
@@ -536,7 +545,7 @@ def main():
                         output_sha256=digest(raw[:-charge_bytes]),
                         final_charge_sha256=digest(raw[-charge_bytes:]), unchanged_replay=True)
             item["r59_source_range_v"] = [float(rows[:, 11].min()), float(rows[:, 11].max())]
-            item["passed"] = bool(result["passed"] and stats[1] <= 1e-10 and stats[2] <= 2e-12)
+            item["passed"] = bool(result["passed"] and stats[1] <= report["r59_closure_limit_v"] and stats[2] <= 2e-12)
             if args.cross_cathode:
                 voltage = cr6_voltage(rows, input[:, 2])
                 item["cr6_current_error_a"] = float(abs(cr6_current(voltage) - reference_cr6_current).max())

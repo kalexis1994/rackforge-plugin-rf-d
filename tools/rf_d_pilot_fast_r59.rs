@@ -6,7 +6,11 @@ use crate::contour_ports::close_volume;
 use crate::{plant, return_maps as map, StepError};
 
 const R59: f64 = 68_000.;
-const CLOSURE_V: f64 = 1e-10;
+const CLOSURE_V: f64 = if cfg!(pilot_r59_tight_closure) {
+    2e-12
+} else {
+    1e-10
+};
 
 #[derive(Clone, Copy)]
 pub struct State {
