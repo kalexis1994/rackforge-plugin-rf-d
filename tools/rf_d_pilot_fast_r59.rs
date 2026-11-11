@@ -77,10 +77,25 @@ impl FollowerSeed {
 }
 
 #[cfg(pilot_r59_predict_q15)]
-pub(crate) fn predict_reset(old: State, c2: f64) -> Option<[f64; 2]> {
+pub(crate) fn predict_reset(old: State, drive: [f64; 3]) -> Option<[f64; 2]> {
+    let c2 = drive[1];
     let seed = old.follower?;
-    let [c2_response, cathode_response] = seed.reset_response(old.gradient?).ok()?;
+    let gain = old.gradient?;
+    let [c2_response, cathode_response] = seed.reset_response(gain).ok()?;
     let reset_at_old_cathode = old.volume[4] + c2_response * (c2 - seed.c2);
+    #[cfg(pilot_r59_predict_q15_audio)]
+    let reset_at_old_cathode = {
+        let [signal, _, filter] = drive;
+        let receiver_drive = plant::Drive {
+            volume_delta_v: old.volume[2] - map::SPLIT_CENTER[0],
+            filter_delta_v: filter - map::SPLIT_CENTER[1],
+        };
+        let base = plant::Prepared::new(old.audio)
+            .predict_vca_base(signal, receiver_drive)
+            .ok()?;
+        reset_at_old_cathode
+            + seed.base_response[4] * (base - old.vca_base) / (1. - gain * seed.base_response[2])
+    };
     Some([reset_at_old_cathode, cathode_response])
 }
 

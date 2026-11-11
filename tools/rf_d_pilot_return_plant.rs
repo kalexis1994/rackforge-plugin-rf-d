@@ -71,6 +71,33 @@ impl Prepared {
         }
     }
 
+    fn endpoint_terms(&self, signal: f64, drive: Drive) -> Result<([f64; CHARGES], [f64; 3]), Error> {
+        if !drive.valid() || !signal.is_finite() || signal.abs() > 0.08 {
+            return Err(Error::Input);
+        }
+        let input = [signal, drive.volume_delta_v, drive.filter_delta_v];
+        let base = std::array::from_fn(|i| {
+            dot(&map::U0[i], &self.old.input) + dot(&map::U1[i], &input)
+                + self.stored[i] + self.correction[i]
+        });
+        Ok((base, input))
+    }
+
+    fn junction_predictor(base: &[f64; CHARGES], input: &[f64; 3]) -> [f64; JUNCTIONS] {
+        let history = product(&ZH, base);
+        std::array::from_fn(|i| history[i] + dot(&map::ZU[i], input))
+    }
+
+    #[cfg(pilot_r59_predict_q15_audio)]
+    pub(crate) fn predict_vca_base(&self, signal: f64, drive: Drive) -> Result<f64, Error> {
+        let (base, input) = self.endpoint_terms(signal, drive)?;
+        let predictor = Self::junction_predictor(&base, &input);
+        let z = std::array::from_fn(|i| predictor[i] - self.old.feedback[i]);
+        let (defects, _) = law(z)?;
+        let voltage = readout_node(3, &base, &input, &defects);
+        voltage.is_finite().then_some(voltage).ok_or(Error::Domain)
+    }
+
     pub(crate) fn solve_root(
         &self,
         signal: f64,
@@ -78,18 +105,8 @@ impl Prepared {
         prior: Option<&Root>,
     ) -> Result<Root, Error> {
         let state = &self.old;
-        if !drive.valid() || !signal.is_finite() || signal.abs() > 0.08 {
-            return Err(Error::Input);
-        }
-        let input = [signal, drive.volume_delta_v, drive.filter_delta_v];
-        let stored = &self.stored;
-        let correction = &self.correction;
-        let base: [f64; CHARGES] = std::array::from_fn(|i| {
-            dot(&map::U0[i], &state.input) + dot(&map::U1[i], &input) + stored[i] + correction[i]
-        });
-        let history = product(&ZH, &base);
-        let predictor: [f64; JUNCTIONS] =
-            std::array::from_fn(|i| history[i] + dot(&map::ZU[i], &input));
+        let (base, input) = self.endpoint_terms(signal, drive)?;
+        let predictor = Self::junction_predictor(&base, &input);
         #[cfg(not(pilot_block_roots))]
         let previous = product(&P, &state.defects);
         #[cfg(pilot_block_roots)]
@@ -176,8 +193,7 @@ pub(crate) struct Root {
 impl Root {
     #[cfg(any(not(pilot_receiver_packed), pilot_receiver_ports))]
     fn readout_node(&self, node: usize) -> f64 {
-        map::DC[node] + dot(&map::XQ[node], &self.base) + dot(&map::XU[node], &self.input)
-            - dot(&map::XD[node], &self.defects)
+        readout_node(node, &self.base, &self.input, &self.defects)
     }
 
     #[cfg(pilot_receiver_ports)]
@@ -251,6 +267,12 @@ impl Root {
         };
         Ok((state, ports))
     }
+}
+
+#[cfg(any(not(pilot_receiver_packed), pilot_receiver_ports))]
+fn readout_node(node: usize, base: &[f64; CHARGES], input: &[f64; 3], defects: &[f64; JUNCTIONS]) -> f64 {
+    map::DC[node] + dot(&map::XQ[node], base) + dot(&map::XU[node], input)
+        - dot(&map::XD[node], defects)
 }
 
 #[cfg(pilot_receiver_ports)]

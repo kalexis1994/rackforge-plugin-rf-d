@@ -586,3 +586,19 @@ los puertos del seguidor. Contar los intentos y las
 iteraciones de R59 de los cierres que retornaron.
 Contrastar con la misma semilla de Q15 y la misma
 política de tangente con el arranque anterior de R59.
+
+Con `--predict-q15-audio`, calcular una lectura
+provisional de la base del VCA con la historia FOH
+aceptada, la señal y R60 del paso nuevo, y la fuente
+anterior de R59. Evaluar la ley una vez sobre el
+predictor de junturas con el feedback anterior.
+Proyectar la diferencia de la base al reset con la
+respuesta del seguidor y el denominador de R59
+cerrado. Usar este término sólo para la semilla
+Euler/BDF2. Resolver y auditar los estados con las
+mismas ecuaciones y límites completos.
+
+Comparar con la misma política de reintentos y
+tangente sin esa lectura provisional. Contar los
+intentos y las iteraciones de R59 después de la
+semilla y medir el coste total de ambos caminos.

@@ -2844,3 +2844,16 @@ El cierre sigue por encima de 1,333 ms en este
 banco con Q25, CR8, C2 y R60 impuestos.
 [Reintentos positivos](../evidence/rf_d_pilot_fast_r5946.json).
 [Reintentos negativos](../evidence/rf_d_pilot_fast_r5947.json).
+
+
+### Lectura provisional de la base del VCA
+
+Proyectar al reset una lectura FOH de la base del
+VCA conservó la trayectoria, los diagnósticos y las
+cargas por bits. Los cierres de audio y las
+iteraciones de R59 fueron idénticos al control.
+El coste de la lectura subió la mediana pareada
+5,93 % en positivo y 5,32 % en negativo. El ensayo
+queda como opción reproducible de laboratorio.
+[Lectura positiva](../evidence/rf_d_pilot_fast_r5948.json).
+[Lectura negativa](../evidence/rf_d_pilot_fast_r5949.json).

@@ -72,9 +72,9 @@ fn direction(residual: [f64; 2], jacobian: [[f64; 2]; 2]) -> Result<[f64; 2], St
 #[cfg(pilot_r59_predict_q15)]
 fn predict(
     old: State,
-    [_, c2, _, q25_base, q25_collector, cr8_anode]: [f64; 6],
+    [signal, c2, filter, q25_base, q25_collector, cr8_anode]: [f64; 6],
 ) -> Option<[f64; 2]> {
-    let [reset_at_old_cathode, slope] = fast_r59::predict_reset(old.audio, c2)?;
+    let [reset_at_old_cathode, slope] = fast_r59::predict_reset(old.audio, [signal, c2, filter])?;
     let drive = q15::Drive {
         c2,
         vca_base: old.audio.vca_base,

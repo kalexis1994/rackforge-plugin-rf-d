@@ -146,7 +146,9 @@ def dynamic_q15(run, report, joined, exe, control, dc, bias, center, limits, sti
         passed = bool(difference["passed"] and exact_audit["passed"] and max(difference["q15_charge_error_c"]) <= 2e-20
                       and audio_charge_error <= CHARGE_LIMIT_C
                       and crossings(exact_rows[:, 15]) == report["candidate_crossings"])
-        if report["q15_retry"]:
+        if report["predict_q15_audio"]:
+            key = "q15_audio_prediction_comparison"
+        elif report["q15_retry"]:
             key = "q15_retry_comparison"
         else:
             key = "q15_predictor_comparison" if report["predict_q15"] else "cached_q15_gain_comparison"
@@ -191,6 +193,8 @@ def main():
                         help="reuse the receiver load tangent during Q15 closure")
     parser.add_argument("--predict-q15", action="store_true",
                         help="seed the Q15 closure from the preceding reset response")
+    parser.add_argument("--predict-q15-audio", action="store_true",
+                        help="include a provisional receiver readout in the Q15 seed")
     parser.add_argument("--q15-retry", action="store_true",
                         help="reuse the provisional R59 root and follower during Q15 retries")
     cathode_options = parser.add_mutually_exclusive_group()
@@ -206,6 +210,8 @@ def main():
     seed_options.add_argument("--reuse-law", action="store_true",
                               help="reuse the previous trial's law evaluation at the same junctions")
     args = parser.parse_args()
+    if args.predict_q15_audio and not args.predict_q15:
+        parser.error("--predict-q15-audio requires --predict-q15")
     if (args.cached_q15_gain or args.predict_q15 or args.q15_retry) and not args.dynamic_q15:
         parser.error("Q15 optimizations require --dynamic-q15")
     if args.dynamic_q15:
@@ -249,6 +255,7 @@ def main():
                   dynamic_q15=args.dynamic_q15,
                   cached_q15_gain=args.cached_q15_gain,
                   predict_q15=args.predict_q15,
+                  predict_q15_audio=args.predict_q15_audio,
                   q15_retry=args.q15_retry,
                   internal_rate_hz=RATE, frames=128, warmup_frames=128, budget_ns=BUDGET_NS,
                   imposed_sources=imposed,
@@ -397,15 +404,20 @@ def main():
                 build(gain_control, *q15_cfg)
             if args.cached_q15_gain:
                 q15_cfg.extend(("--cfg", "pilot_r59_cached_reset_gain"))
-            if args.predict_q15 and not args.q15_retry:
+            if args.predict_q15 and not (args.q15_retry or args.predict_q15_audio):
                 gain_control = AREA / "r59-q15-old-seed.exe"
                 build(gain_control, *q15_cfg)
             if args.predict_q15:
                 q15_cfg.extend(("--cfg", "pilot_r59_predict_q15"))
-            if args.q15_retry:
+            if args.q15_retry and not args.predict_q15_audio:
                 gain_control = AREA / "r59-q15-no-retry-seed.exe"
                 build(gain_control, *q15_cfg)
+            if args.q15_retry:
                 q15_cfg.extend(("--cfg", "pilot_r59_q15_retry"))
+            if args.predict_q15_audio:
+                gain_control = AREA / "r59-q15-no-audio-prediction.exe"
+                build(gain_control, *q15_cfg)
+                q15_cfg.extend(("--cfg", "pilot_r59_predict_q15_audio"))
             build(exe, *q15_cfg)
             dynamic_q15(run, report, joined, exe, gain_control, dc, bias, center, limits, stimulus, cathode_v,
                         assess, cr6_crossings)
