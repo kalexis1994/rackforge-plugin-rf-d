@@ -1,5 +1,9 @@
 //! Close the board-2 follower against the fast receiver at a common endpoint.
-use crate::{contour_ports, plant, return_maps as map, StepError};
+#[cfg(pilot_r59_schur_follower)]
+use crate::contour_ports::close_r59_volume as close_volume;
+#[cfg(not(pilot_r59_schur_follower))]
+use crate::contour_ports::close_volume;
+use crate::{plant, return_maps as map, StepError};
 
 const R59: f64 = 68_000.;
 const CLOSURE_V: f64 = 1e-10;
@@ -34,6 +38,7 @@ pub struct Profile {
     pub stages: [(u64, u128); 7],
     pub successful_root_evaluations: usize,
     pub reused_root_evaluations: usize,
+    pub follower_fallbacks: usize,
 }
 
 macro_rules! measure {
@@ -61,9 +66,14 @@ pub fn advance(
     let (mut volume, factor) = measure!(
         profile,
         0,
-        contour_ports::close_volume(old.volume, c2, cathode, old.vca_base)
+        close_volume(old.volume, c2, cathode, old.vca_base)
     )
     .map_err(Error::Volume)?;
+    #[cfg(all(pilot_r59_profile, pilot_r59_schur_follower))]
+    {
+        profile.follower_fallbacks +=
+            usize::from(matches!(factor, crate::contour_ports::R59Factor::Full(_)));
+    }
     let mut volume_response =
         measure!(profile, 4, factor.solve([0., 0., 1. / R59, 0., 0.])).map_err(Error::Volume)?;
     let mut volume_base = old.vca_base;
@@ -79,7 +89,11 @@ pub fn advance(
             filter_delta_v: filter - map::SPLIT_CENTER[1],
         };
         let refresh_tangent = gradient.is_none();
-        let seed = if refresh_tangent { None } else { prior.as_ref() };
+        let seed = if refresh_tangent {
+            None
+        } else {
+            prior.as_ref()
+        };
         let root = measure!(
             profile,
             2,
@@ -114,12 +128,13 @@ pub fn advance(
         // The tangent supplies a seed. close_volume checks every original row again.
         let initial =
             std::array::from_fn(|k| volume[k] + volume_response[k] * (vca_base - volume_base));
-        let (next, factor) = measure!(
-            profile,
-            3,
-            contour_ports::close_volume(initial, c2, cathode, vca_base)
-        )
-        .map_err(Error::Volume)?;
+        let (next, factor) = measure!(profile, 3, close_volume(initial, c2, cathode, vca_base))
+            .map_err(Error::Volume)?;
+        #[cfg(all(pilot_r59_profile, pilot_r59_schur_follower))]
+        {
+            profile.follower_fallbacks +=
+                usize::from(matches!(factor, crate::contour_ports::R59Factor::Full(_)));
+        }
         volume = next;
         volume_base = vca_base;
         let residual = volume[2] - source;

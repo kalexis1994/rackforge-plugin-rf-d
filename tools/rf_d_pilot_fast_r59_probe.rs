@@ -139,8 +139,10 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             writeln!(
                 out,
-                "{},{}",
-                profile.successful_root_evaluations, profile.reused_root_evaluations
+                "{},{},{}",
+                profile.successful_root_evaluations,
+                profile.reused_root_evaluations,
+                profile.follower_fallbacks
             )?;
         }
     } else {

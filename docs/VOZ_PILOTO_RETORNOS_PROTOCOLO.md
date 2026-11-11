@@ -401,3 +401,23 @@ El respaldo sigue usando el predictor del último
 estado aceptado. Exigir identidad por bits frente
 al control que repite la evaluación y contar cuántas
 evaluaciones se reutilizan en las raíces convergidas.
+
+Con `--schur-follower`, eliminar la incógnita del reset
+en cada paso de Newton del seguidor. En el Jacobiano,
+la fila y columna del reset sólo acoplan con loudness
+por −g24 = −1/R24. Para su diagonal s y residual r4,
+restar g24²/s de la diagonal de loudness y sumar
+g24·r4/s a su lado derecho. Reconstruir la corrección
+del reset como (r4 + g24·d_loudness)/s. Usar el mismo
+factor para la respuesta a R59 y conservar R15, Q3,
+Q2 y la ley de CR6 con sus pendientes.
+
+Comprobar las cinco corrientes originales con 2e−15 A
+y las cinco correcciones con 2e−12 V. Ante fallo del
+solve reducido, repetir con las cinco incógnitas desde
+la semilla de entrada. Probar las reservas DC de CR6
+y la respuesta a R59 contra el Jacobiano completo.
+Contrastar los puertos con Radau en ambas ramas y
+las cargas finales con el control de cinco incógnitas
+con 1e−20 C de diferencia máxima. Medir a 128 frames
+con la misma semilla del receptor en cada pareja.

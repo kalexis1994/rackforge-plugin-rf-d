@@ -2556,3 +2556,35 @@ de laboratorio. Hubo cero asignaciones en los pases.
 La voz de 18 junturas pasó de nuevo las tres escenas
 y conservó el hash de J7 f32.
 [Regresión de la voz](../evidence/rf_d_pilot_returns19.json).
+
+
+### Eliminación del reset en el Jacobiano del seguidor
+
+La primera prueba incluyó una semilla con cátodo de
+1,2 V que agotó el presupuesto de Newton. La repetición
+usó los dos puntos DC de CR6 con referencia previa.
+Ambos validaron las cinco corrientes, la corrección
+completa y la respuesta a R59 contra el LU de cinco
+incógnitas. Los límites permanecieron en 2e−15 A
+y 2e−12 V.
+[Primer intento](../evidence/rf_d_pilot_fast_r5922.json).
+
+Las trayectorias positiva y negativa y sus 17 cargas
+finales coincidieron por bits con el control de cinco
+incógnitas. Pasaron Radau, el refinamiento 384/768 kHz
+y la partición 64/128. El solve reducido se usó en
+los 49.152 cierres de cada perfil.
+
+En positivo, la media instrumentada de los cierres
+del seguidor bajó de 0,401 a 0,345 ms por bloque.
+La mediana pareada del bloque nativo bajó 5,45 % y
+el máximo entre los siete lotes fue 1,858 ms.
+[Rama positiva](../evidence/rf_d_pilot_fast_r5923.json).
+
+En negativo, el coste de los cierres bajó de 0,376 a
+0,316 ms. La mediana pareada del bloque bajó 7,15 %
+y el máximo fue 1,511 ms. Hubo cero asignaciones.
+El candidato se conserva como opción de laboratorio
+`--schur-follower`, con el margen de 1,333 ms
+pendiente en ambas ramas.
+[Rama negativa](../evidence/rf_d_pilot_fast_r5924.json).

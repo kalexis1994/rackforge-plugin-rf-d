@@ -281,6 +281,71 @@ pub(crate) fn close_volume(
     )
 }
 
+#[cfg(pilot_r59_schur_follower)]
+pub(crate) enum R59Factor {
+    Schur { factor: Lu<4>, cv_diagonal: f64 },
+    Full(Lu<5>),
+}
+
+#[cfg(pilot_r59_schur_follower)]
+impl R59Factor {
+    pub(crate) fn solve(&self, [r0, r1, r2, r3, r4]: [f64; 5]) -> Result<[f64; 5], StepError> {
+        match self {
+            Self::Schur { factor, cv_diagonal } => {
+                let g24 = 1. / R24;
+                let [d0, d1, d2, d3] = factor.solve([r0, r1, r2 + (g24 / cv_diagonal) * r4, r3])?;
+                let d4 = (r4 + g24 * d2) / cv_diagonal;
+                if !d4.is_finite() {
+                    return Err(StepError::SingularJacobian);
+                }
+                Ok([d0, d1, d2, d3, d4])
+            }
+            Self::Full(factor) => factor.solve([r0, r1, r2, r3, r4]),
+        }
+    }
+}
+
+#[cfg(pilot_r59_schur_follower)]
+fn close_volume_schur(
+    mut x: [f64; 5],
+    c2: f64,
+    cathode: f64,
+    base: f64,
+) -> Result<([f64; 5], R59Factor), StepError> {
+    let [current, voltage] = JOINT_TOLERANCES;
+    let g24 = 1. / R24;
+    for _ in 0..12 {
+        let [x0, x1, x2, x3, x4] = x;
+        let Stamp { f: [r0, r1, r2, r3], mut j } = volume_stamp([x0, x1, x2, x3], c2, x4, base)?;
+        let (r4, cv_diagonal, _) = cv_law(x4, x2, cathode)?;
+        if !cv_diagonal.is_finite() || cv_diagonal <= 0. {
+            return Err(StepError::SingularJacobian);
+        }
+        // The reset node has only one off-diagonal entry, -1/R24 at loudness.
+        j[2][2] -= g24 * (g24 / cv_diagonal);
+        let factor = R59Factor::Schur { factor: Lu::factor(j)?, cv_diagonal };
+        let residual = [r0, r1, r2, r3, r4];
+        let d = factor.solve(residual)?;
+        if maximum(&residual) <= current && maximum(&d) <= voltage {
+            return Ok((x, factor));
+        }
+        x = std::array::from_fn(|i| x[i] - d[i]);
+    }
+    Err(StepError::IterationBudget)
+}
+
+#[cfg(pilot_r59_schur_follower)]
+pub(crate) fn close_r59_volume(
+    initial: [f64; 5],
+    c2: f64,
+    cathode: f64,
+    base: f64,
+) -> Result<([f64; 5], R59Factor), StepError> {
+    close_volume_schur(initial, c2, cathode, base).or_else(|_| {
+        close_volume(initial, c2, cathode, base).map(|(state, factor)| (state, R59Factor::Full(factor)))
+    })
+}
+
 #[cfg(pilot_audio_readout)]
 pub fn joint_cells(
     cells: Returns,
@@ -433,6 +498,33 @@ mod tests {
             let low = split_solution(cathode, base - step)[0];
             let high = split_solution(cathode, base + step)[0];
             assert!((slope - (high - low) / (2. * step)).abs() <= 2e-8);
+        }
+    }
+
+    #[cfg(pilot_r59_schur_follower)]
+    #[test]
+    fn schur_follower_preserves_all_five_rows_and_load_direction() {
+        for (cathode, base) in [(0.01, 4.306692675075283), (0.7, 4.307742421921254)] {
+            let [q3, q2, x3, x2] = VOLUME;
+            let initial = [q3, q2, x3, x2, cathode + 0.42];
+            let (x, factor) = close_volume_schur(initial, C2, cathode, base)
+                .unwrap_or_else(|error| panic!("cathode {cathode}: {error:?}"));
+            let original = closed_volume_stamp(x, C2, cathode, base).unwrap();
+            let full = Lu::factor(original.j).unwrap();
+            let (reference, _) = close_volume(initial, C2, cathode, base).unwrap();
+            assert!(maximum(&original.f) <= JOINT_TOLERANCES[0]);
+            assert!(maximum(&full.solve(original.f).unwrap()) <= JOINT_TOLERANCES[1]);
+            let delta: [f64; 5] = std::array::from_fn(|i| x[i] - reference[i]);
+            assert!(maximum(&delta) <= 2. * JOINT_TOLERANCES[1]);
+            let load = [0., 0., 1. / R59, 0., 0.];
+            let direction = factor.solve(load).unwrap();
+            for (row, rhs) in original.j.iter().zip(load) {
+                let value = row.iter().zip(direction).map(|(j, d)| j * d).sum::<f64>();
+                assert!((value - rhs).abs() <= JOINT_TOLERANCES[0]);
+            }
+            let full_direction = full.solve(load).unwrap();
+            let delta: [f64; 5] = std::array::from_fn(|i| direction[i] - full_direction[i]);
+            assert!(maximum(&delta) <= JOINT_TOLERANCES[1]);
         }
     }
 }

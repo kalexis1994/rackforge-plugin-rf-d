@@ -46,6 +46,8 @@ def main():
                         help="group the odd Newton rows and compare with the original correction")
     parser.add_argument("--profile", action="store_true",
                         help="attribute native cost using a separate instrumented executable")
+    parser.add_argument("--schur-follower", action="store_true",
+                        help="eliminate the reset node from the follower Newton system")
     seed_options = parser.add_mutually_exclusive_group()
     seed_options.add_argument("--feedback-seed", action="store_true",
                               help="seed receiver retries with the new predictor and previous trial feedback")
@@ -77,6 +79,7 @@ def main():
                   packed_odd=args.packed_odd,
                   feedback_seed=args.feedback_seed,
                   reuse_law=args.reuse_law,
+                  schur_follower=args.schur_follower,
                   **sources.fields(), compiler_sha256=sha(Path(COMPILER)), library_sha256=sha(LIB))
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
     flags = [COMPILER, "--edition=2021", "-C", "opt-level=3", "-C", "target-feature=+fma",
@@ -125,10 +128,11 @@ def main():
         for name, line in zip(PROFILE_STAGES, lines[1:-1], strict=True):
             calls, elapsed_ns = map(int, line.split(","))
             stages[name] = dict(calls=calls, elapsed_ns=elapsed_ns, mean_per_block_ns=elapsed_ns / blocks)
-        evaluations, reused = map(int, lines[-1].split(","))
+        evaluations, reused, fallbacks = map(int, lines[-1].split(","))
         assert 0 <= reused <= stages["receiver_root"]["calls"] <= evaluations
         return dict(bit_exact=exact, instrumented_timing=instrumented, stages=stages,
-                    successful_root_evaluations=evaluations, reused_root_evaluations=reused)
+                    successful_root_evaluations=evaluations, reused_root_evaluations=reused,
+                    follower_fallbacks=fallbacks)
 
     try:
         isolated, joined = AREA / "r59-isolated.exe", AREA / "r59-joined.exe"
@@ -174,30 +178,42 @@ def main():
         odd_control_cfg = cfg.copy()
         if args.packed_odd:
             cfg.extend(("--cfg", "pilot_receiver_packed_odd"))
-        run([*flags, *cfg, *seed_cfg, source, "--extern", f"rf_d_circuit={LIB}", "-o", exe])
-        if args.shared_port_exp:
+        follower_cfg = ["--cfg", "pilot_r59_schur_follower"] if args.schur_follower else []
+        candidate_cfg = [*seed_cfg, *follower_cfg]
+
+        def build(target, *config):
+            run([*flags, *config, source, "--extern", f"rf_d_circuit={LIB}", "-o", target])
+
+        build(exe, *cfg, *candidate_cfg)
+        if args.shared_port_exp or args.schur_follower:
             unit = AREA / "r59-port-tests.exe"
-            run([*flags, *cfg, *seed_cfg, "--test", source, "--extern", f"rf_d_circuit={LIB}", "-o", unit])
-            report["port_unit_tests"] = run([unit, "contour_ports::tests"]).decode()
+            build(unit, *cfg, *candidate_cfg, "--test")
+            report["port_unit_tests"] = run([unit, "contour_ports::tests", "--nocapture"]).decode()
         control = AREA / "r59-scalar.exe"
         if args.packed_products:
-            run([*flags, *control_cfg, *seed_cfg, source, "--extern", f"rf_d_circuit={LIB}", "-o", control])
+            build(control, *control_cfg, *candidate_cfg)
         eager = AREA / "r59-eager.exe"
         if args.compare_eager:
-            run([*flags, *cfg, *seed_cfg, "--cfg", "pilot_r59_eager", source, "--extern", f"rf_d_circuit={LIB}", "-o", eager])
+            build(eager, *cfg, *candidate_cfg, "--cfg", "pilot_r59_eager")
         odd_control = AREA / "r59-odd-control.exe"
         if args.packed_odd:
-            run([*flags, *odd_control_cfg, *seed_cfg, source, "--extern", f"rf_d_circuit={LIB}", "-o", odd_control])
+            build(odd_control, *odd_control_cfg, *candidate_cfg)
         seed_control = AREA / "r59-seed-control.exe"
         if seed_cfg:
-            run([*flags, *cfg, source, "--extern", f"rf_d_circuit={LIB}", "-o", seed_control])
+            build(seed_control, *cfg, *follower_cfg)
+        follower_control = AREA / "r59-follower-control.exe"
+        if follower_cfg:
+            build(follower_control, *cfg, *seed_cfg)
         profile_exe = AREA / "r59-profile.exe"
         seed_control_profile = AREA / "r59-seed-control-profile.exe"
+        follower_control_profile = AREA / "r59-follower-control-profile.exe"
         if args.profile:
-            profile_flags = [*flags, *cfg, "--cfg", "pilot_r59_profile"]
-            run([*profile_flags, *seed_cfg, source, "--extern", f"rf_d_circuit={LIB}", "-o", profile_exe])
+            profile_flags = [*cfg, "--cfg", "pilot_r59_profile"]
+            build(profile_exe, *profile_flags, *candidate_cfg)
             if seed_cfg:
-                run([*profile_flags, source, "--extern", f"rf_d_circuit={LIB}", "-o", seed_control_profile])
+                build(seed_control_profile, *profile_flags, *follower_cfg)
+            if follower_cfg:
+                build(follower_control_profile, *profile_flags, *seed_cfg)
         header = np.r_[dc[:136], bias[:5]]
 
         def controls(time):
@@ -230,6 +246,8 @@ def main():
             controls_to_compare["odd_control"] = odd_control
         if seed_cfg:
             controls_to_compare["seed_control"] = seed_control
+        if follower_cfg:
+            controls_to_compare["follower_control"] = follower_control
         variants = [(name, target, "cached") for name, target in controls_to_compare.items()]
         variants.extend((("cached", exe, "cached"), ("fresh", exe, "fresh")))
         charge_bytes = CHARGES * 8
@@ -264,6 +282,8 @@ def main():
             profiles = {"profile": (profile_exe, cached)}
             if seed_cfg:
                 profiles["seed_control_profile"] = (seed_control_profile, report["cases"]["seed_control"])
+            if follower_cfg:
+                profiles["follower_control_profile"] = (follower_control_profile, report["cases"]["follower_control"])
             for key, (target, expected) in profiles.items():
                 measured = profile_blocks(target, payload, expected)
                 report[key] = measured
@@ -287,7 +307,7 @@ def main():
                 report.update(eager_bit_exact=exact, eager_paired_timing=pairs, eager_median_ratio=ratio)
             elif name == "odd_control":
                 report.update(odd_bit_exact=exact, odd_paired_timing=pairs, odd_median_ratio=ratio)
-            else:
+            elif name == "seed_control":
                 difference = assess(outputs["cached"], outputs[name])
                 maximum_charge = float(abs(charges["cached"] - charges[name]).max())
                 report.update(seed_bit_exact=exact, seed_comparison=difference, seed_paired_timing=pairs,
@@ -295,6 +315,13 @@ def main():
                               seed_charge_limit_c=CHARGE_LIMIT_C)
                 if args.feedback_seed:
                     passed = difference["passed"] and maximum_charge <= CHARGE_LIMIT_C
+            else:
+                difference = assess(outputs["cached"], outputs[name])
+                maximum_charge = float(abs(charges["cached"] - charges[name]).max())
+                report.update(follower_bit_exact=exact, follower_comparison=difference, follower_paired_timing=pairs,
+                              follower_median_ratio=ratio, follower_maximum_charge_difference_c=maximum_charge,
+                              follower_charge_limit_c=CHARGE_LIMIT_C)
+                passed = difference["passed"] and maximum_charge <= CHARGE_LIMIT_C
             report["passed"] = report["passed"] and passed
             report["realtime"] = bool(report["passed"] and report["realtime"] and all(
                 pair["cached"]["max_ns"] <= BUDGET_NS and pair["cached"]["allocations"] == 0
