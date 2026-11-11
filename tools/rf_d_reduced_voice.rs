@@ -1,5 +1,15 @@
-//! Reduced fixed-bias audio arm for the monophonic RF-D pilot.
-use crate::{coefficients, plant, wave};
+//! Monophonic RF-D voice, with distinct laboratory and playable signal paths.
+#[cfg(not(pilot_pi))]
+use crate::coefficients;
+#[cfg(not(pilot_voice_contours))]
+use crate::plant;
+use crate::wave;
+#[cfg(pilot_voice_contours)]
+#[path = "rf_d_voice_contour.rs"]
+pub mod contour;
+#[cfg(pilot_voice_contours)]
+#[path = "rf_d_voice_ladder.rs"]
+mod ladder;
 
 pub const MAX_BLOCK: usize = 128;
 pub const RATE: usize = 48_000;
@@ -25,36 +35,63 @@ pub struct Event {
 #[derive(Clone, Copy, Debug)]
 pub enum Error {
     Input,
+    #[cfg(not(pilot_voice_contours))]
     Plant(plant::Error),
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Frame {
+    #[cfg(not(pilot_voice_contours))]
     pub j7_v: f64,
+    #[cfg(pilot_voice_contours)]
+    pub sample: f64,
+    #[cfg(not(pilot_voice_contours))]
     pub bus_v: f64,
+    #[cfg(not(pilot_voice_contours))]
     pub c27_v: f64,
+    #[cfg(not(pilot_voice_contours))]
     pub panel_a: f64,
-    #[cfg(pilot_returns)]
+    #[cfg(all(pilot_returns, not(pilot_voice_contours)))]
     pub returns_a: [f64; 2],
 }
 
 #[cfg(pilot_returns)]
 #[derive(Clone, Copy)]
 pub struct Panel {
+    #[cfg(not(pilot_voice_contours))]
     pub drive: plant::Drive,
     pub mixer_gain: f64,
+    #[cfg(not(pilot_voice_contours))]
     pub attack_ms: f64,
+    #[cfg(not(pilot_voice_contours))]
     pub release_ms: f64,
+    #[cfg(pilot_voice_contours)]
+    pub contours: Contours,
+}
+
+#[cfg(pilot_voice_contours)]
+#[derive(Clone, Copy, Default)]
+pub struct Contours {
+    pub volume: contour::Settings,
+    pub filter: contour::Settings,
+    pub cutoff: f64,
+    pub amount: f64,
+    pub decay_on: bool,
 }
 
 #[cfg(pilot_returns)]
 impl Default for Panel {
     fn default() -> Self {
         Self {
+            #[cfg(not(pilot_voice_contours))]
             drive: plant::Drive::default(),
             mixer_gain: 1.,
+            #[cfg(not(pilot_voice_contours))]
             attack_ms: RAMP_S * 1000.,
+            #[cfg(not(pilot_voice_contours))]
             release_ms: RAMP_S * 1000.,
+            #[cfg(pilot_voice_contours)]
+            contours: Contours::default(),
         }
     }
 }
@@ -62,24 +99,36 @@ impl Default for Panel {
 #[cfg(pilot_returns)]
 impl Panel {
     fn valid(self) -> bool {
-        self.drive.valid()
-            && (0. ..=1.).contains(&self.mixer_gain)
+        #[cfg(not(pilot_voice_contours))]
+        let contour_valid = self.drive.valid()
             && (1. ..=100.).contains(&self.attack_ms)
-            && (1. ..=200.).contains(&self.release_ms)
+            && (1. ..=200.).contains(&self.release_ms);
+        #[cfg(pilot_voice_contours)]
+        let contour_valid = self.contours.volume.valid()
+            && self.contours.filter.valid()
+            && (0. ..=1.).contains(&self.contours.cutoff)
+            && (0. ..=1.).contains(&self.contours.amount);
+        (0. ..=1.).contains(&self.mixer_gain) && contour_valid
     }
 }
 
 #[derive(Clone)]
 pub struct Voice<const FACTOR: usize> {
+    #[cfg(not(pilot_voice_contours))]
     circuit: plant::State,
+    #[cfg(pilot_voice_contours)]
+    ladder: ladder::Ladder,
     held: u64,
     phase: f64,
     increment: f64,
+    #[cfg(not(pilot_voice_contours))]
     trim: f64,
+    #[cfg(pilot_voice_contours)]
+    contours: [contour::Contour; 2],
     history: [f64; 769],
     head: usize,
     frames: usize,
-    #[cfg(pilot_returns)]
+    #[cfg(all(pilot_returns, not(pilot_voice_contours)))]
     drive: plant::Drive,
 }
 
@@ -92,25 +141,39 @@ impl<const FACTOR: usize> Voice<FACTOR> {
         #[cfg(pilot_pi)]
         assert_eq!(FACTOR, 2);
         Self {
+            #[cfg(not(pilot_voice_contours))]
             circuit: plant::State::dc(1).unwrap(),
+            #[cfg(pilot_voice_contours)]
+            ladder: ladder::Ladder::new((RATE * FACTOR) as f64),
             held: 0,
             phase: 0.,
             increment: 440. / (FACTOR * RATE) as f64,
+            #[cfg(not(pilot_voice_contours))]
             trim: 0.,
+            #[cfg(pilot_voice_contours)]
+            contours: [contour::Contour::default(); 2],
             history: [0.; 769],
             head: 0,
             frames: 0,
-            #[cfg(pilot_returns)]
+            #[cfg(all(pilot_returns, not(pilot_voice_contours)))]
             drive: plant::Drive::default(),
         }
     }
 
     fn event(&mut self, message: Message) -> Result<(), Error> {
+        #[cfg(pilot_voice_contours)]
+        let was_held = self.held != 0;
         match message {
             Message::NoteOn(note @ 36..=72) => self.held |= 1 << (note - 36),
             Message::NoteOff(note @ 36..=72) => self.held &= !(1 << (note - 36)),
             Message::AllNotesOff => self.held = 0,
             _ => return Err(Error::Input),
+        }
+        #[cfg(pilot_voice_contours)]
+        if was_held != (self.held != 0) {
+            for contour in &mut self.contours {
+                contour.gate(self.held != 0);
+            }
         }
         if self.held != 0 {
             let note = self.held.trailing_zeros() + 36;
@@ -130,13 +193,14 @@ impl<const FACTOR: usize> Voice<FACTOR> {
         };
         #[cfg(not(pilot_returns))]
         let ramp_s = RAMP_S;
-        #[cfg(pilot_returns)]
+        #[cfg(all(pilot_returns, not(pilot_voice_contours)))]
         let ramp_s = 0.001
             * if self.held != 0 {
                 panel.attack_ms
             } else {
                 panel.release_ms
             };
+        #[cfg(not(pilot_voice_contours))]
         let change = 1. / (ramp_s * (RATE * FACTOR) as f64);
         #[cfg(not(pilot_returns))]
         let input_peak = INPUT_PEAK_V;
@@ -148,48 +212,74 @@ impl<const FACTOR: usize> Voice<FACTOR> {
             if self.phase >= 1. {
                 self.phase -= 1.;
             }
-            if self.held != 0 {
-                self.trim = (self.trim + change).min(1.);
-            } else {
-                self.trim = (self.trim - change).max(0.);
-            }
+            #[cfg(not(pilot_voice_contours))]
+            let input_gain = {
+                if self.held != 0 {
+                    self.trim = (self.trim + change).min(1.);
+                } else {
+                    self.trim = (self.trim - change).max(0.);
+                }
+                self.trim
+            };
+            #[cfg(pilot_voice_contours)]
+            let input_gain = 1.;
             let position = self.phase * TABLE as f64;
             let index = position as usize;
             let left = wave::SAW[index % TABLE];
             let right = wave::SAW[(index + 1) % TABLE];
-            let input = input_peak * self.trim * (left + position.fract() * (right - left));
+            let input = input_peak * input_gain * (left + position.fract() * (right - left));
             #[cfg(not(pilot_returns))]
             let ports = plant::step(&mut self.circuit, input).map_err(Error::Plant)?;
-            #[cfg(pilot_returns)]
+            #[cfg(all(pilot_returns, not(pilot_voice_contours)))]
             let ports = plant::step(
                 &mut self.circuit,
                 input,
-                self.drive
-                    .interpolate(panel.drive, (_substep + 1) as f64 / FACTOR as f64),
+                self.drive.interpolate(panel.drive, (_substep + 1) as f64 / FACTOR as f64),
             )
             .map_err(Error::Plant)?;
-            self.history[self.head] = ports.j7_v;
-            self.head = (self.head + 1) % kernel.len();
-            last.bus_v = ports.bus_v;
-            last.c27_v = ports.base_v - ports.bus_v;
-            last.panel_a = ports.panel_a;
-            #[cfg(pilot_returns)]
+            #[cfg(pilot_voice_contours)]
             {
-                last.returns_a = ports.returns_a;
+                let rate = (RATE * FACTOR) as f64;
+                let settings = panel.contours;
+                let volume = self.contours[0].tick(settings.volume, settings.decay_on, rate);
+                let filter = self.contours[1].tick(settings.filter, settings.decay_on, rate);
+                let cutoff = settings.cutoff + (1. - settings.cutoff) * settings.amount * filter;
+                let filtered_v = self.ladder.step(input, cutoff);
+                self.history[self.head] = (filtered_v / INPUT_PEAK_V) * volume;
             }
+            #[cfg(not(pilot_voice_contours))]
+            {
+                self.history[self.head] = ports.j7_v;
+                last.bus_v = ports.bus_v;
+                last.c27_v = ports.base_v - ports.bus_v;
+                last.panel_a = ports.panel_a;
+                #[cfg(pilot_returns)]
+                {
+                    last.returns_a = ports.returns_a;
+                }
+            }
+            self.head = (self.head + 1) % kernel.len();
         }
-        #[cfg(pilot_returns)]
+        #[cfg(all(pilot_returns, not(pilot_voice_contours)))]
         {
             self.drive = panel.drive;
         }
         self.frames += 1;
         if self.frames > LATENCY {
             let (first, second) = kernel.split_at(kernel.len() - self.head);
-            last.j7_v = first
+            let filtered = first
                 .iter()
                 .zip(&self.history[self.head..kernel.len()])
                 .chain(second.iter().zip(&self.history[..self.head]))
                 .fold(0., |sum, (coefficient, value)| sum + coefficient * value);
+            #[cfg(pilot_voice_contours)]
+            {
+                last.sample = filtered;
+            }
+            #[cfg(not(pilot_voice_contours))]
+            {
+                last.j7_v = filtered;
+            }
         }
         Ok(last)
     }
@@ -204,7 +294,7 @@ impl<const FACTOR: usize> Voice<FACTOR> {
         )
     }
 
-    #[cfg(pilot_returns)]
+    #[cfg(all(pilot_returns, not(pilot_voice_contours)))]
     pub fn render_with_returns(
         &mut self,
         events: &[Event],

@@ -23,6 +23,7 @@ no significa identidad sonora con el hardware.
 | Voz nativa conjunta | VCO1, BUS/C27 y cadena hasta J7 con controles impuestos | [Dos perfiles de5,25 ms](VOZ_PRIMER_CICLO_RESULTADOS.md), resets, balances y refinamiento | Arranque DC conjunto, asentamiento, contornos, fuentes restantes y RT |
 | Voz SPICE conjunta | VCO1 y cadena con contorno de laboratorio | [Cuatro escenas cortas admitidas](VOZ_SEIS_ACTIVO_RESULTADOS.md); [largo rechazado y auditado](VOZ_SERIAL_CAMPANA_RESULTADOS.md), una de cuatro completa | Contrastes largos sin medir; causas de abortos pendientes |
 | Audio / producto | Sierra H128, ladder, VCA, C27, C18, R59/R60 y J7 | [Piloto portable con panel](VOZ_PILOTO_JUGABLE_PROTOCOLO.md#panel-de-audición-030), MIDI y trims contrastados con Radau, presupuesto offline a 128 frames | C2/C5 y biestable autónomos, resto del panel y prueba física del paquete |
+| Voz tocable 0.4.0 | Sierra H128, ladder de cuatro pares diferenciales, dos contornos RC nominales y VCA reducido | [Paquete con panel](VOZ_TOCABLE.md), gatillo MIDI compartido y estrés RackForge offline a 128/480/4096 frames | OSC2/OSC3, controles de interpretación, prueba física y calibración posterior |
 
 El [VCO1 nativo ensamblado](VCO1_STAMP_RESULTADOS.md) conserva 134
 incógnitas, dos 741 completos, BJT/JFET, Schmitt/reset y cargas del panel.

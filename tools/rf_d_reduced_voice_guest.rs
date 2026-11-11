@@ -22,7 +22,7 @@ struct Guest {
     master: f64,
 }
 
-#[cfg(pilot_returns)]
+#[cfg(all(pilot_returns, not(pilot_voice_contours)))]
 const RANGES: [(f64, f64); 6] = [
     (-15., 15.),
     (-1., 1.),
@@ -31,10 +31,20 @@ const RANGES: [(f64, f64); 6] = [
     (1., 100.),
     (1., 200.),
 ];
-#[cfg(pilot_returns)]
+#[cfg(all(pilot_returns, not(pilot_voice_contours)))]
 const DEFAULTS: [f64; 6] = [0., 0., 100., 100., 5., 5.];
-#[cfg(pilot_returns)]
+#[cfg(all(pilot_returns, not(pilot_voice_contours)))]
 const STATE_TAG: &[u8; 4] = b"RFD1";
+#[cfg(pilot_voice_contours)]
+const RANGES: [(f64, f64); 11] = [
+    (0., 100.), (0., 100.), (0., 100.), (0., 100.),
+    (1., 2000.), (5., 5000.), (0., 100.),
+    (1., 2000.), (5., 5000.), (0., 100.), (0., 1.),
+];
+#[cfg(pilot_voice_contours)]
+const DEFAULTS: [f64; 11] = [72., 60., 100., 100., 5., 180., 70., 5., 240., 30., 0.];
+#[cfg(pilot_voice_contours)]
+const STATE_TAG: &[u8; 4] = b"RFDC";
 #[cfg(pilot_returns)]
 const STATE_BYTES: usize = 4 + DEFAULTS.len() * 8;
 
@@ -58,6 +68,7 @@ fn control_index(index: u32, value: f64) -> Option<usize> {
 
 #[cfg(pilot_returns)]
 impl Controls {
+    #[cfg(not(pilot_voice_contours))]
     fn voice(self) -> voice::Panel {
         let [r59_mv, pin16_mv, mix, _, attack_ms, release_ms] = self.0;
         voice::Panel {
@@ -68,6 +79,30 @@ impl Controls {
             mixer_gain: mix * 0.01,
             attack_ms,
             release_ms,
+        }
+    }
+
+    #[cfg(pilot_voice_contours)]
+    fn voice(self) -> voice::Panel {
+        let [cutoff, amount, mix, _, volume_a, volume_d, volume_s, filter_a, filter_d, filter_s, decay] =
+            self.0;
+        voice::Panel {
+            mixer_gain: mix * 0.01,
+            contours: voice::Contours {
+                volume: voice::contour::Settings {
+                    attack_ms: volume_a,
+                    decay_ms: volume_d,
+                    sustain: volume_s * 0.01,
+                },
+                filter: voice::contour::Settings {
+                    attack_ms: filter_a,
+                    decay_ms: filter_d,
+                    sustain: filter_s * 0.01,
+                },
+                cutoff: cutoff * 0.01,
+                amount: amount * 0.01,
+                decay_on: decay >= 0.5,
+            },
         }
     }
 
@@ -121,10 +156,14 @@ impl Guest {
         for ((stereo, frame), master) in output.chunks_exact_mut(2).zip(frames).zip(masters) {
             // A full-scale fader move settles in 64 host frames.
             self.master += (master - self.master).clamp(-1. / 64., 1. / 64.);
+            #[cfg(pilot_voice_contours)]
+            let signal = frame.sample;
+            #[cfg(not(pilot_voice_contours))]
+            let signal = frame.j7_v / voice::AUDITION_VOLTS_PER_FULL_SCALE;
             let sample = if self.master == 0. {
                 0.
             } else {
-                ((frame.j7_v / voice::AUDITION_VOLTS_PER_FULL_SCALE) * self.master) as f32
+                (signal * self.master) as f32
             };
             stereo.fill(sample);
         }

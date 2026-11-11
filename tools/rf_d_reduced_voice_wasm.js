@@ -1,13 +1,15 @@
 const fs = require("node:fs");
 const { performance } = require("node:perf_hooks");
 
-const [, , path, encodedScore, length, option, requestedBlock, requestedCapacity] = process.argv;
+const [, , path, encodedScore, length, option, requestedBlock, requestedCapacity, schema] = process.argv;
 const blockSize = Number(requestedBlock ?? 128);
 const capacity = Number(requestedCapacity ?? blockSize);
 if (!Number.isInteger(blockSize) || blockSize < 1 || blockSize > capacity) {
     throw new Error("Invalid RF-D block size");
 }
-const {parameters: panel} = require("../plugin/package/metadata/parameters.json");
+const {parameters: panel} = schema
+    ? JSON.parse(fs.readFileSync(schema))
+    : require("../plugin/package/metadata/parameters.json");
 const score = JSON.parse(encodedScore);
 const frames = Number(length);
 const { exports: wasm } = new WebAssembly.Instance(new WebAssembly.Module(fs.readFileSync(path)));
@@ -22,8 +24,10 @@ function prepare() {
 }
 
 prepare();
-if (option === "--panel-state") {
-    const transfer = () => new Uint8Array(wasm.memory.buffer, wasm.rackforge_transfer_ptr(), 52);
+if (option === "--panel-state" || option === "--voice-state") {
+    const stateBytes = 4 + 8 * panel.length;
+    const stateTag = option === "--voice-state" ? "RFDC" : "RFD1";
+    const transfer = () => new Uint8Array(wasm.memory.buffer, wasm.rackforge_transfer_ptr(), stateBytes);
     const values = panel.map(({index, kind}) => {
         if (wasm.rackforge_get_parameter(index) !== kind.default) throw new Error("Panel default mismatch");
         const value = kind.minimum === kind.default ? kind.maximum : kind.minimum;
@@ -31,9 +35,9 @@ if (option === "--panel-state") {
         if (wasm.rackforge_set_parameter(index, NaN) === 0) throw new Error("Accepted invalid parameter");
         return value;
     });
-    if (wasm.rackforge_save_state() !== 52) throw new Error("Panel state size");
+    if (wasm.rackforge_save_state() !== stateBytes) throw new Error("Panel state size");
     const saved = transfer().slice();
-    if (Buffer.from(saved.subarray(0, 4)).toString() !== "RFD1") throw new Error("Panel state tag");
+    if (Buffer.from(saved.subarray(0, 4)).toString() !== stateTag) throw new Error("Panel state tag");
     prepare();
     transfer().set(saved);
     check(wasm.rackforge_load_state(saved.length));
@@ -43,7 +47,8 @@ if (option === "--panel-state") {
         }
     };
     checkValues();
-    new DataView(wasm.memory.buffer, wasm.rackforge_transfer_ptr(), 52).setFloat64(44, NaN, true);
+    new DataView(wasm.memory.buffer, wasm.rackforge_transfer_ptr(), stateBytes)
+        .setFloat64(stateBytes - 8, NaN, true);
     if (wasm.rackforge_load_state(saved.length) === 0) throw new Error("Accepted corrupt panel state");
     checkValues();
     transfer().set(Buffer.from("default"));
@@ -72,12 +77,12 @@ for (let start = 0, event = 0; start < frames; start += blockSize) {
     while (event < score.length && score[event][0] < start + size) {
         const [sample, status, note, value = 100] = score[event++];
         if (status === 0xb0 && panel[note - 20]) {
-            if (value !== 0 && value !== 127) throw new Error("Expected an endpoint control value");
             const at = parameterCount++ * 16;
             parameters.setUint32(at, sample - start, true);
             parameters.setUint32(at + 4, note - 20, true);
             const {minimum, maximum} = panel[note - 20].kind;
-            parameters.setFloat64(at + 8, value === 0 ? minimum : maximum, true);
+            if (value !== 0 && value !== 127 && !schema) throw new Error("Expected an endpoint control value");
+            parameters.setFloat64(at + 8, value === 127 ? maximum : minimum + (maximum - minimum) * value / 127, true);
             continue;
         }
         midi.setUint32(count * 8, sample - start, true);

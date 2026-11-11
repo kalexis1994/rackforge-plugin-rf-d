@@ -27,15 +27,26 @@
     window.parent.postMessage({protocol, kind: "request", request_id, method, params}, origin);
   }
 
+  function readValue(input) {
+    return input.type === "checkbox" ? Number(input.checked) : input.valueAsNumber;
+  }
+
+  function rotaryScale(input, value) {
+    return input.dataset.scale === "log" ? Math.log(value) : value;
+  }
+
   function paint(control, value) {
     const {input, label} = control;
-    input.value = value;
-    const actual = input.valueAsNumber;
-    const text = input.value + " " + input.dataset.unit;
+    const toggle = input.type === "checkbox";
+    if (toggle) input.checked = value >= 0.5;
+    else input.value = value;
+    const text = toggle ? (input.checked ? "On" : "Off") : input.value + " " + input.dataset.unit;
     label.querySelector(".value").textContent = text;
     input.setAttribute("aria-valuetext", text);
     if (label.classList.contains("rotary")) {
-      const fraction = (actual - Number(input.min)) / (Number(input.max) - Number(input.min));
+      const min = rotaryScale(input, Number(input.min));
+      const max = rotaryScale(input, Number(input.max));
+      const fraction = (rotaryScale(input, readValue(input)) - min) / (max - min);
       label.style.setProperty("--rotation", (-135 + 270 * fraction) + "deg");
     }
   }
@@ -75,12 +86,12 @@
   for (const input of document.querySelectorAll("input[data-index]")) {
     const index = Number(input.dataset.index);
     const label = input.closest(".control");
-    const control = {input, label, canonical: input.valueAsNumber};
+    const control = {input, label, canonical: readValue(input)};
     controls.set(index, control);
     paint(control, control.canonical);
     input.addEventListener("input", () => {
       if (!connected) return;
-      control.queued = input.valueAsNumber;
+      control.queued = readValue(input);
       paint(control, control.queued);
       schedule();
     });
@@ -90,13 +101,15 @@
       event.preventDefault();
       input.focus();
       input.setPointerCapture(event.pointerId);
-      control.drag = {id: event.pointerId, y: event.clientY, value: input.valueAsNumber};
+      control.drag = {id: event.pointerId, y: event.clientY, value: rotaryScale(input, readValue(input))};
     });
     input.addEventListener("pointermove", (event) => {
       const drag = control.drag;
       if (!drag || drag.id !== event.pointerId) return;
-      const span = Number(input.max) - Number(input.min);
-      input.value = drag.value + (drag.y - event.clientY) * span / 144;
+      const min = rotaryScale(input, Number(input.min));
+      const max = rotaryScale(input, Number(input.max));
+      const next = Math.max(min, Math.min(max, drag.value + (drag.y - event.clientY) * (max - min) / 144));
+      input.value = input.dataset.scale === "log" ? Math.exp(next) : next;
       input.dispatchEvent(new Event("input"));
     });
     input.addEventListener("lostpointercapture", () => {
