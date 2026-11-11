@@ -70,7 +70,7 @@ def dynamic_q15(run, report, joined, exe, control, dc, bias, center, limits, sti
     raw = run([exe, 128], payload, repeat=True)
     values = np.frombuffer(raw, "<f8")
     assert np.isfinite(values).all()
-    rows = values[:-CHARGES].reshape(2 * STEPS, 25)
+    rows = values[:-CHARGES].reshape(2 * STEPS, 26)
     report["output_sha256"] = digest(raw)
     report["partition_bit_exact"] = raw == run([exe, 64], payload, repeat=True)
 
@@ -110,6 +110,7 @@ def dynamic_q15(run, report, joined, exe, control, dc, bias, center, limits, sti
         max_trials=int(rows[:, 22].max()),
         receiver_evaluations=int(rows[:, 22].sum()),
         measured_block_receiver_evaluations=int(rows[STEPS:, 22].sum()),
+        measured_block_receiver_iterations=int(rows[STEPS:, 25].sum()),
         max_r59_mismatch_a=float(rows[:, 23].max()),
         max_r59_mismatch_v=float(rows[:, 24].max()),
         reference_r59_range_v=[float(reference[8][:, 11].min()), float(reference[8][:, 11].max())],
@@ -134,7 +135,7 @@ def dynamic_q15(run, report, joined, exe, control, dc, bias, center, limits, sti
         exact_raw = run([control, 128], payload, repeat=True)
         exact = np.frombuffer(exact_raw, "<f8")
         assert np.isfinite(exact).all()
-        exact_rows = exact[:-CHARGES].reshape(2 * STEPS, 25)
+        exact_rows = exact[:-CHARGES].reshape(2 * STEPS, 26)
         difference = compare_q15(rows, exact_rows)
         exact_audit = endpoint_audit(exact_rows)
         audio_charge_error = float(abs(values[-CHARGES:] - exact[-CHARGES:]).max())
@@ -145,12 +146,16 @@ def dynamic_q15(run, report, joined, exe, control, dc, bias, center, limits, sti
         passed = bool(difference["passed"] and exact_audit["passed"] and max(difference["q15_charge_error_c"]) <= 2e-20
                       and audio_charge_error <= CHARGE_LIMIT_C
                       and crossings(exact_rows[:, 15]) == report["candidate_crossings"])
-        key = "q15_predictor_comparison" if report["predict_q15"] else "cached_q15_gain_comparison"
+        if report["q15_retry"]:
+            key = "q15_retry_comparison"
+        else:
+            key = "q15_predictor_comparison" if report["predict_q15"] else "cached_q15_gain_comparison"
         report[key] = dict(
             passed=passed, control_output_sha256=digest(exact_raw), endpoint_audit=exact_audit,
             contrast=difference, audio_final_charge_error_c=audio_charge_error, bit_exact=raw == exact_raw,
             control_receiver_evaluations=int(exact_rows[:, 22].sum()),
             control_measured_block_receiver_evaluations=int(exact_rows[STEPS:, 22].sum()),
+            control_measured_block_receiver_iterations=int(exact_rows[STEPS:, 25].sum()),
             paired_timing=pairs, paired_median_ratio=ratio,
         )
         report["passed"] = report["passed"] and passed
@@ -186,6 +191,8 @@ def main():
                         help="reuse the receiver load tangent during Q15 closure")
     parser.add_argument("--predict-q15", action="store_true",
                         help="seed the Q15 closure from the preceding reset response")
+    parser.add_argument("--q15-retry", action="store_true",
+                        help="reuse the provisional R59 root and follower during Q15 retries")
     cathode_options = parser.add_mutually_exclusive_group()
     cathode_options.add_argument("--vary-cathode", action="store_true",
                                  help="drive the reset cathode around a forward-biased CR6 operating point")
@@ -199,7 +206,7 @@ def main():
     seed_options.add_argument("--reuse-law", action="store_true",
                               help="reuse the previous trial's law evaluation at the same junctions")
     args = parser.parse_args()
-    if (args.cached_q15_gain or args.predict_q15) and not args.dynamic_q15:
+    if (args.cached_q15_gain or args.predict_q15 or args.q15_retry) and not args.dynamic_q15:
         parser.error("Q15 optimizations require --dynamic-q15")
     if args.dynamic_q15:
         args.schur_follower = args.predict_follower = args.predict_cathode = args.tight_follower = True
@@ -242,6 +249,7 @@ def main():
                   dynamic_q15=args.dynamic_q15,
                   cached_q15_gain=args.cached_q15_gain,
                   predict_q15=args.predict_q15,
+                  q15_retry=args.q15_retry,
                   internal_rate_hz=RATE, frames=128, warmup_frames=128, budget_ns=BUDGET_NS,
                   imposed_sources=imposed,
                   cathode_v=cathode_v, cathode_amplitude_v=cathode_amplitude_v,
@@ -384,15 +392,20 @@ def main():
         if args.dynamic_q15:
             q15_cfg = [*cfg, *candidate_cfg, "--cfg", "pilot_r59_reset_port"]
             gain_control = None
-            if args.cached_q15_gain and not args.predict_q15:
+            if args.cached_q15_gain and not (args.predict_q15 or args.q15_retry):
                 gain_control = AREA / "r59-q15-exact-gain.exe"
                 build(gain_control, *q15_cfg)
             if args.cached_q15_gain:
                 q15_cfg.extend(("--cfg", "pilot_r59_cached_reset_gain"))
-            if args.predict_q15:
+            if args.predict_q15 and not args.q15_retry:
                 gain_control = AREA / "r59-q15-old-seed.exe"
                 build(gain_control, *q15_cfg)
+            if args.predict_q15:
                 q15_cfg.extend(("--cfg", "pilot_r59_predict_q15"))
+            if args.q15_retry:
+                gain_control = AREA / "r59-q15-no-retry-seed.exe"
+                build(gain_control, *q15_cfg)
+                q15_cfg.extend(("--cfg", "pilot_r59_q15_retry"))
             build(exe, *q15_cfg)
             dynamic_q15(run, report, joined, exe, gain_control, dc, bias, center, limits, stimulus, cathode_v,
                         assess, cr6_crossings)

@@ -23,6 +23,13 @@ pub struct Frame {
     pub charge_increment_c: [f64; 2],
     pub residual_a: [f64; 2],
     pub trials: usize,
+    pub receiver_iterations: usize,
+}
+
+#[derive(Default)]
+struct Work {
+    trials: usize,
+    receiver_iterations: usize,
 }
 
 #[derive(Debug)]
@@ -97,9 +104,34 @@ fn evaluate(
     q15_v: [f64; 2],
     [signal, c2, filter, q25_base, q25_collector, cr8_anode]: [f64; 6],
     refresh: bool,
+    work: &mut Work,
+    #[cfg(pilot_r59_q15_retry)] prior: Option<&Trial>,
 ) -> Result<Trial, Error> {
-    let (audio, frame) = fast_r59::advance(old.audio, [signal, c2, q15_v[0], filter], refresh)
+    let audio_drive = [signal, c2, q15_v[0], filter];
+    #[cfg(pilot_r59_q15_retry)]
+    let warm = prior.and_then(|trial| {
+        work.trials += 1;
+        fast_r59::advance_from_trial(
+            old.audio,
+            audio_drive,
+            refresh,
+            trial.state.audio,
+            &trial.audio.receiver_root,
+        )
+        .ok()
+    });
+    #[cfg(not(pilot_r59_q15_retry))]
+    let warm = None;
+    let (audio, frame) = warm
+        .map_or_else(
+            || {
+                work.trials += 1;
+                fast_r59::advance(old.audio, audio_drive, refresh)
+            },
+            Ok,
+        )
         .map_err(Error::Audio)?;
+    work.receiver_iterations += frame.iterations;
     let drive = q15::Drive {
         c2,
         vca_base: frame.ports.loads_v[0],
@@ -131,14 +163,14 @@ fn evaluate(
 }
 
 pub fn advance(old: State, drive: [f64; 6], refresh: bool) -> Result<(State, Frame), Error> {
-    let mut trials = 0;
+    let mut work = Work::default();
     #[cfg(pilot_r59_predict_q15)]
     if let Some(seed) = predict(old, drive) {
-        if let Ok(result) = solve(old, drive, refresh, seed, &mut trials) {
+        if let Ok(result) = solve(old, drive, refresh, seed, &mut work) {
             return Ok(result);
         }
     }
-    solve(old, drive, refresh, old.q15_v, &mut trials)
+    solve(old, drive, refresh, old.q15_v, &mut work)
 }
 
 fn solve(
@@ -146,10 +178,17 @@ fn solve(
     drive: [f64; 6],
     refresh: bool,
     seed: [f64; 2],
-    trials: &mut usize,
+    work: &mut Work,
 ) -> Result<(State, Frame), Error> {
-    *trials += 1;
-    let mut trial = evaluate(old, seed, drive, refresh)?;
+    let mut trial = evaluate(
+        old,
+        seed,
+        drive,
+        refresh,
+        work,
+        #[cfg(pilot_r59_q15_retry)]
+        None,
+    )?;
     for _ in 0..16 {
         let error = maximum(&trial.residual_a);
         let direction = direction(trial.residual_a, trial.jacobian).map_err(Error::Q15)?;
@@ -160,7 +199,8 @@ fn solve(
                     audio: trial.audio,
                     charge_increment_c: trial.charge_increment_c,
                     residual_a: trial.residual_a,
-                    trials: *trials,
+                    trials: work.trials,
+                    receiver_iterations: work.receiver_iterations,
                 },
             ));
         }
@@ -168,8 +208,15 @@ fn solve(
         for half in 0..12 {
             let scale = 0.5_f64.powi(half);
             let q15_v = std::array::from_fn(|i| trial.state.q15_v[i] - scale * direction[i]);
-            *trials += 1;
-            if let Ok(candidate) = evaluate(old, q15_v, drive, refresh) {
+            if let Ok(candidate) = evaluate(
+                old,
+                q15_v,
+                drive,
+                refresh,
+                work,
+                #[cfg(pilot_r59_q15_retry)]
+                Some(&trial),
+            ) {
                 if maximum(&candidate.residual_a) < error {
                     accepted = Some(candidate);
                     break;

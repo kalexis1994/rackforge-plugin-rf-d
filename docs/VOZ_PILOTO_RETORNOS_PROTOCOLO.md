@@ -572,3 +572,17 @@ política de tangente del receptor. Contar todas las
 evaluaciones del cierre de audio, incluidas las de
 reintento. Conservar la auditoría nodal, Radau, los
 cruces y las reservas de carga al mismo reloj.
+
+Con `--q15-retry`, sembrar cada propuesta de Q15
+desde el cierre provisional anterior de R59. Proyectar
+el seguidor con la nueva base de Q15, aplicar la
+respuesta local de la base del VCA con R59 cerrado
+y usar la raíz de junturas previa como semilla.
+Cada propuesta usa las cargas originales del paso.
+Si el cierre provisional falla, repetir desde la
+historia aceptada. Conservar la verificación de
+las filas y la corrección de Q15, y la auditoría de
+los puertos del seguidor. Contar los intentos y las
+iteraciones de R59 de los cierres que retornaron.
+Contrastar con la misma semilla de Q15 y la misma
+política de tangente con el arranque anterior de R59.

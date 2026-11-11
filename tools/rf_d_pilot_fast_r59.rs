@@ -101,6 +101,8 @@ pub struct Frame {
     pub tangent_calls: usize,
     #[cfg(pilot_r59_reset_port)]
     pub reset_port: ResetPort,
+    #[cfg(pilot_r59_q15_retry)]
+    pub(crate) receiver_root: plant::Root,
 }
 
 #[derive(Debug)]
@@ -151,7 +153,9 @@ pub fn advance(
             old,
             drive,
             refresh,
-            Some(prediction),
+            Some((prediction.0, prediction.1, old.vca_base)),
+            #[cfg(pilot_r59_q15_retry)]
+            None,
             #[cfg(pilot_r59_profile)]
             profile,
         ) {
@@ -168,8 +172,40 @@ pub fn advance(
         refresh,
         #[cfg(pilot_r59_predict_follower)]
         None,
+        #[cfg(pilot_r59_q15_retry)]
+        None,
         #[cfg(pilot_r59_profile)]
         profile,
+    )
+}
+
+#[cfg(pilot_r59_q15_retry)]
+pub(crate) fn advance_from_trial(
+    old: State,
+    drive: [f64; 4],
+    refresh: bool,
+    trial: State,
+    root: &plant::Root,
+) -> Result<(State, Frame), Error> {
+    let seed = trial.follower.ok_or(Error::Closure)?;
+    let (mut volume, response) = seed
+        .predict(trial.volume, drive[1], drive[2])
+        .ok_or(Error::Closure)?;
+    let gain = trial.gradient.ok_or(Error::Closure)?;
+    let denominator = 1. - gain * response[2];
+    if !denominator.is_finite() || denominator.abs() <= 1e-8 {
+        return Err(Error::Closure);
+    }
+    let base_change = gain * (volume[2] - trial.volume[2]) / denominator;
+    for (node, slope) in volume.iter_mut().zip(response) {
+        *node += slope * base_change;
+    }
+    advance_inner(
+        old,
+        drive,
+        refresh,
+        Some((volume, response, trial.vca_base + base_change)),
+        Some(root),
     )
 }
 
@@ -177,7 +213,8 @@ fn advance_inner(
     old: State,
     [signal, c2, cathode, filter]: [f64; 4],
     refresh: bool,
-    #[cfg(pilot_r59_predict_follower)] prediction: Option<([f64; 5], [f64; 5])>,
+    #[cfg(pilot_r59_predict_follower)] prediction: Option<([f64; 5], [f64; 5], f64)>,
+    #[cfg(pilot_r59_q15_retry)] retry_root: Option<&plant::Root>,
     #[cfg(pilot_r59_profile)] profile: &mut Profile,
 ) -> Result<(State, Frame), Error> {
     let mut initial_follower = || {
@@ -194,13 +231,13 @@ fn advance_inner(
         }
         let response = measure!(profile, 4, factor.solve([0., 0., 1. / R59, 0., 0.]))
             .map_err(Error::Volume)?;
-        Ok::<_, Error>((volume, response))
+        Ok::<_, Error>((volume, response, old.vca_base))
     };
     #[cfg(pilot_r59_predict_follower)]
-    let (mut volume, mut volume_response) = prediction.map_or_else(&mut initial_follower, Ok)?;
+    let (mut volume, mut volume_response, mut volume_base) =
+        prediction.map_or_else(&mut initial_follower, Ok)?;
     #[cfg(not(pilot_r59_predict_follower))]
-    let (mut volume, mut volume_response) = initial_follower()?;
-    let mut volume_base = old.vca_base;
+    let (mut volume, mut volume_response, mut volume_base) = initial_follower()?;
     let mut source = volume[2];
     let mut gradient = if refresh { None } else { old.gradient };
     let mut previous_error = f64::INFINITY;
@@ -218,6 +255,8 @@ fn advance_inner(
         } else {
             prior.as_ref()
         };
+        #[cfg(pilot_r59_q15_retry)]
+        let seed = seed.or(retry_root.filter(|_| !refresh_tangent));
         let root = measure!(
             profile,
             2,
@@ -322,6 +361,8 @@ fn advance_inner(
                     tangent_calls,
                     #[cfg(pilot_r59_reset_port)]
                     reset_port,
+                    #[cfg(pilot_r59_q15_retry)]
+                    receiver_root: root,
                 },
             ));
         }

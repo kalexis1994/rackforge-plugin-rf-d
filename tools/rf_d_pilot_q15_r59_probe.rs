@@ -145,6 +145,7 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
                 frame.trials as f64,
                 audio.mismatch_a,
                 audio.mismatch_v,
+                frame.receiver_iterations as f64,
             ] {
                 out.write_all(&value.to_le_bytes())?;
             }

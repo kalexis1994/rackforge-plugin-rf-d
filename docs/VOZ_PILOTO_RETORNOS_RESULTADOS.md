@@ -2820,3 +2820,27 @@ La mediana pareada bajó 39,20 % en positivo y
 fueron 3,008 y 3,714 ms, con cero asignaciones.
 [Semilla positiva](../evidence/rf_d_pilot_fast_r5944.json).
 [Semilla negativa](../evidence/rf_d_pilot_fast_r5945.json).
+
+
+### Reúso del cierre provisional de R59 entre intentos de Q15
+
+Con las cargas del paso fijas, la proyección del
+seguidor y la raíz anterior redujeron las iteraciones
+de R59 de 840 a 676 en positivo y de 838 a 675 en
+negativo. El número de cierres de audio de cada
+bloque se mantuvo en 420 y 419, respectivamente.
+
+Pasaron Radau, los cruces, la auditoría del stamp
+completo y la partición 64/128. La mayor diferencia
+de carga con el control fue 2,53e−27 C en Q15 y
+1,15e−22 C en el receptor. El mayor residual de la
+auditoría fue 2,77e−16 A.
+
+La mediana pareada bajó 21,88 % en positivo y
+16,34 % en negativo. Las medianas fueron 2,185 y
+2,001 ms. Los picos de los tres lotes fueron 3,094
+y 2,344 ms a 128 frames, con cero asignaciones.
+El cierre sigue por encima de 1,333 ms en este
+banco con Q25, CR8, C2 y R60 impuestos.
+[Reintentos positivos](../evidence/rf_d_pilot_fast_r5946.json).
+[Reintentos negativos](../evidence/rf_d_pilot_fast_r5947.json).
