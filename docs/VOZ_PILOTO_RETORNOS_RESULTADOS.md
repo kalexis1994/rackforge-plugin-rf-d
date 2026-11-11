@@ -2953,3 +2953,28 @@ El primer intento se detuvo al compilar el control
 por un atributo condicional en una asignación.
 La corrección envolvió la asignación en un bloque.
 [Intento de compilación](../evidence/rf_d_pilot_fast_r5958.json).
+
+### Productos agrupados con Q15 dinámico
+
+El agrupado conservó por bits la trayectoria,
+los diagnósticos y las 17 cargas finales del
+control escalar. Ambas ramas pasaron Radau, los
+cruces de CR6, la auditoría nodal y la partición
+64/128, con cero asignaciones.
+
+En positivo se usó la proyección de junturas en
+control y candidato. La mediana pareada bajó un
+15,47 % a 1,890 ms y el pico de los tres lotes
+fue 2,177 ms, 1,63 veces el plazo.
+[Agrupado positivo](../evidence/rf_d_pilot_fast_r5961.json).
+
+En negativo se usó el predictor de feedback en
+ambos binarios. La mediana pareada bajó un
+17,49 % a 1,393 ms y el pico de los tres lotes
+fue 1,941 ms, 1,46 veces el plazo.
+[Agrupado negativo](../evidence/rf_d_pilot_fast_r5962.json).
+
+El plazo de 1,333 ms a 128 frames sigue abierto
+en el banco nativo. Las medidas corresponden al
+receptor con Q15/CR6 y R59 cerrados, con C2, R60,
+Q25 y CR8 impuestos.

@@ -150,6 +150,8 @@ def dynamic_q15(run, report, joined, exe, control, dc, bias, center, limits, sti
                       and control_mismatch <= report["r59_closure_limit_v"]
                       and crossings(exact_rows[:, 15]) == report["candidate_crossings"])
         key = report["q15_comparison"]
+        if key in ("q15_packed_products_comparison", "q15_packed_odd_comparison"):
+            passed = passed and raw == exact_raw
         report[key] = dict(
             passed=passed, control_output_sha256=digest(exact_raw), endpoint_audit=exact_audit,
             contrast=difference, audio_final_charge_error_c=audio_charge_error, bit_exact=raw == exact_raw,
@@ -396,10 +398,10 @@ def main():
         if args.tight_r59:
             cfg.extend(("--cfg", "pilot_r59_tight_closure"))
         control_cfg = cfg.copy()
-        if args.packed_products:
+        if args.packed_products and not args.dynamic_q15:
             cfg.extend(("--cfg", "pilot_receiver_packed"))
         odd_control_cfg = cfg.copy()
-        if args.packed_odd:
+        if args.packed_odd and not args.dynamic_q15:
             cfg.extend(("--cfg", "pilot_receiver_packed_odd"))
         follower_cfg = ["--cfg", "pilot_r59_schur_follower"] if args.schur_follower else []
         prediction_cfg = ["--cfg", "pilot_r59_predict_follower"] if args.predict_follower else []
@@ -421,6 +423,8 @@ def main():
                 (args.predict_q15_cr6, "pilot_r59_predict_q15_cr6", "q15_cr6_prediction_comparison"),
                 (args.predict_r59_affine, "pilot_r59_predict_affine", "r59_affine_prediction_comparison"),
                 (args.predict_r59_junctions, "pilot_r59_junction_predictor", "r59_junction_prediction_comparison"),
+                (args.packed_products, "pilot_receiver_packed", "q15_packed_products_comparison"),
+                (args.packed_odd, "pilot_receiver_packed_odd", "q15_packed_odd_comparison"),
             )
             enabled = [(flag, key) for selected, flag, key in refinements if selected]
             gain_control = None

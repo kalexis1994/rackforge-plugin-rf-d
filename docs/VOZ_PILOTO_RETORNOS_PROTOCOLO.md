@@ -654,3 +654,15 @@ fallo del predictor, conservar el arranque desde
 la historia aceptada. Comparar con el mismo cierre
 de R59, la misma reserva de carga y los mismos
 reintentos de Q15.
+
+Con Q15 dinámico, contrastar `--packed-products`
+contra la misma configuración escalar, incluyendo
+el mismo predictor de R59 y el cierre de Q15/CR6.
+El agrupado comparte cada entrada entre cuatro
+filas y conserva el orden de suma por fila.
+Exigir igualdad por bits en la trayectoria, los
+diagnósticos y las 17 cargas finales, además de
+Radau, la auditoría de carga y el plazo nativo.
+Si se añade `--packed-odd`, el control también usa
+los productos agrupados y el contraste aísla la
+corrección impar de Newton.
