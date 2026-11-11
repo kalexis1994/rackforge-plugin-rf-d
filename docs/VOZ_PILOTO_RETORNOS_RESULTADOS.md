@@ -2524,3 +2524,35 @@ pico nativo fue 1,319 ms en los cinco lotes.
 La opción `--feedback-seed` conserva el resultado
 reproducible en el banco con C2 y R60 impuestos.
 [Predictor en negativo](../evidence/rf_d_pilot_fast_r5917.json).
+
+
+### Reúso de la evaluación en las mismas junturas
+
+En 64 bloques, el reintento de cada rama reaprovechó
+16.384 evaluaciones de defecto, pendiente y P·defecto.
+El número de evaluaciones del residual se conservó.
+Las salidas, los diagnósticos y las 17 cargas finales
+coincidieron por bits con el control. Pasaron el
+contraste de Radau y la partición 64/128.
+
+La mediana pareada bajó 3,17 % en positivo y 5,79 %
+en negativo. Un lote positivo registró 10,616 ms de
+pico y el máximo negativo fue 1,814 ms. La repetición
+positiva bajó la mediana pareada 5,01 % y registró un
+pico de 1,696 ms. Se conservan ambos pases positivos.
+[Primer pase positivo](../evidence/rf_d_pilot_fast_r5918.json).
+[Pase negativo](../evidence/rf_d_pilot_fast_r5919.json).
+[Repetición positiva](../evidence/rf_d_pilot_fast_r5920.json).
+
+El predictor de feedback en negativo volvió a obtener
+81.920 evaluaciones frente a 96.512 del control.
+La mediana pareada bajó 11,32 % y el pico fue
+1,505 ms. Así, el primer pico de 1,319 ms quedó
+por debajo del margen y la repetición lo excedió.
+Ambas variantes quedan disponibles como opciones
+de laboratorio. Hubo cero asignaciones en los pases.
+[Repetición del predictor](../evidence/rf_d_pilot_fast_r5921.json).
+
+La voz de 18 junturas pasó de nuevo las tres escenas
+y conservó el hash de J7 f32.
+[Regresión de la voz](../evidence/rf_d_pilot_returns19.json).

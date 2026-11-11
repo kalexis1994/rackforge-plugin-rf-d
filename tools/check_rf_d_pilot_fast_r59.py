@@ -46,8 +46,11 @@ def main():
                         help="group the odd Newton rows and compare with the original correction")
     parser.add_argument("--profile", action="store_true",
                         help="attribute native cost using a separate instrumented executable")
-    parser.add_argument("--feedback-seed", action="store_true",
-                        help="seed receiver retries with the new predictor and previous trial feedback")
+    seed_options = parser.add_mutually_exclusive_group()
+    seed_options.add_argument("--feedback-seed", action="store_true",
+                              help="seed receiver retries with the new predictor and previous trial feedback")
+    seed_options.add_argument("--reuse-law", action="store_true",
+                              help="reuse the previous trial's law evaluation at the same junctions")
     args = parser.parse_args()
     if args.packed_odd and not args.packed_products:
         parser.error("--packed-odd requires --packed-products")
@@ -73,6 +76,7 @@ def main():
                   packed_products=args.packed_products,
                   packed_odd=args.packed_odd,
                   feedback_seed=args.feedback_seed,
+                  reuse_law=args.reuse_law,
                   **sources.fields(), compiler_sha256=sha(Path(COMPILER)), library_sha256=sha(LIB))
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
     flags = [COMPILER, "--edition=2021", "-C", "opt-level=3", "-C", "target-feature=+fma",
@@ -121,8 +125,10 @@ def main():
         for name, line in zip(PROFILE_STAGES, lines[1:-1], strict=True):
             calls, elapsed_ns = map(int, line.split(","))
             stages[name] = dict(calls=calls, elapsed_ns=elapsed_ns, mean_per_block_ns=elapsed_ns / blocks)
+        evaluations, reused = map(int, lines[-1].split(","))
+        assert 0 <= reused <= stages["receiver_root"]["calls"] <= evaluations
         return dict(bit_exact=exact, instrumented_timing=instrumented, stages=stages,
-                    successful_root_evaluations=int(lines[-1]))
+                    successful_root_evaluations=evaluations, reused_root_evaluations=reused)
 
     try:
         isolated, joined = AREA / "r59-isolated.exe", AREA / "r59-joined.exe"
@@ -155,7 +161,11 @@ def main():
         cfg = ["--cfg", "pilot_returns", "--cfg", "pilot_split_returns", "--cfg", "pilot_block_roots",
                "--cfg", "pilot_receiver_handoff", "--cfg", "pilot_receiver_ports", "--cfg", "pilot_audio_readout",
                "--cfg", "pilot_closed_cv"]
-        seed_cfg = ["--cfg", "pilot_r59_feedback_seed"] if args.feedback_seed else []
+        seed_cfg = []
+        if args.feedback_seed:
+            seed_cfg = ["--cfg", "pilot_r59_feedback_seed"]
+        elif args.reuse_law:
+            seed_cfg = ["--cfg", "pilot_r59_reuse_law"]
         if args.shared_port_exp:
             cfg.extend(("--cfg", "pilot_shared_port_exp"))
         control_cfg = cfg.copy()
@@ -179,14 +189,14 @@ def main():
         if args.packed_odd:
             run([*flags, *odd_control_cfg, *seed_cfg, source, "--extern", f"rf_d_circuit={LIB}", "-o", odd_control])
         seed_control = AREA / "r59-seed-control.exe"
-        if args.feedback_seed:
+        if seed_cfg:
             run([*flags, *cfg, source, "--extern", f"rf_d_circuit={LIB}", "-o", seed_control])
         profile_exe = AREA / "r59-profile.exe"
         seed_control_profile = AREA / "r59-seed-control-profile.exe"
         if args.profile:
             profile_flags = [*flags, *cfg, "--cfg", "pilot_r59_profile"]
             run([*profile_flags, *seed_cfg, source, "--extern", f"rf_d_circuit={LIB}", "-o", profile_exe])
-            if args.feedback_seed:
+            if seed_cfg:
                 run([*profile_flags, source, "--extern", f"rf_d_circuit={LIB}", "-o", seed_control_profile])
         header = np.r_[dc[:136], bias[:5]]
 
@@ -218,7 +228,7 @@ def main():
             controls_to_compare["eager"] = eager
         if args.packed_odd:
             controls_to_compare["odd_control"] = odd_control
-        if args.feedback_seed:
+        if seed_cfg:
             controls_to_compare["seed_control"] = seed_control
         variants = [(name, target, "cached") for name, target in controls_to_compare.items()]
         variants.extend((("cached", exe, "cached"), ("fresh", exe, "fresh")))
@@ -252,7 +262,7 @@ def main():
                                  and report["cached_vs_fresh"]["passed"] and all(v["passed"] for v in report["cases"].values()))
         if args.profile:
             profiles = {"profile": (profile_exe, cached)}
-            if args.feedback_seed:
+            if seed_cfg:
                 profiles["seed_control_profile"] = (seed_control_profile, report["cases"]["seed_control"])
             for key, (target, expected) in profiles.items():
                 measured = profile_blocks(target, payload, expected)
@@ -269,6 +279,7 @@ def main():
             ]
             ratio = float(np.median([pair["cached"]["median_ns"] for pair in pairs])
                           / np.median([pair[name]["median_ns"] for pair in pairs]))
+            passed = exact
             if name == "scalar":
                 report.update(packed_bit_exact=exact, packed_vs_scalar=assess(outputs["cached"], outputs[name]),
                               paired_timing=pairs, paired_median_ratio=ratio)
@@ -282,7 +293,8 @@ def main():
                 report.update(seed_bit_exact=exact, seed_comparison=difference, seed_paired_timing=pairs,
                               seed_median_ratio=ratio, seed_maximum_charge_difference_c=maximum_charge,
                               seed_charge_limit_c=CHARGE_LIMIT_C)
-            passed = exact if name != "seed_control" else difference["passed"] and maximum_charge <= CHARGE_LIMIT_C
+                if args.feedback_seed:
+                    passed = difference["passed"] and maximum_charge <= CHARGE_LIMIT_C
             report["passed"] = report["passed"] and passed
             report["realtime"] = bool(report["passed"] and report["realtime"] and all(
                 pair["cached"]["max_ns"] <= BUDGET_NS and pair["cached"]["allocations"] == 0

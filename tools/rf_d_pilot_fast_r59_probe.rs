@@ -137,7 +137,11 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
             for (calls, total_ns) in profile.stages {
                 writeln!(out, "{calls},{total_ns}")?;
             }
-            writeln!(out, "{}", profile.successful_root_evaluations)?;
+            writeln!(
+                out,
+                "{},{}",
+                profile.successful_root_evaluations, profile.reused_root_evaluations
+            )?;
         }
     } else {
         let size = 2 * second.parse::<usize>()?;

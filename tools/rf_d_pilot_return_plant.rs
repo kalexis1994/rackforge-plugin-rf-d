@@ -62,13 +62,6 @@ pub(crate) struct Prepared {
     correction: [f64; CHARGES],
 }
 
-#[derive(Clone, Copy)]
-pub(crate) enum Seed {
-    Junctions([f64; JUNCTIONS]),
-    #[cfg(pilot_r59_feedback_seed)]
-    Feedback([f64; JUNCTIONS]),
-}
-
 impl Prepared {
     pub(crate) fn new(old: State) -> Self {
         Self {
@@ -82,7 +75,7 @@ impl Prepared {
         &self,
         signal: f64,
         drive: Drive,
-        seed: Option<Seed>,
+        prior: Option<&Root>,
     ) -> Result<Root, Error> {
         let state = &self.old;
         if !drive.valid() || !signal.is_finite() || signal.abs() > 0.08 {
@@ -101,15 +94,25 @@ impl Prepared {
         let previous = product(&P, &state.defects);
         #[cfg(pilot_block_roots)]
         let previous = state.feedback;
-        let mut z = match seed {
-            Some(Seed::Junctions(z)) => z,
+        let mut z = match prior {
+            #[cfg(all(pilot_receiver_ports, not(pilot_r59_feedback_seed)))]
+            Some(trial) => trial.junction,
             #[cfg(pilot_r59_feedback_seed)]
-            Some(Seed::Feedback(feedback)) => std::array::from_fn(|i| predictor[i] - feedback[i]),
-            None => std::array::from_fn(|i| predictor[i] - previous[i]),
+            Some(trial) => std::array::from_fn(|i| predictor[i] - trial.feedback[i]),
+            _ => std::array::from_fn(|i| predictor[i] - previous[i]),
         };
         for _iteration in 0..12 {
-            let (defects, slope) = law(z)?;
-            let feedback = product(&P, &defects);
+            let evaluate = || {
+                let (defects, slope) = law(z)?;
+                Ok::<_, Error>((defects, slope, product(&P, &defects)))
+            };
+            #[cfg(pilot_r59_reuse_law)]
+            let (defects, slope, feedback) = match (_iteration, prior) {
+                (0, Some(trial)) => (trial.defects, trial.slope, trial.feedback),
+                _ => evaluate()?,
+            };
+            #[cfg(not(pilot_r59_reuse_law))]
+            let (defects, slope, feedback) = evaluate()?;
             let residual: [f64; JUNCTIONS] =
                 std::array::from_fn(|i| z[i] - predictor[i] + feedback[i]);
             if residual.iter().all(|x| x.abs() <= 2e-13) {
@@ -121,8 +124,12 @@ impl Prepared {
                     feedback,
                     #[cfg(pilot_receiver_ports)]
                     junction: z,
+                    #[cfg(pilot_r59_reuse_law)]
+                    slope,
                     #[cfg(pilot_r59_profile)]
                     evaluations: _iteration + 1,
+                    #[cfg(all(pilot_r59_profile, pilot_r59_reuse_law))]
+                    reused_evaluation: prior.is_some(),
                 });
             }
             // Same modified-Newton preconditioner as the original pilot.
@@ -158,19 +165,15 @@ pub(crate) struct Root {
     feedback: [f64; JUNCTIONS],
     #[cfg(pilot_receiver_ports)]
     junction: [f64; JUNCTIONS],
+    #[cfg(pilot_r59_reuse_law)]
+    slope: [f64; JUNCTIONS],
     #[cfg(pilot_r59_profile)]
     pub(crate) evaluations: usize,
+    #[cfg(all(pilot_r59_profile, pilot_r59_reuse_law))]
+    pub(crate) reused_evaluation: bool,
 }
 
 impl Root {
-    #[cfg(pilot_receiver_ports)]
-    pub(crate) fn retry_seed(&self) -> Seed {
-        #[cfg(pilot_r59_feedback_seed)]
-        return Seed::Feedback(self.feedback);
-        #[cfg(not(pilot_r59_feedback_seed))]
-        Seed::Junctions(self.junction)
-    }
-
     #[cfg(any(not(pilot_receiver_packed), pilot_receiver_ports))]
     fn readout_node(&self, node: usize) -> f64 {
         map::DC[node] + dot(&map::XQ[node], &self.base) + dot(&map::XU[node], &self.input)

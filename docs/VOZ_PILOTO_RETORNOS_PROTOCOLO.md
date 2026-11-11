@@ -391,3 +391,13 @@ de puertos y 1e−20 C de diferencia máxima en las cargas
 finales, igual que el banco de entrega del receptor.
 Contar además las evaluaciones de las raíces que llegan
 a converger, tanto en el candidato como en su control.
+
+Con `--reuse-law`, el reintento arranca en las mismas
+junturas del intento previo y toma sus defectos,
+pendientes y P·defecto ya evaluados. Recalcula el
+predictor y todo el residual con la fuente nueva. Las
+iteraciones posteriores vuelven a evaluar las leyes.
+El respaldo sigue usando el predictor del último
+estado aceptado. Exigir identidad por bits frente
+al control que repite la evaluación y contar cuántas
+evaluaciones se reutilizan en las raíces convergidas.

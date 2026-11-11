@@ -33,6 +33,7 @@ pub enum Error {
 pub struct Profile {
     pub stages: [(u64, u128); 7],
     pub successful_root_evaluations: usize,
+    pub reused_root_evaluations: usize,
 }
 
 macro_rules! measure {
@@ -70,7 +71,7 @@ pub fn advance(
     let mut gradient = if refresh { None } else { old.gradient };
     let mut previous_error = f64::INFINITY;
     let mut tangent_calls = 0;
-    let mut retry_seed = None;
+    let mut prior = None;
     let prepared = measure!(profile, 1, plant::Prepared::new(old.audio));
     for iteration in 1..=8 {
         let drive = plant::Drive {
@@ -78,7 +79,7 @@ pub fn advance(
             filter_delta_v: filter - map::SPLIT_CENTER[1],
         };
         let refresh_tangent = gradient.is_none();
-        let seed = if refresh_tangent { None } else { retry_seed };
+        let seed = if refresh_tangent { None } else { prior.as_ref() };
         let root = measure!(
             profile,
             2,
@@ -91,10 +92,13 @@ pub fn advance(
             })
         )
         .map_err(Error::Audio)?;
-        retry_seed = Some(root.retry_seed());
         #[cfg(pilot_r59_profile)]
         {
             profile.successful_root_evaluations += root.evaluations;
+        }
+        #[cfg(all(pilot_r59_profile, pilot_r59_reuse_law))]
+        {
+            profile.reused_root_evaluations += usize::from(root.reused_evaluation);
         }
         #[cfg(pilot_r59_eager)]
         let completed = measure!(profile, 6, root.finish()).map_err(Error::Audio)?;
@@ -159,6 +163,7 @@ pub fn advance(
             gradient = None;
         }
         previous_error = error;
+        prior = Some(root);
         source += residual / denominator;
     }
     Err(Error::Closure)
