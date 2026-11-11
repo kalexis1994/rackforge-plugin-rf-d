@@ -83,15 +83,54 @@ fn predict(
         cr8_anode,
     };
     let mut q15_v = old.q15_v;
+    #[cfg(pilot_r59_predict_q15_cr6)]
+    let (mut reset, shunt, target_current) = {
+        let (current, conductance) =
+            crate::contour_ports::germanium(old.audio.volume[4] - old.q15_v[0]).ok()?;
+        // The reset response to the cathode is g_CR6 / (shunt + g_CR6).
+        let total = conductance / slope;
+        let shunt = total - conductance;
+        if !shunt.is_finite() || shunt <= 0. {
+            return None;
+        }
+        let target_current = current + total * (reset_at_old_cathode - old.audio.volume[4]);
+        (reset_at_old_cathode, shunt, target_current)
+    };
     for _ in 0..6 {
+        #[cfg(not(pilot_r59_predict_q15_cr6))]
         let reset = reset_at_old_cathode + slope * (q15_v[0] - old.q15_v[0]);
         let (current, conductance) = crate::contour_ports::germanium(reset - q15_v[0]).ok()?;
-        let (_, residual, jacobian) =
-            equation(old, q15_v, drive, [current, conductance * (slope - 1.)]).ok()?;
-        let correction = direction(residual, jacobian).ok()?;
-        if maximum(&residual) <= CURRENT_TOLERANCE_A
-            && maximum(&correction) <= CORRECTION_TOLERANCE_V
-        {
+        #[cfg(not(pilot_r59_predict_q15_cr6))]
+        let (correction, error, max_correction) = {
+            let (_, residual, jacobian) =
+                equation(old, q15_v, drive, [current, conductance * (slope - 1.)]).ok()?;
+            let correction = direction(residual, jacobian).ok()?;
+            (correction, maximum(&residual), maximum(&correction))
+        };
+        #[cfg(pilot_r59_predict_q15_cr6)]
+        let (correction, error, max_correction) = {
+            let (_, mut residual, mut jacobian) =
+                equation(old, q15_v, drive, [current, -conductance]).ok()?;
+            let reset_residual = shunt * (reset - old.audio.volume[4]) + current - target_current;
+            let error = maximum(&residual).max(reset_residual.abs());
+            let reset_diagonal = shunt + conductance;
+            let coupling = conductance / reset_diagonal;
+            // Eliminate the reset row and restore its correction afterward.
+            residual[0] += coupling * reset_residual;
+            jacobian[0][0] -= coupling * conductance;
+            let correction = direction(residual, jacobian).ok()?;
+            let reset_correction = (reset_residual + conductance * correction[0]) / reset_diagonal;
+            if !reset_correction.is_finite() {
+                return None;
+            }
+            reset -= reset_correction;
+            (
+                correction,
+                error,
+                maximum(&correction).max(reset_correction.abs()),
+            )
+        };
+        if error <= CURRENT_TOLERANCE_A && max_correction <= CORRECTION_TOLERANCE_V {
             return Some(q15_v);
         }
         q15_v = std::array::from_fn(|i| q15_v[i] - correction[i]);

@@ -602,3 +602,21 @@ Comparar con la misma política de reintentos y
 tangente sin esa lectura provisional. Contar los
 intentos y las iteraciones de R59 después de la
 semilla y medir el coste total de ambos caminos.
+
+Con `--predict-q15-cr6`, conservar la ley no lineal
+de CR6 en la semilla. Si s es la respuesta de reset
+al cátodo en el estado aceptado con R59 cerrado y
+g es la pendiente de CR6, la conductancia del resto
+del circuito vista desde reset es g/s−g. Congelarla
+durante la predicción y aplicar la excursión de C2
+como una corriente equivalente con la conductancia
+total g/s. Resolver la fila de reset junto con las
+dos filas de Q15. Eliminar la corrección de reset
+al resolver y reconstruirla antes de verificar las
+tres filas y correcciones de la semilla.
+
+Si la conductancia equivalente es inválida o falla
+la semilla, queda disponible el arranque desde el
+estado aceptado. El cierre final conserva el stamp
+completo. Comparar contra la proyección lineal con
+las mismas políticas de R59 y Q15.

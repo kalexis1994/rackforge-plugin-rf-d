@@ -2857,3 +2857,24 @@ El coste de la lectura subió la mediana pareada
 queda como opción reproducible de laboratorio.
 [Lectura positiva](../evidence/rf_d_pilot_fast_r5948.json).
 [Lectura negativa](../evidence/rf_d_pilot_fast_r5949.json).
+
+
+### CR6 no lineal en la semilla de Q15
+
+La nueva semilla conservó la ley de CR6 y usó la
+conductancia del resto del circuito desde el punto
+aceptado. Los cierres de audio bajaron de 420 a 259
+en positivo y de 419 a 258 en negativo por bloque.
+Las iteraciones de R59 fueron 515 y 514.
+
+Las dos ramas pasaron Radau, la auditoría nodal,
+los cruces y la partición. La mayor diferencia
+contra el control fue 1,39e−23 C en Q15 y
+9,26e−23 C en las cargas finales del receptor.
+
+Las medianas pareadas bajaron 16,73 % y 17,17 %,
+a 1,959 y 1,672 ms. Se observaron máximos de
+6,914 y 2,107 ms al incluir el primer lote. El
+plazo sigue abierto.
+[CR6 en la semilla positiva](../evidence/rf_d_pilot_fast_r5950.json).
+[CR6 en la semilla negativa](../evidence/rf_d_pilot_fast_r5951.json).
