@@ -11,7 +11,7 @@ use std::{
     time::Instant,
 };
 struct Counter;
-static ALLOCS: AtomicUsize = AtomicUsize::new(0);
+pub(crate) static ALLOCS: AtomicUsize = AtomicUsize::new(0);
 unsafe impl GlobalAlloc for Counter {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
         ALLOCS.fetch_add(1, Relaxed);

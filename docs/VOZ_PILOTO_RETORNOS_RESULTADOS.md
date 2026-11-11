@@ -2736,3 +2736,24 @@ midió por separado del motor. Queda pendiente el
 cierre dinámico de Q15 con esta corriente de retorno.
 [Tangente positiva](../evidence/rf_d_pilot_fast_r5935.json).
 [Tangente negativa](../evidence/rf_d_pilot_fast_r5936.json).
+
+
+### Primer cierre dinámico de Q15 por CR6 y R59
+
+El trapecio resolvió la corriente de retorno de CR6
+y las cargas de Q15 desde la misma historia en cada
+intento. Pasaron los límites de audio, el residual
+de Q15 y la partición 64/128 en ambas ramas. El
+mayor error de base frente a Radau fue 48,0 µV en
+positivo y 40,9 µV en negativo. La diferencia de
+carga llegó a 3,18e−16 C. Los dos pases quedaron
+rechazados por el contraste temporal.
+
+Las medianas nativas a 128 frames fueron 10,532 ms
+y 9,866 ms, con cero asignaciones. El montaje
+usa Q25, CR8, C2 y R60 impuestos. El primer intento
+se detuvo en compilación por un alias de módulo
+que quedó corregido en los dos pases medidos.
+[Compilación inicial](../evidence/rf_d_pilot_fast_r5937.json).
+[Trapecio positivo](../evidence/rf_d_pilot_fast_r5938.json).
+[Trapecio negativo](../evidence/rf_d_pilot_fast_r5939.json).

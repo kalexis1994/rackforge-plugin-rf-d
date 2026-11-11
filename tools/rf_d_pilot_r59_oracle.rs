@@ -8,6 +8,15 @@ use std::io::{Read, Write};
 mod linear;
 #[path = "rf_d_pilot_returns_oracle.rs"]
 mod receiver;
+#[cfg(pilot_r59_q15)]
+#[path = "latch_charge_driver.rs"]
+mod latch_charge_driver;
+#[cfg(pilot_r59_q15)]
+#[path = "../crates/rf-d-circuit/src/prepared_volume_residual.rs"]
+mod original_volume;
+#[cfg(pilot_r59_q15)]
+#[path = "rf_d_pilot_q15_r59_oracle.rs"]
+mod q15_oracle;
 const N: usize = AUDIO + 5;
 const PAIR: usize = 2 * N;
 const B: [[f64; 2]; 2] = [[1.5, 0.5], [-4.5, 2.5]];
@@ -173,6 +182,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map(|b| f64::from_le_bytes(b.try_into().unwrap()))
         .collect();
     let mut out = std::io::BufWriter::new(std::io::stdout().lock());
+    #[cfg(pilot_r59_q15)]
+    if let Some(rate) = mode.strip_prefix("q15-") {
+        return q15_oracle::render(&values, rate.parse()?, &mut out);
+    }
     if mode == "bias" {
         assert_eq!(values.len(), 3);
         for value in bias(values[0], values[1], values[2]).map_err(|e| format!("bias: {e:?}"))? {

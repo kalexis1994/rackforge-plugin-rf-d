@@ -505,3 +505,31 @@ estado previo. Exigir 20 pS de error y refinamiento,
 2 nA de error de corriente contra Radau y coincidencia
 por bits de la trayectoria y las cargas del banco.
 La consulta de la tangente usa un ejecutable aparte.
+
+Con `--dynamic-q15`, resolver en cada paso de 96 kHz
+la base y el colector de Q15 junto con el puerto
+CR6/R59. Para cada intento, usar la base provisional
+como cátodo y resolver R59 desde la misma historia
+de audio. Restar la corriente de CR6 de la fila de
+base y su tangente del Jacobiano. Conservar las
+leyes y las cargas BE/BC del banco Q15 anterior.
+
+Integrar Q15 por trapecio con el residual
+I_n + I_anterior + 2·ΔQ/h. Conservar el historial
+aceptado al probar cada nuevo punto y comprobar
+2e−15 A y 2e−12 V antes de publicar ambos estados.
+El equilibrio inicial usa el divisor R24/R27 sin
+corriente de CR6. Ajustar la fuente impuesta de
+R56 para ese equilibrio. Modularla 0,15 V a 263 Hz
+para ejercer ambos sentidos de CR6. Q25 y CR8
+son fronteras de laboratorio alrededor de ese punto.
+
+Comparar contra Radau conjunto de 75 nodos por
+etapa a 384 y 768 kHz con el stamp completo de la
+placa y las mismas leyes de carga. Exigir los
+límites de audio y de 20 µV, 2 nA y 2e−20 C para
+los puertos y cargas de Q15. Verificar los índices
+de cruce, el dominio de R59, la suma de incrementos
+de carga y la partición 64/128 por bits. Medir el
+coste y las asignaciones a 128 frames después del
+calentamiento. C2 y el colector de R60 se imponen.

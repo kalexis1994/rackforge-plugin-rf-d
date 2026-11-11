@@ -37,6 +37,78 @@ RESET_TANGENT_LIMIT_S = 2e-11
 PROFILE_STAGES = ("initial_follower", "receiver_history", "receiver_root", "loaded_follower",
                   "follower_response", "receiver_tangent", "receiver_reconstruction")
 
+def dynamic_q15(run, report, joined, exe, dc, bias, center, limits, stimulus, cathode, assess, crossings):
+    # Fit the imposed R56 source at DC. CR8 starts in reverse and Q15 BE/BC
+    # are both deep reverse, giving a 2 fA collector current at this seed.
+    q15_collector = (9.3 + cathode) / 2. - 1e-11
+    cr8_anode = cathode - 0.35
+    cr6 = CR6_SATURATION_A * np.expm1((bias[4] - cathode) / CR6_SCALE_V)
+    cr8 = CR6_SATURATION_A * np.expm1((cr8_anode - cathode) / CR6_SCALE_V)
+    q25_collector = cathode + 33_000. * (-2.1e-15 - cr6 - cr8)
+
+    def controls(time):
+        original = stimulus(time)
+        return np.column_stack((original[:, 0], bias[5] + 0.5 * original[:, 1],
+                                center[1] + original[:, 2], np.full(len(time), cathode),
+                                q25_collector + 0.15 * np.sin(2. * np.pi * 263. * time),
+                                np.full(len(time), cr8_anode)))
+
+    header = np.r_[dc[:136], bias[:5], cathode, q15_collector, controls(np.zeros(1)).ravel()]
+    reference = {}
+    for ratio in (4, 8):
+        rate = RATE * ratio
+        ticks = np.arange(2 * STEPS * ratio)
+        drives = np.column_stack((controls((ticks + 1. / 3.) / rate), controls((ticks + 1.) / rate)))
+        raw = run([joined, f"q15-{rate}"], packed(np.r_[header, drives.ravel()]))
+        reference[ratio] = np.frombuffer(raw, "<f8").reshape(2 * STEPS * ratio, 18)[ratio - 1::ratio]
+        assert np.isfinite(reference[ratio]).all()
+        report[f"reference_{rate}_sha256"] = digest(raw)
+        print("Q15 reference", rate, flush=True)
+    payload = packed(np.r_[header, controls(np.arange(1, 2 * STEPS + 1) / RATE).ravel()])
+    report.update(input=pack_bytes(payload), input_sha256=digest(payload))
+    raw = run([exe, 128], payload, repeat=True)
+    values = np.frombuffer(raw, "<f8")
+    assert np.isfinite(values).all()
+    rows = values[:-CHARGES].reshape(2 * STEPS, 25)
+    report["output_sha256"] = digest(raw)
+    report["partition_bit_exact"] = raw == run([exe, 64], payload, repeat=True)
+
+    def compare_q15(a, b):
+        audio = assess(a[:, :13], b[:, :13])
+        error = abs(a[:, 13:18] - b[:, 13:18]).max(axis=0)
+        return dict(passed=bool(audio["passed"] and error[:2].max() <= 20e-6
+                                and error[2] <= RETURN_LIMIT_A and error[3:].max() <= 2e-20),
+                    audio=audio, q15_voltage_error_v=error[:2].tolist(), cr6_error_a=float(error[2]),
+                    q15_charge_error_c=error[3:].tolist())
+
+    report["refinement"] = compare_q15(reference[4], reference[8])
+    report["contrast"] = compare_q15(rows, reference[8])
+    report["candidate_crossings"] = crossings(rows[:, 15])
+    report["reference_crossings"] = crossings(reference[8][:, 15])
+    report["coarse_reference_crossings"] = crossings(reference[4][:, 15])
+    charge_sum_error = abs(np.cumsum(rows[:, 18:20], axis=0) - rows[:, 16:18]).max(axis=0)
+    report.update(
+        charge_sum_error_c=charge_sum_error.tolist(),
+        max_q15_residual_a=float(abs(rows[:, 20:22]).max()),
+        max_trials=int(rows[:, 22].max()),
+        max_r59_mismatch_a=float(rows[:, 23].max()),
+        max_r59_mismatch_v=float(rows[:, 24].max()),
+        reference_r59_range_v=[float(reference[8][:, 11].min()), float(reference[8][:, 11].max())],
+    )
+    report["passed"] = bool(
+        report["partition_bit_exact"] and report["refinement"]["passed"] and report["contrast"]["passed"]
+        and len(report["reference_crossings"]) >= 2
+        and report["candidate_crossings"] == report["reference_crossings"] == report["coarse_reference_crossings"]
+        and charge_sum_error.max() <= 2e-20 and report["max_q15_residual_a"] <= 2e-15
+        and report["max_r59_mismatch_a"] <= 2e-12 and report["max_r59_mismatch_v"] <= 1e-10
+        and abs(reference[8][:, 11] - center[0]).max() <= limits[0]
+    )
+    timing = dict(zip(("blocks", "median_ns", "max_ns", "allocations"),
+                      map(int, run([exe, "bench"], payload).decode().split(",")), strict=True))
+    report["timing"] = timing
+    report["realtime"] = report["passed"] and timing["max_ns"] <= BUDGET_NS and timing["allocations"] == 0
+    print("Q15", report["passed"], report["contrast"], report["max_q15_residual_a"], timing, flush=True)
+
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -58,6 +130,8 @@ def main():
                         help="include the CR6 cathode tangent in the follower prediction")
     parser.add_argument("--reset-port", action="store_true",
                         help="compare the closed R59 reset port tangent against centered differences")
+    parser.add_argument("--dynamic-q15", action="store_true",
+                        help="close Q15 charge through CR6 and R59 in the joined laboratory circuit")
     cathode_options = parser.add_mutually_exclusive_group()
     cathode_options.add_argument("--vary-cathode", action="store_true",
                                  help="drive the reset cathode around a forward-biased CR6 operating point")
@@ -71,6 +145,8 @@ def main():
     seed_options.add_argument("--reuse-law", action="store_true",
                               help="reuse the previous trial's law evaluation at the same junctions")
     args = parser.parse_args()
+    if args.dynamic_q15:
+        args.schur_follower = args.predict_follower = args.predict_cathode = args.tight_follower = True
     if args.packed_odd and not args.packed_products:
         parser.error("--packed-odd requires --packed-products")
     if args.predict_cathode and not args.predict_follower:
@@ -82,7 +158,7 @@ def main():
     stimulus = off_drives if negative else drives
     moving_cathode = args.vary_cathode or args.cross_cathode
     cathode_v, cathode_amplitude_v = CATHODE_V, 0.
-    if moving_cathode:
+    if moving_cathode or args.dynamic_q15:
         r24, r27 = 6800., 16900.
         unloaded_reset = (center[0] / r24 - 10. / r27) / (1. / r24 + 1. / r27)
         cathode_v = unloaded_reset - 0.45 if args.vary_cathode else unloaded_reset
@@ -93,14 +169,23 @@ def main():
         seq += 1
     modules = dict(fast_r59=MODEL, probe=PROBE, contour_ports="tools/rf_d_pilot_contour_ports.rs",
                    latch_charge="tools/latch_charge_driver.rs", port_lu="tools/rf_d_reduced_engine_lu.rs")
+    if args.dynamic_q15:
+        modules.update(q15="tools/rf_d_pilot_q15_return.rs", q15_r59="tools/rf_d_pilot_q15_r59.rs",
+                       q15_probe="tools/rf_d_pilot_q15_r59_probe.rs")
+    q15_sources = ("tools/rf_d_pilot_q15_r59_oracle.rs",
+                   "crates/rf-d-circuit/src/prepared_volume_residual.rs") if args.dynamic_q15 else ()
     sources = Sources((*SOURCES, *CONTOUR_SOURCES, OWN, JOINED, *modules.values(),
+                       *q15_sources,
                        "tools/check_rf_d_pilot_split_returns.py", "tools/check_rf_d_pilot_off_anchor.py",
                        "tools/affine_evidence.py", "tools/check_hybrid_voice.py",
                        "tools/rf_d_pilot_packed_products.rs",
                        "crates/rf-d-circuit/src/loudness_follower.rs"))
+    imposed = ("signal", "C2", "R60 collector", "Q25 base", "Q25 collector", "CR8 anode") if args.dynamic_q15 else (
+        "signal", "C2", "reset base", "R60 collector")
     report = dict(passed=False, realtime=False, rack_integrated=False, r59_closed=True, branch=args.branch,
+                  dynamic_q15=args.dynamic_q15,
                   internal_rate_hz=RATE, frames=128, warmup_frames=128, budget_ns=BUDGET_NS,
-                  imposed_sources=("signal", "C2", "reset base", "R60 collector"),
+                  imposed_sources=imposed,
                   cathode_v=cathode_v, cathode_amplitude_v=cathode_amplitude_v,
                   receiver_center_v=center, receiver_range_v=limits,
                   shared_port_exp=args.shared_port_exp,
@@ -181,7 +266,8 @@ def main():
     try:
         isolated, joined = AREA / "r59-isolated.exe", AREA / "r59-joined.exe"
         run([*flags, ROOT / ORACLE, "--extern", f"rf_d_circuit={LIB}", "-o", isolated])
-        run([*flags, ROOT / JOINED, "--extern", f"rf_d_circuit={LIB}", "-o", joined])
+        joined_cfg = ["--cfg", "pilot_r59_q15"] if args.dynamic_q15 else []
+        run([*flags, *joined_cfg, ROOT / JOINED, "--extern", f"rf_d_circuit={LIB}", "-o", joined])
         baseline = cases()[1]
         seed = baseline["DC"]
         if negative:
@@ -203,7 +289,10 @@ def main():
         code += 'pub use rf_d_circuit::StepError;\n'
         for name, path in modules.items():
             code += f'#[path = "{(ROOT / path).as_posix()}"] mod {name};\n'
-        code += 'use port_lu as reduced_lu;\nfn main() -> Result<(), Box<dyn std::error::Error>> { probe::main() }\n'
+        entry = "q15_probe" if args.dynamic_q15 else "probe"
+        if args.dynamic_q15:
+            code += 'use latch_charge as latch_charge_driver;\n'
+        code += f'use port_lu as reduced_lu;\nfn main() -> Result<(), Box<dyn std::error::Error>> {{ {entry}::main() }}\n'
         source = emit("r59-fast.rs", code)
         exe = AREA / "r59-fast.exe"
         cfg = ["--cfg", "pilot_returns", "--cfg", "pilot_split_returns", "--cfg", "pilot_block_roots",
@@ -233,6 +322,13 @@ def main():
 
         def build(target, *config):
             run([*flags, *config, source, "--extern", f"rf_d_circuit={LIB}", "-o", target])
+
+        if args.dynamic_q15:
+            build(exe, *cfg, *candidate_cfg, "--cfg", "pilot_r59_reset_port")
+            dynamic_q15(run, report, joined, exe, dc, bias, center, limits, stimulus, cathode_v,
+                        assess, cr6_crossings)
+            sources.unchanged()
+            raise SystemExit(0 if report["passed"] else 1)
 
         build(exe, *cfg, *candidate_cfg)
         if args.shared_port_exp or args.schur_follower or args.predict_cathode:

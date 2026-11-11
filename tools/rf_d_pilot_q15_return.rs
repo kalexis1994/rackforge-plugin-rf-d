@@ -40,13 +40,30 @@ pub(crate) fn junction(v: f64) -> Result<(f64, f64), StepError> {
 }
 
 pub(crate) fn stage(old: State, state: State, drive: Drive) -> Result<Stage, StepError> {
-    let [base, collector] = state.q15;
+    let base = state.q15[0];
     let (volume, factor) = close_volume(state.volume, drive.c2, base, drive.vca_base)?;
     let (cr6, gd6) = germanium(volume[4] - base)?;
     // The cathode changes both ends of the branch. The follower's KCL
     // gives d(x4)/d(x27), including the reciprocal R24 load.
     let dx4 = factor.solve([0., 0., 0., 0., gd6])?[4];
     let cr6_tangent = gd6 * (dx4 - 1.);
+    let (current, jacobian) = conduction(state.q15, drive, cr6, cr6_tangent)?;
+    let (charge, mass) = terminal(old.q15.map(|v| (v, 0.)), state.q15.map(|v| (v, 0.)))?;
+    Ok(Stage {
+        state: State { volume, ..state },
+        current,
+        jacobian,
+        charge,
+        mass,
+    })
+}
+
+pub(crate) fn conduction(
+    [base, collector]: [f64; 2],
+    drive: Drive,
+    cr6: f64,
+    cr6_tangent: f64,
+) -> Result<([f64; 2], [[f64; 2]; 2]), StepError> {
     let (cr8, gd8) = germanium(drive.cr8_anode - base)?;
     let (f, gf) = junction(base)?;
     let (r, gr) = junction(base - collector)?;
@@ -61,14 +78,7 @@ pub(crate) fn stage(old: State, state: State, drive: Drive) -> Result<Stage, Ste
         ],
         [gf - 1.2 * gr, 2. / 10_000. + 1.2 * gr],
     ];
-    let (charge, mass) = terminal(old.q15.map(|v| (v, 0.)), state.q15.map(|v| (v, 0.)))?;
-    Ok(Stage {
-        state: State { volume, ..state },
-        current,
-        jacobian,
-        charge,
-        mass,
-    })
+    Ok((current, jacobian))
 }
 
 fn evaluate(
