@@ -467,3 +467,21 @@ residual de 2e−15 A, el cierre de R59 y el límite de
 1e−20 C entre cargas finales. Repetir la misma
 modulación tras el rechazo de la reserva positiva
 para medir la sensibilidad al criterio de convergencia.
+
+Con `--cross-cathode`, centrar el cátodo en el
+divisor R24/R27 a corriente nula de CR6. Aplicar
+una senoide de 263 Hz y 0,15 V de amplitud con
+la misma excursión reducida de C2. Resolver el
+equilibrio inicial de C2 en Radau. Este estímulo
+reserva el cambio de polaridad local alrededor
+del cero de CR6.
+
+En cada rama exigir al menos dos cambios de signo
+de la tensión de CR6 y uno durante el bloque medido.
+Comparar los índices de cruce a 96 kHz del candidato,
+los controles y las referencias 384/768 kHz. Obtener
+la corriente de CR6 de la tensión de cada trayectoria
+con la ley de germanio del seguidor y exigir el
+límite de retornos de 2 nA. Conservar el dominio
+de R59, la reserva de carga final de 1e−20 C y los
+demás límites del banco.

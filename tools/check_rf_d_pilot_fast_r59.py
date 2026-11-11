@@ -30,6 +30,9 @@ STEPS = 256
 CHARGES = 17
 CHARGE_LIMIT_C = 1e-20
 CATHODE_V = 0.
+CR6_SCALE_V = 1.5 * 1.380649e-23 * 298.15 / 1.602176634e-19
+CR6_SATURATION_A = 1e-8
+RETURN_LIMIT_A = 2e-9
 PROFILE_STAGES = ("initial_follower", "receiver_history", "receiver_root", "loaded_follower",
                   "follower_response", "receiver_tangent", "receiver_reconstruction")
 
@@ -52,8 +55,11 @@ def main():
                         help="seed the follower from the preceding accepted load and C2 tangents")
     parser.add_argument("--predict-cathode", action="store_true",
                         help="include the CR6 cathode tangent in the follower prediction")
-    parser.add_argument("--vary-cathode", action="store_true",
-                        help="drive the reset cathode around a forward-biased CR6 operating point")
+    cathode_options = parser.add_mutually_exclusive_group()
+    cathode_options.add_argument("--vary-cathode", action="store_true",
+                                 help="drive the reset cathode around a forward-biased CR6 operating point")
+    cathode_options.add_argument("--cross-cathode", action="store_true",
+                                 help="drive CR6 across zero bias in both directions")
     parser.add_argument("--tight-follower", action="store_true",
                         help="require a 2e-14 V follower Newton correction in every variant")
     seed_options = parser.add_mutually_exclusive_group()
@@ -69,12 +75,13 @@ def main():
     negative = args.branch == "negative"
     center, limits = (CLOSED, CLOSED_RANGE) if negative else (OPEN, OPEN_RANGE)
     stimulus = off_drives if negative else drives
+    moving_cathode = args.vary_cathode or args.cross_cathode
     cathode_v, cathode_amplitude_v = CATHODE_V, 0.
-    if args.vary_cathode:
+    if moving_cathode:
         r24, r27 = 6800., 16900.
         unloaded_reset = (center[0] / r24 - 10. / r27) / (1. / r24 + 1. / r27)
-        cathode_v = unloaded_reset - 0.45
-        cathode_amplitude_v = 0.25 * limits[0]
+        cathode_v = unloaded_reset - 0.45 if args.vary_cathode else unloaded_reset
+        cathode_amplitude_v = 0.25 * limits[0] if args.vary_cathode else 0.15
     assert AREA.is_dir() and not list(AREA.iterdir())
     seq = 1
     while (out := ROOT / f"evidence/rf_d_pilot_fast_r59{seq:02}.json").exists():
@@ -99,6 +106,7 @@ def main():
                   schur_follower=args.schur_follower,
                   predict_follower=args.predict_follower,
                   predict_cathode=args.predict_cathode,
+                  cross_cathode=args.cross_cathode,
                   follower_correction_limit_v=2e-14 if args.tight_follower else 2e-12,
                   **sources.fields(), compiler_sha256=sha(Path(COMPILER)), library_sha256=sha(LIB))
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"])
@@ -128,6 +136,17 @@ def main():
         audio = compare(candidate[:, :6], reference[:, :6])
         return dict(passed=bool(audio["passed"] and voltage.max() <= 20e-6),
                     audio=audio, maximum_voltage_v=voltage.tolist())
+
+    def cr6_voltage(rows, cathode):
+        return rows[:, 12] - cathode
+
+    def cr6_current(voltage):
+        return CR6_SATURATION_A * np.expm1(voltage / CR6_SCALE_V)
+
+    def cr6_crossings(voltage):
+        nonzero = np.flatnonzero(voltage)
+        sign = voltage[nonzero] > 0.
+        return nonzero[1:][sign[1:] != sign[:-1]].tolist()
 
     def timing(line):
         return dict(zip(("blocks", "median_ns", "p99_ns", "max_ns", "allocations"),
@@ -250,7 +269,7 @@ def main():
 
         def controls(time):
             original = stimulus(time)
-            if args.vary_cathode:
+            if moving_cathode:
                 c2_delta = 0.5 * original[:, 1]
                 cathode = cathode_v + cathode_amplitude_v * np.sin(2. * np.pi * 263. * time)
             else:
@@ -271,11 +290,26 @@ def main():
         report["reference_r59_source_range_v"] = [float(fine[8][:, 11].min()), float(fine[8][:, 11].max())]
         report["reference_source_domain_passed"] = bool(abs(fine[8][:, 11] - center[0]).max() <= limits[0])
         input = controls(np.arange(1, 2 * STEPS + 1) / RATE)
-        cr6 = fine[8][:, 12] - input[:, 2]
+        cr6 = cr6_voltage(fine[8], input[:, 2])
         report["reference_cr6_forward_range_v"] = [float(cr6.min()), float(cr6.max())]
+        reference_cr6_current = cr6_current(cr6)
+        reference_crossings = cr6_crossings(cr6)
+        report["reference_cr6_current_range_a"] = [float(reference_cr6_current.min()), float(reference_cr6_current.max())]
+        report["reference_cr6_crossings"] = reference_crossings
         report["reference_cathode_gate"] = bool(
             not args.vary_cathode or (cr6.min() > 0. and np.ptp(input[:, 2]) > 0.)
         )
+        if args.cross_cathode:
+            report["reference_cathode_gate"] = (
+                len(reference_crossings) >= 2 and any(tick >= STEPS for tick in reference_crossings)
+            )
+        coarse_cr6 = cr6_voltage(fine[4], input[:, 2])
+        report["refinement_cr6_error_a"] = float(abs(cr6_current(coarse_cr6) - reference_cr6_current).max())
+        report["refinement_cr6_crossings"] = cr6_crossings(coarse_cr6)
+        if args.cross_cathode:
+            report["reference_cathode_gate"] = (report["reference_cathode_gate"]
+                                               and report["refinement_cr6_crossings"] == reference_crossings
+                                               and report["refinement_cr6_error_a"] <= RETURN_LIMIT_A)
         payload = packed(np.r_[header, input.ravel()])
         report.update(input_sha256=digest(payload), input=pack_bytes(payload), cases={})
         outputs, charges = {}, {}
@@ -307,6 +341,12 @@ def main():
                         final_charge_sha256=digest(raw[-charge_bytes:]), unchanged_replay=True)
             item["r59_source_range_v"] = [float(rows[:, 11].min()), float(rows[:, 11].max())]
             item["passed"] = bool(result["passed"] and stats[1] <= 1e-10 and stats[2] <= 2e-12)
+            if args.cross_cathode:
+                voltage = cr6_voltage(rows, input[:, 2])
+                item["cr6_current_error_a"] = float(abs(cr6_current(voltage) - reference_cr6_current).max())
+                item["cr6_crossings"] = cr6_crossings(voltage)
+                item["passed"] = (item["passed"] and item["cr6_current_error_a"] <= RETURN_LIMIT_A
+                                  and item["cr6_crossings"] == reference_crossings)
             item["timing"] = time_blocks(target, mode, payload)
             item["realtime"] = item["passed"] and item["timing"]["max_ns"] <= BUDGET_NS and item["timing"]["allocations"] == 0
             report["cases"][name] = item

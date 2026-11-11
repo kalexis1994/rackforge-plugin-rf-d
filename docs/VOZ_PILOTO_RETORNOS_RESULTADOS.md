@@ -2685,3 +2685,28 @@ sigue abierto. El biestable y los contornos autónomos
 quedan pendientes de este banco de retornos.
 [Combinación positiva](../evidence/rf_d_pilot_fast_r5931.json).
 [Combinación negativa](../evidence/rf_d_pilot_fast_r5932.json).
+
+
+### Cruces de polaridad de CR6 con R59 cerrado
+
+Los cambios de signo coincidieron con Radau a
+384 y 768 kHz en ambas ramas. En positivo se
+registraron en los índices 184 y 367 a 96 kHz.
+En negativo se registraron en 183 y 365. Los
+índices se cuentan desde cero e incluyen el
+calentamiento. Cada bloque medido incluyó un cruce.
+
+La corriente de CR6 recorrió aproximadamente
+−9,81 nA a 446 nA. El error máximo frente a Radau
+fue 2,02 fA en positivo y 0,51 fA en negativo.
+La diferencia de las 17 cargas finales frente al
+control fue 4,70e−21 C en positivo y cero en
+negativo. Se conservaron el dominio de R59 y la
+partición 64/128 por bits.
+
+Las medianas iniciales fueron 1,263 ms y 1,082 ms.
+Los picos entre los nueve lotes de cada rama fueron
+5,702 ms y 1,383 ms. El cátodo se impuso externamente
+durante ambos cruces.
+[Cruces positivos](../evidence/rf_d_pilot_fast_r5933.json).
+[Cruces negativos](../evidence/rf_d_pilot_fast_r5934.json).
