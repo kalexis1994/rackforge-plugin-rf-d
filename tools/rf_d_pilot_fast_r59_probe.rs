@@ -35,10 +35,17 @@ fn render(
     offset: usize,
     fresh: bool,
     mut emit: impl FnMut(Frame),
+    #[cfg(pilot_r59_profile)] profile: &mut fast_r59::Profile,
 ) -> Result<(State, [f64; 4]), fast_r59::Error> {
     let mut stats = [0_f64; 4];
     for (i, &drive) in input.iter().enumerate() {
-        let (next, frame) = fast_r59::advance(state, drive, fresh || (offset + i) % STEPS == 0)?;
+        let (next, frame) = fast_r59::advance(
+            state,
+            drive,
+            fresh || (offset + i) % STEPS == 0,
+            #[cfg(pilot_r59_profile)]
+            profile,
+        )?;
         stats[0] = stats[0].max(frame.iterations as f64);
         stats[1] = stats[1].max(frame.mismatch_v);
         stats[2] = stats[2].max(frame.mismatch_a);
@@ -82,18 +89,38 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
         .collect();
     assert_eq!(input.len(), 2 * STEPS);
     let mut out = std::io::BufWriter::new(std::io::stdout().lock());
+    #[cfg(pilot_r59_profile)]
+    let mut profile = fast_r59::Profile::default();
     if second == "bench" {
-        let (warm, _) = render(initial, &input[..STEPS], 0, fresh, |_| {})
-            .map_err(|e| format!("warmup: {e:?}"))?;
+        let (warm, _) = render(
+            initial,
+            &input[..STEPS],
+            0,
+            fresh,
+            |_| {},
+            #[cfg(pilot_r59_profile)]
+            &mut profile,
+        )
+        .map_err(|e| format!("warmup: {e:?}"))?;
+        #[cfg(pilot_r59_profile)]
+        let mut profile = fast_r59::Profile::default();
         let mut times = [0_u128; 64];
         let mut allocations = 0;
         for time in &mut times {
             let before = ALLOCS.load(Relaxed);
             let begin = Instant::now();
             black_box(
-                render(black_box(warm), &input[STEPS..], STEPS, fresh, |frame| {
-                    black_box(frame);
-                })
+                render(
+                    black_box(warm),
+                    &input[STEPS..],
+                    STEPS,
+                    fresh,
+                    |frame| {
+                        black_box(frame);
+                    },
+                    #[cfg(pilot_r59_profile)]
+                    &mut profile,
+                )
                 .map_err(|e| format!("bench: {e:?}"))?,
             );
             *time = begin.elapsed().as_nanos();
@@ -105,6 +132,10 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
             "64,{},{},{},{allocations}",
             times[32], times[63], times[63]
         )?;
+        #[cfg(pilot_r59_profile)]
+        for (calls, total_ns) in profile.stages {
+            writeln!(out, "{calls},{total_ns}")?;
+        }
     } else {
         let size = 2 * second.parse::<usize>()?;
         assert!(matches!(size, 128 | 256));
@@ -112,26 +143,34 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
         let mut stats = [0_f64; 4];
         let mut samples = Vec::with_capacity(13 * input.len());
         for (i, chunk) in input.chunks(size).enumerate() {
-            let (next, measured) = render(state, chunk, i * size, fresh, |frame| {
-                let p = frame.ports;
-                samples.extend([
-                    p.j7_v,
-                    p.bus_v,
-                    p.base_v - p.bus_v,
-                    p.panel_a,
-                    p.returns_a[0],
-                    p.returns_a[1],
-                    p.loads_v[0],
-                    p.loads_v[1],
-                ]);
-                samples.extend([
-                    frame.volume[0],
-                    frame.volume[1],
-                    frame.volume[3],
-                    frame.volume[2],
-                    frame.volume[4],
-                ]);
-            })
+            let (next, measured) = render(
+                state,
+                chunk,
+                i * size,
+                fresh,
+                |frame| {
+                    let p = frame.ports;
+                    samples.extend([
+                        p.j7_v,
+                        p.bus_v,
+                        p.base_v - p.bus_v,
+                        p.panel_a,
+                        p.returns_a[0],
+                        p.returns_a[1],
+                        p.loads_v[0],
+                        p.loads_v[1],
+                    ]);
+                    samples.extend([
+                        frame.volume[0],
+                        frame.volume[1],
+                        frame.volume[3],
+                        frame.volume[2],
+                        frame.volume[4],
+                    ]);
+                },
+                #[cfg(pilot_r59_profile)]
+                &mut profile,
+            )
             .map_err(|e| format!("render chunk {i}: {e:?}"))?;
             state = next;
             for j in 0..3 {

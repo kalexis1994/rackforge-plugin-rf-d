@@ -29,6 +29,8 @@ RATE = 96_000
 STEPS = 256
 CHARGES = 17
 CATHODE_V = 0.
+PROFILE_STAGES = ("initial_follower", "receiver_history", "receiver_root", "loaded_follower",
+                  "follower_response", "receiver_tangent", "receiver_reconstruction")
 
 
 def main():
@@ -41,6 +43,8 @@ def main():
                         help="compare with full receiver reconstruction at every closure attempt")
     parser.add_argument("--packed-odd", action="store_true",
                         help="group the odd Newton rows and compare with the original correction")
+    parser.add_argument("--profile", action="store_true",
+                        help="attribute native cost using a separate instrumented executable")
     args = parser.parse_args()
     if args.packed_odd and not args.packed_products:
         parser.error("--packed-odd requires --packed-products")
@@ -94,10 +98,12 @@ def main():
         return dict(passed=bool(audio["passed"] and voltage.max() <= 20e-6),
                     audio=audio, maximum_voltage_v=voltage.tolist())
 
-    def time_blocks(target, mode, payload):
-        fields = run([target, mode, "bench"], payload).decode().strip().split(",")
+    def timing(line):
         return dict(zip(("blocks", "median_ns", "p99_ns", "max_ns", "allocations"),
-                        map(int, fields), strict=True))
+                        map(int, line.split(",")), strict=True))
+
+    def time_blocks(target, mode, payload):
+        return timing(run([target, mode, "bench"], payload).decode().strip())
 
     try:
         isolated, joined = AREA / "r59-isolated.exe", AREA / "r59-joined.exe"
@@ -152,6 +158,10 @@ def main():
         odd_control = AREA / "r59-odd-control.exe"
         if args.packed_odd:
             run([*flags, *odd_control_cfg, source, "--extern", f"rf_d_circuit={LIB}", "-o", odd_control])
+        profile_exe = AREA / "r59-profile.exe"
+        if args.profile:
+            run([*flags, *cfg, "--cfg", "pilot_r59_profile", source, "--extern", f"rf_d_circuit={LIB}",
+                 "-o", profile_exe])
         header = np.r_[dc[:136], bias[:5]]
 
         def controls(time):
@@ -211,6 +221,20 @@ def main():
         report["cached_vs_fresh"] = assess(outputs["cached"], outputs["fresh"])
         report["passed"] = bool(report["refinement"]["passed"] and report["reference_source_domain_passed"] and report["partition_bit_exact"]
                                  and report["cached_vs_fresh"]["passed"] and all(v["passed"] for v in report["cases"].values()))
+        if args.profile:
+            raw = run([profile_exe, "cached", 128, "--charges"], payload, repeat=True)
+            exact = (digest(raw[:-charge_bytes]) == cached["output_sha256"]
+                     and digest(raw[-charge_bytes:]) == cached["final_charge_sha256"])
+            lines = run([profile_exe, "cached", "bench"], payload).decode().splitlines()
+            instrumented = timing(lines[0])
+            blocks = instrumented["blocks"]
+            stages = {}
+            for name, line in zip(PROFILE_STAGES, lines[1:], strict=True):
+                calls, elapsed_ns = map(int, line.split(","))
+                stages[name] = dict(calls=calls, elapsed_ns=elapsed_ns, mean_per_block_ns=elapsed_ns / blocks)
+            report["profile"] = dict(bit_exact=exact, instrumented_timing=instrumented, stages=stages)
+            report["passed"] = report["passed"] and exact and instrumented["allocations"] == 0
+            print("PROFILE", report["profile"], flush=True)
         report["realtime"] = report["passed"] and report["cases"]["cached"]["realtime"]
         for name, target in controls_to_compare.items():
             exact = all(report["cases"][name][key] == cached[key]

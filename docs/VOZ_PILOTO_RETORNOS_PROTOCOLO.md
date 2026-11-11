@@ -372,3 +372,12 @@ Conservar los pivotes pares, los límites del residual
 y el fallback. Comparar ambas ramas con el control de
 corrección impar original y las mismas matrices agrupadas,
 con identidad de trayectoria, diagnósticos y cargas finales.
+
+Con `--profile`, compilar una variante instrumentada aparte
+con las mismas ecuaciones y el mismo estímulo. Atribuir el
+coste del bloque al cierre inicial del seguidor, la historia
+del receptor, su raíz, el cierre con carga, las dos tangentes
+y la reconstrucción. Contar llamadas y nanosegundos por
+etapa en 64 bloques después del calentamiento. Exigir los
+mismos bits de trayectoria y cargas finales. El límite de
+1,333 ms se aplica a la compilación sin instrumentación.

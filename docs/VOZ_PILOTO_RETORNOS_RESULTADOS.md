@@ -2482,3 +2482,21 @@ y el ensayo agrupado queda reproducible con
 `--packed-odd`.
 [Corrección impar positiva](../evidence/rf_d_pilot_fast_r5912.json).
 [Corrección impar negativa](../evidence/rf_d_pilot_fast_r5913.json).
+
+
+### Perfil de las etapas del cierre R59
+
+En los dos perfiles coincidieron por bits la trayectoria,
+los diagnósticos y las 17 cargas de la compilación sin
+instrumentar. Hubo 512 raíces del receptor por bloque de
+128 frames a 48 kHz, dos por cada paso de 96 kHz.
+
+La raíz consumió en promedio 0,934 ms por bloque en
+positivo y 0,858 ms en negativo. Representó cerca del
+64 % de la suma de las etapas en ambas ramas. Los dos
+cierres del seguidor sumaron 0,412 ms y 0,382 ms,
+respectivamente. La tangente del receptor, calculada
+una vez por bloque, consumió menos de 0,008 ms.
+La compilación instrumentada se usó para atribuir coste.
+[Perfil positivo](../evidence/rf_d_pilot_fast_r5914.json).
+[Perfil negativo](../evidence/rf_d_pilot_fast_r5915.json).
