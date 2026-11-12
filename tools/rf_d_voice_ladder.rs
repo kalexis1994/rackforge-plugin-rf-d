@@ -23,6 +23,8 @@ pub struct Ladder {
     recovery_step: f64,
     #[cfg(pilot_voice_filter)]
     emphasis: emphasis::Regeneration,
+    #[cfg(pilot_voice_modulation)]
+    modulation_octaves: f64,
 }
 
 impl Ladder {
@@ -37,6 +39,8 @@ impl Ladder {
             recovery_step: -(-1. / (rate * RECOVERY_TAU_S)).exp_m1(),
             #[cfg(pilot_voice_filter)]
             emphasis: emphasis::Regeneration::new(rate),
+            #[cfg(pilot_voice_modulation)]
+            modulation_octaves: 0.,
         }
     }
 
@@ -46,19 +50,33 @@ impl Ladder {
         cutoff: f64,
         #[cfg(pilot_voice_filter)] controls: Controls,
         #[cfg(pilot_voice_filter)] note: u8,
+        #[cfg(pilot_voice_modulation)] modulation_octaves: f64,
     ) -> f64 {
         #[cfg(pilot_voice_filter)]
         let (tracking_factor, tracking_changed) =
             self.emphasis.tracking(controls.tracking_thirds, note);
         #[cfg(not(pilot_voice_filter))]
         let tracking_changed = false;
-        if self.cutoff != Some(cutoff) || tracking_changed {
+        #[cfg(pilot_voice_modulation)]
+        let modulation_changed = self.modulation_octaves != modulation_octaves;
+        #[cfg(not(pilot_voice_modulation))]
+        let modulation_changed = false;
+        if self.cutoff != Some(cutoff) || tracking_changed || modulation_changed {
             let (low, high, fraction) = if cutoff < 0.5 {
                 (TAIL_A[0], TAIL_A[1], 2. * cutoff)
             } else {
                 (TAIL_A[1], TAIL_A[2], 2. * cutoff - 1.)
             };
             let tail_a = low * (high / low).powf(fraction);
+            #[cfg(pilot_voice_modulation)]
+            let tracking_factor = {
+                self.modulation_octaves = modulation_octaves;
+                if modulation_octaves == 0. {
+                    tracking_factor
+                } else {
+                    tracking_factor * modulation_octaves.exp2()
+                }
+            };
             #[cfg(pilot_voice_filter)]
             let tail_a = if tracking_factor == 1. {
                 tail_a

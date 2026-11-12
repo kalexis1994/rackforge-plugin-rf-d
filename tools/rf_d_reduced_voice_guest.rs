@@ -56,7 +56,17 @@ const OSC_RANGES: [(f64, f64); OSC_DEFAULTS.len()] = [
 #[cfg(pilot_oscillator_bank)]
 const OSC_END: usize = VOICE_DEFAULTS.len() + OSC_DEFAULTS.len();
 #[cfg(pilot_oscillator_bank)]
-const CONTROL_COUNT: usize = OSC_END + if cfg!(pilot_voice_filter) { 3 } else { 0 };
+const FILTER_END: usize = OSC_END + 3;
+#[cfg(pilot_oscillator_bank)]
+const MOD_DEFAULTS: [f64; 6] = [0., 35., 0., 0., 0., 0.];
+#[cfg(pilot_oscillator_bank)]
+const CONTROL_COUNT: usize = if cfg!(pilot_voice_modulation) {
+    FILTER_END + MOD_DEFAULTS.len()
+} else if cfg!(pilot_voice_filter) {
+    FILTER_END
+} else {
+    OSC_END
+};
 #[cfg(pilot_oscillator_bank)]
 const DEFAULTS: [f64; CONTROL_COUNT] = {
     let mut values = [0.; CONTROL_COUNT];
@@ -66,6 +76,8 @@ const DEFAULTS: [f64; CONTROL_COUNT] = {
             VOICE_DEFAULTS[index]
         } else if index < OSC_END {
             OSC_DEFAULTS[index - VOICE_DEFAULTS.len()]
+        } else if index >= FILTER_END {
+            MOD_DEFAULTS[index - FILTER_END]
         } else {
             0.
         };
@@ -92,6 +104,14 @@ impl Default for Controls {
 #[cfg(pilot_returns)]
 fn control_index(index: u32, value: f64) -> Option<usize> {
     let index = index as usize;
+    #[cfg(pilot_voice_modulation)]
+    if index >= FILTER_END {
+        return match index - FILTER_END {
+            1 | 3 if (0. ..=100.).contains(&value) => Some(index),
+            0 | 2 | 4 | 5 if value == 0. || value == 1. => Some(index),
+            _ => None,
+        };
+    }
     #[cfg(pilot_voice_filter)]
     if index >= OSC_END {
         return match index - OSC_END {
@@ -139,6 +159,15 @@ impl Controls {
             filter: voice::FilterControls {
                 emphasis: self.0[OSC_END] * 0.01,
                 tracking_thirds: self.0[OSC_END + 1] as u8 + 2 * self.0[OSC_END + 2] as u8,
+            },
+            #[cfg(pilot_voice_modulation)]
+            modulation: voice::modulation::Controls {
+                noise_pink: self.0[29] == 1.,
+                noise_level: self.0[30] * 0.01,
+                noise_enabled: self.0[31] == 1.,
+                mix: self.0[32] * 0.01,
+                oscillator: self.0[33] == 1.,
+                filter: self.0[34] == 1.,
             },
             contours: voice::Contours {
                 volume: voice::contour::Settings {
@@ -258,6 +287,10 @@ fn note_event(event: &MidiEvent) -> Option<Event> {
     let message = match (status & 0xf0, note, velocity) {
         (0x80, 36..=72, _) | (0x90, 36..=72, 0) => Message::NoteOff(note),
         (0x90, 36..=72, _) => Message::NoteOn(note),
+        #[cfg(pilot_voice_modulation)]
+        (0xb0, 1, 0..=127) => Message::ModWheel(velocity),
+        #[cfg(pilot_voice_modulation)]
+        (0xb0, 121, _) => Message::ModWheel(0),
         (0xb0, 120 | 123, _) => Message::AllNotesOff,
         _ => return None,
     };
@@ -333,6 +366,8 @@ impl Processor for Guest {
         let valid_length = valid_length
             || bytes.len() == 4 + VOICE_DEFAULTS.len() * 8
             || bytes.len() == 4 + OSC_END * 8;
+        #[cfg(pilot_voice_modulation)]
+        let valid_length = valid_length || bytes.len() == 4 + FILTER_END * 8;
         if !valid_length || &bytes[..4] != STATE_TAG {
             return false;
         }
@@ -349,6 +384,26 @@ impl Processor for Guest {
     }
 
     fn load_preset(&mut self, id: &str) -> bool {
+        #[cfg(pilot_voice_modulation)]
+        if id == "wheel_motion" {
+            self.controls = Controls::default();
+            self.controls.0[0] = 71.;
+            self.controls.0[16] = 0.; // OSC2 triangle an octave below OSC1.
+            self.controls.0[15] = 2.;
+            self.controls.0[18] = 55.;
+            self.controls.0[19] = 1.;
+            self.controls.0[20] = 0.; // Free-running OSC3 in LO.
+            self.controls.0[21] = 0.;
+            self.controls.0[25] = 0.;
+            self.controls.0[26] = 52.;
+            self.controls.0[29] = 1.;
+            self.controls.0[30] = 7.;
+            self.controls.0[31] = 1.;
+            self.controls.0[32] = 12.;
+            self.controls.0[33] = 1.;
+            self.controls.0[34] = 1.;
+            return true;
+        }
         #[cfg(pilot_voice_filter)]
         if id == "resonant_bass" {
             self.controls = Controls::default();

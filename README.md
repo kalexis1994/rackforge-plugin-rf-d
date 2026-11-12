@@ -8,12 +8,12 @@ no acredita identidad sonora con una unidad vintage.
 
 ## Motor jugable y referencia offline
 
-Importá `artifacts/rf-d-voice-0.6.0.rfplugin` desde Plugins y elegí
-**RF-D Voice** en PLAY. El preset **Resonant Bass** abre los tres
-osciladores, los dos contornos, Emphasis y seguimiento de teclado del
-filtro. Funciona a 48 kHz con MIDI 36–72.
+Importá `artifacts/rf-d-voice-0.7.0.rfplugin` desde Plugins y elegí
+**RF-D Voice** en PLAY. El preset **Wheel Motion** responde a la
+rueda MIDI con modulación de afinación y filtro. El mezclador
+incluye ruido blanco y rosa. Funciona a 48 kHz con MIDI 36–72.
 Para regenerarlo, ejecutá `python -B tools/check_rf_d_playable_voice.py`.
-[Controles y verificación](docs/FILTRO_TOCABLE.md).
+[Controles y verificación](docs/RUIDO_Y_MODULACION_TOCABLES.md).
 
 La ruta jugable usa el [piloto monofónico con R59/R60](docs/VOZ_PILOTO_RETORNOS_RESULTADOS.md#retornos-en-el-paquete-portable).
 El [solver acoplado](docs/VOZ_REDUCIDA_MOTOR_RESULTADOS.md) es la referencia

@@ -8,6 +8,9 @@ use crate::wave;
 #[cfg(pilot_oscillator_bank)]
 #[path = "rf_d_voice_oscillators.rs"]
 pub mod oscillator;
+#[cfg(pilot_voice_modulation)]
+#[path = "rf_d_voice_modulation.rs"]
+pub mod modulation;
 #[cfg(pilot_voice_contours)]
 #[path = "rf_d_voice_contour.rs"]
 pub mod contour;
@@ -31,6 +34,8 @@ pub enum Message {
     NoteOn(u8),
     NoteOff(u8),
     AllNotesOff,
+    #[cfg(pilot_voice_modulation)]
+    ModWheel(u8),
 }
 
 #[derive(Clone, Copy)]
@@ -79,6 +84,8 @@ pub struct Panel {
     pub contours: Contours,
     #[cfg(pilot_voice_filter)]
     pub filter: FilterControls,
+    #[cfg(pilot_voice_modulation)]
+    pub modulation: modulation::Controls,
 }
 
 #[cfg(pilot_voice_contours)]
@@ -109,6 +116,8 @@ impl Default for Panel {
             contours: Contours::default(),
             #[cfg(pilot_voice_filter)]
             filter: FilterControls::default(),
+            #[cfg(pilot_voice_modulation)]
+            modulation: modulation::Controls::default(),
         }
     }
 }
@@ -133,7 +142,11 @@ impl Panel {
         let filter_valid = self.filter.valid();
         #[cfg(not(pilot_voice_filter))]
         let filter_valid = true;
-        mixer_valid && contour_valid && filter_valid
+        #[cfg(pilot_voice_modulation)]
+        let modulation_valid = self.modulation.valid();
+        #[cfg(not(pilot_voice_modulation))]
+        let modulation_valid = true;
+        mixer_valid && contour_valid && filter_valid && modulation_valid
     }
 }
 
@@ -150,6 +163,8 @@ pub struct Voice<const FACTOR: usize> {
     phase: f64,
     #[cfg(pilot_oscillator_bank)]
     oscillators: oscillator::Bank,
+    #[cfg(pilot_voice_modulation)]
+    modulation: modulation::Sources,
     increment: f64,
     #[cfg(not(pilot_voice_contours))]
     trim: f64,
@@ -182,6 +197,8 @@ impl<const FACTOR: usize> Voice<FACTOR> {
             phase: 0.,
             #[cfg(pilot_oscillator_bank)]
             oscillators: oscillator::Bank::new((RATE * FACTOR) as f64, FACTOR),
+            #[cfg(pilot_voice_modulation)]
+            modulation: modulation::Sources::new((RATE * FACTOR) as f64, FACTOR),
             increment: 440. / (FACTOR * RATE) as f64,
             #[cfg(not(pilot_voice_contours))]
             trim: 0.,
@@ -196,6 +213,14 @@ impl<const FACTOR: usize> Voice<FACTOR> {
     }
 
     fn event(&mut self, message: Message) -> Result<(), Error> {
+        #[cfg(pilot_voice_modulation)]
+        if let Message::ModWheel(value) = message {
+            if value > 127 {
+                return Err(Error::Input);
+            }
+            self.modulation.set_wheel(value);
+            return Ok(());
+        }
         #[cfg(pilot_voice_contours)]
         let was_held = self.held != 0;
         match message {
@@ -270,8 +295,17 @@ impl<const FACTOR: usize> Voice<FACTOR> {
                 let right = wave::SAW[(index + 1) % TABLE];
                 input_peak * input_gain * (left + position.fract() * (right - left))
             };
+            #[cfg(pilot_voice_modulation)]
+            let (noise, modulation) = self.modulation.step(panel.modulation, self.oscillators.osc3());
             #[cfg(pilot_oscillator_bank)]
-            let input = INPUT_PEAK_V * self.oscillators.sample(panel.oscillators, self.increment);
+            let input = INPUT_PEAK_V * self.oscillators.sample(
+                panel.oscillators,
+                self.increment,
+                #[cfg(pilot_voice_modulation)]
+                noise,
+                #[cfg(pilot_voice_modulation)]
+                if panel.modulation.oscillator { modulation * modulation::PITCH_OCTAVES } else { 0. },
+            );
             #[cfg(not(pilot_returns))]
             let ports = plant::step(&mut self.circuit, input).map_err(Error::Plant)?;
             #[cfg(all(pilot_returns, not(pilot_voice_contours)))]
@@ -295,6 +329,8 @@ impl<const FACTOR: usize> Voice<FACTOR> {
                     panel.filter,
                     #[cfg(pilot_voice_filter)]
                     self.last_note,
+                    #[cfg(pilot_voice_modulation)]
+                    if panel.modulation.filter { modulation * modulation::FILTER_OCTAVES } else { 0. },
                 );
                 self.history[self.head] = (filtered_v / INPUT_PEAK_V) * volume;
             }

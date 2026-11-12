@@ -56,7 +56,7 @@ tres osciladores, legato y cambio de onda con los controles nuevos
 en cero. El motor importa los estados de 0.4.0 y 0.5.0 con los
 controles nuevos en cero.
 
-`python -B tools/check_rf_d_playable_voice.py` regenera 0.6.0 y
+`python -B tools/check_rf_d_playable_voice.py --resonant-filter` regenera 0.6.0 y
 mide el preset resonante en RackForge a 128, 480 y 4096 frames.
 `--oscillator-bank` y `--single-saw` regeneran 0.5.0 y 0.4.0
 respectivamente para proyectos que conserven esas versiones.

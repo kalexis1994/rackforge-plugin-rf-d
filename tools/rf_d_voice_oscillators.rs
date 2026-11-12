@@ -6,6 +6,14 @@ const OCTAVES: [f64; 6] = [-6., -2., -1., 0., 1., 2.];
 const FREE_OSC3_HZ: f64 = 220.;
 const MIX_RAMP_FRAMES: f64 = 64.;
 
+pub(super) fn smooth_mix(state: &mut Option<[f64; 2]>, target: [f64; 2], ramp: f64) -> [f64; 2] {
+    let mix = state.get_or_insert(target);
+    for (value, target) in mix.iter_mut().zip(target) {
+        *value += (target - *value).clamp(-ramp, ramp);
+    }
+    *mix
+}
+
 #[derive(Clone, Copy)]
 pub struct Settings {
     pub range: usize,
@@ -121,7 +129,8 @@ impl Oscillator {
         panel: Panel,
         rate: f64,
         ramp: f64,
-    ) -> (f64, f64) {
+        #[cfg(pilot_voice_modulation)] pitch_offset: f64,
+    ) -> (f64, f64, f64) {
         let free = index == 2 && !panel.osc3_tracking;
         let base_hz = if free { FREE_OSC3_HZ } else { base_hz };
         let semitones = if free {
@@ -130,6 +139,8 @@ impl Oscillator {
             settings.semitones
         };
         let octaves = OCTAVES[settings.range] + (semitones + panel.tune_cents * 0.01) / 12.;
+        #[cfg(pilot_voice_modulation)]
+        let octaves = octaves + pitch_offset;
         self.update_pitch(base_hz, octaves, rate);
         self.phase += self.increment;
         if self.phase >= 1. {
@@ -137,19 +148,16 @@ impl Oscillator {
         }
 
         let target = [f64::from(settings.enabled), settings.level];
-        let mix = self.mix.get_or_insert(target);
-        for (value, target) in mix.iter_mut().zip(target) {
-            *value += (target - *value).clamp(-ramp, ramp);
-        }
-        let [connection, level] = *mix;
-        let signal = if connection * level == 0. {
-            0.
-        } else {
+        let [connection, level] = smooth_mix(&mut self.mix, target, ramp);
+        let gain = connection * level;
+        let raw = if gain != 0. || (cfg!(pilot_voice_modulation) && index == 2) {
             let reverse = index == 2 && settings.shape == 1;
             let shape = if reverse { 2 } else { settings.shape };
-            connection * level * self.wave(shape, reverse)
+            self.wave(shape, reverse)
+        } else {
+            0.
         };
-        (signal, connection)
+        (gain * raw, connection, raw)
     }
 }
 
@@ -158,6 +166,8 @@ pub struct Bank {
     oscillators: [Oscillator; 3],
     rate: f64,
     ramp: f64,
+    #[cfg(pilot_voice_modulation)]
+    osc3: f64,
 }
 
 impl Bank {
@@ -176,10 +186,23 @@ impl Bank {
             ],
             rate,
             ramp: 1. / (MIX_RAMP_FRAMES * factor as f64),
+            #[cfg(pilot_voice_modulation)]
+            osc3: 0.,
         }
     }
 
-    pub fn sample(&mut self, panel: Panel, base_increment: f64) -> f64 {
+    #[cfg(pilot_voice_modulation)]
+    pub fn osc3(&self) -> f64 {
+        self.osc3
+    }
+
+    pub fn sample(
+        &mut self,
+        panel: Panel,
+        base_increment: f64,
+        #[cfg(pilot_voice_modulation)] noise: [f64; 2],
+        #[cfg(pilot_voice_modulation)] pitch_offset: f64,
+    ) -> f64 {
         let base_hz = base_increment * self.rate;
         let mut sum = 0.;
         let mut connections = 0.;
@@ -189,12 +212,29 @@ impl Bank {
             .zip(panel.oscillators)
             .enumerate()
         {
-            let (signal, connection) =
-                oscillator.step(settings, index, base_hz, panel, self.rate, self.ramp);
+            let (signal, connection, _raw) = oscillator.step(
+                settings,
+                index,
+                base_hz,
+                panel,
+                self.rate,
+                self.ramp,
+                #[cfg(pilot_voice_modulation)]
+                pitch_offset,
+            );
             sum += signal;
             connections += connection;
+            #[cfg(pilot_voice_modulation)]
+            if index == 2 {
+                self.osc3 = _raw;
+            }
         }
-        // Equal 33 kΩ source branches. A zeroed connected source still loads BUS.
+        #[cfg(pilot_voice_modulation)]
+        {
+            sum += noise[0];
+            connections += noise[1];
+        }
+        // Equal 33 kΩ oscillator branches. A zeroed connected source still loads BUS.
         sum / connections.max(1.)
     }
 }
