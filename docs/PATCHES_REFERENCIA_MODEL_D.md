@@ -123,8 +123,7 @@ Se conserva Emphasis en 50 % y se prueba Cutoff en 50 %
 según la ficha y en 40 y 60 % como posiciones vecinas.
 El ancho de pulso es el 35 % nominal de RF-D. Las ruedas
 quedan en reposo para aislar el timbre de la nota sostenida.
-Las notas y duraciones de la interpretación del video
-quedan por identificar para un A/B alineado.
+El A/B de la interpretación se documenta abajo.
 
 `python -B tools/check_rf_d_oboe.py --audition --write-report`
 repite la prueba y escribe un solo WAV mono con ganancia
@@ -140,6 +139,41 @@ de la nota antes de igualar la ganancia sube 11,1 dB.
 Este pase permite contrastar el timbre sostenido y la
 forma del ataque. La diferencia de brillo entre variantes
 es sutil con el nivel igualado.
+
+### A/B de la segunda frase del Oboe
+
+El fragmento dura 1,78 s y empieza cerca de 6:13 de la
+demo. Las notas que suenan son Sol4, La♭4, Sol4, Fa4,
+Sol4, La♭4 y Si4. El registro 4′ hace sonar estas notas
+una octava por encima de las teclas MIDI. Los cambios de
+altura y la caída del volumen permiten estimar las
+duraciones, el legato y las dos pausas entre ataques.
+[Interpretación de SynthMania](https://www.youtube.com/watch?v=S_FKXtwqJoQ&t=373s).
+
+La afinación de RF-D se desplaza +25 cents según los
+tramos sin vibrato. La mano tapa parte de la rueda.
+La modulación final se reconstruye por su efecto audible,
+con un triángulo cercano a 9,8 Hz y una curva de CC1 que
+sube a 21 de 127 y vuelve a cero. La posición física y
+los instantes de tecla quedan estimados. Se conservan los
+ajustes de la ficha para Cutoff, Emphasis y ambos contornos.
+
+`python -B tools/check_rf_d_oboe_ab.py --write-report`
+repite el A/B con la captura local identificada por SHA256
+en el recibo. Es una captura del audio reproducido por
+YouTube. La toma original y el render pasan a mono y se
+igualan mediante una ganancia constante por toma, sin EQ.
+El WAV alterna Minimoog y RF-D dos veces, con comienzos
+en 0,00, 2,08, 4,16 y 6,24 s.
+[Transcripción, medidas y orden de escucha](../evidence/rf_d_oboe_ab01.json).
+
+En el Fa4 sostenido, H2/H1 es −3,9 dB en el Minimoog
+y −28,6 dB en RF-D. El vibrato final abarca 59 y 55 cents
+respectivamente entre los percentiles 5 y 95. El nivel
+igualado de cada toma es −22 dBFS RMS. La diferencia de
+armónicos se mide sobre la captura publicada y el render
+completo, con la transferencia de Cutoff y la cadena de
+grabación de la demo pendientes de identificar.
 
 ## Cómo escuchar y medir
 
