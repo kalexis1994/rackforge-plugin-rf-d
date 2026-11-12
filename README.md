@@ -8,11 +8,11 @@ no acredita identidad sonora con una unidad vintage.
 
 ## Motor jugable y referencia offline
 
-Importá `artifacts/rf-d-voice-0.4.0.rfplugin` desde Plugins y elegí
-**RF-D Voice** en PLAY para probar la voz de una sierra con cutoff, monto de
-contorno, dos contornos independientes y switch de decay al soltar.
-Funciona a 48 kHz con MIDI 36–72. Para regenerarlo, ejecutá
-`python -B tools/check_rf_d_playable_voice.py`. [Alcance y verificación](docs/VOZ_TOCABLE.md).
+Importá `artifacts/rf-d-voice-0.5.0.rfplugin` desde Plugins y elegí
+**RF-D Voice** en PLAY. El preset **Three Oscillators** abre los tres
+osciladores y los dos contornos. Funciona a 48 kHz con MIDI 36–72.
+Para regenerarlo, ejecutá `python -B tools/check_rf_d_playable_voice.py`.
+[Controles y verificación](docs/BANCO_OSCILADORES_TOCABLE.md).
 
 La ruta jugable usa el [piloto monofónico con R59/R60](docs/VOZ_PILOTO_RETORNOS_RESULTADOS.md#retornos-en-el-paquete-portable).
 El [solver acoplado](docs/VOZ_REDUCIDA_MOTOR_RESULTADOS.md) es la referencia

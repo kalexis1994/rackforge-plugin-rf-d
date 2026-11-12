@@ -63,7 +63,7 @@ el ladder nominal de recorrido amplio y ganancia de volumen normalizada.
 
 ## Verificación
 
-`python -B tools/check_rf_d_playable_voice.py` regenera e instala el
+`python -B tools/check_rf_d_playable_voice.py --single-saw` regenera e instala el
 paquete en un store temporal de prueba. El [recibo](../evidence/rf_d_playable_voice01.json)
 incluye audio determinista entre tamaños de bloque, apertura del filtro,
 ataque y sustain, switch de release, legato, redisparo y automatización.
@@ -72,5 +72,5 @@ RackForge procesa una nota sostenida en 100 bloques por tamaño. La
 medición de RackForge es offline. Quedan pendientes la escucha y
 la prueba de callbacks con dispositivo físico.
 
-Los siguientes bloques funcionales son OSC2/OSC3 con rangos, formas y
-mezclador, seguido de resonancia, tracking, ruido y modulación.
+El [banco tocable de 0.5.0](BANCO_OSCILADORES_TOCABLE.md) agrega OSC2 y
+OSC3 con rangos, formas de onda, afinación y mezclador.

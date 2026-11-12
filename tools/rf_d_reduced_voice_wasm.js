@@ -24,15 +24,31 @@ function prepare() {
 }
 
 prepare();
+function loadPreset(id) {
+    const bytes = Buffer.from(id);
+    new Uint8Array(wasm.memory.buffer, wasm.rackforge_transfer_ptr(), bytes.length).set(bytes);
+    check(wasm.rackforge_load_preset(bytes.length));
+}
+
 if (option === "--panel-state" || option === "--voice-state") {
     const stateBytes = 4 + 8 * panel.length;
     const stateTag = option === "--voice-state" ? "RFDC" : "RFD1";
     const transfer = () => new Uint8Array(wasm.memory.buffer, wasm.rackforge_transfer_ptr(), stateBytes);
+    const bounds = (kind) => {
+        if (kind.type === "boolean") return [0, 1];
+        if (kind.type === "enum") return [kind.choices[0].value, kind.choices.at(-1).value];
+        return [kind.minimum, kind.maximum];
+    };
     const values = panel.map(({index, kind}) => {
-        if (wasm.rackforge_get_parameter(index) !== kind.default) throw new Error("Panel default mismatch");
-        const value = kind.minimum === kind.default ? kind.maximum : kind.minimum;
+        const initial = Number(kind.default);
+        const [minimum, maximum] = bounds(kind);
+        if (wasm.rackforge_get_parameter(index) !== initial) throw new Error(`Panel default mismatch at ${index}`);
+        const value = minimum === initial ? maximum : minimum;
         check(wasm.rackforge_set_parameter(index, value));
         if (wasm.rackforge_set_parameter(index, NaN) === 0) throw new Error("Accepted invalid parameter");
+        if (["boolean", "enum"].includes(kind.type) && wasm.rackforge_set_parameter(index, 0.5) === 0) {
+            throw new Error("Accepted fractional discrete parameter");
+        }
         return value;
     });
     if (wasm.rackforge_save_state() !== stateBytes) throw new Error("Panel state size");
@@ -51,9 +67,21 @@ if (option === "--panel-state" || option === "--voice-state") {
         .setFloat64(stateBytes - 8, NaN, true);
     if (wasm.rackforge_load_state(saved.length) === 0) throw new Error("Accepted corrupt panel state");
     checkValues();
-    transfer().set(Buffer.from("default"));
-    check(wasm.rackforge_load_preset(7));
-    if (panel.some(({index, kind}) => wasm.rackforge_get_parameter(index) !== kind.default)) {
+    if (option === "--voice-state" && panel.length > 11) {
+        // The original voice used the same header with just the first eleven controls.
+        transfer().set(saved);
+        check(wasm.rackforge_load_state(4 + 11 * 8));
+        if (panel.some(({index, kind}) => wasm.rackforge_get_parameter(index) !==
+            (index < 11 ? values[index] : Number(kind.default)))) {
+            throw new Error("0.4 state migration did not restore the original controls and new defaults");
+        }
+        loadPreset("three_oscillators");
+        prepare();
+        if ([14, 19, 24].some((index) => wasm.rackforge_get_parameter(index) !== 1) ||
+            wasm.rackforge_get_parameter(17) !== 7) throw new Error("Prepare lost the three-oscillator preset");
+    }
+    loadPreset("default");
+    if (panel.some(({index, kind}) => wasm.rackforge_get_parameter(index) !== Number(kind.default))) {
         throw new Error("Pilot Saw preset did not restore defaults");
     }
     prepare();
@@ -76,13 +104,15 @@ for (let start = 0, event = 0; start < frames; start += blockSize) {
     let parameterCount = 0;
     while (event < score.length && score[event][0] < start + size) {
         const [sample, status, note, value = 100] = score[event++];
-        if (status === 0xb0 && panel[note - 20]) {
+        if ((status === 0xb0 || (status === 0xb1 && schema)) && panel[note - 20]) {
             const at = parameterCount++ * 16;
             parameters.setUint32(at, sample - start, true);
             parameters.setUint32(at + 4, note - 20, true);
             const {minimum, maximum} = panel[note - 20].kind;
             if (value !== 0 && value !== 127 && !schema) throw new Error("Expected an endpoint control value");
-            parameters.setFloat64(at + 8, value === 127 ? maximum : minimum + (maximum - minimum) * value / 127, true);
+            const target = status === 0xb1 ? value
+                : value === 127 ? maximum : minimum + (maximum - minimum) * value / 127;
+            parameters.setFloat64(at + 8, target, true);
             continue;
         }
         midi.setUint32(count * 8, sample - start, true);

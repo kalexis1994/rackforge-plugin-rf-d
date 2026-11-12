@@ -3,7 +3,11 @@
 use crate::coefficients;
 #[cfg(not(pilot_voice_contours))]
 use crate::plant;
+#[cfg(not(pilot_oscillator_bank))]
 use crate::wave;
+#[cfg(pilot_oscillator_bank)]
+#[path = "rf_d_voice_oscillators.rs"]
+pub mod oscillator;
 #[cfg(pilot_voice_contours)]
 #[path = "rf_d_voice_contour.rs"]
 pub mod contour;
@@ -17,6 +21,7 @@ pub const LATENCY: usize = 48;
 pub const AUDITION_VOLTS_PER_FULL_SCALE: f64 = 0.000125;
 const INPUT_PEAK_V: f64 = 0.08;
 const RAMP_S: f64 = 0.005;
+#[cfg(not(pilot_oscillator_bank))]
 const TABLE: usize = wave::SAW.len();
 
 #[derive(Clone, Copy)]
@@ -60,7 +65,10 @@ pub struct Frame {
 pub struct Panel {
     #[cfg(not(pilot_voice_contours))]
     pub drive: plant::Drive,
+    #[cfg(not(pilot_oscillator_bank))]
     pub mixer_gain: f64,
+    #[cfg(pilot_oscillator_bank)]
+    pub oscillators: oscillator::Panel,
     #[cfg(not(pilot_voice_contours))]
     pub attack_ms: f64,
     #[cfg(not(pilot_voice_contours))]
@@ -85,7 +93,10 @@ impl Default for Panel {
         Self {
             #[cfg(not(pilot_voice_contours))]
             drive: plant::Drive::default(),
+            #[cfg(not(pilot_oscillator_bank))]
             mixer_gain: 1.,
+            #[cfg(pilot_oscillator_bank)]
+            oscillators: oscillator::Panel::default(),
             #[cfg(not(pilot_voice_contours))]
             attack_ms: RAMP_S * 1000.,
             #[cfg(not(pilot_voice_contours))]
@@ -108,7 +119,11 @@ impl Panel {
             && self.contours.filter.valid()
             && (0. ..=1.).contains(&self.contours.cutoff)
             && (0. ..=1.).contains(&self.contours.amount);
-        (0. ..=1.).contains(&self.mixer_gain) && contour_valid
+        #[cfg(not(pilot_oscillator_bank))]
+        let mixer_valid = (0. ..=1.).contains(&self.mixer_gain);
+        #[cfg(pilot_oscillator_bank)]
+        let mixer_valid = self.oscillators.valid();
+        mixer_valid && contour_valid
     }
 }
 
@@ -119,7 +134,10 @@ pub struct Voice<const FACTOR: usize> {
     #[cfg(pilot_voice_contours)]
     ladder: ladder::Ladder,
     held: u64,
+    #[cfg(not(pilot_oscillator_bank))]
     phase: f64,
+    #[cfg(pilot_oscillator_bank)]
+    oscillators: oscillator::Bank,
     increment: f64,
     #[cfg(not(pilot_voice_contours))]
     trim: f64,
@@ -146,7 +164,10 @@ impl<const FACTOR: usize> Voice<FACTOR> {
             #[cfg(pilot_voice_contours)]
             ladder: ladder::Ladder::new((RATE * FACTOR) as f64),
             held: 0,
+            #[cfg(not(pilot_oscillator_bank))]
             phase: 0.,
+            #[cfg(pilot_oscillator_bank)]
+            oscillators: oscillator::Bank::new((RATE * FACTOR) as f64, FACTOR),
             increment: 440. / (FACTOR * RATE) as f64,
             #[cfg(not(pilot_voice_contours))]
             trim: 0.,
@@ -204,14 +225,10 @@ impl<const FACTOR: usize> Voice<FACTOR> {
         let change = 1. / (ramp_s * (RATE * FACTOR) as f64);
         #[cfg(not(pilot_returns))]
         let input_peak = INPUT_PEAK_V;
-        #[cfg(pilot_returns)]
+        #[cfg(all(pilot_returns, not(pilot_oscillator_bank)))]
         let input_peak = INPUT_PEAK_V * panel.mixer_gain;
         let mut last = Frame::default();
         for _substep in 0..FACTOR {
-            self.phase += self.increment;
-            if self.phase >= 1. {
-                self.phase -= 1.;
-            }
             #[cfg(not(pilot_voice_contours))]
             let input_gain = {
                 if self.held != 0 {
@@ -221,13 +238,22 @@ impl<const FACTOR: usize> Voice<FACTOR> {
                 }
                 self.trim
             };
-            #[cfg(pilot_voice_contours)]
+            #[cfg(all(pilot_voice_contours, not(pilot_oscillator_bank)))]
             let input_gain = 1.;
-            let position = self.phase * TABLE as f64;
-            let index = position as usize;
-            let left = wave::SAW[index % TABLE];
-            let right = wave::SAW[(index + 1) % TABLE];
-            let input = input_peak * input_gain * (left + position.fract() * (right - left));
+            #[cfg(not(pilot_oscillator_bank))]
+            let input = {
+                self.phase += self.increment;
+                if self.phase >= 1. {
+                    self.phase -= 1.;
+                }
+                let position = self.phase * TABLE as f64;
+                let index = position as usize;
+                let left = wave::SAW[index % TABLE];
+                let right = wave::SAW[(index + 1) % TABLE];
+                input_peak * input_gain * (left + position.fract() * (right - left))
+            };
+            #[cfg(pilot_oscillator_bank)]
+            let input = INPUT_PEAK_V * self.oscillators.sample(panel.oscillators, self.increment);
             #[cfg(not(pilot_returns))]
             let ports = plant::step(&mut self.circuit, input).map_err(Error::Plant)?;
             #[cfg(all(pilot_returns, not(pilot_voice_contours)))]

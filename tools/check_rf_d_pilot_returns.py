@@ -51,15 +51,20 @@ def generate_law(laws):
     return emit("pilot-law.rs", error + "\n" + law)
 
 
-def generate_wave():
+def pilot_wave_model():
     table, logs, models, *_ = materialize(read_oracle())
     assert digest(table) == read(MODEL)["table_sha256"]
-    z = prediction(logs, models, -1.6, 0.)["c"][0].copy()
+    return prediction(logs, models, -1.6, 0.)["c"], digest(table)
+
+
+def generate_wave():
+    model, receipt = pilot_wave_model()
+    z = model[0].copy()
     z[1:] *= 2.
     cycle = np.fft.ifft(z, n=4096).real * 4096
     wave = emit("pilot-wave.rs", "pub const SAW:[f64;4096]=[" +
                 ",".join(f"{v:.17e}" for v in cycle / max(abs(cycle))) + "];\n")
-    return wave, digest(table)
+    return wave, receipt
 
 
 def generate_pi_fir():

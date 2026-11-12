@@ -1,4 +1,6 @@
-"""Build and exercise the RackForge RF-D voice with two independent contours."""
+"""Build and exercise the playable RF-D voice in WASM and RackForge."""
+import argparse
+from html import escape
 import json
 import os
 import shutil
@@ -12,31 +14,98 @@ from check_rf_d_pi_pilot import RATE
 from check_rf_d_playable_pilot import (
     AREA, COMPILER, GUEST, HOST, NODE, PACKAGE, ROOT, SDK_PATH, WASM_OPT, emit, sha, write,
 )
-from check_rf_d_pilot_returns import generate_pi_fir, generate_wave
+from check_rf_d_pilot_returns import generate_pi_fir, generate_wave, pilot_wave_model
 
-VERSION = "0.4.0"
+VERSION = "0.5.0"
 PLUGIN_ID = "org.rackforge.lab.rf-d-voice"
-ARTIFACT = ROOT / f"artifacts/rf-d-voice-{VERSION}.rfplugin"
 SCHEMA = ROOT / "plugin/voice/parameters.json"
 CAPACITY = 4096
 SAMPLE_RATE = 48_000
 MARGIN_NS = 128 * 1e9 / SAMPLE_RATE / 2
 
 
-def package_template(destination):
+def oscillator_tables(report):
+    model, report["h128_sha256"] = pilot_wave_model()
+    harmonics = np.arange(1, 129)
+    bands = (128, 64, 32, 16, 8, 4, 2, 1)
+    samples = 2048
+    saw, triangle = model[:2, 1:].copy()
+    hybrid = (10. * saw + 47. * triangle) / 57.
+    widths = (0.5, 0.35, 0.15)
+    pulses = [2. * np.sin(np.pi * harmonics * width) * np.exp(-1j * np.pi * harmonics * width)
+              / (np.pi * harmonics) for width in widths]
+    waves = []
+    for shape in (triangle, hybrid, saw, *pulses):
+        tables = []
+        for count in bands:
+            spectrum = np.r_[0., 2. * shape[:count]]
+            tables.append(np.fft.ifft(spectrum, n=samples).real * samples)
+        tables = np.array(tables)
+        waves.append(tables / abs(tables).max())
+    waves = np.asarray(waves, dtype="<f4")
+    leakage = max(float(np.max(abs(np.fft.rfft(waves[:, index], axis=-1)[:, count + 1:]))) / samples
+                  for index, count in enumerate(bands))
+    assert leakage < 1e-7 and float(abs(waves).max()) <= 1.
+    report["oscillator_tables"] = dict(harmonics=bands, samples=samples, pulse_duties=widths,
+                                       shape=list(waves.shape), maximum_out_of_band_coefficient=leakage)
+    rust = [f"pub const SAMPLES: usize = {samples};",
+            f"pub const HARMONICS: [u16; {len(bands)}] = {list(bands)};",
+            f"pub static WAVES: [[[f32; SAMPLES]; {len(bands)}]; {len(waves)}] = ["]
+    for shape in waves:
+        rust.append("    [")
+        rust.extend("        [" + ",".join(f"{value:.9e}" for value in band) + "]," for band in shape)
+        rust.append("    ],")
+    path = emit("voice-oscillators.rs", "\n".join([*rust, "];", ""]))
+    report["oscillator_tables"]["sha256"] = sha(path)
+    return path
+
+
+def parameter_schema(bank):
+    schema = json.loads(SCHEMA.read_text(encoding="utf8"))
+    if bank:
+        extra = json.loads(SCHEMA.with_name("oscillators.json").read_text(encoding="utf8"))
+        for page in schema["pages"]:
+            page["order"] += len(extra["pages"])
+        schema["pages"] = extra["pages"] + schema["pages"]
+        schema["parameters"][2]["name"] = "OSC 1 Level"
+        schema["parameters"][3]["order"] = 6
+        schema["parameters"].extend(extra["parameters"])
+    return schema
+
+
+def package_template(destination, schema, version, bank):
     shutil.copytree(PACKAGE, destination)
-    shutil.copyfile(SCHEMA, destination / "metadata/parameters.json")
+    write(destination / "metadata/parameters.json", schema)
     for relative in ("rackforge-plugin.toml", "metadata/runtime.json", "metadata/presets.json"):
         path = destination / relative
         content = path.read_text(encoding="utf8")
         content = (content.replace("org.rackforge.lab.rf-d-pilot", PLUGIN_ID)
-                   .replace("0.3.0", VERSION).replace("RF-D Pilot", "RF-D Voice")
+                   .replace("0.3.0", version).replace("RF-D Pilot", "RF-D Voice")
                    .replace("Pilot Saw", "Model D Saw"))
         path.write_text(content, encoding="utf8", newline="\n")
+    if bank:
+        path = destination / "metadata/presets.json"
+        catalog = json.loads(path.read_bytes())
+        catalog["presets"].append(dict(id="three_oscillators", name="Three Oscillators", bank="pilot",
+                                       category="Pilot", order=1, tags=[]))
+        write(path, catalog)
+        path = destination / "web/panel.css"
+        with path.open("a", encoding="utf8") as css:
+            css.write("""
+.choice .mechanism { width: 100%; height: auto; min-height: 42px; }
+.choice select {
+  width: min(100%, 135px);
+  color: inherit;
+  background: #242320;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 4px;
+}
+.pair { row-gap: 12px; }
+""")
     html = destination / "web/play.html"
     header = html.read_text(encoding="utf8").split('    <div class="controls">')[0]
     header = header.replace("RF-D Pilot", "RF-D Voice").replace("PILOT", "VOICE")
-    schema = json.loads(SCHEMA.read_text(encoding="utf8"))
     sections = []
     for page in schema["pages"]:
         controls = sorted((p for p in schema["parameters"] if p["page"] == page["id"]),
@@ -45,10 +114,18 @@ def package_template(destination):
         for param in controls:
             index, kind = param["index"], param["kind"]
             unit = kind.get("unit", "")
-            if param["id"] == "decay_enabled":
+            if param["id"] == "decay_enabled" or kind["type"] == "boolean":
                 style = "toggle"
-                control = f'<input type="checkbox" data-index="{index}" disabled>'
+                checked = " checked" if kind["default"] else ""
+                control = f'<input type="checkbox" data-index="{index}"{checked} disabled>'
                 mechanism = control
+            elif kind["type"] == "enum":
+                style = "choice"
+                options = []
+                for choice in kind["choices"]:
+                    selected = " selected" if choice["value"] == kind["default"] else ""
+                    options.append(f'<option value="{choice["value"]}"{selected}>{escape(choice["name"])}</option>')
+                mechanism = f'<select data-index="{index}" disabled>{"".join(options)}</select>'
             else:
                 style = "fader" if page["id"] == "mixer" else "rotary"
                 scale = ' data-scale="log"' if unit == "ms" else ""
@@ -58,7 +135,7 @@ def package_template(destination):
                 dial = '<span class="dial" aria-hidden="true"></span>' if style == "rotary" else ""
                 mechanism = dial + control
             labels.append(f"""          <label class="control {style}">
-            <span class="label">{param["name"]}</span>
+            <span class="label">{escape(param["name"])}</span>
             <span class="mechanism">{mechanism}</span>
             <span class="value" aria-hidden="true"></span>
           </label>""")
@@ -68,10 +145,11 @@ def package_template(destination):
 {chr(10).join(labels)}
         </div>
       </section>""")
+    voice_label = "THREE OSCILLATORS" if bank else "SINGLE SAW"
     html.write_text(header + f"""    <div class="controls">
 {chr(10).join(sections)}
     </div>
-    <footer><span>MIDI 36–72 · LOW-NOTE PRIORITY</span><span>SINGLE SAW · v{VERSION}</span></footer>
+    <footer><span>MIDI 36–72 · LOW-NOTE PRIORITY</span><span>{voice_label} · v{version}</span></footer>
   </main>
 </body>
 </html>
@@ -145,7 +223,83 @@ def verify_audio(render, report):
     assert measurements["held_filter"]["upper_band_fraction"] > 2. * measurements["default_sustain"]["upper_band_fraction"]
 
 
+def verify_oscillators(render, report):
+    def change(index, value, frame=0):
+        return [frame, 0xb1, 20 + index, value]
+
+    def score(controls, note=57):
+        return [change(0, 100), change(1, 0), *[change(*item) for item in controls],
+                [960, 0x90, note, 100], [38400, 0x80, note, 0]]
+
+    def spectrum(audio):
+        signal = audio[9600:36000].astype(np.float64)
+        return abs(np.fft.rfft(signal * np.hanning(len(signal)), 2**18)) * 4. / len(signal)
+
+    def frequency(audio, expected):
+        magnitudes = spectrum(audio)
+        bin_hz = SAMPLE_RATE / (2**18)
+        center = int(round(expected / bin_hz))
+        radius = max(4, int(0.01 * center))
+        peak = center - radius + np.argmax(magnitudes[center - radius:center + radius + 1])
+        left, middle, right = np.log(magnitudes[peak - 1:peak + 2])
+        hz = bin_hz * (peak + 0.5 * (left - right) / (left - 2. * middle + right))
+        assert abs(1200. * np.log2(hz / expected)) < 0.5, (hz, expected)
+        assert magnitudes[peak] > 0.01, (hz, magnitudes[peak])
+        return float(hz)
+
+    def harmonic_ratio(audio, hz, harmonic):
+        magnitudes = spectrum(audio)
+        index = lambda f: round(f * 2**18 / SAMPLE_RATE)
+        return float(magnitudes[index(harmonic * hz)] / magnitudes[index(hz)])
+
+    osc2 = [(14, 0), (19, 1), (18, 100)]
+    osc3 = [(14, 0), (24, 1), (23, 100)]
+    saw, _ = render(score(osc2))
+    tuned, _ = render(score([*osc2, (15, 2), (17, 7), (11, 50)]))
+    osc3_tracked, _ = render(score(osc3, 69))
+    osc3_free, _ = render(score([*osc3, (25, 0)], 69))
+    assert np.array_equal(osc3_free, render(score([*osc3, (25, 0)], 57))[0])
+    reverse, _ = render(score([*osc3, (21, 1)], 57))
+    assert not np.array_equal(reverse, render(score(osc3))[0])
+    triangle, _ = render(score([*osc2, (16, 0)]))
+    hybrid, _ = render(score([*osc2, (16, 1)]))
+    square, _ = render(score([*osc2, (16, 3)]))
+    wide, _ = render(score([*osc2, (16, 4)]))
+    narrow, _ = render(score([*osc2, (16, 5)]))
+    assert all(np.max(abs(signal)) > 0.01 for signal in (triangle, hybrid, square, wide, narrow))
+    ratios = {name: harmonic_ratio(signal, 220., 2) for name, signal in
+              (("triangle", triangle), ("hybrid", hybrid), ("saw", saw),
+               ("square", square), ("wide", wide), ("narrow", narrow))}
+    assert ratios["square"] < 0.02 and ratios["triangle"] < ratios["hybrid"] < ratios["saw"]
+    assert ratios["narrow"] > ratios["wide"] > ratios["square"]
+
+    # A fifth at 329.63 Hz would share this FFT window with the square's third at 330 Hz.
+    triad_score = score([(19, 1), (17, 5), (16, 0), (24, 1), (20, 2), (21, 3)])
+    triad, _ = render(triad_score)
+    live_score = sorted(triad_score + [change(14, 0, 8233), change(14, 1, 12001),
+                                      change(16, 2, 17487), change(22, -4, 21331)], key=lambda event: event[0])
+    live, times = render(live_score)
+    assert all(np.array_equal(live, render(live_score, block)[0]) for block in (127, 480, CAPACITY))
+    muted, _ = render(score([(14, 0)]))
+    assert not np.any(muted)
+    peak = max(float(np.max(abs(signal))) for signal in (triad, live))
+    assert 0.01 < peak < 1.
+    report["oscillator_audio"] = dict(
+        frequencies_hz=dict(osc2=frequency(saw, 220.), osc2_tuned=frequency(tuned, 110. * 2**(7.5/12)),
+                            osc3_tracked=frequency(osc3_tracked, 440.), osc3_free=frequency(osc3_free, 220.),
+                            triad=[frequency(triad, hz) for hz in (110., 220., 220. * 2**(5/12))]),
+        second_harmonic_ratio=ratios, live_peak=peak,
+        live_node_128_ns=dict(median=int(np.median(times)), maximum=int(max(times)),
+                              over_half_period=sum(value > MARGIN_NS for value in times)))
+
+
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--single-saw", action="store_true", help="rebuild the 0.4.0 single-oscillator voice")
+    bank = not parser.parse_args().single_saw
+    version = VERSION if bank else "0.4.0"
+    artifact = ROOT / f"artifacts/rf-d-voice-{version}.rfplugin"
+    schema = parameter_schema(bank)
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"],
                RACKFORGE_OPTIMIZE_PLUGINS="0")
 
@@ -156,13 +310,18 @@ def main():
 
     AREA.mkdir(parents=True, exist_ok=True)
     assert not list(AREA.iterdir()), AREA
-    report = dict(passed=False, version=VERSION, plugin_id=PLUGIN_ID, host_rate_hz=SAMPLE_RATE,
+    report = dict(passed=False, version=version, plugin_id=PLUGIN_ID, host_rate_hz=SAMPLE_RATE,
                   internal_rate_hz=RATE)
     try:
-        wave, report["h128_sha256"] = generate_wave()
         fir = generate_pi_fir()
-        report["wave_sha256"], report["fir_sha256"] = sha(wave), sha(fir)
-        modules = dict(voice=ROOT / "tools/rf_d_reduced_voice.rs", wave=wave, pi_coefficients=fir)
+        report["fir_sha256"] = sha(fir)
+        modules = dict(voice=ROOT / "tools/rf_d_reduced_voice.rs", pi_coefficients=fir)
+        if bank:
+            modules["oscillator_tables"] = oscillator_tables(report)
+        else:
+            wave, report["h128_sha256"] = generate_wave()
+            modules["wave"] = wave
+            report["wave_sha256"] = sha(wave)
         code = "".join(f'#[path = "{path.as_posix()}"] mod {name};\n' for name, path in modules.items())
         guest = emit("voice-contours-guest.rs", code + (ROOT / GUEST).read_text(encoding="utf8"))
         with TemporaryDirectory(prefix="rf-d-voice-", dir=AREA) as temporary:
@@ -170,33 +329,40 @@ def main():
             sdk = folder / "librackforge_plugin_sdk.rlib"
             component = folder / "voice.wasm"
             optimized = folder / "component.wasm"
+            render_schema = folder / "parameters.json"
+            write(render_schema, schema)
             flags = [COMPILER, "--target", "wasm32-unknown-unknown", "-C", "target-feature=+simd128",
                      "-C", "opt-level=3", "-A", "dead_code"]
             execute(*flags, "--edition=2024", "--crate-type", "rlib", "--crate-name", "rackforge_plugin_sdk",
                     HOST / SDK_PATH, "-o", sdk)
+            bank_flags = ("--cfg", "pilot_oscillator_bank") if bank else ()
             execute(*flags, "--edition=2021", "--crate-type", "cdylib", "-C", "panic=abort", "-C", "lto=fat",
                     "--cfg", "pilot_pi", "--cfg", "pilot_returns", "--cfg", "pilot_host_blocks",
-                    "--cfg", "pilot_voice_contours", guest, "--extern", f"rackforge_plugin_sdk={sdk}", "-o", component)
+                    "--cfg", "pilot_voice_contours", *bank_flags, guest,
+                    "--extern", f"rackforge_plugin_sdk={sdk}", "-o", component)
             execute(WASM_OPT, component, "-O4", "-o", optimized)
 
             def render(score, block=128):
                 raw, timings = execute("node", ROOT / NODE, optimized, json.dumps(score), 43200,
-                                       "--voice-state" if block == 128 else "render", block, CAPACITY, SCHEMA)
+                                       "--voice-state" if block == 128 else "render", block, CAPACITY, render_schema)
                 audio = np.frombuffer(raw, dtype="<f4").reshape(-1, 2)
                 assert np.isfinite(audio).all() and np.array_equal(audio[:, 0], audio[:, 1])
                 return audio[:, 0], json.loads(timings)
 
             verify_audio(render, report)
-            template, archive, store = folder / "package", folder / ARTIFACT.name, folder / "store"
-            package_template(template)
+            if bank:
+                verify_oscillators(render, report)
+            template, archive, store = folder / "package", folder / artifact.name, folder / "store"
+            package_template(template, schema, version, bank)
             packer = HOST / "target/release/rackforge-store.exe"
             execute(packer, "pack-wasm", template, optimized, archive)
             execute(packer, "install-local", archive, store)
             manifest, = store.rglob("rackforge-plugin.toml")
             report["host_stress"] = {}
+            preset = "three_oscillators" if bank else "default"
             for frames in (128, 480, CAPACITY):
                 raw, _ = execute(HOST / "target/release/rackforge-core.exe", "stress", manifest.parent,
-                                 "--preset", "default", "--data-root", folder / "state",
+                                 "--preset", preset, "--data-root", folder / "state",
                                  "--voices", 1, "--blocks", 100, "--frames", frames)
                 result = raw.decode().strip()
                 assert "PLUGIN_STRESS_OK" in result and f"frames={frames}" in result
@@ -205,11 +371,12 @@ def main():
                 report["host_stress"][frames] = result
             report["archive_sha256"] = sha(archive)
             report["component_sha256"] = sha(optimized)
-            ARTIFACT.parent.mkdir(exist_ok=True)
-            archive.replace(ARTIFACT)
+            artifact.parent.mkdir(exist_ok=True)
+            archive.replace(artifact)
         report["passed"] = True
-        write(ROOT / "evidence/rf_d_playable_voice01.json", report)
-        print(f"{ARTIFACT}\n{json.dumps(report['audio'], indent=2)}")
+        receipt = "rf_d_playable_voice02.json" if bank else "rf_d_playable_voice01.json"
+        write(ROOT / "evidence" / receipt, report)
+        print(f"{artifact}\n{json.dumps(report.get('oscillator_audio', report['audio']), indent=2)}")
     except Exception:
         print(json.dumps({key: report[key] for key in ("audio", "node_128_ns", "host_stress") if key in report},
                          indent=2), flush=True)

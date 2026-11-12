@@ -28,6 +28,7 @@
   }
 
   function readValue(input) {
+    if (input.tagName === "SELECT") return Number(input.value);
     return input.type === "checkbox" ? Number(input.checked) : input.valueAsNumber;
   }
 
@@ -37,6 +38,10 @@
 
   function paint(control, value) {
     const {input, label} = control;
+    if (input.tagName === "SELECT") {
+      input.value = value;
+      return;
+    }
     const toggle = input.type === "checkbox";
     if (toggle) input.checked = value >= 0.5;
     else input.value = value;
@@ -83,7 +88,7 @@
     if (!frame) frame = window.requestAnimationFrame(flush);
   }
 
-  for (const input of document.querySelectorAll("input[data-index]")) {
+  for (const input of document.querySelectorAll("[data-index]")) {
     const index = Number(input.dataset.index);
     const label = input.closest(".control");
     const control = {input, label, canonical: readValue(input)};
