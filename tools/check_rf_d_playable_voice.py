@@ -19,6 +19,7 @@ from check_rf_d_pilot_returns import generate_pi_fir, generate_wave, pilot_wave_
 from check_rf_d_playable_filter import emphasis_table, verify_filter
 from check_rf_d_playable_modulation import verify_modulation
 from check_rf_d_voice_keyboard import verify_keyboard
+from check_rf_d_voice_external import verify_external, verify_host_capture
 
 VERSION = "0.7.0"
 PLUGIN_ID = "org.rackforge.lab.rf-d-voice"
@@ -64,7 +65,7 @@ def oscillator_tables(report):
     return path
 
 
-def parameter_schema(bank, emphasis, modulation, performance):
+def parameter_schema(bank, emphasis, modulation, performance, external):
     schema = json.loads(SCHEMA.read_text(encoding="utf8"))
     if bank:
         extra = json.loads(SCHEMA.with_name("oscillators.json").read_text(encoding="utf8"))
@@ -86,10 +87,13 @@ def parameter_schema(bank, emphasis, modulation, performance):
         extra = json.loads(SCHEMA.with_name("performance.json").read_text(encoding="utf8"))
         schema["pages"].extend(extra["pages"])
         schema["parameters"].extend(extra["parameters"])
+    if external:
+        extra = json.loads(SCHEMA.with_name("external.json").read_text(encoding="utf8"))
+        schema["parameters"].extend(extra["parameters"])
     return schema
 
 
-def package_template(destination, schema, version, bank, emphasis, modulation):
+def package_template(destination, schema, version, bank, emphasis, modulation, external):
     shutil.copytree(PACKAGE, destination)
     write(destination / "metadata/parameters.json", schema)
     for relative in ("rackforge-plugin.toml", "metadata/runtime.json", "metadata/presets.json"):
@@ -98,6 +102,10 @@ def package_template(destination, schema, version, bank, emphasis, modulation):
         content = (content.replace("org.rackforge.lab.rf-d-pilot", PLUGIN_ID)
                    .replace("0.3.0", version).replace("RF-D Pilot", "RF-D Voice")
                    .replace("Pilot Saw", "Model D Saw"))
+        if external and relative == "rackforge-plugin.toml":
+            content = content.replace('"audio_output"', '"audio_input", "audio_output"', 1)
+            content = content.replace("[audio]\n", '[audio]\ninput_buses = [{ id = "main", '
+                                      'name = "External Input", channels = 1, layout = "mono" }]\n')
         path.write_text(content, encoding="utf8", newline="\n")
     if bank:
         path = destination / "metadata/presets.json"
@@ -110,6 +118,9 @@ def package_template(destination, schema, version, bank, emphasis, modulation):
         if modulation:
             catalog["presets"].append(dict(id="wheel_motion", name="Wheel Motion", bank="pilot",
                                            category="Modulation", order=3, tags=[]))
+        if external:
+            catalog["presets"].append(dict(id="external_filter", name="External Filter", bank="pilot",
+                                           category="External", order=4, tags=[]))
         write(path, catalog)
         path = destination / "web/panel.css"
         with path.open("a", encoding="utf8") as css:
@@ -124,6 +135,10 @@ def package_template(destination, schema, version, bank, emphasis, modulation):
   padding: 4px;
 }
 .pair { row-gap: 12px; }
+.meter { width: 14px; height: 14px; border-radius: 50%; background: #522626; appearance: none; }
+.meter[data-active="true"] { background: #f66551; box-shadow: 0 0 10px #f6655166; }
+.meter::-webkit-meter-bar { background: transparent; border: 0; }
+.meter::-webkit-meter-optimum-value { background: transparent; }
 """)
     html = destination / "web/play.html"
     header = html.read_text(encoding="utf8").split('    <div class="controls">')[0]
@@ -136,7 +151,10 @@ def package_template(destination, schema, version, bank, emphasis, modulation):
         for param in controls:
             index, kind = param["index"], param["kind"]
             unit = kind.get("unit", "")
-            if param["id"] == "decay_enabled" or kind["type"] == "boolean":
+            if kind["type"] == "meter":
+                style = "indicator"
+                mechanism = f'<meter class="meter" min="0" max="1" value="0" data-index="{index}"></meter>'
+            elif param["id"] == "decay_enabled" or kind["type"] == "boolean":
                 style = "toggle"
                 checked = " checked" if kind["default"] else ""
                 control = f'<input type="checkbox" data-index="{index}"{checked} disabled>'
@@ -322,6 +340,7 @@ def main():
     profiles.add_argument("--oscillator-bank", action="store_true", help="rebuild the 0.5.0 oscillator bank")
     profiles.add_argument("--resonant-filter", action="store_true", help="rebuild the 0.6.0 resonant filter")
     profiles.add_argument("--modulation", action="store_true", help="select the 0.7.0 modulation profile")
+    profiles.add_argument("--keyboard", action="store_true", help="select the keyboard development profile")
     parser.add_argument("--package", metavar="VERSION", help="export one .rfplugin for the selected profile")
     args = parser.parse_args()
     if args.package and not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?", args.package):
@@ -330,9 +349,10 @@ def main():
     emphasis = bank and not args.oscillator_bank
     modulation = emphasis and not args.resonant_filter
     performance = modulation and not args.modulation
+    external = performance and not args.keyboard
     profile_version = VERSION if modulation else "0.6.0" if emphasis else "0.5.0" if bank else "0.4.0"
     version = args.package or (f"{profile_version}-dev" if performance else profile_version)
-    schema = parameter_schema(bank, emphasis, modulation, performance)
+    schema = parameter_schema(bank, emphasis, modulation, performance, external)
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"],
                RACKFORGE_OPTIMIZE_PLUGINS="0")
 
@@ -374,16 +394,24 @@ def main():
             filter_flags = ("--cfg", "pilot_voice_filter") if emphasis else ()
             modulation_flags = ("--cfg", "pilot_voice_modulation") if modulation else ()
             performance_flags = ("--cfg", "pilot_voice_performance") if performance else ()
+            external_flags = ("--cfg", "pilot_voice_external") if external else ()
             execute(*flags, "--edition=2021", "--crate-type", "cdylib", "-C", "panic=abort", "-C", "lto=fat",
                     "--cfg", "pilot_pi", "--cfg", "pilot_returns", "--cfg", "pilot_host_blocks",
                     "--cfg", "pilot_voice_contours", *bank_flags, *filter_flags, *modulation_flags,
-                    *performance_flags, guest,
+                    *performance_flags, *external_flags, guest,
                     "--extern", f"rackforge_plugin_sdk={sdk}", "-o", component)
             execute(WASM_OPT, component, "-O4", "-o", optimized)
 
-            def render(score, block=128, frames=43200):
+            def render(score, block=128, frames=43200, samples=None):
+                input_args = ()
+                if samples is not None:
+                    frames = len(samples)
+                    input_path = folder / "input.f32"
+                    input_path.write_bytes(np.asarray(samples, dtype="<f4").tobytes())
+                    input_args = (input_path,)
                 raw, timings = execute("node", ROOT / NODE, optimized, json.dumps(score), frames,
-                                       "--voice-state" if block == 128 else "render", block, CAPACITY, render_schema)
+                                       "--voice-state" if block == 128 else "render", block, CAPACITY,
+                                       render_schema, *input_args)
                 audio = np.frombuffer(raw, dtype="<f4").reshape(-1, 2)
                 assert np.isfinite(audio).all() and np.array_equal(audio[:, 0], audio[:, 1])
                 return audio[:, 0], json.loads(timings)
@@ -397,8 +425,10 @@ def main():
                 verify_modulation(render, report)
             if performance:
                 verify_keyboard(render, report)
+            if external:
+                verify_external(render, report)
             template = folder / "package"
-            package_template(template, schema, version, bank, emphasis, modulation)
+            package_template(template, schema, version, bank, emphasis, modulation, external)
             if args.package:
                 artifact = ROOT / f"artifacts/rf-d-voice-{version}.rfplugin"
                 archive, store = folder / artifact.name, folder / "store"
@@ -410,6 +440,8 @@ def main():
             else:
                 shutil.copyfile(optimized, template / "component.wasm")
                 host_package = template
+            if external:
+                verify_host_capture(execute, render, folder, host_package, report)
             report["host_stress"] = {}
             preset = ("wheel_motion" if modulation else "resonant_bass" if emphasis
                       else "three_oscillators" if bank else "default")
@@ -428,18 +460,19 @@ def main():
                 artifact.parent.mkdir(exist_ok=True)
                 archive.replace(artifact)
         report["passed"] = True
-        if performance and not args.package:
-            write(ROOT / "evidence/rf_d_voice_development01.json", report)
+        if external and not args.package:
+            write(ROOT / "evidence/rf_d_voice_development02.json", report)
         if args.package:
             print(f"{artifact}\n{report['archive_sha256']}")
         else:
             print("WASM and RackForge checks passed with no archive")
-        result_keys = ("keyboard_audio", "modulation_audio", "filter_audio", "oscillator_audio", "audio")
+        result_keys = ("external_audio", "keyboard_audio", "modulation_audio", "filter_audio",
+                       "oscillator_audio", "audio")
         results = next(report[key] for key in result_keys if key in report)
         print(json.dumps(results, indent=2))
     except Exception:
         fields = ("audio", "oscillator_audio", "filter_audio", "modulation_audio", "keyboard_audio",
-                  "node_128_ns", "host_stress")
+                  "external_audio", "host_capture", "node_128_ns", "host_stress")
         print(json.dumps({key: report[key] for key in fields if key in report},
                          indent=2), flush=True)
         raise

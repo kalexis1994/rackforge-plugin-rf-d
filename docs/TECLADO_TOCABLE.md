@@ -23,7 +23,7 @@ de OSC3 libre. El bend mueve OSC1, OSC2 y OSC3 con OSC3 Control
 activo. CC121 centra el bend y devuelve CC1 a cero. El recorrido
 completo del bend se suaviza en hasta 64 frames a 48 kHz.
 
-`python -B tools/check_rf_d_playable_voice.py` contrasta el glide con
+`python -B tools/check_rf_d_playable_voice.py --keyboard` contrasta el glide con
 la curva nominal, la retención durante el release, los extremos
 del bend, la independencia de OSC3 libre y del filtro ante bend,
 y el tracking durante el legato. El host carga el componente WASM

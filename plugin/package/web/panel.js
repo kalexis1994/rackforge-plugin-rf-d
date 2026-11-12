@@ -29,6 +29,7 @@
 
   function readValue(input) {
     if (input.tagName === "SELECT") return Number(input.value);
+    if (input.tagName === "METER") return input.value;
     return input.type === "checkbox" ? Number(input.checked) : input.valueAsNumber;
   }
 
@@ -40,6 +41,11 @@
     const {input, label} = control;
     if (input.tagName === "SELECT") {
       input.value = value;
+      return;
+    }
+    if (input.tagName === "METER") {
+      input.value = value;
+      input.dataset.active = value >= 0.1;
       return;
     }
     const toggle = input.type === "checkbox";
@@ -94,6 +100,7 @@
     const control = {input, label, canonical: readValue(input)};
     controls.set(index, control);
     paint(control, control.canonical);
+    if (input.tagName === "METER") continue;
     input.addEventListener("input", () => {
       if (!connected) return;
       control.queued = readValue(input);
@@ -123,6 +130,24 @@
     });
   }
 
+  const meters = new Set(
+    [...controls].filter(([, control]) => control.input.tagName === "METER").map(([index]) => index)
+  );
+  if (meters.size) {
+    let polling = false;
+    window.setInterval(() => {
+      if (!connected || document.hidden || polling) return;
+      polling = true;
+      request("plugin.parameters", {}, ({ok, result}) => {
+        polling = false;
+        if (!ok || !Array.isArray(result?.values)) return;
+        for (const {index, value} of result.values) {
+          if (meters.has(index)) acceptValue(index, value);
+        }
+      });
+    }, 100);
+  }
+
   window.addEventListener("message", (event) => {
     const message = event.data;
     if (event.source !== window.parent || event.origin !== origin || message?.protocol !== protocol) return;
@@ -138,7 +163,9 @@
         }
         for (const {index, value} of result.values) acceptValue(index, value);
         connected = true;
-        for (const {input} of controls.values()) input.disabled = false;
+        for (const {input} of controls.values()) {
+          if (input.tagName !== "METER") input.disabled = false;
+        }
         setStatus("Ready for MIDI", true);
       });
     } else if (message.kind === "response") {

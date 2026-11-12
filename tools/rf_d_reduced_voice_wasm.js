@@ -1,17 +1,22 @@
 const fs = require("node:fs");
 const { performance } = require("node:perf_hooks");
 
-const [, , path, encodedScore, length, option, requestedBlock, requestedCapacity, schema] = process.argv;
+const [, , path, encodedScore, length, option, requestedBlock, requestedCapacity, schema, inputPath] = process.argv;
 const blockSize = Number(requestedBlock ?? 128);
 const capacity = Number(requestedCapacity ?? blockSize);
 if (!Number.isInteger(blockSize) || blockSize < 1 || blockSize > capacity) {
     throw new Error("Invalid RF-D block size");
 }
-const {parameters: panel} = schema
+const {parameters: parametersSchema} = schema
     ? JSON.parse(fs.readFileSync(schema))
     : require("../plugin/package/metadata/parameters.json");
+const panel = parametersSchema.filter(({kind}) => kind.type !== "meter");
+const meter = parametersSchema.find(({kind}) => kind.type === "meter");
 const score = JSON.parse(encodedScore);
 const frames = Number(length);
+const input = inputPath ? fs.readFileSync(inputPath) : null;
+const inputChannels = Number(input !== null);
+if (input && input.length !== frames * 4) throw new Error("Expected one float32 per input frame");
 const { exports: wasm } = new WebAssembly.Instance(new WebAssembly.Module(fs.readFileSync(path)));
 
 function check(status) {
@@ -19,7 +24,7 @@ function check(status) {
 }
 
 function prepare() {
-    check(wasm.rackforge_prepare(48000, capacity, 0, 2));
+    check(wasm.rackforge_prepare(48000, capacity, inputChannels, 2));
     if (wasm.rackforge_latency_frames() !== 48) throw new Error("Unexpected RF-D latency");
 }
 
@@ -51,6 +56,10 @@ if (option === "--panel-state" || option === "--voice-state") {
         }
         return value;
     });
+    if (meter && (wasm.rackforge_get_parameter(meter.index) !== 0 ||
+        wasm.rackforge_set_parameter(meter.index, 1) === 0)) {
+        throw new Error("Overload meter must start at zero and be read-only");
+    }
     if (wasm.rackforge_save_state() !== stateBytes) throw new Error("Panel state size");
     const saved = transfer().slice();
     if (Buffer.from(saved.subarray(0, 4)).toString() !== stateTag) throw new Error("Panel state tag");
@@ -69,7 +78,7 @@ if (option === "--panel-state" || option === "--voice-state") {
     checkValues();
     if (option === "--voice-state" && panel.length > 11) {
         // The original voice used the same header with just the first eleven controls.
-        for (const count of [11, 26, 29, 35].filter((size) => size < panel.length)) {
+        for (const count of [11, 26, 29, 35, 37].filter((size) => size < panel.length)) {
             transfer().set(saved);
             check(wasm.rackforge_load_state(4 + count * 8));
             if (panel.some(({index, kind}) => wasm.rackforge_get_parameter(index) !==
@@ -97,6 +106,13 @@ if (option === "--panel-state" || option === "--voice-state") {
             }
         }
     }
+    if (meter) {
+        loadPreset("external_filter");
+        prepare();
+        if (wasm.rackforge_get_parameter(37) !== 1 || wasm.rackforge_get_parameter(38) !== 60) {
+            throw new Error("Prepare lost the external filter preset");
+        }
+    }
     loadPreset("default");
     if (panel.some(({index, kind}) => wasm.rackforge_get_parameter(index) !== Number(kind.default))) {
         throw new Error("Pilot Saw preset did not restore defaults");
@@ -107,12 +123,13 @@ let midi = new DataView(wasm.memory.buffer, wasm.rackforge_midi_ptr());
 midi.setUint32(0, 0, true);
 midi.setUint32(4, 0x90 | 57 << 8 | 100 << 16 | 3 << 24, true);
 for (let i = 0; i < 128; i++) {
-    check(wasm.rackforge_process(Math.min(128, capacity), 0, 2, i === 0 ? 1 : 0, 0));
+    check(wasm.rackforge_process(Math.min(128, capacity), inputChannels, 2, i === 0 ? 1 : 0, 0));
 }
 
 prepare();
 const output = Buffer.alloc(frames * 8);
 const timings = [];
+const overload = [];
 for (let start = 0, event = 0; start < frames; start += blockSize) {
     const size = Math.min(blockSize, frames - start);
     midi = new DataView(wasm.memory.buffer, wasm.rackforge_midi_ptr());
@@ -136,11 +153,16 @@ for (let start = 0, event = 0; start < frames; start += blockSize) {
         midi.setUint32(count * 8 + 4, status | note << 8 | value << 16 | 3 << 24, true);
         count++;
     }
+    if (input) {
+        new Uint8Array(wasm.memory.buffer, wasm.rackforge_input_ptr(), size * 4)
+            .set(input.subarray(start * 4, (start + size) * 4));
+    }
     const time = performance.now();
-    const status = wasm.rackforge_process(size, 0, 2, count, parameterCount);
+    const status = wasm.rackforge_process(size, inputChannels, 2, count, parameterCount);
     timings.push(Math.round((performance.now() - time) * 1e6));
     check(status);
+    if (input && meter) overload.push(wasm.rackforge_get_parameter(meter.index));
     output.set(new Uint8Array(wasm.memory.buffer, wasm.rackforge_output_ptr(), size * 8), start * 8);
 }
-process.stderr.write(JSON.stringify(timings));
+process.stderr.write(JSON.stringify(input ? {timings, overload} : timings));
 process.stdout.write(output);

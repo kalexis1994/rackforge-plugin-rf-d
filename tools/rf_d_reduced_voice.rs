@@ -14,6 +14,9 @@ pub mod modulation;
 #[cfg(pilot_voice_performance)]
 #[path = "rf_d_voice_keyboard.rs"]
 pub mod keyboard;
+#[cfg(pilot_voice_external)]
+#[path = "rf_d_voice_external.rs"]
+pub mod external;
 #[cfg(pilot_voice_contours)]
 #[path = "rf_d_voice_contour.rs"]
 pub mod contour;
@@ -60,6 +63,8 @@ pub enum Error {
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Frame {
+    #[cfg(pilot_voice_external)]
+    pub overload: f64,
     #[cfg(not(pilot_voice_contours))]
     pub j7_v: f64,
     #[cfg(pilot_voice_contours)]
@@ -95,6 +100,8 @@ pub struct Panel {
     pub modulation: modulation::Controls,
     #[cfg(pilot_voice_performance)]
     pub keyboard: keyboard::Controls,
+    #[cfg(pilot_voice_external)]
+    pub external: external::Controls,
 }
 
 #[cfg(pilot_voice_contours)]
@@ -129,6 +136,8 @@ impl Default for Panel {
             modulation: modulation::Controls::default(),
             #[cfg(pilot_voice_performance)]
             keyboard: keyboard::Controls::default(),
+            #[cfg(pilot_voice_external)]
+            external: external::Controls::default(),
         }
     }
 }
@@ -161,7 +170,11 @@ impl Panel {
         let keyboard_valid = self.keyboard.valid();
         #[cfg(not(pilot_voice_performance))]
         let keyboard_valid = true;
-        mixer_valid && contour_valid && filter_valid && modulation_valid && keyboard_valid
+        #[cfg(pilot_voice_external)]
+        let external_valid = self.external.valid();
+        #[cfg(not(pilot_voice_external))]
+        let external_valid = true;
+        mixer_valid && contour_valid && filter_valid && modulation_valid && keyboard_valid && external_valid
     }
 }
 
@@ -182,6 +195,8 @@ pub struct Voice<const FACTOR: usize> {
     modulation: modulation::Sources,
     #[cfg(pilot_voice_performance)]
     keyboard: keyboard::Keyboard,
+    #[cfg(pilot_voice_external)]
+    external: external::Preamp,
     increment: f64,
     #[cfg(not(pilot_voice_contours))]
     trim: f64,
@@ -218,6 +233,8 @@ impl<const FACTOR: usize> Voice<FACTOR> {
             modulation: modulation::Sources::new((RATE * FACTOR) as f64, FACTOR),
             #[cfg(pilot_voice_performance)]
             keyboard: keyboard::Keyboard::new((RATE * FACTOR) as f64, FACTOR),
+            #[cfg(pilot_voice_external)]
+            external: external::Preamp::new((RATE * FACTOR) as f64, FACTOR),
             increment: 440. / (FACTOR * RATE) as f64,
             #[cfg(not(pilot_voice_contours))]
             trim: 0.,
@@ -331,6 +348,11 @@ impl<const FACTOR: usize> Voice<FACTOR> {
             };
             #[cfg(pilot_voice_modulation)]
             let (noise, modulation) = self.modulation.step(panel.modulation, self.oscillators.osc3());
+            #[cfg(pilot_voice_external)]
+            let noise = {
+                let ext = self.external.tick(panel.external, (_substep + 1) as f64 / FACTOR as f64);
+                [noise[0] + ext[0], noise[1] + ext[1]]
+            };
             #[cfg(all(pilot_voice_filter, not(pilot_voice_performance)))]
             let key_cv = f64::from(self.last_note);
             #[cfg(pilot_voice_performance)]
@@ -398,6 +420,10 @@ impl<const FACTOR: usize> Voice<FACTOR> {
         #[cfg(all(pilot_returns, not(pilot_voice_contours)))]
         {
             self.drive = panel.drive;
+        }
+        #[cfg(pilot_voice_external)]
+        {
+            last.overload = self.external.overload();
         }
         self.frames += 1;
         if self.frames > LATENCY {
