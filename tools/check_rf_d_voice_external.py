@@ -69,7 +69,8 @@ def verify_external(render, report):
                                                                   maximum=max(metrics["timings"])))
 
 
-def verify_host_capture(execute, render, folder, package, report, feedback=False, monitor_schema=None):
+def verify_host_capture(execute, render, folder, package, report, feedback=False, monitor_schema=None,
+                        control_inputs=False):
     deps = HOST / "target/release/deps"
     core, midi = deps / HOST_CORE, deps / MIDI_LIB
     registry = Path(COMPILER).parents[4] / ".cargo/registry/src"
@@ -107,14 +108,18 @@ def verify_host_capture(execute, render, folder, package, report, feedback=False
         loop = [change(0, 78), change(2, 75), change(3, 90), change(26, 32),
                 change(37, 1), change(38, 72), change(40, 1)]
         compare("loop_drive", loop, "host_feedback", independent=True)
-    if monitor_schema is not None:
-        overrides = {41: 0., 42: 2., 43: 65., 44: 1.}
+    def compare_state(name, overrides, receipt):
         values = [overrides.get(parameter["index"], parameter["kind"]["default"])
                   for parameter in monitor_schema["parameters"] if parameter["index"] != 39]
-        state = folder / "monitor-state.bin"
+        state = folder / f"{name}-state.bin"
         state.write_bytes(b"RFDC" + np.asarray(values, dtype="<f8").tobytes())
         controls = [change(index, value) for index, value in overrides.items()]
-        compare("monitor", controls, "host_monitor", independent=True, state=state)
-        for result in report["host_monitor"][128]:
+        compare(name, controls, receipt, independent=True, state=state)
+        for result in report[receipt][128]:
             assert result["deadline_misses"] == 0 and result["max_ns"] < 128e9 / RATE / 2, result
+
+    if monitor_schema is not None:
+        compare_state("monitor", {41: 0., 42: 2., 43: 65., 44: 1.}, "host_monitor")
+    if control_inputs:
+        compare_state("control-inputs", {45: 0.5, 46: -0.5, 47: 3.2, 48: 1.}, "host_control_inputs")
     report["host_capture_libraries"] = {library.name: sha(library) for library in (core, midi)}

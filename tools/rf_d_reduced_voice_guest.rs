@@ -83,8 +83,20 @@ const PHONES_LEVEL_INDEX: u32 = OUTPUT_JACK_INDEX + 1;
 #[cfg(pilot_voice_monitor)]
 const TUNER_INDEX: u32 = PHONES_LEVEL_INDEX + 1;
 #[cfg(pilot_oscillator_bank)]
-const CONTROL_COUNT: usize = if cfg!(pilot_voice_monitor) {
-    FEEDBACK_END + 4
+const MONITOR_END: usize = FEEDBACK_END + 4;
+#[cfg(pilot_voice_control_inputs)]
+const PITCH_CV_INDEX: u32 = TUNER_INDEX + 1;
+#[cfg(pilot_voice_control_inputs)]
+const FILTER_CV_INDEX: u32 = PITCH_CV_INDEX + 1;
+#[cfg(pilot_voice_control_inputs)]
+const LOUDNESS_CV_INDEX: u32 = FILTER_CV_INDEX + 1;
+#[cfg(pilot_voice_control_inputs)]
+const S_TRIGGER_INDEX: u32 = LOUDNESS_CV_INDEX + 1;
+#[cfg(pilot_oscillator_bank)]
+const CONTROL_COUNT: usize = if cfg!(pilot_voice_control_inputs) {
+    MONITOR_END + 4
+} else if cfg!(pilot_voice_monitor) {
+    MONITOR_END
 } else if cfg!(pilot_voice_output) {
     FEEDBACK_END + 2
 } else if cfg!(pilot_voice_feedback) {
@@ -119,6 +131,8 @@ const DEFAULTS: [f64; CONTROL_COUNT] = {
             1.
         } else if index == FEEDBACK_END + 2 {
             50.
+        } else if index == MONITOR_END + 2 {
+            5.
         } else {
             0.
         };
@@ -144,6 +158,15 @@ impl Default for Controls {
 
 #[cfg(pilot_returns)]
 fn control_index(index: u32, value: f64) -> Option<usize> {
+    #[cfg(pilot_voice_control_inputs)]
+    if (PITCH_CV_INDEX..=S_TRIGGER_INDEX).contains(&index) {
+        let valid = match index {
+            PITCH_CV_INDEX | FILTER_CV_INDEX => (-2. ..=2.).contains(&value),
+            LOUDNESS_CV_INDEX => (0. ..=5.).contains(&value),
+            _ => value == 0. || value == 1.,
+        };
+        return valid.then_some(index as usize - 1);
+    }
     #[cfg(pilot_voice_monitor)]
     if index == PHONES_LEVEL_INDEX {
         return (0. ..=100.).contains(&value).then_some(index as usize - 1);
@@ -273,6 +296,13 @@ impl Controls {
                 phones_level: self.0[FEEDBACK_END + 2] * 0.01,
                 #[cfg(pilot_voice_monitor)]
                 tuner: self.0[FEEDBACK_END + 3] == 1.,
+            },
+            #[cfg(pilot_voice_control_inputs)]
+            control_inputs: voice::control_inputs::Controls {
+                pitch_v: self.0[MONITOR_END],
+                filter_v: self.0[MONITOR_END + 1],
+                loudness_v: self.0[MONITOR_END + 2],
+                trigger_closed: self.0[MONITOR_END + 3] == 1.,
             },
             contours: voice::Contours {
                 volume: voice::contour::Settings {
@@ -481,6 +511,10 @@ impl Processor for Guest {
 
     #[cfg(pilot_returns)]
     fn get_parameter(&self, index: u32) -> Option<f64> {
+        #[cfg(pilot_voice_control_inputs)]
+        if (PITCH_CV_INDEX..=S_TRIGGER_INDEX).contains(&index) {
+            return self.controls.0.get(index as usize - 1).copied();
+        }
         #[cfg(pilot_voice_monitor)]
         if matches!(index, PHONES_LEVEL_INDEX | TUNER_INDEX) {
             return self.controls.0.get(index as usize - 1).copied();
@@ -534,6 +568,8 @@ impl Processor for Guest {
         let valid_length = valid_length || bytes.len() == 4 + FEEDBACK_END * 8;
         #[cfg(pilot_voice_monitor)]
         let valid_length = valid_length || bytes.len() == 4 + (FEEDBACK_END + 2) * 8;
+        #[cfg(pilot_voice_control_inputs)]
+        let valid_length = valid_length || bytes.len() == 4 + MONITOR_END * 8;
         if !valid_length || &bytes[..4] != STATE_TAG {
             return false;
         }

@@ -20,6 +20,9 @@ pub mod external;
 #[cfg(pilot_voice_feedback)]
 #[path = "rf_d_voice_feedback.rs"]
 pub mod feedback;
+#[cfg(pilot_voice_control_inputs)]
+#[path = "rf_d_voice_control_inputs.rs"]
+pub mod control_inputs;
 #[cfg(pilot_voice_output)]
 #[path = "rf_d_voice_output.rs"]
 pub mod output;
@@ -38,6 +41,8 @@ pub const LATENCY: usize = 48;
 pub const AUDITION_VOLTS_PER_FULL_SCALE: f64 = 0.000125;
 const INPUT_PEAK_V: f64 = 0.08;
 const RAMP_S: f64 = 0.005;
+#[cfg(pilot_voice_filter)]
+const INITIAL_NOTE: u8 = if cfg!(pilot_voice_control_inputs) { 69 } else { 57 };
 #[cfg(not(pilot_oscillator_bank))]
 const TABLE: usize = wave::SAW.len();
 
@@ -112,6 +117,8 @@ pub struct Panel {
     pub feedback: feedback::Controls,
     #[cfg(pilot_voice_output)]
     pub output: output::Controls,
+    #[cfg(pilot_voice_control_inputs)]
+    pub control_inputs: control_inputs::Controls,
 }
 
 #[cfg(pilot_voice_contours)]
@@ -152,6 +159,8 @@ impl Default for Panel {
             feedback: feedback::Controls::default(),
             #[cfg(pilot_voice_output)]
             output: output::Controls::default(),
+            #[cfg(pilot_voice_control_inputs)]
+            control_inputs: control_inputs::Controls::default(),
         }
     }
 }
@@ -197,8 +206,12 @@ impl Panel {
             && !(self.output.low && self.output.phones);
         #[cfg(not(pilot_voice_monitor))]
         let monitor_valid = true;
+        #[cfg(pilot_voice_control_inputs)]
+        let jacks_valid = self.control_inputs.valid();
+        #[cfg(not(pilot_voice_control_inputs))]
+        let jacks_valid = true;
         mixer_valid && contour_valid && filter_valid && modulation_valid && keyboard_valid
-            && external_valid && feedback_valid && monitor_valid
+            && external_valid && feedback_valid && monitor_valid && jacks_valid
     }
 }
 
@@ -227,6 +240,10 @@ pub struct Voice<const FACTOR: usize> {
     output: output::Stage,
     #[cfg(pilot_voice_monitor)]
     monitor: output::Monitor,
+    #[cfg(pilot_voice_control_inputs)]
+    rear_cv: control_inputs::Slew,
+    #[cfg(pilot_voice_control_inputs)]
+    trigger_closed: bool,
     increment: f64,
     #[cfg(not(pilot_voice_contours))]
     trim: f64,
@@ -265,7 +282,7 @@ impl<const FACTOR: usize> Voice<FACTOR> {
             ladder: ladder::Ladder::new((RATE * FACTOR) as f64),
             held: 0,
             #[cfg(pilot_voice_filter)]
-            last_note: 57,
+            last_note: INITIAL_NOTE,
             #[cfg(not(pilot_oscillator_bank))]
             phase: 0.,
             #[cfg(pilot_oscillator_bank)]
@@ -282,6 +299,10 @@ impl<const FACTOR: usize> Voice<FACTOR> {
             output: output::Stage::new((RATE * FACTOR) as f64, FACTOR),
             #[cfg(pilot_voice_monitor)]
             monitor: output::Monitor::new((RATE * FACTOR) as f64, FACTOR),
+            #[cfg(pilot_voice_control_inputs)]
+            rear_cv: control_inputs::Slew::new(FACTOR),
+            #[cfg(pilot_voice_control_inputs)]
+            trigger_closed: false,
             increment: 440. / (FACTOR * RATE) as f64,
             #[cfg(not(pilot_voice_contours))]
             trim: 0.,
@@ -294,6 +315,34 @@ impl<const FACTOR: usize> Voice<FACTOR> {
             frames: 0,
             #[cfg(all(pilot_returns, not(pilot_voice_contours)))]
             drive: plant::Drive::default(),
+        }
+    }
+
+    #[cfg(pilot_voice_contours)]
+    fn contour_gate(&self) -> bool {
+        #[cfg(pilot_voice_control_inputs)]
+        let external = self.trigger_closed;
+        #[cfg(not(pilot_voice_control_inputs))]
+        let external = false;
+        self.held != 0 || external
+    }
+
+    #[cfg(pilot_voice_contours)]
+    fn update_contour_gate(&mut self, previous: bool) {
+        let gate = self.contour_gate();
+        if previous != gate {
+            for contour in &mut self.contours {
+                contour.gate(gate);
+            }
+        }
+    }
+
+    #[cfg(pilot_voice_control_inputs)]
+    fn set_trigger(&mut self, closed: bool) {
+        if self.trigger_closed != closed {
+            let previous = self.contour_gate();
+            self.trigger_closed = closed;
+            self.update_contour_gate(previous);
         }
     }
 
@@ -320,7 +369,7 @@ impl<const FACTOR: usize> Voice<FACTOR> {
             _ => {}
         }
         #[cfg(pilot_voice_contours)]
-        let was_held = self.held != 0;
+        let previous_gate = self.contour_gate();
         match message {
             Message::NoteOn(note @ 36..=72) => self.held |= 1 << (note - 36),
             Message::NoteOff(note @ 36..=72) => self.held &= !(1 << (note - 36)),
@@ -328,11 +377,7 @@ impl<const FACTOR: usize> Voice<FACTOR> {
             _ => return Err(Error::Input),
         }
         #[cfg(pilot_voice_contours)]
-        if was_held != (self.held != 0) {
-            for contour in &mut self.contours {
-                contour.gate(self.held != 0);
-            }
-        }
+        self.update_contour_gate(previous_gate);
         if self.held != 0 {
             let note = self.held.trailing_zeros() + 36;
             #[cfg(pilot_voice_filter)]
@@ -410,6 +455,10 @@ impl<const FACTOR: usize> Voice<FACTOR> {
             let key_cv = f64::from(self.last_note);
             #[cfg(pilot_voice_performance)]
             let (key_cv, bend) = self.keyboard.tick(self.held != 0, panel.keyboard);
+            #[cfg(pilot_voice_control_inputs)]
+            let [pitch_cv, filter_cv, loudness_gain] = self.rear_cv.tick(panel.control_inputs);
+            #[cfg(pilot_voice_control_inputs)]
+            let bend = bend + pitch_cv;
             #[cfg(pilot_oscillator_bank)]
             let increment = self.increment;
             #[cfg(pilot_voice_performance)]
@@ -445,6 +494,14 @@ impl<const FACTOR: usize> Voice<FACTOR> {
                 let volume = self.contours[0].tick(settings.volume, settings.decay_on, rate);
                 let filter = self.contours[1].tick(settings.filter, settings.decay_on, rate);
                 let cutoff = settings.cutoff + (1. - settings.cutoff) * settings.amount * filter;
+                #[cfg(pilot_voice_modulation)]
+                let filter_modulation = if panel.modulation.filter {
+                    modulation * modulation::FILTER_OCTAVES
+                } else {
+                    0.
+                };
+                #[cfg(pilot_voice_control_inputs)]
+                let filter_modulation = filter_modulation + filter_cv;
                 let filtered_v = self.ladder.step(
                     input,
                     cutoff,
@@ -453,9 +510,11 @@ impl<const FACTOR: usize> Voice<FACTOR> {
                     #[cfg(pilot_voice_filter)]
                     key_cv,
                     #[cfg(pilot_voice_modulation)]
-                    if panel.modulation.filter { modulation * modulation::FILTER_OCTAVES } else { 0. },
+                    filter_modulation,
                 );
                 let post_vca = (filtered_v / INPUT_PEAK_V) * volume;
+                #[cfg(pilot_voice_control_inputs)]
+                let post_vca = post_vca * loudness_gain;
                 #[cfg(pilot_voice_monitor)]
                 let post_vca = post_vca + self.monitor.reference(panel.output.tuner);
                 #[cfg(all(pilot_voice_feedback, not(pilot_voice_output)))]
@@ -575,12 +634,23 @@ impl<const FACTOR: usize> Voice<FACTOR> {
         let mut output = [Frame::default(); MAX_BLOCK];
         let mut events = events.iter().peekable();
         for (offset, frame) in output[..frames.len()].iter_mut().enumerate() {
+            #[cfg(pilot_returns)]
+            let controls = panel(offset);
+            // Close incoming contacts before releasing outgoing ones at a shared offset.
+            #[cfg(pilot_voice_control_inputs)]
+            if controls.control_inputs.trigger_closed {
+                candidate.set_trigger(true);
+            }
             while let Some(event) = events.next_if(|event| event.offset == offset) {
                 candidate.event(event.message)?;
             }
+            #[cfg(pilot_voice_control_inputs)]
+            if !controls.control_inputs.trigger_closed {
+                candidate.set_trigger(false);
+            }
             *frame = candidate.next(
                 #[cfg(pilot_returns)]
-                panel(offset),
+                controls,
             )?;
         }
         *self = candidate;

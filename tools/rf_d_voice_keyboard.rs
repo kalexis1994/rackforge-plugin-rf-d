@@ -39,7 +39,7 @@ pub struct Keyboard {
 impl Keyboard {
     pub fn new(rate: f64, factor: usize) -> Self {
         Self {
-            note: 57.,
+            note: f64::from(super::INITIAL_NOTE),
             target: None,
             glide_time_ms: 0.,
             glide_step: 0.,
