@@ -20,6 +20,9 @@ pub mod external;
 #[cfg(pilot_voice_feedback)]
 #[path = "rf_d_voice_feedback.rs"]
 pub mod feedback;
+#[cfg(pilot_voice_output)]
+#[path = "rf_d_voice_output.rs"]
+pub mod output;
 #[cfg(pilot_voice_contours)]
 #[path = "rf_d_voice_contour.rs"]
 pub mod contour;
@@ -107,6 +110,8 @@ pub struct Panel {
     pub external: external::Controls,
     #[cfg(pilot_voice_feedback)]
     pub feedback: feedback::Controls,
+    #[cfg(pilot_voice_output)]
+    pub output: output::Controls,
 }
 
 #[cfg(pilot_voice_contours)]
@@ -145,6 +150,8 @@ impl Default for Panel {
             external: external::Controls::default(),
             #[cfg(pilot_voice_feedback)]
             feedback: feedback::Controls::default(),
+            #[cfg(pilot_voice_output)]
+            output: output::Controls::default(),
         }
     }
 }
@@ -211,6 +218,8 @@ pub struct Voice<const FACTOR: usize> {
     external: external::Preamp,
     #[cfg(pilot_voice_feedback)]
     feedback: feedback::Loop,
+    #[cfg(pilot_voice_output)]
+    output: output::Stage,
     increment: f64,
     #[cfg(not(pilot_voice_contours))]
     trim: f64,
@@ -251,6 +260,8 @@ impl<const FACTOR: usize> Voice<FACTOR> {
             external: external::Preamp::new((RATE * FACTOR) as f64, FACTOR),
             #[cfg(pilot_voice_feedback)]
             feedback: feedback::Loop::new(FACTOR),
+            #[cfg(pilot_voice_output)]
+            output: output::Stage::new((RATE * FACTOR) as f64, FACTOR),
             increment: 440. / (FACTOR * RATE) as f64,
             #[cfg(not(pilot_voice_contours))]
             trim: 0.,
@@ -423,8 +434,14 @@ impl<const FACTOR: usize> Voice<FACTOR> {
                     if panel.modulation.filter { modulation * modulation::FILTER_OCTAVES } else { 0. },
                 );
                 let post_vca = (filtered_v / INPUT_PEAK_V) * volume;
-                #[cfg(pilot_voice_feedback)]
+                #[cfg(all(pilot_voice_feedback, not(pilot_voice_output)))]
                 self.feedback.observe(post_vca, panel.feedback.output_level);
+                #[cfg(pilot_voice_output)]
+                let post_vca = {
+                    let [hi, lo] = self.output.tick(post_vca, panel.feedback.output_level, panel.output.enabled);
+                    self.feedback.observe_low(lo);
+                    hi
+                };
                 self.history[self.head] = post_vca;
             }
             #[cfg(not(pilot_voice_contours))]
@@ -458,6 +475,8 @@ impl<const FACTOR: usize> Voice<FACTOR> {
                 .fold(0., |sum, (coefficient, value)| sum + coefficient * value);
             #[cfg(pilot_voice_contours)]
             {
+                #[cfg(pilot_voice_output)]
+                let filtered = self.output.monitor(filtered, panel.output.low);
                 last.sample = filtered;
             }
             #[cfg(not(pilot_voice_contours))]

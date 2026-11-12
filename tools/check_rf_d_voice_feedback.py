@@ -5,7 +5,7 @@ from check_rf_d_playable_filter import change, rms
 from check_rf_d_voice_external import sine
 
 
-def verify_feedback(render, report):
+def verify_feedback(render, report, output=False):
     frames = 57600
     note_on = [960, 0x90, 57, 100]
     note_off = [48000, 0x80, 57, 0]
@@ -23,11 +23,18 @@ def verify_feedback(render, report):
     assert np.array_equal(high, with_capture)
     quieter_output, _ = play([*tone, *ext, cable, change(3, 25)])
     window = slice(24000, 45000)
-    assert np.allclose(quieter_output[window], medium[window] * 0.25, atol=2e-6, rtol=0.)
+    if output:
+        assert rms(quieter_output[window]) < 0.4 * rms(medium[window])
+    else:
+        assert np.allclose(quieter_output[window], medium[window] * 0.25, atol=2e-6, rtol=0.)
     levels = [rms(audio[window]) for audio in (open_loop, medium, high)]
     assert 0.01 < levels[0] < levels[1] < levels[2], levels
     assert levels[1] > 1.12 * levels[0] and levels[2] > 1.5 * levels[0], levels
-    assert float(np.max(abs(high))) < 1. and not np.any(high[50000:])
+    assert float(np.max(abs(high))) < 1.
+    if output:
+        assert np.max(abs(high[-960:])) < 0.01
+    else:
+        assert not np.any(high[50000:])
 
     muted, _ = play([*tone, *ext, change(37, 0), cable])
     reference, _ = play(tone)

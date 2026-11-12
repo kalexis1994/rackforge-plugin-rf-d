@@ -35,7 +35,7 @@ J5/J6 y su calibración quedan para contraste con el circuito.
 
 ## Verificación sin empaquetar
 
-`python -B tools/check_rf_d_playable_voice.py` comprueba una
+`python -B tools/check_rf_d_playable_voice.py --feedback` comprueba una
 nota con el cable abierto, con External Level al 25 % y al
 100 %. En esa escena, el RMS pasó de 0,0672 a 0,1068 y a
 0,8011, con pico de 0,9095 en el caso de mayor realimentación.
@@ -53,3 +53,6 @@ El máximo observado para Loop Drive a 128 frames fue 0,237 ms,
 con cero pérdidas de plazo en los dos escenarios de captura.
 La escucha y la prueba con dispositivo físico quedan pendientes.
 [Resultados](../evidence/rf_d_voice_development03.json).
+
+La [etapa de salida de desarrollo](SALIDA_TOCABLE.md) toma el
+retorno LO desde el puerto C2/R20 e incorpora Main Output.

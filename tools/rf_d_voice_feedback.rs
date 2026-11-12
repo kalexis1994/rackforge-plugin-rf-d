@@ -25,7 +25,7 @@ impl Controls {
 
 #[derive(Clone)]
 pub struct Loop {
-    hi_v: f64,
+    lo_v: f64,
     connection: Option<f64>,
     step: f64,
 }
@@ -33,7 +33,7 @@ pub struct Loop {
 impl Loop {
     pub fn new(factor: usize) -> Self {
         Self {
-            hi_v: 0.,
+            lo_v: 0.,
             connection: None,
             step: 1. / (64. * factor as f64),
         }
@@ -43,10 +43,17 @@ impl Loop {
         let target = f64::from(connected);
         let connection = self.connection.get_or_insert(target);
         *connection += (target - *connection).clamp(-self.step, self.step);
-        [self.hi_v * LOW_OUTPUT_DIVIDER, *connection]
+        [self.lo_v, *connection]
     }
 
+    #[cfg(not(pilot_voice_output))]
     pub fn observe(&mut self, post_vca: f64, output_level: f64) {
-        self.hi_v = (output_level * post_vca).clamp(-1., 1.) * HI_VOLTS_PER_FULL_SCALE;
+        self.lo_v =
+            (output_level * post_vca).clamp(-1., 1.) * HI_VOLTS_PER_FULL_SCALE * LOW_OUTPUT_DIVIDER;
+    }
+
+    #[cfg(pilot_voice_output)]
+    pub fn observe_low(&mut self, lo_v: f64) {
+        self.lo_v = lo_v;
     }
 }
