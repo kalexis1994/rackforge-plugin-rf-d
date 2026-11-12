@@ -323,6 +323,40 @@ genera `artifacts/rf-d-oboe-ataque-ab.wav` a −22 dBFS RMS.
 El RF-D con el ataque ajustado entra en 2,08 s y el RF-D
 del A/B de cuerpo entra en 6,24 s.
 
+### Sobremuestreo en el Oboe
+
+El motor de la prueba procesa a 96 kHz (2×) y entrega
+48 kHz. La variante a 192 kHz (4×) usa los mismos eventos,
+controles y ancho de pulso. Cada variante calcula el lazo
+de Emphasis a su frecuencia interna y usa el FIR de
+22 kHz con 1 ms de retardo. La respuesta de ambos FIR
+varía menos de 0,001 dB en los puntos medidos entre 8 y
+20 kHz. El sobremuestreo permite reducir el plegamiento
+de armónicos que genera el procesamiento no lineal.
+[Kahles, Esqueda y Välimäki, 2019](https://doi.org/10.17743/jaes.2019.0012).
+
+En las siete notas, el cambio medio de 2× a 4× es de
+0,13 dB en las bandas 2,2–4 y 4–8 kHz y de 0,61 dB
+entre 12 y 18 kHz. En esa última banda, el error medio
+frente a la toma sigue en 8,7 dB con 4×. La mediana del
+tiempo de render de 128 frames en el banco WASM pasó de
+0,109 a 0,196 ms en esta ejecución.
+
+En el tono de 440 Hz, la energía fuera de los armónicos
+queda cerca de −112 dB en ambas variantes, relativa a la
+energía audible. En el tono de 1760 Hz con filtro abierto
+pasa de −118,5 a −129,9 dB. La medida usa 200 ms de tono
+sostenido y recoge todo residuo entre 20 Hz y 20 kHz fuera
+de los bins armónicos. La variante 4× se ejecuta en el
+banco de escucha.
+[Mediciones por nota y frecuencia interna](../evidence/rf_d_oboe_oversampling01.json).
+
+`python -B tools/check_rf_d_oboe_oversampling.py --audition --write-report`
+genera `artifacts/rf-d-oboe-sobremuestreo-ab.wav` a −22 dBFS RMS.
+La secuencia es Minimoog, RF-D 4×, Minimoog y RF-D 2×.
+La última toma coincide por bytes con el RF-D de 2,08 s
+del A/B de ataque.
+
 ## Cómo escuchar y medir
 
 Para el A/B musical hay que identificar la nota, su duración y

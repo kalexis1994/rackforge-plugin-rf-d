@@ -67,11 +67,11 @@ def generate_wave():
     return wave, receipt
 
 
-def generate_pi_fir():
+def generate_pi_fir(rate=96_000):
     from prepare_long_note_aa import taps
 
-    fir = taps(96_000)
-    return emit("pilot-pi-fir.rs", f"pub const H96000:[f64;{len(fir)}]=[\n" +
+    fir = taps(rate)
+    return emit("pilot-pi-fir.rs", f"pub const H{rate}:[f64;{len(fir)}]=[\n" +
                 "".join(f"    {value:.17e},\n" for value in fir) + "];\n")
 
 

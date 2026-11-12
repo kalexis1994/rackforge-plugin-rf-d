@@ -11,7 +11,6 @@ from tempfile import TemporaryDirectory
 
 import numpy as np
 
-from check_rf_d_pi_pilot import RATE
 from check_rf_d_playable_pilot import (
     AREA, COMPILER, GUEST, HOST, NODE, PACKAGE, ROOT, SDK_PATH, WASM_OPT, emit, sha, write,
 )
@@ -357,7 +356,7 @@ def verify_oscillators(render, report):
                               over_half_period=sum(value > MARGIN_NS for value in times)))
 
 
-def main(argv=None, *, inspect_audio=None, legacy_timbre=False, wide_pulse_duty=None):
+def main(argv=None, *, inspect_audio=None, legacy_timbre=False, wide_pulse_duty=None, oversampling=2):
     parser = argparse.ArgumentParser(description=__doc__)
     profiles = parser.add_mutually_exclusive_group()
     profiles.add_argument("--single-saw", action="store_true", help="rebuild the 0.4.0 single-oscillator voice")
@@ -391,6 +390,8 @@ def main(argv=None, *, inspect_audio=None, legacy_timbre=False, wide_pulse_duty=
     calibrated = midi and not legacy_timbre
     if wide_pulse_duty is not None and (not calibrated or inspect_audio is None):
         parser.error("wide pulse duty overrides require calibrated MIDI audio inspection")
+    if oversampling not in (2, 4) or (oversampling == 4 and (not calibrated or inspect_audio is None)):
+        parser.error("4x oversampling requires calibrated MIDI audio inspection")
     profile_version = VERSION if modulation else "0.6.0" if emphasis else "0.5.0" if bank else "0.4.0"
     version = args.package or (f"{profile_version}-dev" if performance else profile_version)
     schema = parameter_schema(bank, emphasis, modulation, performance, external, feedback, output, monitor, control_inputs)
@@ -409,10 +410,11 @@ def main(argv=None, *, inspect_audio=None, legacy_timbre=False, wide_pulse_duty=
 
     AREA.mkdir(parents=True, exist_ok=True)
     assert not list(AREA.iterdir()), AREA
+    internal_rate = SAMPLE_RATE * oversampling
     report = dict(passed=False, version=version, plugin_id=PLUGIN_ID, host_rate_hz=SAMPLE_RATE,
-                  internal_rate_hz=RATE, packaged=bool(args.package))
+                  internal_rate_hz=internal_rate, packaged=bool(args.package))
     try:
-        fir = generate_pi_fir()
+        fir = generate_pi_fir(internal_rate)
         report["fir_sha256"] = sha(fir)
         modules = dict(voice=ROOT / "tools/rf_d_reduced_voice.rs", pi_coefficients=fir)
         if bank:
@@ -425,7 +427,7 @@ def main(argv=None, *, inspect_audio=None, legacy_timbre=False, wide_pulse_duty=
             modules["wave"] = wave
             report["wave_sha256"] = sha(wave)
         if emphasis:
-            modules["emphasis_coefficients"] = emphasis_table(report, calibrated=calibrated)
+            modules["emphasis_coefficients"] = emphasis_table(report, calibrated=calibrated, rate=internal_rate)
         if calibrated:
             modules["cutoff_coefficients"] = calibrated_cutoff_table(report)
         if control_inputs:
@@ -454,11 +456,12 @@ def main(argv=None, *, inspect_audio=None, legacy_timbre=False, wide_pulse_duty=
             cv_flags = ("--cfg", "pilot_voice_control_inputs") if control_inputs else ()
             midi_flags = ("--cfg", "pilot_voice_midi") if midi else ()
             calibrated_flags = ("--cfg", "pilot_calibrated_filter") if calibrated else ()
+            oversampling_flags = ("--cfg", "pilot_oversample_4x") if oversampling == 4 else ()
             execute(*flags, "--edition=2021", "--crate-type", "cdylib", "-C", "panic=abort", "-C", "lto=fat",
                     "--cfg", "pilot_pi", "--cfg", "pilot_returns", "--cfg", "pilot_host_blocks",
                     "--cfg", "pilot_voice_contours", *bank_flags, *filter_flags, *modulation_flags,
                     *performance_flags, *external_flags, *feedback_flags, *output_flags, *monitor_flags, *cv_flags,
-                    *midi_flags, *calibrated_flags, guest,
+                    *midi_flags, *calibrated_flags, *oversampling_flags, guest,
                     "--extern", f"rackforge_plugin_sdk={sdk}", "-o", component)
             execute(WASM_OPT, component, "-O4", "-o", optimized)
 

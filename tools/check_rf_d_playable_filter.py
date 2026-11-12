@@ -12,9 +12,9 @@ LOG2_MIN = -12
 STEPS_PER_OCTAVE = 32
 
 
-def linear_threshold(step):
+def linear_threshold(step, rate=RATE):
     """Find the first negative-real crossing of the discrete open loop."""
-    poles = [math.exp(-1. / (RATE * tau)) for tau in (RECOVERY_TAU_S, RETURN_TAU_S)]
+    poles = [math.exp(-1. / (rate * tau)) for tau in (RECOVERY_TAU_S, RETURN_TAU_S)]
 
     def loop(omega):
         delay = np.exp(-1j * omega)
@@ -36,15 +36,15 @@ def linear_threshold(step):
     omega = (low + high) / 2.
     phase, magnitude = loop(omega)
     assert abs(phase + np.pi) < 1e-10
-    return float(1. / magnitude), omega * RATE / (2. * np.pi)
+    return float(1. / magnitude), omega * rate / (2. * np.pi)
 
 
-def emphasis_table(report, *, calibrated=False):
+def emphasis_table(report, *, calibrated=False, rate=RATE):
     log2_max = -0.75 if calibrated else -2
     intervals = round((log2_max - LOG2_MIN) * STEPS_PER_OCTAVE)
     logs = LOG2_MIN + np.arange(intervals + 1) / STEPS_PER_OCTAVE
-    gains = [linear_threshold(step)[0] for step in np.exp2(logs)]
-    points = [linear_threshold(step)[0] for step in np.exp2((logs[:-1] + logs[1:]) / 2.)]
+    gains = [linear_threshold(step, rate)[0] for step in np.exp2(logs)]
+    points = [linear_threshold(step, rate)[0] for step in np.exp2((logs[:-1] + logs[1:]) / 2.)]
     error = max(abs((a + b) / (2. * exact) - 1.)
                 for a, b, exact in zip(gains, gains[1:], points))
     assert error < 0.001
@@ -54,7 +54,7 @@ pub const RETURN_TAU_S: f64 = {RETURN_TAU_S:.16e};
 pub const CRITICAL_GAIN: [f64; {len(gains)}] = [
 """ + "".join(f"    {gain:.16e},\n" for gain in gains) + "];\n"
     path = emit("voice-emphasis.rs", source)
-    report["emphasis_table"] = dict(knots=len(gains), internal_rate_hz=RATE,
+    report["emphasis_table"] = dict(knots=len(gains), internal_rate_hz=rate,
                                     recovery_tau_s=RECOVERY_TAU_S, return_tau_s=RETURN_TAU_S,
                                     midpoint_relative_error=error, sha256=sha(path))
     return path

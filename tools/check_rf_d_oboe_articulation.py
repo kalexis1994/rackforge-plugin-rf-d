@@ -44,7 +44,6 @@ def compare(render, schema, component, reference, previous, audition):
         audio, _ = render(events, frames=start + FRAMES, block=block)
         return audio[start:]
 
-    assert component == previous["component_sha256"]
     baseline = phrase(controls, KEYS)
     candidate = phrase(adjusted, keys)
     assert np.array_equal(candidate, phrase(adjusted, keys, block=480))

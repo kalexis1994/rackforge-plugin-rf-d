@@ -1,9 +1,9 @@
 use rackforge_plugin_sdk::{export_processor, MidiEvent, ParameterEvent, Processor};
 use voice::{Event, Frame, Message, Voice};
 
-#[cfg(pilot_pi)]
+#[cfg(all(pilot_pi, not(pilot_oversample_4x)))]
 const PILOT_FACTOR: usize = 2;
-#[cfg(not(pilot_pi))]
+#[cfg(any(not(pilot_pi), pilot_oversample_4x))]
 const PILOT_FACTOR: usize = 4;
 
 // Desktop prepares for its maximum callback, independently of the device period.
