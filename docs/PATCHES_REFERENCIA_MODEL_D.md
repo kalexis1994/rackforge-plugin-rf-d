@@ -357,6 +357,34 @@ La secuencia es Minimoog, RF-D 4×, Minimoog y RF-D 2×.
 La última toma coincide por bytes con el RF-D de 2,08 s
 del A/B de ataque.
 
+### Ajuste de armónicos a 4×
+
+En Fa4, el RF-D a 4× tenía entre 3 y 4 dB de menos en
+H4 y H5 y unos 4 dB de más en H10. Para distinguir
+esas diferencias, se midió cada armónico respecto de
+la fundamental en las mismas ventanas por nota.
+
+Se buscaron Cutoff, Emphasis y nivel de OSC1 sobre
+Fa4 y Sol4, con el pulso y la articulación del último
+A/B. El criterio suma tres errores medios en dB.
+Incluye H2–H6, H8–H20 y cuatro bandas entre 1,2 y
+12 kHz. Para los armónicos, la comparación usa un piso
+de −45 dB respecto de la fundamental. Los valores
+elegidos fueron 69 %, 45 % y 25 %, respectivamente.
+
+En las cinco ventanas reservadas de la frase, el error
+de H8–H20 pasó de 3,78 a 2,33 dB y el de las cuatro
+bandas pasó de 2,85 a 2,21 dB. El de H2–H6 pasó de
+2,93 a 3,12 dB. El error medio de la curva de ataque
+quedó en 1,32 dB. Los valores son un ajuste del patch
+a la captura de SynthMania.
+[Mediciones por nota](../evidence/rf_d_oboe_refit01.json).
+
+`python -B tools/check_rf_d_oboe_refit.py --audition --write-report`
+genera `artifacts/rf-d-oboe-refit-ab.wav` a −22 dBFS RMS.
+El RF-D ajustado entra en 2,08 s y el RF-D del A/B de
+sobremuestreo entra en 6,24 s. Ambas tomas usan 4×.
+
 ## Cómo escuchar y medir
 
 Para el A/B musical hay que identificar la nota, su duración y
