@@ -105,6 +105,42 @@ Las métricas del recibo se calculan con los niveles originales.
 | 6,15 s | 30 | 40 |
 | 8,20 s | 30 | 60 |
 
+## Oboe para la comparación por oído
+
+Oboe usa sólo OSC1 en el mezclador, con pulso ancho a 4′
+y nivel de panel 4. La ficha marca Cutoff 0, Emphasis 5
+y Amount 3. El filtro usa ataque/decay/sustain 10 ms,
+600 ms y 8. El contorno de volumen usa 100 ms, 200 ms
+y 8. OSC3 queda libre en LO como fuente de modulación,
+con su canal de audio apagado. [Ficha impresa 9, página 5
+del PDF](https://medias.audiofanzine.com/files/minimoog-sounds-by-tom-rhea-ld-480638.pdf#page=5)
+y [demo de SynthMania a 6:05](https://www.youtube.com/watch?v=S_FKXtwqJoQ&t=365s).
+
+La escucha usa un segundo de gate en MIDI 57, con
+fundamental nominal de 440 Hz por el rango 4′. MIDI 60
+sirve de segunda nota para verificar el efecto de Cutoff.
+Se conserva Emphasis en 50 % y se prueba Cutoff en 50 %
+según la ficha y en 40 y 60 % como posiciones vecinas.
+El ancho de pulso es el 35 % nominal de RF-D. Las ruedas
+quedan en reposo para aislar el timbre de la nota sostenida.
+Las notas y duraciones de la interpretación del video
+quedan por identificar para un A/B alineado.
+
+`python -B tools/check_rf_d_oboe.py --audition --write-report`
+repite la prueba y escribe un solo WAV mono con ganancia
+constante por clip para igualar el RMS. El orden de escucha
+es Cutoff 50, 40 y 60 % en 0,00, 2,05 y 4,10 s. Los datos
+incluyen los controles, la frecuencia medida y los armónicos.
+[Resultados](../evidence/rf_d_oboe_sweep01.json).
+
+En la nota de 440 Hz, con Cutoff en 50 %, la relación
+H4–H8 frente a H1–H3 es de −55,4 dB en el tramo sostenido.
+Al abrir Cutoff a 60 %, esa relación sube 1,8 dB y el RMS
+de la nota antes de igualar la ganancia sube 11,1 dB.
+Este pase permite contrastar el timbre sostenido y la
+forma del ataque. La diferencia de brillo entre variantes
+es sutil con el nivel igualado.
+
 ## Cómo escuchar y medir
 
 Para el A/B musical hay que identificar la nota, su duración y

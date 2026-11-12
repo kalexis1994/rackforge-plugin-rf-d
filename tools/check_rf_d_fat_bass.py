@@ -55,13 +55,13 @@ def measure(audio, fundamental_hz):
     return result
 
 
-def write_audition(audio_by_controls, rows):
-    selected = [rows[pair] for pair in AUDITION_ORDER]
+def write_audition(audio_by_controls, rows, *, destination=AUDITION, order=AUDITION_ORDER):
+    selected = [rows[pair] for pair in order]
     rms_target = min(10 ** (-22 / 20), 10 ** (-1 / 20) * min(
         row["held_rms"] / row["peak"] for row in selected))
     pcm = []
     playlist = []
-    for cutoff, emphasis in AUDITION_ORDER:
+    for cutoff, emphasis in order:
         gain = rms_target / rows[cutoff, emphasis]["held_rms"]
         clip = audio_by_controls[cutoff, emphasis] * gain
         assert np.max(abs(clip)) < 1.
@@ -70,11 +70,11 @@ def write_audition(audio_by_controls, rows):
         playlist.append(dict(cutoff=cutoff, emphasis=emphasis, gain=gain,
                              start_frame=sum(part.size for part in pcm)))
         pcm.append(np.rint(clip * 32767).astype("<i2"))
-    AUDITION.parent.mkdir(exist_ok=True)
-    with wave.open(str(AUDITION), "wb") as output:
+    destination.parent.mkdir(exist_ok=True)
+    with wave.open(str(destination), "wb") as output:
         output.setparams((1, 2, SAMPLE_RATE, 0, "NONE", "not compressed"))
         output.writeframes(np.concatenate(pcm).tobytes())
-    return dict(sha256=sha(AUDITION), held_rms_target=rms_target, playlist=playlist)
+    return dict(sha256=sha(destination), held_rms_target=rms_target, playlist=playlist)
 
 
 def sweep(render, schema, component_sha256, audition):
