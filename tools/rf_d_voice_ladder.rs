@@ -10,7 +10,10 @@ const CAPACITANCE_F: f64 = 68e-9;
 const THERMAL_V: f64 = 0.025_693;
 const DIFFERENTIAL_V: f64 = 2. * THERMAL_V;
 const RECOVERY_TAU_S: f64 = 47e3 * 0.22e-6;
+#[cfg(not(pilot_calibrated_filter))]
 const TAIL_A: [f64; 3] = [0.243_120_956e-6, 6.824_898_51e-6, 144.421_881e-6];
+#[cfg(pilot_calibrated_filter)]
+use crate::cutoff_coefficients::TAIL_A;
 
 #[derive(Clone)]
 pub struct Ladder {
@@ -62,12 +65,21 @@ impl Ladder {
         #[cfg(not(pilot_voice_modulation))]
         let modulation_changed = false;
         if self.cutoff != Some(cutoff) || tracking_changed || modulation_changed {
-            let (low, high, fraction) = if cutoff < 0.5 {
-                (TAIL_A[0], TAIL_A[1], 2. * cutoff)
-            } else {
-                (TAIL_A[1], TAIL_A[2], 2. * cutoff - 1.)
+            #[cfg(pilot_calibrated_filter)]
+            let tail_a = {
+                let index = cutoff * (TAIL_A.len() - 1) as f64;
+                let lower = (index as usize).min(TAIL_A.len() - 2);
+                TAIL_A[lower] + (index - lower as f64) * (TAIL_A[lower + 1] - TAIL_A[lower])
             };
-            let tail_a = low * (high / low).powf(fraction);
+            #[cfg(not(pilot_calibrated_filter))]
+            let tail_a = {
+                let (low, high, fraction) = if cutoff < 0.5 {
+                    (TAIL_A[0], TAIL_A[1], 2. * cutoff)
+                } else {
+                    (TAIL_A[1], TAIL_A[2], 2. * cutoff - 1.)
+                };
+                low * (high / low).powf(fraction)
+            };
             #[cfg(pilot_voice_modulation)]
             let tracking_factor = {
                 self.modulation_octaves = modulation_octaves;
@@ -81,11 +93,16 @@ impl Ladder {
             let tail_a = if tracking_factor == 1. {
                 tail_a
             } else {
-                (tail_a * tracking_factor).clamp(TAIL_A[0], TAIL_A[2])
+                (tail_a * tracking_factor).clamp(TAIL_A[0], TAIL_A[TAIL_A.len() - 1])
             };
             // A capacitor between the two equal and opposite branches sees half the
             // difference current. Voltage states are normalized by 2*Vt.
-            self.coefficient = tail_a * self.tail_to_coefficient;
+            let step = tail_a * self.tail_to_coefficient;
+            // Backward Euler for the linearized stage keeps the step bounded
+            // at the larger calibrated currents.
+            #[cfg(pilot_calibrated_filter)]
+            let step = step / (1. + step);
+            self.coefficient = step;
             self.cutoff = Some(cutoff);
         }
         let drive = input_v / DIFFERENTIAL_V;

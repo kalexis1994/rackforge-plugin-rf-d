@@ -199,8 +199,8 @@ el contorno desactivado, la voz de RF-D se estabiliza a
 La tabla del motor parte del RANGE provisional 0,1 de los
 [tres puntos DC del oráculo](VOZ_APERTURA_CUTOFF_RESULTADOS.md).
 Este contraste permite medir el error del control fuera del
-patch. El ajuste al 90 % es local para la escucha. El motor
-sigue usando su curva anterior y el tercer armónico permanece
+patch. El ajuste al 90 % fue local para la escucha. Ese motor
+usaba su curva anterior y el tercer armónico quedaba
 unos 10 dB por debajo de la captura en el Fa4.
 [Manual de servicio, página impresa 14](https://www.vintagesynthparts.com/wp-content/uploads/2016/08/MINIMOOG-D_SERVICE_MANUAL.pdf).
 
@@ -208,6 +208,50 @@ unos 10 dB por debajo de la captura en el Fa4.
 genera `artifacts/rf-d-oboe-cutoff-ab.wav` con la secuencia
 Minimoog, RF-D al 50 %, Minimoog, RF-D al 90 %. Las tomas
 mantienen −22 dBFS RMS. [Mediciones](../evidence/rf_d_oboe_clarity01.json).
+
+### Oboe con el filtro calibrado
+
+La voz MIDI calibra RANGE con Cutoff en la marca −1 y
+Emphasis en 10. Se busca la corriente que reproduce el punto
+de 440 Hz y se resuelve Q26/Q28 junto al ladder para todo el
+recorrido del potenciómetro. La tabla de 41 corrientes en
+amperios se contrasta en 40 puntos intermedios con error
+relativo máximo de 0,39 %. La medida
+estabilizada del motor da 439,99 Hz. En los puntos vecinos
+35, 45 y 50 % da 315,82, 614,61 y 859,88 Hz.
+[Manual de servicio, página impresa 14](https://www.vintagesynthparts.com/wp-content/uploads/2016/08/MINIMOOG-D_SERVICE_MANUAL.pdf#page=14).
+
+A 96 kHz, el paso del ladder usa `g = x/(1+x)`, con
+`x = Icola/(4·Vt·C·96000)`. Es el paso de Euler implícito
+para la etapa linealizada, aplicado a la diferencia de
+corrientes tanh del modelo reducido. La tabla de realimentación
+se extiende al intervalo de coeficientes que ahora alcanza el
+filtro abierto. La pendiente del mando presupone una relación
+lineal entre la posición del panel y la fracción eléctrica de
+R11. El ancho de **Wide Pulse** se toma del contacto 11 de la
+simulación CA3046, que dio 30,42 % de estado alto.
+[Red de cutoff](CUTOFF_NATIVO_Q26_Q28.md) · [Validación de pulsos](../evidence/vco1_circuit_validation.json).
+
+Con los valores de la ficha y Cutoff al 50 %, el Fa4 da
+H2/H1 de −3,6 dB y H3/H1 de −15,2 dB. La toma del Minimoog
+da −3,9 y −13,0 dB respectivamente. En esa nota H4 queda
+6,2 dB por encima de la captura y H6 queda 12,3 dB por debajo.
+La calibración de rango es nominal y el A/B sigue usando
+la captura de la demo.
+[Mediciones por nota](../evidence/rf_d_oboe_calibrated01.json).
+
+`python -B tools/check_rf_d_oboe_calibrated.py --audition --write-report`
+genera `artifacts/rf-d-oboe-calibrado-ab.wav`. Alterna
+Minimoog y RF-D dos veces con −22 dBFS RMS.
+
+La batería de WASM y RackForge valida los ocho presets,
+el estado restaurado y el render a 128, 480 y 4096 frames.
+El mayor tiempo de captura de los presets a 128 frames fue
+0,3224 ms. La prueba de Phones usa una señal menor para medir
+la transferencia de pequeña señal con la nueva apertura.
+El contraste de Filter CV usa la frecuencia que predice la
+etapa discreta para cada corriente, con la tolerancia anterior.
+[Pruebas del motor](../evidence/rf_d_voice_development09.json).
 
 ## Cómo escuchar y medir
 

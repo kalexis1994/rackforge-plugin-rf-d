@@ -25,7 +25,7 @@ def carrier(audio):
     return abs(analytic), frequency
 
 
-def verify_modulation(render, report):
+def verify_modulation(render, report, *, cutoff=67):
     frames = 3 * RATE
     key = [960, 0x90, 57, 100]
     loudness = [change(1, 0), change(6, 100)]
@@ -43,7 +43,7 @@ def verify_modulation(render, report):
     load_ratio = rms(loaded[12000:]) / rms(unloaded[12000:])
     assert 0.24 < load_ratio < 0.27, load_ratio
 
-    source = [change(0, 67), *loudness, change(13, 0),
+    source = [change(0, cutoff), *loudness, change(13, 0),
               change(20, 0), change(21, 0), change(24, 0), change(25, 0)]
     wheel = [4801, 0xb0, 1, 127]
     neutral, _ = render([*source, key], frames=frames)

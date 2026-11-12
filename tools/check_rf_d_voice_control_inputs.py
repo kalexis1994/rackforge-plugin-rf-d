@@ -1,8 +1,9 @@
 """Verify the Model D's three control voltages and shorting trigger in the playable voice."""
 import numpy as np
 
-from check_rf_d_playable_filter import change, filter_score, peak_frequency, rms
+from check_rf_d_playable_filter import change, filter_score, linear_threshold, peak_frequency, rms
 from check_rf_d_playable_pilot import emit, sha
+from rf_d_cutoff_calibration import AMP_PER_STEP
 from vca2_active_core_dc_reference import DEVICES, conditional_vca2_dc
 
 PITCH_CV, FILTER_CV, LOUDNESS_CV, S_TRIGGER = range(45, 49)
@@ -34,7 +35,7 @@ def loudness_table(report):
     return path
 
 
-def verify_control_inputs(render, report):
+def verify_control_inputs(render, report, *, cutoff=65):
     def frequency(audio, window=WINDOW):
         return peak_frequency(audio[window])[0]
 
@@ -51,12 +52,22 @@ def verify_control_inputs(render, report):
     free = [change(25, 0), *voice]
     assert np.array_equal(render(free)[0], render([change(PITCH_CV, 1.), *free])[0])
 
-    filtered = filter_score()
+    filtered = filter_score(cutoff=cutoff)
     dry_filter, _ = render(filtered)
     filter_pitch = [frequency(render([change(FILTER_CV, voltage), *filtered])[0])
                     for voltage in (-1., 0., 1.)]
-    assert np.allclose(np.array(filter_pitch) / filter_pitch[1], [0.5, 1., 2.], atol=0.025, rtol=0.)
-    tracked, _ = render(filter_score(note=69, thirds=3))
+    ratios = [0.5, 1., 2.]
+    expected_ratios = ratios
+    if "cutoff_calibration" in report:
+        tails = report["cutoff_calibration"]["knots_tail_a"]
+        tail = np.interp(cutoff / 100., np.linspace(0., 1., len(tails)), tails)
+        currents = tail * np.asarray(ratios)
+        frequencies = np.asarray([linear_threshold(step)[1] for step in currents / (AMP_PER_STEP + currents)])
+        expected_ratios = frequencies / frequencies[1]
+    assert np.allclose(np.array(filter_pitch) / filter_pitch[1], expected_ratios, atol=0.025, rtol=0.), (
+        filter_pitch, expected_ratios,
+    )
+    tracked, _ = render(filter_score(note=69, thirds=3, cutoff=cutoff))
     assert abs(filter_pitch[2] - frequency(tracked)) < 0.1
     assert np.array_equal(dry_filter, render([change(PITCH_CV, 1.), *filtered])[0])
 

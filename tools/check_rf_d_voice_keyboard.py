@@ -11,7 +11,7 @@ def frequency(audio, start, stop):
     return peak_frequency(audio[start:stop])[0]
 
 
-def verify_keyboard(render, report):
+def verify_keyboard(render, report, *, cutoff=65):
     base = [change(0, 100), change(1, 0), change(6, 100), change(13, 0)]
     glide = [change(35, 1), change(36, 500)]
     notes = [[960, 0x90, 69, 100], [12001, 0x90, 57, 100], [42001, 0x80, 57, 0]]
@@ -48,7 +48,7 @@ def verify_keyboard(render, report):
     free = [*osc3, change(25, 0), key]
     assert np.array_equal(render(free)[0], render([*free, *wheel])[0])
 
-    filter_cv = filter_score(note=69, thirds=3)
+    filter_cv = filter_score(note=69, thirds=3, cutoff=cutoff)
     filter_bend = filter_cv + wheel
     assert np.array_equal(render(filter_cv)[0], render(filter_bend)[0])
     filter_glide = sorted([*filter_cv, *glide, [12001, 0x90, 57, 100]], key=lambda event: event[0])

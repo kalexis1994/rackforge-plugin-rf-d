@@ -21,13 +21,14 @@ from vca_cascaded_output_dc_reference import DEVICE_NAMES, conditional_cascaded_
 OUTPUT = Path(__file__).resolve().parents[1]/"evidence"/"cutoff_j7_vectors.json"
 
 
-def initial_cutoff_ladder(ladder, controls):
+def initial_cutoff_ladder(ladder, controls, *, control_seed=None):
     """Twenty-node DC KCL; neither block is treated as a fixed current source."""
     pv, pg = panel_equivalent(controls["panel"])
     lp = ladder["network_parameters"]
     x = [ladder["nodes_v"][name] for name in NODE_NAMES]
-    q = solve_dc(panel=controls["panel"], range_fraction=controls["range_fraction"],
-                 tail_v=x[5], q26=controls["q26"], q28=controls["q28"])
+    if control_seed is None:
+        control_seed = solve_dc(panel=controls["panel"], range_fraction=controls["range_fraction"],
+                                tail_v=x[5], q26=controls["q26"], q28=controls["q28"])["node_v"]
 
     def evaluate(y):
         r, _ = evaluate_nodal_kcl(y[:16], **lp)
@@ -38,7 +39,7 @@ def initial_cutoff_ladder(ladder, controls):
                          q26=controls["q26"], q28=controls["q28"])
         return r+c, {}
 
-    y, _, error = _newton(x+q["node_v"], evaluate, "cutoff-ladder/dc")
+    y, _, error = _newton(x+list(control_seed), evaluate, "cutoff-ladder/dc")
     coupled = copy.deepcopy(ladder)
     coupled["nodes_v"] = dict(zip(NODE_NAMES, y[:16]))
     coupled["tail_current_a"] = (y[5]-y[19])/680

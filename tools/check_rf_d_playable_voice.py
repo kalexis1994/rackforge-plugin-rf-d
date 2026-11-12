@@ -26,6 +26,7 @@ from check_rf_d_voice_monitor import verify_monitor
 from check_rf_d_voice_control_inputs import loudness_table, verify_control_inputs
 from check_rf_d_voice_midi import HOST_SCORE, verify_midi
 from check_rf_d_voice_presets import emit_program_table, prepare_catalog, verify_presets
+from rf_d_cutoff_calibration import calibrated_cutoff_table
 
 VERSION = "0.7.0"
 PLUGIN_ID = "org.rackforge.lab.rf-d-voice"
@@ -35,14 +36,21 @@ SAMPLE_RATE = 48_000
 MARGIN_NS = 128 * 1e9 / SAMPLE_RATE / 2
 
 
-def oscillator_tables(report):
+def oscillator_tables(report, *, calibrated=False):
     model, report["h128_sha256"] = pilot_wave_model()
     harmonics = np.arange(1, 129)
     bands = (128, 64, 32, 16, 8, 4, 2, 1)
     samples = 2048
     saw, triangle = model[:2, 1:].copy()
     hybrid = (10. * saw + 47. * triangle) / 57.
-    widths = (0.5, 0.35, 0.15)
+    wide = 0.35
+    if calibrated:
+        evidence = ROOT / "evidence/vco1_circuit_validation.json"
+        measured = json.loads(evidence.read_bytes())
+        assert measured["passed"]
+        wide = measured["result"]["pulse_duties"]["11"]["high"]
+        report["wide_pulse"] = dict(duty=wide, contact=11, source_sha256=sha(evidence))
+    widths = (0.5, wide, 0.15)
     pulses = [2. * np.sin(np.pi * harmonics * width) * np.exp(-1j * np.pi * harmonics * width)
               / (np.pi * harmonics) for width in widths]
     waves = []
@@ -345,7 +353,7 @@ def verify_oscillators(render, report):
                               over_half_period=sum(value > MARGIN_NS for value in times)))
 
 
-def main(argv=None, *, inspect_audio=None):
+def main(argv=None, *, inspect_audio=None, legacy_timbre=False):
     parser = argparse.ArgumentParser(description=__doc__)
     profiles = parser.add_mutually_exclusive_group()
     profiles.add_argument("--single-saw", action="store_true", help="rebuild the 0.4.0 single-oscillator voice")
@@ -376,6 +384,7 @@ def main(argv=None, *, inspect_audio=None):
     control_inputs = monitor and not args.monitor
     midi = control_inputs and not args.control_inputs
     factory = midi and not args.midi
+    calibrated = midi and not legacy_timbre
     profile_version = VERSION if modulation else "0.6.0" if emphasis else "0.5.0" if bank else "0.4.0"
     version = args.package or (f"{profile_version}-dev" if performance else profile_version)
     schema = parameter_schema(bank, emphasis, modulation, performance, external, feedback, output, monitor, control_inputs)
@@ -401,14 +410,16 @@ def main(argv=None, *, inspect_audio=None):
         report["fir_sha256"] = sha(fir)
         modules = dict(voice=ROOT / "tools/rf_d_reduced_voice.rs", pi_coefficients=fir)
         if bank:
-            modules["oscillator_tables"] = oscillator_tables(report)
+            modules["oscillator_tables"] = oscillator_tables(report, calibrated=calibrated)
             modules["voice_programs"] = emit_program_table(programs)
         else:
             wave, report["h128_sha256"] = generate_wave()
             modules["wave"] = wave
             report["wave_sha256"] = sha(wave)
         if emphasis:
-            modules["emphasis_coefficients"] = emphasis_table(report)
+            modules["emphasis_coefficients"] = emphasis_table(report, calibrated=calibrated)
+        if calibrated:
+            modules["cutoff_coefficients"] = calibrated_cutoff_table(report)
         if control_inputs:
             modules["loudness_cv_coefficients"] = loudness_table(report)
         code = "".join(f'#[path = "{path.as_posix()}"] mod {name};\n' for name, path in modules.items())
@@ -434,11 +445,12 @@ def main(argv=None, *, inspect_audio=None):
             monitor_flags = ("--cfg", "pilot_voice_monitor") if monitor else ()
             cv_flags = ("--cfg", "pilot_voice_control_inputs") if control_inputs else ()
             midi_flags = ("--cfg", "pilot_voice_midi") if midi else ()
+            calibrated_flags = ("--cfg", "pilot_calibrated_filter") if calibrated else ()
             execute(*flags, "--edition=2021", "--crate-type", "cdylib", "-C", "panic=abort", "-C", "lto=fat",
                     "--cfg", "pilot_pi", "--cfg", "pilot_returns", "--cfg", "pilot_host_blocks",
                     "--cfg", "pilot_voice_contours", *bank_flags, *filter_flags, *modulation_flags,
                     *performance_flags, *external_flags, *feedback_flags, *output_flags, *monitor_flags, *cv_flags,
-                    *midi_flags, guest,
+                    *midi_flags, *calibrated_flags, guest,
                     "--extern", f"rackforge_plugin_sdk={sdk}", "-o", component)
             execute(WASM_OPT, component, "-O4", "-o", optimized)
 
@@ -463,12 +475,13 @@ def main(argv=None, *, inspect_audio=None):
             verify_audio(render, report, output)
             if bank:
                 verify_oscillators(render, report)
+            resonance_cutoff = 38.8 if calibrated else 65
             if emphasis:
-                verify_filter(render, report)
+                verify_filter(render, report, cutoff=resonance_cutoff)
             if modulation:
-                verify_modulation(render, report)
+                verify_modulation(render, report, cutoff=41 if calibrated else 67)
             if performance:
-                verify_keyboard(render, report)
+                verify_keyboard(render, report, cutoff=resonance_cutoff)
             if external:
                 verify_external(render, report)
             if feedback:
@@ -478,7 +491,7 @@ def main(argv=None, *, inspect_audio=None):
             if monitor:
                 verify_monitor(render, report)
             if control_inputs:
-                verify_control_inputs(render, report)
+                verify_control_inputs(render, report, cutoff=resonance_cutoff)
             if midi:
                 verify_midi(render, report)
             if factory:
@@ -519,7 +532,7 @@ def main(argv=None, *, inspect_audio=None):
                 archive.replace(artifact)
         report["passed"] = True
         if factory and not args.package:
-            write(ROOT / "evidence/rf_d_voice_development08.json", report)
+            write(ROOT / "evidence/rf_d_voice_development09.json", report)
         if args.package:
             print(f"{artifact}\n{report['archive_sha256']}")
         else:

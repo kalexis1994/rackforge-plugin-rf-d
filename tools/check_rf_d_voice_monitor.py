@@ -58,11 +58,12 @@ def verify_monitor(render, report):
 
     # Drive the shared VCA output with two in-band frequencies through EXT.
     frames = np.arange(43200)
-    samples = 0.15 * (np.sin(2. * np.pi * 40. * frames / 48000.) +
+    samples = 0.075 * (np.sin(2. * np.pi * 40. * frames / 48000.) +
                       np.sin(2. * np.pi * 440. * frames / 48000.))
     score = [change(0, 100), change(1, 0), change(14, 0), change(37, 1),
              change(38, 55), [960, 0x90, 57, 100]]
     external_hi, _ = render(score, samples=samples)
+    assert np.max(abs(external_hi)) < 0.8
     response = {}
     for level in (0.25, 0.5, 1.):
         external_j7, _ = render([phones, change(43, level * 100.), *score], samples=samples)

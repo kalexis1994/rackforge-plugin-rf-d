@@ -24,6 +24,8 @@ def linear_threshold(step):
         return phase, abs(delay * stage**4 * math.prod(capacitors))
 
     low, high = 1e-12, 0.8
+    if loop(high)[0] >= -np.pi:
+        high = np.pi - 1e-6
     assert loop(low)[0] > -np.pi and loop(high)[0] < -np.pi
     for _ in range(48):
         middle = (low + high) / 2.
@@ -37,8 +39,10 @@ def linear_threshold(step):
     return float(1. / magnitude), omega * RATE / (2. * np.pi)
 
 
-def emphasis_table(report):
-    logs = LOG2_MIN + np.arange(10 * STEPS_PER_OCTAVE + 1) / STEPS_PER_OCTAVE
+def emphasis_table(report, *, calibrated=False):
+    log2_max = -0.75 if calibrated else -2
+    intervals = round((log2_max - LOG2_MIN) * STEPS_PER_OCTAVE)
+    logs = LOG2_MIN + np.arange(intervals + 1) / STEPS_PER_OCTAVE
     gains = [linear_threshold(step)[0] for step in np.exp2(logs)]
     points = [linear_threshold(step)[0] for step in np.exp2((logs[:-1] + logs[1:]) / 2.)]
     error = max(abs((a + b) / (2. * exact) - 1.)
@@ -87,11 +91,11 @@ def rms(signal):
     return float(np.sqrt(np.mean(signal.astype(np.float64)**2)))
 
 
-def verify_filter(render, report):
+def verify_filter(render, report, *, cutoff=65):
     window = slice(24_000, 41_280)
-    reference, _ = render(filter_score())
-    off, _ = render(filter_score(emphasis=0))
-    damped, _ = render(filter_score(emphasis=80, excite=True))
+    reference, _ = render(filter_score(cutoff=cutoff))
+    off, _ = render(filter_score(emphasis=0, cutoff=cutoff))
+    damped, _ = render(filter_score(emphasis=80, cutoff=cutoff, excite=True))
     assert not np.any(off)
     damping = [rms(damped[start:end]) for start, end in ((7500, 8000), (9000, 10500), (24000, 41280))]
     assert damping[0] > 0.005 and damping[2] < 0.001 * damping[0], damping
@@ -102,14 +106,14 @@ def verify_filter(render, report):
 
     frequencies = {}
     for thirds in (0, 1, 2, 3):
-        moved, _ = render(filter_score(69, thirds=thirds))
+        moved, _ = render(filter_score(69, thirds=thirds, cutoff=cutoff))
         hz, _ = peak_frequency(moved[window])
         frequencies[thirds] = hz
         assert abs(hz / baseline_hz / (2**(thirds / 3.)) - 1.) < 0.035, (thirds, hz, baseline_hz)
         if not thirds:
             assert np.array_equal(reference, moved)
 
-    legato_score = filter_score(69, thirds=3) + [[24001, 0x90, 57, 100], [48001, 0x80, 57, 0]]
+    legato_score = filter_score(69, thirds=3, cutoff=cutoff) + [[24001, 0x90, 57, 100], [48001, 0x80, 57, 0]]
     legato, times = render(legato_score, frames=72000)
     assert all(np.array_equal(legato, render(legato_score, block, frames=72000)[0])
                for block in (127, 480, 4096))

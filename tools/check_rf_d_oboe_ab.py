@@ -152,7 +152,7 @@ def main():
             write(RECEIPT, report)
         print(json.dumps(report, indent=2, allow_nan=False))
 
-    build_voice(["--midi"], inspect_audio=inspect)
+    build_voice(["--midi"], inspect_audio=inspect, legacy_timbre=True)
 
 
 if __name__ == "__main__":
