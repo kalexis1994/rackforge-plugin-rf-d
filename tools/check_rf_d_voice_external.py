@@ -70,7 +70,7 @@ def verify_external(render, report):
 
 
 def verify_host_capture(execute, render, folder, package, report, feedback=False, monitor_schema=None,
-                        control_inputs=False):
+                        control_inputs=False, midi_score=None):
     deps = HOST / "target/release/deps"
     core, midi = deps / HOST_CORE, deps / MIDI_LIB
     registry = Path(COMPILER).parents[4] / ".cargo/registry/src"
@@ -86,12 +86,18 @@ def verify_host_capture(execute, render, folder, package, report, feedback=False
     fixture = folder / "capture.f32"
     fixture.write_bytes(samples.tobytes())
 
-    def compare(preset, controls, receipt, independent, state=None):
-        expected, _ = render([*controls, KEY], samples=samples)
+    def compare(preset, controls, receipt, independent, state=None, score=None):
+        midi = [KEY] if score is None else [[*event, True] for event in score]
+        expected, _ = render([*controls, *midi], samples=samples)
         missing = expected if independent else np.zeros_like(expected)
         capture = report[receipt] = {}
+        state_args = (state,) if state is not None else ()
+        if score is not None:
+            events = folder / "midi-score.bin"
+            events.write_bytes(b"".join(frame.to_bytes(4, "little") + bytes(message)
+                                        for frame, *message in score))
+            state_args = (state or "-", events)
         for block in (128, 480, 4096):
-            state_args = (state,) if state is not None else ()
             raw, logs = execute(probe, package, folder / "state", fixture, block, preset, *state_args)
             stereo = np.frombuffer(raw, dtype="<f4").reshape(2, len(samples), 2)
             for audio, target in zip(stereo, (expected, missing)):
@@ -122,4 +128,8 @@ def verify_host_capture(execute, render, folder, package, report, feedback=False
         compare_state("monitor", {41: 0., 42: 2., 43: 65., 44: 1.}, "host_monitor")
     if control_inputs:
         compare_state("control-inputs", {45: 0.5, 46: -0.5, 47: 3.2, 48: 1.}, "host_control_inputs")
+    if midi_score is not None:
+        compare("default", [], "host_midi", independent=True, score=midi_score)
+        for result in report["host_midi"][128]:
+            assert result["deadline_misses"] == 0 and result["max_ns"] < 128e9 / RATE / 2, result
     report["host_capture_libraries"] = {library.name: sha(library) for library in (core, midi)}

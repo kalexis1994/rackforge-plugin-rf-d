@@ -2,6 +2,8 @@
 use crate::oscillator_tables::{HARMONICS, SAMPLES, WAVES};
 
 const AUDIO_BAND_HZ: f64 = 20_000.;
+#[cfg(pilot_voice_midi)]
+const FIR_CUTOFF_HZ: f64 = 22_000.;
 const OCTAVES: [f64; 6] = [-6., -2., -1., 0., 1., 2.];
 const FREE_OSC3_HZ: f64 = 220.;
 const MIX_RAMP_FRAMES: f64 = 64.;
@@ -78,6 +80,8 @@ struct Oscillator {
     increment: f64,
     band: usize,
     blend: f64,
+    #[cfg(pilot_voice_midi)]
+    band_gain: f64,
     // Fraction of the mixer switch and level after dezippering.
     mix: Option<[f64; 2]>,
 }
@@ -90,6 +94,10 @@ impl Oscillator {
         self.last_pitch = Some((base_hz, octaves));
         let frequency = base_hz * octaves.exp2();
         self.increment = frequency / rate;
+        #[cfg(pilot_voice_midi)]
+        {
+            self.band_gain = ((FIR_CUTOFF_HZ - frequency) / (FIR_CUTOFF_HZ - AUDIO_BAND_HZ)).clamp(0., 1.);
+        }
         self.band = HARMONICS
             .iter()
             .position(|&count| frequency * f64::from(count) <= AUDIO_BAND_HZ)
@@ -147,16 +155,23 @@ impl Oscillator {
         self.update_pitch(base_hz, octaves, rate);
         self.phase += self.increment;
         if self.phase >= 1. {
-            self.phase -= 1.;
+            #[cfg(pilot_voice_midi)]
+            { self.phase -= self.phase.floor(); }
+            #[cfg(not(pilot_voice_midi))]
+            { self.phase -= 1.; }
         }
 
         let target = [f64::from(settings.enabled), settings.level];
         let [connection, level] = smooth_mix(&mut self.mix, target, ramp);
         let gain = connection * level;
-        let raw = if gain != 0. || (cfg!(pilot_voice_modulation) && index == 2) {
+        #[cfg(pilot_voice_midi)]
+        let band_gain = self.band_gain;
+        #[cfg(not(pilot_voice_midi))]
+        let band_gain = 1.;
+        let raw = if band_gain != 0. && (gain != 0. || (cfg!(pilot_voice_modulation) && index == 2)) {
             let reverse = index == 2 && settings.shape == 1;
             let shape = if reverse { 2 } else { settings.shape };
-            self.wave(shape, reverse)
+            self.wave(shape, reverse) * band_gain
         } else {
             0.
         };

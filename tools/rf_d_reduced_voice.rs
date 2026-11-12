@@ -14,6 +14,9 @@ pub mod modulation;
 #[cfg(pilot_voice_performance)]
 #[path = "rf_d_voice_keyboard.rs"]
 pub mod keyboard;
+#[cfg(pilot_voice_midi)]
+#[path = "rf_d_voice_midi.rs"]
+pub mod midi;
 #[cfg(pilot_voice_external)]
 #[path = "rf_d_voice_external.rs"]
 pub mod external;
@@ -48,14 +51,19 @@ const TABLE: usize = wave::SAW.len();
 
 #[derive(Clone, Copy)]
 pub enum Message {
+    #[cfg(pilot_voice_midi)]
+    Midi(u8, midi::Action),
+    #[cfg(not(pilot_voice_midi))]
     NoteOn(u8),
+    #[cfg(not(pilot_voice_midi))]
     NoteOff(u8),
+    #[cfg(not(pilot_voice_midi))]
     AllNotesOff,
     #[cfg(pilot_voice_modulation)]
     ModWheel(u8),
     #[cfg(pilot_voice_performance)]
     PitchBend(u16),
-    #[cfg(pilot_voice_performance)]
+    #[cfg(all(pilot_voice_performance, not(pilot_voice_midi)))]
     ResetControllers,
 }
 
@@ -221,7 +229,10 @@ pub struct Voice<const FACTOR: usize> {
     circuit: plant::State,
     #[cfg(pilot_voice_contours)]
     ladder: ladder::Ladder,
+    #[cfg(not(pilot_voice_midi))]
     held: u64,
+    #[cfg(pilot_voice_midi)]
+    notes: midi::Notes,
     #[cfg(pilot_voice_filter)]
     last_note: u8,
     #[cfg(not(pilot_oscillator_bank))]
@@ -280,7 +291,10 @@ impl<const FACTOR: usize> Voice<FACTOR> {
             circuit: plant::State::dc(1).unwrap(),
             #[cfg(pilot_voice_contours)]
             ladder: ladder::Ladder::new((RATE * FACTOR) as f64),
+            #[cfg(not(pilot_voice_midi))]
             held: 0,
+            #[cfg(pilot_voice_midi)]
+            notes: midi::Notes::default(),
             #[cfg(pilot_voice_filter)]
             last_note: INITIAL_NOTE,
             #[cfg(not(pilot_oscillator_bank))]
@@ -318,13 +332,24 @@ impl<const FACTOR: usize> Voice<FACTOR> {
         }
     }
 
+    fn keys_down(&self) -> bool {
+        #[cfg(not(pilot_voice_midi))]
+        { self.held != 0 }
+        #[cfg(pilot_voice_midi)]
+        { self.notes.pressed != 0 }
+    }
+
     #[cfg(pilot_voice_contours)]
     fn contour_gate(&self) -> bool {
         #[cfg(pilot_voice_control_inputs)]
         let external = self.trigger_closed;
         #[cfg(not(pilot_voice_control_inputs))]
         let external = false;
-        self.held != 0 || external
+        #[cfg(pilot_voice_midi)]
+        let pedal = self.notes.sustained;
+        #[cfg(not(pilot_voice_midi))]
+        let pedal = false;
+        self.keys_down() || pedal || external
     }
 
     #[cfg(pilot_voice_contours)]
@@ -361,6 +386,7 @@ impl<const FACTOR: usize> Voice<FACTOR> {
                 self.keyboard.set_bend(value);
                 return Ok(());
             }
+            #[cfg(not(pilot_voice_midi))]
             Message::ResetControllers => {
                 self.keyboard.set_bend(8192);
                 self.modulation.set_wheel(0);
@@ -370,16 +396,37 @@ impl<const FACTOR: usize> Voice<FACTOR> {
         }
         #[cfg(pilot_voice_contours)]
         let previous_gate = self.contour_gate();
+        #[cfg(not(pilot_voice_midi))]
         match message {
             Message::NoteOn(note @ 36..=72) => self.held |= 1 << (note - 36),
             Message::NoteOff(note @ 36..=72) => self.held &= !(1 << (note - 36)),
             Message::AllNotesOff => self.held = 0,
             _ => return Err(Error::Input),
         }
+        #[cfg(pilot_voice_midi)]
+        {
+            let Message::Midi(channel, action) = message else {
+                return Err(Error::Input);
+            };
+            if !self.notes.apply(channel, action) {
+                return Err(Error::Input);
+            }
+            if matches!(action, midi::Action::ResetControllers) {
+                self.keyboard.set_bend(8192);
+                self.modulation.set_wheel(0);
+            }
+            if matches!(action, midi::Action::AllSoundOff) && !self.contour_gate() {
+                self.contours.fill(contour::Contour::default());
+                return Ok(());
+            }
+        }
         #[cfg(pilot_voice_contours)]
         self.update_contour_gate(previous_gate);
-        if self.held != 0 {
+        if self.keys_down() {
+            #[cfg(not(pilot_voice_midi))]
             let note = self.held.trailing_zeros() + 36;
+            #[cfg(pilot_voice_midi)]
+            let note = self.notes.pressed.trailing_zeros();
             #[cfg(pilot_voice_filter)]
             {
                 self.last_note = note as u8;
@@ -404,7 +451,7 @@ impl<const FACTOR: usize> Voice<FACTOR> {
         let ramp_s = RAMP_S;
         #[cfg(all(pilot_returns, not(pilot_voice_contours)))]
         let ramp_s = 0.001
-            * if self.held != 0 {
+            * if self.keys_down() {
                 panel.attack_ms
             } else {
                 panel.release_ms
@@ -419,7 +466,7 @@ impl<const FACTOR: usize> Voice<FACTOR> {
         for _substep in 0..FACTOR {
             #[cfg(not(pilot_voice_contours))]
             let input_gain = {
-                if self.held != 0 {
+                if self.keys_down() {
                     self.trim = (self.trim + change).min(1.);
                 } else {
                     self.trim = (self.trim - change).max(0.);
@@ -454,7 +501,7 @@ impl<const FACTOR: usize> Voice<FACTOR> {
             #[cfg(all(pilot_voice_filter, not(pilot_voice_performance)))]
             let key_cv = f64::from(self.last_note);
             #[cfg(pilot_voice_performance)]
-            let (key_cv, bend) = self.keyboard.tick(self.held != 0, panel.keyboard);
+            let (key_cv, bend) = self.keyboard.tick(self.keys_down(), panel.keyboard);
             #[cfg(pilot_voice_control_inputs)]
             let [pitch_cv, filter_cv, loudness_gain] = self.rear_cv.tick(panel.control_inputs);
             #[cfg(pilot_voice_control_inputs)]

@@ -16,7 +16,7 @@ use std::{
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<_> = std::env::args_os().collect();
-    assert!(matches!(args.len(), 6 | 7));
+    assert!(matches!(args.len(), 6..=8));
     let package = PluginPackage::open(Path::new(&args[1]))?;
     let plugin =
         unsafe { LoadedPlugin::load(&package, None, &BTreeMap::new(), Some(Path::new(&args[2])))? };
@@ -24,7 +24,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     assert!(!raw.is_empty() && raw.len() % 4 == 0);
     let capacity: usize = args[4].to_str().unwrap().parse()?;
     let preset = args[5].to_str().unwrap();
-    let state = if let Some(path) = args.get(6) {
+    let state = if let Some(path) = args.get(6).filter(|path| *path != "-") {
         RackSlotStateLoad::Opaque(std::fs::read(path)?)
     } else {
         RackSlotStateLoad::LegacyPreset(preset.into())
@@ -37,6 +37,17 @@ fn main() -> Result<(), Box<dyn Error>> {
             [distractor, f32::from_le_bytes(sample.try_into().unwrap())]
         })
         .collect();
+    let events: Vec<(usize, [u8; 3])> = if let Some(path) = args.get(7) {
+        let bytes = std::fs::read(path)?;
+        assert_eq!(bytes.len() % 7, 0);
+        bytes.chunks_exact(7).map(|entry| {
+            (u32::from_le_bytes(entry[..4].try_into().unwrap()) as usize, entry[4..].try_into().unwrap())
+        }).collect()
+    } else {
+        vec![(960, [0x90, 57, 100])]
+    };
+    assert!(events.windows(2).all(|pair| pair[0].0 <= pair[1].0));
+    assert!(events.iter().all(|(frame, _)| *frame < capture.len() / 2));
     let id = plugin.manifest().id.clone();
     let mut source = CompiledAudioSource::HardwareInput {
         bus_id: "main".into(),
@@ -68,17 +79,18 @@ fn main() -> Result<(), Box<dyn Error>> {
         let mut pool = RenderPool::with_workers(0, telemetry.clone());
         let mut layers = ControlLayers::default();
         let mut output = vec![0.; 2 * capacity];
+        let mut events = events.iter().peekable();
         for (block, samples) in capture.chunks(2 * capacity).enumerate() {
             let first = block * capacity;
             let frames = samples.len() / 2;
-            if (first..first + frames).contains(&960) {
+            while let Some(&(frame, data)) = events.next_if(|(frame, _)| *frame < first + frames) {
                 rack.route(
                     IngressMidiEvent {
                         source: MidiSourceKey::new(0),
                         packet: MidiPacket {
-                            frame: (960 - first) as u32,
+                            frame: (frame - first) as u32,
                             length: 3,
-                            data: [0x90, 57, 100],
+                            data,
                             wide: None,
                         },
                     },

@@ -8,7 +8,7 @@ no acredita identidad sonora con una unidad vintage.
 
 ## Motor jugable y referencia offline
 
-La voz monofónica funciona a 48 kHz con MIDI 36–72. Incluye
+La voz monofónica funciona a 48 kHz y acepta MIDI 0–127. Incluye
 tres osciladores, dos contornos, Emphasis, ruido y modulación
 desde la rueda MIDI, glide y pitch bend. El mezclador de
 desarrollo admite entrada externa mono, preamplificación,
@@ -18,6 +18,9 @@ C2, el monitor HI/LO/Phones y el afinador A‑440.
 La página **Control Inputs** expone los CV de osciladores,
 filtro y loudness, y el contacto S‑Trigger.
 [Entradas de control](docs/ENTRADAS_CONTROL_TOCABLES.md).
+La entrada MIDI conserva la prioridad de nota baja y admite
+teclas solapadas por canal, pedal de sustain y corte de emergencia.
+[Interpretación MIDI](docs/MIDI_TOCABLE.md).
 
 `python -B tools/check_rf_d_playable_voice.py` prueba el motor en
 WASM y RackForge desde un directorio temporal y lo retira al terminar.

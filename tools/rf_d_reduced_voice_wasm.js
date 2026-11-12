@@ -150,9 +150,9 @@ for (let start = 0, event = 0; start < frames; start += blockSize) {
     let count = 0;
     let parameterCount = 0;
     while (event < score.length && score[event][0] < start + size) {
-        const [sample, status, note, value = 100] = score[event++];
+        const [sample, status, note, value = 100, literalMidi = false] = score[event++];
         const parameter = writable.get(note - 20);
-        if ((status === 0xb0 || (status === 0xb1 && schema)) && parameter) {
+        if (!literalMidi && (status === 0xb0 || (status === 0xb1 && schema)) && parameter) {
             const at = parameterCount++ * 16;
             parameters.setUint32(at, sample - start, true);
             parameters.setUint32(at + 4, note - 20, true);

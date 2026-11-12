@@ -446,18 +446,39 @@ fn note_event(event: &MidiEvent) -> Option<Event> {
     if event.length != 3 {
         return None;
     }
+    #[cfg(pilot_voice_midi)]
+    let channel = status & 0x0f;
+    #[cfg(pilot_voice_midi)]
+    if note > 127 || velocity > 127 {
+        return None;
+    }
     let message = match (status & 0xf0, note, velocity) {
+        #[cfg(not(pilot_voice_midi))]
         (0x80, 36..=72, _) | (0x90, 36..=72, 0) => Message::NoteOff(note),
+        #[cfg(not(pilot_voice_midi))]
         (0x90, 36..=72, _) => Message::NoteOn(note),
+        #[cfg(pilot_voice_midi)]
+        (0x80, _, _) | (0x90, _, 0) => Message::Midi(channel, voice::midi::Action::NoteOff(note)),
+        #[cfg(pilot_voice_midi)]
+        (0x90, _, _) => Message::Midi(channel, voice::midi::Action::NoteOn(note)),
+        #[cfg(pilot_voice_midi)]
+        (0xb0, 64, value) => Message::Midi(channel, voice::midi::Action::Sustain(value >= 64)),
         #[cfg(pilot_voice_modulation)]
         (0xb0, 1, 0..=127) => Message::ModWheel(velocity),
         #[cfg(all(pilot_voice_modulation, not(pilot_voice_performance)))]
         (0xb0, 121, _) => Message::ModWheel(0),
-        #[cfg(pilot_voice_performance)]
+        #[cfg(all(pilot_voice_performance, not(pilot_voice_midi)))]
         (0xb0, 121, _) => Message::ResetControllers,
+        #[cfg(pilot_voice_midi)]
+        (0xb0, 121, _) => Message::Midi(channel, voice::midi::Action::ResetControllers),
         #[cfg(pilot_voice_performance)]
         (0xe0, low @ 0..=127, high @ 0..=127) => Message::PitchBend(u16::from(low) | u16::from(high) << 7),
+        #[cfg(not(pilot_voice_midi))]
         (0xb0, 120 | 123, _) => Message::AllNotesOff,
+        #[cfg(pilot_voice_midi)]
+        (0xb0, 120, _) => Message::Midi(channel, voice::midi::Action::AllSoundOff),
+        #[cfg(pilot_voice_midi)]
+        (0xb0, 123, _) => Message::Midi(channel, voice::midi::Action::AllNotesOff),
         _ => return None,
     };
     Some(Event {
@@ -708,7 +729,10 @@ impl Guest {
         let span = first_frame..first_frame + frames;
         let mut events = [Event {
             offset: 0,
+            #[cfg(not(pilot_voice_midi))]
             message: Message::AllNotesOff,
+            #[cfg(pilot_voice_midi)]
+            message: Message::Midi(0, voice::midi::Action::AllNotesOff),
         }; 256];
         let mut count = 0;
         for mut event in midi

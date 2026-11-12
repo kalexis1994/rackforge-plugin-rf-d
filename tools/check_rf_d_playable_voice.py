@@ -24,6 +24,7 @@ from check_rf_d_voice_feedback import verify_feedback
 from check_rf_d_voice_output import verify_output
 from check_rf_d_voice_monitor import verify_monitor
 from check_rf_d_voice_control_inputs import loudness_table, verify_control_inputs
+from check_rf_d_voice_midi import HOST_SCORE, verify_midi
 
 VERSION = "0.7.0"
 PLUGIN_ID = "org.rackforge.lab.rf-d-voice"
@@ -113,7 +114,7 @@ def parameter_schema(bank, emphasis, modulation, performance, external, feedback
     return schema
 
 
-def package_template(destination, schema, version, bank, emphasis, modulation, external, feedback):
+def package_template(destination, schema, version, bank, emphasis, modulation, external, feedback, midi):
     shutil.copytree(PACKAGE, destination)
     write(destination / "metadata/parameters.json", schema)
     for relative in ("rackforge-plugin.toml", "metadata/runtime.json", "metadata/presets.json"):
@@ -209,10 +210,11 @@ def package_template(destination, schema, version, bank, emphasis, modulation, e
         </div>
       </section>""")
     voice_label = "THREE OSCILLATORS" if bank else "SINGLE SAW"
+    midi_label = "MIDI 0–127 · LOW-NOTE PRIORITY · SUSTAIN" if midi else "MIDI 36–72 · LOW-NOTE PRIORITY"
     html.write_text(header + f"""    <div class="controls">
 {chr(10).join(sections)}
     </div>
-    <footer><span>MIDI 36–72 · LOW-NOTE PRIORITY</span><span>{voice_label} · v{version}</span></footer>
+    <footer><span>{midi_label}</span><span>{voice_label} · v{version}</span></footer>
   </main>
 </body>
 </html>
@@ -371,6 +373,7 @@ def main():
     profiles.add_argument("--feedback", action="store_true", help="select the LO feedback development profile")
     profiles.add_argument("--main-output", action="store_true", help="select the HI/LO development profile")
     profiles.add_argument("--monitor", action="store_true", help="select the Phones and A-440 development profile")
+    profiles.add_argument("--control-inputs", action="store_true", help="select the rear-jack development profile")
     parser.add_argument("--package", metavar="VERSION", help="export one .rfplugin for the selected profile")
     args = parser.parse_args()
     if args.package and not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?", args.package):
@@ -384,6 +387,7 @@ def main():
     output = feedback and not args.feedback
     monitor = output and not args.main_output
     control_inputs = monitor and not args.monitor
+    midi = control_inputs and not args.control_inputs
     profile_version = VERSION if modulation else "0.6.0" if emphasis else "0.5.0" if bank else "0.4.0"
     version = args.package or (f"{profile_version}-dev" if performance else profile_version)
     schema = parameter_schema(bank, emphasis, modulation, performance, external, feedback, output, monitor, control_inputs)
@@ -435,10 +439,12 @@ def main():
             output_flags = ("--cfg", "pilot_voice_output") if output else ()
             monitor_flags = ("--cfg", "pilot_voice_monitor") if monitor else ()
             cv_flags = ("--cfg", "pilot_voice_control_inputs") if control_inputs else ()
+            midi_flags = ("--cfg", "pilot_voice_midi") if midi else ()
             execute(*flags, "--edition=2021", "--crate-type", "cdylib", "-C", "panic=abort", "-C", "lto=fat",
                     "--cfg", "pilot_pi", "--cfg", "pilot_returns", "--cfg", "pilot_host_blocks",
                     "--cfg", "pilot_voice_contours", *bank_flags, *filter_flags, *modulation_flags,
-                    *performance_flags, *external_flags, *feedback_flags, *output_flags, *monitor_flags, *cv_flags, guest,
+                    *performance_flags, *external_flags, *feedback_flags, *output_flags, *monitor_flags, *cv_flags,
+                    *midi_flags, guest,
                     "--extern", f"rackforge_plugin_sdk={sdk}", "-o", component)
             execute(WASM_OPT, component, "-O4", "-o", optimized)
 
@@ -475,8 +481,10 @@ def main():
                 verify_monitor(render, report)
             if control_inputs:
                 verify_control_inputs(render, report)
+            if midi:
+                verify_midi(render, report)
             template = folder / "package"
-            package_template(template, schema, version, bank, emphasis, modulation, external, feedback)
+            package_template(template, schema, version, bank, emphasis, modulation, external, feedback, midi)
             if args.package:
                 artifact = ROOT / f"artifacts/rf-d-voice-{version}.rfplugin"
                 archive, store = folder / artifact.name, folder / "store"
@@ -490,7 +498,7 @@ def main():
                 host_package = template
             if external:
                 verify_host_capture(execute, render, folder, host_package, report, feedback,
-                                    schema if monitor else None, control_inputs)
+                                    schema if monitor else None, control_inputs, HOST_SCORE if midi else None)
             report["host_stress"] = {}
             preset = ("loop_drive" if feedback else "wheel_motion" if modulation else "resonant_bass" if emphasis
                       else "three_oscillators" if bank else "default")
@@ -509,13 +517,13 @@ def main():
                 artifact.parent.mkdir(exist_ok=True)
                 archive.replace(artifact)
         report["passed"] = True
-        if control_inputs and not args.package:
-            write(ROOT / "evidence/rf_d_voice_development06.json", report)
+        if midi and not args.package:
+            write(ROOT / "evidence/rf_d_voice_development07.json", report)
         if args.package:
             print(f"{artifact}\n{report['archive_sha256']}")
         else:
             print("WASM and RackForge checks passed with no archive")
-        result_keys = ("control_inputs_audio", "monitor_audio", "output_audio", "feedback_audio", "external_audio", "keyboard_audio", "modulation_audio", "filter_audio",
+        result_keys = ("midi_audio", "control_inputs_audio", "monitor_audio", "output_audio", "feedback_audio", "external_audio", "keyboard_audio", "modulation_audio", "filter_audio",
                        "oscillator_audio", "audio")
         results = next(report[key] for key in result_keys if key in report)
         print(json.dumps(results, indent=2))
@@ -523,7 +531,7 @@ def main():
         fields = ("audio", "oscillator_audio", "filter_audio", "modulation_audio", "keyboard_audio",
                   "external_audio", "feedback_audio", "output_audio", "monitor_audio",
                   "loudness_cv_table", "control_inputs_audio", "host_capture", "host_feedback", "host_monitor",
-                  "host_control_inputs",
+                  "host_control_inputs", "midi_audio", "host_midi",
                   "node_128_ns", "host_stress")
         print(json.dumps({key: report[key] for key in fields if key in report},
                          indent=2), flush=True)
