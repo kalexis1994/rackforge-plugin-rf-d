@@ -73,5 +73,29 @@ La prueba ABI verifica los 26 parámetros, los dos presets y la lectura de
 los 11 valores del estado de 0.4.0 con los osciladores nuevos en sus
 valores iniciales. RackForge puede fijar la versión de plugin en un
 proyecto guardado. `--single-saw` permite regenerar el paquete 0.4.0
-para esos proyectos. El estrés en RackForge es offline con los tres
-osciladores activos. Queda pendiente la escucha con salida física.
+para esos proyectos. El estrés offline de RackForge usa los tres
+osciladores activos.
+
+## Medición con salida física
+
+`python -B tools/check_rf_d_playable_voice_asio.py` instala el mismo
+paquete por hash en un store temporal, carga el preset de tres
+osciladores en un slot y alterna MIDI 57 y 45 en legato. El banco
+silencia los buffers del dispositivo después de medir el render.
+ASIO4ALL/NVIDIA confirmó 128 frames efectivos a 48 kHz, alternancia
+de buffer y restauración del perfil. Queda pendiente la escucha.
+
+| Pase | Callbacks | Mediana | Máximo | Sobre 1,333 ms | Plazos perdidos |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Control sin nota | 1200 | 0,0884 ms | 0,2036 ms | 0 | 0 |
+| Tres osciladores 1 | 4800 | 0,0896 ms | 0,4923 ms | 0 | 0 |
+| Tres osciladores 2 | 4800 | 0,0899 ms | 0,1651 ms | 0 | 0 |
+
+Los dos pases activos tuvieron cero errores, avisos, fallos de slot e
+intervalos superiores a 1,5 períodos. El control registró ocho avisos.
+El criterio completo de admisión sigue abierto. El host registró una
+asignación por callback, también en el control. El
+[contraste de get_fuel](RECOVERY_ENGINE128_FUEL_RESULTADOS.md) identificó
+ese patrón en el host base y eliminó la asignación en el host corregido.
+Este paquete todavía requiere confirmación con ese host.
+[Recibo ASIO](../evidence/rf_d_playable_voice_asio01.json).
