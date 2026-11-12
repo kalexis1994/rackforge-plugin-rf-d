@@ -253,6 +253,28 @@ El contraste de Filter CV usa la frecuencia que predice la
 etapa discreta para cada corriente, con la tolerancia anterior.
 [Pruebas del motor](../evidence/rf_d_voice_development09.json).
 
+### Ajuste del Oboe a la toma de SynthMania
+
+El A/B calibrado conservaba la diferencia que se oía en
+los agudos. En Fa4, la banda de 2,2–4 kHz quedaba 21,1 dB
+por debajo del Minimoog y la de 4–8 kHz, 30,7 dB por debajo.
+Las dos relaciones usan la energía total de la nota.
+
+Se compararon cinco bandas entre 700 Hz y 16 kHz y se
+seleccionaron Cutoff 72 % y Emphasis 40 % con el Fa4 y el
+Sol4 de las ventanas 275–430 y 600–720 ms. En las otras
+cinco notas de la misma frase, la diferencia media por
+banda bajó de 15,1 a 2,0 dB. En Fa4 quedaron 2,1 dB de
+diferencia entre 2,2 y 4 kHz y 0,1 dB entre 4 y 8 kHz.
+Las posiciones elegidas corresponden al ajuste de esta
+captura y se conservan como valores del patch de escucha.
+[Mediciones por nota y búsqueda](../evidence/rf_d_oboe_spectrum01.json).
+
+`python -B tools/check_rf_d_oboe_spectrum.py --audition --write-report`
+genera `artifacts/rf-d-oboe-brillo-ab.wav` a −22 dBFS RMS.
+La secuencia empieza con Minimoog y RF-D ajustado. Después
+repite Minimoog y reproduce RF-D con los valores de la ficha.
+
 ## Cómo escuchar y medir
 
 Para el A/B musical hay que identificar la nota, su duración y
