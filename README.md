@@ -11,8 +11,8 @@ no acredita identidad sonora con una unidad vintage.
 La voz monofónica funciona a 48 kHz con MIDI 36–72. Incluye
 tres osciladores, dos contornos, Emphasis, ruido y modulación
 desde la rueda MIDI, glide y pitch bend. El mezclador de
-desarrollo admite entrada externa mono, preamplificación y
-sobrecarga. [Controles y verificación](docs/ENTRADA_EXTERNA_TOCABLE.md).
+desarrollo admite entrada externa mono, preamplificación,
+sobrecarga y realimentación LO. [Controles y verificación](docs/REALIMENTACION_TOCABLE.md).
 
 `python -B tools/check_rf_d_playable_voice.py` prueba el motor en
 WASM y RackForge desde un directorio temporal y lo retira al terminar.

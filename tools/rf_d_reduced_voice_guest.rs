@@ -66,11 +66,17 @@ const MOD_DEFAULTS: [f64; 6] = [0., 35., 0., 0., 0., 0.];
 const MOD_END: usize = FILTER_END + MOD_DEFAULTS.len();
 #[cfg(pilot_oscillator_bank)]
 const KEYBOARD_END: usize = MOD_END + 2;
-#[cfg(pilot_voice_external)]
-const OVERLOAD_INDEX: u32 = (KEYBOARD_END + 2) as u32;
 #[cfg(pilot_oscillator_bank)]
-const CONTROL_COUNT: usize = if cfg!(pilot_voice_external) {
-    KEYBOARD_END + 2
+const EXTERNAL_END: usize = KEYBOARD_END + 2;
+#[cfg(pilot_voice_external)]
+const OVERLOAD_INDEX: u32 = EXTERNAL_END as u32;
+#[cfg(pilot_voice_feedback)]
+const FEEDBACK_INDEX: u32 = OVERLOAD_INDEX + 1;
+#[cfg(pilot_oscillator_bank)]
+const CONTROL_COUNT: usize = if cfg!(pilot_voice_feedback) {
+    EXTERNAL_END + 1
+} else if cfg!(pilot_voice_external) {
+    EXTERNAL_END
 } else if cfg!(pilot_voice_performance) {
     KEYBOARD_END
 } else if cfg!(pilot_voice_modulation) {
@@ -120,6 +126,10 @@ impl Default for Controls {
 
 #[cfg(pilot_returns)]
 fn control_index(index: u32, value: f64) -> Option<usize> {
+    #[cfg(pilot_voice_feedback)]
+    if index == FEEDBACK_INDEX {
+        return (value == 0. || value == 1.).then_some(EXTERNAL_END);
+    }
     let index = index as usize;
     #[cfg(pilot_voice_external)]
     if index >= KEYBOARD_END {
@@ -213,6 +223,11 @@ impl Controls {
                 level: self.0[KEYBOARD_END + 1] * 0.01,
                 input: 0.,
             },
+            #[cfg(pilot_voice_feedback)]
+            feedback: voice::feedback::Controls {
+                connected: self.0[EXTERNAL_END] == 1.,
+                output_level: self.master(),
+            },
             contours: voice::Contours {
                 volume: voice::contour::Settings {
                     attack_ms: volume_a,
@@ -300,6 +315,12 @@ impl Guest {
                 panel.external.input = f64::from(sample.clamp(-1., 1.));
             }
             *master = controls.master();
+            #[cfg(pilot_voice_feedback)]
+            {
+                self.master += (*master - self.master).clamp(-1. / 64., 1. / 64.);
+                *master = self.master;
+                panel.feedback.output_level = self.master;
+            }
         }
         self.voice
             .as_mut()
@@ -313,7 +334,11 @@ impl Guest {
         }
         for ((stereo, frame), master) in output.chunks_exact_mut(2).zip(frames).zip(masters) {
             // A full-scale fader move settles in 64 host frames.
-            self.master += (master - self.master).clamp(-1. / 64., 1. / 64.);
+            #[cfg(not(pilot_voice_feedback))]
+            let master = {
+                self.master += (master - self.master).clamp(-1. / 64., 1. / 64.);
+                self.master
+            };
             #[cfg(pilot_voice_contours)]
             let signal = frame.sample;
             #[cfg(pilot_oscillator_bank)]
@@ -323,10 +348,10 @@ impl Guest {
             };
             #[cfg(not(pilot_voice_contours))]
             let signal = frame.j7_v / voice::AUDITION_VOLTS_PER_FULL_SCALE;
-            let sample = if self.master == 0. {
+            let sample = if master == 0. {
                 0.
             } else {
-                (signal * self.master) as f32
+                (signal * master) as f32
             };
             stereo.fill(sample);
         }
@@ -403,6 +428,10 @@ impl Processor for Guest {
 
     #[cfg(pilot_returns)]
     fn get_parameter(&self, index: u32) -> Option<f64> {
+        #[cfg(pilot_voice_feedback)]
+        if index == FEEDBACK_INDEX {
+            return Some(self.controls.0[EXTERNAL_END]);
+        }
         #[cfg(pilot_voice_external)]
         if index == OVERLOAD_INDEX {
             return Some(self.overload);
@@ -438,13 +467,18 @@ impl Processor for Guest {
         let valid_length = valid_length || bytes.len() == 4 + MOD_END * 8;
         #[cfg(pilot_voice_external)]
         let valid_length = valid_length || bytes.len() == 4 + KEYBOARD_END * 8;
+        #[cfg(pilot_voice_feedback)]
+        let valid_length = valid_length || bytes.len() == 4 + EXTERNAL_END * 8;
         if !valid_length || &bytes[..4] != STATE_TAG {
             return false;
         }
         let mut candidate = Controls::default();
         for (index, word) in bytes[4..].chunks_exact(8).enumerate() {
             let value = f64::from_le_bytes(word.try_into().unwrap());
-            if control_index(index as u32, value).is_none() {
+            let parameter = index as u32;
+            #[cfg(pilot_voice_feedback)]
+            let parameter = if index == EXTERNAL_END { FEEDBACK_INDEX } else { parameter };
+            if control_index(parameter, value).is_none() {
                 return false;
             }
             candidate.0[index] = value;
@@ -454,6 +488,18 @@ impl Processor for Guest {
     }
 
     fn load_preset(&mut self, id: &str) -> bool {
+        #[cfg(pilot_voice_feedback)]
+        if id == "loop_drive" {
+            self.controls = Controls::default();
+            self.controls.0[0] = 78.;
+            self.controls.0[2] = 75.;
+            self.controls.0[3] = 90.;
+            self.controls.0[26] = 32.;
+            self.controls.0[KEYBOARD_END] = 1.;
+            self.controls.0[KEYBOARD_END + 1] = 72.;
+            self.controls.0[EXTERNAL_END] = 1.;
+            return true;
+        }
         #[cfg(pilot_voice_external)]
         if id == "external_filter" {
             self.controls = Controls::default();

@@ -46,7 +46,12 @@ impl Preamp {
         }
     }
 
-    pub fn tick(&mut self, controls: Controls, fraction: f64) -> [f64; 2] {
+    pub fn tick(
+        &mut self,
+        controls: Controls,
+        fraction: f64,
+        #[cfg(pilot_voice_feedback)] feedback: [f64; 2],
+    ) -> [f64; 2] {
         let input = self.previous + fraction * (controls.input - self.previous);
         if fraction == 1. {
             self.previous = controls.input;
@@ -57,6 +62,8 @@ impl Preamp {
             self.ramp,
         );
         let input_v = INPUT_VOLTS_PER_FS * level * input;
+        #[cfg(pilot_voice_feedback)]
+        let input_v = input_v * (1. - feedback[1]) + level * feedback[1] * feedback[0];
         self.coupling[0] += self.steps[0] * (input_v - self.coupling[0]);
         let drive = PREAMP_GAIN * (input_v - self.coupling[0]);
         let limited = PREAMP_SWING_V * (drive / PREAMP_SWING_V).tanh();

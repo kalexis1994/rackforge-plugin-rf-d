@@ -16,13 +16,14 @@ use std::{
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<_> = std::env::args_os().collect();
-    assert_eq!(args.len(), 5);
+    assert_eq!(args.len(), 6);
     let package = PluginPackage::open(Path::new(&args[1]))?;
     let plugin =
         unsafe { LoadedPlugin::load(&package, None, &BTreeMap::new(), Some(Path::new(&args[2])))? };
     let raw = std::fs::read(&args[3])?;
     assert!(!raw.is_empty() && raw.len() % 4 == 0);
     let capacity: usize = args[4].to_str().unwrap().parse()?;
+    let preset = args[5].to_str().unwrap();
     let capture: Vec<f32> = raw
         .chunks_exact(4)
         .enumerate()
@@ -42,7 +43,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let slot = RackSlotRuntimeSpec {
         slot_id: "rf-d-external".into(),
         plugin_id: id.clone(),
-        state: RackSlotStateLoad::LegacyPreset("external_filter".into()),
+        state: RackSlotStateLoad::LegacyPreset(preset.into()),
         midi_stages: vec![],
         audio_sources: vec![source],
         sends_to_main: true,
@@ -93,12 +94,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                 }),
                 output,
             )?;
-            if inputs[1] == 2 {
-                for sample in output {
-                    writer.write_all(&sample.to_le_bytes())?;
-                }
-            } else {
-                assert!(output.iter().all(|sample| *sample == 0.));
+            for sample in output {
+                writer.write_all(&sample.to_le_bytes())?;
             }
         }
         let measured = telemetry.snapshot_and_reset();

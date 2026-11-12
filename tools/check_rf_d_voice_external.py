@@ -69,7 +69,7 @@ def verify_external(render, report):
                                                                   maximum=max(metrics["timings"])))
 
 
-def verify_host_capture(execute, render, folder, package, report):
+def verify_host_capture(execute, render, folder, package, report, feedback=False):
     deps = HOST / "target/release/deps"
     core, midi = deps / HOST_CORE, deps / MIDI_LIB
     registry = Path(COMPILER).parents[4] / ".cargo/registry/src"
@@ -82,18 +82,28 @@ def verify_host_capture(execute, render, folder, package, report):
             *[arg for path in native_dirs for arg in ("-L", f"native={path}")],
             source, "--extern", f"rackforge_core={core}", "--extern", f"rackforge_midi_api={midi}", "-o", probe)
     samples = sine(0.65)
-    expected, _ = render([*PRESET, KEY], samples=samples)
     fixture = folder / "capture.f32"
     fixture.write_bytes(samples.tobytes())
-    capture = report["host_capture"] = {}
-    for block in (128, 480, 4096):
-        raw, logs = execute(probe, package, folder / "state", fixture, block)
-        stereo = np.frombuffer(raw, dtype="<f4").reshape(-1, 2)
-        assert np.array_equal(stereo[:, 0], expected) and np.array_equal(stereo[:, 1], expected)
-        measured = [line.split(",")[1:] for line in logs.decode().splitlines() if line.startswith("RF_D_EXT,")]
-        assert [int(row[0]) for row in measured] == [2, 3]
-        assert all(int(count) == (len(samples) + block - 1) // block and int(faults) == 0
-                   for _, count, _, _, faults in measured)
-        capture[block] = [{"capture_input": int(channel), "blocks": int(count), "max_ns": int(maximum),
-                           "deadline_misses": int(misses)} for channel, count, maximum, misses, _ in measured]
+
+    def compare(preset, controls, receipt, looped):
+        expected, _ = render([*controls, KEY], samples=samples)
+        missing = expected if looped else np.zeros_like(expected)
+        capture = report[receipt] = {}
+        for block in (128, 480, 4096):
+            raw, logs = execute(probe, package, folder / "state", fixture, block, preset)
+            stereo = np.frombuffer(raw, dtype="<f4").reshape(2, len(samples), 2)
+            for audio, target in zip(stereo, (expected, missing)):
+                assert np.array_equal(audio[:, 0], target) and np.array_equal(audio[:, 1], target), (preset, block)
+            measured = [line.split(",")[1:] for line in logs.decode().splitlines() if line.startswith("RF_D_EXT,")]
+            assert [int(row[0]) for row in measured] == [2, 3]
+            assert all(int(count) == (len(samples) + block - 1) // block and int(faults) == 0
+                       for _, count, _, _, faults in measured)
+            capture[block] = [{"capture_input": int(channel), "blocks": int(count), "max_ns": int(maximum),
+                               "deadline_misses": int(misses)} for channel, count, maximum, misses, _ in measured]
+
+    compare("external_filter", PRESET, "host_capture", looped=False)
+    if feedback:
+        loop = [change(0, 78), change(2, 75), change(3, 90), change(26, 32),
+                change(37, 1), change(38, 72), change(40, 1)]
+        compare("loop_drive", loop, "host_feedback", looped=True)
     report["host_capture_libraries"] = {library.name: sha(library) for library in (core, midi)}

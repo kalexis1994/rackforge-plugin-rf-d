@@ -17,6 +17,9 @@ pub mod keyboard;
 #[cfg(pilot_voice_external)]
 #[path = "rf_d_voice_external.rs"]
 pub mod external;
+#[cfg(pilot_voice_feedback)]
+#[path = "rf_d_voice_feedback.rs"]
+pub mod feedback;
 #[cfg(pilot_voice_contours)]
 #[path = "rf_d_voice_contour.rs"]
 pub mod contour;
@@ -102,6 +105,8 @@ pub struct Panel {
     pub keyboard: keyboard::Controls,
     #[cfg(pilot_voice_external)]
     pub external: external::Controls,
+    #[cfg(pilot_voice_feedback)]
+    pub feedback: feedback::Controls,
 }
 
 #[cfg(pilot_voice_contours)]
@@ -138,6 +143,8 @@ impl Default for Panel {
             keyboard: keyboard::Controls::default(),
             #[cfg(pilot_voice_external)]
             external: external::Controls::default(),
+            #[cfg(pilot_voice_feedback)]
+            feedback: feedback::Controls::default(),
         }
     }
 }
@@ -174,7 +181,12 @@ impl Panel {
         let external_valid = self.external.valid();
         #[cfg(not(pilot_voice_external))]
         let external_valid = true;
-        mixer_valid && contour_valid && filter_valid && modulation_valid && keyboard_valid && external_valid
+        #[cfg(pilot_voice_feedback)]
+        let feedback_valid = self.feedback.valid();
+        #[cfg(not(pilot_voice_feedback))]
+        let feedback_valid = true;
+        mixer_valid && contour_valid && filter_valid && modulation_valid && keyboard_valid
+            && external_valid && feedback_valid
     }
 }
 
@@ -197,6 +209,8 @@ pub struct Voice<const FACTOR: usize> {
     keyboard: keyboard::Keyboard,
     #[cfg(pilot_voice_external)]
     external: external::Preamp,
+    #[cfg(pilot_voice_feedback)]
+    feedback: feedback::Loop,
     increment: f64,
     #[cfg(not(pilot_voice_contours))]
     trim: f64,
@@ -235,6 +249,8 @@ impl<const FACTOR: usize> Voice<FACTOR> {
             keyboard: keyboard::Keyboard::new((RATE * FACTOR) as f64, FACTOR),
             #[cfg(pilot_voice_external)]
             external: external::Preamp::new((RATE * FACTOR) as f64, FACTOR),
+            #[cfg(pilot_voice_feedback)]
+            feedback: feedback::Loop::new(FACTOR),
             increment: 440. / (FACTOR * RATE) as f64,
             #[cfg(not(pilot_voice_contours))]
             trim: 0.,
@@ -350,7 +366,11 @@ impl<const FACTOR: usize> Voice<FACTOR> {
             let (noise, modulation) = self.modulation.step(panel.modulation, self.oscillators.osc3());
             #[cfg(pilot_voice_external)]
             let noise = {
-                let ext = self.external.tick(panel.external, (_substep + 1) as f64 / FACTOR as f64);
+                let ext = self.external.tick(
+                    panel.external, (_substep + 1) as f64 / FACTOR as f64,
+                    #[cfg(pilot_voice_feedback)]
+                    self.feedback.jack(panel.feedback.connected),
+                );
                 [noise[0] + ext[0], noise[1] + ext[1]]
             };
             #[cfg(all(pilot_voice_filter, not(pilot_voice_performance)))]
@@ -402,7 +422,10 @@ impl<const FACTOR: usize> Voice<FACTOR> {
                     #[cfg(pilot_voice_modulation)]
                     if panel.modulation.filter { modulation * modulation::FILTER_OCTAVES } else { 0. },
                 );
-                self.history[self.head] = (filtered_v / INPUT_PEAK_V) * volume;
+                let post_vca = (filtered_v / INPUT_PEAK_V) * volume;
+                #[cfg(pilot_voice_feedback)]
+                self.feedback.observe(post_vca, panel.feedback.output_level);
+                self.history[self.head] = post_vca;
             }
             #[cfg(not(pilot_voice_contours))]
             {

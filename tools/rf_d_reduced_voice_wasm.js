@@ -11,6 +11,7 @@ const {parameters: parametersSchema} = schema
     ? JSON.parse(fs.readFileSync(schema))
     : require("../plugin/package/metadata/parameters.json");
 const panel = parametersSchema.filter(({kind}) => kind.type !== "meter");
+const writable = new Map(panel.map((parameter) => [parameter.index, parameter]));
 const meter = parametersSchema.find(({kind}) => kind.type === "meter");
 const score = JSON.parse(encodedScore);
 const frames = Number(length);
@@ -67,7 +68,7 @@ if (option === "--panel-state" || option === "--voice-state") {
     transfer().set(saved);
     check(wasm.rackforge_load_state(saved.length));
     const checkValues = () => {
-        if (values.some((value, index) => wasm.rackforge_get_parameter(index) !== value)) {
+        if (values.some((value, index) => wasm.rackforge_get_parameter(panel[index].index) !== value)) {
             throw new Error("Panel state round trip");
         }
     };
@@ -78,11 +79,11 @@ if (option === "--panel-state" || option === "--voice-state") {
     checkValues();
     if (option === "--voice-state" && panel.length > 11) {
         // The original voice used the same header with just the first eleven controls.
-        for (const count of [11, 26, 29, 35, 37].filter((size) => size < panel.length)) {
+        for (const count of [11, 26, 29, 35, 37, 39].filter((size) => size < panel.length)) {
             transfer().set(saved);
             check(wasm.rackforge_load_state(4 + count * 8));
-            if (panel.some(({index, kind}) => wasm.rackforge_get_parameter(index) !==
-                (index < count ? values[index] : Number(kind.default)))) {
+            if (panel.some(({index, kind}, slot) => wasm.rackforge_get_parameter(index) !==
+                (slot < count ? values[slot] : Number(kind.default)))) {
                 throw new Error(`Voice state migration failed for ${count} controls`);
             }
         }
@@ -113,6 +114,13 @@ if (option === "--panel-state" || option === "--voice-state") {
             throw new Error("Prepare lost the external filter preset");
         }
     }
+    if (writable.has(40)) {
+        loadPreset("loop_drive");
+        prepare();
+        if (wasm.rackforge_get_parameter(40) !== 1 || wasm.rackforge_get_parameter(37) !== 1) {
+            throw new Error("Prepare lost the feedback connection");
+        }
+    }
     loadPreset("default");
     if (panel.some(({index, kind}) => wasm.rackforge_get_parameter(index) !== Number(kind.default))) {
         throw new Error("Pilot Saw preset did not restore defaults");
@@ -138,11 +146,12 @@ for (let start = 0, event = 0; start < frames; start += blockSize) {
     let parameterCount = 0;
     while (event < score.length && score[event][0] < start + size) {
         const [sample, status, note, value = 100] = score[event++];
-        if ((status === 0xb0 || (status === 0xb1 && schema)) && panel[note - 20]) {
+        const parameter = writable.get(note - 20);
+        if ((status === 0xb0 || (status === 0xb1 && schema)) && parameter) {
             const at = parameterCount++ * 16;
             parameters.setUint32(at, sample - start, true);
             parameters.setUint32(at + 4, note - 20, true);
-            const {minimum, maximum} = panel[note - 20].kind;
+            const {minimum, maximum} = parameter.kind;
             if (value !== 0 && value !== 127 && !schema) throw new Error("Expected an endpoint control value");
             const target = status === 0xb1 ? value
                 : value === 127 ? maximum : minimum + (maximum - minimum) * value / 127;

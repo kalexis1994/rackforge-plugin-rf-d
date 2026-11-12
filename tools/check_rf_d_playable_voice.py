@@ -20,6 +20,7 @@ from check_rf_d_playable_filter import emphasis_table, verify_filter
 from check_rf_d_playable_modulation import verify_modulation
 from check_rf_d_voice_keyboard import verify_keyboard
 from check_rf_d_voice_external import verify_external, verify_host_capture
+from check_rf_d_voice_feedback import verify_feedback
 
 VERSION = "0.7.0"
 PLUGIN_ID = "org.rackforge.lab.rf-d-voice"
@@ -65,7 +66,7 @@ def oscillator_tables(report):
     return path
 
 
-def parameter_schema(bank, emphasis, modulation, performance, external):
+def parameter_schema(bank, emphasis, modulation, performance, external, feedback):
     schema = json.loads(SCHEMA.read_text(encoding="utf8"))
     if bank:
         extra = json.loads(SCHEMA.with_name("oscillators.json").read_text(encoding="utf8"))
@@ -90,10 +91,13 @@ def parameter_schema(bank, emphasis, modulation, performance, external):
     if external:
         extra = json.loads(SCHEMA.with_name("external.json").read_text(encoding="utf8"))
         schema["parameters"].extend(extra["parameters"])
+    if feedback:
+        extra = json.loads(SCHEMA.with_name("feedback.json").read_text(encoding="utf8"))
+        schema["parameters"].extend(extra["parameters"])
     return schema
 
 
-def package_template(destination, schema, version, bank, emphasis, modulation, external):
+def package_template(destination, schema, version, bank, emphasis, modulation, external, feedback):
     shutil.copytree(PACKAGE, destination)
     write(destination / "metadata/parameters.json", schema)
     for relative in ("rackforge-plugin.toml", "metadata/runtime.json", "metadata/presets.json"):
@@ -121,6 +125,9 @@ def package_template(destination, schema, version, bank, emphasis, modulation, e
         if external:
             catalog["presets"].append(dict(id="external_filter", name="External Filter", bank="pilot",
                                            category="External", order=4, tags=[]))
+        if feedback:
+            catalog["presets"].append(dict(id="loop_drive", name="Loop Drive", bank="pilot",
+                                           category="External", order=5, tags=[]))
         write(path, catalog)
         path = destination / "web/panel.css"
         with path.open("a", encoding="utf8") as css:
@@ -341,6 +348,7 @@ def main():
     profiles.add_argument("--resonant-filter", action="store_true", help="rebuild the 0.6.0 resonant filter")
     profiles.add_argument("--modulation", action="store_true", help="select the 0.7.0 modulation profile")
     profiles.add_argument("--keyboard", action="store_true", help="select the keyboard development profile")
+    profiles.add_argument("--external", action="store_true", help="select the external input development profile")
     parser.add_argument("--package", metavar="VERSION", help="export one .rfplugin for the selected profile")
     args = parser.parse_args()
     if args.package and not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?", args.package):
@@ -350,9 +358,10 @@ def main():
     modulation = emphasis and not args.resonant_filter
     performance = modulation and not args.modulation
     external = performance and not args.keyboard
+    feedback = external and not args.external
     profile_version = VERSION if modulation else "0.6.0" if emphasis else "0.5.0" if bank else "0.4.0"
     version = args.package or (f"{profile_version}-dev" if performance else profile_version)
-    schema = parameter_schema(bank, emphasis, modulation, performance, external)
+    schema = parameter_schema(bank, emphasis, modulation, performance, external, feedback)
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"],
                RACKFORGE_OPTIMIZE_PLUGINS="0")
 
@@ -395,10 +404,11 @@ def main():
             modulation_flags = ("--cfg", "pilot_voice_modulation") if modulation else ()
             performance_flags = ("--cfg", "pilot_voice_performance") if performance else ()
             external_flags = ("--cfg", "pilot_voice_external") if external else ()
+            feedback_flags = ("--cfg", "pilot_voice_feedback") if feedback else ()
             execute(*flags, "--edition=2021", "--crate-type", "cdylib", "-C", "panic=abort", "-C", "lto=fat",
                     "--cfg", "pilot_pi", "--cfg", "pilot_returns", "--cfg", "pilot_host_blocks",
                     "--cfg", "pilot_voice_contours", *bank_flags, *filter_flags, *modulation_flags,
-                    *performance_flags, *external_flags, guest,
+                    *performance_flags, *external_flags, *feedback_flags, guest,
                     "--extern", f"rackforge_plugin_sdk={sdk}", "-o", component)
             execute(WASM_OPT, component, "-O4", "-o", optimized)
 
@@ -427,8 +437,10 @@ def main():
                 verify_keyboard(render, report)
             if external:
                 verify_external(render, report)
+            if feedback:
+                verify_feedback(render, report)
             template = folder / "package"
-            package_template(template, schema, version, bank, emphasis, modulation, external)
+            package_template(template, schema, version, bank, emphasis, modulation, external, feedback)
             if args.package:
                 artifact = ROOT / f"artifacts/rf-d-voice-{version}.rfplugin"
                 archive, store = folder / artifact.name, folder / "store"
@@ -441,9 +453,9 @@ def main():
                 shutil.copyfile(optimized, template / "component.wasm")
                 host_package = template
             if external:
-                verify_host_capture(execute, render, folder, host_package, report)
+                verify_host_capture(execute, render, folder, host_package, report, feedback)
             report["host_stress"] = {}
-            preset = ("wheel_motion" if modulation else "resonant_bass" if emphasis
+            preset = ("loop_drive" if feedback else "wheel_motion" if modulation else "resonant_bass" if emphasis
                       else "three_oscillators" if bank else "default")
             for frames in (128, 480, CAPACITY):
                 raw, _ = execute(HOST / "target/release/rackforge-core.exe", "stress", host_package,
@@ -460,19 +472,19 @@ def main():
                 artifact.parent.mkdir(exist_ok=True)
                 archive.replace(artifact)
         report["passed"] = True
-        if external and not args.package:
-            write(ROOT / "evidence/rf_d_voice_development02.json", report)
+        if feedback and not args.package:
+            write(ROOT / "evidence/rf_d_voice_development03.json", report)
         if args.package:
             print(f"{artifact}\n{report['archive_sha256']}")
         else:
             print("WASM and RackForge checks passed with no archive")
-        result_keys = ("external_audio", "keyboard_audio", "modulation_audio", "filter_audio",
+        result_keys = ("feedback_audio", "external_audio", "keyboard_audio", "modulation_audio", "filter_audio",
                        "oscillator_audio", "audio")
         results = next(report[key] for key in result_keys if key in report)
         print(json.dumps(results, indent=2))
     except Exception:
         fields = ("audio", "oscillator_audio", "filter_audio", "modulation_audio", "keyboard_audio",
-                  "external_audio", "host_capture", "node_128_ns", "host_stress")
+                  "external_audio", "feedback_audio", "host_capture", "host_feedback", "node_128_ns", "host_stress")
         print(json.dumps({key: report[key] for key in fields if key in report},
                          indent=2), flush=True)
         raise

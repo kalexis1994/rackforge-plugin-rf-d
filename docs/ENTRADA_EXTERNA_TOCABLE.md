@@ -46,7 +46,7 @@ y el umbral de la lámpara quedan para contraste con el circuito.
 
 ## Verificación sin empaquetar
 
-`python -B tools/check_rf_d_playable_voice.py` carga el WASM
+`python -B tools/check_rf_d_playable_voice.py --external` carga el WASM
 desde un directorio temporal. La prueba mide ganancia a nivel
 bajo, compresión y armónicos a nivel alto, caída del indicador
 y carga de la rama conectada a nivel cero. También verifica
@@ -68,6 +68,7 @@ un canal distractor. El slot toma el canal físico 2 y reproduce
 bit a bit el WASM directo a 128, 480 y 4096 frames. Cuando el
 canal 2 falta, el slot reproduce silencio. La captura es
 sintética. El máximo observado a 128 frames fue 0,185 ms.
-Quedan pendientes la escucha, la comprobación con dispositivo
-físico y la realimentación de salida.
+Quedan pendientes la escucha y la comprobación con dispositivo
+físico. La [realimentación de salida](REALIMENTACION_TOCABLE.md)
+usa este mismo preamplificador.
 [Resultados](../evidence/rf_d_voice_development02.json).

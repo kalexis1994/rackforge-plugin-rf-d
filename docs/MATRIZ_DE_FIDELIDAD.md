@@ -28,7 +28,8 @@ no significa identidad sonora con el hardware.
 | Filtro tocable 0.6.0 | Retorno AC de Emphasis, autooscilación nominal y tracking aditivo por tercios | [Respuesta de filtro y verificación de controles](FILTRO_TOCABLE.md) | Curva de R14, carga activa del retorno, contraste sonoro y modulación |
 | Ruido y modulación 0.7.0 | Ramas blanca, rosa y roja, peso de mezcla R48 y suma de OSC3/ruido con CC1 | [Espectros y destinos MIDI](RUIDO_Y_MODULACION_TOCABLES.md) | Ruido de juntura, calibración de profundidad, glide, pitch bend y entrada externa |
 | Teclado de desarrollo | CV compartido y retenido, glide RC y pitch bend de 14 bits | [Glide y destinos de bend](TECLADO_TOCABLE.md) | Curvas de calibración y validación física en la próxima versión |
-| Entrada externa de desarrollo | Bus mono, preamp AC con sobrecarga, rama R46 y lectura de pico | [Respuesta y captura de RackForge](ENTRADA_EXTERNA_TOCABLE.md) | Ganancia y carga medidas, escucha, dispositivo físico y realimentación |
+| Entrada externa de desarrollo | Bus mono, preamp AC con sobrecarga, rama R46 y lectura de pico | [Respuesta y captura de RackForge](ENTRADA_EXTERNA_TOCABLE.md) | Ganancia y carga medidas, escucha y dispositivo físico |
+| Realimentación de desarrollo | Retorno LO a EXT después de VCA y Output Level | [Lazo y contrastes en RackForge](REALIMENTACION_TOCABLE.md) | Calibración de salida y escucha con dispositivo físico |
 
 El [VCO1 nativo ensamblado](VCO1_STAMP_RESULTADOS.md) conserva 134
 incógnitas, dos 741 completos, BJT/JFET, Schmitt/reset y cargas del panel.
