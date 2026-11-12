@@ -69,16 +69,25 @@ if (option === "--panel-state" || option === "--voice-state") {
     checkValues();
     if (option === "--voice-state" && panel.length > 11) {
         // The original voice used the same header with just the first eleven controls.
-        transfer().set(saved);
-        check(wasm.rackforge_load_state(4 + 11 * 8));
-        if (panel.some(({index, kind}) => wasm.rackforge_get_parameter(index) !==
-            (index < 11 ? values[index] : Number(kind.default)))) {
-            throw new Error("0.4 state migration did not restore the original controls and new defaults");
+        for (const count of [11, 26].filter((size) => size < panel.length)) {
+            transfer().set(saved);
+            check(wasm.rackforge_load_state(4 + count * 8));
+            if (panel.some(({index, kind}) => wasm.rackforge_get_parameter(index) !==
+                (index < count ? values[index] : Number(kind.default)))) {
+                throw new Error(`Voice state migration failed for ${count} controls`);
+            }
         }
         loadPreset("three_oscillators");
         prepare();
         if ([14, 19, 24].some((index) => wasm.rackforge_get_parameter(index) !== 1) ||
             wasm.rackforge_get_parameter(17) !== 7) throw new Error("Prepare lost the three-oscillator preset");
+        if (panel.length > 26) {
+            loadPreset("resonant_bass");
+            prepare();
+            if (wasm.rackforge_get_parameter(26) !== 82 || wasm.rackforge_get_parameter(28) !== 1) {
+                throw new Error("Prepare lost the resonant bass preset");
+            }
+        }
     }
     loadPreset("default");
     if (panel.some(({index, kind}) => wasm.rackforge_get_parameter(index) !== Number(kind.default))) {

@@ -59,7 +59,7 @@ referencia eléctrica para el ajuste posterior.
 
 ## Verificación y compatibilidad
 
-`python -B tools/check_rf_d_playable_voice.py` genera el paquete y lo
+`python -B tools/check_rf_d_playable_voice.py --oscillator-bank` genera el paquete y lo
 prueba en un store temporal. El [recibo de 0.5.0](../evidence/rf_d_playable_voice02.json)
 registra pitch aislado, combinación de tres osciladores, espectro por
 forma, seguimiento de OSC3, automatización y equivalencia bit a bit

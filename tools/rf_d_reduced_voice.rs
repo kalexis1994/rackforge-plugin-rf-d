@@ -14,6 +14,8 @@ pub mod contour;
 #[cfg(pilot_voice_contours)]
 #[path = "rf_d_voice_ladder.rs"]
 mod ladder;
+#[cfg(pilot_voice_filter)]
+pub use ladder::Controls as FilterControls;
 
 pub const MAX_BLOCK: usize = 128;
 pub const RATE: usize = 48_000;
@@ -75,6 +77,8 @@ pub struct Panel {
     pub release_ms: f64,
     #[cfg(pilot_voice_contours)]
     pub contours: Contours,
+    #[cfg(pilot_voice_filter)]
+    pub filter: FilterControls,
 }
 
 #[cfg(pilot_voice_contours)]
@@ -103,6 +107,8 @@ impl Default for Panel {
             release_ms: RAMP_S * 1000.,
             #[cfg(pilot_voice_contours)]
             contours: Contours::default(),
+            #[cfg(pilot_voice_filter)]
+            filter: FilterControls::default(),
         }
     }
 }
@@ -123,7 +129,11 @@ impl Panel {
         let mixer_valid = (0. ..=1.).contains(&self.mixer_gain);
         #[cfg(pilot_oscillator_bank)]
         let mixer_valid = self.oscillators.valid();
-        mixer_valid && contour_valid
+        #[cfg(pilot_voice_filter)]
+        let filter_valid = self.filter.valid();
+        #[cfg(not(pilot_voice_filter))]
+        let filter_valid = true;
+        mixer_valid && contour_valid && filter_valid
     }
 }
 
@@ -134,6 +144,8 @@ pub struct Voice<const FACTOR: usize> {
     #[cfg(pilot_voice_contours)]
     ladder: ladder::Ladder,
     held: u64,
+    #[cfg(pilot_voice_filter)]
+    last_note: u8,
     #[cfg(not(pilot_oscillator_bank))]
     phase: f64,
     #[cfg(pilot_oscillator_bank)]
@@ -164,6 +176,8 @@ impl<const FACTOR: usize> Voice<FACTOR> {
             #[cfg(pilot_voice_contours)]
             ladder: ladder::Ladder::new((RATE * FACTOR) as f64),
             held: 0,
+            #[cfg(pilot_voice_filter)]
+            last_note: 57,
             #[cfg(not(pilot_oscillator_bank))]
             phase: 0.,
             #[cfg(pilot_oscillator_bank)]
@@ -198,6 +212,10 @@ impl<const FACTOR: usize> Voice<FACTOR> {
         }
         if self.held != 0 {
             let note = self.held.trailing_zeros() + 36;
+            #[cfg(pilot_voice_filter)]
+            {
+                self.last_note = note as u8;
+            }
             self.increment = 440. * ((f64::from(note) - 69.) / 12.).exp2() / (FACTOR * RATE) as f64;
         }
         Ok(())
@@ -270,7 +288,14 @@ impl<const FACTOR: usize> Voice<FACTOR> {
                 let volume = self.contours[0].tick(settings.volume, settings.decay_on, rate);
                 let filter = self.contours[1].tick(settings.filter, settings.decay_on, rate);
                 let cutoff = settings.cutoff + (1. - settings.cutoff) * settings.amount * filter;
-                let filtered_v = self.ladder.step(input, cutoff);
+                let filtered_v = self.ladder.step(
+                    input,
+                    cutoff,
+                    #[cfg(pilot_voice_filter)]
+                    panel.filter,
+                    #[cfg(pilot_voice_filter)]
+                    self.last_note,
+                );
                 self.history[self.head] = (filtered_v / INPUT_PEAK_V) * volume;
             }
             #[cfg(not(pilot_voice_contours))]

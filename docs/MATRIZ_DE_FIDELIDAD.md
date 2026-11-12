@@ -25,6 +25,7 @@ no significa identidad sonora con el hardware.
 | Audio / producto | Sierra H128, ladder, VCA, C27, C18, R59/R60 y J7 | [Piloto portable con panel](VOZ_PILOTO_JUGABLE_PROTOCOLO.md#panel-de-audición-030), MIDI y trims contrastados con Radau, presupuesto offline a 128 frames | C2/C5 y biestable autónomos, resto del panel y prueba física del paquete |
 | Voz tocable 0.4.0 | Sierra H128, ladder de cuatro pares diferenciales, dos contornos RC nominales y VCA reducido | [Paquete con panel](VOZ_TOCABLE.md), gatillo MIDI compartido y estrés RackForge offline a 128/480/4096 frames | OSC2/OSC3, controles de interpretación, prueba física y calibración posterior |
 | Banco tocable 0.5.0 | Tres fases libres, sierra y triangular H128, pulsos nominales y mezcla de igual conductancia | [Rangos, formas y afinación](BANCO_OSCILADORES_TOCABLE.md), OSC3 libre y estrés de tres osciladores en RackForge | Resonancia, tracking de filtro, ruido, modulación y calibración posterior |
+| Filtro tocable 0.6.0 | Retorno AC de Emphasis, autooscilación nominal y tracking aditivo por tercios | [Respuesta de filtro y verificación de controles](FILTRO_TOCABLE.md) | Curva de R14, carga activa del retorno, contraste sonoro y modulación |
 
 El [VCO1 nativo ensamblado](VCO1_STAMP_RESULTADOS.md) conserva 134
 incógnitas, dos 741 completos, BJT/JFET, Schmitt/reset y cargas del panel.

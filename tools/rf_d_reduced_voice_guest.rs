@@ -54,14 +54,20 @@ const OSC_RANGES: [(f64, f64); OSC_DEFAULTS.len()] = [
     (0., 5.), (0., 5.), (-9., 9.), (0., 100.), (0., 1.), (0., 1.),
 ];
 #[cfg(pilot_oscillator_bank)]
-const DEFAULTS: [f64; VOICE_DEFAULTS.len() + OSC_DEFAULTS.len()] = {
-    let mut values = [0.; VOICE_DEFAULTS.len() + OSC_DEFAULTS.len()];
+const OSC_END: usize = VOICE_DEFAULTS.len() + OSC_DEFAULTS.len();
+#[cfg(pilot_oscillator_bank)]
+const CONTROL_COUNT: usize = OSC_END + if cfg!(pilot_voice_filter) { 3 } else { 0 };
+#[cfg(pilot_oscillator_bank)]
+const DEFAULTS: [f64; CONTROL_COUNT] = {
+    let mut values = [0.; CONTROL_COUNT];
     let mut index = 0;
     while index < values.len() {
         values[index] = if index < VOICE_DEFAULTS.len() {
             VOICE_DEFAULTS[index]
-        } else {
+        } else if index < OSC_END {
             OSC_DEFAULTS[index - VOICE_DEFAULTS.len()]
+        } else {
+            0.
         };
         index += 1;
     }
@@ -86,6 +92,14 @@ impl Default for Controls {
 #[cfg(pilot_returns)]
 fn control_index(index: u32, value: f64) -> Option<usize> {
     let index = index as usize;
+    #[cfg(pilot_voice_filter)]
+    if index >= OSC_END {
+        return match index - OSC_END {
+            0 if (0. ..=100.).contains(&value) => Some(index),
+            1 | 2 if value == 0. || value == 1. => Some(index),
+            _ => None,
+        };
+    }
     #[cfg(pilot_oscillator_bank)]
     if let Some(osc_index) = index.checked_sub(VOICE_DEFAULTS.len()) {
         let &(min, max) = OSC_RANGES.get(osc_index)?;
@@ -121,6 +135,11 @@ impl Controls {
             mixer_gain: mix * 0.01,
             #[cfg(pilot_oscillator_bank)]
             oscillators: self.oscillators(mix),
+            #[cfg(pilot_voice_filter)]
+            filter: voice::FilterControls {
+                emphasis: self.0[OSC_END] * 0.01,
+                tracking_thirds: self.0[OSC_END + 1] as u8 + 2 * self.0[OSC_END + 2] as u8,
+            },
             contours: voice::Contours {
                 volume: voice::contour::Settings {
                     attack_ms: volume_a,
@@ -143,7 +162,7 @@ impl Controls {
     fn oscillators(self, osc1_level: f64) -> voice::oscillator::Panel {
         let [tune, range1, wave1, on1, range2, wave2, freq2, level2, on2,
              range3, wave3, freq3, level3, on3, tracking] =
-            self.0[VOICE_DEFAULTS.len()..].try_into().unwrap();
+            self.0[VOICE_DEFAULTS.len()..OSC_END].try_into().unwrap();
         let settings = |range, wave, semitones, level, enabled| voice::oscillator::Settings {
             range: range as usize,
             shape: wave as usize,
@@ -311,7 +330,9 @@ impl Processor for Guest {
     fn load_state(&mut self, bytes: &[u8]) -> bool {
         let valid_length = bytes.len() == STATE_BYTES;
         #[cfg(pilot_oscillator_bank)]
-        let valid_length = valid_length || bytes.len() == 4 + VOICE_DEFAULTS.len() * 8;
+        let valid_length = valid_length
+            || bytes.len() == 4 + VOICE_DEFAULTS.len() * 8
+            || bytes.len() == 4 + OSC_END * 8;
         if !valid_length || &bytes[..4] != STATE_TAG {
             return false;
         }
@@ -328,6 +349,21 @@ impl Processor for Guest {
     }
 
     fn load_preset(&mut self, id: &str) -> bool {
+        #[cfg(pilot_voice_filter)]
+        if id == "resonant_bass" {
+            self.controls = Controls::default();
+            self.controls.0[0] = 56.;
+            self.controls.0[1] = 55.;
+            self.controls.0[16] = 0.; // Lightly detuned triangle at the keyboard pitch.
+            self.controls.0[17] = 0.06;
+            self.controls.0[18] = 45.;
+            self.controls.0[19] = 1.;
+            self.controls.0[20] = 2.; // OSC3 sawtooth an octave below OSC1.
+            self.controls.0[24] = 1.;
+            self.controls.0[26] = 82.;
+            self.controls.0[28] = 1.;
+            return true;
+        }
         #[cfg(pilot_oscillator_bank)]
         if id == "three_oscillators" {
             self.controls = Controls::default();

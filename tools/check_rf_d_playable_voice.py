@@ -15,8 +15,9 @@ from check_rf_d_playable_pilot import (
     AREA, COMPILER, GUEST, HOST, NODE, PACKAGE, ROOT, SDK_PATH, WASM_OPT, emit, sha, write,
 )
 from check_rf_d_pilot_returns import generate_pi_fir, generate_wave, pilot_wave_model
+from check_rf_d_playable_filter import emphasis_table, verify_filter
 
-VERSION = "0.5.0"
+VERSION = "0.6.0"
 PLUGIN_ID = "org.rackforge.lab.rf-d-voice"
 SCHEMA = ROOT / "plugin/voice/parameters.json"
 CAPACITY = 4096
@@ -60,7 +61,7 @@ def oscillator_tables(report):
     return path
 
 
-def parameter_schema(bank):
+def parameter_schema(bank, emphasis):
     schema = json.loads(SCHEMA.read_text(encoding="utf8"))
     if bank:
         extra = json.loads(SCHEMA.with_name("oscillators.json").read_text(encoding="utf8"))
@@ -70,10 +71,14 @@ def parameter_schema(bank):
         schema["parameters"][2]["name"] = "OSC 1 Level"
         schema["parameters"][3]["order"] = 6
         schema["parameters"].extend(extra["parameters"])
+    if emphasis:
+        extra = json.loads(SCHEMA.with_name("filter.json").read_text(encoding="utf8"))
+        schema["parameters"][1]["order"] = 2
+        schema["parameters"].extend(extra["parameters"])
     return schema
 
 
-def package_template(destination, schema, version, bank):
+def package_template(destination, schema, version, bank, emphasis):
     shutil.copytree(PACKAGE, destination)
     write(destination / "metadata/parameters.json", schema)
     for relative in ("rackforge-plugin.toml", "metadata/runtime.json", "metadata/presets.json"):
@@ -88,6 +93,9 @@ def package_template(destination, schema, version, bank):
         catalog = json.loads(path.read_bytes())
         catalog["presets"].append(dict(id="three_oscillators", name="Three Oscillators", bank="pilot",
                                        category="Pilot", order=1, tags=[]))
+        if emphasis:
+            catalog["presets"].append(dict(id="resonant_bass", name="Resonant Bass", bank="pilot",
+                                           category="Bass", order=2, tags=[]))
         write(path, catalog)
         path = destination / "web/panel.css"
         with path.open("a", encoding="utf8") as css:
@@ -295,11 +303,15 @@ def verify_oscillators(render, report):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--single-saw", action="store_true", help="rebuild the 0.4.0 single-oscillator voice")
-    bank = not parser.parse_args().single_saw
-    version = VERSION if bank else "0.4.0"
+    profiles = parser.add_mutually_exclusive_group()
+    profiles.add_argument("--single-saw", action="store_true", help="rebuild the 0.4.0 single-oscillator voice")
+    profiles.add_argument("--oscillator-bank", action="store_true", help="rebuild the 0.5.0 oscillator bank")
+    args = parser.parse_args()
+    bank = not args.single_saw
+    emphasis = bank and not args.oscillator_bank
+    version = VERSION if emphasis else "0.5.0" if bank else "0.4.0"
     artifact = ROOT / f"artifacts/rf-d-voice-{version}.rfplugin"
-    schema = parameter_schema(bank)
+    schema = parameter_schema(bank, emphasis)
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"],
                RACKFORGE_OPTIMIZE_PLUGINS="0")
 
@@ -322,6 +334,8 @@ def main():
             wave, report["h128_sha256"] = generate_wave()
             modules["wave"] = wave
             report["wave_sha256"] = sha(wave)
+        if emphasis:
+            modules["emphasis_coefficients"] = emphasis_table(report)
         code = "".join(f'#[path = "{path.as_posix()}"] mod {name};\n' for name, path in modules.items())
         guest = emit("voice-contours-guest.rs", code + (ROOT / GUEST).read_text(encoding="utf8"))
         with TemporaryDirectory(prefix="rf-d-voice-", dir=AREA) as temporary:
@@ -336,14 +350,15 @@ def main():
             execute(*flags, "--edition=2024", "--crate-type", "rlib", "--crate-name", "rackforge_plugin_sdk",
                     HOST / SDK_PATH, "-o", sdk)
             bank_flags = ("--cfg", "pilot_oscillator_bank") if bank else ()
+            filter_flags = ("--cfg", "pilot_voice_filter") if emphasis else ()
             execute(*flags, "--edition=2021", "--crate-type", "cdylib", "-C", "panic=abort", "-C", "lto=fat",
                     "--cfg", "pilot_pi", "--cfg", "pilot_returns", "--cfg", "pilot_host_blocks",
-                    "--cfg", "pilot_voice_contours", *bank_flags, guest,
+                    "--cfg", "pilot_voice_contours", *bank_flags, *filter_flags, guest,
                     "--extern", f"rackforge_plugin_sdk={sdk}", "-o", component)
             execute(WASM_OPT, component, "-O4", "-o", optimized)
 
-            def render(score, block=128):
-                raw, timings = execute("node", ROOT / NODE, optimized, json.dumps(score), 43200,
+            def render(score, block=128, frames=43200):
+                raw, timings = execute("node", ROOT / NODE, optimized, json.dumps(score), frames,
                                        "--voice-state" if block == 128 else "render", block, CAPACITY, render_schema)
                 audio = np.frombuffer(raw, dtype="<f4").reshape(-1, 2)
                 assert np.isfinite(audio).all() and np.array_equal(audio[:, 0], audio[:, 1])
@@ -352,14 +367,16 @@ def main():
             verify_audio(render, report)
             if bank:
                 verify_oscillators(render, report)
+            if emphasis:
+                verify_filter(render, report)
             template, archive, store = folder / "package", folder / artifact.name, folder / "store"
-            package_template(template, schema, version, bank)
+            package_template(template, schema, version, bank, emphasis)
             packer = HOST / "target/release/rackforge-store.exe"
             execute(packer, "pack-wasm", template, optimized, archive)
             execute(packer, "install-local", archive, store)
             manifest, = store.rglob("rackforge-plugin.toml")
             report["host_stress"] = {}
-            preset = "three_oscillators" if bank else "default"
+            preset = "resonant_bass" if emphasis else "three_oscillators" if bank else "default"
             for frames in (128, 480, CAPACITY):
                 raw, _ = execute(HOST / "target/release/rackforge-core.exe", "stress", manifest.parent,
                                  "--preset", preset, "--data-root", folder / "state",
@@ -374,11 +391,14 @@ def main():
             artifact.parent.mkdir(exist_ok=True)
             archive.replace(artifact)
         report["passed"] = True
-        receipt = "rf_d_playable_voice02.json" if bank else "rf_d_playable_voice01.json"
+        sequence = 3 if emphasis else 2 if bank else 1
+        receipt = f"rf_d_playable_voice{sequence:02}.json"
         write(ROOT / "evidence" / receipt, report)
-        print(f"{artifact}\n{json.dumps(report.get('oscillator_audio', report['audio']), indent=2)}")
+        results = report.get("filter_audio", report.get("oscillator_audio", report["audio"]))
+        print(f"{artifact}\n{json.dumps(results, indent=2)}")
     except Exception:
-        print(json.dumps({key: report[key] for key in ("audio", "node_128_ns", "host_stress") if key in report},
+        fields = ("audio", "oscillator_audio", "filter_audio", "node_128_ns", "host_stress")
+        print(json.dumps({key: report[key] for key in fields if key in report},
                          indent=2), flush=True)
         raise
     finally:
