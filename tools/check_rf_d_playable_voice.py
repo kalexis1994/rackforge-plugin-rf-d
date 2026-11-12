@@ -25,6 +25,7 @@ from check_rf_d_voice_output import verify_output
 from check_rf_d_voice_monitor import verify_monitor
 from check_rf_d_voice_control_inputs import loudness_table, verify_control_inputs
 from check_rf_d_voice_midi import HOST_SCORE, verify_midi
+from check_rf_d_voice_presets import emit_program_table, prepare_catalog, verify_presets
 
 VERSION = "0.7.0"
 PLUGIN_ID = "org.rackforge.lab.rf-d-voice"
@@ -114,38 +115,21 @@ def parameter_schema(bank, emphasis, modulation, performance, external, feedback
     return schema
 
 
-def package_template(destination, schema, version, bank, emphasis, modulation, external, feedback, midi):
+def package_template(destination, schema, catalog, version, bank, external, midi):
     shutil.copytree(PACKAGE, destination)
     write(destination / "metadata/parameters.json", schema)
-    for relative in ("rackforge-plugin.toml", "metadata/runtime.json", "metadata/presets.json"):
+    write(destination / "metadata/presets.json", catalog)
+    for relative in ("rackforge-plugin.toml", "metadata/runtime.json"):
         path = destination / relative
         content = path.read_text(encoding="utf8")
         content = (content.replace("org.rackforge.lab.rf-d-pilot", PLUGIN_ID)
-                   .replace("0.3.0", version).replace("RF-D Pilot", "RF-D Voice")
-                   .replace("Pilot Saw", "Model D Saw"))
+                   .replace("0.3.0", version).replace("RF-D Pilot", "RF-D Voice"))
         if external and relative == "rackforge-plugin.toml":
             content = content.replace('"audio_output"', '"audio_input", "audio_output"', 1)
             content = content.replace("[audio]\n", '[audio]\ninput_buses = [{ id = "main", '
                                       'name = "External Input", channels = 1, layout = "mono" }]\n')
         path.write_text(content, encoding="utf8", newline="\n")
     if bank:
-        path = destination / "metadata/presets.json"
-        catalog = json.loads(path.read_bytes())
-        catalog["presets"].append(dict(id="three_oscillators", name="Three Oscillators", bank="pilot",
-                                       category="Pilot", order=1, tags=[]))
-        if emphasis:
-            catalog["presets"].append(dict(id="resonant_bass", name="Resonant Bass", bank="pilot",
-                                           category="Bass", order=2, tags=[]))
-        if modulation:
-            catalog["presets"].append(dict(id="wheel_motion", name="Wheel Motion", bank="pilot",
-                                           category="Modulation", order=3, tags=[]))
-        if external:
-            catalog["presets"].append(dict(id="external_filter", name="External Filter", bank="pilot",
-                                           category="External", order=4, tags=[]))
-        if feedback:
-            catalog["presets"].append(dict(id="loop_drive", name="Loop Drive", bank="pilot",
-                                           category="External", order=5, tags=[]))
-        write(path, catalog)
         path = destination / "web/panel.css"
         with path.open("a", encoding="utf8") as css:
             css.write("""
@@ -374,6 +358,7 @@ def main():
     profiles.add_argument("--main-output", action="store_true", help="select the HI/LO development profile")
     profiles.add_argument("--monitor", action="store_true", help="select the Phones and A-440 development profile")
     profiles.add_argument("--control-inputs", action="store_true", help="select the rear-jack development profile")
+    profiles.add_argument("--midi", action="store_true", help="select the MIDI development profile")
     parser.add_argument("--package", metavar="VERSION", help="export one .rfplugin for the selected profile")
     args = parser.parse_args()
     if args.package and not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?", args.package):
@@ -388,9 +373,15 @@ def main():
     monitor = output and not args.main_output
     control_inputs = monitor and not args.monitor
     midi = control_inputs and not args.control_inputs
+    factory = midi and not args.midi
     profile_version = VERSION if modulation else "0.6.0" if emphasis else "0.5.0" if bank else "0.4.0"
     version = args.package or (f"{profile_version}-dev" if performance else profile_version)
     schema = parameter_schema(bank, emphasis, modulation, performance, external, feedback, output, monitor, control_inputs)
+    features = {name for name, enabled in (("oscillators", bank), ("filter", emphasis), ("modulation", modulation),
+                                          ("external", external), ("feedback", feedback), ("factory", factory))
+                if enabled}
+    catalog, programs = prepare_catalog(schema, features)
+    factory_names = [entry["id"] for entry in catalog["presets"] if entry["bank"] == "factory"]
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"],
                RACKFORGE_OPTIMIZE_PLUGINS="0")
 
@@ -409,6 +400,7 @@ def main():
         modules = dict(voice=ROOT / "tools/rf_d_reduced_voice.rs", pi_coefficients=fir)
         if bank:
             modules["oscillator_tables"] = oscillator_tables(report)
+            modules["voice_programs"] = emit_program_table(programs)
         else:
             wave, report["h128_sha256"] = generate_wave()
             modules["wave"] = wave
@@ -448,16 +440,16 @@ def main():
                     "--extern", f"rackforge_plugin_sdk={sdk}", "-o", component)
             execute(WASM_OPT, component, "-O4", "-o", optimized)
 
-            def render(score, block=128, frames=43200, samples=None):
-                input_args = ()
+            def render(score, block=128, frames=43200, samples=None, preset=None):
+                input_path = "-"
                 if samples is not None:
                     frames = len(samples)
                     input_path = folder / "input.f32"
                     input_path.write_bytes(np.asarray(samples, dtype="<f4").tobytes())
-                    input_args = (input_path,)
+                extra_args = (input_path, preset) if preset is not None else (input_path,) if samples is not None else ()
                 raw, timings = execute("node", ROOT / NODE, optimized, json.dumps(score), frames,
                                        "--voice-state" if block == 128 else "render", block, CAPACITY,
-                                       render_schema, *input_args)
+                                       render_schema, *extra_args)
                 audio = np.frombuffer(raw, dtype="<f4").reshape(-1, 2)
                 assert np.isfinite(audio).all() and np.array_equal(audio[:, 0], audio[:, 1])
                 return audio[:, 0], json.loads(timings)
@@ -483,8 +475,10 @@ def main():
                 verify_control_inputs(render, report)
             if midi:
                 verify_midi(render, report)
+            if factory:
+                verify_presets(render, programs, factory_names, report)
             template = folder / "package"
-            package_template(template, schema, version, bank, emphasis, modulation, external, feedback, midi)
+            package_template(template, schema, catalog, version, bank, external, midi)
             if args.package:
                 artifact = ROOT / f"artifacts/rf-d-voice-{version}.rfplugin"
                 archive, store = folder / artifact.name, folder / "store"
@@ -498,7 +492,8 @@ def main():
                 host_package = template
             if external:
                 verify_host_capture(execute, render, folder, host_package, report, feedback,
-                                    schema if monitor else None, control_inputs, HOST_SCORE if midi else None)
+                                    schema if monitor else None, control_inputs, HOST_SCORE if midi else None,
+                                    {name: programs[name] for name in factory_names})
             report["host_stress"] = {}
             preset = ("loop_drive" if feedback else "wheel_motion" if modulation else "resonant_bass" if emphasis
                       else "three_oscillators" if bank else "default")
@@ -517,13 +512,13 @@ def main():
                 artifact.parent.mkdir(exist_ok=True)
                 archive.replace(artifact)
         report["passed"] = True
-        if midi and not args.package:
-            write(ROOT / "evidence/rf_d_voice_development07.json", report)
+        if factory and not args.package:
+            write(ROOT / "evidence/rf_d_voice_development08.json", report)
         if args.package:
             print(f"{artifact}\n{report['archive_sha256']}")
         else:
             print("WASM and RackForge checks passed with no archive")
-        result_keys = ("midi_audio", "control_inputs_audio", "monitor_audio", "output_audio", "feedback_audio", "external_audio", "keyboard_audio", "modulation_audio", "filter_audio",
+        result_keys = ("factory_audio", "midi_audio", "control_inputs_audio", "monitor_audio", "output_audio", "feedback_audio", "external_audio", "keyboard_audio", "modulation_audio", "filter_audio",
                        "oscillator_audio", "audio")
         results = next(report[key] for key in result_keys if key in report)
         print(json.dumps(results, indent=2))
@@ -531,7 +526,7 @@ def main():
         fields = ("audio", "oscillator_audio", "filter_audio", "modulation_audio", "keyboard_audio",
                   "external_audio", "feedback_audio", "output_audio", "monitor_audio",
                   "loudness_cv_table", "control_inputs_audio", "host_capture", "host_feedback", "host_monitor",
-                  "host_control_inputs", "midi_audio", "host_midi",
+                  "host_control_inputs", "midi_audio", "host_midi", "factory_audio", "host_factory",
                   "node_128_ns", "host_stress")
         print(json.dumps({key: report[key] for key in fields if key in report},
                          indent=2), flush=True)

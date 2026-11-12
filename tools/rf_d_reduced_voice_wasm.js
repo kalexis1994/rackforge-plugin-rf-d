@@ -1,7 +1,7 @@
 const fs = require("node:fs");
 const { performance } = require("node:perf_hooks");
 
-const [, , path, encodedScore, length, option, requestedBlock, requestedCapacity, schema, inputPath] = process.argv;
+const [, , path, encodedScore, length, option, requestedBlock, requestedCapacity, schema, inputPath, preset] = process.argv;
 const blockSize = Number(requestedBlock ?? 128);
 const capacity = Number(requestedCapacity ?? blockSize);
 if (!Number.isInteger(blockSize) || blockSize < 1 || blockSize > capacity) {
@@ -15,7 +15,7 @@ const writable = new Map(panel.map((parameter) => [parameter.index, parameter]))
 const meter = parametersSchema.find(({kind}) => kind.type === "meter");
 const score = JSON.parse(encodedScore);
 const frames = Number(length);
-const input = inputPath ? fs.readFileSync(inputPath) : null;
+const input = inputPath && inputPath !== "-" ? fs.readFileSync(inputPath) : null;
 const inputChannels = Number(input !== null);
 if (input && input.length !== frames * 4) throw new Error("Expected one float32 per input frame");
 const { exports: wasm } = new WebAssembly.Instance(new WebAssembly.Module(fs.readFileSync(path)));
@@ -139,6 +139,11 @@ for (let i = 0; i < 128; i++) {
     check(wasm.rackforge_process(Math.min(128, capacity), inputChannels, 2, i === 0 ? 1 : 0, 0));
 }
 
+if (preset) {
+    check(wasm.rackforge_set_parameter(44, 1));
+    check(wasm.rackforge_set_parameter(48, 1));
+    loadPreset(preset);
+}
 prepare();
 const output = Buffer.alloc(frames * 8);
 const timings = [];

@@ -16,7 +16,7 @@ use std::{
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<_> = std::env::args_os().collect();
-    assert!(matches!(args.len(), 6..=8));
+    assert!(matches!(args.len(), 6..=9));
     let package = PluginPackage::open(Path::new(&args[1]))?;
     let plugin =
         unsafe { LoadedPlugin::load(&package, None, &BTreeMap::new(), Some(Path::new(&args[2])))? };
@@ -24,6 +24,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     assert!(!raw.is_empty() && raw.len() % 4 == 0);
     let capacity: usize = args[4].to_str().unwrap().parse()?;
     let preset = args[5].to_str().unwrap();
+    if let Some(path) = args.get(8) {
+        let mut instance = plugin.create_instance()?;
+        instance.load_preset(preset)?;
+        instance.activate(48000., capacity.try_into()?, 1, 2)?;
+        std::fs::write(path, instance.save_state()?)?;
+    }
     let state = if let Some(path) = args.get(6).filter(|path| *path != "-") {
         RackSlotStateLoad::Opaque(std::fs::read(path)?)
     } else {

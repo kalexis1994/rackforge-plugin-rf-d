@@ -5,6 +5,7 @@ import numpy as np
 
 from check_rf_d_playable_filter import change, rms
 from check_rf_d_playable_pilot import COMPILER, HOST, HOST_COMPILER, HOST_CORE, MIDI_LIB, ROOT, sha
+from check_rf_d_voice_presets import verify_host_presets
 
 RATE = 48000
 KEY = [960, 0x90, 57, 100]
@@ -70,7 +71,7 @@ def verify_external(render, report):
 
 
 def verify_host_capture(execute, render, folder, package, report, feedback=False, monitor_schema=None,
-                        control_inputs=False, midi_score=None):
+                        control_inputs=False, midi_score=None, factory_programs=None):
     deps = HOST / "target/release/deps"
     core, midi = deps / HOST_CORE, deps / MIDI_LIB
     registry = Path(COMPILER).parents[4] / ".cargo/registry/src"
@@ -132,4 +133,6 @@ def verify_host_capture(execute, render, folder, package, report, feedback=False
         compare("default", [], "host_midi", independent=True, score=midi_score)
         for result in report["host_midi"][128]:
             assert result["deadline_misses"] == 0 and result["max_ns"] < 128e9 / RATE / 2, result
+    if factory_programs:
+        verify_host_presets(execute, render, folder, probe, package, monitor_schema, factory_programs, report)
     report["host_capture_libraries"] = {library.name: sha(library) for library in (core, midi)}

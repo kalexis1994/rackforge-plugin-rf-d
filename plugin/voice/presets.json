@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "banks": [
+    {"id": "pilot", "name": "Pilot", "order": 0},
+    {"id": "factory", "name": "RF-D Factory", "order": 1}
+  ],
+  "presets": [
+    {"id": "default", "name": "Model D Saw", "bank": "pilot", "category": "Pilot", "order": 0,
+      "tags": [], "parameters": {}},
+    {"id": "three_oscillators", "name": "Three Oscillators", "bank": "pilot", "category": "Pilot", "order": 1,
+      "tags": [], "requires": "oscillators", "parameters": {
+        "osc2_wave": 0, "osc2_frequency": 7, "osc2_enabled": true,
+        "osc3_range": 2, "osc3_wave": 3, "osc3_enabled": true}},
+    {"id": "resonant_bass", "name": "Resonant Bass", "bank": "pilot", "category": "Bass", "order": 2,
+      "tags": [], "requires": "filter", "parameters": {
+        "cutoff": 56, "contour_amount": 55, "osc2_wave": 0, "osc2_frequency": 0.06,
+        "osc2_level": 45, "osc2_enabled": true, "osc3_range": 2, "osc3_enabled": true,
+        "emphasis": 82, "filter_tracking_two_thirds": true}},
+    {"id": "wheel_motion", "name": "Wheel Motion", "bank": "pilot", "category": "Modulation", "order": 3,
+      "tags": [], "requires": "modulation", "parameters": {
+        "cutoff": 71, "osc2_range": 2, "osc2_wave": 0, "osc2_level": 55, "osc2_enabled": true,
+        "osc3_range": 0, "osc3_wave": 0, "osc3_tracking": false, "emphasis": 52,
+        "noise_color": 1, "noise_level": 7, "noise_enabled": true, "modulation_mix": 12,
+        "oscillator_modulation": true, "filter_modulation": true}},
+    {"id": "external_filter", "name": "External Filter", "bank": "pilot", "category": "External", "order": 4,
+      "tags": [], "requires": "external", "parameters": {
+        "cutoff": 100, "contour_amount": 0, "loudness_sustain": 100, "osc1_enabled": false,
+        "external_enabled": true, "external_level": 60}},
+    {"id": "loop_drive", "name": "Loop Drive", "bank": "pilot", "category": "External", "order": 5,
+      "tags": [], "requires": "feedback", "parameters": {
+        "cutoff": 78, "saw_mix": 75, "output_level": 90, "emphasis": 32,
+        "external_enabled": true, "external_level": 72, "output_feedback": true}},
+    {"id": "round_sub", "name": "Round Sub", "bank": "factory", "category": "Bass", "order": 0,
+      "tags": ["triangle", "sub"], "requires": "factory",
+      "description": "A 16-foot triangle with a quieter triangle one octave above.",
+      "parameters": {
+        "osc1_range": 2, "osc1_wave": 0, "saw_mix": 88, "osc2_wave": 0,
+        "osc2_level": 26, "osc2_enabled": true, "cutoff": 58, "contour_amount": 28, "emphasis": 12,
+        "loudness_attack": 4, "loudness_decay": 140, "loudness_sustain": 78,
+        "filter_decay": 145, "filter_sustain": 15, "filter_tracking_one_third": true}},
+    {"id": "feedback_bass", "name": "Feedback Bass", "bank": "factory", "category": "Bass", "order": 1,
+      "tags": ["saw", "feedback"], "requires": "factory",
+      "description": "Saw and sub-square bass with the internal LO feedback cable engaged.",
+      "parameters": {
+        "saw_mix": 84, "osc2_range": 2, "osc2_wave": 3, "osc2_level": 62, "osc2_enabled": true,
+        "cutoff": 63, "contour_amount": 57, "emphasis": 45, "loudness_sustain": 81,
+        "filter_attack": 2, "filter_decay": 170, "filter_sustain": 24,
+        "external_enabled": true, "external_level": 77, "output_feedback": true, "output_level": 86}},
+    {"id": "glide_lead", "name": "Glide Lead", "bank": "factory", "category": "Lead", "order": 2,
+      "tags": ["saw", "glide"], "requires": "factory",
+      "description": "Two slightly detuned saws with legato glide.",
+      "parameters": {
+        "saw_mix": 79, "osc2_frequency": 0.12, "osc2_level": 64, "osc2_enabled": true,
+        "cutoff": 82, "contour_amount": 27, "emphasis": 24, "filter_tracking_two_thirds": true,
+        "loudness_sustain": 87, "loudness_decay": 155, "decay_enabled": 1, "glide_enabled": true, "glide_time": 170}},
+    {"id": "wheel_vibrato", "name": "Wheel Vibrato", "bank": "factory", "category": "Lead", "order": 3,
+      "tags": ["pulse", "mod-wheel"], "requires": "factory",
+      "description": "Pulse lead with a free-running OSC 3 triangle routed to pitch via the mod wheel.",
+      "parameters": {
+        "osc1_wave": 4, "saw_mix": 82, "osc2_wave": 0, "osc2_level": 28, "osc2_enabled": true,
+        "osc3_range": 0, "osc3_wave": 0, "osc3_tracking": false, "oscillator_modulation": true,
+        "cutoff": 80, "contour_amount": 30, "emphasis": 26, "filter_tracking_one_third": true,
+        "loudness_attack": 9, "loudness_sustain": 85}},
+    {"id": "filter_brass", "name": "Filter Brass", "bank": "factory", "category": "Brass", "order": 4,
+      "tags": ["saw", "swell"], "requires": "factory",
+      "description": "Detuned saws with a filter swell that opens after the loudness attack.",
+      "parameters": {
+        "saw_mix": 74, "osc2_frequency": -0.1, "osc2_level": 59, "osc2_enabled": true,
+        "cutoff": 54, "contour_amount": 72, "emphasis": 27, "filter_tracking_two_thirds": true,
+        "loudness_attack": 27, "loudness_decay": 250, "loudness_sustain": 66, "decay_enabled": 1,
+        "filter_attack": 72, "filter_decay": 310, "filter_sustain": 54}},
+    {"id": "pulse_pluck", "name": "Pulse Pluck", "bank": "factory", "category": "Pluck", "order": 5,
+      "tags": ["pulse", "decay"], "requires": "factory",
+      "description": "Narrow pulse with a fast attack and a short filter decay.",
+      "parameters": {
+        "osc1_wave": 5, "saw_mix": 87, "cutoff": 53, "contour_amount": 72, "emphasis": 48,
+        "loudness_attack": 2, "loudness_decay": 115, "loudness_sustain": 12, "decay_enabled": 1,
+        "filter_attack": 2, "filter_decay": 115, "filter_sustain": 9}},
+    {"id": "noise_sweep", "name": "Noise Sweep", "bank": "factory", "category": "Texture", "order": 6,
+      "tags": ["pink-noise", "swell"], "requires": "factory",
+      "description": "Pink noise swept by the filter contour while a key is held.",
+      "parameters": {
+        "osc1_enabled": false, "noise_color": 1, "noise_enabled": true, "noise_level": 78,
+        "cutoff": 56, "contour_amount": 61, "emphasis": 56,
+        "loudness_attack": 88, "loudness_decay": 360, "loudness_sustain": 78, "decay_enabled": 1,
+        "filter_attack": 145, "filter_decay": 420, "filter_sustain": 65}},
+    {"id": "interval_drone", "name": "Interval Drone", "bank": "factory", "category": "Texture", "order": 7,
+      "tags": ["fifth", "drone"], "requires": "factory",
+      "description": "Three oscillators spanning a lower octave and an upper fifth. Hold a key or use S-Trigger.",
+      "parameters": {
+        "osc1_wave": 1, "saw_mix": 67, "osc2_wave": 0, "osc2_frequency": 7,
+        "osc2_level": 48, "osc2_enabled": true, "osc3_range": 2, "osc3_wave": 0,
+        "osc3_level": 60, "osc3_enabled": true, "cutoff": 74, "contour_amount": 32, "emphasis": 29,
+        "loudness_attack": 76, "loudness_decay": 490, "loudness_sustain": 82, "decay_enabled": 1,
+        "filter_attack": 135, "filter_decay": 480, "filter_sustain": 68, "filter_tracking_one_third": true}}
+  ]
+}

@@ -610,83 +610,30 @@ impl Processor for Guest {
     }
 
     fn load_preset(&mut self, id: &str) -> bool {
-        #[cfg(pilot_voice_feedback)]
-        if id == "loop_drive" {
-            self.controls = Controls::default();
-            self.controls.0[0] = 78.;
-            self.controls.0[2] = 75.;
-            self.controls.0[3] = 90.;
-            self.controls.0[26] = 32.;
-            self.controls.0[KEYBOARD_END] = 1.;
-            self.controls.0[KEYBOARD_END + 1] = 72.;
-            self.controls.0[EXTERNAL_END] = 1.;
-            return true;
-        }
-        #[cfg(pilot_voice_external)]
-        if id == "external_filter" {
-            self.controls = Controls::default();
-            self.controls.0[0] = 100.;
-            self.controls.0[1] = 0.;
-            self.controls.0[6] = 100.;
-            self.controls.0[14] = 0.;
-            self.controls.0[KEYBOARD_END] = 1.;
-            self.controls.0[KEYBOARD_END + 1] = 60.;
-            return true;
-        }
-        #[cfg(pilot_voice_modulation)]
-        if id == "wheel_motion" {
-            self.controls = Controls::default();
-            self.controls.0[0] = 71.;
-            self.controls.0[16] = 0.; // OSC2 triangle an octave below OSC1.
-            self.controls.0[15] = 2.;
-            self.controls.0[18] = 55.;
-            self.controls.0[19] = 1.;
-            self.controls.0[20] = 0.; // Free-running OSC3 in LO.
-            self.controls.0[21] = 0.;
-            self.controls.0[25] = 0.;
-            self.controls.0[26] = 52.;
-            self.controls.0[29] = 1.;
-            self.controls.0[30] = 7.;
-            self.controls.0[31] = 1.;
-            self.controls.0[32] = 12.;
-            self.controls.0[33] = 1.;
-            self.controls.0[34] = 1.;
-            return true;
-        }
-        #[cfg(pilot_voice_filter)]
-        if id == "resonant_bass" {
-            self.controls = Controls::default();
-            self.controls.0[0] = 56.;
-            self.controls.0[1] = 55.;
-            self.controls.0[16] = 0.; // Lightly detuned triangle at the keyboard pitch.
-            self.controls.0[17] = 0.06;
-            self.controls.0[18] = 45.;
-            self.controls.0[19] = 1.;
-            self.controls.0[20] = 2.; // OSC3 sawtooth an octave below OSC1.
-            self.controls.0[24] = 1.;
-            self.controls.0[26] = 82.;
-            self.controls.0[28] = 1.;
-            return true;
-        }
         #[cfg(pilot_oscillator_bank)]
-        if id == "three_oscillators" {
-            self.controls = Controls::default();
-            self.controls.0[16] = 0.; // OSC2 triangle, fifth above OSC1.
-            self.controls.0[17] = 7.;
-            self.controls.0[19] = 1.;
-            self.controls.0[20] = 2.; // OSC3 square, octave below OSC1.
-            self.controls.0[21] = 3.;
-            self.controls.0[24] = 1.;
-            return true;
-        }
-        if id != "default" {
-            return false;
-        }
-        #[cfg(pilot_returns)]
         {
-            self.controls = Controls::default();
+            let Some((_, parameters)) = crate::voice_programs::PRESETS.iter().find(|(name, _)| *name == id) else {
+                return false;
+            };
+            let mut candidate = Controls::default();
+            for &(index, value) in *parameters {
+                let Some(slot) = control_index(index, value) else {
+                    return false;
+                };
+                candidate.0[slot] = value;
+            }
+            self.controls = candidate;
+            true
         }
-        true
+        #[cfg(not(pilot_oscillator_bank))]
+        {
+            if id != "default" {
+                return false;
+            }
+            #[cfg(pilot_returns)]
+            { self.controls = Controls::default(); }
+            true
+        }
     }
 
     fn latency_frames(&self) -> u32 {
