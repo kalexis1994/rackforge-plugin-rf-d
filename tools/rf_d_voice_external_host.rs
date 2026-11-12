@@ -16,7 +16,7 @@ use std::{
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<_> = std::env::args_os().collect();
-    assert_eq!(args.len(), 6);
+    assert!(matches!(args.len(), 6 | 7));
     let package = PluginPackage::open(Path::new(&args[1]))?;
     let plugin =
         unsafe { LoadedPlugin::load(&package, None, &BTreeMap::new(), Some(Path::new(&args[2])))? };
@@ -24,6 +24,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     assert!(!raw.is_empty() && raw.len() % 4 == 0);
     let capacity: usize = args[4].to_str().unwrap().parse()?;
     let preset = args[5].to_str().unwrap();
+    let state = if let Some(path) = args.get(6) {
+        RackSlotStateLoad::Opaque(std::fs::read(path)?)
+    } else {
+        RackSlotStateLoad::LegacyPreset(preset.into())
+    };
     let capture: Vec<f32> = raw
         .chunks_exact(4)
         .enumerate()
@@ -43,7 +48,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let slot = RackSlotRuntimeSpec {
         slot_id: "rf-d-external".into(),
         plugin_id: id.clone(),
-        state: RackSlotStateLoad::LegacyPreset(preset.into()),
+        state,
         midi_stages: vec![],
         audio_sources: vec![source],
         sends_to_main: true,

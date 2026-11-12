@@ -192,8 +192,13 @@ impl Panel {
         let feedback_valid = self.feedback.valid();
         #[cfg(not(pilot_voice_feedback))]
         let feedback_valid = true;
+        #[cfg(pilot_voice_monitor)]
+        let monitor_valid = (0. ..=1.).contains(&self.output.phones_level)
+            && !(self.output.low && self.output.phones);
+        #[cfg(not(pilot_voice_monitor))]
+        let monitor_valid = true;
         mixer_valid && contour_valid && filter_valid && modulation_valid && keyboard_valid
-            && external_valid && feedback_valid
+            && external_valid && feedback_valid && monitor_valid
     }
 }
 
@@ -220,16 +225,29 @@ pub struct Voice<const FACTOR: usize> {
     feedback: feedback::Loop,
     #[cfg(pilot_voice_output)]
     output: output::Stage,
+    #[cfg(pilot_voice_monitor)]
+    monitor: output::Monitor,
     increment: f64,
     #[cfg(not(pilot_voice_contours))]
     trim: f64,
     #[cfg(pilot_voice_contours)]
     contours: [contour::Contour; 2],
     history: [f64; 769],
+    #[cfg(pilot_voice_monitor)]
+    phones_history: [f64; 769],
     head: usize,
     frames: usize,
     #[cfg(all(pilot_returns, not(pilot_voice_contours)))]
     drive: plant::Drive,
+}
+
+fn decimate(kernel: &[f64], history: &[f64], head: usize) -> f64 {
+    let (first, second) = kernel.split_at(kernel.len() - head);
+    first
+        .iter()
+        .zip(&history[head..kernel.len()])
+        .chain(second.iter().zip(&history[..head]))
+        .fold(0., |sum, (coefficient, value)| sum + coefficient * value)
 }
 
 impl<const FACTOR: usize> Voice<FACTOR> {
@@ -262,12 +280,16 @@ impl<const FACTOR: usize> Voice<FACTOR> {
             feedback: feedback::Loop::new(FACTOR),
             #[cfg(pilot_voice_output)]
             output: output::Stage::new((RATE * FACTOR) as f64, FACTOR),
+            #[cfg(pilot_voice_monitor)]
+            monitor: output::Monitor::new((RATE * FACTOR) as f64, FACTOR),
             increment: 440. / (FACTOR * RATE) as f64,
             #[cfg(not(pilot_voice_contours))]
             trim: 0.,
             #[cfg(pilot_voice_contours)]
             contours: [contour::Contour::default(); 2],
             history: [0.; 769],
+            #[cfg(pilot_voice_monitor)]
+            phones_history: [0.; 769],
             head: 0,
             frames: 0,
             #[cfg(all(pilot_returns, not(pilot_voice_contours)))]
@@ -434,11 +456,19 @@ impl<const FACTOR: usize> Voice<FACTOR> {
                     if panel.modulation.filter { modulation * modulation::FILTER_OCTAVES } else { 0. },
                 );
                 let post_vca = (filtered_v / INPUT_PEAK_V) * volume;
+                #[cfg(pilot_voice_monitor)]
+                let post_vca = post_vca + self.monitor.reference(panel.output.tuner);
                 #[cfg(all(pilot_voice_feedback, not(pilot_voice_output)))]
                 self.feedback.observe(post_vca, panel.feedback.output_level);
                 #[cfg(pilot_voice_output)]
                 let post_vca = {
-                    let [hi, lo] = self.output.tick(post_vca, panel.feedback.output_level, panel.output.enabled);
+                    let [hi, lo, _c2_right] = self.output.tick(
+                        post_vca, panel.feedback.output_level, panel.output.enabled,
+                    );
+                    #[cfg(pilot_voice_monitor)]
+                    {
+                        self.phones_history[self.head] = self.monitor.tick(_c2_right, panel.output.phones_level);
+                    }
                     self.feedback.observe_low(lo);
                     hi
                 };
@@ -467,16 +497,15 @@ impl<const FACTOR: usize> Voice<FACTOR> {
         }
         self.frames += 1;
         if self.frames > LATENCY {
-            let (first, second) = kernel.split_at(kernel.len() - self.head);
-            let filtered = first
-                .iter()
-                .zip(&self.history[self.head..kernel.len()])
-                .chain(second.iter().zip(&self.history[..self.head]))
-                .fold(0., |sum, (coefficient, value)| sum + coefficient * value);
+            let filtered = decimate(kernel, &self.history, self.head);
             #[cfg(pilot_voice_contours)]
             {
-                #[cfg(pilot_voice_output)]
+                #[cfg(all(pilot_voice_output, not(pilot_voice_monitor)))]
                 let filtered = self.output.monitor(filtered, panel.output.low);
+                #[cfg(pilot_voice_monitor)]
+                let filtered = self.monitor.mix(
+                    filtered, decimate(kernel, &self.phones_history, self.head), panel.output,
+                );
                 last.sample = filtered;
             }
             #[cfg(not(pilot_voice_contours))]

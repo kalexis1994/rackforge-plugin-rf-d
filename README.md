@@ -13,7 +13,8 @@ tres osciladores, dos contornos, Emphasis, ruido y modulación
 desde la rueda MIDI, glide y pitch bend. El mezclador de
 desarrollo admite entrada externa mono, preamplificación,
 sobrecarga y realimentación LO. La etapa de salida incorpora
-C2 y permite elegir HI o LO. [Controles y verificación](docs/SALIDA_TOCABLE.md).
+C2, el monitor HI/LO/Phones y el afinador A‑440.
+[Controles y verificación](docs/SALIDA_TOCABLE.md).
 
 `python -B tools/check_rf_d_playable_voice.py` prueba el motor en
 WASM y RackForge desde un directorio temporal y lo retira al terminar.

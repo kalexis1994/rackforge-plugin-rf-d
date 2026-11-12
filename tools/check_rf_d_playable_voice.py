@@ -22,6 +22,7 @@ from check_rf_d_voice_keyboard import verify_keyboard
 from check_rf_d_voice_external import verify_external, verify_host_capture
 from check_rf_d_voice_feedback import verify_feedback
 from check_rf_d_voice_output import verify_output
+from check_rf_d_voice_monitor import verify_monitor
 
 VERSION = "0.7.0"
 PLUGIN_ID = "org.rackforge.lab.rf-d-voice"
@@ -67,7 +68,7 @@ def oscillator_tables(report):
     return path
 
 
-def parameter_schema(bank, emphasis, modulation, performance, external, feedback, output):
+def parameter_schema(bank, emphasis, modulation, performance, external, feedback, output, monitor):
     schema = json.loads(SCHEMA.read_text(encoding="utf8"))
     if bank:
         extra = json.loads(SCHEMA.with_name("oscillators.json").read_text(encoding="utf8"))
@@ -99,6 +100,10 @@ def parameter_schema(bank, emphasis, modulation, performance, external, feedback
         extra = json.loads(SCHEMA.with_name("output.json").read_text(encoding="utf8"))
         schema["parameters"][3].update(page="output", order=0)
         schema["pages"].extend(extra["pages"])
+        schema["parameters"].extend(extra["parameters"])
+    if monitor:
+        schema["parameters"][-1]["kind"]["choices"].append({"value": 2, "name": "Phones"})
+        extra = json.loads(SCHEMA.with_name("monitor.json").read_text(encoding="utf8"))
         schema["parameters"].extend(extra["parameters"])
     return schema
 
@@ -359,6 +364,7 @@ def main():
     profiles.add_argument("--keyboard", action="store_true", help="select the keyboard development profile")
     profiles.add_argument("--external", action="store_true", help="select the external input development profile")
     profiles.add_argument("--feedback", action="store_true", help="select the LO feedback development profile")
+    profiles.add_argument("--main-output", action="store_true", help="select the HI/LO development profile")
     parser.add_argument("--package", metavar="VERSION", help="export one .rfplugin for the selected profile")
     args = parser.parse_args()
     if args.package and not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?", args.package):
@@ -370,9 +376,10 @@ def main():
     external = performance and not args.keyboard
     feedback = external and not args.external
     output = feedback and not args.feedback
+    monitor = output and not args.main_output
     profile_version = VERSION if modulation else "0.6.0" if emphasis else "0.5.0" if bank else "0.4.0"
     version = args.package or (f"{profile_version}-dev" if performance else profile_version)
-    schema = parameter_schema(bank, emphasis, modulation, performance, external, feedback, output)
+    schema = parameter_schema(bank, emphasis, modulation, performance, external, feedback, output, monitor)
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"],
                RACKFORGE_OPTIMIZE_PLUGINS="0")
 
@@ -417,10 +424,11 @@ def main():
             external_flags = ("--cfg", "pilot_voice_external") if external else ()
             feedback_flags = ("--cfg", "pilot_voice_feedback") if feedback else ()
             output_flags = ("--cfg", "pilot_voice_output") if output else ()
+            monitor_flags = ("--cfg", "pilot_voice_monitor") if monitor else ()
             execute(*flags, "--edition=2021", "--crate-type", "cdylib", "-C", "panic=abort", "-C", "lto=fat",
                     "--cfg", "pilot_pi", "--cfg", "pilot_returns", "--cfg", "pilot_host_blocks",
                     "--cfg", "pilot_voice_contours", *bank_flags, *filter_flags, *modulation_flags,
-                    *performance_flags, *external_flags, *feedback_flags, *output_flags, guest,
+                    *performance_flags, *external_flags, *feedback_flags, *output_flags, *monitor_flags, guest,
                     "--extern", f"rackforge_plugin_sdk={sdk}", "-o", component)
             execute(WASM_OPT, component, "-O4", "-o", optimized)
 
@@ -453,6 +461,8 @@ def main():
                 verify_feedback(render, report, output)
             if output:
                 verify_output(render, report)
+            if monitor:
+                verify_monitor(render, report)
             template = folder / "package"
             package_template(template, schema, version, bank, emphasis, modulation, external, feedback)
             if args.package:
@@ -467,7 +477,8 @@ def main():
                 shutil.copyfile(optimized, template / "component.wasm")
                 host_package = template
             if external:
-                verify_host_capture(execute, render, folder, host_package, report, feedback)
+                verify_host_capture(execute, render, folder, host_package, report, feedback,
+                                    schema if monitor else None)
             report["host_stress"] = {}
             preset = ("loop_drive" if feedback else "wheel_motion" if modulation else "resonant_bass" if emphasis
                       else "three_oscillators" if bank else "default")
@@ -486,19 +497,20 @@ def main():
                 artifact.parent.mkdir(exist_ok=True)
                 archive.replace(artifact)
         report["passed"] = True
-        if output and not args.package:
-            write(ROOT / "evidence/rf_d_voice_development04.json", report)
+        if monitor and not args.package:
+            write(ROOT / "evidence/rf_d_voice_development05.json", report)
         if args.package:
             print(f"{artifact}\n{report['archive_sha256']}")
         else:
             print("WASM and RackForge checks passed with no archive")
-        result_keys = ("output_audio", "feedback_audio", "external_audio", "keyboard_audio", "modulation_audio", "filter_audio",
+        result_keys = ("monitor_audio", "output_audio", "feedback_audio", "external_audio", "keyboard_audio", "modulation_audio", "filter_audio",
                        "oscillator_audio", "audio")
         results = next(report[key] for key in result_keys if key in report)
         print(json.dumps(results, indent=2))
     except Exception:
         fields = ("audio", "oscillator_audio", "filter_audio", "modulation_audio", "keyboard_audio",
-                  "external_audio", "feedback_audio", "output_audio", "host_capture", "host_feedback",
+                  "external_audio", "feedback_audio", "output_audio", "monitor_audio",
+                  "host_capture", "host_feedback", "host_monitor",
                   "node_128_ns", "host_stress")
         print(json.dumps({key: report[key] for key in fields if key in report},
                          indent=2), flush=True)

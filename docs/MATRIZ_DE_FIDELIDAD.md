@@ -30,7 +30,7 @@ no significa identidad sonora con el hardware.
 | Teclado de desarrollo | CV compartido y retenido, glide RC y pitch bend de 14 bits | [Glide y destinos de bend](TECLADO_TOCABLE.md) | Curvas de calibración y validación física en la próxima versión |
 | Entrada externa de desarrollo | Bus mono, preamp AC con sobrecarga, rama R46 y lectura de pico | [Respuesta y captura de RackForge](ENTRADA_EXTERNA_TOCABLE.md) | Ganancia y carga medidas, escucha y dispositivo físico |
 | Realimentación de desarrollo | Retorno LO a EXT después de VCA y Output Level | [Lazo y contrastes en RackForge](REALIMENTACION_TOCABLE.md) | Calibración de salida y escucha con dispositivo físico |
-| Salida de desarrollo | C2, carga de R20, contactos SW18 y divisor HI/LO | [Puerto de salida y contraste](SALIDA_TOCABLE.md) | Curvas y cargas medidas, amplificador de auriculares y escucha física |
+| Salida de desarrollo | C2, R20, SW18, divisor HI/LO, R21, C19/C21 y referencia A‑440 | [Puerto de salida, reducción AC y contraste](SALIDA_TOCABLE.md) | Carga dinámica reflejada a C2, etapa activa de auriculares en señal grande, calibración y escucha física |
 
 El [VCO1 nativo ensamblado](VCO1_STAMP_RESULTADOS.md) conserva 134
 incógnitas, dos 741 completos, BJT/JFET, Schmitt/reset y cargas del panel.

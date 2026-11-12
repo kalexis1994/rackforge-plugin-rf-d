@@ -79,11 +79,16 @@ if (option === "--panel-state" || option === "--voice-state") {
     checkValues();
     if (option === "--voice-state" && panel.length > 11) {
         // The original voice used the same header with just the first eleven controls.
-        for (const count of [11, 26, 29, 35, 37, 39, 40].filter((size) => size < panel.length)) {
+        for (const count of [11, 26, 29, 35, 37, 39, 40, 42].filter((size) => size < panel.length)) {
             transfer().set(saved);
+            // The previous output profile only stored HI or LO.
+            if (count === 42) new DataView(transfer().buffer, transfer().byteOffset).setFloat64(4 + 41 * 8, 1, true);
             check(wasm.rackforge_load_state(4 + count * 8));
-            if (panel.some(({index, kind}, slot) => wasm.rackforge_get_parameter(index) !==
-                (slot < count ? values[slot] : Number(kind.default)))) {
+            if (panel.some(({index, kind}, slot) => {
+                const expected = count === 42 && index === 42 ? 1 :
+                    slot < count ? values[slot] : Number(kind.default);
+                return wasm.rackforge_get_parameter(index) !== expected;
+            })) {
                 throw new Error(`Voice state migration failed for ${count} controls`);
             }
         }
