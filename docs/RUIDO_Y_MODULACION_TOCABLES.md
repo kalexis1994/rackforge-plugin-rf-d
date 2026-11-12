@@ -79,3 +79,28 @@ esos dos análisis.
 `--resonant-filter`, `--oscillator-bank` y `--single-saw`.
 El motor carga los estados de esas tres versiones y completa
 los controles nuevos con sus valores iniciales.
+
+## Salida física a 128 frames
+
+El banco cargó **Wheel Motion** desde el paquete probado por hash
+en el host corregido `37e5f803`. Alternó las notas 57 y 45 en
+legato y envió CC1 con valores 127, 80, 127 y 48. ASIO4ALL y la
+salida NVIDIA confirmaron 128 frames efectivos a 48 kHz.
+
+| Pase admitido | Callbacks | Mediana | Máximo | Asignaciones de render | Plazos perdidos |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Control repetido | 1200 | 0,0931 ms | 0,1924 ms | 0 | 0 |
+| Wheel Motion 1 | 4800 | 0,1307 ms | 0,2382 ms | 0 | 0 |
+| Wheel Motion 2 | 4800 | 0,1316 ms | 0,2290 ms | 0 | 0 |
+
+Los pases admitidos quedaron dentro de 1,333 ms. El primer
+control registró una solicitud de reset de ASIO. La repetición
+pasó con el mismo binario. El banco silenció los buffers del
+dispositivo después de verificar la señal del motor y restauró
+el perfil al terminar. La escucha queda pendiente.
+[Recibo ASIO](../evidence/rf_d_playable_voice_asio04.json).
+
+Con el registro de compilación de RackForge descrito en el
+[protocolo de combustible](RECOVERY_ENGINE128_FUEL_PROTOCOLO.md),
+ejecutar
+`python -B tools/check_rf_d_playable_voice_asio.py --modulation --host-build tmp/lab-current/voice-fuel-build.jsonl`.

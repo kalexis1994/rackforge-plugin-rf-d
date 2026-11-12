@@ -44,16 +44,25 @@ def voice_probe(preset="three_oscillators"):
                     }
                 }
                 let telemetry = pool.telemetry().clone();""")
+    if preset == "wheel_motion":
+        source = once(source, "                        0 => Some([0x90, 57, 100]),", """                        0 => Some([0x90, 57, 100]),
+                        1 => Some([0xb0, 1, 127]),
+                        1537 => Some([0xb0, 1, 80]),
+                        3073 => Some([0xb0, 1, 127]),
+                        4097 => Some([0xb0, 1, 48]),""")
     return source
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--filter", action="store_true", help="measure the 0.6.0 resonant bass preset")
+    profiles = parser.add_mutually_exclusive_group()
+    profiles.add_argument("--filter", action="store_true", help="measure the 0.6.0 resonant bass preset")
+    profiles.add_argument("--modulation", action="store_true", help="measure the 0.7.0 preset with MIDI CC1")
     parser.add_argument("--host-build", type=Path, help="successful Cargo JSON log under tmp/lab-current")
     args = parser.parse_args()
-    preset = "resonant_bass" if args.filter else "three_oscillators"
-    package_receipt = "rf_d_playable_voice03.json" if args.filter else "rf_d_playable_voice02.json"
+    preset = "wheel_motion" if args.modulation else "resonant_bass" if args.filter else "three_oscillators"
+    sequence = 4 if args.modulation else 3 if args.filter else 2
+    package_receipt = f"rf_d_playable_voice{sequence:02}.json"
     package_report = json.loads((ROOT / "evidence" / package_receipt).read_bytes())
     version = package_report["version"]
     artifact = ROOT / f"artifacts/rf-d-voice-{version}.rfplugin"
