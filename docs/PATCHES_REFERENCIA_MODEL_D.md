@@ -300,6 +300,29 @@ genera `artifacts/rf-d-oboe-cuerpo-ab.wav` a −22 dBFS RMS.
 El RF-D con el ajuste de cuerpo entra en 2,08 s y el RF-D
 del primer A/B anterior entra en 6,24 s.
 
+### Ataque y articulación del Oboe
+
+La toma de SynthMania alcanza el nivel sostenido en unos
+20–30 ms en las tres entradas después de una pausa. En
+RF-D, el ataque tarda más con el valor nominal de 100 ms
+de la ficha. La primera entrada de la captura también
+empieza con menos energía entre 2 y 8 kHz y gana brillo
+durante los primeros 30 ms.
+
+En el render de escucha se usa un ataque de volumen de
+30 ms y se desplaza 6 ms el inicio de las tres notas
+separadas. Se mantienen los cortes de nota, las uniones
+legato, el vibrato y los controles del ajuste de cuerpo.
+Se compara RMS en ventanas de 8 ms, relativo al nivel
+de cada nota entre 50 y 70 ms desde el inicio transcrito.
+El tiempo nuevo es un ajuste para esta interpretación.
+[Curvas de ataque](../evidence/rf_d_oboe_articulation01.json).
+
+`python -B tools/check_rf_d_oboe_articulation.py --audition --write-report`
+genera `artifacts/rf-d-oboe-ataque-ab.wav` a −22 dBFS RMS.
+El RF-D con el ataque ajustado entra en 2,08 s y el RF-D
+del A/B de cuerpo entra en 6,24 s.
+
 ## Cómo escuchar y medir
 
 Para el A/B musical hay que identificar la nota, su duración y

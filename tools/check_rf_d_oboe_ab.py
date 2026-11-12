@@ -46,11 +46,11 @@ def read_reference():
     return pcm.reshape(-1, 2).mean(axis=1) / 32768.
 
 
-def score(schema, *, controls=CONTROLS):
+def score(schema, *, controls=CONTROLS, keys=KEYS):
     indices = {parameter["id"]: parameter["index"] for parameter in schema["parameters"]}
     events = [change(indices[name], value) for name, value in controls.items()]
     performance = []
-    for start_ms, stop_ms, note in KEYS:
+    for start_ms, stop_ms, note in keys:
         performance.append([PREROLL + frames_at(start_ms), 0x90, note, 100])
         performance.append([PREROLL + frames_at(stop_ms), 0x80, note, 0])
     # For a legato change, press the next key before releasing the previous one.
