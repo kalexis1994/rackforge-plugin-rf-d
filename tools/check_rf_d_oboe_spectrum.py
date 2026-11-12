@@ -19,9 +19,9 @@ FIT_NOTES = (3, 4)
 RESERVED_NOTES = (0, 1, 2, 5, 6)
 
 
-def band_levels(audio):
+def band_levels(audio, bands=BANDS):
     frequencies = np.fft.rfftfreq(FFT_SIZE, 1. / SAMPLE_RATE)
-    masks = [(low <= frequencies) & (frequencies < high) for low, high in BANDS]
+    masks = [(low <= frequencies) & (frequencies < high) for low, high in bands]
     rows = []
     for start, stop in NOTE_WINDOWS:
         signal = audio[frames_at(start):frames_at(stop)].astype(np.float64)

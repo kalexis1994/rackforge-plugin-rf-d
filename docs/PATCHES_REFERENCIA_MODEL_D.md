@@ -275,6 +275,31 @@ genera `artifacts/rf-d-oboe-brillo-ab.wav` a −22 dBFS RMS.
 La secuencia empieza con Minimoog y RF-D ajustado. Después
 repite Minimoog y reproduce RF-D con los valores de la ficha.
 
+### Ajuste del cuerpo del Oboe
+
+En la primera comparación con brillo ajustado, RF-D tenía
+1,3 dB más de energía relativa en la fundamental de la
+nota mediana. Los armónicos de 1,2 a 4 kHz quedaban más bajos.
+El séptimo armónico medía −41,8 dB respecto de la fundamental
+en el Minimoog y −21,0 dB en RF-D, como medianas de siete notas.
+Un pulso rectangular con ciclo útil de 2/7 tiene un cero
+teórico en ese armónico. Se ensayó 28,57 % como hipótesis
+para la toma, con el 30,42 % de la placa como comparación.
+
+El Fa4 y el Sol4 seleccionaron Cutoff 67 % y Emphasis 60 %,
+con nivel de OSC1 al 40 %. En las otras cinco notas, el
+error medio entre 1,2 y 4 kHz bajó de 3,4 a 2,1 dB.
+La mayor recuperación se dio entre 2,2 y 4 kHz y el nivel
+relativo entre 1,2 y 2,2 kHz sigue por debajo de la toma.
+El error medio entre 4 y 8 kHz quedó en 2,4 dB. El ancho
+de pulso de 2/7 se aplica en este experimento de escucha.
+[Mediciones por nota](../evidence/rf_d_oboe_body01.json).
+
+`python -B tools/check_rf_d_oboe_body.py --audition --write-report`
+genera `artifacts/rf-d-oboe-cuerpo-ab.wav` a −22 dBFS RMS.
+El RF-D con el ajuste de cuerpo entra en 2,08 s y el RF-D
+del primer A/B anterior entra en 6,24 s.
+
 ## Cómo escuchar y medir
 
 Para el A/B musical hay que identificar la nota, su duración y

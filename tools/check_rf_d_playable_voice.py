@@ -36,7 +36,7 @@ SAMPLE_RATE = 48_000
 MARGIN_NS = 128 * 1e9 / SAMPLE_RATE / 2
 
 
-def oscillator_tables(report, *, calibrated=False):
+def oscillator_tables(report, *, calibrated=False, wide_pulse_duty=None):
     model, report["h128_sha256"] = pilot_wave_model()
     harmonics = np.arange(1, 129)
     bands = (128, 64, 32, 16, 8, 4, 2, 1)
@@ -50,6 +50,10 @@ def oscillator_tables(report, *, calibrated=False):
         assert measured["passed"]
         wide = measured["result"]["pulse_duties"]["11"]["high"]
         report["wide_pulse"] = dict(duty=wide, contact=11, source_sha256=sha(evidence))
+    if wide_pulse_duty is not None:
+        assert 0.15 < wide_pulse_duty < 0.5
+        wide = wide_pulse_duty
+        report["wide_pulse"] = dict(duty=wide, source="laboratory override")
     widths = (0.5, wide, 0.15)
     pulses = [2. * np.sin(np.pi * harmonics * width) * np.exp(-1j * np.pi * harmonics * width)
               / (np.pi * harmonics) for width in widths]
@@ -353,7 +357,7 @@ def verify_oscillators(render, report):
                               over_half_period=sum(value > MARGIN_NS for value in times)))
 
 
-def main(argv=None, *, inspect_audio=None, legacy_timbre=False):
+def main(argv=None, *, inspect_audio=None, legacy_timbre=False, wide_pulse_duty=None):
     parser = argparse.ArgumentParser(description=__doc__)
     profiles = parser.add_mutually_exclusive_group()
     profiles.add_argument("--single-saw", action="store_true", help="rebuild the 0.4.0 single-oscillator voice")
@@ -385,6 +389,8 @@ def main(argv=None, *, inspect_audio=None, legacy_timbre=False):
     midi = control_inputs and not args.control_inputs
     factory = midi and not args.midi
     calibrated = midi and not legacy_timbre
+    if wide_pulse_duty is not None and (not calibrated or inspect_audio is None):
+        parser.error("wide pulse duty overrides require calibrated MIDI audio inspection")
     profile_version = VERSION if modulation else "0.6.0" if emphasis else "0.5.0" if bank else "0.4.0"
     version = args.package or (f"{profile_version}-dev" if performance else profile_version)
     schema = parameter_schema(bank, emphasis, modulation, performance, external, feedback, output, monitor, control_inputs)
@@ -410,7 +416,9 @@ def main(argv=None, *, inspect_audio=None, legacy_timbre=False):
         report["fir_sha256"] = sha(fir)
         modules = dict(voice=ROOT / "tools/rf_d_reduced_voice.rs", pi_coefficients=fir)
         if bank:
-            modules["oscillator_tables"] = oscillator_tables(report, calibrated=calibrated)
+            modules["oscillator_tables"] = oscillator_tables(
+                report, calibrated=calibrated, wide_pulse_duty=wide_pulse_duty,
+            )
             modules["voice_programs"] = emit_program_table(programs)
         else:
             wave, report["h128_sha256"] = generate_wave()
