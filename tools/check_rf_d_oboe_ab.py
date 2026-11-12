@@ -46,9 +46,9 @@ def read_reference():
     return pcm.reshape(-1, 2).mean(axis=1) / 32768.
 
 
-def score(schema):
+def score(schema, *, controls=CONTROLS):
     indices = {parameter["id"]: parameter["index"] for parameter in schema["parameters"]}
-    events = [change(indices[name], value) for name, value in CONTROLS.items()]
+    events = [change(indices[name], value) for name, value in controls.items()]
     performance = []
     for start_ms, stop_ms, note in KEYS:
         performance.append([PREROLL + frames_at(start_ms), 0x90, note, 100])
@@ -89,27 +89,33 @@ def vibrato_span(audio):
     return float(high - low)
 
 
-def write_ab(reference, candidate):
+def write_audition(takes, order, destination):
     fade = np.ones(FRAMES)
     edge = np.linspace(0., 1., frames_at(10))
     fade[:edge.size], fade[-edge.size:] = edge, edge[::-1]
-    clips = [reference * fade, candidate * fade]
+    clips = {name: take * fade for name, take in takes.items()}
     # Use constant gain per complete phrase and leave 1 dB of peak headroom.
     target = min(10. ** (-22. / 20.), *(10. ** (-1. / 20.) * rms(clip) / np.max(abs(clip))
-                                      for clip in clips))
-    gains = [target / rms(clip) for clip in clips]
-    pcm = [np.rint(32767. * clip * gain).astype("<i2") for clip, gain in zip(clips, gains)]
-    levels = [float(20. * np.log10(rms(clip.astype(np.float64) / 32767.))) for clip in pcm]
-    assert abs(levels[0] - levels[1]) < 0.01
+                                      for clip in clips.values()))
+    gains = {name: target / rms(clip) for name, clip in clips.items()}
+    pcm = {name: np.rint(32767. * clip * gains[name]).astype("<i2") for name, clip in clips.items()}
+    levels = {name: float(20. * np.log10(rms(clip.astype(np.float64) / 32767.)))
+              for name, clip in pcm.items()}
+    assert max(levels.values()) - min(levels.values()) < 0.01
     gap = np.zeros(frames_at(300), dtype="<i2")
-    sequence = [pcm[0], gap, pcm[1], gap, pcm[0], gap, pcm[1]]
-    AUDITION.parent.mkdir(exist_ok=True)
-    with wave.open(str(AUDITION), "wb") as wav:
+    sequence = []
+    for name in order:
+        if sequence:
+            sequence.append(gap)
+        sequence.append(pcm[name])
+    destination.parent.mkdir(exist_ok=True)
+    with wave.open(str(destination), "wb") as wav:
         wav.setparams((1, 2, SAMPLE_RATE, 0, "NONE", "not compressed"))
         wav.writeframes(np.concatenate(sequence).tobytes())
     playlist = [dict(source=source, start_frame=index * (FRAMES + gap.size))
-                for index, source in enumerate(("Minimoog", "RF-D") * 2)]
-    return dict(sha256=sha(AUDITION), gain=gains, rms_dbfs=levels, playlist=playlist)
+                for index, source in enumerate(order)]
+    return dict(sha256=sha(destination), gain=list(gains.values()), rms_dbfs=list(levels.values()),
+                playlist=playlist)
 
 
 def main():
@@ -139,7 +145,9 @@ def main():
                       gate_ms_and_midi_note=KEYS, estimated_mod_wheel_ms_and_cc1=WHEEL,
                       preroll_frames=PREROLL, compensated_voice_delay_frames=VOICE_DELAY,
                       bit_equal_block_frames=[128, 480], note_measurements=measurements,
-                      final_vibrato_p95_minus_p05_cents=vibrato, audition=write_ab(reference, candidate))
+                      final_vibrato_p95_minus_p05_cents=vibrato,
+                      audition=write_audition({"Minimoog": reference, "RF-D": candidate},
+                                              ("Minimoog", "RF-D") * 2, AUDITION))
         if args.write_report:
             write(RECEIPT, report)
         print(json.dumps(report, indent=2, allow_nan=False))

@@ -175,6 +175,40 @@ armónicos se mide sobre la captura publicada y el render
 completo, con la transferencia de Cutoff y la cadena de
 grabación de la demo pendientes de identificar.
 
+### De dónde sale la pérdida de agudos
+
+Se repitió la misma frase cambiando un control por vez.
+Con Cutoff al 50 %, el pico de RF-D fue 0,035 FS frente al
+umbral de 0,8 FS del limitador de salida. Reducir Output Level
+de 50 a 25 dejó H2/H1 dentro de 0,1 dB del original de RF-D.
+Reducir el nivel de OSC1 de 40 a 20 apenas movió esa relación.
+Abrir Cutoff de 50 a 90 recuperó entre 22,4 y 22,6 dB de
+H2/H1 en las siete notas.
+
+| Fa4 sostenido | H2/H1 | H3/H1 | H5/H1 |
+| --- | ---: | ---: | ---: |
+| Minimoog de la demo | −3,9 dB | −13,0 dB | −6,9 dB |
+| RF-D, Cutoff 50 | −28,6 dB | −64,0 dB | −68,1 dB |
+| RF-D, Cutoff 90 | −6,0 dB | −23,1 dB | −7,0 dB |
+
+La calibración **Filter Range** del manual de servicio de
+1973 pide igualar la autooscilación a 440 Hz con Cutoff en −1,
+Emphasis en 10 y ambos switches de teclado apagados. Con
+el contorno desactivado, la voz de RF-D se estabiliza a
+91,7 Hz en el 40 % equivalente a −1 y a 443,1 Hz en el 66,5 %.
+La tabla del motor parte del RANGE provisional 0,1 de los
+[tres puntos DC del oráculo](VOZ_APERTURA_CUTOFF_RESULTADOS.md).
+Este contraste permite medir el error del control fuera del
+patch. El ajuste al 90 % es local para la escucha. El motor
+sigue usando su curva anterior y el tercer armónico permanece
+unos 10 dB por debajo de la captura en el Fa4.
+[Manual de servicio, página impresa 14](https://www.vintagesynthparts.com/wp-content/uploads/2016/08/MINIMOOG-D_SERVICE_MANUAL.pdf).
+
+`python -B tools/check_rf_d_oboe_clarity.py --audition --write-report`
+genera `artifacts/rf-d-oboe-cutoff-ab.wav` con la secuencia
+Minimoog, RF-D al 50 %, Minimoog, RF-D al 90 %. Las tomas
+mantienen −22 dBFS RMS. [Mediciones](../evidence/rf_d_oboe_clarity01.json).
+
 ## Cómo escuchar y medir
 
 Para el A/B musical hay que identificar la nota, su duración y
