@@ -74,9 +74,8 @@ enventanado, con tolerancia de 0,1 Hz. La dispersión de fase del
 filtro se registra como medida aparte. El DSP se conservó entre
 esos dos análisis.
 
-`python -B tools/check_rf_d_playable_voice.py` genera el paquete
-0.7.0. Las versiones 0.6.0, 0.5.0 y 0.4.0 se regeneran con
-`--resonant-filter`, `--oscillator-bank` y `--single-saw`.
+`python -B tools/check_rf_d_playable_voice.py --modulation` prueba el
+perfil 0.7.0. La opción `--package 0.7.0` exporta ese perfil bajo demanda.
 El motor carga los estados de esas tres versiones y completa
 los controles nuevos con sus valores iniciales.
 

@@ -60,8 +60,12 @@ const FILTER_END: usize = OSC_END + 3;
 #[cfg(pilot_oscillator_bank)]
 const MOD_DEFAULTS: [f64; 6] = [0., 35., 0., 0., 0., 0.];
 #[cfg(pilot_oscillator_bank)]
-const CONTROL_COUNT: usize = if cfg!(pilot_voice_modulation) {
-    FILTER_END + MOD_DEFAULTS.len()
+const MOD_END: usize = FILTER_END + MOD_DEFAULTS.len();
+#[cfg(pilot_oscillator_bank)]
+const CONTROL_COUNT: usize = if cfg!(pilot_voice_performance) {
+    MOD_END + 2
+} else if cfg!(pilot_voice_modulation) {
+    MOD_END
 } else if cfg!(pilot_voice_filter) {
     FILTER_END
 } else {
@@ -76,8 +80,10 @@ const DEFAULTS: [f64; CONTROL_COUNT] = {
             VOICE_DEFAULTS[index]
         } else if index < OSC_END {
             OSC_DEFAULTS[index - VOICE_DEFAULTS.len()]
-        } else if index >= FILTER_END {
+        } else if (index >= FILTER_END) && (index < MOD_END) {
             MOD_DEFAULTS[index - FILTER_END]
+        } else if index == MOD_END + 1 {
+            120.
         } else {
             0.
         };
@@ -104,6 +110,14 @@ impl Default for Controls {
 #[cfg(pilot_returns)]
 fn control_index(index: u32, value: f64) -> Option<usize> {
     let index = index as usize;
+    #[cfg(pilot_voice_performance)]
+    if index >= MOD_END {
+        return match index - MOD_END {
+            0 if value == 0. || value == 1. => Some(index),
+            1 if (1. ..=10_000.).contains(&value) => Some(index),
+            _ => None,
+        };
+    }
     #[cfg(pilot_voice_modulation)]
     if index >= FILTER_END {
         return match index - FILTER_END {
@@ -168,6 +182,11 @@ impl Controls {
                 mix: self.0[32] * 0.01,
                 oscillator: self.0[33] == 1.,
                 filter: self.0[34] == 1.,
+            },
+            #[cfg(pilot_voice_performance)]
+            keyboard: voice::keyboard::Controls {
+                glide: self.0[MOD_END] == 1.,
+                time_ms: self.0[MOD_END + 1],
             },
             contours: voice::Contours {
                 volume: voice::contour::Settings {
@@ -289,8 +308,12 @@ fn note_event(event: &MidiEvent) -> Option<Event> {
         (0x90, 36..=72, _) => Message::NoteOn(note),
         #[cfg(pilot_voice_modulation)]
         (0xb0, 1, 0..=127) => Message::ModWheel(velocity),
-        #[cfg(pilot_voice_modulation)]
+        #[cfg(all(pilot_voice_modulation, not(pilot_voice_performance)))]
         (0xb0, 121, _) => Message::ModWheel(0),
+        #[cfg(pilot_voice_performance)]
+        (0xb0, 121, _) => Message::ResetControllers,
+        #[cfg(pilot_voice_performance)]
+        (0xe0, low @ 0..=127, high @ 0..=127) => Message::PitchBend(u16::from(low) | u16::from(high) << 7),
         (0xb0, 120 | 123, _) => Message::AllNotesOff,
         _ => return None,
     };
@@ -368,6 +391,8 @@ impl Processor for Guest {
             || bytes.len() == 4 + OSC_END * 8;
         #[cfg(pilot_voice_modulation)]
         let valid_length = valid_length || bytes.len() == 4 + FILTER_END * 8;
+        #[cfg(pilot_voice_performance)]
+        let valid_length = valid_length || bytes.len() == 4 + MOD_END * 8;
         if !valid_length || &bytes[..4] != STATE_TAG {
             return false;
         }

@@ -130,6 +130,7 @@ impl Oscillator {
         rate: f64,
         ramp: f64,
         #[cfg(pilot_voice_modulation)] pitch_offset: f64,
+        #[cfg(pilot_voice_performance)] bend: f64,
     ) -> (f64, f64, f64) {
         let free = index == 2 && !panel.osc3_tracking;
         let base_hz = if free { FREE_OSC3_HZ } else { base_hz };
@@ -141,6 +142,8 @@ impl Oscillator {
         let octaves = OCTAVES[settings.range] + (semitones + panel.tune_cents * 0.01) / 12.;
         #[cfg(pilot_voice_modulation)]
         let octaves = octaves + pitch_offset;
+        #[cfg(pilot_voice_performance)]
+        let octaves = if free { octaves } else { octaves + bend };
         self.update_pitch(base_hz, octaves, rate);
         self.phase += self.increment;
         if self.phase >= 1. {
@@ -202,6 +205,7 @@ impl Bank {
         base_increment: f64,
         #[cfg(pilot_voice_modulation)] noise: [f64; 2],
         #[cfg(pilot_voice_modulation)] pitch_offset: f64,
+        #[cfg(pilot_voice_performance)] bend: f64,
     ) -> f64 {
         let base_hz = base_increment * self.rate;
         let mut sum = 0.;
@@ -221,6 +225,8 @@ impl Bank {
                 self.ramp,
                 #[cfg(pilot_voice_modulation)]
                 pitch_offset,
+                #[cfg(pilot_voice_performance)]
+                bend,
             );
             sum += signal;
             connections += connection;

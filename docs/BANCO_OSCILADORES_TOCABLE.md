@@ -59,8 +59,9 @@ referencia eléctrica para el ajuste posterior.
 
 ## Verificación y compatibilidad
 
-`python -B tools/check_rf_d_playable_voice.py --oscillator-bank` genera el paquete y lo
-prueba en un store temporal. El [recibo de 0.5.0](../evidence/rf_d_playable_voice02.json)
+`python -B tools/check_rf_d_playable_voice.py --oscillator-bank` prueba
+la voz 0.5.0 desde un directorio temporal. La opción `--package 0.5.0`
+exporta el paquete bajo demanda. El [recibo de 0.5.0](../evidence/rf_d_playable_voice02.json)
 registra pitch aislado, combinación de tres osciladores, espectro por
 forma, seguimiento de OSC3, automatización y equivalencia bit a bit
 entre tamaños de callback. Un primer ensayo de mezcla midió 329,525 Hz
@@ -72,7 +73,7 @@ aislada de afinación y en el preset.
 La prueba ABI verifica los 26 parámetros, los dos presets y la lectura de
 los 11 valores del estado de 0.4.0 con los osciladores nuevos en sus
 valores iniciales. RackForge puede fijar la versión de plugin en un
-proyecto guardado. `--single-saw` permite regenerar el paquete 0.4.0
+proyecto guardado. `--single-saw --package 0.4.0` permite exportar ese perfil
 para esos proyectos. El estrés offline de RackForge usa los tres
 osciladores activos.
 

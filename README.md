@@ -8,34 +8,26 @@ no acredita identidad sonora con una unidad vintage.
 
 ## Motor jugable y referencia offline
 
-Importá `artifacts/rf-d-voice-0.7.0.rfplugin` desde Plugins y elegí
-**RF-D Voice** en PLAY. El preset **Wheel Motion** responde a la
-rueda MIDI con modulación de afinación y filtro. El mezclador
-incluye ruido blanco y rosa. Funciona a 48 kHz con MIDI 36–72.
-Para regenerarlo, ejecutá `python -B tools/check_rf_d_playable_voice.py`.
-[Controles y verificación](docs/RUIDO_Y_MODULACION_TOCABLES.md).
+La voz monofónica funciona a 48 kHz con MIDI 36–72. Incluye
+tres osciladores, dos contornos, Emphasis, ruido y modulación
+desde la rueda MIDI. El bloque de interpretación agrega
+glide y pitch bend. [Controles y verificación](docs/TECLADO_TOCABLE.md).
 
-La ruta jugable usa el [piloto monofónico con R59/R60](docs/VOZ_PILOTO_RETORNOS_RESULTADOS.md#retornos-en-el-paquete-portable).
-El [solver acoplado](docs/VOZ_REDUCIDA_MOTOR_RESULTADOS.md) es la referencia
-eléctrica offline. Cada bloque que se incorpore al piloto debe contrastar
-sus puertos y su salida y cumplir el presupuesto de RackForge.
+`python -B tools/check_rf_d_playable_voice.py` prueba el motor en
+WASM y RackForge desde un directorio temporal y lo retira al terminar.
+El argumento `--package VERSION` exporta un único `.rfplugin` para
+la versión elegida después de integrar varios bloques.
 
-Importá `artifacts/rf-d-pilot-0.3.2.rfplugin` desde la sección Plugins de
-RackForge. Elegí RF-D Pilot en PLAY y tocá por MIDI a 48 kHz. El paquete
-admite callbacks de hasta 4.096 frames. El panel incluye
-faders de mezcla y salida, knobs de ataque y release de audición, y los trims
-de filtro y R59. El motor de audición usa una sierra monofónica y admite notas
-MIDI 36–72. Los dos tiempos de audición ajustan la rampa lineal del piloto.
+El [piloto monofónico con R59/R60](docs/VOZ_PILOTO_RETORNOS_RESULTADOS.md#retornos-en-el-paquete-portable)
+y el [solver acoplado](docs/VOZ_REDUCIDA_MOTOR_RESULTADOS.md) conservan las
+referencias eléctricas para contrastar la voz de desarrollo.
 
-Desde la raíz, ejecutá `python -B tools/check_rf_d_pi_pilot.py --desktop-blocks`
-para regenerar el 0.3.2. El banco de referencia a 192 kHz internos se ejecuta
-con `python -B tools/check_rf_d_playable_pilot.py`.
-[Protocolo](docs/VOZ_PILOTO_JUGABLE_PROTOCOLO.md).
-
-Para Raspberry Pi, el perfil `artifacts/rf-d-pilot-0.3.1.rfplugin` usa
-96 kHz internos y conserva la salida del host a 48 kHz. Se regenera con
-`python -B tools/check_rf_d_pi_pilot.py`.
-[Resultados en la Pi](docs/VOZ_PILOTO_RETORNOS_RESULTADOS.md#perfil-raspberry-pi-031).
+Los nueve archivos locales generados de 0.1.0 a 0.7.0 se retiraron
+al adoptar este flujo. Los recibos conservan sus hashes.
+Las comparaciones históricas que cargan un archivo por hash,
+incluidas las campañas físicas y las del piloto, requieren el
+artefacto histórico correspondiente.
+[Protocolo del piloto](docs/VOZ_PILOTO_JUGABLE_PROTOCOLO.md).
 
 ## Estado actual — 2026-10-12
 

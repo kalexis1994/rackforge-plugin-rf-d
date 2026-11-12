@@ -49,7 +49,7 @@ impl Ladder {
         input_v: f64,
         cutoff: f64,
         #[cfg(pilot_voice_filter)] controls: Controls,
-        #[cfg(pilot_voice_filter)] note: u8,
+        #[cfg(pilot_voice_filter)] note: f64,
         #[cfg(pilot_voice_modulation)] modulation_octaves: f64,
     ) -> f64 {
         #[cfg(pilot_voice_filter)]

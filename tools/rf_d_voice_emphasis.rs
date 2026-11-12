@@ -26,7 +26,7 @@ pub struct Regeneration {
     coefficient: f64,
     critical_gain: f64,
     above_threshold: bool,
-    tracking: (u8, u8),
+    tracking: (u8, f64),
     tracking_factor: f64,
 }
 
@@ -39,26 +39,19 @@ impl Regeneration {
             coefficient: 0.,
             critical_gain: 0.,
             above_threshold: false,
-            tracking: (0, TRACKING_ANCHOR as u8),
+            tracking: (0, TRACKING_ANCHOR),
             tracking_factor: 1.,
         }
     }
 
-    pub fn tracking(&mut self, thirds: u8, note: u8) -> (f64, bool) {
+    pub fn tracking(&mut self, thirds: u8, note: f64) -> (f64, bool) {
         // The note is irrelevant with both switches open.
-        let key = (
-            thirds,
-            if thirds == 0 {
-                TRACKING_ANCHOR as u8
-            } else {
-                note
-            },
-        );
+        let key = (thirds, if thirds == 0 { TRACKING_ANCHOR } else { note });
         if self.tracking == key {
             return (self.tracking_factor, false);
         }
         self.tracking = key;
-        let octaves = f64::from(thirds) * (f64::from(note) - TRACKING_ANCHOR) / 36.;
+        let octaves = f64::from(thirds) * (note - TRACKING_ANCHOR) / 36.;
         self.tracking_factor = octaves.exp2();
         (self.tracking_factor, true)
     }

@@ -69,7 +69,7 @@ if (option === "--panel-state" || option === "--voice-state") {
     checkValues();
     if (option === "--voice-state" && panel.length > 11) {
         // The original voice used the same header with just the first eleven controls.
-        for (const count of [11, 26, 29].filter((size) => size < panel.length)) {
+        for (const count of [11, 26, 29, 35].filter((size) => size < panel.length)) {
             transfer().set(saved);
             check(wasm.rackforge_load_state(4 + count * 8));
             if (panel.some(({index, kind}) => wasm.rackforge_get_parameter(index) !==

@@ -63,8 +63,9 @@ el ladder nominal de recorrido amplio y ganancia de volumen normalizada.
 
 ## Verificación
 
-`python -B tools/check_rf_d_playable_voice.py --single-saw` regenera e instala el
-paquete en un store temporal de prueba. El [recibo](../evidence/rf_d_playable_voice01.json)
+`python -B tools/check_rf_d_playable_voice.py --single-saw` prueba la voz
+0.4.0 desde un directorio temporal. La opción `--package 0.4.0`
+exporta el paquete bajo demanda. El [recibo histórico](../evidence/rf_d_playable_voice01.json)
 incluye audio determinista entre tamaños de bloque, apertura del filtro,
 ataque y sustain, switch de release, legato, redisparo y automatización.
 La prueba ABI comprueba el estado de los once parámetros y el preset.

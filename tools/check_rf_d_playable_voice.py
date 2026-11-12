@@ -3,6 +3,7 @@ import argparse
 from html import escape
 import json
 import os
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -17,6 +18,7 @@ from check_rf_d_playable_pilot import (
 from check_rf_d_pilot_returns import generate_pi_fir, generate_wave, pilot_wave_model
 from check_rf_d_playable_filter import emphasis_table, verify_filter
 from check_rf_d_playable_modulation import verify_modulation
+from check_rf_d_voice_keyboard import verify_keyboard
 
 VERSION = "0.7.0"
 PLUGIN_ID = "org.rackforge.lab.rf-d-voice"
@@ -62,7 +64,7 @@ def oscillator_tables(report):
     return path
 
 
-def parameter_schema(bank, emphasis, modulation):
+def parameter_schema(bank, emphasis, modulation, performance):
     schema = json.loads(SCHEMA.read_text(encoding="utf8"))
     if bank:
         extra = json.loads(SCHEMA.with_name("oscillators.json").read_text(encoding="utf8"))
@@ -78,6 +80,10 @@ def parameter_schema(bank, emphasis, modulation):
         schema["parameters"].extend(extra["parameters"])
     if modulation:
         extra = json.loads(SCHEMA.with_name("modulation.json").read_text(encoding="utf8"))
+        schema["pages"].extend(extra["pages"])
+        schema["parameters"].extend(extra["parameters"])
+    if performance:
+        extra = json.loads(SCHEMA.with_name("performance.json").read_text(encoding="utf8"))
         schema["pages"].extend(extra["pages"])
         schema["parameters"].extend(extra["parameters"])
     return schema
@@ -315,13 +321,18 @@ def main():
     profiles.add_argument("--single-saw", action="store_true", help="rebuild the 0.4.0 single-oscillator voice")
     profiles.add_argument("--oscillator-bank", action="store_true", help="rebuild the 0.5.0 oscillator bank")
     profiles.add_argument("--resonant-filter", action="store_true", help="rebuild the 0.6.0 resonant filter")
+    profiles.add_argument("--modulation", action="store_true", help="select the 0.7.0 modulation profile")
+    parser.add_argument("--package", metavar="VERSION", help="export one .rfplugin for the selected profile")
     args = parser.parse_args()
+    if args.package and not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?", args.package):
+        parser.error("--package expects a version such as 0.8.0")
     bank = not args.single_saw
     emphasis = bank and not args.oscillator_bank
     modulation = emphasis and not args.resonant_filter
-    version = VERSION if modulation else "0.6.0" if emphasis else "0.5.0" if bank else "0.4.0"
-    artifact = ROOT / f"artifacts/rf-d-voice-{version}.rfplugin"
-    schema = parameter_schema(bank, emphasis, modulation)
+    performance = modulation and not args.modulation
+    profile_version = VERSION if modulation else "0.6.0" if emphasis else "0.5.0" if bank else "0.4.0"
+    version = args.package or (f"{profile_version}-dev" if performance else profile_version)
+    schema = parameter_schema(bank, emphasis, modulation, performance)
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"],
                RACKFORGE_OPTIMIZE_PLUGINS="0")
 
@@ -333,7 +344,7 @@ def main():
     AREA.mkdir(parents=True, exist_ok=True)
     assert not list(AREA.iterdir()), AREA
     report = dict(passed=False, version=version, plugin_id=PLUGIN_ID, host_rate_hz=SAMPLE_RATE,
-                  internal_rate_hz=RATE)
+                  internal_rate_hz=RATE, packaged=bool(args.package))
     try:
         fir = generate_pi_fir()
         report["fir_sha256"] = sha(fir)
@@ -362,9 +373,11 @@ def main():
             bank_flags = ("--cfg", "pilot_oscillator_bank") if bank else ()
             filter_flags = ("--cfg", "pilot_voice_filter") if emphasis else ()
             modulation_flags = ("--cfg", "pilot_voice_modulation") if modulation else ()
+            performance_flags = ("--cfg", "pilot_voice_performance") if performance else ()
             execute(*flags, "--edition=2021", "--crate-type", "cdylib", "-C", "panic=abort", "-C", "lto=fat",
                     "--cfg", "pilot_pi", "--cfg", "pilot_returns", "--cfg", "pilot_host_blocks",
-                    "--cfg", "pilot_voice_contours", *bank_flags, *filter_flags, *modulation_flags, guest,
+                    "--cfg", "pilot_voice_contours", *bank_flags, *filter_flags, *modulation_flags,
+                    *performance_flags, guest,
                     "--extern", f"rackforge_plugin_sdk={sdk}", "-o", component)
             execute(WASM_OPT, component, "-O4", "-o", optimized)
 
@@ -382,17 +395,26 @@ def main():
                 verify_filter(render, report)
             if modulation:
                 verify_modulation(render, report)
-            template, archive, store = folder / "package", folder / artifact.name, folder / "store"
+            if performance:
+                verify_keyboard(render, report)
+            template = folder / "package"
             package_template(template, schema, version, bank, emphasis, modulation)
-            packer = HOST / "target/release/rackforge-store.exe"
-            execute(packer, "pack-wasm", template, optimized, archive)
-            execute(packer, "install-local", archive, store)
-            manifest, = store.rglob("rackforge-plugin.toml")
+            if args.package:
+                artifact = ROOT / f"artifacts/rf-d-voice-{version}.rfplugin"
+                archive, store = folder / artifact.name, folder / "store"
+                packer = HOST / "target/release/rackforge-store.exe"
+                execute(packer, "pack-wasm", template, optimized, archive)
+                execute(packer, "install-local", archive, store)
+                manifest, = store.rglob("rackforge-plugin.toml")
+                host_package = manifest.parent
+            else:
+                shutil.copyfile(optimized, template / "component.wasm")
+                host_package = template
             report["host_stress"] = {}
             preset = ("wheel_motion" if modulation else "resonant_bass" if emphasis
                       else "three_oscillators" if bank else "default")
             for frames in (128, 480, CAPACITY):
-                raw, _ = execute(HOST / "target/release/rackforge-core.exe", "stress", manifest.parent,
+                raw, _ = execute(HOST / "target/release/rackforge-core.exe", "stress", host_package,
                                  "--preset", preset, "--data-root", folder / "state",
                                  "--voices", 1, "--blocks", 100, "--frames", frames)
                 result = raw.decode().strip()
@@ -400,18 +422,24 @@ def main():
                 assert 0.001 < float(result.split("peak=")[1].split()[0]) < 1., result
                 assert float(result.split("realtime_ratio=")[1]) < 0.5, result
                 report["host_stress"][frames] = result
-            report["archive_sha256"] = sha(archive)
             report["component_sha256"] = sha(optimized)
-            artifact.parent.mkdir(exist_ok=True)
-            archive.replace(artifact)
+            if args.package:
+                report["archive_sha256"] = sha(archive)
+                artifact.parent.mkdir(exist_ok=True)
+                archive.replace(artifact)
         report["passed"] = True
-        sequence = 4 if modulation else 3 if emphasis else 2 if bank else 1
-        receipt = f"rf_d_playable_voice{sequence:02}.json"
-        write(ROOT / "evidence" / receipt, report)
-        results = report.get("modulation_audio", report.get("filter_audio", report.get("oscillator_audio", report["audio"])))
-        print(f"{artifact}\n{json.dumps(results, indent=2)}")
+        if performance and not args.package:
+            write(ROOT / "evidence/rf_d_voice_development01.json", report)
+        if args.package:
+            print(f"{artifact}\n{report['archive_sha256']}")
+        else:
+            print("WASM and RackForge checks passed with no archive")
+        result_keys = ("keyboard_audio", "modulation_audio", "filter_audio", "oscillator_audio", "audio")
+        results = next(report[key] for key in result_keys if key in report)
+        print(json.dumps(results, indent=2))
     except Exception:
-        fields = ("audio", "oscillator_audio", "filter_audio", "modulation_audio", "node_128_ns", "host_stress")
+        fields = ("audio", "oscillator_audio", "filter_audio", "modulation_audio", "keyboard_audio",
+                  "node_128_ns", "host_stress")
         print(json.dumps({key: report[key] for key in fields if key in report},
                          indent=2), flush=True)
         raise

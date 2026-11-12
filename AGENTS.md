@@ -9,5 +9,6 @@ Follow RACE at `../rackforge-race/` for circuit modeling, evidence, capture, and
 - JSON restores tuples as lists. Compare packed/restored evidence with canonical JSON bytes or unpacked typed states; never use raw Python container equality for that gate. Preserve failed validation attempts and keep numerical gates unchanged when correcting a serialization adapter.
 - Keep original monophonic behavior as the sound target. Mark host presets, MIDI mappings, and other stage conveniences as RackForge extensions.
 - In audio processing, avoid allocation, file access, locks, logging, and serialization. Measure both audio differences and deadlines before admitting optimizations.
+- Combine several implementation blocks before exporting a version. During development, run the WASM and RackForge checks from temporary directories. Export a `.rfplugin` only for the requested release.
 
 - Follow `docs/ALMACENAMIENTO_LABORATORIO.md`: new laboratory drivers use one `tmp/lab-current`, retire generated executables/exports after measured receipts, and avoid per-attempt sample folders or copied build trees. Keep source documents and admitted inputs; declare any retirement of an admitted dependency explicitly. Preserve bounded failure fixtures and unchanged replays before cleanup.

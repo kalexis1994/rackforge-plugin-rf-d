@@ -11,6 +11,9 @@ pub mod oscillator;
 #[cfg(pilot_voice_modulation)]
 #[path = "rf_d_voice_modulation.rs"]
 pub mod modulation;
+#[cfg(pilot_voice_performance)]
+#[path = "rf_d_voice_keyboard.rs"]
+pub mod keyboard;
 #[cfg(pilot_voice_contours)]
 #[path = "rf_d_voice_contour.rs"]
 pub mod contour;
@@ -36,6 +39,10 @@ pub enum Message {
     AllNotesOff,
     #[cfg(pilot_voice_modulation)]
     ModWheel(u8),
+    #[cfg(pilot_voice_performance)]
+    PitchBend(u16),
+    #[cfg(pilot_voice_performance)]
+    ResetControllers,
 }
 
 #[derive(Clone, Copy)]
@@ -86,6 +93,8 @@ pub struct Panel {
     pub filter: FilterControls,
     #[cfg(pilot_voice_modulation)]
     pub modulation: modulation::Controls,
+    #[cfg(pilot_voice_performance)]
+    pub keyboard: keyboard::Controls,
 }
 
 #[cfg(pilot_voice_contours)]
@@ -118,6 +127,8 @@ impl Default for Panel {
             filter: FilterControls::default(),
             #[cfg(pilot_voice_modulation)]
             modulation: modulation::Controls::default(),
+            #[cfg(pilot_voice_performance)]
+            keyboard: keyboard::Controls::default(),
         }
     }
 }
@@ -146,7 +157,11 @@ impl Panel {
         let modulation_valid = self.modulation.valid();
         #[cfg(not(pilot_voice_modulation))]
         let modulation_valid = true;
-        mixer_valid && contour_valid && filter_valid && modulation_valid
+        #[cfg(pilot_voice_performance)]
+        let keyboard_valid = self.keyboard.valid();
+        #[cfg(not(pilot_voice_performance))]
+        let keyboard_valid = true;
+        mixer_valid && contour_valid && filter_valid && modulation_valid && keyboard_valid
     }
 }
 
@@ -165,6 +180,8 @@ pub struct Voice<const FACTOR: usize> {
     oscillators: oscillator::Bank,
     #[cfg(pilot_voice_modulation)]
     modulation: modulation::Sources,
+    #[cfg(pilot_voice_performance)]
+    keyboard: keyboard::Keyboard,
     increment: f64,
     #[cfg(not(pilot_voice_contours))]
     trim: f64,
@@ -199,6 +216,8 @@ impl<const FACTOR: usize> Voice<FACTOR> {
             oscillators: oscillator::Bank::new((RATE * FACTOR) as f64, FACTOR),
             #[cfg(pilot_voice_modulation)]
             modulation: modulation::Sources::new((RATE * FACTOR) as f64, FACTOR),
+            #[cfg(pilot_voice_performance)]
+            keyboard: keyboard::Keyboard::new((RATE * FACTOR) as f64, FACTOR),
             increment: 440. / (FACTOR * RATE) as f64,
             #[cfg(not(pilot_voice_contours))]
             trim: 0.,
@@ -221,6 +240,19 @@ impl<const FACTOR: usize> Voice<FACTOR> {
             self.modulation.set_wheel(value);
             return Ok(());
         }
+        #[cfg(pilot_voice_performance)]
+        match message {
+            Message::PitchBend(value @ 0..=16383) => {
+                self.keyboard.set_bend(value);
+                return Ok(());
+            }
+            Message::ResetControllers => {
+                self.keyboard.set_bend(8192);
+                self.modulation.set_wheel(0);
+                return Ok(());
+            }
+            _ => {}
+        }
         #[cfg(pilot_voice_contours)]
         let was_held = self.held != 0;
         match message {
@@ -241,6 +273,8 @@ impl<const FACTOR: usize> Voice<FACTOR> {
             {
                 self.last_note = note as u8;
             }
+            #[cfg(pilot_voice_performance)]
+            self.keyboard.select(note as u8);
             self.increment = 440. * ((f64::from(note) - 69.) / 12.).exp2() / (FACTOR * RATE) as f64;
         }
         Ok(())
@@ -297,14 +331,28 @@ impl<const FACTOR: usize> Voice<FACTOR> {
             };
             #[cfg(pilot_voice_modulation)]
             let (noise, modulation) = self.modulation.step(panel.modulation, self.oscillators.osc3());
+            #[cfg(all(pilot_voice_filter, not(pilot_voice_performance)))]
+            let key_cv = f64::from(self.last_note);
+            #[cfg(pilot_voice_performance)]
+            let (key_cv, bend) = self.keyboard.tick(self.held != 0, panel.keyboard);
+            #[cfg(pilot_oscillator_bank)]
+            let increment = self.increment;
+            #[cfg(pilot_voice_performance)]
+            let increment = if key_cv == f64::from(self.last_note) {
+                increment
+            } else {
+                increment * ((key_cv - f64::from(self.last_note)) / 12.).exp2()
+            };
             #[cfg(pilot_oscillator_bank)]
             let input = INPUT_PEAK_V * self.oscillators.sample(
                 panel.oscillators,
-                self.increment,
+                increment,
                 #[cfg(pilot_voice_modulation)]
                 noise,
                 #[cfg(pilot_voice_modulation)]
                 if panel.modulation.oscillator { modulation * modulation::PITCH_OCTAVES } else { 0. },
+                #[cfg(pilot_voice_performance)]
+                bend,
             );
             #[cfg(not(pilot_returns))]
             let ports = plant::step(&mut self.circuit, input).map_err(Error::Plant)?;
@@ -328,7 +376,7 @@ impl<const FACTOR: usize> Voice<FACTOR> {
                     #[cfg(pilot_voice_filter)]
                     panel.filter,
                     #[cfg(pilot_voice_filter)]
-                    self.last_note,
+                    key_cv,
                     #[cfg(pilot_voice_modulation)]
                     if panel.modulation.filter { modulation * modulation::FILTER_OCTAVES } else { 0. },
                 );
