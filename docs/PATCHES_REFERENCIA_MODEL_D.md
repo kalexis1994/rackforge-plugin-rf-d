@@ -37,35 +37,7 @@ y la rueda queda a cero en la primera nota de laboratorio.
 Las posiciones gráficas de la rueda sirven para orientar
 un segundo pase por oído.
 
-```json
-{
-  "emerson_fat_bass": {
-    "osc1_range": 1, "osc1_wave": 2, "saw_mix": 100,
-    "osc2_range": 2, "osc2_wave": 2, "osc2_frequency": 0, "osc2_level": 100, "osc2_enabled": true,
-    "osc3_range": 2, "osc3_wave": 2, "osc3_frequency": 0, "osc3_level": 100, "osc3_enabled": true, "osc3_tracking": true,
-    "cutoff": 30, "emphasis": 50, "contour_amount": 35,
-    "filter_tracking_one_third": true, "filter_tracking_two_thirds": true, "filter_modulation": true,
-    "filter_attack": 1, "filter_decay": 300, "filter_sustain": 0,
-    "loudness_attack": 1, "loudness_decay": 600, "loudness_sustain": 50, "decay_enabled": 1, "output_level": 50
-  },
-  "bass_viol_plucked": {
-    "osc1_range": 1, "osc1_wave": 1, "saw_mix": 80,
-    "osc3_range": 0, "osc3_wave": 0, "osc3_frequency": -7, "osc3_tracking": false,
-    "cutoff": 20, "emphasis": 40, "contour_amount": 40,
-    "filter_tracking_one_third": true, "filter_modulation": true,
-    "filter_attack": 1, "filter_decay": 300, "filter_sustain": 40,
-    "loudness_attack": 1, "loudness_decay": 700, "loudness_sustain": 0, "decay_enabled": 1, "output_level": 50
-  },
-  "trumpet": {
-    "osc1_range": 3, "osc1_wave": 2, "saw_mix": 50,
-    "osc2_range": 3, "osc2_wave": 2, "osc2_frequency": 0, "osc2_level": 70, "osc2_enabled": true,
-    "osc3_range": 3, "osc3_wave": 2, "osc3_frequency": 0, "osc3_level": 90, "osc3_enabled": true, "osc3_tracking": true,
-    "cutoff": 20, "emphasis": 0, "contour_amount": 40, "filter_tracking_one_third": true,
-    "filter_attack": 400, "filter_decay": 400, "filter_sustain": 100,
-    "loudness_attack": 200, "loudness_decay": 400, "loudness_sustain": 100, "decay_enabled": 1, "output_level": 50
-  }
-}
-```
+[Valores iniciales por parámetro](../evidence/rf_d_reference_patches.json).
 
 ## Primer render de RF-D
 
@@ -88,6 +60,50 @@ alineada para distinguir un problema de curva de perilla
 de un problema de respuesta del filtro. Estas cifras
 corresponden a una nota de prueba propia de RF-D. La
 comparación con la ejecución de SynthMania queda pendiente.
+
+## Fat Bass y la sensibilidad a Cutoff y Emphasis
+
+La [demo de SynthMania](https://www.youtube.com/watch?v=S_FKXtwqJoQ&t=691s)
+muestra la misma ficha a 11:37. A 11:42 y 11:47 se ve el
+instrumento en un ángulo oblicuo. A 11:52 la mano izquierda
+aparece junto a las ruedas. Las tomas revisadas dejan
+inciertas las teclas pulsadas, su duración y la trayectoria
+de las ruedas. El análisis usa dos notas propias, MIDI 57 y 45,
+con un segundo de gate y ambas ruedas en reposo.
+
+Se conservaron los valores de la ficha, con Cutoff en 20, 30
+o 40 y Emphasis en 40, 50 o 60. El punto central es 30/50.
+Cada paso de diez puntos representa una división en la
+conversión nominal del dial. Las 18 corridas miden RMS y
+armónicos H1 a H8 en dos ventanas desde Note On. La temprana
+cubre 30–175 ms y la tardía 480–880 ms. Para los armónicos
+se usa proyección a múltiplos de 55 Hz en MIDI 57 y de
+27,5 Hz en MIDI 45, con ventana Hann y eliminación de DC.
+
+Con Emphasis en 50, mover Cutoff de 30 a 40 elevó la relación
+tardía H4–H8 frente a H1–H3 en **18,7 dB** en MIDI 57 y
+**19,4 dB** en MIDI 45. A Cutoff 30, mover Emphasis de 40 a 60
+redujo esa relación en **2,9 dB** y **1,8 dB**. El signo del
+efecto de Emphasis se invirtió a Cutoff 40. En RF-D conviene
+fijar primero Cutoff con una nota aislada y comprobar Emphasis
+en el entorno de esa posición. La medición usa el motor
+reducido y sigue pendiente el contraste con el audio del video.
+[Resultados completos](../evidence/rf_d_fat_bass_sweep01.json).
+
+`python -B tools/check_rf_d_fat_bass.py --audition` genera
+un solo WAV mono de 10 s en `artifacts/rf-d-fat-bass-audicion.wav`.
+Reproduce MIDI 57 en cinco variantes y ajusta una ganancia
+constante por variante para igualar el RMS de la nota sostenida.
+Las métricas del recibo se calculan con los niveles originales.
+`--write-report` guarda los resultados y el hash del componente.
+
+| Inicio | Cutoff | Emphasis |
+| --- | ---: | ---: |
+| 0,00 s | 30 | 50 |
+| 2,05 s | 20 | 50 |
+| 4,10 s | 40 | 50 |
+| 6,15 s | 30 | 40 |
+| 8,20 s | 30 | 60 |
 
 ## Cómo escuchar y medir
 

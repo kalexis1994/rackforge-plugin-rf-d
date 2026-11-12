@@ -345,7 +345,7 @@ def verify_oscillators(render, report):
                               over_half_period=sum(value > MARGIN_NS for value in times)))
 
 
-def main():
+def main(argv=None, *, inspect_audio=None):
     parser = argparse.ArgumentParser(description=__doc__)
     profiles = parser.add_mutually_exclusive_group()
     profiles.add_argument("--single-saw", action="store_true", help="rebuild the 0.4.0 single-oscillator voice")
@@ -360,7 +360,9 @@ def main():
     profiles.add_argument("--control-inputs", action="store_true", help="select the rear-jack development profile")
     profiles.add_argument("--midi", action="store_true", help="select the MIDI development profile")
     parser.add_argument("--package", metavar="VERSION", help="export one .rfplugin for the selected profile")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
+    if inspect_audio is not None and args.package:
+        parser.error("audio inspection uses the temporary WASM component")
     if args.package and not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?", args.package):
         parser.error("--package expects a version such as 0.8.0")
     bank = not args.single_saw
@@ -453,6 +455,10 @@ def main():
                 audio = np.frombuffer(raw, dtype="<f4").reshape(-1, 2)
                 assert np.isfinite(audio).all() and np.array_equal(audio[:, 0], audio[:, 1])
                 return audio[:, 0], json.loads(timings)
+
+            if inspect_audio is not None:
+                inspect_audio(render, schema, sha(optimized))
+                return
 
             verify_audio(render, report, output)
             if bank:
