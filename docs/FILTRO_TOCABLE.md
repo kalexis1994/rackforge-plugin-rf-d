@@ -60,3 +60,33 @@ controles nuevos en cero.
 mide el preset resonante en RackForge a 128, 480 y 4096 frames.
 `--oscillator-bank` y `--single-saw` regeneran 0.5.0 y 0.4.0
 respectivamente para proyectos que conserven esas versiones.
+
+## Salida física a 128 frames
+
+El banco midió el mismo paquete por hash con **Resonant Bass** en un
+slot del host RackForge corregido en `37e5f803`. La escena alternó
+MIDI 57 y 45 en legato con Emphasis y Keyboard ⅔ activos. ASIO4ALL
+y la salida NVIDIA confirmaron 128 frames efectivos a 48 kHz.
+El banco verifica la señal del motor y silencia los buffers de
+salida del dispositivo. La escucha en Desktop queda pendiente.
+
+| Pase admitido | Callbacks | Mediana | Máximo | Asignaciones de render | Plazos perdidos |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Control repetido | 1200 | 0,0884 ms | 0,1787 ms | 0 | 0 |
+| Resonant Bass 1 | 4800 | 0,0889 ms | 0,2202 ms | 0 | 0 |
+| Resonant Bass 2 | 4800 | 0,0884 ms | 0,2105 ms | 0 | 0 |
+
+Todos los callbacks de los pases admitidos quedaron dentro de
+1,333 ms. El primer control silencioso registró la máscara 8, una
+solicitud de reset de ASIO. La repetición del control usó el mismo
+binario y pasó. La primera campaña conserva el control rechazado
+y sus dos pases activos, con máximos de 0,2216 y 0,7184 ms.
+Se restauró el perfil del dispositivo después de cada campaña.
+[Primera campaña](../evidence/rf_d_playable_voice_asio02.json),
+[confirmación](../evidence/rf_d_playable_voice_asio03.json).
+
+El [protocolo de combustible](RECOVERY_ENGINE128_FUEL_PROTOCOLO.md)
+identifica la revisión de RackForge y el toolchain MSVC. Con el
+registro JSON de la compilación de `rackforge-core` bajo
+`tmp/lab-current`, ejecutar
+`python -B tools/check_rf_d_playable_voice_asio.py --filter --host-build tmp/lab-current/voice-fuel-build.jsonl`.

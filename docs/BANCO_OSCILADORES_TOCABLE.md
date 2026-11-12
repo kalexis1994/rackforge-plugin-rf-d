@@ -92,10 +92,11 @@ de buffer y restauración del perfil. Queda pendiente la escucha.
 | Tres osciladores 2 | 4800 | 0,0899 ms | 0,1651 ms | 0 | 0 |
 
 Los dos pases activos tuvieron cero errores, avisos, fallos de slot e
-intervalos superiores a 1,5 períodos. El control registró ocho avisos.
+intervalos superiores a 1,5 períodos. El control registró la máscara
+de aviso 8, correspondiente a una solicitud de reset de ASIO.
 El criterio completo de admisión sigue abierto. El host registró una
 asignación por callback, también en el control. El
 [contraste de get_fuel](RECOVERY_ENGINE128_FUEL_RESULTADOS.md) identificó
 ese patrón en el host base y eliminó la asignación en el host corregido.
-Este paquete todavía requiere confirmación con ese host.
+El [paquete 0.6.0](FILTRO_TOCABLE.md) se midió también con ese host.
 [Recibo ASIO](../evidence/rf_d_playable_voice_asio01.json).

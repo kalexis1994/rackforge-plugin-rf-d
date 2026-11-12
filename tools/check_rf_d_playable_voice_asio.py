@@ -1,4 +1,5 @@
-"""Measure the packaged three-oscillator RF-D voice on NVIDIA ASIO at 128 frames."""
+"""Measure the packaged RF-D voice on NVIDIA ASIO at 128 frames."""
+import argparse
 import json
 import os
 import subprocess
@@ -6,7 +7,7 @@ import traceback
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from check_recovery_engine128 import HOST_CORE, analyze, sources_for_build
+from check_recovery_engine128 import HOST_CORE, analyze, cargo_artifacts, sources_for_build
 from check_recovery_engine128_schedule import topology
 from check_recovery_engine128_smt import NVIDIA_ENDPOINT, admitted, analyze_smt, fixed_pair_primary
 from check_recovery_host import HOST_COMPILER
@@ -19,15 +20,15 @@ CPU = 9
 IDLE = 8500
 
 
-def voice_probe():
+def voice_probe(preset="three_oscillators"):
     _, source = sources_for_build(schedule=True, smt=True, smt_lean=True)
     source = source.decode()
     source = once(source, "    startup: usize,", """    startup: usize,
     layers: rackforge_core::parameter_link::ControlLayers,""")
     source = once(source, "route, output: [0.; 256], startup: 48,", """route, output: [0.; 256], startup: 48,
             layers: rackforge_core::parameter_link::ControlLayers::default(),""")
-    source = once(source, "state: RackSlotStateLoad::Default,", """
-                    state: RackSlotStateLoad::LegacyPreset("three_oscillators".into()),""")
+    source = once(source, "state: RackSlotStateLoad::Default,", f"""
+                    state: RackSlotStateLoad::LegacyPreset("{preset}".into()),""")
     source = once(source, "                let telemetry = pool.telemetry().clone();", """                if !self.silence {
                     let note = match self.calls {
                         0 => Some([0x90, 57, 100]),
@@ -47,11 +48,20 @@ def voice_probe():
 
 
 def main():
-    package_report = json.loads((ROOT / "evidence/rf_d_playable_voice02.json").read_bytes())
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--filter", action="store_true", help="measure the 0.6.0 resonant bass preset")
+    parser.add_argument("--host-build", type=Path, help="successful Cargo JSON log under tmp/lab-current")
+    args = parser.parse_args()
+    preset = "resonant_bass" if args.filter else "three_oscillators"
+    package_receipt = "rf_d_playable_voice03.json" if args.filter else "rf_d_playable_voice02.json"
+    package_report = json.loads((ROOT / "evidence" / package_receipt).read_bytes())
     version = package_report["version"]
     artifact = ROOT / f"artifacts/rf-d-voice-{version}.rfplugin"
     assert sha(artifact) == package_report["archive_sha256"]
-    assert not list(AREA.iterdir()), AREA
+    if args.host_build:
+        assert args.host_build.resolve().parent == AREA.resolve()
+    else:
+        assert not list(AREA.iterdir()), AREA
     env = {key: value for key, value in os.environ.items() if not key.startswith(("RF_D_SMT_", "RF_D_SCHED_"))}
     env.update(RACKFORGE_AUDIO_WORKERS="0", RACKFORGE_OPTIMIZE_PLUGINS="0")
 
@@ -64,29 +74,43 @@ def main():
         assert run.returncode == 0, run.stderr.decode(errors="replace")
         return run.stdout.decode().strip()
 
-    deps = HOST / "target/release/deps"
-    core = deps / HOST_CORE
-    cpal = deps / "libcpal-7dab8e06a9b0e32f.rlib"
-    windows = deps / "libwindows-30e5b7032d286333.rlib"
-    midi = deps / "librackforge_midi_api-9bf68be69a56bbe5.rlib"
+    platform = HOST / "target/release/deps"
+    rebuilt = cargo_artifacts(args.host_build) if args.host_build else {}
+    core = rebuilt.get("rackforge_core", platform / HOST_CORE)
+    deps = core.parent
+    cpal = platform / "libcpal-7dab8e06a9b0e32f.rlib"
+    windows = platform / "libwindows-30e5b7032d286333.rlib"
+    midi, = deps.glob("librackforge_midi_api-*.rlib")
+    dependency_dirs = list(dict.fromkeys((deps, platform)))
     asio = HOST / "target/release/build/asio-sys-bb9248db199c7ec7/out"
     registry = Path(COMPILER).parents[4] / ".cargo/registry/src"
     native = list(dict.fromkeys(path.parent for path in (
         *sorted((HOST / "target/release/build").glob("*/out/*.lib")),
+        *sorted((deps.parent / "build").glob("*/out/*.lib")),
         *sorted(registry.glob("*/windows_x86_64_msvc-*/lib/*.lib")),
     )))
     probe = AREA / "voice-physical.rs"
     exe = AREA / "recovery-host128.exe"
+    assert not any(path.exists() for path in (probe, exe, exe.with_suffix(".pdb")))
     attempt = 1
     while (receipt := ROOT / f"evidence/rf_d_playable_voice_asio{attempt:02}.json").exists():
         attempt += 1
-    report = dict(passed=False, version=version, artifact_sha256=sha(artifact), endpoint=NVIDIA_ENDPOINT,
+    report = dict(passed=False, version=version, preset=preset, artifact_sha256=sha(artifact), endpoint=NVIDIA_ENDPOINT,
                   core_sha256=sha(core), cpu=CPU, minimum_idle=IDLE, runs=[])
+    if args.host_build:
+        rows = [json.loads(line) for line in args.host_build.read_text(encoding="utf8").splitlines()]
+        build, = [row for row in rows if row.get("reason") == "compiler-artifact"
+                  and row["target"]["name"] == "rackforge_core"]
+        source = Path(build["manifest_path"]).parents[2]
+        report["host_build"] = dict(commit=successful("git", "-C", source, "rev-parse", "HEAD"),
+                                    log_sha256=sha(args.host_build),
+                                    libraries={name: sha(path) for name, path in rebuilt.items()})
     try:
-        probe.write_text(voice_probe(), encoding="utf8", newline="\n")
+        probe.write_text(voice_probe(preset), encoding="utf8", newline="\n")
         report["probe_sha256"] = sha(probe)
         successful(HOST_COMPILER, "--edition=2021", "-C", "opt-level=2", "-A", "dead_code",
-                   "-A", "unused_imports", "--cfg", "asio128", "-L", f"dependency={deps}",
+                   "-A", "unused_imports", "--cfg", "asio128",
+                   *[arg for path in dependency_dirs for arg in ("-L", f"dependency={path}")],
                    *[arg for path in native for arg in ("-L", f"native={path}")],
                    "-L", f"native={asio}", "-l", "static=asio", probe, "--extern", f"cpal={cpal}",
                    "--extern", f"windows={windows}", "--extern", f"rackforge_core={core}",
@@ -107,7 +131,7 @@ def main():
                     top = topology(successful(exe, "schedule-topology"))
                     fixed_pair_primary(top, CPU)
                     rows = folder / "callbacks.bin"
-                    for route, blocks in (("control", 1200), ("rack", 4800), ("rack", 4800)):
+                    def measure(route, blocks):
                         rows.unlink(missing_ok=True)
                         controls = dict(env, RF_D_ENGINE_ROUTE=route, RF_D_ENGINE_PACKAGE=str(manifest.parent),
                                         RF_D_ENGINE_CACHE=str(folder / "cache"), RF_D_ENGINE_ROWS=str(rows),
@@ -120,13 +144,19 @@ def main():
                         if run.returncode:
                             item["stderr"] = stream
                             print(stream, flush=True)
-                            continue
-                        item["rows_sha256"] = sha(rows)
-                        item["metrics"] = analyze_smt(rows.read_bytes(), stream, blocks, "quiet-event", None,
-                                                      top, analyze, silent=route == "control",
-                                                      endpoint=endpoint, event_cpu=CPU, event_idle=IDLE)
-                        print(route, item["metrics"]["wall_ns"], item["metrics"]["gate_passed"], flush=True)
-                    report["passed"] = admitted(report["runs"][0], report["runs"][1:])
+                        else:
+                            item["rows_sha256"] = sha(rows)
+                            item["metrics"] = analyze_smt(rows.read_bytes(), stream, blocks, "quiet-event", None,
+                                                          top, analyze, silent=route == "control",
+                                                          endpoint=endpoint, event_cpu=CPU, event_idle=IDLE)
+                            print(route, item["metrics"]["wall_ns"], item["metrics"]["gate_passed"], flush=True)
+                        return item
+
+                    control = measure("control", 1200)
+                    if not control.get("metrics", {}).get("gate_passed", False):
+                        control = measure("control", 1200)
+                        control["unchanged_replay"] = True
+                    report["passed"] = admitted(control, [measure("rack", 4800), measure("rack", 4800)])
                 finally:
                     restore_override(profile, before)
                     report["restored"] = successful(exe, "asio-query", ASIO_DRIVER)
@@ -139,7 +169,7 @@ def main():
             path.unlink(missing_ok=True)
         write(receipt, report)
     if not report["passed"]:
-        raise SystemExit("The two 128-frame ASIO passes did not meet the timing gate")
+        raise SystemExit(f"The 128-frame ASIO campaign did not pass all checks. See {receipt}")
 
 
 if __name__ == "__main__":
