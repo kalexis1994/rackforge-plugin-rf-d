@@ -622,6 +622,38 @@ grupo alterna Minimoog, RF-D limpio y RF-D con realce, a
 secuencia se repite a partir de 4,20 s.
 [Mediciones y orden de escucha](../evidence/rf_d_vintage_saw_brightness_ab01.json).
 
+### Refit del brillo periódico
+
+Se volvió a estimar la fase de cada nota para ajustar
+sólo el espectro periódico. El ensayo conserva las
+transiciones suaves del realce anterior, fija su inicio
+en 2,5 kHz y explora el nivel entre 4 y 10 kHz y el fin
+de la transición alta. Se minimiza el error RMS en dB
+de cuatro bandas entre 4 y 17 kHz en La2. La3 queda
+reservado y usa exactamente la misma curva.
+
+El ajuste elegido añade 0,9 dB entre 4 y 10 kHz y
+vuelve a 0 dB en 14 kHz. Los errores frente a la parte
+periódica del Minimoog son:
+
+| Nota | RF-D limpio | Realce anterior | Refit |
+| --- | ---: | ---: | ---: |
+| La2, ajuste | 0,78 dB | 0,14 dB | 0,11 dB |
+| La3, reserva | 3,19 dB | 2,66 dB | 2,75 dB |
+
+El cambio respecto del realce anterior es pequeño. La3
+conserva una diferencia marcada en la banda superior.
+La curva se aplica en posproducción al render limpio.
+La prueba deja abierta la procedencia del residuo agudo
+de la captura vintage.
+
+`python -B tools/check_rf_d_vintage_saw_brightness_refit.py --write-report`
+genera `artifacts/rf-d-sierra-refit-ab.wav` a −22 dBFS RMS.
+Cada grupo reproduce Minimoog, RF-D limpio y RF-D con
+refit. Los grupos de La2 y La3 empiezan a 0,00 y 2,10 s.
+La secuencia se repite desde 4,20 s.
+[Resultados y curva](../evidence/rf_d_vintage_saw_brightness_refit01.json).
+
 ## Cómo escuchar y medir
 
 Para el A/B musical hay que identificar la nota, su duración y

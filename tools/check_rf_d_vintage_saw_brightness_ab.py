@@ -17,12 +17,12 @@ LIFT_HZ = (2_500., 4_000., 10_000., 17_000.)
 LIFT_DB = (0., 0.8, 0.8, 0.)
 
 
-def lift_highs(audio):
+def lift_highs(audio, *, knots_hz=LIFT_HZ, gains_db=LIFT_DB):
     pad = FRAMES // 2
     padded = np.pad(audio, pad, mode="reflect")
     frequencies = np.fft.rfftfreq(padded.size, 1. / SAMPLE_RATE)
     gain_db = np.zeros_like(frequencies)
-    for lo, hi, low_db, high_db in zip(LIFT_HZ[:-1], LIFT_HZ[1:], LIFT_DB[:-1], LIFT_DB[1:], strict=True):
+    for lo, hi, low_db, high_db in zip(knots_hz[:-1], knots_hz[1:], gains_db[:-1], gains_db[1:], strict=True):
         band = (frequencies >= lo) & (frequencies < hi)
         position = (frequencies[band] - lo) / (hi - lo)
         gain_db[band] = low_db + (high_db - low_db) * (0.5 - 0.5 * np.cos(np.pi * position))
