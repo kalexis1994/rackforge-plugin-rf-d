@@ -98,12 +98,14 @@ del reset. [Red de referencia](REFERENCIA_MENOS4V.md).
 | Cambio de referencia equivalente | 82,9 mV | 98,4 mV |
 
 Los dos últimos renglones extrapolan la derivada local
-medida con ±1 µA. Establecen una escala para contrastar
-las corrientes de las otras ramas, cuya variación real
-todavía no se midió. C14 hace que la impedancia dependa
+medida con ±1 µA. Establecen una escala para el contraste
+posterior con las corrientes de las otras ramas. C14 hace que la impedancia dependa
 de frecuencia. La excitación continua de este banco
 no predice la respuesta a una corriente variable.
 
 `python -B tools/check_vco1_loaded_reset_neg4.py --write-report`
 repite las cuatro corridas a partir del banco nominal.
 [Mediciones de la referencia compartida](../evidence/vco1_loaded_reset_neg401.json).
+
+El [contraste con las corrientes de OSC2 y OSC3](REFERENCIA_MENOS4V.md#corrientes-de-osc2-y-osc3-con-c14)
+mide la variación de esta ruta con C14 y el mixer conectados.
