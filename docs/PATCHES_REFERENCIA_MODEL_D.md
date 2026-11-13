@@ -486,6 +486,31 @@ El render coincide por bits a 128 y 480 frames en ambos
 modos. El WAV de escucha es `artifacts/rf-d-sierra-vintage-ab.wav`.
 [Ventanas, controles y armónicos](../evidence/rf_d_vintage_saw_ab01.json).
 
+La escucha posterior señaló una leve opacidad en RF-D. En
+La3, las fundamentales coinciden dentro de 0,04 cents y la
+energía de H2–H7 respecto de H1 difiere sólo 0,03 dB a 4×.
+Al volver a medir con ventanas de 25, 50 y 100 ms, excluyendo
+la primera y la última ventana de cada toma, el déficit de
+H8–H16 en La3 se mantuvo entre 0,89 y 0,96 dB. El de H17–H24
+se mantuvo entre 2,12 y 2,23 dB. Pasar de 2× a 4× recupera
+0,35 y 0,81 dB respectivamente, según el recibo del A/B.
+
+El FIR de decimación de RF-D varía menos de 0,001 dB entre
+H1 y H24 en ambas notas y tasas internas. La linealización
+de la escalera del motor, con Emphasis en cero y corriente de
+cola máxima de 921,41 µA, da cuatro polos idénticos. Para
+`x = Icola / (4·Vt·C·fs)` y `a = x / (1 + x)`, cada polo
+usa `a / (1 − (1 − a)·z⁻¹)`. El corte de −3 dB del producto
+es de 5,96 kHz a 2× y 7,04 kHz a 4×. A la misma corriente,
+el modelo lineal continuo da 9,13 kHz. En La3, la diferencia
+2×→4× que predice esa linealización para H24 respecto de H1
+es de +0,65 dB, frente a +0,96 dB en el render completo. Esto
+identifica una contribución de la discretización al cambio
+con la tasa. El déficit frente al Minimoog sigue condicionado
+por la procedencia del MP3.
+[Corriente de cola del modelo](../evidence/rf_d_voice_development09.json) ·
+[Implementación de la escalera](../tools/rf_d_voice_ladder.rs).
+
 ## Cómo escuchar y medir
 
 Para el A/B musical hay que identificar la nota, su duración y
