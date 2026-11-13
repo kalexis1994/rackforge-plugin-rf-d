@@ -654,6 +654,54 @@ refit. Los grupos de La2 y La3 empiezan a 0,00 y 2,10 s.
 La secuencia se repite desde 4,20 s.
 [Resultados y curva](../evidence/rf_d_vintage_saw_brightness_refit01.json).
 
+### De dónde puede venir el residuo agudo
+
+Con el interruptor **SW12 en OFF**, la fuente de ruido del
+panel queda desconectada del bus de audio. El esquema muestra
+la ruta desde la placa 3 por el selector blanco/rosa SW14, el
+potenciómetro R10 y R48 hasta SW12 (manual de servicio 204D,
+fig. 9-17, p. 19 del PDF). La rama de modulación tiene su
+propio recorrido hacia la placa de osciladores (fig. 9-3,
+p. 5 del PDF) y se puede dirigir al filtro mediante SW15
+(fig. 9-17). En el render de una sola sierra están apagadas
+las dos rutas de modulación y la rama de ruido del mixer.
+El ensayo previo del 4 % no representa esa configuración.
+
+Para comprobar si parte del residuo sigue al oscilador,
+se estima la variación de fase respecto del ciclo a partir
+de dos grupos separados de armónicos bajos: H2/H4/H6 y
+H3/H5/H7. Se vuelve a ajustar el ciclo con cada estimación
+y se mide el residuo en 8–12 kHz, fuera de los armónicos
+usados para estimar la corrección.
+
+| Nota vintage | Corrección de pares | Corrección de impares | Promedio de las dos correcciones |
+| --- | ---: | ---: | ---: |
+| La2 | −2,33 dB | −2,19 dB | −2,84 dB |
+| La3 | −2,62 dB | −2,96 dB | −2,95 dB |
+
+En La2 queda un residuo de −31,42 dB respecto de la potencia
+total. La corrección conjunta explica cerca del 48 % de la
+potencia residual inicial en esa banda. En el render limpio
+de RF-D, el cambio conjunto en La2 es inferior a 0,01 dB.
+El resultado es compatible con variación temporal común
+a varios armónicos, pero el MP3 no permite atribuirla a un
+componente concreto ni separar el resto de la toma y su
+codificación. Tampoco confirma la posición de las perillas
+ni el recorrido de captura.
+
+El siguiente contraste es buscar una toma de línea sin
+pérdidas con SW12 y ambas rutas de modulación documentados.
+Con el mismo La2 tocado desde 8′ y 16′, y con dos posiciones
+de filtro, se puede contrastar qué parte sigue al oscilador,
+qué parte sigue a la apertura del filtro y qué aparece en
+las pausas. Cualquier ajuste del motor debe vincularse con
+un bloque o recorrido del esquema y comprobarse fuera de
+la nota usada para el ajuste.
+
+`python -B tools/check_rf_d_vintage_saw_phase.py --write-report`
+repite el análisis sin generar audio.
+[Resultados por nota, estimación y banda](../evidence/rf_d_vintage_saw_phase01.json).
+
 ## Cómo escuchar y medir
 
 Para el A/B musical hay que identificar la nota, su duración y

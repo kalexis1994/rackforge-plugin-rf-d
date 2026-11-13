@@ -45,13 +45,17 @@ def saw_phase(audio):
     return phase, fundamental
 
 
-def periodic_component(audio):
-    phase, fundamental = saw_phase(audio)
+def fit_cycle(audio, phase, fundamental):
     harmonics = np.arange(1, int(PERIODIC_BAND_LIMIT_HZ / fundamental) + 1)
     angles = phase[:, None] * harmonics
     basis = np.column_stack((np.ones(audio.size), np.cos(angles), np.sin(angles)))
     weights = np.linalg.lstsq(basis[ANALYSIS], audio[ANALYSIS], rcond=None)[0]
-    return basis @ weights, np.diff(phase[ANALYSIS]) * SAMPLE_RATE / (2. * np.pi)
+    return basis @ weights
+
+
+def periodic_component(audio):
+    phase, fundamental = saw_phase(audio)
+    return fit_cycle(audio, phase, fundamental), np.diff(phase[ANALYSIS]) * SAMPLE_RATE / (2. * np.pi)
 
 
 def high_residual(residual):
