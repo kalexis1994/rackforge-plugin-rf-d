@@ -445,6 +445,47 @@ con dos repeticiones a −22 dBFS RMS y ganancia constante
 por frase. El Minimoog entra a 0,00 y 5,40 s. RF-D entra a
 2,70 y 8,10 s.
 
+## Sierra de un Model D de 1974
+
+[AMAZONA](https://www.amazona.de/vergleichstest-moog-minimoog-vs-vst-software-clones/)
+publica el archivo de audio «Oszillatoren des Minimoogs» y
+su autor identifica el instrumento como un original de 1974.
+Se tomaron dos ventanas sostenidas del primer pasaje, con
+fundamentales de aproximadamente 109 y 219 Hz. El espectro
+es compatible con una sola sierra. La ruta de grabación, la
+posición del filtro y el nivel de mezcla del hardware siguen
+sin confirmar. El resultado es provisional.
+
+Greg Kist y Brian Glock documentaron una prueba de formas
+de onda con un Model D de 1973, en mono y sin EQ ni efectos.
+El [hilo original](https://forum.moogmusic.com/t/vintage-voyager-or-virtual-a-comparison-test/3920)
+describe la captura y la
+[ficha archivada del audio](https://web.archive.org/web/20080115075617/http://moogmusic.com:80/members/?section=files&file_section=3&cat_id=49&file_id=391)
+identifica el archivo. No se recuperó ese audio para esta
+comparación.
+
+En RF-D se usó OSC1 en sierra a 8′, nivel de mezcla de 50 %,
+cutoff al máximo, Emphasis en cero y sin modulación. El A/B
+usa sobremuestreo 4×, una ganancia constante por toma y
+−22 dBFS RMS. Alterna Minimoog y RF-D para La2 y luego
+para La3. El patrón completo se repite.
+
+En 4×, la energía de H8–H16 respecto de H1 queda 0,09 dB
+por debajo de la referencia en La2 y 0,95 dB por debajo en
+La3. H17–H24 queda 0,55 y 2,21 dB por debajo,
+respectivamente. El resultado en 2× va en la misma
+dirección. El exceso de armónicos altos observado en
+Trumpet no se repite en estas ventanas. La fuente es MP3
+y la comparación incluye la cadena de salida completa.
+
+`python -B tools/check_rf_d_vintage_saw_ab.py --write-report`
+usa el extracto privado verificado por SHA-256. El extracto
+promedia los dos canales del MP3 de 44,1 kHz y se remuestrea
+a 48 kHz con sinc de ventana coseno de 65 coeficientes.
+El render coincide por bits a 128 y 480 frames en ambos
+modos. El WAV de escucha es `artifacts/rf-d-sierra-vintage-ab.wav`.
+[Ventanas, controles y armónicos](../evidence/rf_d_vintage_saw_ab01.json).
+
 ## Cómo escuchar y medir
 
 Para el A/B musical hay que identificar la nota, su duración y
