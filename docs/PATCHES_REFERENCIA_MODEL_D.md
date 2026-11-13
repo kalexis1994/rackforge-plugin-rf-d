@@ -898,6 +898,44 @@ repite el contraste con el extracto local.
 El [ensayo del riel de −10 V](REFERENCIA_MENOS4V.md#rizado-de-100-hz-en-el-riel-de-10-v)
 cuantifica la sensibilidad de 9B y contrasta las dos notas.
 
+### Bandas laterales de 100 y 120 Hz
+
+La medida por flanco toma una muestra por ciclo. En La3
+esa rejilla pliega 120 Hz cerca de 100 Hz. Para contrastar
+ambas frecuencias, se usó el residuo continuo a 48 kHz
+del mismo extracto verificado. Se proyectó en dos familias
+de bandas laterales. La variación de tiempo multiplica
+la derivada del ciclo por una senoide. La variación de
+amplitud multiplica el ciclo por la senoide. Se ajustó
+en 4–7,5 kHz durante media nota y se predijo la otra mitad.
+Las bandas de 0,5–3,5 y 8–12 kHz quedaron reservadas.
+
+| Varianza del residuo en la mitad reservada que explica el desplazamiento | La2, 0,5–3,5 kHz | La2, 8–12 kHz | La3, 0,5–3,5 kHz | La3, 8–12 kHz |
+| --- | ---: | ---: | ---: | ---: |
+| 100 Hz | −0,9 % | −1,3 % | 38,4 % | 56,0 % |
+| 120 Hz | −2,3 % | −4,2 % | 18,8 % | 28,6 % |
+
+Al ajustar las dos frecuencias juntas en La3, el
+desplazamiento estimado a 100 Hz queda entre 4,91 y
+5,26 µs pico según la banda. A 120 Hz queda entre
+0,48 y 0,79 µs. El modelo de amplitud a 100 Hz por
+sí solo explica alrededor de 0 % en las bandas
+reservadas. Un control con una sierra desplazada
+4 µs recuperó la frecuencia aplicada en los dos
+casos, con menos de 0,04 µs de error en amplitud.
+La derivada espectral corrige el sesgo de ganancia
+que introducía la diferencia centrada en la banda alta.
+
+El patrón de La3 es consistente con un desplazamiento
+periódico a 100 Hz en la grabación. La2 no replica
+ese patrón. La posición de los controles, la
+revisión de placa y la cadena de captura de la
+unidad siguen sin verificarse.
+
+`python -B tools/check_rf_d_vintage_saw_sidebands.py --write-report`
+repite el contraste sin generar audio.
+[Bandas laterales por nota](../evidence/rf_d_vintage_saw_sidebands01.json).
+
 ## Cómo escuchar y medir
 
 Para el A/B musical hay que identificar la nota, su duración y
