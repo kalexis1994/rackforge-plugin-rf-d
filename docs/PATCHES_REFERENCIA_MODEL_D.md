@@ -385,6 +385,34 @@ genera `artifacts/rf-d-oboe-refit-ab.wav` a −22 dBFS RMS.
 El RF-D ajustado entra en 2,08 s y el RF-D del A/B de
 sobremuestreo entra en 6,24 s. Ambas tomas usan 4×.
 
+### Cola de la grabación de SynthMania
+
+La escucha del primer par del A/B con ajuste de armónicos
+identificó una sensación de espacio en la toma del Minimoog.
+La captura estéreo anterior a la mezcla a mono permite
+contrastar esa observación. Se retira del canal diferencia
+la componente proporcional a la señal mono, para descontar
+un desbalance constante de ganancia entre canales.
+
+Durante la última nota sostenida la correlación entre
+canales es 0,999 y el residuo lateral queda 33,3 dB por
+debajo del centro. Entre 155 y 250 ms después del Note Off
+transcrito, la correlación baja a 0,35–0,16 y el residuo
+queda entre 3,6 y 2,3 dB por debajo del centro. En esas
+ventanas, entre 87 y 92 % de su energía de 100 Hz a 6 kHz
+cae cerca de los armónicos de la nota final.
+
+La cola estéreo sigue la última nota. Es compatible con
+ambiente o procesamiento de la grabación y su origen
+exacto queda abierto. Se toma el primer par del último A/B
+como referencia de escucha para el timbre. La cola se
+conserva como observación de la captura.
+[Grabación de SynthMania](https://www.youtube.com/watch?v=S_FKXtwqJoQ&t=373s) ·
+[Mediciones de la cola](../evidence/rf_d_oboe_tail01.json).
+
+`python -B tools/check_rf_d_oboe_tail.py` repite el análisis
+desde la captura estéreo y el WAV del A/B con ajuste de armónicos.
+
 ## Cómo escuchar y medir
 
 Para el A/B musical hay que identificar la nota, su duración y
