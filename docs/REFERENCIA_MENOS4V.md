@@ -156,3 +156,30 @@ reproduce las doce corridas.
 [Medidas](../evidence/vco_neg10_ripple01.json) ·
 [Rechazos y replays](../evidence/vco_neg10_ripple_rejections01.json) ·
 [Contraste vintage](PATCHES_REFERENCIA_MODEL_D.md#componente-periódica-en-el-tiempo-del-flanco).
+
+### Contraste directo a 1,25 mV pico y vía de R37
+
+La Fig. 9-3 une −10 V a R37 (11,8 kΩ), en serie
+con la sección activa del ajuste de frecuencia R11
+hacia el sumador de IC1. Se repitió a 1,25 mV pico
+con el riel completo y con la senoide aplicada
+sólo en el extremo de alimentación de R37.
+
+| Desplazamiento de 9B a 100 Hz | La2 | La3 |
+| --- | ---: | ---: |
+| Riel completo | 4,36 µs pico | 5,98 µs pico |
+| Sólo R37 | 5,70 µs pico | 5,70 µs pico |
+
+El ensayo directo concuerda con la extrapolación del
+riel completo dentro de 0,09 %. En La3, R37 reproduce
+el 95 % de la amplitud con una diferencia de fase de
+2,5°. En La2, su amplitud supera la del riel completo.
+La suma de las demás conexiones modifica la respuesta
+y se opone en parte a la de R37 en La2. El ensayo
+refuerza la vía de afinación como mecanismo eléctrico
+para La3 y conserva la discrepancia con La2. El
+estímulo pertenece al banco de medición.
+
+`python -B tools/check_vco_neg10_r37.py --write-report`
+repite las seis corridas.
+[Medidas a 1,25 mV](../evidence/vco_neg10_r37_01.json).
