@@ -8,11 +8,15 @@ from tempfile import TemporaryDirectory
 import numpy as np
 
 from check_rf_d_playable_voice import ROOT, SAMPLE_RATE, sha, write
-from check_rf_d_vintage_saw_ab import NOTES, SOURCE, SOURCE_AUDIO, SOURCE_SHA256, SOURCE_WINDOWS, read_reference
+from check_rf_d_vintage_saw_ab import (
+    NOTES, REFERENCE_SHA256, SOURCE, SOURCE_AUDIO, SOURCE_SHA256, SOURCE_WINDOWS, read_reference,
+)
 from check_rf_d_vintage_saw_air import ANALYSIS, BANDS_HZ, band_power, fit_cycle, saw_phase
 from check_rf_d_vintage_saw_phase import phase_corrections
 
 RECEIPT = ROOT / "evidence/rf_d_vintage_saw_reset_residual01.json"
+TIMING_RECEIPT = ROOT / "evidence/rf_d_vintage_saw_edge_timing01.json"
+LINE_FREQUENCIES_HZ = (50., 60., 100., 120.)
 LAB = ROOT / "tmp/lab-current"
 BAND = BANDS_HZ[2]
 PREDICTOR_BAND = (4_000, 7_500)
@@ -67,8 +71,8 @@ def measure(audio, phase, cycle, reference):
     )
 
 
-def edge_timing(audio, phase, cycle):
-    """Use timing fitted in one frequency band to predict a disjoint band."""
+def edge_shifts(audio, phase, cycle):
+    """Estimate the displacement of each complete edge in two disjoint bands."""
     turns = relative_phase(phase, cycle)[ANALYSIS]
     periods = np.rint(turns).astype(int)
     near_edge = abs(turns - periods) < 0.5 / PHASE_BINS
@@ -78,7 +82,8 @@ def edge_timing(audio, phase, cycle):
     template = [bandpass(derivative, band)[ANALYSIS] for band in (PREDICTOR_BAND, BAND)]
     shifts = []
     power_before = power_after = 0.
-    for period in np.unique(periods)[1:-1]:
+    cycles = np.unique(periods)[1:-1]
+    for period in cycles:
         mask = near_edge & (periods == period)
         fitted = [np.dot(signal[mask], slope[mask]) / np.dot(slope[mask], slope[mask])
                   for signal, slope in zip(observed, template, strict=True)]
@@ -86,12 +91,60 @@ def edge_timing(audio, phase, cycle):
         power_before += np.sum(observed[1][mask]**2)
         power_after += np.sum(prediction_error**2)
         shifts.append(fitted)
-    shifts = np.asarray(shifts)
+    return cycles, np.asarray(shifts), power_before, power_after
+
+
+def edge_timing(audio, phase, cycle):
+    """Use timing fitted in one frequency band to predict a disjoint band."""
+    _, shifts, power_before, power_after = edge_shifts(audio, phase, cycle)
     return dict(
         cycles=len(shifts), shift_estimate_correlation=float(np.corrcoef(shifts.T)[0, 1]),
         predictor_shift_std_us=float(np.std(shifts[:, 0]) * 1e6),
         predicted_band_power_change_db=float(10. * np.log10(power_after / power_before)),
     )
+
+
+def line_frequency_fit(time, shifts, frequency):
+    angle = 2. * np.pi * frequency * time
+    basis = np.column_stack((np.ones_like(angle), np.cos(angle), np.sin(angle)))
+    fit = np.linalg.lstsq(basis, shifts, rcond=None)[0]
+    phasors = fit[1] + 1j * fit[2]
+    error = baseline = 0.
+    halves = np.array_split(np.arange(time.size), 2)
+    for training, held in (halves, halves[::-1]):
+        # Predict with the amplitude and phase of the other band, from
+        # disjoint cycles. Remove the local mean to score AC timing only.
+        coeff = np.linalg.lstsq(basis[training], shifts[training, 0], rcond=None)[0]
+        prediction = basis[held] @ coeff
+        target = shifts[held, 1]
+        error += np.var(target - prediction) * len(held)
+        baseline += np.var(target) * len(held)
+    return dict(
+        fitted_peak_us=(abs(phasors) * 1e6).tolist(),
+        phase_difference_deg=float(np.angle(phasors[0] * phasors[1].conjugate(), deg=True)),
+        variance_explained=(1. - np.var(shifts - basis @ fit, axis=0) / np.var(shifts, axis=0)).tolist(),
+        held_out_ac_variance_explained=float(1. - error / baseline),
+    )
+
+
+def line_frequency_report():
+    report = dict(reference_sha256=REFERENCE_SHA256, source_mp3_sha256=SOURCE_SHA256,
+                  shift_bands_hz=(PREDICTOR_BAND, BAND), notes={})
+    for (note, _), audio in zip(NOTES, read_reference(), strict=True):
+        phase, cycle, fundamental = track(audio)
+        cycles, shifts, _, _ = edge_shifts(audio, phase, cycle)
+        time = (cycles - cycles[0]) / fundamental
+        fits = {
+            str(int(hz)): dict(
+                alias_hz=abs(hz - round(hz / fundamental) * fundamental),
+                **line_frequency_fit(time, shifts, hz),
+            )
+            for hz in LINE_FREQUENCIES_HZ
+        }
+        report["notes"][note] = dict(fundamental_hz=fundamental, edge_count=len(cycles),
+                                    span_s=float(time[-1]), edge_std_us=(np.std(shifts, axis=0) * 1e6).tolist(),
+                                    fits=fits)
+    return report
 
 
 def codec_control(executable, path, cycle, phase, original_level):
@@ -117,10 +170,20 @@ def codec_control(executable, path, cycle, phase, original_level):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--ffmpeg", required=True, type=Path)
-    parser.add_argument("--source-mp3", required=True, type=Path)
+    parser.add_argument("--ffmpeg", type=Path)
+    parser.add_argument("--source-mp3", type=Path)
+    parser.add_argument("--line-frequencies", action="store_true",
+                        help="compare line frequency hypotheses using the verified local excerpt")
     parser.add_argument("--write-report", action="store_true")
     args = parser.parse_args()
+    if args.line_frequencies:
+        report = line_frequency_report()
+        if args.write_report:
+            write(TIMING_RECEIPT, report)
+        print(json.dumps(report, indent=2))
+        return
+    if args.ffmpeg is None or args.source_mp3 is None:
+        parser.error("the MP3 comparison requires --ffmpeg and --source-mp3")
     if sha(args.source_mp3) != SOURCE_SHA256:
         raise SystemExit("Source MP3 hash differs from the archived reference")
     recording = decode(args.ffmpeg, args.source_mp3)

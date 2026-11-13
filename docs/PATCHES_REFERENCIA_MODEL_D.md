@@ -864,6 +864,38 @@ El [banco del flanco cargado en 9B](VCO1_FLANCO_9B_CARGADO.md)
 contrasta ese desplazamiento con el reinicio de C1 y la
 carga dinámica de la placa 4.
 
+### Componente periódica en el tiempo del flanco
+
+En el extracto WAV verificado del MP3, se tomó una estimación
+del tiempo por ciclo en cada una de las dos bandas. Se ajustaron
+50, 60, 100 y 120 Hz. Para comprobar el patrón, se ajustaron
+amplitud y fase en 4–7,5 kHz durante media nota y se midió
+cuánta varianza del tiempo estimado en 8–12 kHz se explica
+en la otra mitad. El resultado combina las dos direcciones.
+
+| Frecuencia ensayada | La2 | La3 |
+| --- | ---: | ---: |
+| 50 Hz | 20,0 % | 7,3 % |
+| 60 Hz | 11,5 % | 0,3 % |
+| 100 Hz | −10,1 % | 71,7 % |
+| 120 Hz | −12,5 % | 42,2 % |
+
+En La3, el ajuste de 100 Hz da 5,27 y 6,60 µs pico en
+las dos bandas, con una diferencia de fase de 0,97°.
+La métrica cuantifica el tiempo estimado del flanco.
+Un valor negativo indica que la predicción aumenta su
+varianza residual. El contraste es exploratorio, con
+42 flancos en La2 y 87 en La3. Al tomar una muestra
+por ciclo, 120 Hz se pliega a 99,50 Hz en La3. El mejor
+ajuste de 100 Hz orienta una prueba de sensibilidad del
+circuito y deja abierto el origen de la modulación en
+la cadena de grabación. En La2 no se replica el patrón
+de 100 Hz.
+
+`python -B tools/check_rf_d_vintage_saw_reset_residual.py --line-frequencies --write-report`
+repite el contraste con el extracto local.
+[Resultados por nota](../evidence/rf_d_vintage_saw_edge_timing01.json).
+
 ## Cómo escuchar y medir
 
 Para el A/B musical hay que identificar la nota, su duración y
