@@ -763,6 +763,24 @@ Si difieren las frecuencias de muestreo, el montaje convierte
 el canal elegido a 48 kHz. En RF-D se iguala la afinación con
 Master Tune para cada par.
 
+### Escucha del La2 con el cutoff abierto
+
+La escucha de las cuatro tomas señaló un sonido más oscuro.
+Al repetir con RF-D afinado a la toma vintage (unos 109,1 Hz),
+el cutoff a 75 % reduce 21,56 dB la potencia relativa entre
+8 y 12 kHz frente al cutoff a 100 %. La fundamental queda
+en la misma frecuencia.
+
+Con RF-D abierto, en esa banda quedan 3,86 dB de diferencia
+de potencia total respecto del MP3 vintage. La diferencia
+entre las componentes periódicas es de 0,68 dB. La posición
+de cutoff del instrumento vintage sigue sin verificarse.
+
+`python -B tools/check_rf_d_la2_open_ab.py --write-report`
+alterna el La2 vintage y RF-D con cutoff a 100 %, con volumen
+igualado a −22 dBFS RMS. La secuencia se repite desde 1,40 s.
+[Mediciones y orden de escucha](../evidence/rf_d_la2_open_ab01.json).
+
 ## Cómo escuchar y medir
 
 Para el A/B musical hay que identificar la nota, su duración y
