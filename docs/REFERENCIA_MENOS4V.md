@@ -183,3 +183,47 @@ estímulo pertenece al banco de medición.
 `python -B tools/check_vco_neg10_r37.py --write-report`
 repite las seis corridas.
 [Medidas a 1,25 mV](../evidence/vco_neg10_r37_01.json).
+
+## Rizado conjunto de +10 V y −10 V
+
+Se aplicaron 1,25 mV pico a 100 Hz a +10 V solo y
+a ambos rieles con 0°, 90° y 180° de diferencia de
+fase. C14, la carga continua de OSC2/3, el mixer y
+la placa 4 siguen conectados. Las fuentes del banco
+fijan las tensiones de CV y −5 V. El regulador y
+la retención de teclado quedan fuera de este banco.
+
+| Desplazamiento de 9B, pico | La2 | La3 |
+| --- | ---: | ---: |
+| +10 V solo | 4,40 ns | 0,81 ns |
+| −10 V solo | 4,36 µs | 5,98 µs |
+| Ambos, en fase | 4,36 µs | 5,98 µs |
+| Ambos, en cuadratura | 4,36 µs | 5,98 µs |
+| Ambos, en oposición | 4,36 µs | 5,98 µs |
+
+La suma vectorial de los ensayos por riel predice
+los desplazamientos combinados con un error máximo
+de 44 ns. En oposición, repetir a 250 ns en vez de
+500 ns y reducir la tolerancia relativa a la mitad
+cambia el fasor menos de 0,24 ns. El primer intento
+completó los solves y se detuvo al serializar un
+booleano de NumPy. Se repitieron las catorce corridas
+con el mismo circuito y las mismas comprobaciones.
+
+Si la amplitud de ambos rieles es igual, las ganancias
+medidas acotan la relación La2/La3 a **0,728–0,729**
+para cualquier fase. Los dos estimadores por flanco
+de la toma dieron 0,164 y 0,356. En el modelo lineal
+local, bajar hasta 0,356 requeriría un +10 V con al
+menos 514 veces la amplitud de −10 V y fase ajustada.
+Esa relación extrapola las ganancias de pequeña señal
+y queda fuera de los ensayos de cancelación. El
+contraste reduce la plausibilidad del rizado común
+por los pines de alimentación del VCO bajo CV fijo.
+Las entradas de CV y la cadena de salida siguen
+siendo vías posibles.
+
+`python -B tools/check_vco_dual_rail_ripple.py --write-report`
+repite las catorce corridas.
+[Medidas de los dos rieles](../evidence/vco_dual_rail_ripple01.json) ·
+[Bandas laterales de la toma](PATCHES_REFERENCIA_MODEL_D.md#bandas-laterales-de-100-y-120-hz).
