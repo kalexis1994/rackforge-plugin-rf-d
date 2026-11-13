@@ -604,6 +604,24 @@ secuencia completa se repite desde 4,20 s. La variante
 con ruido coincide por bits a 128 y 480 frames.
 [Mediciones y orden de escucha](../evidence/rf_d_vintage_saw_noise_ab01.json).
 
+### Realce leve sobre la sierra limpia
+
+En la escucha, el 4 % de ruido blanco resultó excesivo. El
+siguiente A/B vuelve al render trapezoidal limpio y aplica
+un realce de 0,8 dB entre 4 y 10 kHz con transiciones suaves
+entre 2,5–4 kHz y 10–17 kHz. Se eligió el nivel a partir de
+la diferencia entre las componentes periódicas del La2.
+En el WAV del La2, la energía relativa de 8 a 12 kHz sube
+0,78 dB. El realce se aplica fuera del motor de audio como
+prueba de escucha, sin una fuente de ruido adicional.
+
+`python -B tools/check_rf_d_vintage_saw_brightness_ab.py --write-report`
+genera `artifacts/rf-d-sierra-brillo-limpio-ab.wav`. Cada
+grupo alterna Minimoog, RF-D limpio y RF-D con realce, a
+−22 dBFS RMS. La2 empieza a 0,00 s y La3 a 2,10 s. La
+secuencia se repite a partir de 4,20 s.
+[Mediciones y orden de escucha](../evidence/rf_d_vintage_saw_brightness_ab01.json).
+
 ## Cómo escuchar y medir
 
 Para el A/B musical hay que identificar la nota, su duración y
