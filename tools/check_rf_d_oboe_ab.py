@@ -46,7 +46,7 @@ def read_reference():
     return pcm.reshape(-1, 2).mean(axis=1) / 32768.
 
 
-def score(schema, *, controls=CONTROLS, keys=KEYS):
+def score(schema, *, controls=CONTROLS, keys=KEYS, wheel=WHEEL):
     indices = {parameter["id"]: parameter["index"] for parameter in schema["parameters"]}
     events = [change(indices[name], value) for name, value in controls.items()]
     performance = []
@@ -55,11 +55,12 @@ def score(schema, *, controls=CONTROLS, keys=KEYS):
         performance.append([PREROLL + frames_at(stop_ms), 0x80, note, 0])
     # For a legato change, press the next key before releasing the previous one.
     performance.sort(key=lambda event: (event[0], -event[1]))
-    times, values = zip(*WHEEL)
-    samples = sorted(set(range(times[0], times[-1], 4)) | set(times))
-    amounts = np.rint(np.interp(samples, times, values)).astype(int).tolist()
-    performance.extend([PREROLL + frames_at(ms), 0xb0, 1, value]
-                       for ms, value in zip(samples, amounts))
+    if wheel:
+        times, values = zip(*wheel)
+        samples = sorted(set(range(times[0], times[-1], 4)) | set(times))
+        amounts = np.rint(np.interp(samples, times, values)).astype(int).tolist()
+        performance.extend([PREROLL + frames_at(ms), 0xb0, 1, value]
+                           for ms, value in zip(samples, amounts))
     return events + sorted(performance, key=lambda event: event[0])
 
 
@@ -90,7 +91,9 @@ def vibrato_span(audio):
 
 
 def write_audition(takes, order, destination):
-    fade = np.ones(FRAMES)
+    frames = len(next(iter(takes.values())))
+    assert all(take.shape == (frames,) for take in takes.values())
+    fade = np.ones(frames)
     edge = np.linspace(0., 1., frames_at(10))
     fade[:edge.size], fade[-edge.size:] = edge, edge[::-1]
     clips = {name: take * fade for name, take in takes.items()}
@@ -112,7 +115,7 @@ def write_audition(takes, order, destination):
     with wave.open(str(destination), "wb") as wav:
         wav.setparams((1, 2, SAMPLE_RATE, 0, "NONE", "not compressed"))
         wav.writeframes(np.concatenate(sequence).tobytes())
-    playlist = [dict(source=source, start_frame=index * (FRAMES + gap.size))
+    playlist = [dict(source=source, start_frame=index * (frames + gap.size))
                 for index, source in enumerate(order)]
     return dict(sha256=sha(destination), gain=list(gains.values()), rms_dbfs=list(levels.values()),
                 playlist=playlist)

@@ -59,7 +59,8 @@ bajo. Conviene medir la apertura y el nivel con la toma
 alineada para distinguir un problema de curva de perilla
 de un problema de respuesta del filtro. Estas cifras
 corresponden a una nota de prueba propia de RF-D. La
-comparación con la ejecución de SynthMania queda pendiente.
+comparación con la ejecución de SynthMania está en la
+[sección de Trumpet](#trumpet-para-comparar-la-apertura-del-filtro).
 
 ## Fat Bass y la sensibilidad a Cutoff y Emphasis
 
@@ -412,6 +413,37 @@ conserva como observación de la captura.
 
 `python -B tools/check_rf_d_oboe_tail.py` repite el análisis
 desde la captura estéreo y el WAV del A/B con ajuste de armónicos.
+
+## Trumpet para comparar la apertura del filtro
+
+La [ficha de Trumpet](https://medias.audiofanzine.com/files/minimoog-sounds-by-tom-rhea-ld-480638.pdf#page=6)
+arranca con OSC1 en sierra a 8′ y nivel 5. Los otros dos
+osciladores permiten engrosar el sonido al unísono. El A/B
+usa la variante de un oscilador, Emphasis en cero y tracking
+de teclado de un tercio. Se transcribió la primera frase de
+la [demo de SynthMania](https://www.youtube.com/watch?v=S_FKXtwqJoQ&t=416s)
+hasta la caída del Fa, con nueve notas y un arpegio ligado al
+inicio. Los gates se estimaron a partir del audio, con rueda
+fija y afinación global de +15,4 cents en RF-D.
+
+Se probaron Cutoff y ambos ataques en seis notas y se
+reservaron las tres últimas para verificar el ajuste. El
+candidato usa Cutoff 40, ataque de filtro de 200 ms y ataque
+de volumen de 110 ms. En las notas reservadas, el error
+medio absoluto en H2–H8 respecto de H1 pasó de **8,65 a
+3,87 dB**. El de la envolvente de ataque respecto del RMS
+de la frase bajó de **9,78 a 1,39 dB**. Son ajustes para esta
+toma. La grabación conserva su cadena original y queda
+pendiente comprobar los valores en otra ejecución.
+[Transcripción, ajuste y mediciones](../evidence/rf_d_trumpet_ab01.json).
+
+`python -B tools/check_rf_d_trumpet_ab.py --write-report` usa
+la referencia privada verificada por SHA-256. Renderiza a
+48 kHz con sobremuestreo 4× y verifica igualdad por bits
+a 128 y 480 frames. Genera `artifacts/rf-d-trumpet-ab.wav`,
+con dos repeticiones a −22 dBFS RMS y ganancia constante
+por frase. El Minimoog entra a 0,00 y 5,40 s. RF-D entra a
+2,70 y 8,10 s.
 
 ## Cómo escuchar y medir
 
