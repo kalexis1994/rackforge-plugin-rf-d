@@ -87,3 +87,72 @@ nominales dejan abiertas otras vías de acople.
 reproduce las doce corridas completas.
 [Recibo de medidas](../evidence/vco_shared_neg401.json) ·
 [Banco anterior de 9B](VCO1_FLANCO_9B_CARGADO.md).
+
+## Rizado de 100 Hz en el riel de −10 V
+
+El manual SVC-204D describe el puente CR1–CR4 y los
+condensadores de filtrado de la placa 5. En la placa 3, el
+regulador de −10 V sigue al de +10 V y ambos realimentan
+desde la placa de osciladores. Una red de 50 Hz puede
+producir 100 Hz tras el puente. El ajuste de servicio mide
+la continua en los pines de la placa de osciladores. Las
+secciones consultadas no cuantifican el rizado residual.
+[SVC-204D, §2.7, §5.6 y Fig. 9-13](FUENTES.md).
+
+Se aplicaron 2 y 8 mV pico a 100 Hz al riel de −10 V del
+banco cargado. El control conserva la misma polarización
+y el mismo paso máximo, con amplitud cero. Se mantienen
+C14, la carga continua de OSC2/3, el mixer y la entrada
+activa de la placa 4. Los otros rieles y las tensiones
+de control siguen ideales. Una prueba aplica los 8 mV
+sólo a R166 para medir la vía del divisor.
+
+Por ciclo se toma el tiempo del punto medio de 9B
+respecto al mismo ciclo en el control. Se extrae la
+componente a 100 Hz con un ajuste que admite offset
+y deriva lineal. También se mide el retardo local
+entre la rampa al bajar de −3,8 V y el punto medio
+de 9B. Hay 11 flancos en La2 y 22 en La3.
+
+| Respuesta a 100 Hz | La2 | La3 |
+| --- | ---: | ---: |
+| Riel completo, desplazamiento del flanco | 3,484 µs/mV | 4,781 µs/mV |
+| Riel completo, variación del retardo local | 2,015 µs/mV | 1,007 µs/mV |
+| Sólo R166, desplazamiento del flanco | 0,178 µs/mV | 0,159 µs/mV |
+| Tensión en −4 V por mV aplicado al riel completo | 0,381 mV | 0,381 mV |
+| Tensión en −4 V por mV aplicado sólo a R166 | 0,379 mV | 0,379 mV |
+| Componente equivalente de 100 Hz en el tiempo del flanco vintage | 0,86–2,35 µs pico | 5,27–6,60 µs pico |
+
+Las dos amplitudes del riel completo dan ganancias que
+difieren menos de 0,1 %. Al reducir el paso máximo de
+500 a 250 ns y la tolerancia relativa de 10⁻⁵ a 5·10⁻⁶,
+las ganancias a 8 mV cambian menos de 0,01 %. Sin
+estímulo, el mayor piso a 100 Hz es de 2 ns pico. Gear
+con la tolerancia original rechazó el transitorio.
+También se archivó el rechazo de la medición de Q10
+con Trap, donde el umbral de corriente tuvo múltiples
+cruces. La medida de 9B exige un solo cruce en su
+propia ventana y conserva el mismo circuito.
+
+Para alcanzar la escala de La3, el riel completo
+requeriría **1,10–1,38 mV pico**. Por R166 solo, la
+extrapolación a partir de 8 mV da 33–42 mV pico.
+La amplitud en −4 V es casi la misma en ambos ensayos,
+pero la respuesta temporal completa es unas 30 veces
+mayor en La3. Hay otras conexiones al riel que pueden
+dominar el efecto.
+
+Un mismo rizado de 1,10–1,38 mV predice 3,84–4,81 µs
+pico en La2. Esa nota no sostuvo el ajuste de 100 Hz
+entre bandas y mitades de la toma. La discrepancia
+limita la hipótesis de un único rizado estable de −10 V
+para ambas notas. El rizado real del instrumento, su
+correlación con +10 V y la ruta de captura permanecen
+sin medir. El cálculo compara tiempos en 9B con
+estimaciones de la salida grabada.
+
+`python -B tools/check_vco_neg10_ripple.py --write-report`
+reproduce las doce corridas.
+[Medidas](../evidence/vco_neg10_ripple01.json) ·
+[Rechazos y replays](../evidence/vco_neg10_ripple_rejections01.json) ·
+[Contraste vintage](PATCHES_REFERENCIA_MODEL_D.md#componente-periódica-en-el-tiempo-del-flanco).

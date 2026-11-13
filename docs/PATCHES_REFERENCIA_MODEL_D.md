@@ -895,6 +895,8 @@ de 100 Hz.
 `python -B tools/check_rf_d_vintage_saw_reset_residual.py --line-frequencies --write-report`
 repite el contraste con el extracto local.
 [Resultados por nota](../evidence/rf_d_vintage_saw_edge_timing01.json).
+El [ensayo del riel de −10 V](REFERENCIA_MENOS4V.md#rizado-de-100-hz-en-el-riel-de-10-v)
+cuantifica la sensibilidad de 9B y contrasta las dos notas.
 
 ## Cómo escuchar y medir
 

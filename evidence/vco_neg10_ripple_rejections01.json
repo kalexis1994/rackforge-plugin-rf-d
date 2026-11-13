@@ -1,0 +1,1295 @@
+{
+  "scope": "Rejected sensitivity runs and convergence probes at 100 Hz.",
+  "runs": {
+    "neg10-ripple-la2-rail-2mv": {
+      "status": "rejected",
+      "log_summary": [
+        "No. of Data Rows : 1985",
+        "doAnalyses: TRAN:  Timestep too small; time = 0.000706075, timestep = 6.25e-19: trouble with lab_e402-instance jq7_left"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V NEG10_TEST -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.002 100)",
+        "Iexternal NEG4_REF 0 9.2300412559056722e-06",
+        ".options klu bypass=0 itl4=100 temp=25 tnom=25 method=gear maxord=2 reltol=1e-7 abstol=1e-13 vntol=1e-8 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.155 0 4.9999999999999998e-07"
+      ],
+      "receipt": {
+        "scenario": {
+          "oscillator": {
+            "keyboard_v": -4.1161,
+            "other_control_v": -2.1,
+            "r8_fraction": 0.2613404652606161,
+            "r11_active_ohm": 521.3126579373712,
+            "c4_f": 1e-11,
+            "upper_contact": 3,
+            "lower_contact": 10,
+            "level_fraction": 0.5,
+            "imposed_mixer_v": 0.0,
+            "external_neg4_load_a": 9.230041255905672e-06,
+            "duration_s": 0.155,
+            "max_step_s": 5e-07,
+            "method": "gear",
+            "order": 2
+          },
+          "cutoff_fraction": 1.0,
+          "range_fraction": 0.5,
+          "scale_ohm": 250,
+          "emphasis_ohm": 50000,
+          "regen_bottom_ohm": 500,
+          "r61_ohm": 200,
+          "first_loudness_v": 2,
+          "second_loudness_base_v": 2,
+          "contour_amount_v": 0,
+          "first_balance_ohm": 12.5,
+          "second_balance_ohm": 50,
+          "main_load_ohm": 100000,
+          "headphone_input_ohm": 100000
+        },
+        "deck_sha256": "84f37744732a10cb400ae2753cd4a8996a10a4a015c0642e940c78c2c0de17d2",
+        "source_sha256": {
+          "evidence/vco1_ramp_graph.json": "bec931c06ac012fd14ee2b7ddf8f86f06c2d3c0ab2a78306dd6f33c88bead361",
+          "evidence/vco1_ca3046_parts.json": "2724e065969f8b0edc4f1191a787ae38c755aa4850fcfa6b9262828207689ad9",
+          "evidence/vco1_panel_pulse_width.json": "6da8d7eb376649cbda482c32f8da8ec55da5e2f7344756bac626a6e9d81b69c9",
+          "evidence/vco1_laboratory_devices.json": "50b4f163e29d2c4a9a19a186d871a0a83ff1d19c7d4c539e8e42add2dcd254f1",
+          "tools/vco1_circuit_reference.py": "c2e44b4e528744359300f7257a601c7e870a929e9f5c624f7ba741b07bff193b",
+          "references-local/datasheets/ti_lm741_lm741.lib": "f58370983c8bd22bf6a59ddd05a1dd492f1a0ea60f673ffd460a356da5e693dc",
+          "evidence/voice_board4_graph.json": "dae24df4d2ea7635cc1935e556a9d989ec34f48950ec884069532cc5d3ba49f9",
+          "tools/voice_circuit_reference.py": "88267ed30db730315eca9d0099d40ee7e1a8ac9f751bee9e7f1b6a24d114e17c",
+          "tools/check_vco1_loaded_reset_edge.py": "ce7b1a0d95c06591c42a879ebc44c40a4be40d49e5e787e3b5c50582ce82af2d",
+          "tools/check_vco_neg10_ripple.py": "2a4c9d6ae462d3b5e744faec2e82cdcdcaf7594997e5a263bc96783e8831e093"
+        },
+        "log_sha256": "4ecfe0a5737dd74014a6b9777482557ec352a66d9d910a394480257be5d627ba",
+        "partial_export_sha256": "43be9ce78c040e6f46bdd77fa071bb767e25fa335158b9211cf5919882322551",
+        "error": "SPICE reported failure; preserved run log"
+      },
+      "reproduction_deck": [
+        "RF-D coupled conditional VCO1 ladder VCAs board outputs",
+        ".include \"$ROOT/references-local/datasheets/ti_lm741_lm741.lib\"",
+        "Vneg10 NEG10_V NEG10_TEST -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.002 100)",
+        "Vpos10 POS10_V 0 10",
+        "Vneg5 NEG5_V 0 -5",
+        "Iexternal NEG4_REF 0 9.2300412559056722e-06",
+        "CC1 0 RAMP_C1 1e-08",
+        "CC2 QA_BASE QB_BASE 1e-10",
+        "CC3 FET_C3_LEFT SCHMITT_DRIVE 1e-10",
+        "CC4 FET_C4_LEFT SCHMITT_DRIVE 9.9999999999999994e-12",
+        "CC14 NEG4_REF 0 1.1999999999999999e-07",
+        "XIC1 IC1_PLUS IC1_SUM 0 NEG10_V IC1_OUT LM741",
+        "Qic2_qa RAMP_C1 QA_BASE PAIR_EMITTER LAB_NPN",
+        "Qic2_qb QB_COLLECTOR QB_BASE PAIR_EMITTER LAB_NPN",
+        "Qic2_qc PAIR_EMITTER QC_BASE QC_EMITTER LAB_NPN",
+        "XIC3 QB_COLLECTOR NEG4_REF POS10_V NEG10_V IC3_OUT LM741",
+        "Qq1 POS10_V Q2_COLLECTOR Q1_EMITTER LAB_NPN",
+        "Qq2 Q2_COLLECTOR SCHMITT_DRIVE Q2_EMITTER LAB_NPN",
+        "Qq3 SCHMITT_DRIVE Q3_BASE NEG10_V LAB_NPN",
+        "Qq4 Q4_COLLECTOR Q4_BASE Q4_EMITTER LAB_NPN",
+        "Qq5 SCHMITT_Q5_COLLECTOR SCHMITT_SENSE 0 LAB_PNP",
+        "Qq6 SCHMITT_Q6_COLLECTOR SCHMITT_Q5_COLLECTOR 0 LAB_PNP",
+        "JQ7_left FET_LEFT_DRAIN RAMP_C1 FET_COMMON_SOURCE LAB_E402",
+        "JQ7_right FET_RIGHT_DRAIN FET_C4_LEFT FET_COMMON_SOURCE LAB_E402",
+        "Qq8 Q3_BASE FET_RIGHT_DRAIN FET_C3_LEFT LAB_PNP",
+        "Qq9 NEG10_V FET_LEFT_DRAIN FET_C3_LEFT LAB_PNP",
+        "Qq10 RAMP_C1 Q10_BASE 0 LAB_PNP",
+        "Qq11 Q11_COLLECTOR Q11_BASE 0 LAB_PNP",
+        "Qq12 Q12_COLLECTOR Q12_BASE NEG10_V LAB_NPN",
+        "RR1 PULSE_WIDTH_22B Q11_BASE 43000",
+        "RR2 Q11_BASE Q12_COLLECTOR 910000",
+        "RR3 POS10_V Q2_COLLECTOR 10700",
+        "RR4 POS10_V FET_C4_LEFT 33200",
+        "RR5 POS10_V FET_RIGHT_DRAIN 5600",
+        "RR6 SCHMITT_Q6_COLLECTOR RESET_BIAS 56",
+        "RR7 QA_BASE NEG5_V 100",
+        "RR8_high R8_TOP QB_BASE 73.86595347393839",
+        "RR8_low QB_BASE R8_BOTTOM 26.13404652606161",
+        "RR9 IC1_OUT R8_TOP 33",
+        "RR10 IC1_PLUS NEG5_V 1000",
+        "RR11_active IC1_SUM R37_TOP 521.31265793737123",
+        "RR13 RECT_OUTPUT_20B Q12_COLLECTOR 6200",
+        "RR14 Q2_COLLECTOR NEG10_V 150000",
+        "RR15 POS10_V SCHMITT_DRIVE 2200",
+        "RR16 POS10_V SCHMITT_SENSE 33200",
+        "RR17 SCHMITT_SENSE RESET_BIAS 10000",
+        "RR19 R8_BOTTOM NEG5_V 1000",
+        "RR20 IC1_OUT IC1_SUM 1000",
+        "RR22 0 RECT_OUTPUT_20B 4700",
+        "RR23 TRI_OUTPUT_21B NEG10_V 8200",
+        "RR24 FET_C4_LEFT SCHMITT_DRIVE 10700",
+        "RR25 FET_C4_LEFT NEG10_V 15000",
+        "RR26 RESET_BIAS NEG10_V 1000",
+        "RR28 Q1_EMITTER TRI_OUTPUT_21B 750",
+        "RR29 Q2_EMITTER NEG10_V 10000",
+        "RR30 SCHMITT_DRIVE SCHMITT_SENSE 10700",
+        "RR31 SCHMITT_Q5_COLLECTOR NEG10_V 10000",
+        "RR33 0 SAW_OUTPUT_9B 4700",
+        "RR34 SCHMITT_DRIVE SAW_OUTPUT_9B 4300",
+        "RR35 Q12_BASE NEG10_V 100000",
+        "RR36 Q3_BASE NEG10_V 2700",
+        "RR37 R37_TOP NEG10_V 11800",
+        "RR39 Q11_COLLECTOR Q12_BASE 100000",
+        "RR40 SCHMITT_DRIVE Q11_BASE 43000",
+        "RR41 SCHMITT_Q6_COLLECTOR Q10_BASE 910",
+        "RR50 0 QB_COLLECTOR 39000",
+        "RR69 IC3_OUT QC_BASE 15000",
+        "RR78_dc QC_BASE NEG10_V 2000",
+        "RR78_series QC_BASE R78_RC_MID 220",
+        "CR78_cap R78_RC_MID NEG10_V 1e-08",
+        "RR79 QC_EMITTER NEG10_V 1000",
+        "RR42 IC1_SUM QC_EMITTER 160000",
+        "RR44 Q11_BASE NEG10_V 390000",
+        "RR45 POS10_V FET_C3_LEFT 1200",
+        "RR46 POS10_V FET_LEFT_DRAIN 5600",
+        "RR47 FET_COMMON_SOURCE Q4_COLLECTOR 100",
+        "RR48 Q4_EMITTER NEG10_V 12000",
+        "RR49 NEG4_REF Q4_BASE 1000",
+        "RR166 NEG10_V NEG4_REF 6200",
+        "RR174 NEG4_REF 0 3900",
+        "VBEND BEND 0 -2.1000000000000001",
+        "RR12 BEND IC1_SUM 150000",
+        "VTUNE TUNE 0 -2.1000000000000001",
+        "RR21 TUNE IC1_SUM 560000",
+        "VKEYBOARD KEYBOARD 0 -4.1161000000000003",
+        "RR27 KEYBOARD IC1_SUM 51100",
+        "VMOD MOD 0 -2.1000000000000001",
+        "RR32 MOD IC1_SUM 51100",
+        "VEXT EXT 0 -2.1000000000000001",
+        "RR38 EXT IC1_SUM 51100",
+        "VOSC1_RANGE OSC1_RANGE 0 -2.1000000000000001",
+        "RR43 OSC1_RANGE IC1_SUM 15000",
+        "RR34_PANEL 0 SW6_11 1500",
+        "RR33_PANEL SW6_11 SW6_12 1000",
+        "RR32_PANEL SW6_12 NEG10_V 7500",
+        "RR30_PANEL SAW_OUTPUT_9B SAW_TRI_TAP 47000",
+        "RR31_PANEL SAW_TRI_TAP TRI_OUTPUT_21B 10000",
+        "VSW6_width PULSE_WIDTH_22B 0 0",
+        "RR6_panel_high SAW_OUTPUT_9B R6_WIPER 12500",
+        "RR6_panel_low R6_WIPER 0 12500",
+        "RR45_PANEL R6_WIPER MIX_BUS_BOARD4_PIN4 33000",
+        ".model LAB_NPN NPN(IS=1e-14 BF=100 BR=5 VAF=0 IKF=0 CJE=7.0000000000000001e-12 VJE=0.75 MJE=0.5 CJC=3.0000000000000001e-12 VJC=0.69999999999999996 MJC=0.33000000000000002 FC=0.40000000000000002 TF=1.0000000000000001e-09 TR=3e-09 TNOM=25)",
+        ".model LAB_PNP PNP(IS=1e-14 BF=100 BR=5 VAF=0 IKF=0 CJE=7.0000000000000001e-12 VJE=0.75 MJE=0.5 CJC=3.0000000000000001e-12 VJC=0.69999999999999996 MJC=0.33000000000000002 FC=0.40000000000000002 TF=1.0000000000000001e-09 TR=3e-09 TNOM=25)",
+        ".model LAB_E402 NJF(LEVEL=1 VTO=-2.5 BETA=0.00030188679245283021 LAMBDA=0.0030000000000000001 CGS=3.3000000000000001e-12 CGD=5.4990908339470075e-12 PB=1 IS=1e-14 B=1 FC=0.5 RD=0 RS=0 TNOM=25)",
+        "RF4_R4 POS10_V F4_TAP_Q2_Q3 220",
+        "RF4_R16 F4_TAP_Q2_Q3 F4_TAP_Q10_Q11 150",
+        "RF4_R32 F4_TAP_Q10_Q11 F4_TAP_Q19_Q20 150",
+        "RF4_R41 F4_TAP_Q19_Q20 F4_TAP_Q23_Q24 150",
+        "RF4_R52 F4_TAP_Q23_Q24 F4_BOTTOM 150",
+        "RF4_R54 F4_BOTTOM F4_BASE_Q29 470",
+        "RF4_R76 F4_BOTTOM F4_REGEN_BOTTOM 330",
+        "RF4_R60 F4_TAIL F4_Q28_COLLECTOR 680",
+        "RF4_R46 F4_RANGE_WIPER F4_CUTOFF_SHARED 68000",
+        "RF4_R45 F4_Q26_COLLECTOR NEG10_V 330",
+        "RF4_R74 F4_CONTOUR_AMOUNT F4_CONTROL_BASE 47000",
+        "RF4_R70 F4_SCALE_LOW 0 1800",
+        "RF4_R31 F4_Q8_BASE 0 47000",
+        "RF4_R38 F4_Q6_BASE 0 47000",
+        "RF4_R24 F4_Q8_EMITTER_Q7_BASE NEG10_V 220000",
+        "RF4_R20 F4_Q6_EMITTER_Q5_BASE NEG10_V 100000",
+        "RF4_R26 F4_RECOVER_TAIL NEG10_V 1000",
+        "RF4_R3 F4_RECOVER_COLLECTOR F4_RECOVER_R7_R3 1000",
+        "RF4_R7 F4_RECOVER_R7_R3 F4_RECOVER_R6_R7 180",
+        "RF4_R6 F4_RECOVER_R6_R7 POS10_V 47",
+        "RF4_R2 F4_RECOVER_COLLECTOR F4_C6_LEFT 82000",
+        "RF4_R34 F4_Q16_BASE F4_Q15_BASE 820",
+        "RF4_R36 F4_Q15_BASE 0 510",
+        "RF4_R22 F4_FIRST_BAL_WIPER F4_Q15_BASE 120",
+        "RF4_R13 F4_FIRST_BAL_WIPER F4_SECOND_BAL_WIPER 120",
+        "RF4_R35 F4_PAIR_EMITTER F4_Q18_COLLECTOR 1000",
+        "RF4_R37 F4_Q18_EMITTER 0 6800",
+        "RF4_R43 F4_Q18_EMITTER NEG10_V 270000",
+        "RF4_R59 F4_LOUDNESS_CONTOUR F4_Q18_BASE 68000",
+        "RF4_R33 F4_PAIR2_EMITTER F4_Q21_COLLECTOR 470",
+        "RF4_R42 F4_Q21_EMITTER 0 3300",
+        "RF4_R44 F4_Q21_EMITTER NEG10_V 150000",
+        "RF4_R51 F4_Q21_BASE 0 33000",
+        "RF4_R11 F4_SECOND_BAL_WIPER F4_Q1_BASE 150",
+        "RF4_R10 F4_Q1_BASE POS10_V 120",
+        "RF4_R9 F4_Q1_EMITTER POS10_V 62",
+        "RF4_R8 F4_Q1_COLLECTOR F4_Q12_EMITTER 8.1999999999999993",
+        "RF4_R28 F4_Q1_COLLECTOR F4_Q17_EMITTER 8.1999999999999993",
+        "RF4_R30 F4_Q12_COLLECTOR 0 680",
+        "RF4_R29 F4_Q17_COLLECTOR 0 680",
+        "RF4_R75 F4_C2_RIGHT F4_MAIN_OUTPUT 1000",
+        "RF4_R77 F4_C2_RIGHT F4_HEADPHONE_INPUT 1000",
+        "CF4_C27 MIX_BUS_BOARD4_PIN4 F4_BASE_Q29 1.0000000000000001e-05",
+        "CF4_C24 F4_BOTTOM 0 0.00022000000000000001",
+        "CF4_C16 F4_L_Q29C_Q23E F4_R_Q30C_Q24E 6.8e-08",
+        "CF4_C11 F4_L_Q23C_Q19E F4_R_Q24C_Q20E 6.8e-08",
+        "CF4_C7 F4_L_Q19C_Q10E F4_R_Q20C_Q11E 6.8e-08",
+        "CF4_C3 F4_L_Q10C_Q2E F4_R_Q11C_Q3E 6.8e-08",
+        "CF4_C5 F4_L_Q10C_Q2E F4_Q8_BASE 2.2000000000000001e-07",
+        "CF4_C1 F4_R_Q11C_Q3E F4_Q6_BASE 2.2000000000000001e-07",
+        "CF4_C9 F4_RECOVER_R6_R7 0 0.0001",
+        "CF4_C10 F4_RECOVER_R7_R3 F4_EMPHASIS_PIN7 1.0000000000000001e-05",
+        "CF4_C18 F4_CONTROL_BASE 0 1e-10",
+        "CF4_C6 F4_C6_LEFT F4_Q16_BASE 3.3000000000000002e-07",
+        "CF4_C15 F4_Q15_BASE 0 0.00022000000000000001",
+        "CF4_C4 F4_Q1_BASE POS10_V 0.00022000000000000001",
+        "CF4_C2 F4_Q17_COLLECTOR F4_C2_RIGHT 1.0000000000000001e-05",
+        "QF4_Q29 F4_L_Q29C_Q23E F4_BASE_Q29 F4_TAIL LAB_NPN",
+        "QF4_Q30 F4_R_Q30C_Q24E F4_BASE_Q30 F4_TAIL LAB_NPN",
+        "QF4_Q23 F4_L_Q23C_Q19E F4_TAP_Q23_Q24 F4_L_Q29C_Q23E LAB_NPN",
+        "QF4_Q24 F4_R_Q24C_Q20E F4_TAP_Q23_Q24 F4_R_Q30C_Q24E LAB_NPN",
+        "QF4_Q19 F4_L_Q19C_Q10E F4_TAP_Q19_Q20 F4_L_Q23C_Q19E LAB_NPN",
+        "QF4_Q20 F4_R_Q20C_Q11E F4_TAP_Q19_Q20 F4_R_Q24C_Q20E LAB_NPN",
+        "QF4_Q10 F4_L_Q10C_Q2E F4_TAP_Q10_Q11 F4_L_Q19C_Q10E LAB_NPN",
+        "QF4_Q11 F4_R_Q11C_Q3E F4_TAP_Q10_Q11 F4_R_Q20C_Q11E LAB_NPN",
+        "QF4_Q2 POS10_V F4_TAP_Q2_Q3 F4_L_Q10C_Q2E LAB_NPN",
+        "QF4_Q3 POS10_V F4_TAP_Q2_Q3 F4_R_Q11C_Q3E LAB_NPN",
+        "QF4_Q28 F4_Q28_COLLECTOR F4_CUTOFF_SHARED 0 LAB_NPN",
+        "QF4_Q8 F4_RECOVER_COLLECTOR F4_Q8_BASE F4_Q8_EMITTER_Q7_BASE LAB_NPN",
+        "QF4_Q6 POS10_V F4_Q6_BASE F4_Q6_EMITTER_Q5_BASE LAB_NPN",
+        "QF4_Q7 F4_RECOVER_COLLECTOR F4_Q8_EMITTER_Q7_BASE F4_RECOVER_TAIL LAB_NPN",
+        "QF4_Q5 POS10_V F4_Q6_EMITTER_Q5_BASE F4_RECOVER_TAIL LAB_NPN",
+        "QF4_Q16 F4_Q16_COLLECTOR F4_Q16_BASE F4_PAIR_EMITTER LAB_NPN",
+        "QF4_Q15 F4_Q15_COLLECTOR F4_Q15_BASE F4_PAIR_EMITTER LAB_NPN",
+        "QF4_Q18 F4_Q18_COLLECTOR F4_Q18_BASE F4_Q18_EMITTER LAB_NPN",
+        "QF4_Q14 F4_Q14_COLLECTOR F4_Q16_COLLECTOR F4_PAIR2_EMITTER LAB_NPN",
+        "QF4_Q13 F4_Q13_COLLECTOR F4_Q15_COLLECTOR F4_PAIR2_EMITTER LAB_NPN",
+        "QF4_Q21 F4_Q21_COLLECTOR F4_Q21_BASE F4_Q21_EMITTER LAB_NPN",
+        "QF4_Q26 F4_Q26_COLLECTOR F4_CONTROL_BASE F4_CUTOFF_SHARED LAB_PNP",
+        "QF4_Q1 F4_Q1_COLLECTOR F4_Q1_BASE F4_Q1_EMITTER LAB_PNP",
+        "QF4_Q12 F4_Q12_COLLECTOR F4_Q14_COLLECTOR F4_Q12_EMITTER LAB_PNP",
+        "QF4_Q17 F4_Q17_COLLECTOR F4_Q13_COLLECTOR F4_Q17_EMITTER LAB_PNP",
+        ".model LAB_458 D(IS=2.4741471366716827e-09 N=2 TNOM=25)",
+        "DF4_CR1 F4_Q17_COLLECTOR POS10_V LAB_458",
+        "DF4_CR2 0 F4_Q17_COLLECTOR LAB_458",
+        "RF4_R61 F4_BOTTOM 0 200",
+        "RF4_R73_bottom F4_REGEN_BOTTOM F4_BASE_Q30 500",
+        "RF4_R73_top F4_BASE_Q30 F4_EMPHASIS_PIN6 500",
+        "RF4_R14_PANEL F4_EMPHASIS_PIN7 F4_EMPHASIS_PIN6 50000",
+        "RF4_R39_low 0 F4_RANGE_WIPER 5000",
+        "RF4_R39_high F4_RANGE_WIPER POS10_V 5000",
+        "RF4_R49 F4_CONTROL_BASE F4_SCALE_LOW 250",
+        "RF4_R11_PANEL_low NEG10_V F4_CUTOFF_WIPER 5000",
+        "VF4_R11_PANEL_high F4_CUTOFF_WIPER POS10_V 0",
+        "RF4_R55_PANEL F4_CUTOFF_WIPER F4_CONTROL_BASE 200000",
+        "RF4_R51_PANEL 0 F4_CONTROL_BASE 100000",
+        "RF4_R52_PANEL 0 F4_CONTROL_BASE 33000",
+        "RF4_R19_R14 F4_FIRST_BAL_WIPER F4_Q16_COLLECTOR 112.5",
+        "RF4_R23_R14 F4_FIRST_BAL_WIPER F4_Q15_COLLECTOR 112.5",
+        "RF4_R18_R12 F4_SECOND_BAL_WIPER F4_Q14_COLLECTOR 380",
+        "RF4_R21_R12 F4_SECOND_BAL_WIPER F4_Q13_COLLECTOR 380",
+        "RF4_MAIN_LOAD F4_MAIN_OUTPUT 0 100000",
+        "RF4_HEADPHONE_LOAD F4_HEADPHONE_INPUT 0 100000",
+        "VF4_contour F4_LOUDNESS_CONTOUR 0 2",
+        "VF4_external F4_Q21_BASE 0 2",
+        "VF4_amount F4_CONTOUR_AMOUNT 0 0",
+        ".options klu bypass=0 itl4=100 temp=25 tnom=25 method=gear maxord=2 reltol=1e-7 abstol=1e-13 vntol=1e-8 gmin=1e-12",
+        ".ic v(RAMP_C1)=0",
+        ".save v(ramp_c1) v(schmitt_q6_collector) @qq10[ic] v(saw_output_9b) v(r6_wiper) v(mix_bus_board4_pin4) v(f4_base_q29) v(f4_main_output) v(neg4_ref) v(neg10_test)",
+        ".control",
+        "set numdgt=17",
+        "set wr_singlescale",
+        "set wr_vecnames",
+        "tran 4.9999999999999998e-07 0.155 0 4.9999999999999998e-07",
+        "wrdata $ROOT/tmp/lab-current/neg10-ripple-la2-rail-2mv.txt v(ramp_c1) v(schmitt_q6_collector) @qq10[ic] v(saw_output_9b) v(r6_wiper) v(mix_bus_board4_pin4) v(f4_base_q29) v(f4_main_output) v(neg4_ref) v(neg10_test)",
+        "quit",
+        ".endc",
+        ".end"
+      ]
+    },
+    "neg10-ripple-la3-rail-2mv": {
+      "status": "rejected",
+      "log_summary": [
+        "No. of Data Rows : 2081",
+        "doAnalyses: TRAN:  Timestep too small; time = 0.00070809, timestep = 6.25e-19: trouble with lab_e402-instance jq7_left"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V NEG10_TEST -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.002 100)",
+        "Iexternal NEG4_REF 0 9.2300313955227237e-06",
+        ".options klu bypass=0 itl4=100 temp=25 tnom=25 method=gear maxord=2 reltol=1e-7 abstol=1e-13 vntol=1e-8 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.155 0 4.9999999999999998e-07"
+      ],
+      "receipt": {
+        "scenario": {
+          "oscillator": {
+            "keyboard_v": -3.10332,
+            "other_control_v": -2.1,
+            "r8_fraction": 0.2613404652606161,
+            "r11_active_ohm": 521.3126579373712,
+            "c4_f": 1e-11,
+            "upper_contact": 3,
+            "lower_contact": 10,
+            "level_fraction": 0.5,
+            "imposed_mixer_v": 0.0,
+            "external_neg4_load_a": 9.230031395522724e-06,
+            "duration_s": 0.155,
+            "max_step_s": 5e-07,
+            "method": "gear",
+            "order": 2
+          },
+          "cutoff_fraction": 1.0,
+          "range_fraction": 0.5,
+          "scale_ohm": 250,
+          "emphasis_ohm": 50000,
+          "regen_bottom_ohm": 500,
+          "r61_ohm": 200,
+          "first_loudness_v": 2,
+          "second_loudness_base_v": 2,
+          "contour_amount_v": 0,
+          "first_balance_ohm": 12.5,
+          "second_balance_ohm": 50,
+          "main_load_ohm": 100000,
+          "headphone_input_ohm": 100000
+        },
+        "deck_sha256": "eb7c6255c49ef80cb338542edd761fc959704759162273cb59aa7404bad6d89d",
+        "source_sha256": {
+          "evidence/vco1_ramp_graph.json": "bec931c06ac012fd14ee2b7ddf8f86f06c2d3c0ab2a78306dd6f33c88bead361",
+          "evidence/vco1_ca3046_parts.json": "2724e065969f8b0edc4f1191a787ae38c755aa4850fcfa6b9262828207689ad9",
+          "evidence/vco1_panel_pulse_width.json": "6da8d7eb376649cbda482c32f8da8ec55da5e2f7344756bac626a6e9d81b69c9",
+          "evidence/vco1_laboratory_devices.json": "50b4f163e29d2c4a9a19a186d871a0a83ff1d19c7d4c539e8e42add2dcd254f1",
+          "tools/vco1_circuit_reference.py": "c2e44b4e528744359300f7257a601c7e870a929e9f5c624f7ba741b07bff193b",
+          "references-local/datasheets/ti_lm741_lm741.lib": "f58370983c8bd22bf6a59ddd05a1dd492f1a0ea60f673ffd460a356da5e693dc",
+          "evidence/voice_board4_graph.json": "dae24df4d2ea7635cc1935e556a9d989ec34f48950ec884069532cc5d3ba49f9",
+          "tools/voice_circuit_reference.py": "88267ed30db730315eca9d0099d40ee7e1a8ac9f751bee9e7f1b6a24d114e17c",
+          "tools/check_vco1_loaded_reset_edge.py": "ce7b1a0d95c06591c42a879ebc44c40a4be40d49e5e787e3b5c50582ce82af2d",
+          "tools/check_vco_neg10_ripple.py": "2a4c9d6ae462d3b5e744faec2e82cdcdcaf7594997e5a263bc96783e8831e093"
+        },
+        "log_sha256": "4402930c445e67084fb0b914854654c5153926fc84bbfc51c99b87ff459647d5",
+        "partial_export_sha256": "0852c15a0653059c538118b9316f133fcf307834852e54753e23727c8348ec11",
+        "error": "SPICE reported failure; preserved run log"
+      }
+    },
+    "neg10-probe-la2-divider-gear-klu-relax": {
+      "status": "rejected",
+      "log_summary": [
+        "No. of Data Rows : 19606",
+        "doAnalyses: TRAN:  Timestep too small; time = 0.00911693, timestep = 6.25e-19: trouble with lab_e402-instance jq7_left"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V 0 -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.0080000000000000002 100)",
+        "Vneg10_div NEG10_DIV NEG10_TEST -10",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options trtol=7 klu bypass=0 itl4=100 temp=25 tnom=25 method=gear maxord=2 reltol=1e-7 abstol=1e-13 vntol=1e-8 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-probe-la2-divider-gear-sparse-base": {
+      "status": "rejected",
+      "log_summary": [
+        "No. of Data Rows : 70880",
+        "doAnalyses: TRAN:  Timestep too small; time = 0.0273494, timestep = 6.25e-19: trouble with lab_e402-instance jq7_left"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V 0 -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.0080000000000000002 100)",
+        "Vneg10_div NEG10_DIV NEG10_TEST -10",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options bypass=0 itl4=100 temp=25 tnom=25 method=gear maxord=2 reltol=1e-7 abstol=1e-13 vntol=1e-8 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-probe-la2-divider-trap-klu-base": {
+      "status": "rejected",
+      "log_summary": [
+        "No. of Data Rows : 19066",
+        "doAnalyses: TRAN:  Timestep too small; time = 0.00911692, timestep = 6.25e-19: trouble with node \"xic3.4\""
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V 0 -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.0080000000000000002 100)",
+        "Vneg10_div NEG10_DIV NEG10_TEST -10",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options klu bypass=0 itl4=100 temp=25 tnom=25 method=trap maxord=2 reltol=1e-7 abstol=1e-13 vntol=1e-8 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-probe-la2-divider-trap-sparse-base": {
+      "status": "rejected",
+      "log_summary": [
+        "No. of Data Rows : 112510",
+        "doAnalyses: TRAN:  Timestep too small; time = 0.0455813, timestep = 6.25e-19: trouble with lab_e402-instance jq7_left"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V 0 -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.0080000000000000002 100)",
+        "Vneg10_div NEG10_DIV NEG10_TEST -10",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options bypass=0 itl4=100 temp=25 tnom=25 method=trap maxord=2 reltol=1e-7 abstol=1e-13 vntol=1e-8 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-probe-la2-rail-gear-klu-relax": {
+      "status": "rejected",
+      "log_summary": [
+        "No. of Data Rows : 692",
+        "doAnalyses: TRAN:  Timestep too small; time = 0.000171972, timestep = 6.25e-19: trouble with lab_e402-instance jq7_left"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V NEG10_TEST -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.0080000000000000002 100)",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options trtol=7 klu bypass=0 itl4=100 temp=25 tnom=25 method=gear maxord=2 reltol=1e-7 abstol=1e-13 vntol=1e-8 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-probe-la2-rail-gear-sparse-base": {
+      "status": "probe_completed",
+      "log_summary": [
+        "No. of Data Rows : 209716"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V NEG10_TEST -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.0080000000000000002 100)",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options bypass=0 itl4=100 temp=25 tnom=25 method=gear maxord=2 reltol=1e-7 abstol=1e-13 vntol=1e-8 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-probe-la2-rail-trap-klu-base": {
+      "status": "rejected",
+      "log_summary": [
+        "No. of Data Rows : 19259",
+        "doAnalyses: TRAN:  Timestep too small; time = 0.00911264, timestep = 6.25e-19: trouble with lab_e402-instance jq7_left"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V NEG10_TEST -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.0080000000000000002 100)",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options klu bypass=0 itl4=100 temp=25 tnom=25 method=trap maxord=2 reltol=1e-7 abstol=1e-13 vntol=1e-8 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-probe-la2-rail-trap-sparse-base": {
+      "status": "rejected",
+      "log_summary": [
+        "No. of Data Rows : 42286",
+        "doAnalyses: TRAN:  Timestep too small; time = 0.0182164, timestep = 6.25e-19: trouble with lab_e402-instance jq7_left"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V NEG10_TEST -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.0080000000000000002 100)",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options bypass=0 itl4=100 temp=25 tnom=25 method=trap maxord=2 reltol=1e-7 abstol=1e-13 vntol=1e-8 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-probe-la3-divider-gear-klu-relax": {
+      "status": "rejected",
+      "log_summary": [
+        "No. of Data Rows : 12079",
+        "doAnalyses: TRAN:  Timestep too small; time = 0.00453268, timestep = 6.25e-19: trouble with lab_e402-instance jq7_left"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V 0 -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.0080000000000000002 100)",
+        "Vneg10_div NEG10_DIV NEG10_TEST -10",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options trtol=7 klu bypass=0 itl4=100 temp=25 tnom=25 method=gear maxord=2 reltol=1e-7 abstol=1e-13 vntol=1e-8 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-probe-la3-divider-gear-sparse-base": {
+      "status": "probe_completed",
+      "log_summary": [
+        "No. of Data Rows : 259395"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V 0 -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.0080000000000000002 100)",
+        "Vneg10_div NEG10_DIV NEG10_TEST -10",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options bypass=0 itl4=100 temp=25 tnom=25 method=gear maxord=2 reltol=1e-7 abstol=1e-13 vntol=1e-8 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-probe-la3-divider-trap-klu-base": {
+      "status": "rejected",
+      "log_summary": [
+        "No. of Data Rows : 9914",
+        "doAnalyses: TRAN:  Timestep too small; time = 0.00453249, timestep = 6.25e-19: trouble with lab_e402-instance jq7_left"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V 0 -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.0080000000000000002 100)",
+        "Vneg10_div NEG10_DIV NEG10_TEST -10",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options klu bypass=0 itl4=100 temp=25 tnom=25 method=trap maxord=2 reltol=1e-7 abstol=1e-13 vntol=1e-8 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-probe-la3-divider-trap-sparse-base": {
+      "status": "rejected",
+      "log_summary": [
+        "No. of Data Rows : 10416",
+        "doAnalyses: TRAN:  Timestep too small; time = 0.00453252, timestep = 6.25e-19: trouble with lab_e402-instance jq7_left"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V 0 -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.0080000000000000002 100)",
+        "Vneg10_div NEG10_DIV NEG10_TEST -10",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options bypass=0 itl4=100 temp=25 tnom=25 method=trap maxord=2 reltol=1e-7 abstol=1e-13 vntol=1e-8 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-probe-la3-rail-gear-klu-relax": {
+      "status": "rejected",
+      "log_summary": [
+        "No. of Data Rows : 636",
+        "doAnalyses: TRAN:  Timestep too small; time = 0.000171927, timestep = 6.25e-19: trouble with lab_e402-instance jq7_left"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V NEG10_TEST -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.0080000000000000002 100)",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options trtol=7 klu bypass=0 itl4=100 temp=25 tnom=25 method=gear maxord=2 reltol=1e-7 abstol=1e-13 vntol=1e-8 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-probe-la3-rail-gear-sparse-base": {
+      "status": "probe_completed",
+      "log_summary": [
+        "No. of Data Rows : 264480"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V NEG10_TEST -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.0080000000000000002 100)",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options bypass=0 itl4=100 temp=25 tnom=25 method=gear maxord=2 reltol=1e-7 abstol=1e-13 vntol=1e-8 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-probe-la3-rail-trap-klu-base": {
+      "status": "rejected",
+      "log_summary": [
+        "No. of Data Rows : 9829",
+        "doAnalyses: TRAN:  Timestep too small; time = 0.00445452, timestep = 6.25e-19: trouble with node \"xic3.4\""
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V NEG10_TEST -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.0080000000000000002 100)",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options klu bypass=0 itl4=100 temp=25 tnom=25 method=trap maxord=2 reltol=1e-7 abstol=1e-13 vntol=1e-8 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-probe-la3-rail-trap-sparse-base": {
+      "status": "rejected",
+      "log_summary": [
+        "No. of Data Rows : 175836",
+        "doAnalyses: TRAN:  Timestep too small; time = 0.0588692, timestep = 6.25e-19: trouble with lab_e402-instance jq7_left"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V NEG10_TEST -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.0080000000000000002 100)",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options bypass=0 itl4=100 temp=25 tnom=25 method=trap maxord=2 reltol=1e-7 abstol=1e-13 vntol=1e-8 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-solver-la2-divider-gear-10u": {
+      "status": "probe_completed",
+      "log_summary": [
+        "No. of Data Rows : 160985"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V 0 -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.0080000000000000002 100)",
+        "Vneg10_div NEG10_DIV NEG10_TEST -10",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options klu bypass=0 itl4=100 temp=25 tnom=25 method=gear maxord=2 reltol=1e-5 abstol=1e-13 vntol=1e-7 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-solver-la2-divider-gear-1u": {
+      "status": "probe_completed",
+      "log_summary": [
+        "No. of Data Rows : 173959"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V 0 -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.0080000000000000002 100)",
+        "Vneg10_div NEG10_DIV NEG10_TEST -10",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options klu bypass=0 itl4=100 temp=25 tnom=25 method=gear maxord=2 reltol=1e-6 abstol=1e-13 vntol=1e-7 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-solver-la2-divider-gear-bypass": {
+      "status": "rejected",
+      "log_summary": [
+        "No. of Data Rows : 19608",
+        "doAnalyses: TRAN:  Timestep too small; time = 0.00911693, timestep = 6.25e-19: trouble with lab_e402-instance jq7_left"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V 0 -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.0080000000000000002 100)",
+        "Vneg10_div NEG10_DIV NEG10_TEST -10",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options klu bypass=1 itl4=100 temp=25 tnom=25 method=gear maxord=2 reltol=1e-7 abstol=1e-13 vntol=1e-8 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-solver-la2-divider-trap-10u": {
+      "status": "probe_completed",
+      "log_summary": [
+        "No. of Data Rows : 157494"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V 0 -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.0080000000000000002 100)",
+        "Vneg10_div NEG10_DIV NEG10_TEST -10",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options klu bypass=0 itl4=100 temp=25 tnom=25 method=trap maxord=2 reltol=1e-5 abstol=1e-13 vntol=1e-7 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-solver-la2-divider-trap-1u": {
+      "status": "probe_completed",
+      "log_summary": [
+        "No. of Data Rows : 166739"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V 0 -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.0080000000000000002 100)",
+        "Vneg10_div NEG10_DIV NEG10_TEST -10",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options klu bypass=0 itl4=100 temp=25 tnom=25 method=trap maxord=2 reltol=1e-6 abstol=1e-13 vntol=1e-7 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-solver-la2-divider-trap-pwl": {
+      "status": "rejected",
+      "log_summary": [
+        "No. of Data Rows : 20196",
+        "doAnalyses: TRAN:  Timestep too small; time = 0.00911692, timestep = 6.25e-19: trouble with lab_e402-instance jq7_right"
+      ],
+      "pwl": {
+        "frequency_hz": 100,
+        "amplitude_v": 0.008,
+        "step_s": 2.5e-05,
+        "points": 3001
+      },
+      "options_and_sources": [
+        "Vneg10 NEG10_V 0 -10",
+        "Vneg10_test NEG10_TEST 0 PWL(<see pwl>)",
+        "Vneg10_div NEG10_DIV NEG10_TEST -10",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options klu bypass=0 itl4=100 temp=25 tnom=25 method=trap maxord=2 reltol=1e-7 abstol=1e-13 vntol=1e-8 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-solver-la2-rail-gear-10u": {
+      "status": "probe_completed",
+      "log_summary": [
+        "No. of Data Rows : 160827"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V NEG10_TEST -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.0080000000000000002 100)",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options klu bypass=0 itl4=100 temp=25 tnom=25 method=gear maxord=2 reltol=1e-5 abstol=1e-13 vntol=1e-7 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-solver-la2-rail-gear-1u": {
+      "status": "rejected",
+      "log_summary": [
+        "No. of Data Rows : 475",
+        "doAnalyses: TRAN:  Timestep too small; time = 0.000176171, timestep = 6.25e-19: trouble with lab_e402-instance jq7_left"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V NEG10_TEST -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.0080000000000000002 100)",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options klu bypass=0 itl4=100 temp=25 tnom=25 method=gear maxord=2 reltol=1e-6 abstol=1e-13 vntol=1e-7 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-solver-la2-rail-gear-bypass": {
+      "status": "rejected",
+      "log_summary": [
+        "No. of Data Rows : 279930",
+        "doAnalyses: TRAN:  Timestep too small; time = 0.000174251, timestep = 6.25e-19: trouble with lab_e402-instance jq7_left"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V NEG10_TEST -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.0080000000000000002 100)",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options klu bypass=1 itl4=100 temp=25 tnom=25 method=gear maxord=2 reltol=1e-7 abstol=1e-13 vntol=1e-8 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-solver-la2-rail-trap-10u": {
+      "status": "probe_completed",
+      "log_summary": [
+        "No. of Data Rows : 157404"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V NEG10_TEST -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.0080000000000000002 100)",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options klu bypass=0 itl4=100 temp=25 tnom=25 method=trap maxord=2 reltol=1e-5 abstol=1e-13 vntol=1e-7 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-solver-la2-rail-trap-1u": {
+      "status": "probe_completed",
+      "log_summary": [
+        "No. of Data Rows : 166478"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V NEG10_TEST -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.0080000000000000002 100)",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options klu bypass=0 itl4=100 temp=25 tnom=25 method=trap maxord=2 reltol=1e-6 abstol=1e-13 vntol=1e-7 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-solver-la2-rail-trap-pwl": {
+      "status": "rejected",
+      "log_summary": [
+        "No. of Data Rows : 474",
+        "doAnalyses: TRAN:  Timestep too small; time = 0.000175058, timestep = 6.25e-19: trouble with lab_e402-instance jq7_left"
+      ],
+      "pwl": {
+        "frequency_hz": 100,
+        "amplitude_v": 0.008,
+        "step_s": 2.5e-05,
+        "points": 3001
+      },
+      "options_and_sources": [
+        "Vneg10 NEG10_V NEG10_TEST -10",
+        "Vneg10_test NEG10_TEST 0 PWL(<see pwl>)",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options klu bypass=0 itl4=100 temp=25 tnom=25 method=trap maxord=2 reltol=1e-7 abstol=1e-13 vntol=1e-8 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-solver-la3-divider-gear-10u": {
+      "status": "probe_completed",
+      "log_summary": [
+        "No. of Data Rows : 172162"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V 0 -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.0080000000000000002 100)",
+        "Vneg10_div NEG10_DIV NEG10_TEST -10",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options klu bypass=0 itl4=100 temp=25 tnom=25 method=gear maxord=2 reltol=1e-5 abstol=1e-13 vntol=1e-7 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-solver-la3-divider-gear-1u": {
+      "status": "probe_completed",
+      "log_summary": [
+        "No. of Data Rows : 198385"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V 0 -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.0080000000000000002 100)",
+        "Vneg10_div NEG10_DIV NEG10_TEST -10",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options klu bypass=0 itl4=100 temp=25 tnom=25 method=gear maxord=2 reltol=1e-6 abstol=1e-13 vntol=1e-7 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-solver-la3-divider-gear-bypass": {
+      "status": "rejected",
+      "log_summary": [
+        "No. of Data Rows : 10825",
+        "doAnalyses: TRAN:  Timestep too small; time = 0.00453251, timestep = 6.25e-19: trouble with lab_e402-instance jq7_left"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V 0 -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.0080000000000000002 100)",
+        "Vneg10_div NEG10_DIV NEG10_TEST -10",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options klu bypass=1 itl4=100 temp=25 tnom=25 method=gear maxord=2 reltol=1e-7 abstol=1e-13 vntol=1e-8 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-solver-la3-divider-trap-10u": {
+      "status": "probe_completed",
+      "log_summary": [
+        "No. of Data Rows : 165085"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V 0 -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.0080000000000000002 100)",
+        "Vneg10_div NEG10_DIV NEG10_TEST -10",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options klu bypass=0 itl4=100 temp=25 tnom=25 method=trap maxord=2 reltol=1e-5 abstol=1e-13 vntol=1e-7 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-solver-la3-divider-trap-1u": {
+      "status": "rejected",
+      "log_summary": [
+        "No. of Data Rows : 21205",
+        "doAnalyses: TRAN:  Timestep too small; time = 0.00906035, timestep = 6.25e-19: trouble with lab_e402-instance jq7_left"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V 0 -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.0080000000000000002 100)",
+        "Vneg10_div NEG10_DIV NEG10_TEST -10",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options klu bypass=0 itl4=100 temp=25 tnom=25 method=trap maxord=2 reltol=1e-6 abstol=1e-13 vntol=1e-7 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-solver-la3-divider-trap-pwl": {
+      "status": "rejected",
+      "log_summary": [
+        "No. of Data Rows : 10494",
+        "doAnalyses: TRAN:  Timestep too small; time = 0.0045325, timestep = 6.25e-19: trouble with lab_e402-instance jq7_left"
+      ],
+      "pwl": {
+        "frequency_hz": 100,
+        "amplitude_v": 0.008,
+        "step_s": 2.5e-05,
+        "points": 3001
+      },
+      "options_and_sources": [
+        "Vneg10 NEG10_V 0 -10",
+        "Vneg10_test NEG10_TEST 0 PWL(<see pwl>)",
+        "Vneg10_div NEG10_DIV NEG10_TEST -10",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options klu bypass=0 itl4=100 temp=25 tnom=25 method=trap maxord=2 reltol=1e-7 abstol=1e-13 vntol=1e-8 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-solver-la3-rail-gear-10u": {
+      "status": "probe_completed",
+      "log_summary": [
+        "No. of Data Rows : 171803"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V NEG10_TEST -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.0080000000000000002 100)",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options klu bypass=0 itl4=100 temp=25 tnom=25 method=gear maxord=2 reltol=1e-5 abstol=1e-13 vntol=1e-7 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-solver-la3-rail-gear-1u": {
+      "status": "rejected",
+      "log_summary": [
+        "No. of Data Rows : 461",
+        "doAnalyses: TRAN:  Timestep too small; time = 0.000176256, timestep = 6.25e-19: trouble with lab_e402-instance jq7_left"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V NEG10_TEST -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.0080000000000000002 100)",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options klu bypass=0 itl4=100 temp=25 tnom=25 method=gear maxord=2 reltol=1e-6 abstol=1e-13 vntol=1e-7 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-solver-la3-rail-gear-bypass": {
+      "status": "rejected",
+      "log_summary": [
+        "No. of Data Rows : 601",
+        "doAnalyses: TRAN:  Timestep too small; time = 0.000172563, timestep = 6.25e-19: trouble with lab_e402-instance jq7_left"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V NEG10_TEST -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.0080000000000000002 100)",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options klu bypass=1 itl4=100 temp=25 tnom=25 method=gear maxord=2 reltol=1e-7 abstol=1e-13 vntol=1e-8 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-solver-la3-rail-trap-10u": {
+      "status": "probe_completed",
+      "log_summary": [
+        "No. of Data Rows : 164927"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V NEG10_TEST -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.0080000000000000002 100)",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options klu bypass=0 itl4=100 temp=25 tnom=25 method=trap maxord=2 reltol=1e-5 abstol=1e-13 vntol=1e-7 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-solver-la3-rail-trap-1u": {
+      "status": "probe_completed",
+      "log_summary": [
+        "No. of Data Rows : 183236"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V NEG10_TEST -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0.0080000000000000002 100)",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options klu bypass=0 itl4=100 temp=25 tnom=25 method=trap maxord=2 reltol=1e-6 abstol=1e-13 vntol=1e-7 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-solver-la3-rail-trap-pwl": {
+      "status": "rejected",
+      "log_summary": [
+        "No. of Data Rows : 470",
+        "doAnalyses: TRAN:  Timestep too small; time = 0.000175006, timestep = 6.25e-19: trouble with lab_e402-instance jq7_left"
+      ],
+      "pwl": {
+        "frequency_hz": 100,
+        "amplitude_v": 0.008,
+        "step_s": 2.5e-05,
+        "points": 3001
+      },
+      "options_and_sources": [
+        "Vneg10 NEG10_V NEG10_TEST -10",
+        "Vneg10_test NEG10_TEST 0 PWL(<see pwl>)",
+        "Iexternal NEG4_REF 0 9.2300400000000008e-06",
+        ".options klu bypass=0 itl4=100 temp=25 tnom=25 method=trap maxord=2 reltol=1e-7 abstol=1e-13 vntol=1e-8 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.074999999999999997 0 4.9999999999999998e-07"
+      ]
+    },
+    "neg10-trap-la2-quiet": {
+      "status": "rejected",
+      "log_summary": [
+        "No. of Data Rows : 325786"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V NEG10_TEST -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0 100)",
+        "Iexternal NEG4_REF 0 9.2300412559056722e-06",
+        ".options klu bypass=0 itl4=100 temp=25 tnom=25 method=trap maxord=2 reltol=1.0000000000000001e-05 abstol=1e-13 vntol=1e-7 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.155 0 4.9999999999999998e-07"
+      ],
+      "receipt": {
+        "scenario": {
+          "oscillator": {
+            "keyboard_v": -4.1161,
+            "other_control_v": -2.1,
+            "r8_fraction": 0.2613404652606161,
+            "r11_active_ohm": 521.3126579373712,
+            "c4_f": 1e-11,
+            "upper_contact": 3,
+            "lower_contact": 10,
+            "level_fraction": 0.5,
+            "imposed_mixer_v": 0.0,
+            "external_neg4_load_a": 9.230041255905672e-06,
+            "duration_s": 0.155,
+            "max_step_s": 5e-07,
+            "method": "trap",
+            "order": 2
+          },
+          "cutoff_fraction": 1.0,
+          "range_fraction": 0.5,
+          "scale_ohm": 250,
+          "emphasis_ohm": 50000,
+          "regen_bottom_ohm": 500,
+          "r61_ohm": 200,
+          "first_loudness_v": 2,
+          "second_loudness_base_v": 2,
+          "contour_amount_v": 0,
+          "first_balance_ohm": 12.5,
+          "second_balance_ohm": 50,
+          "main_load_ohm": 100000,
+          "headphone_input_ohm": 100000
+        },
+        "deck_sha256": "8e60b97d6417f1c8b96f6fdfe36afc47943b678be805b55b28d516648aebac58",
+        "source_sha256": {
+          "evidence/vco1_ramp_graph.json": "bec931c06ac012fd14ee2b7ddf8f86f06c2d3c0ab2a78306dd6f33c88bead361",
+          "evidence/vco1_ca3046_parts.json": "2724e065969f8b0edc4f1191a787ae38c755aa4850fcfa6b9262828207689ad9",
+          "evidence/vco1_panel_pulse_width.json": "6da8d7eb376649cbda482c32f8da8ec55da5e2f7344756bac626a6e9d81b69c9",
+          "evidence/vco1_laboratory_devices.json": "50b4f163e29d2c4a9a19a186d871a0a83ff1d19c7d4c539e8e42add2dcd254f1",
+          "tools/vco1_circuit_reference.py": "c2e44b4e528744359300f7257a601c7e870a929e9f5c624f7ba741b07bff193b",
+          "references-local/datasheets/ti_lm741_lm741.lib": "f58370983c8bd22bf6a59ddd05a1dd492f1a0ea60f673ffd460a356da5e693dc",
+          "evidence/voice_board4_graph.json": "dae24df4d2ea7635cc1935e556a9d989ec34f48950ec884069532cc5d3ba49f9",
+          "tools/voice_circuit_reference.py": "88267ed30db730315eca9d0099d40ee7e1a8ac9f751bee9e7f1b6a24d114e17c",
+          "tools/check_vco1_loaded_reset_edge.py": "ce7b1a0d95c06591c42a879ebc44c40a4be40d49e5e787e3b5c50582ce82af2d",
+          "tools/check_vco_neg10_ripple.py": "a278457322a6348ca455e6d18a8d33d38871e764b8965fe99b0454d6510b73c6"
+        },
+        "log_sha256": "b7925b079a16b8785eb1edee36bc444b3e8de62fd0dcf8a55d6437d2205b390c",
+        "raw_export_sha256": "02816b129fbe5a475d3472069f83755845a13eee7a1b22a36545906429163d42",
+        "rows": 325786
+      },
+      "reason": "The previous Q10 threshold readout finds multiple crossings at the relaxed solver settings.",
+      "reproduction_deck": [
+        "RF-D coupled conditional VCO1 ladder VCAs board outputs",
+        ".include \"$ROOT/references-local/datasheets/ti_lm741_lm741.lib\"",
+        "Vneg10 NEG10_V NEG10_TEST -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0 100)",
+        "Vpos10 POS10_V 0 10",
+        "Vneg5 NEG5_V 0 -5",
+        "Iexternal NEG4_REF 0 9.2300412559056722e-06",
+        "CC1 0 RAMP_C1 1e-08",
+        "CC2 QA_BASE QB_BASE 1e-10",
+        "CC3 FET_C3_LEFT SCHMITT_DRIVE 1e-10",
+        "CC4 FET_C4_LEFT SCHMITT_DRIVE 9.9999999999999994e-12",
+        "CC14 NEG4_REF 0 1.1999999999999999e-07",
+        "XIC1 IC1_PLUS IC1_SUM 0 NEG10_V IC1_OUT LM741",
+        "Qic2_qa RAMP_C1 QA_BASE PAIR_EMITTER LAB_NPN",
+        "Qic2_qb QB_COLLECTOR QB_BASE PAIR_EMITTER LAB_NPN",
+        "Qic2_qc PAIR_EMITTER QC_BASE QC_EMITTER LAB_NPN",
+        "XIC3 QB_COLLECTOR NEG4_REF POS10_V NEG10_V IC3_OUT LM741",
+        "Qq1 POS10_V Q2_COLLECTOR Q1_EMITTER LAB_NPN",
+        "Qq2 Q2_COLLECTOR SCHMITT_DRIVE Q2_EMITTER LAB_NPN",
+        "Qq3 SCHMITT_DRIVE Q3_BASE NEG10_V LAB_NPN",
+        "Qq4 Q4_COLLECTOR Q4_BASE Q4_EMITTER LAB_NPN",
+        "Qq5 SCHMITT_Q5_COLLECTOR SCHMITT_SENSE 0 LAB_PNP",
+        "Qq6 SCHMITT_Q6_COLLECTOR SCHMITT_Q5_COLLECTOR 0 LAB_PNP",
+        "JQ7_left FET_LEFT_DRAIN RAMP_C1 FET_COMMON_SOURCE LAB_E402",
+        "JQ7_right FET_RIGHT_DRAIN FET_C4_LEFT FET_COMMON_SOURCE LAB_E402",
+        "Qq8 Q3_BASE FET_RIGHT_DRAIN FET_C3_LEFT LAB_PNP",
+        "Qq9 NEG10_V FET_LEFT_DRAIN FET_C3_LEFT LAB_PNP",
+        "Qq10 RAMP_C1 Q10_BASE 0 LAB_PNP",
+        "Qq11 Q11_COLLECTOR Q11_BASE 0 LAB_PNP",
+        "Qq12 Q12_COLLECTOR Q12_BASE NEG10_V LAB_NPN",
+        "RR1 PULSE_WIDTH_22B Q11_BASE 43000",
+        "RR2 Q11_BASE Q12_COLLECTOR 910000",
+        "RR3 POS10_V Q2_COLLECTOR 10700",
+        "RR4 POS10_V FET_C4_LEFT 33200",
+        "RR5 POS10_V FET_RIGHT_DRAIN 5600",
+        "RR6 SCHMITT_Q6_COLLECTOR RESET_BIAS 56",
+        "RR7 QA_BASE NEG5_V 100",
+        "RR8_high R8_TOP QB_BASE 73.86595347393839",
+        "RR8_low QB_BASE R8_BOTTOM 26.13404652606161",
+        "RR9 IC1_OUT R8_TOP 33",
+        "RR10 IC1_PLUS NEG5_V 1000",
+        "RR11_active IC1_SUM R37_TOP 521.31265793737123",
+        "RR13 RECT_OUTPUT_20B Q12_COLLECTOR 6200",
+        "RR14 Q2_COLLECTOR NEG10_V 150000",
+        "RR15 POS10_V SCHMITT_DRIVE 2200",
+        "RR16 POS10_V SCHMITT_SENSE 33200",
+        "RR17 SCHMITT_SENSE RESET_BIAS 10000",
+        "RR19 R8_BOTTOM NEG5_V 1000",
+        "RR20 IC1_OUT IC1_SUM 1000",
+        "RR22 0 RECT_OUTPUT_20B 4700",
+        "RR23 TRI_OUTPUT_21B NEG10_V 8200",
+        "RR24 FET_C4_LEFT SCHMITT_DRIVE 10700",
+        "RR25 FET_C4_LEFT NEG10_V 15000",
+        "RR26 RESET_BIAS NEG10_V 1000",
+        "RR28 Q1_EMITTER TRI_OUTPUT_21B 750",
+        "RR29 Q2_EMITTER NEG10_V 10000",
+        "RR30 SCHMITT_DRIVE SCHMITT_SENSE 10700",
+        "RR31 SCHMITT_Q5_COLLECTOR NEG10_V 10000",
+        "RR33 0 SAW_OUTPUT_9B 4700",
+        "RR34 SCHMITT_DRIVE SAW_OUTPUT_9B 4300",
+        "RR35 Q12_BASE NEG10_V 100000",
+        "RR36 Q3_BASE NEG10_V 2700",
+        "RR37 R37_TOP NEG10_V 11800",
+        "RR39 Q11_COLLECTOR Q12_BASE 100000",
+        "RR40 SCHMITT_DRIVE Q11_BASE 43000",
+        "RR41 SCHMITT_Q6_COLLECTOR Q10_BASE 910",
+        "RR50 0 QB_COLLECTOR 39000",
+        "RR69 IC3_OUT QC_BASE 15000",
+        "RR78_dc QC_BASE NEG10_V 2000",
+        "RR78_series QC_BASE R78_RC_MID 220",
+        "CR78_cap R78_RC_MID NEG10_V 1e-08",
+        "RR79 QC_EMITTER NEG10_V 1000",
+        "RR42 IC1_SUM QC_EMITTER 160000",
+        "RR44 Q11_BASE NEG10_V 390000",
+        "RR45 POS10_V FET_C3_LEFT 1200",
+        "RR46 POS10_V FET_LEFT_DRAIN 5600",
+        "RR47 FET_COMMON_SOURCE Q4_COLLECTOR 100",
+        "RR48 Q4_EMITTER NEG10_V 12000",
+        "RR49 NEG4_REF Q4_BASE 1000",
+        "RR166 NEG10_V NEG4_REF 6200",
+        "RR174 NEG4_REF 0 3900",
+        "VBEND BEND 0 -2.1000000000000001",
+        "RR12 BEND IC1_SUM 150000",
+        "VTUNE TUNE 0 -2.1000000000000001",
+        "RR21 TUNE IC1_SUM 560000",
+        "VKEYBOARD KEYBOARD 0 -4.1161000000000003",
+        "RR27 KEYBOARD IC1_SUM 51100",
+        "VMOD MOD 0 -2.1000000000000001",
+        "RR32 MOD IC1_SUM 51100",
+        "VEXT EXT 0 -2.1000000000000001",
+        "RR38 EXT IC1_SUM 51100",
+        "VOSC1_RANGE OSC1_RANGE 0 -2.1000000000000001",
+        "RR43 OSC1_RANGE IC1_SUM 15000",
+        "RR34_PANEL 0 SW6_11 1500",
+        "RR33_PANEL SW6_11 SW6_12 1000",
+        "RR32_PANEL SW6_12 NEG10_V 7500",
+        "RR30_PANEL SAW_OUTPUT_9B SAW_TRI_TAP 47000",
+        "RR31_PANEL SAW_TRI_TAP TRI_OUTPUT_21B 10000",
+        "VSW6_width PULSE_WIDTH_22B 0 0",
+        "RR6_panel_high SAW_OUTPUT_9B R6_WIPER 12500",
+        "RR6_panel_low R6_WIPER 0 12500",
+        "RR45_PANEL R6_WIPER MIX_BUS_BOARD4_PIN4 33000",
+        ".model LAB_NPN NPN(IS=1e-14 BF=100 BR=5 VAF=0 IKF=0 CJE=7.0000000000000001e-12 VJE=0.75 MJE=0.5 CJC=3.0000000000000001e-12 VJC=0.69999999999999996 MJC=0.33000000000000002 FC=0.40000000000000002 TF=1.0000000000000001e-09 TR=3e-09 TNOM=25)",
+        ".model LAB_PNP PNP(IS=1e-14 BF=100 BR=5 VAF=0 IKF=0 CJE=7.0000000000000001e-12 VJE=0.75 MJE=0.5 CJC=3.0000000000000001e-12 VJC=0.69999999999999996 MJC=0.33000000000000002 FC=0.40000000000000002 TF=1.0000000000000001e-09 TR=3e-09 TNOM=25)",
+        ".model LAB_E402 NJF(LEVEL=1 VTO=-2.5 BETA=0.00030188679245283021 LAMBDA=0.0030000000000000001 CGS=3.3000000000000001e-12 CGD=5.4990908339470075e-12 PB=1 IS=1e-14 B=1 FC=0.5 RD=0 RS=0 TNOM=25)",
+        "RF4_R4 POS10_V F4_TAP_Q2_Q3 220",
+        "RF4_R16 F4_TAP_Q2_Q3 F4_TAP_Q10_Q11 150",
+        "RF4_R32 F4_TAP_Q10_Q11 F4_TAP_Q19_Q20 150",
+        "RF4_R41 F4_TAP_Q19_Q20 F4_TAP_Q23_Q24 150",
+        "RF4_R52 F4_TAP_Q23_Q24 F4_BOTTOM 150",
+        "RF4_R54 F4_BOTTOM F4_BASE_Q29 470",
+        "RF4_R76 F4_BOTTOM F4_REGEN_BOTTOM 330",
+        "RF4_R60 F4_TAIL F4_Q28_COLLECTOR 680",
+        "RF4_R46 F4_RANGE_WIPER F4_CUTOFF_SHARED 68000",
+        "RF4_R45 F4_Q26_COLLECTOR NEG10_V 330",
+        "RF4_R74 F4_CONTOUR_AMOUNT F4_CONTROL_BASE 47000",
+        "RF4_R70 F4_SCALE_LOW 0 1800",
+        "RF4_R31 F4_Q8_BASE 0 47000",
+        "RF4_R38 F4_Q6_BASE 0 47000",
+        "RF4_R24 F4_Q8_EMITTER_Q7_BASE NEG10_V 220000",
+        "RF4_R20 F4_Q6_EMITTER_Q5_BASE NEG10_V 100000",
+        "RF4_R26 F4_RECOVER_TAIL NEG10_V 1000",
+        "RF4_R3 F4_RECOVER_COLLECTOR F4_RECOVER_R7_R3 1000",
+        "RF4_R7 F4_RECOVER_R7_R3 F4_RECOVER_R6_R7 180",
+        "RF4_R6 F4_RECOVER_R6_R7 POS10_V 47",
+        "RF4_R2 F4_RECOVER_COLLECTOR F4_C6_LEFT 82000",
+        "RF4_R34 F4_Q16_BASE F4_Q15_BASE 820",
+        "RF4_R36 F4_Q15_BASE 0 510",
+        "RF4_R22 F4_FIRST_BAL_WIPER F4_Q15_BASE 120",
+        "RF4_R13 F4_FIRST_BAL_WIPER F4_SECOND_BAL_WIPER 120",
+        "RF4_R35 F4_PAIR_EMITTER F4_Q18_COLLECTOR 1000",
+        "RF4_R37 F4_Q18_EMITTER 0 6800",
+        "RF4_R43 F4_Q18_EMITTER NEG10_V 270000",
+        "RF4_R59 F4_LOUDNESS_CONTOUR F4_Q18_BASE 68000",
+        "RF4_R33 F4_PAIR2_EMITTER F4_Q21_COLLECTOR 470",
+        "RF4_R42 F4_Q21_EMITTER 0 3300",
+        "RF4_R44 F4_Q21_EMITTER NEG10_V 150000",
+        "RF4_R51 F4_Q21_BASE 0 33000",
+        "RF4_R11 F4_SECOND_BAL_WIPER F4_Q1_BASE 150",
+        "RF4_R10 F4_Q1_BASE POS10_V 120",
+        "RF4_R9 F4_Q1_EMITTER POS10_V 62",
+        "RF4_R8 F4_Q1_COLLECTOR F4_Q12_EMITTER 8.1999999999999993",
+        "RF4_R28 F4_Q1_COLLECTOR F4_Q17_EMITTER 8.1999999999999993",
+        "RF4_R30 F4_Q12_COLLECTOR 0 680",
+        "RF4_R29 F4_Q17_COLLECTOR 0 680",
+        "RF4_R75 F4_C2_RIGHT F4_MAIN_OUTPUT 1000",
+        "RF4_R77 F4_C2_RIGHT F4_HEADPHONE_INPUT 1000",
+        "CF4_C27 MIX_BUS_BOARD4_PIN4 F4_BASE_Q29 1.0000000000000001e-05",
+        "CF4_C24 F4_BOTTOM 0 0.00022000000000000001",
+        "CF4_C16 F4_L_Q29C_Q23E F4_R_Q30C_Q24E 6.8e-08",
+        "CF4_C11 F4_L_Q23C_Q19E F4_R_Q24C_Q20E 6.8e-08",
+        "CF4_C7 F4_L_Q19C_Q10E F4_R_Q20C_Q11E 6.8e-08",
+        "CF4_C3 F4_L_Q10C_Q2E F4_R_Q11C_Q3E 6.8e-08",
+        "CF4_C5 F4_L_Q10C_Q2E F4_Q8_BASE 2.2000000000000001e-07",
+        "CF4_C1 F4_R_Q11C_Q3E F4_Q6_BASE 2.2000000000000001e-07",
+        "CF4_C9 F4_RECOVER_R6_R7 0 0.0001",
+        "CF4_C10 F4_RECOVER_R7_R3 F4_EMPHASIS_PIN7 1.0000000000000001e-05",
+        "CF4_C18 F4_CONTROL_BASE 0 1e-10",
+        "CF4_C6 F4_C6_LEFT F4_Q16_BASE 3.3000000000000002e-07",
+        "CF4_C15 F4_Q15_BASE 0 0.00022000000000000001",
+        "CF4_C4 F4_Q1_BASE POS10_V 0.00022000000000000001",
+        "CF4_C2 F4_Q17_COLLECTOR F4_C2_RIGHT 1.0000000000000001e-05",
+        "QF4_Q29 F4_L_Q29C_Q23E F4_BASE_Q29 F4_TAIL LAB_NPN",
+        "QF4_Q30 F4_R_Q30C_Q24E F4_BASE_Q30 F4_TAIL LAB_NPN",
+        "QF4_Q23 F4_L_Q23C_Q19E F4_TAP_Q23_Q24 F4_L_Q29C_Q23E LAB_NPN",
+        "QF4_Q24 F4_R_Q24C_Q20E F4_TAP_Q23_Q24 F4_R_Q30C_Q24E LAB_NPN",
+        "QF4_Q19 F4_L_Q19C_Q10E F4_TAP_Q19_Q20 F4_L_Q23C_Q19E LAB_NPN",
+        "QF4_Q20 F4_R_Q20C_Q11E F4_TAP_Q19_Q20 F4_R_Q24C_Q20E LAB_NPN",
+        "QF4_Q10 F4_L_Q10C_Q2E F4_TAP_Q10_Q11 F4_L_Q19C_Q10E LAB_NPN",
+        "QF4_Q11 F4_R_Q11C_Q3E F4_TAP_Q10_Q11 F4_R_Q20C_Q11E LAB_NPN",
+        "QF4_Q2 POS10_V F4_TAP_Q2_Q3 F4_L_Q10C_Q2E LAB_NPN",
+        "QF4_Q3 POS10_V F4_TAP_Q2_Q3 F4_R_Q11C_Q3E LAB_NPN",
+        "QF4_Q28 F4_Q28_COLLECTOR F4_CUTOFF_SHARED 0 LAB_NPN",
+        "QF4_Q8 F4_RECOVER_COLLECTOR F4_Q8_BASE F4_Q8_EMITTER_Q7_BASE LAB_NPN",
+        "QF4_Q6 POS10_V F4_Q6_BASE F4_Q6_EMITTER_Q5_BASE LAB_NPN",
+        "QF4_Q7 F4_RECOVER_COLLECTOR F4_Q8_EMITTER_Q7_BASE F4_RECOVER_TAIL LAB_NPN",
+        "QF4_Q5 POS10_V F4_Q6_EMITTER_Q5_BASE F4_RECOVER_TAIL LAB_NPN",
+        "QF4_Q16 F4_Q16_COLLECTOR F4_Q16_BASE F4_PAIR_EMITTER LAB_NPN",
+        "QF4_Q15 F4_Q15_COLLECTOR F4_Q15_BASE F4_PAIR_EMITTER LAB_NPN",
+        "QF4_Q18 F4_Q18_COLLECTOR F4_Q18_BASE F4_Q18_EMITTER LAB_NPN",
+        "QF4_Q14 F4_Q14_COLLECTOR F4_Q16_COLLECTOR F4_PAIR2_EMITTER LAB_NPN",
+        "QF4_Q13 F4_Q13_COLLECTOR F4_Q15_COLLECTOR F4_PAIR2_EMITTER LAB_NPN",
+        "QF4_Q21 F4_Q21_COLLECTOR F4_Q21_BASE F4_Q21_EMITTER LAB_NPN",
+        "QF4_Q26 F4_Q26_COLLECTOR F4_CONTROL_BASE F4_CUTOFF_SHARED LAB_PNP",
+        "QF4_Q1 F4_Q1_COLLECTOR F4_Q1_BASE F4_Q1_EMITTER LAB_PNP",
+        "QF4_Q12 F4_Q12_COLLECTOR F4_Q14_COLLECTOR F4_Q12_EMITTER LAB_PNP",
+        "QF4_Q17 F4_Q17_COLLECTOR F4_Q13_COLLECTOR F4_Q17_EMITTER LAB_PNP",
+        ".model LAB_458 D(IS=2.4741471366716827e-09 N=2 TNOM=25)",
+        "DF4_CR1 F4_Q17_COLLECTOR POS10_V LAB_458",
+        "DF4_CR2 0 F4_Q17_COLLECTOR LAB_458",
+        "RF4_R61 F4_BOTTOM 0 200",
+        "RF4_R73_bottom F4_REGEN_BOTTOM F4_BASE_Q30 500",
+        "RF4_R73_top F4_BASE_Q30 F4_EMPHASIS_PIN6 500",
+        "RF4_R14_PANEL F4_EMPHASIS_PIN7 F4_EMPHASIS_PIN6 50000",
+        "RF4_R39_low 0 F4_RANGE_WIPER 5000",
+        "RF4_R39_high F4_RANGE_WIPER POS10_V 5000",
+        "RF4_R49 F4_CONTROL_BASE F4_SCALE_LOW 250",
+        "RF4_R11_PANEL_low NEG10_V F4_CUTOFF_WIPER 5000",
+        "VF4_R11_PANEL_high F4_CUTOFF_WIPER POS10_V 0",
+        "RF4_R55_PANEL F4_CUTOFF_WIPER F4_CONTROL_BASE 200000",
+        "RF4_R51_PANEL 0 F4_CONTROL_BASE 100000",
+        "RF4_R52_PANEL 0 F4_CONTROL_BASE 33000",
+        "RF4_R19_R14 F4_FIRST_BAL_WIPER F4_Q16_COLLECTOR 112.5",
+        "RF4_R23_R14 F4_FIRST_BAL_WIPER F4_Q15_COLLECTOR 112.5",
+        "RF4_R18_R12 F4_SECOND_BAL_WIPER F4_Q14_COLLECTOR 380",
+        "RF4_R21_R12 F4_SECOND_BAL_WIPER F4_Q13_COLLECTOR 380",
+        "RF4_MAIN_LOAD F4_MAIN_OUTPUT 0 100000",
+        "RF4_HEADPHONE_LOAD F4_HEADPHONE_INPUT 0 100000",
+        "VF4_contour F4_LOUDNESS_CONTOUR 0 2",
+        "VF4_external F4_Q21_BASE 0 2",
+        "VF4_amount F4_CONTOUR_AMOUNT 0 0",
+        ".options klu bypass=0 itl4=100 temp=25 tnom=25 method=trap maxord=2 reltol=1.0000000000000001e-05 abstol=1e-13 vntol=1e-7 gmin=1e-12",
+        ".ic v(RAMP_C1)=0",
+        ".save v(ramp_c1) v(schmitt_q6_collector) @qq10[ic] v(saw_output_9b) v(r6_wiper) v(mix_bus_board4_pin4) v(f4_base_q29) v(f4_main_output) v(neg4_ref) v(neg10_test)",
+        ".control",
+        "set numdgt=17",
+        "set wr_singlescale",
+        "set wr_vecnames",
+        "tran 4.9999999999999998e-07 0.155 0 4.9999999999999998e-07",
+        "wrdata $ROOT/tmp/lab-current/neg10-trap-la2-quiet.txt v(ramp_c1) v(schmitt_q6_collector) @qq10[ic] v(saw_output_9b) v(r6_wiper) v(mix_bus_board4_pin4) v(f4_base_q29) v(f4_main_output) v(neg4_ref) v(neg10_test)",
+        "quit",
+        ".endc",
+        ".end"
+      ]
+    },
+    "neg10-trap-la3-quiet": {
+      "status": "rejected",
+      "log_summary": [
+        "No. of Data Rows : 341654"
+      ],
+      "options_and_sources": [
+        "Vneg10 NEG10_V NEG10_TEST -10",
+        "Vneg10_test NEG10_TEST 0 SIN(0 0 100)",
+        "Iexternal NEG4_REF 0 9.2300313955227237e-06",
+        ".options klu bypass=0 itl4=100 temp=25 tnom=25 method=trap maxord=2 reltol=1.0000000000000001e-05 abstol=1e-13 vntol=1e-7 gmin=1e-12",
+        "tran 4.9999999999999998e-07 0.155 0 4.9999999999999998e-07"
+      ],
+      "receipt": {
+        "scenario": {
+          "oscillator": {
+            "keyboard_v": -3.10332,
+            "other_control_v": -2.1,
+            "r8_fraction": 0.2613404652606161,
+            "r11_active_ohm": 521.3126579373712,
+            "c4_f": 1e-11,
+            "upper_contact": 3,
+            "lower_contact": 10,
+            "level_fraction": 0.5,
+            "imposed_mixer_v": 0.0,
+            "external_neg4_load_a": 9.230031395522724e-06,
+            "duration_s": 0.155,
+            "max_step_s": 5e-07,
+            "method": "trap",
+            "order": 2
+          },
+          "cutoff_fraction": 1.0,
+          "range_fraction": 0.5,
+          "scale_ohm": 250,
+          "emphasis_ohm": 50000,
+          "regen_bottom_ohm": 500,
+          "r61_ohm": 200,
+          "first_loudness_v": 2,
+          "second_loudness_base_v": 2,
+          "contour_amount_v": 0,
+          "first_balance_ohm": 12.5,
+          "second_balance_ohm": 50,
+          "main_load_ohm": 100000,
+          "headphone_input_ohm": 100000
+        },
+        "deck_sha256": "f760f77c5a5c943342e392bbfbd4b2dafc0cd171b18a999a69952d8cac850a81",
+        "source_sha256": {
+          "evidence/vco1_ramp_graph.json": "bec931c06ac012fd14ee2b7ddf8f86f06c2d3c0ab2a78306dd6f33c88bead361",
+          "evidence/vco1_ca3046_parts.json": "2724e065969f8b0edc4f1191a787ae38c755aa4850fcfa6b9262828207689ad9",
+          "evidence/vco1_panel_pulse_width.json": "6da8d7eb376649cbda482c32f8da8ec55da5e2f7344756bac626a6e9d81b69c9",
+          "evidence/vco1_laboratory_devices.json": "50b4f163e29d2c4a9a19a186d871a0a83ff1d19c7d4c539e8e42add2dcd254f1",
+          "tools/vco1_circuit_reference.py": "c2e44b4e528744359300f7257a601c7e870a929e9f5c624f7ba741b07bff193b",
+          "references-local/datasheets/ti_lm741_lm741.lib": "f58370983c8bd22bf6a59ddd05a1dd492f1a0ea60f673ffd460a356da5e693dc",
+          "evidence/voice_board4_graph.json": "dae24df4d2ea7635cc1935e556a9d989ec34f48950ec884069532cc5d3ba49f9",
+          "tools/voice_circuit_reference.py": "88267ed30db730315eca9d0099d40ee7e1a8ac9f751bee9e7f1b6a24d114e17c",
+          "tools/check_vco1_loaded_reset_edge.py": "ce7b1a0d95c06591c42a879ebc44c40a4be40d49e5e787e3b5c50582ce82af2d",
+          "tools/check_vco_neg10_ripple.py": "a278457322a6348ca455e6d18a8d33d38871e764b8965fe99b0454d6510b73c6"
+        },
+        "log_sha256": "008f9d9bdc30ab98833a627b20f7385069879f0011a2db1dc7e1eea422e91155",
+        "raw_export_sha256": "be18981e69c1ac16cf2da5215142cf797e2d4e0ba4f632485b0c8d9f935bac98",
+        "rows": 341654
+      },
+      "reason": "The previous Q10 threshold readout finds multiple crossings at the relaxed solver settings."
+    }
+  }
+}
