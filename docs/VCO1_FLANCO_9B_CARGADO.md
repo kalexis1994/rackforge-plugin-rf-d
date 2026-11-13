@@ -81,3 +81,29 @@ recorrido de captura del MP3.
 ejecuta las ocho corridas de ngspice, mide los nodos y
 publica los resultados por ciclo con los hashes de origen.
 [Mediciones](../evidence/vco1_loaded_reset_edge01.json).
+
+## Carga de la referencia compartida de −4 V
+
+Con las mismas condiciones se repitió Gear2 con ±1 µA
+en el puerto de carga de la referencia que comparten los
+osciladores. R166/R174, C14 y las ramas resueltas de OSC1
+conservan su conexión. La tensión se lee 100 µs antes
+del reset. [Red de referencia](REFERENCIA_MENOS4V.md).
+
+| Magnitud | La2 | La3 |
+| --- | ---: | ---: |
+| Variación de la referencia por µA adicional | −2,389 mV | −2,389 mV |
+| Variación del retardo de 9B por µA adicional | −0,209 µs | −0,104 µs |
+| Corriente equivalente para la dispersión temporal vintage | 34,7 µA | 41,2 µA |
+| Cambio de referencia equivalente | 82,9 mV | 98,4 mV |
+
+Los dos últimos renglones extrapolan la derivada local
+medida con ±1 µA. Establecen una escala para contrastar
+las corrientes de las otras ramas, cuya variación real
+todavía no se midió. C14 hace que la impedancia dependa
+de frecuencia. La excitación continua de este banco
+no predice la respuesta a una corriente variable.
+
+`python -B tools/check_vco1_loaded_reset_neg4.py --write-report`
+repite las cuatro corridas a partir del banco nominal.
+[Mediciones de la referencia compartida](../evidence/vco1_loaded_reset_neg401.json).
