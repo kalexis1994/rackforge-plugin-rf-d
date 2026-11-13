@@ -578,6 +578,32 @@ sólo al WAV de escucha. Los tres fragmentos se igualan a
 −22 dBFS RMS y se repiten desde 2,10 s.
 [Mediciones y orden de escucha](../evidence/rf_d_vintage_saw_air01.json).
 
+### Prueba con el ruido blanco del panel
+
+Se mantuvo la sierra a 8′ y el filtro trapezoidal a 4×.
+Se probó el generador de ruido blanco de RF-D entre 1 %
+y 10 % del dial. Se eligió **4 %** por el menor error medio
+del residuo del La2 entre 4 y 17 kHz. La potencia total
+de 8 a 12 kHz queda a 1,10 dB de la toma de referencia,
+frente a los 3,86 dB de la versión limpia. En el La3,
+reservado durante el ajuste, el residuo resulta 3,83 dB
+demasiado fuerte en promedio entre las cuatro bandas.
+
+Conectar esa rama del mixer, incluso con Noise Level
+en cero, reduce el RMS de la sierra en unos 12 dB antes
+de igualar niveles. La escucha incluye ese cambio de
+carga. La prueba aproxima parte de la textura del MP3
+y deja abierto su origen. El experimento usa controles
+existentes de RF-D y el modo trapezoidal de laboratorio.
+
+`python -B tools/check_rf_d_vintage_saw_noise_ab.py --write-report`
+genera `artifacts/rf-d-sierra-ruido-ab.wav`. Suenan Minimoog,
+RF-D limpio y RF-D con ruido para cada nota, a −22 dBFS RMS.
+Los grupos de La2 y La3 empiezan a 0,00 y 2,10 s. La
+secuencia completa se repite desde 4,20 s. La variante
+con ruido coincide por bits a 128 y 480 frames.
+[Mediciones y orden de escucha](../evidence/rf_d_vintage_saw_noise_ab01.json).
+
 ## Cómo escuchar y medir
 
 Para el A/B musical hay que identificar la nota, su duración y
