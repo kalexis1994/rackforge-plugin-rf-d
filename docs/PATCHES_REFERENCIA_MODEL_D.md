@@ -781,6 +781,41 @@ alterna el La2 vintage y RF-D con cutoff a 100 %, con volumen
 igualado a −22 dBFS RMS. La secuencia se repite desde 1,40 s.
 [Mediciones y orden de escucha](../evidence/rf_d_la2_open_ab01.json).
 
+### Textura del La2 y entrada de afinación
+
+Con el cutoff abierto y el ruido del mixer apagado,
+se llevó la corrección de fase estimada en los armónicos
+bajos a la entrada de afinación J1. Se convirtió la
+derivada de fase a frecuencia instantánea y luego a
+voltios con la ley nominal de 1 V por octava de esa
+entrada. RF-D recibe el promedio de tensión cada 2 ms.
+Es un estímulo de laboratorio derivado del MP3.
+[Recorrido de J1](ENTRADAS_CONTROL_TOCABLES.md#afinación-y-filtro).
+
+En La2, la corrección equivale a 12,9 µs RMS de
+desplazamiento del ciclo. Al aplicarla a RF-D, la
+potencia relativa total de 8 a 12 kHz aumenta 0,03 dB y
+el residuo sigue 13,90 dB por debajo de la toma vintage.
+En La3, la potencia total de esa banda cambia menos
+de 0,001 dB. El estímulo ensayado explica una parte
+de la variación temporal pero deja abierta la fuente
+de la diferencia audible.
+
+En el MP3 vintage se hizo el contraste inverso: se restó
+sólo el aporte agudo estimado de esa corrección, con una
+transición de 3 a 4 kHz. El residuo de 8 a 12 kHz cae
+2,84 dB y la potencia total de la banda cae 0,57 dB.
+Esta variante sirve para escuchar cuánto se conserva de
+la textura en la grabación.
+
+`python -B tools/check_rf_d_la2_pitch_cv_ab.py --write-report`
+genera un WAV con volumen igualado. Suenan el Minimoog
+original, RF-D abierto, RF-D con CV de prueba y el
+Minimoog con el aporte de fase atenuado. Empiezan a
+0,00, 0,70, 1,40 y 2,10 s. Los renders de RF-D
+coinciden por bits a 128 y 480 frames.
+[Mediciones y orden de escucha](../evidence/rf_d_la2_pitch_cv_ab01.json).
+
 ## Cómo escuchar y medir
 
 Para el A/B musical hay que identificar la nota, su duración y
