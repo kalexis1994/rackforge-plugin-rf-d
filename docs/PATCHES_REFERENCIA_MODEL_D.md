@@ -816,6 +816,50 @@ Minimoog con el aporte de fase atenuado. Empiezan a
 coinciden por bits a 128 y 480 frames.
 [Mediciones y orden de escucha](../evidence/rf_d_la2_pitch_cv_ab01.json).
 
+### El residuo se concentra en el flanco de la sierra
+
+Se volvió al MP3 original estéreo y se descontó el ciclo
+promedio con seguimiento de fase. Se dividió el ciclo en
+ocho sectores y se centró uno en la pendiente máxima de
+la sierra. En ese octavo se concentra el **55 %** de la
+energía residual de 8 a 12 kHz en La2 y el **72 %** en La3.
+Cada canal por separado muestra la misma concentración.
+
+Para probar si el residuo se parece a un cambio de tiempo,
+se estimó un desplazamiento por ciclo a partir de la
+pendiente de la sierra entre 4 y 7,5 kHz. La predicción se
+evaluó alrededor del flanco en la banda reservada de 8 a
+12 kHz. Los desplazamientos estimados en ambas bandas
+correlacionan 0,92 en La2 y 0,99 en La3. La predicción
+reduce el residuo de esa zona en 2,29 y 9,55 dB,
+respectivamente. Las cifras se refieren al entorno del
+flanco y se calculan tras corregir la variación lenta
+de fase.
+
+Como control, se codificó el ciclo ajustado con LAME a
+44,1 kHz y 256 kb/s estéreo, los parámetros del archivo
+publicado. El error añadido por esa recodificación queda
+26,7 dB por debajo del residuo vintage en La2 y 14,7 dB
+por debajo en La3. En el control, la predicción entre
+bandas aumenta el error cerca de 0,3 dB. El codificador y
+el procesamiento previos a la publicación siguen sin
+identificarse.
+
+La dispersión del desplazamiento equivalente es de
+7,3 µs en La2 y 4,3 µs en La3. Con la excursión nominal
+de 4 V de C1 y una rampa lineal, equivaldrían a cambios
+de umbral del orden de 3,2 y 3,8 mV. Son valores derivados
+para orientar una prueba de sensibilidad. El siguiente
+punto del circuito a contrastar es el reinicio de C1 por
+Q5/Q6 y Q10, seguido de la salida 9B, con su carga de mixer.
+Una captura simultánea de 9B y HI permitiría localizar
+si el patrón ya existe antes del filtro y el VCA.
+[Rampa, Schmitt y salida 9B](VCO1_CA3046.md#primer-tramo-de-netlist-rampa-corriente-y-reset).
+
+`python -B tools/check_rf_d_vintage_saw_reset_residual.py --ffmpeg RUTA --source-mp3 RUTA --write-report`
+repite el análisis y retira los MP3 temporales del control.
+[Resultados por nota y canal](../evidence/rf_d_vintage_saw_reset_residual01.json).
+
 ## Cómo escuchar y medir
 
 Para el A/B musical hay que identificar la nota, su duración y
