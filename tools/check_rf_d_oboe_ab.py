@@ -90,7 +90,7 @@ def vibrato_span(audio):
     return float(high - low)
 
 
-def write_audition(takes, order, destination):
+def write_audition(takes, order, destination, *, sample_width=2):
     frames = len(next(iter(takes.values())))
     assert all(take.shape == (frames,) for take in takes.values())
     fade = np.ones(frames)
@@ -101,20 +101,26 @@ def write_audition(takes, order, destination):
     target = min(10. ** (-22. / 20.), *(10. ** (-1. / 20.) * rms(clip) / np.max(abs(clip))
                                       for clip in clips.values()))
     gains = {name: target / rms(clip) for name, clip in clips.items()}
-    pcm = {name: np.rint(32767. * clip * gains[name]).astype("<i2") for name, clip in clips.items()}
-    levels = {name: float(20. * np.log10(rms(clip.astype(np.float64) / 32767.)))
+    assert sample_width in (2, 3)
+    full_scale = 2 ** (8 * sample_width - 1) - 1
+    dtype = "<i2" if sample_width == 2 else "<i4"
+    pcm = {name: np.rint(full_scale * clip * gains[name]).astype(dtype) for name, clip in clips.items()}
+    levels = {name: float(20. * np.log10(rms(clip.astype(np.float64) / full_scale)))
               for name, clip in pcm.items()}
     assert max(levels.values()) - min(levels.values()) < 0.01
-    gap = np.zeros(frames_at(300), dtype="<i2")
+    gap = np.zeros(frames_at(300), dtype=dtype)
     sequence = []
     for name in order:
         if sequence:
             sequence.append(gap)
         sequence.append(pcm[name])
     destination.parent.mkdir(exist_ok=True)
+    samples = np.concatenate(sequence)
+    if sample_width == 3:
+        samples = samples.view(np.uint8).reshape(-1, 4)[:, :3]
     with wave.open(str(destination), "wb") as wav:
-        wav.setparams((1, 2, SAMPLE_RATE, 0, "NONE", "not compressed"))
-        wav.writeframes(np.concatenate(sequence).tobytes())
+        wav.setparams((1, sample_width, SAMPLE_RATE, 0, "NONE", "not compressed"))
+        wav.writeframes(samples.tobytes())
     playlist = [dict(source=source, start_frame=index * (frames + gap.size))
                 for index, source in enumerate(order)]
     return dict(sha256=sha(destination), gain=list(gains.values()), rms_dbfs=list(levels.values()),

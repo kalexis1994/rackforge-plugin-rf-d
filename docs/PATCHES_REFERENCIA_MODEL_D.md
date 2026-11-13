@@ -702,6 +702,67 @@ la nota usada para el ajuste.
 repite el análisis sin generar audio.
 [Resultados por nota, estimación y banda](../evidence/rf_d_vintage_saw_phase01.json).
 
+### A/B de línea del La2 en 8′ y 16′
+
+Para mantener la fundamental en 110 Hz se toca la tecla
+La2 (MIDI 45) en 8′ y la tecla La3 (MIDI 57) en 16′. Se usa
+sólo OSC1 en sierra a mitad del recorrido del mixer. OSC2,
+OSC3, entrada externa, feedback, SW12 (ruido), ambas rutas
+de modulación, glide y A-440 quedan apagados. La rueda de
+modulación va al mínimo. El filtro conserva Emphasis y
+Amount of Contour en cero y los dos switches de Keyboard
+Control apagados para que cambiar de tecla no mueva el
+cutoff. El contorno de volumen va con ataque mínimo y
+sustain máximo. La salida HI va directamente a la entrada
+de línea, con volumen y ganancia de interfaz fijos en las
+cuatro tomas. Registrar unidad, recorrido de captura y
+posiciones de panel. Mantener los archivos PCM originales.
+
+El control intermedio propuesto está al 75 % del recorrido
+desde el mínimo. El 100 % corresponde al tope abierto y
+ambos valores describen posición de perilla. El 75 % se
+puede reemplazar por la posición documentada de una futura
+toma. Conviene grabar dos segundos sostenidos por condición
+y dejar pausas con la misma ganancia para conservar el fondo
+de la cadena.
+
+| Fuente revisada | Alcance |
+| --- | --- |
+| [Legowelt, Model D #5529](https://www.legowelt.org/samples/) | ZIP descargado y revisado. El banco trae WAV de 16 bits y ficha del instrumento. La ficha no indica el recorrido de señal ni los estados de panel por toma. |
+| [Synapse Audio, comparación con hardware](https://www.synapse-audio.com/legend/LegendVsHardware.zip) | ZIP descargado y revisado. Incluye siete frases, entre ellas `Generic Saw Lead BT.wav` en PCM mono de 24 bits a 44,1 kHz. La [descripción de las tomas](https://www.kvraudio.com/forum/viewtopic.php?t=470249) identifica una unidad tardía con MIDI Lintronics y no documenta la matriz de cuatro condiciones. |
+| [Terry Furber, Model D de 1974](https://forum.moogmusic.com/t/a-real-moog/7436?page=3#post_58) | El autor describe tomas del oscilador y de la salida HI, con VCF y VCA abiertos y resonancia en cero, en su [anuncio original reproducido en Matrixsynth](https://www.matrixsynth.com/2009/08/minimoog-samples.html). La página que alojaba las muestras ya no responde y la consulta a Wayback no devolvió una copia de esa página. |
+| [Till Kopper, mediciones del Minimoog](https://www.till-kopper.de/minidata.html) | El WAV publicado tiene dos ciclos por forma de onda y dura 27 ms en total. Aporta forma de ciclo a 440 Hz. |
+| [Idle Foundry, calibración de CA-72](https://github.com/idlefoundry/ca-72/blob/main/docs/calibration/README.md) | Describe capturas simultáneas de mixer y salida con una recreación física moderna. Los WAV originales se guardan en el laboratorio del autor. |
+
+El render de RF-D usa el ladder trapezoidal de laboratorio
+a 4× y reproduce las cuatro tomas en un único WAV de 24 bits.
+El orden es 8′ abierto, 8′ intermedio, 16′ abierto y 16′
+intermedio, a 0,00, 0,80, 1,60 y 2,40 s. Las cuatro tomas
+coinciden por bits entre callbacks de 128 y 480 frames.
+El montaje iguala el RMS con ganancia constante por toma
+y fundidos de 10 ms en los bordes. Las mediciones se
+hacen antes de esos cambios. El filtro a 75 % reduce la
+potencia relativa de 8–12 kHz en 21,50 dB frente al filtro
+abierto. Con el cutoff fijo, cambiar de registro conservando
+110 Hz cambia esa potencia relativa en menos de 0,001 dB
+en RF-D.
+[Mediciones de RF-D](../evidence/rf_d_la2_line01.json).
+
+`python -B tools/check_rf_d_la2_line_ab.py --write-report`
+genera `artifacts/rf-d-la2-registros.wav`. Cuando se disponga
+de una captura documentada, pasar `--reference manifest.json`
+para alternar Minimoog y RF-D en `artifacts/rf-d-la2-linea-ab.wav`.
+El manifiesto incluye `unit`, `line_chain`, `settings_evidence`,
+`intermediate_cutoff_percent` y `takes`. Cada entrada de
+`takes` (`8-abierto`, `8-intermedio`, `16-abierto`,
+`16-intermedio`) lleva `wav` y `start_seconds` para
+seleccionar medio segundo de sustain. Se puede indicar
+`channel` desde 1. El programa registra los originales
+por SHA-256 y mide la energía aguda y el residuo de fase.
+Si difieren las frecuencias de muestreo, el montaje convierte
+el canal elegido a 48 kHz. En RF-D se iguala la afinación con
+Master Tune para cada par.
+
 ## Cómo escuchar y medir
 
 Para el A/B musical hay que identificar la nota, su duración y
