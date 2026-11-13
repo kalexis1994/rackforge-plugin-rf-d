@@ -21,6 +21,12 @@ pub struct Ladder {
     current: [f64; 4],
     cutoff: Option<f64>,
     coefficient: f64,
+    #[cfg(pilot_ladder_trapezoidal)]
+    trapezoidal_step: f64,
+    #[cfg(pilot_ladder_trapezoidal)]
+    previous_step: f64,
+    #[cfg(pilot_ladder_trapezoidal)]
+    previous_drive: f64,
     tail_to_coefficient: f64,
     recovery_charge: f64,
     recovery_step: f64,
@@ -37,6 +43,12 @@ impl Ladder {
             current: [0.; 4],
             cutoff: None,
             coefficient: 0.,
+            #[cfg(pilot_ladder_trapezoidal)]
+            trapezoidal_step: 0.,
+            #[cfg(pilot_ladder_trapezoidal)]
+            previous_step: 0.,
+            #[cfg(pilot_ladder_trapezoidal)]
+            previous_drive: 0.,
             tail_to_coefficient: 1. / (2. * DIFFERENTIAL_V * CAPACITANCE_F * rate),
             recovery_charge: 0.,
             recovery_step: -(-1. / (rate * RECOVERY_TAU_S)).exp_m1(),
@@ -98,6 +110,10 @@ impl Ladder {
             // A capacitor between the two equal and opposite branches sees half the
             // difference current. Voltage states are normalized by 2*Vt.
             let step = tail_a * self.tail_to_coefficient;
+            #[cfg(pilot_ladder_trapezoidal)]
+            {
+                self.trapezoidal_step = step * 0.5;
+            }
             // Backward Euler for the linearized stage keeps the step bounded
             // at the larger calibrated currents.
             #[cfg(pilot_calibrated_filter)]
@@ -109,10 +125,26 @@ impl Ladder {
         #[cfg(pilot_voice_filter)]
         let drive = drive - self.emphasis.feedback(controls.emphasis, self.coefficient);
         let mut incoming = drive.tanh();
+        #[cfg(not(pilot_ladder_trapezoidal))]
         for (voltage, current) in self.voltage.iter_mut().zip(&mut self.current) {
             *voltage += self.coefficient * (incoming - *current);
             *current = voltage.tanh();
             incoming = *current;
+        }
+        #[cfg(pilot_ladder_trapezoidal)]
+        {
+            let mut previous_incoming = self.previous_drive;
+            self.previous_drive = incoming;
+            for (voltage, current) in self.voltage.iter_mut().zip(&mut self.current) {
+                let old_current = *current;
+                let rhs = *voltage + self.previous_step * (previous_incoming - old_current)
+                    + self.trapezoidal_step * incoming;
+                (*voltage, *current) =
+                    trapezoidal_stage(rhs, *voltage, old_current, self.trapezoidal_step);
+                incoming = *current;
+                previous_incoming = old_current;
+            }
+            self.previous_step = self.trapezoidal_step;
         }
         // Differential recovery across C1/C5 and R31/R38 with a passive load.
         self.recovery_charge += self.recovery_step * (self.voltage[3] - self.recovery_charge);
@@ -120,5 +152,41 @@ impl Ladder {
         #[cfg(pilot_voice_filter)]
         self.emphasis.observe(recovered);
         recovered * DIFFERENTIAL_V
+    }
+}
+
+#[cfg(pilot_ladder_trapezoidal)]
+fn trapezoidal_stage(rhs: f64, mut voltage: f64, mut current: f64, half_step: f64) -> (f64, f64) {
+    // Solve v + (dt/2)*k*tanh(v) = rhs. The derivative is always positive.
+    for _ in 0..4 {
+        voltage -= (voltage + half_step * current - rhs)
+            / (1. + half_step * (1. - current * current));
+        current = voltage.tanh();
+    }
+    (voltage, current)
+}
+
+#[cfg(all(test, pilot_ladder_trapezoidal))]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn trapezoidal_stage_balances_charge_at_both_rates() {
+        for rate in [96_000., 192_000.] {
+            let half_step = 921.41e-6 / (4. * DIFFERENTIAL_V * CAPACITANCE_F * rate);
+            for old_voltage in [-4_f64, -2., -0.5, 0., 0.5, 2., 4.] {
+                let old_current = old_voltage.tanh();
+                for previous_input in [-1., -0.5, 0., 0.5, 1.] {
+                    for new_input in [-1., -0.5, 0., 0.5, 1.] {
+                        for previous_step in [0., half_step * 0.5, half_step] {
+                            let rhs = old_voltage + previous_step * (previous_input - old_current)
+                                + half_step * new_input;
+                            let (v, i) = trapezoidal_stage(rhs, old_voltage, old_current, half_step);
+                            assert!((v + half_step * i - rhs).abs() < 2e-8);
+                        }
+                    }
+                }
+            }
+        }
     }
 }

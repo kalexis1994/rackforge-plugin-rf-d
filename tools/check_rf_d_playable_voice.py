@@ -356,7 +356,8 @@ def verify_oscillators(render, report):
                               over_half_period=sum(value > MARGIN_NS for value in times)))
 
 
-def main(argv=None, *, inspect_audio=None, legacy_timbre=False, wide_pulse_duty=None, oversampling=2):
+def main(argv=None, *, inspect_audio=None, legacy_timbre=False, wide_pulse_duty=None,
+         oversampling=2, trapezoidal_ladder=False):
     parser = argparse.ArgumentParser(description=__doc__)
     profiles = parser.add_mutually_exclusive_group()
     profiles.add_argument("--single-saw", action="store_true", help="rebuild the 0.4.0 single-oscillator voice")
@@ -392,6 +393,8 @@ def main(argv=None, *, inspect_audio=None, legacy_timbre=False, wide_pulse_duty=
         parser.error("wide pulse duty overrides require calibrated MIDI audio inspection")
     if oversampling not in (2, 4) or (oversampling == 4 and (not calibrated or inspect_audio is None)):
         parser.error("4x oversampling requires calibrated MIDI audio inspection")
+    if trapezoidal_ladder and (not calibrated or inspect_audio is None):
+        parser.error("trapezoidal ladder requires calibrated MIDI audio inspection")
     profile_version = VERSION if modulation else "0.6.0" if emphasis else "0.5.0" if bank else "0.4.0"
     version = args.package or (f"{profile_version}-dev" if performance else profile_version)
     schema = parameter_schema(bank, emphasis, modulation, performance, external, feedback, output, monitor, control_inputs)
@@ -457,11 +460,12 @@ def main(argv=None, *, inspect_audio=None, legacy_timbre=False, wide_pulse_duty=
             midi_flags = ("--cfg", "pilot_voice_midi") if midi else ()
             calibrated_flags = ("--cfg", "pilot_calibrated_filter") if calibrated else ()
             oversampling_flags = ("--cfg", "pilot_oversample_4x") if oversampling == 4 else ()
+            ladder_flags = ("--cfg", "pilot_ladder_trapezoidal") if trapezoidal_ladder else ()
             execute(*flags, "--edition=2021", "--crate-type", "cdylib", "-C", "panic=abort", "-C", "lto=fat",
                     "--cfg", "pilot_pi", "--cfg", "pilot_returns", "--cfg", "pilot_host_blocks",
                     "--cfg", "pilot_voice_contours", *bank_flags, *filter_flags, *modulation_flags,
                     *performance_flags, *external_flags, *feedback_flags, *output_flags, *monitor_flags, *cv_flags,
-                    *midi_flags, *calibrated_flags, *oversampling_flags, guest,
+                    *midi_flags, *calibrated_flags, *oversampling_flags, *ladder_flags, guest,
                     "--extern", f"rackforge_plugin_sdk={sdk}", "-o", component)
             execute(WASM_OPT, component, "-O4", "-o", optimized)
 

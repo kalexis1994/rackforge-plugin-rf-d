@@ -511,6 +511,45 @@ por la procedencia del MP3.
 [Corriente de cola del modelo](../evidence/rf_d_voice_development09.json) ·
 [Implementación de la escalera](../tools/rf_d_voice_ladder.rs).
 
+### Integración trapezoidal de la escalera
+
+El ensayo de laboratorio compara ambos motores a 4× con
+las mismas tablas de oscilador, corriente de cola, ajustes
+del panel, recuperación y FIR. Cada etapa conserva la ley
+de corriente `tanh(v)`. Con `k = Icola/(4·Vt·C)`, el cambio de
+voltaje normalizado integra el promedio de las corrientes
+de ambos extremos del intervalo. Cuatro pasos de Newton
+resuelven la ecuación escalar monótona
+`v + (Δt/2)·k·tanh(v) = rhs`. La prueba de carga verifica
+el residuo normalizado por `2·Vt` a 96 y 192 kHz, con entradas
+y estados de ambos signos y cambios de coeficiente.
+
+| Nota | Cambio H2–H7 | Cambio H8–H16 | Cambio H17–H24 |
+| --- | ---: | ---: | ---: |
+| La2 | +0,01 dB | +0,09 dB | +0,28 dB |
+| La3 | +0,03 dB | +0,33 dB | +0,89 dB |
+
+Los valores comparan el candidato con el render actual,
+respecto de H1. En La3, el déficit de H17–H24 frente al
+MP3 vintage baja de 2,21 a 1,32 dB. La posición del filtro
+y la conexión de la referencia siguen sin confirmar.
+El render actual reproduce las mediciones previas y cada
+variante coincide por bits a 128 y 480 frames.
+
+El ensayo está habilitado sólo en el banco. Se midió con
+Emphasis en cero. La regeneración requiere su propia
+calibración y validación con este integrador. Los tiempos
+de los callbacks WASM de 128 frames son una observación
+del banco local. La medición física de RackForge queda
+pendiente.
+
+`python -B tools/check_rf_d_ladder_trapezoidal_ab.py --write-report`
+genera `artifacts/rf-d-sierra-filtro-ab.wav` a −22 dBFS RMS.
+Para cada nota suenan Minimoog, RF-D actual y RF-D
+trapezoidal. Los grupos de La2 y La3 empiezan a 0,00 y
+2,40 s. La secuencia completa se repite desde 4,80 s.
+[Mediciones y orden de escucha](../evidence/rf_d_ladder_trapezoidal_ab01.json).
+
 ## Cómo escuchar y medir
 
 Para el A/B musical hay que identificar la nota, su duración y
