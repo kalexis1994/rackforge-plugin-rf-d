@@ -860,6 +860,10 @@ si el patrón ya existe antes del filtro y el VCA.
 repite el análisis y retira los MP3 temporales del control.
 [Resultados por nota y canal](../evidence/rf_d_vintage_saw_reset_residual01.json).
 
+El [banco del flanco cargado en 9B](VCO1_FLANCO_9B_CARGADO.md)
+contrasta ese desplazamiento con el reinicio de C1 y la
+carga dinámica de la placa 4.
+
 ## Cómo escuchar y medir
 
 Para el A/B musical hay que identificar la nota, su duración y
