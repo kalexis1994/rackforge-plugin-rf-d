@@ -550,6 +550,34 @@ trapezoidal. Los grupos de La2 y La3 empiezan a 0,00 y
 2,40 s. La secuencia completa se repite desde 4,80 s.
 [Mediciones y orden de escucha](../evidence/rf_d_ladder_trapezoidal_ab01.json).
 
+### Apertura y residuo agudo del La2
+
+La escucha señaló más apertura en el La2 vintage. La medida
+anterior terminaba en H24, cerca de 2,6 kHz en esta nota.
+Al medir de 8 a 12 kHz, la referencia tiene **3,86 dB** más
+energía que RF-D trapezoidal respecto del nivel total.
+Se estima la fase a partir de la fundamental y se ajusta una
+forma de onda periódica a esa fase para seguir la deriva de
+afinación. La diferencia entre las dos componentes
+periódicas en esa banda es **0,68 dB**. El resto del espectro
+incluye energía que no se explica con un ciclo fijo,
+incluidos cambios de forma de onda, ruido y posibles
+artefactos de captura o codificación.
+
+En el MP3 original, la potencia de 4 a 16 kHz baja cerca de
+51 dB entre el La2 y las pausas de 3,78–3,95 s y 11,90–12,10 s.
+Eso acota el nivel de fondo de esas pausas. La prueba no
+identifica el origen del residuo durante la nota sostenida.
+
+`python -B tools/check_rf_d_vintage_saw_air.py --write-report`
+compara Minimoog, la misma toma con el residuo agudo
+atenuado y RF-D trapezoidal. Para la toma intermedia se
+resta la parte del residuo filtrada con un paso alto de
+transición suave de 3 a 4 kHz. El procesamiento se aplica
+sólo al WAV de escucha. Los tres fragmentos se igualan a
+−22 dBFS RMS y se repiten desde 2,10 s.
+[Mediciones y orden de escucha](../evidence/rf_d_vintage_saw_air01.json).
+
 ## Cómo escuchar y medir
 
 Para el A/B musical hay que identificar la nota, su duración y
