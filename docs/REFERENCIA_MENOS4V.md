@@ -227,3 +227,7 @@ siendo vías posibles.
 repite las catorce corridas.
 [Medidas de los dos rieles](../evidence/vco_dual_rail_ripple01.json) ·
 [Bandas laterales de la toma](PATCHES_REFERENCIA_MODEL_D.md#bandas-laterales-de-100-y-120-hz).
+
+El [ensayo del CV de teclado](CV_TECLADO_RIZADO.md)
+mide el acople por C6/Q13/Q10 y lo combina con la
+sensibilidad de los pines de alimentación.

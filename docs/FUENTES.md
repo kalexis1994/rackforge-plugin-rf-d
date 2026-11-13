@@ -136,7 +136,7 @@ Estos artículos originales ayudan a diseñar y contrastar el solver. **Ninguno 
 | Ruido, mezcla de modulación y entrada externa | SVC-204D PDF pp. 10–11 y 14; esquemas pp. 66 y 69 |
 | Ladder, recuperación, dos VCA | SVC-204D PDF pp. 11–12, impresa 2-7; placa p. 68, Fig. 9-10; esquema p. 69, Fig. 9-11. |
 | Contornos, gatillo y final decay | SVC-204D PDF pp. 12–14, impresas 2-7 a 2-9; esquema p. 65, Fig. 9-5. La copia SVC-9 lo rotula **Fig. 9-7, PDF p. 9**; BOM tabla 7-6 pp. 26–27; panel tabla 7-3 p. 21 y Fig. 9-17 p. 19; LHC Fig. 9-15 p. 17. [Grafo y ambigüedad del biestable](CONTORNO_VOLUMEN_CIRCUITO.md). |
-| Prioridad de nota, retención CV, glide | SVC-204D PDF p. 16, impresa 2-10A; esquema p. 65, Fig. 9-5 |
+| Prioridad de nota, retención CV, glide | SVC-204D PDF p. 16, impresa 2-10A. Esquema PDF p. 65, hoja impresa 9-5 y rótulo Fig. 9-7. SVC-9 PDF p. 9 para el detalle. [Medición del CV de teclado](CV_TECLADO_RIZADO.md). |
 | Afinación y calibración | SVC-204D PDF pp. 26–38, sección 5; B-TUNE y B-804C tienen prioridad para los procedimientos que corrigen |
 | Modificaciones de época | SVC-204D PDF pp. 52–57, sección 8, con correcciones B-804C |
 | Revisión temprana de placas | SVC-RJF PDF pp. 4–5, impresas 4–5; ajustes pp. 11–17 |
