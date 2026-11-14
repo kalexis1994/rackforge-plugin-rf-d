@@ -11,9 +11,9 @@ from tempfile import TemporaryDirectory
 import numpy as np
 
 from check_rf_d_playable_pilot import (
-    AREA, COMPILER, GUEST, HOST, NODE, PACKAGE, ROOT, SDK_PATH, WASM_OPT, emit, sha, write,
+    AREA, COMPILER, GUEST, HOST as LOCAL_HOST, NODE, PACKAGE, ROOT, SDK_PATH, WASM_OPT, emit, sha, write,
 )
-from check_rf_d_pilot_returns import generate_pi_fir, generate_wave, pilot_wave_model
+from check_rf_d_pilot_returns import generate_pi_fir, generate_wave
 from check_rf_d_playable_filter import emphasis_table, verify_filter
 from check_rf_d_playable_modulation import verify_modulation
 from check_rf_d_voice_keyboard import verify_keyboard, verify_left_hand
@@ -29,6 +29,8 @@ from rf_d_cutoff_calibration import calibrated_cutoff_table
 from rf_d_voice_panel import program_parameters, render_panel, render_program_config
 
 VERSION = "0.7.0"
+HOST = Path(os.environ.get("RACKFORGE_ROOT", LOCAL_HOST)).resolve()
+EXE = ".exe" if os.name == "nt" else ""
 PLUGIN_ID = "org.rackforge.lab.rf-d-voice"
 SCHEMA = ROOT / "plugin/voice/parameters.json"
 CONTROL_LAYOUT = SCHEMA.with_name("control-layout.json")
@@ -49,11 +51,19 @@ CONTROL_ROLES = {
 
 
 def oscillator_tables(report, *, calibrated=False, wide_pulse_duty=None):
-    model, report["h128_sha256"] = pilot_wave_model()
+    # The admitted stationary spectrum is stored as data so a release does
+    # not depend on reproducing the laboratory's Windows float hashes.
+    spectrum_path = SCHEMA.with_name("oscillator-h128.json")
+    spectrum = json.loads(spectrum_path.read_text(encoding="utf8"))
+    report["h128_sha256"] = spectrum["h128_table_sha256"]
+    report["oscillator_spectrum_sha256"] = sha(spectrum_path)
+    assert spectrum["keyboard_cv_v"] == -1.6 and spectrum["mixer_bus_v"] == 0.
+    model = np.asarray([spectrum["waveforms"][name] for name in ("saw", "triangle")])
+    assert model.shape == (2, 129, 2) and np.isfinite(model).all()
     harmonics = np.arange(1, 129)
     bands = (128, 64, 32, 16, 8, 4, 2, 1)
     samples = 2048
-    saw, triangle = model[:2, 1:].copy()
+    saw, triangle = model[:, 1:, 0] + 1j * model[:, 1:, 1]
     hybrid = (10. * saw + 47. * triangle) / 57.
     wide = 0.35
     if calibrated:
@@ -188,7 +198,7 @@ def package_template(destination, schema, catalog, version, bank, external, prog
     html.write_text(render_panel(schema, bank, programs), encoding="utf8", newline="\n")
 
 
-def compile_program_voice(execute, compiler, folder, guest, cfg_flags):
+def compile_program_voice(execute, cargo, folder, guest, cfg_flags):
     manifest = folder / "Cargo.toml"
     manifest.write_text(
         '[package]\nname = "rf-d-voice"\nversion = "0.1.0"\nedition = "2021"\n'
@@ -202,11 +212,11 @@ def compile_program_voice(execute, compiler, folder, guest, cfg_flags):
     )
     shutil.copyfile(HOST / "Cargo.lock", folder / "Cargo.lock")
     target = folder / "target"
-    execute(compiler.with_name("cargo.exe"), "rustc", "--manifest-path", manifest,
+    execute(cargo, "rustc", "--manifest-path", manifest,
             "--config", 'target.wasm32-unknown-unknown.rustflags = ["-C", "target-feature=+simd128"]',
             "--target-dir", target, "--release", "--target", "wasm32-unknown-unknown",
             "--", "-A", "unexpected_cfgs", "-A", "dead_code",
-            "--cfg", "pilot_voice_programs", *cfg_flags)
+            "--cfg", "pilot_voice_programs", *cfg_flags, timeout=900)
     return target / "wasm32-unknown-unknown/release/rf_d_voice.wasm"
 
 
@@ -214,7 +224,7 @@ def verify_program_library(execute, component, schema, package, folder):
     document = folder / "user-program.json"
     result, _ = execute("node", ROOT / "tools/check_rf_d_voice_programs.js", component, schema, document)
     print(result.decode().strip())
-    core = HOST / "target/release/rackforge-core.exe"
+    core = HOST / f"target/release/rackforge-core{EXE}"
     data = folder / "program-state"
     program = json.loads(document.read_bytes())
     program_id = program["id"]
@@ -421,15 +431,20 @@ def main(argv=None, *, inspect_audio=None, legacy_timbre=False, wide_pulse_duty=
         catalog["banks"].append(dict(id="user", name="User", order=2))
     factory_programs = {entry["id"]: entry["bank"] for entry in catalog["presets"]} if factory else {}
     compiler = Path(COMPILER)
-    if midi:
+    if os.name != "nt":
+        compiler = Path(shutil.which("rustc") or "rustc")
+    elif midi:
         # Cargo also needs the native Rust standard library for build scripts and proc macros.
-        compiler = Path(os.environ.get("RF_D_RUSTC", compiler.parents[2] /
-                        "1.98.0-x86_64-pc-windows-gnu/bin/rustc.exe"))
-    env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"],
-               RACKFORGE_OPTIMIZE_PLUGINS="0", RUSTC=str(compiler))
+        compiler = compiler.parents[2] / "1.98.0-x86_64-pc-windows-gnu/bin/rustc.exe"
+    compiler = Path(os.environ.get("RF_D_RUSTC", compiler))
+    cargo = compiler.with_name(f"cargo{EXE}")
+    optimizer = os.environ.get("RF_D_WASM_OPT", WASM_OPT if os.name == "nt" else "wasm-opt")
+    env = dict(os.environ, RACKFORGE_OPTIMIZE_PLUGINS="0", RUSTC=str(compiler))
+    if os.name == "nt":
+        env["PATH"] = "C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + env["PATH"]
 
-    def execute(*args):
-        run = subprocess.run(list(map(str, args)), cwd=ROOT, env=env, capture_output=True, timeout=120)
+    def execute(*args, timeout=120):
+        run = subprocess.run(list(map(str, args)), cwd=ROOT, env=env, capture_output=True, timeout=timeout)
         assert run.returncode == 0, run.stderr.decode(errors="replace") + run.stdout.decode(errors="replace")
         return run.stdout, run.stderr
 
@@ -498,13 +513,13 @@ def main(argv=None, *, inspect_audio=None, legacy_timbre=False, wide_pulse_duty=
                          *performance_flags, *external_flags, *feedback_flags, *output_flags, *monitor_flags,
                          *cv_flags, *midi_flags, *poly_flags, *calibrated_flags, *oversampling_flags, *ladder_flags)
             if midi:
-                component = compile_program_voice(execute, compiler, folder, guest, cfg_flags)
+                component = compile_program_voice(execute, cargo, folder, guest, cfg_flags)
             else:
                 execute(*flags, "--edition=2024", "--crate-type", "rlib", "--crate-name", "rackforge_plugin_sdk",
                         HOST / SDK_PATH, "-o", sdk)
                 execute(*flags, "--edition=2021", "--crate-type", "cdylib", "-C", "panic=abort", "-C", "lto=fat",
                         *cfg_flags, guest, "--extern", f"rackforge_plugin_sdk={sdk}", "-o", component)
-            execute(WASM_OPT, component, "-O4", "-o", optimized)
+            execute(optimizer, component, "-O4", "-o", optimized)
 
             def render(score, block=128, frames=43200, samples=None, preset=None):
                 input_path = "-"
@@ -556,7 +571,7 @@ def main(argv=None, *, inspect_audio=None, legacy_timbre=False, wide_pulse_duty=
             if args.package:
                 artifact = ROOT / f"artifacts/rf-d-voice-{version}.rfplugin"
                 archive, store = folder / artifact.name, folder / "store"
-                packer = HOST / "target/release/rackforge-store.exe"
+                packer = HOST / f"target/release/rackforge-store{EXE}"
                 execute(packer, "pack-wasm", template, optimized, archive)
                 execute(packer, "install-local", archive, store)
                 manifest, = store.rglob("rackforge-plugin.toml")
@@ -569,13 +584,13 @@ def main(argv=None, *, inspect_audio=None, legacy_timbre=False, wide_pulse_duty=
             if external:
                 verify_host_capture(execute, render, folder, host_package, report, feedback,
                                     schema if monitor else None, control_inputs, HOST_SCORE if midi else None,
-                                    {name: programs[name] for name in factory_programs})
+                                    {name: programs[name] for name in factory_programs}, host=HOST)
             report["host_stress"] = {}
             preset = ("feedback_bass" if factory else "loop_drive" if feedback
                       else "wheel_motion" if modulation else "resonant_bass" if emphasis
                       else "three_oscillators" if bank else "default")
             for frames in (128, 480, CAPACITY):
-                raw, _ = execute(HOST / "target/release/rackforge-core.exe", "stress", host_package,
+                raw, _ = execute(HOST / f"target/release/rackforge-core{EXE}", "stress", host_package,
                                  "--preset", preset, "--data-root", folder / "state",
                                  "--voices", 1, "--blocks", 100, "--frames", frames)
                 result = raw.decode().strip()

@@ -33,6 +33,14 @@ WASM y RackForge desde un directorio temporal y lo retira al terminar.
 El argumento `--package VERSION` exporta un único `.rfplugin` para
 la versión elegida después de integrar varios bloques.
 
+GitHub Actions compila y prueba el paquete con el SDK y las herramientas
+de una revisión fija de RackForge. Para publicar, actualizá `VERSION`
+y subí el tag correspondiente, por ejemplo `v0.8.7`. El workflow
+publica `RF-D.rfplugin` junto con su SHA-256 después de instalar el paquete
+en un store temporal y verificar el audio y los programas.
+El espectro H128 admitido del VCO (CV de −1,6 V, BUS de 0 V) se
+distribuye como coeficientes en `plugin/voice/oscillator-h128.json`.
+
 El [piloto monofónico con R59/R60](docs/VOZ_PILOTO_RETORNOS_RESULTADOS.md#retornos-en-el-paquete-portable)
 y el [solver acoplado](docs/VOZ_REDUCIDA_MOTOR_RESULTADOS.md) conservan las
 referencias eléctricas para contrastar la voz de desarrollo.

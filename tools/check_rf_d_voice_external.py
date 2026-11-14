@@ -1,5 +1,7 @@
 """Measure the external preamp, overload readout and RackForge capture route."""
+import os
 from pathlib import Path
+import shutil
 
 import numpy as np
 
@@ -71,16 +73,24 @@ def verify_external(render, report):
 
 
 def verify_host_capture(execute, render, folder, package, report, feedback=False, monitor_schema=None,
-                        control_inputs=False, midi_score=None, factory_programs=None):
-    deps = HOST / "target/release/deps"
-    core, midi = deps / HOST_CORE, deps / MIDI_LIB
-    registry = Path(COMPILER).parents[4] / ".cargo/registry/src"
-    imports = sorted(registry.glob("*/windows_x86_64_msvc-*/lib/*.lib"))
-    libraries = sorted((HOST / "target/release/build").glob("*/out/*.lib"))
-    native_dirs = list(dict.fromkeys(p.parent for p in [*libraries, *imports]))
+                        control_inputs=False, midi_score=None, factory_programs=None, *, host=HOST):
+    deps = host / "target/release/deps"
+    if os.name == "nt" and (deps / HOST_CORE).exists() and (deps / MIDI_LIB).exists():
+        core, midi = deps / HOST_CORE, deps / MIDI_LIB
+    else:
+        core = host / "target/release/librackforge_core.rlib"
+        # The clean host build links a single MIDI API artifact.
+        midi, = [path for path in deps.glob("librackforge_midi_api-*.rlib")]
+    compiler = HOST_COMPILER if os.name == "nt" else shutil.which("rustc") or "rustc"
+    imports = []
+    if os.name == "nt":
+        registry = Path(COMPILER).parents[4] / ".cargo/registry/src"
+        imports = sorted(registry.glob("*/windows_x86_64_msvc-*/lib/*.lib"))
+    native_dirs = sorted({path.parent for path in imports}
+                         | {path for path in (host / "target/release/build").glob("*/out") if path.is_dir()})
     source = ROOT / "tools/rf_d_voice_external_host.rs"
-    probe = folder / "external-rack.exe"
-    execute(HOST_COMPILER, "--edition=2021", "-C", "opt-level=3", "-L", f"dependency={deps}",
+    probe = folder / ("external-rack.exe" if os.name == "nt" else "external-rack")
+    execute(compiler, "--edition=2021", "-C", "opt-level=3", "-L", f"dependency={deps}",
             *[arg for path in native_dirs for arg in ("-L", f"native={path}")],
             source, "--extern", f"rackforge_core={core}", "--extern", f"rackforge_midi_api={midi}", "-o", probe)
     samples = sine(0.65)
