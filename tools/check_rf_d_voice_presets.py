@@ -7,7 +7,7 @@ import re
 import numpy as np
 
 from check_rf_d_playable_filter import change, peak_frequency, rms
-from check_rf_d_playable_pilot import ROOT, emit, sha
+from rf_d_playable_build import ROOT, emit, sha
 
 CATALOG_PATH = ROOT / "plugin/voice/presets.json"
 FEATURES = {"oscillators", "filter", "modulation", "external", "feedback", "factory"}

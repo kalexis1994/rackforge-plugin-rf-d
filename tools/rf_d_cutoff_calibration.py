@@ -5,7 +5,7 @@ import math
 import numpy as np
 
 from check_rf_d_playable_filter import RATE, linear_threshold
-from check_rf_d_playable_pilot import ROOT, emit, sha
+from rf_d_playable_build import ROOT, emit, sha
 from cutoff_j7_vectors import initial_cutoff_ladder, setup
 
 AMP_PER_STEP = 4 * 0.025693 * 68e-9 * RATE

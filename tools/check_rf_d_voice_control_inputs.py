@@ -2,7 +2,7 @@
 import numpy as np
 
 from check_rf_d_playable_filter import change, filter_score, linear_threshold, peak_frequency, rms
-from check_rf_d_playable_pilot import emit, sha
+from rf_d_playable_build import emit, sha
 from rf_d_cutoff_calibration import AMP_PER_STEP
 from vca2_active_core_dc_reference import DEVICES, conditional_vca2_dc
 

@@ -6,7 +6,7 @@ import shutil
 import numpy as np
 
 from check_rf_d_playable_filter import change, rms
-from check_rf_d_playable_pilot import COMPILER, HOST, HOST_COMPILER, HOST_CORE, MIDI_LIB, ROOT, sha
+from rf_d_playable_build import COMPILER, HOST, ROOT, sha
 from check_rf_d_voice_presets import verify_host_presets
 
 RATE = 48000
@@ -75,13 +75,17 @@ def verify_external(render, report):
 def verify_host_capture(execute, render, folder, package, report, feedback=False, monitor_schema=None,
                         control_inputs=False, midi_score=None, factory_programs=None, *, host=HOST):
     deps = host / "target/release/deps"
-    if os.name == "nt" and (deps / HOST_CORE).exists() and (deps / MIDI_LIB).exists():
-        core, midi = deps / HOST_CORE, deps / MIDI_LIB
-    else:
-        core = host / "target/release/librackforge_core.rlib"
-        # The clean host build links a single MIDI API artifact.
-        midi, = [path for path in deps.glob("librackforge_midi_api-*.rlib")]
-    compiler = HOST_COMPILER if os.name == "nt" else shutil.which("rustc") or "rustc"
+    core = host / "target/release/librackforge_core.rlib"
+    candidates = list(deps.glob("librackforge_midi_api-*.rlib"))
+    # The Windows laboratory has several builds of the host dependencies.
+    if len(candidates) != 1:
+        legacy = deps / "librackforge_midi_api-9bf68be69a56bbe5.rlib"
+        if legacy.exists():
+            candidates = [legacy]
+            core = deps / "librackforge_core-3896b480a6ff0d55.rlib"
+    midi, = candidates
+    compiler = (Path(COMPILER).parents[2] / "1.98.0-x86_64-pc-windows-msvc/bin/rustc.exe"
+                if os.name == "nt" else shutil.which("rustc") or "rustc")
     imports = []
     if os.name == "nt":
         registry = Path(COMPILER).parents[4] / ".cargo/registry/src"

@@ -10,10 +10,10 @@ from tempfile import TemporaryDirectory
 
 import numpy as np
 
-from check_rf_d_playable_pilot import (
-    AREA, COMPILER, GUEST, HOST as LOCAL_HOST, NODE, PACKAGE, ROOT, SDK_PATH, WASM_OPT, emit, sha, write,
+from prepare_long_note_aa import taps
+from rf_d_playable_build import (
+    AREA, COMPILER, GUEST, HOST, NODE, PACKAGE, ROOT, SDK_PATH, WASM_OPT, emit, sha, write,
 )
-from check_rf_d_pilot_returns import generate_pi_fir, generate_wave
 from check_rf_d_playable_filter import emphasis_table, verify_filter
 from check_rf_d_playable_modulation import verify_modulation
 from check_rf_d_voice_keyboard import verify_keyboard, verify_left_hand
@@ -29,7 +29,6 @@ from rf_d_cutoff_calibration import calibrated_cutoff_table
 from rf_d_voice_panel import program_parameters, render_panel, render_program_config
 
 VERSION = "0.7.0"
-HOST = Path(os.environ.get("RACKFORGE_ROOT", LOCAL_HOST)).resolve()
 EXE = ".exe" if os.name == "nt" else ""
 PLUGIN_ID = "org.rackforge.lab.rf-d-voice"
 SCHEMA = ROOT / "plugin/voice/parameters.json"
@@ -454,10 +453,14 @@ def main(argv=None, *, inspect_audio=None, legacy_timbre=False, wide_pulse_duty=
     report = dict(passed=False, version=version, plugin_id=PLUGIN_ID, host_rate_hz=SAMPLE_RATE,
                   internal_rate_hz=internal_rate, packaged=bool(args.package))
     try:
-        fir = generate_pi_fir(internal_rate)
+        kernel = taps(internal_rate)
+        fir = emit("pilot-pi-fir.rs", f"pub const H{internal_rate}:[f64;{len(kernel)}]=[\n"
+                   + "".join(f"    {value:.17e},\n" for value in kernel) + "];\n")
         report["fir_sha256"] = sha(fir)
         modules = dict(voice=ROOT / "tools/rf_d_reduced_voice.rs", pi_coefficients=fir)
         if not bank:
+            from check_rf_d_pilot_returns import generate_wave
+
             wave, report["h128_sha256"] = generate_wave()
             modules["wave"] = wave
             report["wave_sha256"] = sha(wave)

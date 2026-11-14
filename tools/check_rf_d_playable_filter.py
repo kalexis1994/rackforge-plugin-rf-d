@@ -3,7 +3,7 @@ import math
 
 import numpy as np
 
-from check_rf_d_playable_pilot import emit, sha
+from rf_d_playable_build import emit, sha
 
 RATE = 96_000
 RECOVERY_TAU_S = 47e3 * 0.22e-6

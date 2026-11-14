@@ -73,13 +73,26 @@ jobs:
           tar -xzf "$archive" -C "$RUNNER_TEMP"
           echo "RF_D_WASM_OPT=$RUNNER_TEMP/binaryen-version_132/bin/wasm-opt" >> "$GITHUB_ENV"
       - name: Cache Cargo dependencies
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        id: host-cache
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
-          path: ~/.cargo/registry
-          key: ${{ runner.os }}-${{ runner.arch }}-rf-d-${{ env.RUST_VERSION }}-${{ hashFiles('.rackforge/Cargo.lock') }}
+          path: |
+            ~/.cargo/registry
+            .rackforge/target
+          key: ${{ runner.os }}-${{ runner.arch }}-rf-d-${{ env.RUST_VERSION }}-${{ env.RACKFORGE_REF }}
+      - name: Verify the build entry point
+        run: python -B tools/check_rf_d_playable_voice.py --help
       - name: Build RackForge packager and validation host
         working-directory: .rackforge
         run: cargo build --locked --release -p rackforge-core -p rackforge-store
+      - name: Save the compiled RackForge tools
+        if: steps.host-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: |
+            ~/.cargo/registry
+            .rackforge/target
+          key: ${{ steps.host-cache.outputs.cache-primary-key }}
       - name: Build and validate RF-D
         env:
           VERSION: ${{ steps.version.outputs.value }}
