@@ -27,6 +27,34 @@ rangos nativos con arrastre vertical, la actualización por parámetro
 y los puntos de enlace MIDI del host. Los índices, rangos y tipos
 del panel vienen del esquema público del perfil compilado.
 
+Los interruptores horizontales serigrafiados llevan **ON** en el
+extremo derecho. **Keyboard Control 1** conserva la marca encima y
+**2** debajo. **Osc. 3 Control** gira en vertical con **ON** arriba.
+**White/Pink** también es vertical y marca ambos tipos de ruido.
+El control virtual de **S-Trigger** indica el cierre del contacto.
+La sección lateral de la tecla es circular con un sector abierto hacia
+afuera. Las dos caras planas del sector son las superficies de presión
+y se encuentran en un valle. Solo se dibujan los hombros redondos
+expuestos por encima del marco.
+El SVG proyecta esas superficies con una cámara
+ortográfica inclinada 21° hacia el borde inferior del panel. El foco
+está arriba a la izquierda, a 225° desde la derecha en coordenadas SVG
+y 36° sobre el plano. La orientación y la basculación se aplican antes
+de proyectar y calcular los reflejos. El marco, el grano y la luz de
+fondo siguen esa dirección. Las demás piezas conservan sus relieves
+dibujados en SVG.
+En escritorio, las líneas se interrumpen bajo **Oscillator Modulation**
+entre Controllers y Oscillator Bank, y bajo **Filter Modulation** y
+**Keyboard Control** entre Mixer y Modifiers. En la vista compacta,
+estos controles quedan dentro de sus secciones.
+[Manual temprano de Moog, pp. PDF 4–12](https://funkwerkes.com/web/wp-content/techdocs/MixedProAudio/Minimoog-Manual.pdf#page=4) ·
+[Frontal del Model D](https://commons.wikimedia.org/wiki/File:Minimoog_panel.jpg).
+
+En el mixer, cada par de volumen y switch de oscilador comparte su
+identificación. El indicador **Overload** está junto a **External Input
+Volume** y responde al nivel del preamplificador. El selector **White/Pink**
+queda junto a **Noise Volume**.
+
 ## Modificadores
 
 | Parte del Model D | Función expuesta en RF-D |
@@ -46,6 +74,8 @@ RF-D. La calibración respecto de la serigrafía vintage sigue en los
 modelos de cada bloque.
 
 ## Jacks y enlaces
+
+**Connections** permanece visible debajo de los mandos en **PLAY**.
 
 | Conexión histórica | Ruta en RF-D |
 | --- | --- |

@@ -4,6 +4,8 @@ import json
 from math import cos, radians, sin
 from pathlib import Path
 
+from rf_d_rocker_svg import rocker_symbols
+
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "plugin/package/web"
 LIVE_PARAMETERS = {
@@ -32,6 +34,8 @@ WAVEFORM_MARKS = {
     "Wide Pulse": "M0 3V-3H7V3H10",
     "Narrow Pulse": "M0 3V-3H2V3H10",
 }
+MODULATION_ENDPOINTS = ('<span class="scale-endpoints" aria-hidden="true">'
+                        '<span>Osc. 3</span><span>Noise</span></span>')
 
 
 def selector_scale(choices):
@@ -52,13 +56,15 @@ def link_target(param):
     return f' data-rackforge-parameter-index="{param["index"]}"'
 
 
-def field(param, label=None, *, style=None, socket=False):
+def field(param, label=None, *, style=None, socket=False, accessible_name=None):
     name = label or param["name"]
     index = param["index"]
     kind = param["kind"]
     variant = kind["type"]
     style = style or {"boolean": "rocker", "meter": "lamp"}.get(variant, "knob")
     attrs = f'data-index="{index}" disabled'
+    if accessible_name:
+        attrs += f' aria-label="{escape(accessible_name, quote=True)}"'
     number = '<output class="value" aria-hidden="true"></output>'
     choices = ""
     if variant == "enum":
@@ -67,13 +73,40 @@ def field(param, label=None, *, style=None, socket=False):
         encoded = escape(json.dumps([name for _, name in values], ensure_ascii=False), quote=True)
         choices = f' data-choices="{encoded}"'
     link = link_target(param)
+    marks = ""
+    orientation = ""
     if style == "pedal":
         return (f'<button class="control jack pedal" type="button" id="control-{param["id"]}"{link} '
                 f'aria-pressed="false" {attrs}>{hardware("jack")}<span>{escape(name)}</span></button>')
     if style == "rocker":
         assert variant != "enum" or len(values) == 2
+        stem = param["id"]
+        axis = "horizontal"
+        frame = "horizontal"
+        if stem == "noise_color":
+            orientation = " rocker-vertical rocker-noise"
+            axis, frame = "down", "vertical"
+            marks = ('<span class="switch-legend switch-start" aria-hidden="true">White</span>'
+                     '<span class="switch-legend switch-end" aria-hidden="true">Pink</span>')
+        elif stem == "external_s_trigger":
+            choices = ' data-choices="[&quot;Open&quot;, &quot;Closed&quot;]"'
+            marks = '<span class="switch-legend switch-end" aria-hidden="true">Closed</span>'
+        else:
+            if stem == "osc3_tracking":
+                orientation = " rocker-vertical"
+                axis, frame = "up", "vertical"
+            elif stem == "filter_tracking_one_third":
+                orientation = " rocker-mark-above"
+            marks = '<span class="switch-legend switch-end" aria-hidden="true">On</span>'
         checked = " checked" if kind["default"] else ""
-        widget = f'{hardware("rocker")}<input type="checkbox"{checked}{choices} {attrs}>'
+        state_id = f'state-{stem}'
+        number = f'<output id="{state_id}" class="value sr-only" aria-hidden="true"></output>'
+        widget = (f'<input type="checkbox"{checked}{choices} {attrs} aria-describedby="{state_id}">'
+                  '<svg viewBox="0 0 100 100" aria-hidden="true">'
+                  f'<use href="#rocker-frame-{frame}"/>'
+                  f'<use href="#rocker-{axis}-on" class="rocker-on"/>'
+                  f'<use href="#rocker-{axis}-off" class="rocker-off"/>'
+                  '</svg>')
     elif style == "lamp":
         widget = hardware("lamp") + f'<meter data-index="{index}" min="0" max="1" value="0"></meter>'
         number = ""
@@ -89,10 +122,12 @@ def field(param, label=None, *, style=None, socket=False):
         wheel = f' data-wheel="{param["id"]}"' if style == "wheel" else ""
         widget = (front + f'<input type="range" min="{kind["minimum"]}" max="{kind["maximum"]}"'
                   f' step="{kind["step"]}" value="{kind["default"]}" data-unit="{unit}"{scale}{wheel} {attrs}>')
-    classes = f"rotary {style}" if style in ("knob", "wheel") else style
+    classes = f"rotary {style}" if style in ("knob", "wheel") else style + orientation
     socket_icon = hardware("trigger-jack" if param["id"] == "external_s_trigger" else "jack", "socket") if socket else ""
+    endpoints = MODULATION_ENDPOINTS if param["id"] == "modulation_mix" else ""
     return (f'<label class="control {classes}" id="control-{param["id"]}"{link}>'
-            f'<span class="label">{escape(name)}</span><span class="mechanism">{widget}</span>{socket_icon}{number}</label>')
+            f'<span class="label">{escape(name)}</span><span class="mechanism">{widget}{marks}</span>'
+            f'{socket_icon}{number}{endpoints}</label>')
 
 
 def group(title, controls, css_class=""):
@@ -107,12 +142,12 @@ def render_panel(schema, bank, programs=False):
     params = {item["id"]: item for item in schema["parameters"]}
     used = set()
 
-    def control(name, label=None, *, style=None, socket=False):
+    def control(name, label=None, *, style=None, socket=False, accessible_name=None):
         if name not in params:
             return ""
         assert name not in used, name
         used.add(name)
-        return field(params[name], label, style=style, socket=socket)
+        return field(params[name], label, style=style, socket=socket, accessible_name=accessible_name)
 
     voices = ""
     if "voice_mode" in params:
@@ -134,9 +169,11 @@ def render_panel(schema, bank, programs=False):
         has_left_hand = "pitch_wheel" in params
         hand_switches = ((control("glide_enabled", "Glide"), control("decay_enabled", "Decay", style="rocker"))
                          if not has_left_hand else ())
+        oscillator_modulation = control("oscillator_modulation", "Oscillator Modulation")
         controllers = section("Controllers", group("Tuning and performance", (
-            control("tune", "Tune"), control("oscillator_modulation", "Osc Mod"),
-            control("glide_time", "Glide Time"), control("modulation_mix", "Mod Mix"),
+            control("tune", "Tune"),
+            f'<div class="oscillator-modulation">{oscillator_modulation}</div>' if oscillator_modulation else "",
+            control("glide_time", "Glide"), control("modulation_mix", "Modulation Mix"),
             *hand_switches,
         )), "controllers")
         left_hand = ""
@@ -149,7 +186,7 @@ def render_panel(schema, bank, programs=False):
                          + control("decay_enabled", "Decay", style="rocker")
                          + '</div><div class="wheels">'
                          + control("pitch_wheel", "Pitch", style="wheel")
-                         + control("mod_wheel", "Mod", style="wheel")
+                         + control("mod_wheel", "Mod.", style="wheel")
                          + '</div><details><summary>Resistive pedals</summary>'
                          + group("Pedal resistance", (
                              control("glide_pedal_resistance", "Glide"),
@@ -158,47 +195,65 @@ def render_panel(schema, bank, programs=False):
                          + '</details></section>')
         oscillator_rows = ""
         for index in range(1, 4):
+            tracking = control("osc3_tracking", "Osc. 3 Control") if index == 3 else ""
             oscillator_rows += (
                 f'<div class="osc-row" role="group" aria-label="Oscillator {index}">'
-                f'<h3>OSC {index}</h3>'
-                + control(f"osc{index}_range", f"OSC {index} Range")
-                + (control(f"osc{index}_frequency", f"OSC {index} Frequency") if index > 1 else '<span></span>')
-                + control(f"osc{index}_wave", f"OSC {index} Waveform")
+                f'<h3>Oscillator {index}</h3>'
+                + control(f"osc{index}_range", "Range", accessible_name=f"Oscillator {index} Range")
+                + (control(f"osc{index}_frequency", "Frequency", accessible_name=f"Oscillator {index} Frequency")
+                   if index > 1 else '<span></span>')
+                + control(f"osc{index}_wave", "Waveform", accessible_name=f"Oscillator {index} Waveform")
+                + (f'<div class="oscillator-control">{tracking}</div>' if tracking else "")
                 + "</div>"
             )
-        oscillators = section("Oscillator Bank", oscillator_rows + control("osc3_tracking"), "oscillators")
+        oscillators = section("Oscillator Bank", oscillator_rows, "oscillators")
 
-        channels = (("saw_mix", "osc1_enabled", "OSC 1"), ("osc2_level", "osc2_enabled", "OSC 2"),
-                    ("osc3_level", "osc3_enabled", "OSC 3"), ("external_level", "external_enabled", "External"),
-                    ("noise_level", "noise_enabled", "Noise"))
-        def mixer_channel(level, enable, label):
-            return group(label, (control(level, f"{label} Level"), control(enable, f"{label} On")), "channel")
+        def mixer_channel(level, enable, label, *, indicator=""):
+            heading = f"{label} Volume" if indicator else label
+            return (f'<div class="mixer-channel" role="group" aria-label="{label}">'
+                    f'<h3>{heading}</h3><div class="channel">'
+                    + control(level, "Volume", accessible_name=f"{label} Volume")
+                    + control(enable, label, accessible_name=f"{label} Mixer Switch")
+                    + indicator + '</div></div>')
 
+        external = mixer_channel("external_level", "external_enabled", "External Input",
+                                 indicator=control("external_overload")) if "external_level" in params else ""
+        noise = mixer_channel("noise_level", "noise_enabled", "Noise",
+                              indicator=control("noise_color", "Noise Color", style="rocker")) if "noise_level" in params else ""
         mixer = section("Mixer",
             '<div class="mixer-oscillators">'
-            + "".join(mixer_channel(*channel) for channel in channels[:3])
-            + '</div><div class="mixer-sources">'
-            + "".join(mixer_channel(*channel) for channel in channels[3:] if channel[0] in params)
-            + group("Mixer indicators", (control("external_overload"), control("noise_color", "Noise Color", style="rocker")))
-            + '</div>', "mixer")
+            + mixer_channel("saw_mix", "osc1_enabled", "OSC 1")
+            + mixer_channel("osc2_level", "osc2_enabled", "OSC 2")
+            + mixer_channel("osc3_level", "osc3_enabled", "OSC 3")
+            + '</div><div class="mixer-sources">' + external + noise + '</div>', "mixer")
 
 
+        filter_switches = ""
+        if "filter_tracking_one_third" in params:
+            filter_switches = ('<div class="filter-switches" role="group" aria-label="Filter switches">'
+                + control("filter_modulation", "Filter Modulation")
+                + '<div class="keyboard-control" role="group" aria-labelledby="keyboard-control-heading">'
+                  '<h4 id="keyboard-control-heading">Keyboard Control</h4>'
+                + control("filter_tracking_one_third", "1", accessible_name="Keyboard Control 1 (one-third)")
+                + control("filter_tracking_two_thirds", "2", accessible_name="Keyboard Control 2 (two-thirds)")
+                + '</div></div>')
         modifiers = section("Modifiers",
-            '<h3>Filter</h3>' + group("Filter", (control("cutoff"), control("emphasis"), control("contour_amount", "Contour Amount")), "three")
-            + group("Filter switches", (control("filter_modulation", "Filter Mod"),
-                                        control("filter_tracking_one_third", "Track ⅓"),
-                                        control("filter_tracking_two_thirds", "Track ⅔")), "three")
+            '<h3>Filter</h3>' + group("Filter", (control("cutoff", "Cutoff Frequency"), control("emphasis"),
+                                                control("contour_amount", "Amount of Contour")), "three")
+            + filter_switches
             + '<h3>Filter Contour</h3>' + group("Filter Contour", (
-                control("filter_attack", "Filter Attack"), control("filter_decay", "Filter Decay"),
-                control("filter_sustain", "Filter Sustain")), "three")
+                control("filter_attack", "Attack Time", accessible_name="Filter Attack Time"),
+                control("filter_decay", "Decay Time", accessible_name="Filter Decay Time"),
+                control("filter_sustain", "Sustain Level", accessible_name="Filter Sustain Level")), "three")
             + '<h3>Loudness Contour</h3>' + group("Loudness Contour", (
-                control("loudness_attack", "Loudness Attack"), control("loudness_decay", "Loudness Decay"),
-                control("loudness_sustain", "Loudness Sustain")), "three"), "modifiers")
+                control("loudness_attack", "Attack Time", accessible_name="Loudness Attack Time"),
+                control("loudness_decay", "Decay Time", accessible_name="Loudness Decay Time"),
+                control("loudness_sustain", "Sustain Level", accessible_name="Loudness Sustain Level")), "three"), "modifiers")
 
         output = section("Output", group("Output controls", (
-            control("output_level", "Volume"), control("main_output_enabled", "Main Out"),
-            control("headphones_level", "Phones Vol"), control("tuner_a440", "A-440"),
-        )), "output")
+            control("output_level", "Volume", accessible_name="Main Output Volume"), control("main_output_enabled", "Main Output"),
+            control("tuner_a440", "A-440"), control("headphones_level", "Phones Volume"),
+        ), "output-controls"), "output")
         if has_left_hand:
             controllers = f'<div class="left-column">{controllers}{left_hand}</div>'
         front = controllers + oscillators + mixer + modifiers + output
@@ -231,7 +286,7 @@ def render_panel(schema, bank, programs=False):
                               f'{hardware("jack")}<span>External</span></a>'
                               '<p>Rack audio input</p></section>')
         if "pitch_cv" in params:
-            rear_parts.append('<section class="patch-block"><h3>Control Inputs</h3><div class="jacks cv">'
+            rear_parts.append('<section class="patch-block"><h3>Ext. Control Inputs</h3><div class="jacks cv">'
                               + control("loudness_cv", "Loudness CV", socket=True)
                               + control("filter_cv", "Filter CV", socket=True)
                               + control("pitch_cv", "Oscillator CV", socket=True)
@@ -249,11 +304,13 @@ def render_panel(schema, bank, programs=False):
                           for name, label in (("glide_enabled", "Glide"), ("decay_enabled", "Decay")))
                 + '</div><p>Link a MIDI pedal</p></section>'
             )
-        rear = ('<details class="rear" id="connections"><summary>Connections</summary><div class="patch-panel">'
-                + "".join(rear_parts) + '</div></details>') if rear_parts else ""
+        rear = ('<section class="rear" id="connections" aria-labelledby="connections-heading">'
+                '<h2 id="connections-heading">Connections</h2><div class="patch-panel">'
+                + "".join(rear_parts) + '</div></section>') if rear_parts else ""
 
     assert used == params.keys(), sorted(params.keys() - used)
     symbols = (WEB / "hardware.svg").read_text(encoding="utf8")
+    symbols = symbols.replace("</defs>", rocker_symbols() + "\n  </defs>", 1)
     program_panel = program_toolbar("play", schema) if programs else "<rf-program-select></rf-program-select>"
     program_script = '<script src="programs.js" defer></script>' if programs else ""
     patch_script = '<script src="patch-cable.js" defer></script>' if "output_feedback" in params else ""
@@ -271,14 +328,16 @@ def render_panel(schema, bank, programs=False):
 <body>
   {symbols}
   <main class="instrument">
-    <header class="masthead">
-      <h1 class="nameplate"><small>Rackforge Instruments</small><span>RF-D</span></h1>
-      {program_panel}
-      {voices}
-      <p class="status" id="status" role="status">Connecting to RackForge…</p>
-    </header>
-    <div class="controls{' single' if not bank else ''}">{front}</div>
-    {rear}
+    <div class="faceplate">
+      <header class="masthead">
+        <h1 class="nameplate"><small>Rackforge Instruments</small><span>RF-D</span></h1>
+        {program_panel}
+        {voices}
+        <p class="status" id="status" role="status">Connecting to RackForge…</p>
+      </header>
+      <div class="controls{' single' if not bank else ''}">{front}</div>
+      {rear}
+    </div>
   </main>
 </body>
 </html>
@@ -351,11 +410,13 @@ def render_program_config(schema):
 </head>
 <body>
   <main class="instrument">
-    <header class="masthead">
-      <h1 class="nameplate"><small>Rackforge Instruments</small><span>RF-D</span></h1>
-      {program_toolbar("config", schema)}
-      <p class="status" id="status" role="status">Connecting to RackForge…</p>
-    </header>
+    <div class="faceplate">
+      <header class="masthead">
+        <h1 class="nameplate"><small>Rackforge Instruments</small><span>RF-D</span></h1>
+        {program_toolbar("config", schema)}
+        <p class="status" id="status" role="status">Connecting to RackForge…</p>
+      </header>
+    </div>
   </main>
 </body>
 </html>

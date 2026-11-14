@@ -2,7 +2,6 @@
   const input = document.querySelector("[data-patch-feedback]");
   if (!input) return;
   const panel = input.closest(".feedback-patch");
-  const connections = panel.closest("details");
   const shelf = panel.querySelector(".patch-sockets");
   const ports = [...shelf.querySelectorAll("[data-patch-port]")];
   const svg = shelf.querySelector(".patch-cable");
@@ -239,10 +238,6 @@
   document.addEventListener("keydown", (event) => {
     if (event.key !== "Escape" || (!drag && !armed)) return;
     cancel();
-  });
-  connections.addEventListener("toggle", () => {
-    if (connections.open) schedule();
-    else cancel();
   });
   new ResizeObserver(schedule).observe(shelf);
   reduced.addEventListener("change", schedule);
