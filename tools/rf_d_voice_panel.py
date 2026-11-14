@@ -14,15 +14,28 @@ LIVE_PARAMETERS = {
     "glide_pedal_resistance", "decay_pedal_resistance",
     "voice_mode",
 }
+EXPRESSION_PARAMETERS = {"velocity_loudness", "pressure_filter"}
 
 
 def program_parameters(schema):
-    return [param for param in schema["parameters"]
+    return [dict(param, missing_default=param["kind"]["default"]) if param["id"] in EXPRESSION_PARAMETERS else param
+            for param in schema["parameters"]
             if param["id"] not in LIVE_PARAMETERS and param["kind"]["type"] != "meter"]
 
 
 def hardware(shape, css_class=""):
     return f'<svg class="{css_class}" viewBox="0 0 100 100" aria-hidden="true"><use href="#{shape}"/></svg>'
+
+
+WHEEL = ('<svg viewBox="0 0 64 116" aria-hidden="true">'
+         '<use href="#wheel-body"/>'
+         '<g clip-path="url(#wheel-tread-clip)">'
+         '<use href="#wheel-thumb-notch" data-wheel-notch visibility="hidden"/></g>'
+         '</svg>')
+
+FADER = ('<span class="fader-guide" aria-hidden="true"><span class="fader-slot"></span>'
+         '<span class="fader-travel"><svg class="fader-thumb" viewBox="0 0 22 28">'
+         '<use href="#expression-fader-thumb"/></svg></span></span>')
 
 
 WAVEFORM_MARKS = {
@@ -115,10 +128,14 @@ def field(param, label=None, *, style=None, socket=False, accessible_name=None):
         widget = (hardware("selector") + scale + hardware("pointer", "pointer")
                   + f'<input type="range" min="0" max="{len(values) - 1}" step="1"'
                     f' value="{kind["default"]}"{choices} {attrs}>')
+    elif style == "fader":
+        unit = escape(kind["unit"], quote=True)
+        widget = (FADER + f'<input type="range" min="{kind["minimum"]}" max="{kind["maximum"]}"'
+                  f' step="{kind["step"]}" value="{kind["default"]}" data-unit="{unit}" {attrs}>')
     else:
         scale = ' data-scale="log"' if kind.get("taper") == "logarithmic" else ""
         unit = escape(kind.get("unit", ""), quote=True)
-        front = hardware("wheel") if style == "wheel" else hardware("pot") + hardware("pointer", "pointer")
+        front = WHEEL if style == "wheel" else hardware("pot") + hardware("pointer", "pointer")
         wheel = f' data-wheel="{param["id"]}"' if style == "wheel" else ""
         widget = (front + f'<input type="range" min="{kind["minimum"]}" max="{kind["maximum"]}"'
                   f' step="{kind["step"]}" value="{kind["default"]}" data-unit="{unit}"{scale}{wheel} {attrs}>')
@@ -136,6 +153,10 @@ def group(title, controls, css_class=""):
 
 def section(title, content, css_class=""):
     return f'<section class="module {css_class}"><h2>{title}</h2><div class="module-body">{content}</div></section>'
+
+
+def nameplate():
+    return '<h1 class="nameplate"><span>RF-D</span><small>Rackforge Instruments</small></h1>'
 
 
 def render_panel(schema, bank, programs=False):
@@ -179,20 +200,20 @@ def render_panel(schema, bank, programs=False):
         left_hand = ""
         if has_left_hand:
             left_hand = ('<section class="left-hand" id="left-hand" aria-label="Left-hand controller">'
-                         '<div class="pedal-switches">'
+                         '<div class="wheels">'
+                         + control("pitch_wheel", "Pitch", style="wheel")
+                         + control("mod_wheel", "Mod.", style="wheel")
+                         + '</div><div class="pedal-switches">'
                          + control("glide_pedal", "Glide Pedal", style="pedal")
                          + control("glide_enabled", "Glide")
                          + control("decay_pedal", "Decay Pedal", style="pedal")
                          + control("decay_enabled", "Decay", style="rocker")
-                         + '</div><div class="wheels">'
-                         + control("pitch_wheel", "Pitch", style="wheel")
-                         + control("mod_wheel", "Mod.", style="wheel")
-                         + '</div><details><summary>Resistive pedals</summary>'
+                         + '</div><div class="resistive-pedals"><h3>Resistive Pedals</h3>'
                          + group("Pedal resistance", (
-                             control("glide_pedal_resistance", "Glide"),
-                             control("decay_pedal_resistance", "Decay"),
+                             control("glide_pedal_resistance", "Glide", accessible_name="Glide Pedal Resistance"),
+                             control("decay_pedal_resistance", "Decay", accessible_name="Decay Pedal Resistance"),
                          ))
-                         + '</details></section>')
+                         + '</div></section>')
         oscillator_rows = ""
         for index in range(1, 4):
             tracking = control("osc3_tracking", "Osc. 3 Control") if index == 3 else ""
@@ -254,8 +275,6 @@ def render_panel(schema, bank, programs=False):
             control("output_level", "Volume", accessible_name="Main Output Volume"), control("main_output_enabled", "Main Output"),
             control("tuner_a440", "A-440"), control("headphones_level", "Phones Volume"),
         ), "output-controls"), "output")
-        if has_left_hand:
-            controllers = f'<div class="left-column">{controllers}{left_hand}</div>'
         front = controllers + oscillators + mixer + modifiers + output
 
         rear_parts = []
@@ -271,7 +290,7 @@ def render_panel(schema, bank, programs=False):
                             for name in ("LO", "HI", "Phones") if name in choices)
             select_attr = "" if has_feedback else "hidden "
             rear_parts.append(
-                '<section class="patch-block"><h3>Monitor Output</h3>'
+                '<section class="patch-block monitor-output"><h3>Monitor Output</h3>'
                 f'<div class="control output-route"{link_target(selector)}>'
                 f'<select {select_attr}aria-label="Monitor Output" data-index="{index}" disabled>'
                 + "".join(f'<option value="{value}"{" selected" if value == selector["kind"]["default"] else ""}>'
@@ -286,7 +305,7 @@ def render_panel(schema, bank, programs=False):
                               f'{hardware("jack")}<span>External</span></a>'
                               '<p>Rack audio input</p></section>')
         if "pitch_cv" in params:
-            rear_parts.append('<section class="patch-block"><h3>Ext. Control Inputs</h3><div class="jacks cv">'
+            rear_parts.append('<section class="patch-block control-jacks"><h3>Ext. Control Inputs</h3><div class="jacks cv">'
                               + control("loudness_cv", "Loudness CV", socket=True)
                               + control("filter_cv", "Filter CV", socket=True)
                               + control("pitch_cv", "Oscillator CV", socket=True)
@@ -295,6 +314,13 @@ def render_panel(schema, bank, programs=False):
         if has_feedback:
             used.add("output_feedback")
             rear_parts.insert(0, feedback_patch(params["output_feedback"]))
+        if EXPRESSION_PARAMETERS <= params.keys():
+            rear_parts.append('<section class="patch-block keyboard-expression"><h3>Keyboard Expression</h3>'
+                              + group("Keyboard Expression", (
+                                  control("velocity_loudness", "Velocity → Loudness", style="fader"),
+                                  control("pressure_filter", "After Pressure → Filter", style="fader"),
+                              ))
+                              + '</section>')
         if "glide_enabled" in params and not has_left_hand:
             rear_parts.append(
                 '<section class="patch-block"><h3>Pedal Controls</h3><div class="jacks">'
@@ -314,6 +340,8 @@ def render_panel(schema, bank, programs=False):
     program_panel = program_toolbar("play", schema) if programs else "<rf-program-select></rf-program-select>"
     program_script = '<script src="programs.js" defer></script>' if programs else ""
     patch_script = '<script src="patch-cable.js" defer></script>' if "output_feedback" in params else ""
+    lower = ('<div class="wood-rail" aria-hidden="true"></div>'
+             f'<div class="performance-deck">{left_hand}{rear}</div>') if left_hand or rear else ""
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -330,13 +358,13 @@ def render_panel(schema, bank, programs=False):
   <main class="instrument">
     <div class="faceplate">
       <header class="masthead">
-        <h1 class="nameplate"><small>Rackforge Instruments</small><span>RF-D</span></h1>
+        {nameplate()}
         {program_panel}
         {voices}
         <p class="status" id="status" role="status">Connecting to RackForge…</p>
       </header>
       <div class="controls{' single' if not bank else ''}">{front}</div>
-      {rear}
+      {lower}
     </div>
   </main>
 </body>
@@ -375,12 +403,22 @@ def feedback_patch(parameter):
 
 
 def program_toolbar(surface, schema):
-    fields = json.dumps([{key: param[key] for key in ("id", "index", "kind")}
+    fields = json.dumps([{key: param[key] for key in ("id", "index", "kind", "missing_default") if key in param}
                          for param in program_parameters(schema)], ensure_ascii=False).replace("<", "\\u003c")
-    save_program = ('''<label class="program-name"><span>Program name</span>
-          <input id="program-name" maxlength="64" placeholder="Program name" required disabled>
-        </label>
-        <button type="submit" disabled>Save new</button>''' if surface == "play" else "")
+    save_button = ('<button type="button" id="program-save-open" aria-haspopup="dialog" disabled>'
+                   'Save as Program</button>' if surface == "play" else "")
+    save_dialog = ('''<dialog id="program-save-dialog" aria-labelledby="program-save-heading">
+        <div class="program-save-content">
+          <h2 id="program-save-heading">Save as Program</h2>
+          <label for="program-name">Program name</label>
+          <input id="program-name" type="text" maxlength="64" required autofocus>
+          <p id="program-save-status" role="status"></p>
+          <div class="program-save-actions">
+            <button type="button" id="program-save-cancel">Cancel</button>
+            <button type="button" id="program-save-confirm">Save</button>
+          </div>
+        </div>
+      </dialog>''' if surface == "play" else "")
     import_file = ('<label class="file-button">Import .rfd'
                    '<input type="file" id="rfd-import" accept=".rfd" disabled></label>'
                    if surface == "config" else "")
@@ -388,11 +426,12 @@ def program_toolbar(surface, schema):
       <h2 id="programs-heading">Programs</h2>
       <script id="program-fields" type="application/json">{fields}</script>
       <rf-program-select label="Programs"></rf-program-select>
-      <form id="program-actions">
-        {save_program}
+      <div id="program-actions">
+        {save_button}
         <button type="button" id="rfd-export" disabled>Export .rfd</button>
         {import_file}
-      </form>
+      </div>
+      {save_dialog}
       <p id="program-status" role="status"></p>
     </section>"""
 
@@ -412,7 +451,7 @@ def render_program_config(schema):
   <main class="instrument">
     <div class="faceplate">
       <header class="masthead">
-        <h1 class="nameplate"><small>Rackforge Instruments</small><span>RF-D</span></h1>
+        {nameplate()}
         {program_toolbar("config", schema)}
         <p class="status" id="status" role="status">Connecting to RackForge…</p>
       </header>

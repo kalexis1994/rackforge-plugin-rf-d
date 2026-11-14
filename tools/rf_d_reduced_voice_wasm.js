@@ -79,7 +79,7 @@ if (option === "--panel-state" || option === "--voice-state") {
     checkValues();
     if (option === "--voice-state" && panel.length > 11) {
         // The original voice used the same header with just the first eleven controls.
-        for (const count of [11, 26, 29, 35, 37, 39, 40, 42, 44, 48, 54].filter((size) => size < panel.length)) {
+        for (const count of [11, 26, 29, 35, 37, 39, 40, 42, 44, 48, 54, 55].filter((size) => size < panel.length)) {
             transfer().set(saved);
             // The previous output profile only stored HI or LO.
             if (count === 42) new DataView(transfer().buffer, transfer().byteOffset).setFloat64(4 + 41 * 8, 1, true);
@@ -126,7 +126,7 @@ if (option === "--panel-state" || option === "--voice-state") {
             throw new Error("Prepare lost the feedback connection");
         }
     }
-    const livePanel = panel.filter(({index}) => index >= 49);
+    const livePanel = panel.filter(({index}) => index >= 49 && index <= 55);
     const liveValues = livePanel.map(({index}) => wasm.rackforge_get_parameter(index));
     loadPreset("default");
     for (const {index, kind} of panel) {
@@ -176,7 +176,9 @@ for (let start = 0, event = 0; start < frames; start += blockSize) {
             continue;
         }
         midi.setUint32(count * 8, sample - start, true);
-        midi.setUint32(count * 8 + 4, status | note << 8 | value << 16 | 3 << 24, true);
+        const channelPressure = (status & 0xf0) === 0xd0;
+        midi.setUint32(count * 8 + 4,
+            status | note << 8 | (channelPressure ? 2 << 24 : value << 16 | 3 << 24), true);
         count++;
     }
     if (input) {

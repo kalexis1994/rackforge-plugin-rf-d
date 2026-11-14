@@ -127,6 +127,8 @@ pub struct Panel {
     pub keyboard: keyboard::Controls,
     #[cfg(pilot_voice_midi)]
     pub wheels: left_hand::Wheels,
+    #[cfg(pilot_voice_midi)]
+    pub expression: [f64; 2],
     #[cfg(pilot_voice_external)]
     pub external: external::Controls,
     #[cfg(pilot_voice_feedback)]
@@ -173,6 +175,8 @@ impl Default for Panel {
             keyboard: keyboard::Controls::default(),
             #[cfg(pilot_voice_midi)]
             wheels: left_hand::Wheels::default(),
+            #[cfg(pilot_voice_midi)]
+            expression: [0.; 2],
             #[cfg(pilot_voice_external)]
             external: external::Controls::default(),
             #[cfg(pilot_voice_feedback)]
@@ -245,6 +249,10 @@ pub struct Voice<const FACTOR: usize> {
     held: u64,
     #[cfg(pilot_voice_midi)]
     notes: midi::Notes,
+    #[cfg(pilot_voice_midi)]
+    velocity: u8,
+    #[cfg(pilot_voice_midi)]
+    pressure: u8,
     #[cfg(pilot_voice_poly)]
     poly_gate: Option<bool>,
     #[cfg(pilot_voice_filter)]
@@ -311,6 +319,10 @@ impl<const FACTOR: usize> Voice<FACTOR> {
             held: 0,
             #[cfg(pilot_voice_midi)]
             notes: midi::Notes::default(),
+            #[cfg(pilot_voice_midi)]
+            velocity: 127,
+            #[cfg(pilot_voice_midi)]
+            pressure: 0,
             #[cfg(pilot_voice_poly)]
             poly_gate: None,
             #[cfg(pilot_voice_filter)]
@@ -433,6 +445,15 @@ impl<const FACTOR: usize> Voice<FACTOR> {
             if !self.notes.apply(channel, action) {
                 return Err(Error::Input);
             }
+            if self.keys_down() {
+                [self.velocity, self.pressure] = self.notes.expression(self.notes.pressed.trailing_zeros() as u8);
+            } else {
+                // Keep the attack velocity through the release tail.
+                self.pressure = 0;
+            }
+            if matches!(action, midi::Action::ChannelPressure(_) | midi::Action::PolyPressure(..)) {
+                return Ok(());
+            }
             if matches!(action, midi::Action::AllSoundOff) && !self.contour_gate() {
                 self.contours.fill(contour::Contour::default());
                 return Ok(());
@@ -499,6 +520,21 @@ impl<const FACTOR: usize> Voice<FACTOR> {
             self.keyboard.set_bend(panel.wheels.pitch);
             self.modulation.set_wheel(panel.wheels.modulation);
         }
+        #[cfg(pilot_voice_midi)]
+        let control_inputs = {
+            let mut inputs = panel.control_inputs;
+            let [velocity_depth, pressure_depth_v] = panel.expression;
+            if velocity_depth > 0. {
+                inputs.loudness_v *= 1. - velocity_depth * (1. - f64::from(self.velocity) / 127.);
+            }
+            if pressure_depth_v > 0. {
+                let offset = pressure_depth_v * f64::from(self.pressure) / 127.;
+                inputs.filter_v = (inputs.filter_v + offset).min(2.);
+            }
+            inputs
+        };
+        #[cfg(all(pilot_voice_control_inputs, not(pilot_voice_midi)))]
+        let control_inputs = panel.control_inputs;
         #[cfg(pilot_voice_contours)]
         let settings = panel.contours;
         #[cfg(pilot_voice_contours)]
@@ -548,7 +584,7 @@ impl<const FACTOR: usize> Voice<FACTOR> {
             #[cfg(pilot_voice_performance)]
             let (key_cv, bend) = self.keyboard.tick(self.keys_down(), panel.keyboard);
             #[cfg(pilot_voice_control_inputs)]
-            let [pitch_cv, filter_cv, loudness_gain] = self.rear_cv.tick(panel.control_inputs);
+            let [pitch_cv, filter_cv, loudness_gain] = self.rear_cv.tick(control_inputs);
             #[cfg(pilot_voice_control_inputs)]
             let bend = bend + pitch_cv;
             #[cfg(pilot_oscillator_bank)]

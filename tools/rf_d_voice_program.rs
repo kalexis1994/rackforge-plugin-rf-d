@@ -36,11 +36,16 @@ fn controls(document: &ProgramDocument, mut candidate: Controls) -> Option<Contr
     }
     let payload = document.payload.as_object()?;
     let values = payload.get("parameters")?.as_object()?;
-    if payload.len() != 1 || values.len() != program_data::FIELDS.len() {
+    if payload.len() != 1 || values.keys().any(|name| {
+        !program_data::FIELDS.iter().any(|&(_, id, _)| id == name)
+    }) {
         return None;
     }
-    for &(index, name) in program_data::FIELDS {
-        let value = values.get(name)?.as_f64()?;
+    for &(index, name, missing_default) in program_data::FIELDS {
+        let value = match values.get(name) {
+            Some(value) => value.as_f64()?,
+            None => missing_default?,
+        };
         candidate.0[control_index(index, value)?] = value;
     }
     Some(candidate)
@@ -74,15 +79,21 @@ impl Library {
         let request: ProgramEditRequest = serde_json::from_slice(request).ok()?;
         request.validate().ok()?;
         if let Some(id) = request.program_id.as_deref() {
-            let document = self.0.get(id.strip_prefix(PREFIX)?)?;
-            return write(&envelope(document.clone())?, output);
+            let mut document = self.0.get(id.strip_prefix(PREFIX)?)?.clone();
+            let values = document.payload.get_mut("parameters")?.as_object_mut()?;
+            for &(_, name, missing_default) in program_data::FIELDS {
+                if let Some(value) = missing_default {
+                    values.entry(name).or_insert_with(|| json!(value));
+                }
+            }
+            return write(&envelope(document)?, output);
         }
         let id = (1..=MAX_PROGRAMS)
             .map(|slot| format!("user-{slot:02}"))
             .find(|id| !self.0.contains_key(id))?;
         let parameters = program_data::FIELDS
             .iter()
-            .map(|&(index, id)| read_parameter(index).map(|value| (id, value)))
+            .map(|&(index, id, _)| read_parameter(index).map(|value| (id, value)))
             .collect::<Option<BTreeMap<_, _>>>()?;
         let document = ProgramDocument {
             schema_version: 1,

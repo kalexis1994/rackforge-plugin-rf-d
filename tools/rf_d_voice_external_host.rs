@@ -95,7 +95,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                         source: MidiSourceKey::new(0),
                         packet: MidiPacket {
                             frame: (frame - first) as u32,
-                            length: 3,
+                            length: if data[0] & 0xf0 == 0xd0 { 2 } else { 3 },
                             data,
                             wide: None,
                         },

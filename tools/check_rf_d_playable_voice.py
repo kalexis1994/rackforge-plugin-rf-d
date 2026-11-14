@@ -22,7 +22,7 @@ from check_rf_d_voice_feedback import verify_feedback
 from check_rf_d_voice_output import verify_output
 from check_rf_d_voice_monitor import verify_monitor
 from check_rf_d_voice_control_inputs import loudness_table, verify_control_inputs
-from check_rf_d_voice_midi import HOST_SCORE, verify_midi
+from check_rf_d_voice_midi import HOST_SCORE, verify_expression, verify_midi
 from check_rf_d_voice_poly import verify_polyphony
 from check_rf_d_voice_presets import emit_program_table, prepare_catalog, verify_presets
 from rf_d_cutoff_calibration import calibrated_cutoff_table
@@ -144,6 +144,7 @@ def parameter_schema(bank, emphasis, modulation, performance, external, feedback
         assert left_hand
         extra = json.loads(SCHEMA.with_name("polyphony.json").read_text(encoding="utf8"))
         schema["parameters"].extend(extra["parameters"])
+    schema["parameters"].sort(key=lambda parameter: parameter["index"])
     parameters = {parameter["id"]: parameter for parameter in schema["parameters"]}
     schema["schema_version"] = 2
     schema["semantic_controls"] = [
@@ -451,9 +452,11 @@ def main(argv=None, *, inspect_audio=None, legacy_timbre=False, wide_pulse_duty=
             )
             modules["voice_programs"] = emit_program_table(programs)
         if midi:
-            controls = [(p["index"], p["id"]) for p in program_parameters(schema)]
-            program_data = "pub const FIELDS: &[(u32, &str)] = &[\n"
-            program_data += "".join(f'    ({index}, "{name}"),\n' for index, name in controls)
+            program_data = "pub const FIELDS: &[(u32, &str, Option<f64>)] = &[\n"
+            for field in program_parameters(schema):
+                default = field.get("missing_default")
+                fallback = "None" if default is None else f"Some({float(default)})"
+                program_data += f'    ({field["index"]}, "{field["id"]}", {fallback}),\n'
             program_data += "];\n"
             program_data += f'pub const CATALOG: &str = r#"{json.dumps(catalog, ensure_ascii=False, separators=(",", ":"))}"#;\n'
             program_data += f'pub const VERSION: &str = "{version}";\n'
@@ -543,6 +546,7 @@ def main(argv=None, *, inspect_audio=None, legacy_timbre=False, wide_pulse_duty=
                 verify_control_inputs(render, report, cutoff=resonance_cutoff)
             if midi:
                 verify_midi(render, report)
+                verify_expression(render, report)
                 verify_left_hand(render, report, cutoff=resonance_cutoff)
                 verify_polyphony(render, report)
             if factory:
@@ -586,7 +590,7 @@ def main(argv=None, *, inspect_audio=None, legacy_timbre=False, wide_pulse_duty=
                 archive.replace(artifact)
         report["passed"] = True
         if factory and not args.package:
-            write(ROOT / "evidence/rf_d_voice_development09.json", report)
+            write(ROOT / "evidence/rf_d_voice_development10.json", report)
         if args.package:
             print(f"{artifact}\n{report['archive_sha256']}")
         else:
@@ -599,7 +603,8 @@ def main(argv=None, *, inspect_audio=None, legacy_timbre=False, wide_pulse_duty=
         fields = ("audio", "oscillator_audio", "filter_audio", "modulation_audio", "keyboard_audio",
                   "external_audio", "feedback_audio", "output_audio", "monitor_audio",
                   "loudness_cv_table", "control_inputs_audio", "host_capture", "host_feedback", "host_monitor",
-                  "host_control_inputs", "midi_audio", "host_midi", "factory_audio", "host_factory",
+                  "host_control_inputs", "midi_audio", "keyboard_expression", "host_keyboard_expression",
+                  "host_midi", "factory_audio", "host_factory",
                   "node_128_ns", "host_stress", "left_hand_audio", "host_left_hand")
         print(json.dumps({key: report[key] for key in fields if key in report},
                          indent=2), flush=True)

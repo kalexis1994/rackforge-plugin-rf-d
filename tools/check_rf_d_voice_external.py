@@ -149,6 +149,11 @@ def verify_host_capture(execute, render, folder, package, report, feedback=False
         compare_lab_preset("default", [], "host_midi", independent=True, score=midi_score)
         for result in report["host_midi"][128]:
             assert result["deadline_misses"] == 0 and result["max_ns"] < 128e9 / RATE / 2, result
+        expression_score = [[960, 0x90, 57, 51], [1001, 0x91, 64, 110], [4401, 0xa0, 57, 75],
+                            [8033, 0xd1, 96, 0], [16501, 0xa0, 57, 0], [23003, 0xb1, 121, 0],
+                            [27001, 0x80, 57, 0], [29501, 0x81, 64, 0]]
+        compare_state("keyboard-expression", {55: 1, 56: 70, 57: 1.25},
+                      "host_keyboard_expression", score=expression_score)
     if factory_programs:
         verify_host_presets(execute, render, folder, probe, package, monitor_schema, factory_programs, report)
     report["host_capture_libraries"] = {library.name: sha(library) for library in (core, midi)}

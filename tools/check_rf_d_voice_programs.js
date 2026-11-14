@@ -59,10 +59,14 @@ voice.set(50, 71);
 voice.set(51, 1);
 voice.set(53, 1.25);
 voice.set(55, 3);
+voice.set(56, 43);
+voice.set(57, 0.82);
 const {document} = voice.read(voice.exchange("begin_edit", {schema_version: 1}));
 assert.equal(document.payload.parameters.cutoff, cutoff);
 assert.equal(document.payload.parameters.tune, -27.25);
 assert.equal(document.payload.parameters.output_jack, 2);
+assert.equal(document.payload.parameters.velocity_loudness, 43);
+assert.equal(document.payload.parameters.pressure_filter, 0.82);
 const live = [
   "external_overload", "tuner_a440", "pitch_cv", "filter_cv", "loudness_cv", "external_s_trigger",
   "pitch_wheel", "mod_wheel", "glide_pedal", "decay_pedal", "glide_pedal_resistance", "decay_pedal_resistance",
@@ -77,7 +81,8 @@ const edited = voice.read(voice.exchange("apply_edit", {
   schema_version: 1, document, field_id: "cutoff", value: {type: "integer", value: 4025},
 }));
 assert.equal(edited.document.payload.parameters.cutoff, 40.25);
-for (const changes of [{cutoff: 101}, {output_jack: 1.5}, {external_s_trigger: 1}, {cutoff: undefined}]) {
+for (const changes of [{cutoff: 101}, {output_jack: 1.5}, {external_s_trigger: 1}, {cutoff: undefined},
+  {pressure_filter: null}, {pressure_filter: 2.01}, {velocity_loudness: -1}]) {
   const invalid = {...document, payload: {parameters: {...document.payload.parameters, ...changes}}};
   assert.ok(voice.exchange("prepare_save", invalid) < 0);
   assert.equal(voice.get(0), cutoff);
@@ -87,12 +92,15 @@ document.name = "Oboe nocturno";
 const prepared = voice.read(voice.exchange("prepare_save", document));
 voice.set(0, 91);
 voice.set(45, -0.5);
+voice.set(56, 0);
+voice.set(57, 0);
 assert.equal(voice.exchange("preview", prepared), 0);
 assert.equal(voice.get(0), cutoff);
 assert.equal(voice.get(45), -0.5);
 assert.equal(voice.get(48), 1);
 assert.deepEqual([49, 50, 51, 53].map(voice.get), [1234, 71, 1, 1.25]);
 assert.equal(voice.get(55), 3);
+assert.deepEqual([voice.get(56), voice.get(57)], [43, 0.82]);
 assert.equal(voice.exchange("install", prepared), 0);
 assert.ok(voice.catalog().presets.some(({id, name, bank, editable}) =>
   id === prepared.preview_sound_id && name === document.name && bank === "user" && editable));
@@ -110,6 +118,22 @@ assert.equal(reopened.get(45), 0);
 assert.equal(reopened.get(48), 0);
 assert.deepEqual([49, 50, 51, 53].map(reopened.get), [8192, 0, 0, 0]);
 assert.equal(reopened.get(55), 0);
+
+const legacy = JSON.parse(JSON.stringify(prepared));
+legacy.document.id = "user-02";
+legacy.storage_path = "programs/user-02.rackforge-program.json";
+legacy.preview_sound_id = "custom.user-02";
+delete legacy.document.payload.parameters.velocity_loudness;
+delete legacy.document.payload.parameters.pressure_filter;
+assert.equal(reopened.exchange("install", legacy), 0);
+reopened.load(legacy.preview_sound_id);
+assert.deepEqual([reopened.get(56), reopened.get(57)], [0, 0]);
+const legacyDraft = reopened.read(reopened.exchange("begin_edit", {
+  schema_version: 1, program_id: legacy.preview_sound_id,
+})).document;
+assert.equal(legacyDraft.payload.parameters.velocity_loudness, 0);
+assert.equal(legacyDraft.payload.parameters.pressure_filter, 0);
+
 for (let slot = 2; slot <= 64; slot++) {
   const id = `user-${String(slot).padStart(2, "0")}`;
   const label = "Ó".repeat(61) + String(slot);

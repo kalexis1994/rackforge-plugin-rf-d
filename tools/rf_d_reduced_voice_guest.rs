@@ -116,6 +116,10 @@ const GLIDE_RESISTANCE_INDEX: u32 = DECAY_PEDAL_INDEX + 1;
 const DECAY_RESISTANCE_INDEX: u32 = GLIDE_RESISTANCE_INDEX + 1;
 #[cfg(pilot_voice_poly)]
 const VOICE_MODE_INDEX: u32 = DECAY_RESISTANCE_INDEX + 1;
+#[cfg(pilot_voice_midi)]
+const VELOCITY_LOUDNESS_INDEX: u32 = DECAY_RESISTANCE_INDEX + 1 + cfg!(pilot_voice_poly) as u32;
+#[cfg(pilot_voice_midi)]
+const PRESSURE_FILTER_INDEX: u32 = VELOCITY_LOUDNESS_INDEX + 1;
 #[cfg(pilot_oscillator_bank)]
 const REAR_END: usize = MONITOR_END + 4;
 #[cfg(pilot_voice_midi)]
@@ -123,10 +127,11 @@ const LEFT_HAND_DEFAULTS: &[f64] = &[
     8192., 0., 0., 0., 0., 0.,
     #[cfg(pilot_voice_poly)]
     0.,
+    0., 0.,
 ];
 #[cfg(pilot_oscillator_bank)]
 const CONTROL_COUNT: usize = if cfg!(pilot_voice_midi) {
-    REAR_END + LEFT_HAND_CONTROL_COUNT
+    REAR_END + LEFT_HAND_DEFAULTS.len()
 } else if cfg!(pilot_voice_control_inputs) {
     REAR_END
 } else if cfg!(pilot_voice_monitor) {
@@ -146,8 +151,6 @@ const CONTROL_COUNT: usize = if cfg!(pilot_voice_midi) {
 } else {
     OSC_END
 };
-#[cfg(pilot_oscillator_bank)]
-const LEFT_HAND_CONTROL_COUNT: usize = 6 + cfg!(pilot_voice_poly) as usize;
 #[cfg(pilot_oscillator_bank)]
 const DEFAULTS: [f64; CONTROL_COUNT] = {
     let mut values = [0.; CONTROL_COUNT];
@@ -200,6 +203,11 @@ impl Default for Controls {
 
 #[cfg(pilot_returns)]
 fn control_index(index: u32, value: f64) -> Option<usize> {
+    #[cfg(pilot_voice_midi)]
+    if matches!(index, VELOCITY_LOUDNESS_INDEX | PRESSURE_FILTER_INDEX) {
+        let maximum = if index == VELOCITY_LOUDNESS_INDEX { 100. } else { 2. };
+        return (0. ..=maximum).contains(&value).then_some(index as usize - 1);
+    }
     #[cfg(pilot_voice_poly)]
     if index == VOICE_MODE_INDEX {
         return ((0. ..=(voice::poly::MAX_VOICES - 1) as f64).contains(&value)
@@ -351,6 +359,11 @@ impl Controls {
                 pitch: self.0[PITCH_WHEEL_INDEX as usize - 1] as u16,
                 modulation: self.0[MOD_WHEEL_INDEX as usize - 1] as u8,
             },
+            #[cfg(pilot_voice_midi)]
+            expression: [
+                self.0[VELOCITY_LOUDNESS_INDEX as usize - 1] * 0.01,
+                self.0[PRESSURE_FILTER_INDEX as usize - 1],
+            ],
             #[cfg(pilot_voice_external)]
             external: voice::external::Controls {
                 enabled: self.0[KEYBOARD_END] == 1.,
@@ -581,11 +594,18 @@ impl Guest {
 
 fn note_event(event: &MidiEvent) -> Option<Event> {
     let [status, note, velocity] = event.data;
+    #[cfg(pilot_voice_midi)]
+    let channel = status & 0x0f;
+    #[cfg(pilot_voice_midi)]
+    if status & 0xf0 == 0xd0 {
+        return (event.length == 2 && note <= 127).then_some(Event {
+            offset: event.frame as usize,
+            message: Message::Midi(channel, voice::midi::Action::ChannelPressure(note)),
+        });
+    }
     if event.length != 3 {
         return None;
     }
-    #[cfg(pilot_voice_midi)]
-    let channel = status & 0x0f;
     #[cfg(pilot_voice_midi)]
     if note > 127 || velocity > 127 {
         return None;
@@ -598,7 +618,9 @@ fn note_event(event: &MidiEvent) -> Option<Event> {
         #[cfg(pilot_voice_midi)]
         (0x80, _, _) | (0x90, _, 0) => Message::Midi(channel, voice::midi::Action::NoteOff(note)),
         #[cfg(pilot_voice_midi)]
-        (0x90, _, _) => Message::Midi(channel, voice::midi::Action::NoteOn(note)),
+        (0x90, _, _) => Message::Midi(channel, voice::midi::Action::NoteOn(note, velocity)),
+        #[cfg(pilot_voice_midi)]
+        (0xa0, _, _) => Message::Midi(channel, voice::midi::Action::PolyPressure(note, velocity)),
         #[cfg(pilot_voice_midi)]
         (0xb0, 64, value) => Message::Midi(channel, voice::midi::Action::Sustain(value >= 64)),
         #[cfg(pilot_voice_modulation)]
@@ -675,6 +697,10 @@ impl Processor for Guest {
 
     #[cfg(pilot_returns)]
     fn get_parameter(&self, index: u32) -> Option<f64> {
+        #[cfg(pilot_voice_midi)]
+        if matches!(index, VELOCITY_LOUDNESS_INDEX | PRESSURE_FILTER_INDEX) {
+            return self.controls.0.get(index as usize - 1).copied();
+        }
         #[cfg(pilot_voice_poly)]
         if index == VOICE_MODE_INDEX {
             return self.controls.0.get(index as usize - 1).copied();
@@ -745,7 +771,9 @@ impl Processor for Guest {
         #[cfg(pilot_voice_midi)]
         let valid_length = valid_length || bytes.len() == 4 + REAR_END * 8;
         #[cfg(pilot_voice_poly)]
-        let valid_length = valid_length || bytes.len() == STATE_BYTES - 8;
+        let valid_length = valid_length
+            || bytes.len() == 4 + (REAR_END + 6) * 8
+            || bytes.len() == 4 + (REAR_END + 7) * 8;
         if !valid_length || &bytes[..4] != STATE_TAG {
             return false;
         }
@@ -825,7 +853,10 @@ impl Processor for Guest {
             };
             let mut candidate = Controls::default();
             #[cfg(pilot_voice_midi)]
-            candidate.0[REAR_END..].copy_from_slice(&self.controls.0[REAR_END..]);
+            {
+                let live = REAR_END..VELOCITY_LOUDNESS_INDEX as usize - 1;
+                candidate.0[live.clone()].copy_from_slice(&self.controls.0[live]);
+            }
             for &(index, value) in *parameters {
                 let Some(slot) = control_index(index, value) else {
                     return false;

@@ -125,13 +125,16 @@ RackForge carga cada programa por ID, guarda sus controles y
 vuelve a abrir el sonido desde esos bytes. La prueba compara
 los valores guardados y la salida por bits con WASM directo.
 Glide Lead, Feedback Bass e Interval Drone también se reabren
-a 480 y 4096 frames. El estado de sesión actual ocupa 444 bytes.
-Los estados anteriores de 436 bytes se abren en Mono.
-El banco **User** admite 64 programas y usa el modo **Voices** vigente.
+a 480 y 4096 frames. El estado de sesión actual ocupa 460 bytes.
+Los estados anteriores de 444 bytes conservan el modo de voz.
+Los de 436 bytes se abren en Mono. Ambos cargan las profundidades
+de expresión en cero.
+El banco **User** admite 64 programas, recuerda las profundidades de
+expresión y usa el modo **Voices** vigente.
 El identificador de cada uno de los 16 programas de fábrica anteriores
 sigue disponible. Los IDs de las pruebas antiguas siguen siendo
 utilizables por las herramientas de laboratorio.
-[Resultados](../evidence/rf_d_voice_development09.json).
+[Resultados](../evidence/rf_d_voice_development10.json).
 
 `--midi` reconstruye el perfil previo al banco de fábrica.
 La escucha y el balance de nivel en dispositivo quedan pendientes.

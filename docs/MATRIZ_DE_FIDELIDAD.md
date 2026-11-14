@@ -35,6 +35,7 @@ no significa identidad sonora con el hardware.
 | Controlador izquierdo de desarrollo | Ruedas Pitch/Mod y jacks J1402/J1401, contactos NC y pedales resistivos | [Panel, MIDI y reducción RC del pedal](PANEL_RF_D.md#pedales-glide-y-decay) | Taper de pedal físico, carga conjunta de la rama de descarga y ensayo con hardware |
 | Interpretación MIDI de desarrollo | Prioridad monofónica clásica, notas 0–127 y canales MIDI | [Teclas, pedal y corte](MIDI_TOCABLE.md) | Escucha y respuesta del controlador en dispositivo |
 | Programas de fábrica | 24 sonidos Mono y 16 Poly diseñados en la voz CA3046 de RF-D | [Catálogo, estado y contraste en RackForge](PROGRAMAS_RF_D.md) | Escucha y balance de nivel en dispositivo |
+| Expresión del teclado | Extensión de RackForge inspirada en dos conexiones de la reedición. MIDI controla los nodos de CV de Loudness y Filter | [Rutas, rangos y respuesta de Mono y Poly](PANEL_RF_D.md#expresión-del-teclado) | Curvas y trims de la reedición por medir |
 
 El [VCO1 nativo ensamblado](VCO1_STAMP_RESULTADOS.md) conserva 134
 incógnitas, dos 741 completos, BJT/JFET, Schmitt/reset y cargas del panel.

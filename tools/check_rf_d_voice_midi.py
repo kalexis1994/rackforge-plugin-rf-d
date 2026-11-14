@@ -18,6 +18,56 @@ def sustain(frame, value):
     return [frame, 0xb0, 64, value, True]
 
 
+def verify_expression(render, report):
+    tone = [change(0, 48), change(1, 0), change(6, 100)]
+    hard = [960, 0x90, 57, 127]
+    soft = [960, 0x90, 57, 32]
+    channel_pressure = [8201, 0xd0, 100, 0]
+    key_pressure = [8201, 0xa0, 57, 100]
+    window = slice(10400, 14000)
+    classic, _ = render([*tone, hard])
+    assert np.array_equal(classic, render([*tone, soft, channel_pressure])[0])
+    velocity = [*tone, change(56, 100)]
+    assert np.array_equal(classic, render([*velocity, hard])[0])
+    quiet, _ = render([*velocity, soft])
+    assert rms(quiet[window]) < 0.6 * rms(classic[window])
+
+    pressure = [*tone, change(57, 1.5), hard]
+    no_pressure, _ = render(pressure)
+    channel, _ = render([*pressure, channel_pressure])
+    assert np.array_equal(channel, render([*pressure, key_pressure])[0])
+    assert np.array_equal(channel[:8201], no_pressure[:8201])
+    assert rms(channel[window] - no_pressure[window]) > 0.01
+    for unrelated in ([8201, 0xd1, 100, 0], [8201, 0xa0, 58, 100]):
+        assert np.array_equal(no_pressure, render([*pressure, unrelated])[0])
+
+    poly = [*tone, change(55, 1), change(56, 75), change(57, 1.5),
+            soft, [1001, 0x91, 64, 127]]
+    poly_base, _ = render(poly)
+    poly_press, _ = render([*poly, channel_pressure])
+    assert np.array_equal(poly_press, render([*poly, key_pressure])[0])
+    assert rms(poly_press[window] - poly_base[window]) > 0.01
+    assert np.array_equal(poly_base, render([*poly, [8201, 0xa1, 57, 100]])[0])
+
+    # A released or stolen key must not carry its pressure into another voice.
+    release = [15001, 0x80, 57, 0]
+    next_key = [17001, 0x90, 59, 127]
+    assert np.array_equal(
+        render([*poly, release, next_key])[0],
+        render([*poly, release, [16501, 0xa0, 57, 127], next_key])[0],
+    )
+
+    score = [*poly, channel_pressure, [15001, 0xb0, 121, 0], release, next_key]
+    audio, _ = render(score)
+    assert all(np.array_equal(audio, render(score, block)[0]) for block in (127, 480, 4096))
+    reset, _ = render([*poly, channel_pressure, [15001, 0xd0, 0, 0], release, next_key])
+    assert np.array_equal(audio, reset)
+    report["keyboard_expression"] = dict(
+        vintage_bit_exact=True, soft_to_hard_ratio=rms(quiet[window]) / rms(classic[window]),
+        mono_channel_and_key_pressure=True, poly_voice_pressure_isolated=True, block_invariant=True,
+    )
+
+
 def verify_midi(render, report):
     tone = [change(0, 100), change(1, 0), change(2, 25), change(6, 100), change(13, 0)]
     attack, release = [960, 0x90, 57, 100], [30001, 0x80, 57, 0]

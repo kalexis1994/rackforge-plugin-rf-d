@@ -43,6 +43,8 @@ y 36° sobre el plano. La orientación y la basculación se aplican antes
 de proyectar y calcular los reflejos. El marco, el grano y la luz de
 fondo siguen esa dirección. Las demás piezas conservan sus relieves
 dibujados en SVG.
+Los knobs y selectores tienen tapas de metal cepillado con un reflejo
+fijo arriba a la izquierda. El indicador gira con el valor del control.
 En escritorio, las líneas se interrumpen bajo **Oscillator Modulation**
 entre Controllers y Oscillator Bank, y bajo **Filter Modulation** y
 **Keyboard Control** entre Mixer y Modifiers. En la vista compacta,
@@ -66,16 +68,21 @@ queda junto a **Noise Volume**.
 | Filter Contour y Loudness Contour, OP-EARLY pp. PDF 10–13 | Attack, Decay y Sustain por contorno. Decay de la mano izquierda controla la caída final compartida. |
 | Output, OP-EARLY pp. PDF 4–5 | Volumen principal, Main Output, A-440 y volumen de auriculares. El ciclo de vida de la instancia lo gobierna RackForge. |
 
-Las ruedas **Pitch** y **Mod** se pueden arrastrar en pantalla y se
-actualizan con Pitch Bend y CC1 de MIDI. Pitch conserva la posición
-al soltar, como el mando vintage con retén central. Doble clic o
-Escape la devuelve al centro. Las escalas usan las unidades del motor
-RF-D. La calibración respecto de la serigrafía vintage sigue en los
-modelos de cada bloque.
+Las ruedas **Pitch** y **Mod** reproducen el plástico marfil liso,
+la hendidura para el dedo y la ranura estrecha de las unidades de 1973
+y 1974. Al girarlas, la hendidura acompaña la curvatura de la rueda.
+Se pueden arrastrar en pantalla y se actualizan con Pitch Bend y CC1
+de MIDI. El **Pitch** virtual vuelve al centro al soltar el gesto,
+como la rueda con resorte de la reedición de 2022. **Mod** mantiene su
+posición. Los mensajes de Pitch Bend externos conservan el valor
+enviado por el controlador. [Moog sobre la rueda de la reedición](https://moogmusic-help.freshdesk.com/en/support/solutions/articles/69000840518-moog-minimoog-model-d-what-are-the-differences-between-the-2022-and-the-2016-minimoog-model-d-).
 
 ## Jacks y enlaces
 
-**Connections** permanece visible debajo de los mandos en **PLAY**.
+En **PLAY**, una vira de madera separa los mandos del bloque inferior.
+Las ruedas, los switches y los pedales quedan a la izquierda.
+**Connections** se mantiene visible sobre una placa de aluminio a la
+derecha. En pantallas angostas, la placa queda debajo de las ruedas.
 
 | Conexión histórica | Ruta en RF-D |
 | --- | --- |
@@ -83,7 +90,7 @@ modelos de cada bloque.
 | J4 HI, J5 LO y J7 Phones | Los tres jacks seleccionan qué señal va al bus principal estéreo de RackForge. La elección es excluyente. Main Output gobierna HI/LO y el volumen Phones actúa en su rama. |
 | J1 Oscillator, J2 Filter, J3 Loudness | Parámetros en voltios, ajustables desde el panel y enlazables por automatización o MIDI. |
 | SO-1 External S-Trigger | Entrada lógica que representa el cierre a masa y mantiene los dos contornos. Puede enlazarse a un pedal MIDI. |
-| J1402 Glide y J1401 Decay | Jacks S-260 con contacto normalmente cerrado y estado independiente del switch. Mantener pulsado el jack o enviar un pedal por MIDI abre el contacto. **Resistive pedals** expone las dos resistencias en MΩ. |
+| J1402 Glide y J1401 Decay | Jacks S-260 con contacto normalmente cerrado y estado independiente del switch. Mantener pulsado el jack o enviar un pedal por MIDI abre el contacto. **Resistive Pedals** mantiene ambas resistencias en MΩ visibles debajo de las ruedas. |
 | Dos tomas auxiliares de alimentación regulada ±10 V | Alimentan accesorios analógicos en el original y quedan fuera del ruteo de RackForge. |
 | Cable J5 LO → J6 External | En **Connections**, tocar ambos jacks o arrastrar de uno al otro. Tocar una punta conectada o soltarla fuera del destino desconecta el lazo. Escape cancela el gesto y recupera el cable conectado. El lazo cambia la fuente del preamplificador y External On conecta la rama al mixer. |
 
@@ -194,6 +201,43 @@ Esas conexiones pertenecen a la reedición y quedan fuera del perfil
 vintage de RF-D.
 [Manual de Moog, sección Top Patch Panel, pp. impresas 34–37](https://cdn.inmusicbrands.com/Moog/Model%20D/Minimoog_Model_D_Manual.pdf).
 
+### Expresión del teclado
+
+**Connections → Keyboard Expression** ofrece dos rutas opcionales que se
+guardan con el programa. El ejemplo *Enhancing a Keyboard Performance*
+del manual de la reedición (p. 40 impresa) conecta Velocity a Loudness y
+After Pressure a Filter. RF-D usa esos destinos mediante MIDI y los
+[nodos de CV ya modelados](ENTRADAS_CONTROL_TOCABLES.md).
+Los dos faders usan un cursor metálico sobre una ranura oscura. Admiten
+arrastre, ajuste por teclado y asignación MIDI desde el panel.
+
+- **Velocity → Loudness** ajusta entre 0 y 100 % cuánto puede reducirse el
+  voltaje de Loudness CV. Para una profundidad fraccional `d` y una
+  velocidad MIDI `v` de 1 a 127, el segundo VCA recibe
+  `V_loudness × (1 − d × (1 − v/127))`. La velocidad máxima conserva el
+  nivel del panel. La voz retiene la última velocidad en la cola.
+- **After Pressure → Filter** suma `V_depth × presión/127` al CV de corte,
+  hasta el límite de +2 V del modelo. La profundidad va de 0 a 2 V.
+  Se usa el mayor valor entre la presión de canal y la de la tecla.
+  La presión se libera con la tecla, incluso bajo sustain. En Mono sigue
+  la nota de prioridad baja. En Poly, el canal y la tecla se aplican por
+  voz. Reset Controllers limpia ambas fuentes de presión del canal.
+
+Ambas rutas reutilizan el suavizado de los CV de hasta 64 frames a 48 kHz.
+Las profundidades y la conversión lineal de MIDI a voltios son decisiones
+de RF-D. El manual describe el ruteo y el trim, y queda por medir su
+respuesta en una unidad física. **Glide Lead** y **Brass Section**
+demuestran esta extensión. El ajuste de fábrica **Model D Classic**
+arranca en Mono con ambas profundidades en cero.
+[Manual de Moog, p. 40](https://cdn.inmusicbrands.com/Moog/Model%20D/Minimoog_Model_D_Manual.pdf).
+
+La prueba con MIDI mide el cambio de nivel por velocidad, el filtro en
+respuesta a presión de canal y de tecla, y el aislamiento de voces.
+RackForge reproduce el mismo audio que WASM directo con bloques de
+128, 480 y 4096 frames. Los dos pases offline de RackForge a 128 frames
+tuvieron picos de 0,542 y 0,441 ms, con cero plazos perdidos.
+[Resultados](../evidence/rf_d_voice_development10.json).
+
 ### Pedales Glide y Decay
 
 La Fig. 9-12 de SVC-204D muestra J1402 y J1401 en el controlador
@@ -239,7 +283,8 @@ con cero plazos perdidos.
 La cabecera reúne la marca Rackforge Instruments, el modelo RF-D y
 los controles de programas. En **PLAY**, el selector nativo de RackForge
 muestra los bancos de fábrica **Mono** y **Poly** y el banco **User**.
-**Save new** guarda los ajustes actuales con un nombre.
+**Save as Program** abre una ventana para ingresar el nombre. **Save**
+guarda los ajustes actuales y **Cancel** cierra la ventana.
 **Export .rfd** descarga el sonido del panel. Para incorporar
 un archivo al banco **User**, abrir **CONFIG → Import .rfd**. Tras guardar
 o importar, RF-D selecciona el programa nuevo. La biblioteca
@@ -247,13 +292,15 @@ de usuario admite 64 programas y RackForge gestiona su almacenamiento.
 El guardado y la importación están disponibles en la instancia principal.
 
 `.rfd` es JSON UTF-8 con el identificador `rackforge.rf-d.program` en
-`format`, `version: 1`, `name` y un objeto `parameters` con los 43
+`format`, `version: 1`, `name` y un objeto `parameters` con los 45
 ajustes guardables por identificador público estable. Los valores usan
 las unidades del motor. Los parámetros booleanos se expresan como 0 o 1 y los
-selectores como sus códigos numéricos. La importación requiere el
-conjunto completo y verifica los rangos antes de abrir el borrador.
+selectores como sus códigos numéricos. La importación verifica los rangos
+antes de abrir el borrador. Los dos ajustes de expresión toman el valor
+cero cuando se abre un programa anterior que se guardó sin ellos.
 Los programas de usuario conservan los mandos de síntesis y salida,
-incluido el lazo LO → External. Los voltajes CV, S-Trigger, el medidor,
+el lazo LO → External y las profundidades de expresión. Los valores en
+vivo de los jacks CV, S-Trigger, el medidor,
 A-440, las ruedas, los pedales, los enlaces MIDI y el selector
 [Voices](POLIFONIA_RF_D.md) pertenecen a la interpretación o a la sesión.
 Los programas de fábrica eligen el modo de voz según el banco.

@@ -1,10 +1,14 @@
 (() => {
-  const form = document.getElementById("program-actions");
   const selector = document.querySelector(".programs rf-program-select");
-  const name = document.getElementById("program-name");
   const status = document.getElementById("program-status");
   const importFile = document.getElementById("rfd-import");
   const exportButton = document.getElementById("rfd-export");
+  const saveButton = document.getElementById("program-save-open");
+  const saveDialog = document.getElementById("program-save-dialog");
+  const saveName = document.getElementById("program-name");
+  const saveStatus = document.getElementById("program-save-status");
+  const saveCancel = document.getElementById("program-save-cancel");
+  const saveConfirm = document.getElementById("program-save-confirm");
   const fields = JSON.parse(document.getElementById("program-fields").textContent);
   const api = "rackforge.plugin.web@1";
   const format = "rackforge.rf-d.program";
@@ -33,9 +37,15 @@
 
   function refresh() {
     const disabled = busy || !context || !!context.program_draft;
+    const editingDisabled = disabled || !!context?.isolated;
     selector.toggleAttribute("disabled", disabled);
-    for (const field of form.querySelectorAll("button, input")) {
-      field.disabled = disabled || (context.isolated && field !== exportButton && field !== name);
+    exportButton.disabled = disabled;
+    if (importFile) importFile.disabled = editingDisabled;
+    if (saveButton) {
+      saveButton.disabled = editingDisabled;
+      saveName.readOnly = busy;
+      saveConfirm.disabled = editingDisabled;
+      saveCancel.disabled = busy;
     }
   }
 
@@ -60,17 +70,19 @@
     return trimmed;
   }
 
-  function run(action, allowIsolated = false) {
+  async function run(action, allowIsolated = false, feedback = status) {
     if (busy || !context || (context.isolated && !allowIsolated) || context.program_draft) return;
     busy = true;
     status.textContent = "";
     refresh();
-    void action().catch((error) => {
-      status.textContent = error.message;
-    }).finally(() => {
+    try {
+      await action();
+    } catch (error) {
+      feedback.textContent = error.message;
+    } finally {
       busy = false;
       refresh();
-    });
+    }
   }
 
   async function withNewDraft(action) {
@@ -114,14 +126,16 @@
     }
     if (file?.format !== format || file.version !== 1 || typeof file.name !== "string"
       || !file.parameters || Array.isArray(file.parameters) || typeof file.parameters !== "object"
-      || Object.keys(file.parameters).length !== fields.length) {
+      || Object.keys(file.parameters).some((key) => !fields.some(({id}) => id === key))) {
       throw new Error("This file is not an RF-D v1 program.");
     }
-    for (const {id, kind} of fields) {
-      const value = file.parameters[id];
+    const parameters = {};
+    for (const {id, kind, missing_default} of fields) {
+      const value = Object.hasOwn(file.parameters, id) ? file.parameters[id] : missing_default;
       if (!validValue(kind, value)) throw new Error(`Invalid program setting: ${id}.`);
+      parameters[id] = value;
     }
-    return {name: cleanName(file.name), parameters: file.parameters};
+    return {name: cleanName(file.name), parameters};
   }
 
   function validValue(kind, value) {
@@ -131,23 +145,39 @@
     return value >= kind.minimum && value <= kind.maximum;
   }
 
-  form.addEventListener("submit", (event) => {
+  saveButton?.addEventListener("click", () => {
+    saveName.value = "";
+    saveStatus.textContent = "";
+    saveDialog.showModal();
+  });
+  saveCancel?.addEventListener("click", () => saveDialog.close());
+  saveDialog?.addEventListener("close", () => saveButton.focus());
+  saveDialog?.addEventListener("cancel", (event) => {
+    if (busy) event.preventDefault();
+  });
+  saveName?.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" || event.isComposing) return;
     event.preventDefault();
-    if (!name) return;
-    run(async () => {
-      const programName = cleanName(name.value);
+    saveConfirm.click();
+  });
+  saveConfirm?.addEventListener("click", async () => {
+    let saved = false;
+    await run(async () => {
+      const programName = cleanName(saveName.value);
+      saveStatus.textContent = "Saving…";
       const draft = await withNewDraft(async ({draft_id}) => {
         await request("plugin.set_program_name", {draft_id, name: programName});
         await waitForDraft((document, updated) => updated.dirty && document.name === programName);
       });
       status.textContent = await activateSaved(draft, `Saved “${programName}”.`);
-      name.value = "";
-    });
+      saved = true;
+    }, false, saveStatus);
+    if (saved) saveDialog.close();
   });
 
   exportButton.addEventListener("click", () => run(async () => {
     const selected = context.instance.sounds?.find((sound) => sound.id === context.instance.selected_sound_id);
-    const programName = cleanName(name?.value || selected?.name || "RF-D Program");
+    const programName = cleanName(selected?.name || "RF-D Program");
     const snapshot = await request("plugin.parameters");
     const byIndex = new Map(snapshot.values.map(({index, value}) => [index, value]));
     const parameters = Object.fromEntries(fields.map(({id, index}) => [id, byIndex.get(index)]));

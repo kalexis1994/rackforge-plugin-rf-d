@@ -7,6 +7,7 @@
   // Use RackForge's long-press interval and travel tolerance for touch gestures.
   const longPressMs = 560;
   const touchTolerance = 10;
+  const pitchCenter = 8192;
   let sequence = 0;
   let frame = 0;
   let connected = false;
@@ -74,14 +75,20 @@
       const min = rotaryScale(input, Number(input.min));
       const max = rotaryScale(input, Number(input.max));
       const fraction = (rotaryScale(input, current) - min) / (max - min);
-      if (wheel) label.style.setProperty("--wheel-offset", (32 - 64 * fraction) + "px");
-      else label.style.setProperty("--rotation", (-135 + 270 * fraction) + "deg");
+      if (wheel) {
+        const angle = (0.5 - fraction) * 2.5;
+        const y = 58 + 47 * Math.sin(angle);
+        const x = 23.25 + 9.75 * Math.pow((y - 58) / 49, 2);
+        control.notch.setAttribute("transform", `translate(${x.toFixed(2)} ${y.toFixed(2)}) scale(1 ${Math.cos(angle).toFixed(2)})`);
+        control.notch.removeAttribute("visibility");
+      } else label.style.setProperty("--rotation", (-135 + 270 * fraction) + "deg");
     }
+    if (control.fader) label.style.setProperty("--travel", (100 * (current - input.min) / (input.max - input.min)) + "%");
   }
 
   function formatWheel(wheel, value) {
     if (wheel === "mod_wheel") return `${Math.round(100 * value / 127)} %`;
-    const bend = (value - 8192) / (value < 8192 ? 8192 : 8191);
+    const bend = (value - pitchCenter) / (value < pitchCenter ? pitchCenter : 8191);
     return `${(6 * bend).toFixed(1)} st`;
   }
 
@@ -115,17 +122,19 @@
         if (control.queued === undefined) paint(control, control.canonical);
       }
       if (control.queued !== undefined) {
-        if (control.input.tagName === "BUTTON") flushControl(index, control);
+        if (control.input.tagName === "BUTTON" || control.immediate) flushControl(index, control);
         else schedule();
       }
     });
   }
 
-  function queue(control, value) {
+  function queue(control, value, immediate = false) {
     if (!connected) return;
     control.queued = value;
+    control.immediate = immediate;
     paint(control, value);
-    schedule();
+    if (immediate) flushControl(Number(control.input.dataset.index), control);
+    else schedule();
   }
 
   function bindPedal(index, control) {
@@ -197,12 +206,47 @@
     if (!frame) frame = window.requestAnimationFrame(flush);
   }
 
+  function bindPitchKeys(control) {
+    const {input} = control;
+    const directions = {ArrowLeft: -1, ArrowRight: 1, ArrowDown: -1, ArrowUp: 1, PageDown: -4, PageUp: 4};
+    const keys = new Set();
+    const center = () => queue(control, pitchCenter, true);
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        keys.clear();
+        const drag = control.drag;
+        control.drag = undefined;
+        if (drag && input.hasPointerCapture(drag.id)) input.releasePointerCapture(drag.id);
+        center();
+        return;
+      }
+      if (!Object.hasOwn(directions, event.key) && event.key !== "Home" && event.key !== "End") return;
+      event.preventDefault();
+      keys.add(event.key);
+      const value = event.key === "Home" ? 0 : event.key === "End" ? 16383
+        : Math.max(0, Math.min(16383, readValue(input) + 683 * directions[event.key]));
+      queue(control, value, true);
+    });
+    input.addEventListener("keyup", (event) => {
+      if (keys.delete(event.key) && !keys.size) center();
+    });
+    const releaseKeys = () => {
+      if (keys.size) center();
+      keys.clear();
+    };
+    input.addEventListener("blur", releaseKeys);
+    window.addEventListener("blur", releaseKeys);
+    input.addEventListener("dblclick", center);
+  }
+
   for (const input of document.querySelectorAll("[data-index]")) {
     const index = Number(input.dataset.index);
     const label = input.closest(".control");
     const choices = input.dataset.choices ? JSON.parse(input.dataset.choices) : undefined;
     const routes = label.querySelectorAll("[data-choice]");
-    const control = {input, label, choices, routes, canonical: readValue(input)};
+    const control = {input, label, choices, routes, canonical: readValue(input),
+      notch: label.querySelector("[data-wheel-notch]"), fader: label.querySelector(".fader-travel")};
     controls.set(index, control);
     paint(control, control.canonical);
     if (input.tagName === "METER") continue;
@@ -211,14 +255,8 @@
       continue;
     }
     input.addEventListener("input", () => queue(control, readValue(input)));
-    if (input.dataset.wheel === "pitch_wheel") {
-      input.addEventListener("keydown", (event) => {
-        if (event.key !== "Escape") return;
-        event.preventDefault();
-        queue(control, 8192);
-      });
-      input.addEventListener("dblclick", () => queue(control, 8192));
-    }
+    const pitch = input.dataset.wheel === "pitch_wheel";
+    if (pitch) bindPitchKeys(control);
     for (const route of routes) {
       route.addEventListener("click", () => queue(control, Number(route.dataset.choice)));
       route.addEventListener("keydown", (event) => {
@@ -232,7 +270,13 @@
         next.click();
       });
     }
-    if (!label.classList.contains("rotary")) continue;
+    if (!label.classList.contains("rotary") && !control.fader) continue;
+    function moveFader(x) {
+      const track = control.fader.getBoundingClientRect();
+      const fraction = Math.max(0, Math.min(1, (x - track.left) / track.width));
+      input.value = Number(input.min) + fraction * (input.max - input.min);
+      input.dispatchEvent(new Event("input"));
+    }
     // Chromium's range thumb also responds to native touch events.
     input.addEventListener("touchstart", (event) => event.preventDefault(), {passive: false});
     input.addEventListener("pointerdown", (event) => {
@@ -241,6 +285,7 @@
       input.focus();
       input.setPointerCapture(event.pointerId);
       control.drag = {...startGesture(event), value: rotaryScale(input, readValue(input))};
+      if (control.fader && control.drag.active) moveFader(event.clientX);
     });
     input.addEventListener("pointermove", (event) => {
       const drag = control.drag;
@@ -249,18 +294,34 @@
         if (!beginDrag(drag, event)) return;
         drag.active = true;
       }
+      if (control.fader) {
+        moveFader(event.clientX);
+        return;
+      }
       const min = rotaryScale(input, Number(input.min));
       const max = rotaryScale(input, Number(input.max));
       const distance = input.dataset.wheel ? 96 : 144;
       const next = Math.max(min, Math.min(max, drag.value + (drag.y - event.clientY) * (max - min) / distance));
       input.value = input.dataset.scale === "log" ? Math.exp(next) : next;
+      if (pitch) drag.changed ||= input.valueAsNumber !== drag.value;
       input.dispatchEvent(new Event("input"));
     });
-    input.addEventListener("lostpointercapture", (event) => {
-      if (control.drag?.id !== event.pointerId) return;
+    function endDrag(event) {
+      const drag = control.drag;
+      if (!drag || (event.type !== "blur" && drag.id !== event.pointerId)) return;
       control.drag = undefined;
-      if (!control.waiting && control.queued === undefined) paint(control, control.canonical);
+      if (pitch && drag.changed) queue(control, pitchCenter, true);
+      else if (!control.waiting && control.queued === undefined) paint(control, control.canonical);
+    }
+    input.addEventListener("pointerup", (event) => {
+      const drag = control.drag;
+      if (control.fader && drag?.id === event.pointerId && !drag.active
+          && event.timeStamp - drag.time < longPressMs) moveFader(event.clientX);
+      endDrag(event);
     });
+    input.addEventListener("pointercancel", endDrag);
+    input.addEventListener("lostpointercapture", endDrag);
+    if (pitch) window.addEventListener("blur", endDrag);
   }
 
   const meters = new Set(
