@@ -12,134 +12,15 @@ permissions:
 
 concurrency:
   group: rf-d-package-${{ github.ref }}
-  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
-
-env:
-  RACKFORGE_REF: 7cb77d591f555b5242d0e47271edc9c66a3edbb7
-  RUST_VERSION: 1.98.0
-  CARGO_INCREMENTAL: "0"
+  cancel-in-progress: ${{ github.ref_type != 'tag' }}
 
 jobs:
-  rfplugin:
-    name: Portable .rfplugin
-    runs-on: ubuntu-24.04
-    timeout-minutes: 45
-    outputs:
-      version: ${{ steps.version.outputs.value }}
-      artifact: ${{ steps.version.outputs.artifact }}
-    steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-        with:
-          persist-credentials: false
-      - name: Read release version
-        id: version
-        run: |
-          version="$(cat VERSION)"
-          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
-            echo "Invalid RF-D version in VERSION" >&2
-            exit 1
-          fi
-          if [[ "$GITHUB_REF_TYPE" == tag && "$GITHUB_REF_NAME" != "v$version" ]]; then
-            echo "Tag $GITHUB_REF_NAME does not match VERSION ($version)" >&2
-            exit 1
-          fi
-          echo "value=$version" >> "$GITHUB_OUTPUT"
-          echo "artifact=RF-D-$version-$GITHUB_SHA" >> "$GITHUB_OUTPUT"
-      - name: Check out the pinned RackForge SDK and host tools
-        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-        with:
-          repository: kalexis1994/rackforge
-          ref: ${{ env.RACKFORGE_REF }}
-          path: .rackforge
-          persist-credentials: false
-      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
-        with:
-          python-version: "3.12.10"
-      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
-        with:
-          node-version: "24"
-      - name: Install build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends libasound2-dev libudev-dev pkg-config
-          rustup toolchain install "$RUST_VERSION" --profile minimal --target wasm32-unknown-unknown
-          rustup default "$RUST_VERSION"
-          python -m pip install -r requirements-lab.txt
-          archive="$RUNNER_TEMP/binaryen-version_132-x86_64-linux.tar.gz"
-          curl --fail --silent --show-error --location --retry 3 \
-            'https://github.com/WebAssembly/binaryen/releases/download/version_132/binaryen-version_132-x86_64-linux.tar.gz' \
-            --output "$archive"
-          echo "195ddc94f9bc89f45abdabb0b9eea86023d727ba90eac8b35b80f2544fc30572  $archive" | sha256sum -c -
-          tar -xzf "$archive" -C "$RUNNER_TEMP"
-          echo "RF_D_WASM_OPT=$RUNNER_TEMP/binaryen-version_132/bin/wasm-opt" >> "$GITHUB_ENV"
-      - name: Cache Cargo dependencies
-        id: host-cache
-        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
-        with:
-          path: |
-            ~/.cargo/registry
-            .rackforge/target
-          key: ${{ runner.os }}-${{ runner.arch }}-rf-d-${{ env.RUST_VERSION }}-${{ env.RACKFORGE_REF }}
-      - name: Verify the build entry point
-        run: python -B tools/check_rf_d_playable_voice.py --help
-      - name: Build RackForge packager and validation host
-        working-directory: .rackforge
-        run: cargo build --locked --release -p rackforge-core -p rackforge-store
-      - name: Save the compiled RackForge tools
-        if: steps.host-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5
-        with:
-          path: |
-            ~/.cargo/registry
-            .rackforge/target
-          key: ${{ steps.host-cache.outputs.cache-primary-key }}
-      - name: Build and validate RF-D
-        env:
-          VERSION: ${{ steps.version.outputs.value }}
-          RACKFORGE_ROOT: ${{ github.workspace }}/.rackforge
-        run: |
-          python -B -u tools/check_rf_d_playable_voice.py --package "$VERSION" --ci-thread-cpu
-          mv "artifacts/rf-d-voice-$VERSION.rfplugin" artifacts/RF-D.rfplugin
-          cd artifacts
-          sha256sum RF-D.rfplugin > RF-D.rfplugin.sha256
-      - name: Upload validated package
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        with:
-          name: ${{ steps.version.outputs.artifact }}
-          path: |
-            artifacts/RF-D.rfplugin
-            artifacts/RF-D.rfplugin.sha256
-          if-no-files-found: error
-          retention-days: 30
-          compression-level: 0
+  validate:
+    if: github.ref_type != 'tag'
+    uses: ./.github/workflows/package.yml
 
   release:
-    name: Publish GitHub release
-    if: startsWith(github.ref, 'refs/tags/')
-    needs: rfplugin
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    if: github.ref_type == 'tag'
     permissions:
       contents: write
-    steps:
-      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
-        with:
-          name: ${{ needs.rfplugin.outputs.artifact }}
-          path: release
-      - name: Verify release checksum
-        working-directory: release
-        run: sha256sum --check RF-D.rfplugin.sha256
-      - name: Publish release assets
-        env:
-          GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ needs.rfplugin.outputs.version }}
-        run: |
-          assets=(release/RF-D.rfplugin release/RF-D.rfplugin.sha256)
-          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            gh release upload "$GITHUB_REF_NAME" "${assets[@]}" --clobber --repo "$GITHUB_REPOSITORY"
-          else
-            flags=()
-            if [[ "$VERSION" == *-* ]]; then flags+=(--prerelease); fi
-            gh release create "$GITHUB_REF_NAME" "${assets[@]}" --repo "$GITHUB_REPOSITORY" \
-              --verify-tag --title "RF-D v$VERSION" --generate-notes "${flags[@]}"
-          fi
+    uses: ./.github/workflows/package.yml
