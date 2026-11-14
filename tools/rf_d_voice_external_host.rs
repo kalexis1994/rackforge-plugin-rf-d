@@ -12,11 +12,40 @@ use std::{
     error::Error,
     io::{BufWriter, Write},
     path::Path,
+    time::Duration,
 };
+
+#[cfg(target_os = "linux")]
+fn thread_cpu_time() -> Duration {
+    use std::ffi::{c_int, c_long};
+
+    #[repr(C)]
+    struct Timespec {
+        seconds: c_long,
+        nanoseconds: c_long,
+    }
+
+    unsafe extern "C" {
+        fn clock_gettime(clock: c_int, time: *mut Timespec) -> c_int;
+    }
+
+    const CLOCK_THREAD_CPUTIME_ID: c_int = 3;
+    let mut time = Timespec { seconds: 0, nanoseconds: 0 };
+    // The pointer refers to an initialized, writable Linux timespec.
+    let status = unsafe { clock_gettime(CLOCK_THREAD_CPUTIME_ID, &mut time) };
+    assert_eq!(status, 0, "{}", std::io::Error::last_os_error());
+    Duration::new(time.seconds as u64, time.nanoseconds as u32)
+}
+
+#[cfg(not(target_os = "linux"))]
+fn thread_cpu_time() -> Duration {
+    unreachable!("thread CPU timing requires Linux")
+}
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<_> = std::env::args_os().collect();
     assert!(matches!(args.len(), 6..=9));
+    let measure_cpu = std::env::var_os("RF_D_HOST_THREAD_CPU").is_some();
     let package = PluginPackage::open(Path::new(&args[1]))?;
     let plugin =
         unsafe { LoadedPlugin::load(&package, None, &BTreeMap::new(), Some(Path::new(&args[2])))? };
@@ -82,10 +111,13 @@ fn main() -> Result<(), Box<dyn Error>> {
             2,
         )?;
         let telemetry = RenderTelemetry::new(MAX_RENDER_SLOTS);
+        // Use the calling thread for all render work so its CPU clock covers the entire block.
         let mut pool = RenderPool::with_workers(0, telemetry.clone());
         let mut layers = ControlLayers::default();
         let mut output = vec![0.; 2 * capacity];
         let mut events = events.iter().peekable();
+        let mut cpu_max_ns = 0;
+        let mut cpu_deadline_misses = 0;
         for (block, samples) in capture.chunks(2 * capacity).enumerate() {
             let first = block * capacity;
             let frames = samples.len() / 2;
@@ -105,11 +137,13 @@ fn main() -> Result<(), Box<dyn Error>> {
                 );
             }
             let output = &mut output[..2 * frames];
+            let deadline_ns = frames as u64 * 1_000_000_000 / 48000;
+            let cpu_start = measure_cpu.then(thread_cpu_time);
             rack.render(
                 &mut pool,
                 &telemetry,
                 frames as u32,
-                frames as u64 * 1_000_000_000 / 48000,
+                deadline_ns,
                 Some(RackCapture {
                     samples,
                     channels: 2,
@@ -117,6 +151,11 @@ fn main() -> Result<(), Box<dyn Error>> {
                 }),
                 output,
             )?;
+            if let Some(start) = cpu_start {
+                let cpu_ns = (thread_cpu_time() - start).as_nanos() as u64;
+                cpu_max_ns = cpu_max_ns.max(cpu_ns);
+                cpu_deadline_misses += u64::from(cpu_ns > deadline_ns);
+            }
             for sample in output {
                 writer.write_all(&sample.to_le_bytes())?;
             }
@@ -130,6 +169,9 @@ fn main() -> Result<(), Box<dyn Error>> {
             measured.deadline_misses,
             measured.slot_faults.iter().sum::<u64>()
         );
+        if measure_cpu {
+            eprintln!("RF_D_EXT_CPU,{},{cpu_max_ns},{cpu_deadline_misses}", inputs[1]);
+        }
         assert_eq!(rack.take_dropped_events(), 0);
     }
     writer.flush()?;

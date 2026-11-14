@@ -5,6 +5,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -395,7 +396,11 @@ def main(argv=None, *, inspect_audio=None, legacy_timbre=False, wide_pulse_duty=
     profiles.add_argument("--control-inputs", action="store_true", help="select the rear-jack development profile")
     profiles.add_argument("--midi", action="store_true", help="select the MIDI development profile")
     parser.add_argument("--package", metavar="VERSION", help="export one .rfplugin for the selected profile")
+    parser.add_argument("--ci-thread-cpu", action="store_true",
+                        help="check the offline Linux RackForge render budget with the render thread's CPU clock")
     args = parser.parse_args(argv)
+    if args.ci_thread_cpu and sys.platform != "linux":
+        parser.error("--ci-thread-cpu requires Linux")
     if inspect_audio is not None and args.package:
         parser.error("audio inspection uses the temporary WASM component")
     if args.package and not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?", args.package):
@@ -442,8 +447,13 @@ def main(argv=None, *, inspect_audio=None, legacy_timbre=False, wide_pulse_duty=
     if os.name == "nt":
         env["PATH"] = "C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + env["PATH"]
 
-    def execute(*args, timeout=120):
-        run = subprocess.run(list(map(str, args)), cwd=ROOT, env=env, capture_output=True, timeout=timeout)
+    env.pop("RF_D_HOST_THREAD_CPU", None)
+
+    def execute(*command, timeout=120):
+        command_env = env
+        if args.ci_thread_cpu and Path(command[0]).name == "external-rack":
+            command_env = dict(env, RF_D_HOST_THREAD_CPU="1")
+        run = subprocess.run(list(map(str, command)), cwd=ROOT, env=command_env, capture_output=True, timeout=timeout)
         assert run.returncode == 0, run.stderr.decode(errors="replace") + run.stdout.decode(errors="replace")
         return run.stdout, run.stderr
 
@@ -587,7 +597,8 @@ def main(argv=None, *, inspect_audio=None, legacy_timbre=False, wide_pulse_duty=
             if external:
                 verify_host_capture(execute, render, folder, host_package, report, feedback,
                                     schema if monitor else None, control_inputs, HOST_SCORE if midi else None,
-                                    {name: programs[name] for name in factory_programs}, host=HOST)
+                                    {name: programs[name] for name in factory_programs}, host=HOST,
+                                    thread_cpu=args.ci_thread_cpu)
             report["host_stress"] = {}
             preset = ("feedback_bass" if factory else "loop_drive" if feedback
                       else "wheel_motion" if modulation else "resonant_bass" if emphasis
@@ -611,6 +622,17 @@ def main(argv=None, *, inspect_audio=None, legacy_timbre=False, wide_pulse_duty=
             write(ROOT / "evidence/rf_d_voice_development10.json", report)
         if args.package:
             print(f"{artifact}\n{report['archive_sha256']}")
+            if args.ci_thread_cpu:
+                timing_results = [result for key in ("host_monitor", "host_control_inputs", "host_midi",
+                                                     "host_left_hand", "host_keyboard_expression")
+                                  for result in report.get(key, {}).get(128, ())]
+                for preset in report.get("host_factory", {}).values():
+                    timing_results.extend(preset["catalog_128_timing"])
+                    timing_results.extend(preset["restored_128_timing"])
+                if timing_results:
+                    print("RackForge 128-frame maxima (ns): "
+                          f"thread CPU {max(result['cpu_max_ns'] for result in timing_results)}, "
+                          f"wall time {max(result['max_ns'] for result in timing_results)}")
         else:
             print("WASM and RackForge checks passed with no archive")
         result_keys = ("factory_audio", "midi_audio", "control_inputs_audio", "monitor_audio", "output_audio", "feedback_audio", "external_audio", "keyboard_audio", "modulation_audio", "filter_audio",

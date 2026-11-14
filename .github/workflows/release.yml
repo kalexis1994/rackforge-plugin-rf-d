@@ -98,7 +98,7 @@ jobs:
           VERSION: ${{ steps.version.outputs.value }}
           RACKFORGE_ROOT: ${{ github.workspace }}/.rackforge
         run: |
-          python -B -u tools/check_rf_d_playable_voice.py --package "$VERSION"
+          python -B -u tools/check_rf_d_playable_voice.py --package "$VERSION" --ci-thread-cpu
           mv "artifacts/rf-d-voice-$VERSION.rfplugin" artifacts/RF-D.rfplugin
           cd artifacts
           sha256sum RF-D.rfplugin > RF-D.rfplugin.sha256

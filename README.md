@@ -38,6 +38,9 @@ de una revisión fija de RackForge. Para publicar, actualizá `VERSION`
 y subí el tag correspondiente, por ejemplo `v0.8.7`. El workflow
 publica `RF-D.rfplugin` junto con su SHA-256 después de instalar el paquete
 en un store temporal y verificar el audio y los programas.
+En CI, el margen de 1,333 ms a 128 frames se comprueba con el reloj de
+CPU del hilo de render. El workflow también informa el pico de tiempo
+de pared. La comprobación local sigue usando tiempo de pared.
 El espectro H128 admitido del VCO (CV de −1,6 V, BUS de 0 V) se
 distribuye como coeficientes en `plugin/voice/oscillator-h128.json`.
 

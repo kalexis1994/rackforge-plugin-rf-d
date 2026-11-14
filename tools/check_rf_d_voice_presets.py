@@ -8,6 +8,7 @@ import numpy as np
 
 from check_rf_d_playable_filter import change, peak_frequency, rms
 from rf_d_playable_build import ROOT, emit, sha
+from rf_d_voice_host_timing import host_timing, require_realtime
 
 CATALOG_PATH = ROOT / "plugin/voice/presets.json"
 FEATURES = {"oscillators", "filter", "modulation", "external", "feedback", "factory"}
@@ -159,7 +160,7 @@ def verify_presets(render, programs, factory, report):
     report["factory_catalog_sha256"] = sha(CATALOG_PATH)
 
 
-def verify_host_presets(execute, render, folder, probe, package, schema, programs, report):
+def verify_host_presets(execute, render, folder, probe, package, schema, programs, report, *, thread_cpu=False):
     samples = np.zeros(43200, dtype="<f4")
     capture = folder / "factory-capture.f32"
     capture.write_bytes(samples.tobytes())
@@ -173,25 +174,29 @@ def verify_host_presets(execute, render, folder, probe, package, schema, program
         raw, logs = execute(probe, package, folder / "state", capture, block, name, *state_args)
         audio = np.frombuffer(raw, dtype="<f4").reshape(2, len(samples), 2)
         assert np.array_equal(audio, np.broadcast_to(expected[None, :, None], audio.shape)), (name, block)
-        rows = [line.split(",")[1:] for line in logs.decode().splitlines() if line.startswith("RF_D_EXT,")]
-        assert [int(row[0]) for row in rows] == [2, 3]
-        for _, count, maximum, misses, faults in rows:
-            assert int(count) == (len(samples) + block - 1) // block and int(misses) == int(faults) == 0, (name, rows)
-            if block == 128:
-                assert int(maximum) < (block / 48000.) * 0.5e9, (name, rows)
-        return [int(row[2]) for row in rows]
+        timing = host_timing(logs, block, len(samples), thread_cpu)
+        try:
+            require_realtime(timing, block, thread_cpu)
+        except AssertionError as failure:
+            raise AssertionError((name, block, timing)) from failure
+        return timing
 
     for name, controls in programs.items():
         score = factory_score(name, controls[mode] > 0)
         events.write_bytes(b"".join(frame.to_bytes(4, "little") + bytes(message) for frame, *message in score))
         expected, _ = render(score, samples=samples, preset=name)
-        catalog_max = compare(name, 128, expected, "-", events, state)
+        catalog_timing = compare(name, 128, expected, "-", events, state)
         values = [controls.get(param["index"], param["kind"]["default"]) for param in writable]
         assert state.read_bytes() == b"RFDC" + np.asarray(values, dtype="<f8").tobytes(), name
-        restore_max = compare(name, 128, expected, state, events)
-        results[name] = dict(state_bytes=state.stat().st_size, state_sha256=sha(state), catalog_128_max_ns=catalog_max,
-                             restored_128_max_ns=restore_max)
+        restore_timing = compare(name, 128, expected, state, events)
+        entry = results[name] = dict(
+            state_bytes=state.stat().st_size, state_sha256=sha(state),
+            catalog_128_max_ns=[result["max_ns"] for result in catalog_timing],
+            restored_128_max_ns=[result["max_ns"] for result in restore_timing])
+        if thread_cpu:
+            entry.update(catalog_128_timing=catalog_timing, restored_128_timing=restore_timing)
         if name in ("glide_lead", "feedback_bass", "interval_drone"):
-            results[name]["restored_larger_blocks_max_ns"] = {
-                block: compare(name, block, expected, state, events) for block in (480, 4096)
+            entry["restored_larger_blocks_max_ns"] = {
+                block: [result["max_ns"] for result in compare(name, block, expected, state, events)]
+                for block in (480, 4096)
             }

@@ -7,6 +7,7 @@ import numpy as np
 
 from check_rf_d_playable_filter import change, rms
 from rf_d_playable_build import COMPILER, HOST, ROOT, sha
+from rf_d_voice_host_timing import host_timing, require_realtime
 from check_rf_d_voice_presets import verify_host_presets
 
 RATE = 48000
@@ -73,7 +74,8 @@ def verify_external(render, report):
 
 
 def verify_host_capture(execute, render, folder, package, report, feedback=False, monitor_schema=None,
-                        control_inputs=False, midi_score=None, factory_programs=None, *, host=HOST):
+                        control_inputs=False, midi_score=None, factory_programs=None, *,
+                        host=HOST, thread_cpu=False):
     deps = host / "target/release/deps"
     core = host / "target/release/librackforge_core.rlib"
     candidates = list(deps.glob("librackforge_midi_api-*.rlib"))
@@ -117,12 +119,7 @@ def verify_host_capture(execute, render, folder, package, report, feedback=False
             stereo = np.frombuffer(raw, dtype="<f4").reshape(2, len(samples), 2)
             for audio, target in zip(stereo, (expected, missing)):
                 assert np.array_equal(audio[:, 0], target) and np.array_equal(audio[:, 1], target), (preset, block)
-            measured = [line.split(",")[1:] for line in logs.decode().splitlines() if line.startswith("RF_D_EXT,")]
-            assert [int(row[0]) for row in measured] == [2, 3]
-            assert all(int(count) == (len(samples) + block - 1) // block and int(faults) == 0
-                       for _, count, _, _, faults in measured)
-            capture[block] = [{"capture_input": int(channel), "blocks": int(count), "max_ns": int(maximum),
-                               "deadline_misses": int(misses)} for channel, count, maximum, misses, _ in measured]
+            capture[block] = host_timing(logs, block, len(samples), thread_cpu)
 
     def fixture_state(name, overrides):
         values = [overrides.get(parameter["index"], parameter["kind"]["default"])
@@ -147,8 +144,7 @@ def verify_host_capture(execute, render, folder, package, report, feedback=False
         state = fixture_state(name, overrides)
         controls = [change(index, value) for index, value in overrides.items()]
         compare(name, controls, receipt, independent=True, state=state, score=score)
-        for result in report[receipt][128]:
-            assert result["deadline_misses"] == 0 and result["max_ns"] < 128e9 / RATE / 2, result
+        require_realtime(report[receipt][128], 128, thread_cpu)
 
     if monitor_schema is not None:
         compare_state("monitor", {41: 0., 42: 2., 43: 65., 44: 1.}, "host_monitor")
@@ -161,13 +157,13 @@ def verify_host_capture(execute, render, folder, package, report, feedback=False
                       "host_left_hand", score=wheel_score)
     if midi_score is not None:
         compare_lab_preset("default", [], "host_midi", independent=True, score=midi_score)
-        for result in report["host_midi"][128]:
-            assert result["deadline_misses"] == 0 and result["max_ns"] < 128e9 / RATE / 2, result
+        require_realtime(report["host_midi"][128], 128, thread_cpu)
         expression_score = [[960, 0x90, 57, 51], [1001, 0x91, 64, 110], [4401, 0xa0, 57, 75],
                             [8033, 0xd1, 96, 0], [16501, 0xa0, 57, 0], [23003, 0xb1, 121, 0],
                             [27001, 0x80, 57, 0], [29501, 0x81, 64, 0]]
         compare_state("keyboard-expression", {55: 1, 56: 70, 57: 1.25},
                       "host_keyboard_expression", score=expression_score)
     if factory_programs:
-        verify_host_presets(execute, render, folder, probe, package, monitor_schema, factory_programs, report)
+        verify_host_presets(execute, render, folder, probe, package, monitor_schema, factory_programs, report,
+                            thread_cpu=thread_cpu)
     report["host_capture_libraries"] = {library.name: sha(library) for library in (core, midi)}
