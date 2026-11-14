@@ -13,16 +13,26 @@ const MAX_HOST_FRAMES: usize = if cfg!(pilot_host_blocks) {
     voice::MAX_BLOCK
 };
 const MAX_INPUT_CHANNELS: usize = cfg!(pilot_voice_external) as usize;
+#[cfg(pilot_voice_programs)]
+const TRANSFER_BYTES: usize = crate::program::TRANSFER_BYTES;
+#[cfg(not(pilot_voice_programs))]
+const TRANSFER_BYTES: usize = 4096;
 
 #[derive(Default)]
 struct Guest {
     voice: Option<Voice<PILOT_FACTOR>>,
+    #[cfg(pilot_voice_poly)]
+    poly: Option<voice::poly::Polyphony<PILOT_FACTOR>>,
+    #[cfg(pilot_voice_poly)]
+    voice_mode: usize,
     #[cfg(pilot_returns)]
     controls: Controls,
     #[cfg(pilot_returns)]
     master: f64,
     #[cfg(pilot_voice_external)]
     overload: f64,
+    #[cfg(pilot_voice_programs)]
+    programs: crate::program::Library,
 }
 
 #[cfg(all(pilot_returns, not(pilot_voice_contours)))]
@@ -92,9 +102,33 @@ const FILTER_CV_INDEX: u32 = PITCH_CV_INDEX + 1;
 const LOUDNESS_CV_INDEX: u32 = FILTER_CV_INDEX + 1;
 #[cfg(pilot_voice_control_inputs)]
 const S_TRIGGER_INDEX: u32 = LOUDNESS_CV_INDEX + 1;
+#[cfg(pilot_voice_midi)]
+const PITCH_WHEEL_INDEX: u32 = S_TRIGGER_INDEX + 1;
+#[cfg(pilot_voice_midi)]
+const MOD_WHEEL_INDEX: u32 = PITCH_WHEEL_INDEX + 1;
+#[cfg(pilot_voice_midi)]
+const GLIDE_PEDAL_INDEX: u32 = MOD_WHEEL_INDEX + 1;
+#[cfg(pilot_voice_midi)]
+const DECAY_PEDAL_INDEX: u32 = GLIDE_PEDAL_INDEX + 1;
+#[cfg(pilot_voice_midi)]
+const GLIDE_RESISTANCE_INDEX: u32 = DECAY_PEDAL_INDEX + 1;
+#[cfg(pilot_voice_midi)]
+const DECAY_RESISTANCE_INDEX: u32 = GLIDE_RESISTANCE_INDEX + 1;
+#[cfg(pilot_voice_poly)]
+const VOICE_MODE_INDEX: u32 = DECAY_RESISTANCE_INDEX + 1;
 #[cfg(pilot_oscillator_bank)]
-const CONTROL_COUNT: usize = if cfg!(pilot_voice_control_inputs) {
-    MONITOR_END + 4
+const REAR_END: usize = MONITOR_END + 4;
+#[cfg(pilot_voice_midi)]
+const LEFT_HAND_DEFAULTS: &[f64] = &[
+    8192., 0., 0., 0., 0., 0.,
+    #[cfg(pilot_voice_poly)]
+    0.,
+];
+#[cfg(pilot_oscillator_bank)]
+const CONTROL_COUNT: usize = if cfg!(pilot_voice_midi) {
+    REAR_END + LEFT_HAND_CONTROL_COUNT
+} else if cfg!(pilot_voice_control_inputs) {
+    REAR_END
 } else if cfg!(pilot_voice_monitor) {
     MONITOR_END
 } else if cfg!(pilot_voice_output) {
@@ -113,10 +147,18 @@ const CONTROL_COUNT: usize = if cfg!(pilot_voice_control_inputs) {
     OSC_END
 };
 #[cfg(pilot_oscillator_bank)]
+const LEFT_HAND_CONTROL_COUNT: usize = 6 + cfg!(pilot_voice_poly) as usize;
+#[cfg(pilot_oscillator_bank)]
 const DEFAULTS: [f64; CONTROL_COUNT] = {
     let mut values = [0.; CONTROL_COUNT];
     let mut index = 0;
     while index < values.len() {
+        #[cfg(pilot_voice_midi)]
+        if index >= REAR_END {
+            values[index] = LEFT_HAND_DEFAULTS[index - REAR_END];
+            index += 1;
+            continue;
+        }
         values[index] = if index < VOICE_DEFAULTS.len() {
             VOICE_DEFAULTS[index]
         } else if index < OSC_END {
@@ -158,6 +200,23 @@ impl Default for Controls {
 
 #[cfg(pilot_returns)]
 fn control_index(index: u32, value: f64) -> Option<usize> {
+    #[cfg(pilot_voice_poly)]
+    if index == VOICE_MODE_INDEX {
+        return ((0. ..=(voice::poly::MAX_VOICES - 1) as f64).contains(&value)
+            && value.fract() == 0.).then_some(index as usize - 1);
+    }
+    #[cfg(pilot_voice_midi)]
+    if (PITCH_WHEEL_INDEX..=DECAY_RESISTANCE_INDEX).contains(&index) {
+        let valid = match index {
+            PITCH_WHEEL_INDEX => (0. ..=16383.).contains(&value) && value.fract() == 0.,
+            MOD_WHEEL_INDEX => (0. ..=127.).contains(&value) && value.fract() == 0.,
+            GLIDE_PEDAL_INDEX | DECAY_PEDAL_INDEX => value == 0. || value == 1.,
+            GLIDE_RESISTANCE_INDEX => (0. ..=10.).contains(&value),
+            DECAY_RESISTANCE_INDEX => (0. ..=2.5).contains(&value),
+            _ => false,
+        };
+        return valid.then_some(index as usize - 1);
+    }
     #[cfg(pilot_voice_control_inputs)]
     if (PITCH_CV_INDEX..=S_TRIGGER_INDEX).contains(&index) {
         let valid = match index {
@@ -251,6 +310,21 @@ impl Controls {
     fn voice(self) -> voice::Panel {
         let [cutoff, amount, mix, _, volume_a, volume_d, volume_s, filter_a, filter_d, filter_s, decay] =
             self.0[..VOICE_DEFAULTS.len()].try_into().unwrap();
+        #[cfg(pilot_voice_performance)]
+        let glide = self.0[MOD_END] == 1.;
+        let decay_on = decay >= 0.5;
+        #[cfg(pilot_voice_performance)]
+        let glide_time = self.0[MOD_END + 1];
+        #[cfg(pilot_voice_midi)]
+        let (glide, glide_time) = voice::left_hand::glide(
+            glide, glide_time, self.0[GLIDE_PEDAL_INDEX as usize - 1] == 1.,
+            self.0[GLIDE_RESISTANCE_INDEX as usize - 1],
+        );
+        #[cfg(pilot_voice_midi)]
+        let decay_pedal = voice::left_hand::DecayPedal::new(
+            decay_on, self.0[DECAY_PEDAL_INDEX as usize - 1] == 1.,
+            self.0[DECAY_RESISTANCE_INDEX as usize - 1],
+        );
         voice::Panel {
             #[cfg(not(pilot_oscillator_bank))]
             mixer_gain: mix * 0.01,
@@ -271,9 +345,11 @@ impl Controls {
                 filter: self.0[34] == 1.,
             },
             #[cfg(pilot_voice_performance)]
-            keyboard: voice::keyboard::Controls {
-                glide: self.0[MOD_END] == 1.,
-                time_ms: self.0[MOD_END + 1],
+            keyboard: voice::keyboard::Controls { glide, time_ms: glide_time },
+            #[cfg(pilot_voice_midi)]
+            wheels: voice::left_hand::Wheels {
+                pitch: self.0[PITCH_WHEEL_INDEX as usize - 1] as u16,
+                modulation: self.0[MOD_WHEEL_INDEX as usize - 1] as u8,
             },
             #[cfg(pilot_voice_external)]
             external: voice::external::Controls {
@@ -317,8 +393,22 @@ impl Controls {
                 },
                 cutoff: cutoff * 0.01,
                 amount: amount * 0.01,
-                decay_on: decay >= 0.5,
+                decay_on,
+                #[cfg(pilot_voice_midi)]
+                decay_pedal,
             },
+        }
+    }
+
+    #[cfg(pilot_voice_midi)]
+    fn apply_wheel_message(&mut self, message: Message) {
+        match message {
+            Message::PitchBend(value) => self.0[PITCH_WHEEL_INDEX as usize - 1] = f64::from(value),
+            Message::ModWheel(value) => self.0[MOD_WHEEL_INDEX as usize - 1] = f64::from(value),
+            Message::Midi(_, voice::midi::Action::ResetControllers) => {
+                self.0[REAR_END..REAR_END + 2].copy_from_slice(&LEFT_HAND_DEFAULTS[..2]);
+            }
+            _ => {}
         }
     }
 
@@ -372,20 +462,30 @@ impl Guest {
             }
         }
         let mut controls = self.controls;
+        #[cfg(pilot_voice_midi)]
+        let mut messages = midi.iter().peekable();
         let mut panels = [voice::Panel::default(); voice::MAX_BLOCK];
         let mut masters = [0.; voice::MAX_BLOCK];
+        #[cfg(pilot_voice_poly)]
+        let mut modes = [0; voice::MAX_BLOCK];
         for (_offset, ((panel, master), changes)) in panels[..frames.len()]
             .iter_mut()
             .zip(&mut masters)
             .zip(changes)
             .enumerate()
         {
+            #[cfg(pilot_voice_midi)]
+            while let Some(event) = messages.next_if(|event| event.offset == _offset) {
+                controls.apply_wheel_message(event.message);
+            }
             for (value, change) in controls.0.iter_mut().zip(changes) {
                 if let Some(change) = change {
                     *value = change;
                 }
             }
             *panel = controls.voice();
+            #[cfg(pilot_voice_poly)]
+            { modes[_offset] = controls.0[VOICE_MODE_INDEX as usize - 1] as usize; }
             #[cfg(pilot_voice_external)]
             if let Some(sample) = input.get(_offset).filter(|sample| sample.is_finite()) {
                 panel.external.input = f64::from(sample.clamp(-1., 1.));
@@ -398,11 +498,14 @@ impl Guest {
                 panel.feedback.output_level = self.master;
             }
         }
+        #[cfg(not(pilot_voice_poly))]
         self.voice
             .as_mut()
             .expect("prepared pilot")
             .render_panel(midi, frames, &panels[..frames.len()])
             .expect("pilot render");
+        #[cfg(pilot_voice_poly)]
+        self.render_modes(midi, frames, &panels[..frames.len()], &modes[..frames.len()]);
         self.controls = controls;
         #[cfg(pilot_voice_external)]
         if let Some(frame) = frames.last() {
@@ -437,6 +540,41 @@ impl Guest {
                 }
             };
             stereo.fill(sample);
+        }
+    }
+
+    #[cfg(pilot_voice_poly)]
+    fn render_modes(&mut self, midi: &[Event], frames: &mut [Frame], panels: &[voice::Panel], modes: &[usize]) {
+        // Keep the original mono block path as the common case.
+        if self.voice_mode == 0 && modes.iter().all(|&mode| mode == 0) {
+            self.voice.as_mut().unwrap().render_panel(midi, frames, panels).expect("pilot render");
+            return;
+        }
+        let mut events = midi.iter().peekable();
+        for (offset, ((frame, &panel), &mode)) in frames.iter_mut().zip(panels).zip(modes).enumerate() {
+            if mode != self.voice_mode {
+                if mode == 0 {
+                    self.voice = Some(Voice::new());
+                } else {
+                    self.poly = Some(voice::poly::Polyphony::new());
+                }
+                self.voice_mode = mode;
+            }
+            let incoming = std::iter::from_fn(|| events.next_if(|event| event.offset == offset));
+            if mode == 0 {
+                *frame = self.voice.as_mut().unwrap().render_frame(incoming.map(|event| event.message), panel)
+                    .expect("pilot mono frame");
+            } else {
+                let poly = self.poly.as_mut().unwrap();
+                if panel.control_inputs.trigger_closed {
+                    poly.trigger(true);
+                }
+                for event in incoming {
+                    poly.event(event.message, mode + 1);
+                }
+                poly.trigger(panel.control_inputs.trigger_closed);
+                *frame = poly.next(mode + 1, panel);
+            }
         }
     }
 }
@@ -506,6 +644,11 @@ impl Processor for Guest {
 
     fn reset(&mut self) {
         self.voice = Some(Voice::new());
+        #[cfg(pilot_voice_poly)]
+        {
+            self.poly = None;
+            self.voice_mode = 0;
+        }
         #[cfg(pilot_voice_external)]
         {
             self.overload = 0.;
@@ -532,6 +675,14 @@ impl Processor for Guest {
 
     #[cfg(pilot_returns)]
     fn get_parameter(&self, index: u32) -> Option<f64> {
+        #[cfg(pilot_voice_poly)]
+        if index == VOICE_MODE_INDEX {
+            return self.controls.0.get(index as usize - 1).copied();
+        }
+        #[cfg(pilot_voice_midi)]
+        if (PITCH_WHEEL_INDEX..=DECAY_RESISTANCE_INDEX).contains(&index) {
+            return self.controls.0.get(index as usize - 1).copied();
+        }
         #[cfg(pilot_voice_control_inputs)]
         if (PITCH_CV_INDEX..=S_TRIGGER_INDEX).contains(&index) {
             return self.controls.0.get(index as usize - 1).copied();
@@ -591,6 +742,10 @@ impl Processor for Guest {
         let valid_length = valid_length || bytes.len() == 4 + (FEEDBACK_END + 2) * 8;
         #[cfg(pilot_voice_control_inputs)]
         let valid_length = valid_length || bytes.len() == 4 + MONITOR_END * 8;
+        #[cfg(pilot_voice_midi)]
+        let valid_length = valid_length || bytes.len() == 4 + REAR_END * 8;
+        #[cfg(pilot_voice_poly)]
+        let valid_length = valid_length || bytes.len() == STATE_BYTES - 8;
         if !valid_length || &bytes[..4] != STATE_TAG {
             return false;
         }
@@ -609,13 +764,68 @@ impl Processor for Guest {
         true
     }
 
+    #[cfg(pilot_voice_programs)]
+    fn write_program_catalog(&mut self, destination: &mut [u8]) -> Option<usize> {
+        self.programs.catalog(destination)
+    }
+
+    #[cfg(pilot_voice_programs)]
+    fn program_editing_capabilities(&self) -> u32 {
+        use rackforge_plugin_sdk::{PROGRAM_EDIT_BASIC, PROGRAM_EDIT_DECLARATIVE, PROGRAM_EDIT_PREVIEW};
+        PROGRAM_EDIT_BASIC | PROGRAM_EDIT_DECLARATIVE | PROGRAM_EDIT_PREVIEW
+    }
+
+    #[cfg(pilot_voice_programs)]
+    fn begin_program_edit(&mut self, request: &[u8], destination: &mut [u8]) -> Option<usize> {
+        self.programs.begin(|index| self.get_parameter(index), request, destination)
+    }
+
+    #[cfg(pilot_voice_programs)]
+    fn prepare_program_save(&mut self, document: &[u8], destination: &mut [u8]) -> Option<usize> {
+        self.programs.prepare(document, destination)
+    }
+
+    #[cfg(pilot_voice_programs)]
+    fn install_program(&mut self, prepared: &[u8]) -> bool {
+        self.programs.install(prepared)
+    }
+
+    #[cfg(pilot_voice_programs)]
+    fn preview_program(&mut self, prepared: &[u8]) -> bool {
+        let Some(controls) = crate::program::Library::preview(prepared, self.controls) else {
+            return false;
+        };
+        self.controls = controls;
+        true
+    }
+
+    #[cfg(pilot_voice_programs)]
+    fn program_editor_view(&mut self, document: &[u8], destination: &mut [u8]) -> Option<usize> {
+        crate::program::Library::editor(document, destination)
+    }
+
+    #[cfg(pilot_voice_programs)]
+    fn apply_program_edit(&mut self, request: &[u8], destination: &mut [u8]) -> Option<usize> {
+        self.programs.edit(request, destination)
+    }
+
     fn load_preset(&mut self, id: &str) -> bool {
+        #[cfg(pilot_voice_programs)]
+        if id.starts_with("custom.") {
+            let Some(controls) = self.programs.recall(id, self.controls) else {
+                return false;
+            };
+            self.controls = controls;
+            return true;
+        }
         #[cfg(pilot_oscillator_bank)]
         {
             let Some((_, parameters)) = crate::voice_programs::PRESETS.iter().find(|(name, _)| *name == id) else {
                 return false;
             };
             let mut candidate = Controls::default();
+            #[cfg(pilot_voice_midi)]
+            candidate.0[REAR_END..].copy_from_slice(&self.controls.0[REAR_END..]);
             for &(index, value) in *parameters {
                 let Some(slot) = control_index(index, value) else {
                     return false;
@@ -720,5 +930,5 @@ export_processor!(
     max_output_channels = 2,
     max_midi_events = 256,
     max_parameter_events = 256,
-    max_transfer_bytes = 4096
+    max_transfer_bytes = TRANSFER_BYTES
 );

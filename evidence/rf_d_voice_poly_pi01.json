@@ -1,0 +1,565 @@
+{
+  "date": "2026-11-14",
+  "hardware": "Raspberry Pi 4 Model B Rev 1.4",
+  "rate_hz": 48000,
+  "frames": 128,
+  "period_us": 2666.667,
+  "target_us": 1333.333,
+  "tested_component_sha256": "cf5173521b3e415752c123c32e26643d18b2fd29e31f7ef10c7603b434bce624",
+  "notes": "Both passes ran with the existing RackForge audio service active on Scarlett Solo USB. RackForge stress approximate mean derives from realtime_ratio rounded to three decimals. The raw WASM block timings include OS scheduling.",
+  "live_device_probe": {
+    "active_profile": {
+      "device": "Scarlett Solo USB",
+      "format": "S32_LE",
+      "rate_hz": 48000,
+      "period_frames": 128,
+      "buffer_frames": 384
+    },
+    "isolated_device": "bcm2835 Headphones",
+    "result": "The separate RackForge process could not open an S16_LE stream because this build renders S32_LE only. No measurements through an audio device for the candidate.",
+    "active_service_changed": false
+  },
+  "mono_bit_exact_to_0_8_3": {
+    "interval_drone": "2fda1fedff3f77ee63111d3c388e0beef4039ce47a4c45b44f95e7b370d5b629",
+    "wheel_vibrato": "b1810fa5f914e13d60f944f1f35c9c42230d90f0d4e65ee4d1950b68ed6ddfea",
+    "feedback_bass": "94130d4b3d07bee3d13f2e34c364618292d545fa4bcf543a1f2709f8ce8304f3"
+  },
+  "passes": [
+    {
+      "cpu_affinity": "unrestricted",
+      "rackforge_stress_blocks_per_program": 1600,
+      "wasm_skipped_startup_blocks": 8,
+      "rackforge_stress": {
+        "1": {
+          "interval_drone": {
+            "ratio": 0.3,
+            "peak": 0.161791,
+            "approximate_mean_us": 800
+          },
+          "copper_sidebands": {
+            "ratio": 0.271,
+            "peak": 0.248275,
+            "approximate_mean_us": 722.7
+          },
+          "feedback_bass": {
+            "ratio": 0.268,
+            "peak": 0.145298,
+            "approximate_mean_us": 714.7
+          }
+        },
+        "2": {
+          "interval_drone": {
+            "ratio": 0.501,
+            "peak": 0.208209,
+            "approximate_mean_us": 1336
+          },
+          "copper_sidebands": {
+            "ratio": 0.532,
+            "peak": 0.32833,
+            "approximate_mean_us": 1418.7
+          },
+          "feedback_bass": {
+            "ratio": 0.491,
+            "peak": 0.167269,
+            "approximate_mean_us": 1309.3
+          }
+        },
+        "3": {
+          "interval_drone": {
+            "ratio": 0.913,
+            "peak": 0.231969,
+            "approximate_mean_us": 2434.7
+          },
+          "copper_sidebands": {
+            "ratio": 0.778,
+            "peak": 0.373668,
+            "approximate_mean_us": 2074.7
+          },
+          "feedback_bass": {
+            "ratio": 0.794,
+            "peak": 0.173194,
+            "approximate_mean_us": 2117.3
+          }
+        },
+        "4": {
+          "interval_drone": {
+            "ratio": 0.972,
+            "peak": 0.250057,
+            "approximate_mean_us": 2592
+          },
+          "copper_sidebands": {
+            "ratio": 1.076,
+            "peak": 0.399026,
+            "approximate_mean_us": 2869.3
+          },
+          "feedback_bass": {
+            "ratio": 0.953,
+            "peak": 0.184709,
+            "approximate_mean_us": 2541.3
+          }
+        },
+        "5": {
+          "interval_drone": {
+            "ratio": 1.189,
+            "peak": 0.239265,
+            "approximate_mean_us": 3170.7
+          },
+          "copper_sidebands": {
+            "ratio": 1.184,
+            "peak": 0.411627,
+            "approximate_mean_us": 3157.3
+          },
+          "feedback_bass": {
+            "ratio": 1.186,
+            "peak": 0.185312,
+            "approximate_mean_us": 3162.7
+          }
+        },
+        "6": {
+          "interval_drone": {
+            "ratio": 1.383,
+            "peak": 0.232633,
+            "approximate_mean_us": 3688
+          },
+          "copper_sidebands": {
+            "ratio": 1.403,
+            "peak": 0.42338,
+            "approximate_mean_us": 3741.3
+          },
+          "feedback_bass": {
+            "ratio": 1.322,
+            "peak": 0.194843,
+            "approximate_mean_us": 3525.3
+          }
+        }
+      },
+      "wasm_block_times": {
+        "1": {
+          "interval_drone": {
+            "blocks": 817,
+            "median_us": 784.751,
+            "p99_us": 2515.623,
+            "max_us": 4036.348,
+            "over_margin": 83,
+            "over_period": 3
+          },
+          "copper_sidebands": {
+            "blocks": 817,
+            "median_us": 1005.638,
+            "p99_us": 2427.549,
+            "max_us": 3907.091,
+            "over_margin": 137,
+            "over_period": 4
+          },
+          "feedback_bass": {
+            "blocks": 817,
+            "median_us": 798.084,
+            "p99_us": 2220.33,
+            "max_us": 2763.584,
+            "over_margin": 84,
+            "over_period": 2
+          }
+        },
+        "2": {
+          "interval_drone": {
+            "blocks": 817,
+            "median_us": 1260.284,
+            "p99_us": 1918.406,
+            "max_us": 2932.396,
+            "over_margin": 367,
+            "over_period": 2
+          },
+          "copper_sidebands": {
+            "blocks": 817,
+            "median_us": 1771.649,
+            "p99_us": 2973.081,
+            "max_us": 4512.546,
+            "over_margin": 776,
+            "over_period": 33
+          },
+          "feedback_bass": {
+            "blocks": 817,
+            "median_us": 1368.208,
+            "p99_us": 2148.218,
+            "max_us": 2768.583,
+            "over_margin": 441,
+            "over_period": 2
+          }
+        },
+        "3": {
+          "interval_drone": {
+            "blocks": 817,
+            "median_us": 2043.868,
+            "p99_us": 3347.207,
+            "max_us": 5050.726,
+            "over_margin": 817,
+            "over_period": 38
+          },
+          "copper_sidebands": {
+            "blocks": 817,
+            "median_us": 2208.367,
+            "p99_us": 3981.941,
+            "max_us": 8657.393,
+            "over_margin": 817,
+            "over_period": 94
+          },
+          "feedback_bass": {
+            "blocks": 817,
+            "median_us": 2024.017,
+            "p99_us": 3036.098,
+            "max_us": 3995.96,
+            "over_margin": 816,
+            "over_period": 54
+          }
+        },
+        "4": {
+          "interval_drone": {
+            "blocks": 817,
+            "median_us": 2632.158,
+            "p99_us": 4267.216,
+            "max_us": 6996.41,
+            "over_margin": 817,
+            "over_period": 357
+          },
+          "copper_sidebands": {
+            "blocks": 817,
+            "median_us": 2701.139,
+            "p99_us": 4362.845,
+            "max_us": 5121.3,
+            "over_margin": 817,
+            "over_period": 524
+          },
+          "feedback_bass": {
+            "blocks": 817,
+            "median_us": 2487.604,
+            "p99_us": 3808.572,
+            "max_us": 5179.799,
+            "over_margin": 817,
+            "over_period": 186
+          }
+        },
+        "5": {
+          "interval_drone": {
+            "blocks": 817,
+            "median_us": 3031.654,
+            "p99_us": 4553.564,
+            "max_us": 5471.018,
+            "over_margin": 817,
+            "over_period": 754
+          },
+          "copper_sidebands": {
+            "blocks": 817,
+            "median_us": 3299.818,
+            "p99_us": 5246.465,
+            "max_us": 5972.68,
+            "over_margin": 817,
+            "over_period": 817
+          },
+          "feedback_bass": {
+            "blocks": 817,
+            "median_us": 3090.357,
+            "p99_us": 4933.634,
+            "max_us": 8596.967,
+            "over_margin": 817,
+            "over_period": 812
+          }
+        },
+        "6": {
+          "interval_drone": {
+            "blocks": 817,
+            "median_us": 3391.169,
+            "p99_us": 5371.463,
+            "max_us": 6688.617,
+            "over_margin": 817,
+            "over_period": 817
+          },
+          "copper_sidebands": {
+            "blocks": 817,
+            "median_us": 3886.886,
+            "p99_us": 6364.194,
+            "max_us": 10008.323,
+            "over_margin": 817,
+            "over_period": 817
+          },
+          "feedback_bass": {
+            "blocks": 817,
+            "median_us": 3325.261,
+            "p99_us": 4703.637,
+            "max_us": 5095.299,
+            "over_margin": 817,
+            "over_period": 817
+          }
+        }
+      }
+    },
+    {
+      "cpu_affinity": [
+        3
+      ],
+      "rackforge_stress_blocks_per_program": 800,
+      "wasm_skipped_startup_blocks": 8,
+      "rackforge_stress": {
+        "1": {
+          "interval_drone": {
+            "ratio": 0.337,
+            "peak": 0.161791,
+            "approximate_mean_us": 898.7
+          },
+          "copper_sidebands": {
+            "ratio": 0.278,
+            "peak": 0.248275,
+            "approximate_mean_us": 741.3
+          },
+          "feedback_bass": {
+            "ratio": 0.265,
+            "peak": 0.145298,
+            "approximate_mean_us": 706.7
+          }
+        },
+        "2": {
+          "interval_drone": {
+            "ratio": 0.488,
+            "peak": 0.208209,
+            "approximate_mean_us": 1301.3
+          },
+          "copper_sidebands": {
+            "ratio": 0.512,
+            "peak": 0.32833,
+            "approximate_mean_us": 1365.3
+          },
+          "feedback_bass": {
+            "ratio": 0.502,
+            "peak": 0.166413,
+            "approximate_mean_us": 1338.7
+          }
+        },
+        "3": {
+          "interval_drone": {
+            "ratio": 0.737,
+            "peak": 0.231969,
+            "approximate_mean_us": 1965.3
+          },
+          "copper_sidebands": {
+            "ratio": 0.74,
+            "peak": 0.373668,
+            "approximate_mean_us": 1973.3
+          },
+          "feedback_bass": {
+            "ratio": 0.832,
+            "peak": 0.173194,
+            "approximate_mean_us": 2218.7
+          }
+        },
+        "4": {
+          "interval_drone": {
+            "ratio": 0.996,
+            "peak": 0.250057,
+            "approximate_mean_us": 2656
+          },
+          "copper_sidebands": {
+            "ratio": 0.944,
+            "peak": 0.399026,
+            "approximate_mean_us": 2517.3
+          },
+          "feedback_bass": {
+            "ratio": 0.992,
+            "peak": 0.184709,
+            "approximate_mean_us": 2645.3
+          }
+        },
+        "5": {
+          "interval_drone": {
+            "ratio": 1.183,
+            "peak": 0.227654,
+            "approximate_mean_us": 3154.7
+          },
+          "copper_sidebands": {
+            "ratio": 1.159,
+            "peak": 0.411627,
+            "approximate_mean_us": 3090.7
+          },
+          "feedback_bass": {
+            "ratio": 1.178,
+            "peak": 0.185312,
+            "approximate_mean_us": 3141.3
+          }
+        },
+        "6": {
+          "interval_drone": {
+            "ratio": 1.44,
+            "peak": 0.211994,
+            "approximate_mean_us": 3840
+          },
+          "copper_sidebands": {
+            "ratio": 1.348,
+            "peak": 0.42338,
+            "approximate_mean_us": 3594.7
+          },
+          "feedback_bass": {
+            "ratio": 1.331,
+            "peak": 0.194843,
+            "approximate_mean_us": 3549.3
+          }
+        }
+      },
+      "wasm_block_times": {
+        "1": {
+          "interval_drone": {
+            "blocks": 817,
+            "median_us": 671.511,
+            "p99_us": 3693.517,
+            "max_us": 4470.49,
+            "over_margin": 43,
+            "over_period": 34
+          },
+          "copper_sidebands": {
+            "blocks": 817,
+            "median_us": 752.918,
+            "p99_us": 4258.325,
+            "max_us": 5593.941,
+            "over_margin": 92,
+            "over_period": 32
+          },
+          "feedback_bass": {
+            "blocks": 817,
+            "median_us": 681.752,
+            "p99_us": 4178.697,
+            "max_us": 4393.416,
+            "over_margin": 61,
+            "over_period": 34
+          }
+        },
+        "2": {
+          "interval_drone": {
+            "blocks": 817,
+            "median_us": 1139.118,
+            "p99_us": 4589.933,
+            "max_us": 4915.948,
+            "over_margin": 108,
+            "over_period": 32
+          },
+          "copper_sidebands": {
+            "blocks": 817,
+            "median_us": 1343.911,
+            "p99_us": 4874.559,
+            "max_us": 6937.353,
+            "over_margin": 429,
+            "over_period": 30
+          },
+          "feedback_bass": {
+            "blocks": 817,
+            "median_us": 1233.098,
+            "p99_us": 4778.283,
+            "max_us": 6294.933,
+            "over_margin": 238,
+            "over_period": 33
+          }
+        },
+        "3": {
+          "interval_drone": {
+            "blocks": 817,
+            "median_us": 1679.556,
+            "p99_us": 4976.799,
+            "max_us": 5518.756,
+            "over_margin": 817,
+            "over_period": 38
+          },
+          "copper_sidebands": {
+            "blocks": 817,
+            "median_us": 2212.495,
+            "p99_us": 5505.719,
+            "max_us": 7833.917,
+            "over_margin": 817,
+            "over_period": 168
+          },
+          "feedback_bass": {
+            "blocks": 817,
+            "median_us": 1946.646,
+            "p99_us": 5548.534,
+            "max_us": 8566.187,
+            "over_margin": 817,
+            "over_period": 79
+          }
+        },
+        "4": {
+          "interval_drone": {
+            "blocks": 817,
+            "median_us": 2228.754,
+            "p99_us": 5789.957,
+            "max_us": 8908.424,
+            "over_margin": 817,
+            "over_period": 208
+          },
+          "copper_sidebands": {
+            "blocks": 817,
+            "median_us": 2611.324,
+            "p99_us": 5888.289,
+            "max_us": 8692.259,
+            "over_margin": 817,
+            "over_period": 377
+          },
+          "feedback_bass": {
+            "blocks": 817,
+            "median_us": 2336.067,
+            "p99_us": 6086.879,
+            "max_us": 9688.545,
+            "over_margin": 817,
+            "over_period": 203
+          }
+        },
+        "5": {
+          "interval_drone": {
+            "blocks": 817,
+            "median_us": 2881.544,
+            "p99_us": 8126.525,
+            "max_us": 9288.16,
+            "over_margin": 817,
+            "over_period": 694
+          },
+          "copper_sidebands": {
+            "blocks": 817,
+            "median_us": 3163.392,
+            "p99_us": 8090.081,
+            "max_us": 10660.665,
+            "over_margin": 817,
+            "over_period": 817
+          },
+          "feedback_bass": {
+            "blocks": 817,
+            "median_us": 3027.69,
+            "p99_us": 8801.647,
+            "max_us": 10347.538,
+            "over_margin": 817,
+            "over_period": 807
+          }
+        },
+        "6": {
+          "interval_drone": {
+            "blocks": 817,
+            "median_us": 3186.763,
+            "p99_us": 9088.977,
+            "max_us": 11338.102,
+            "over_margin": 817,
+            "over_period": 817
+          },
+          "copper_sidebands": {
+            "blocks": 817,
+            "median_us": 3682.738,
+            "p99_us": 9403.455,
+            "max_us": 11814.133,
+            "over_margin": 817,
+            "over_period": 817
+          },
+          "feedback_bass": {
+            "blocks": 817,
+            "median_us": 3372.279,
+            "p99_us": 9849.006,
+            "max_us": 11636.858,
+            "over_margin": 817,
+            "over_period": 817
+          }
+        }
+      }
+    }
+  ]
+}

@@ -21,8 +21,12 @@ filtro y loudness, y el contacto S‑Trigger.
 La entrada MIDI conserva la prioridad de nota baja y admite
 teclas solapadas por canal, pedal de sustain y corte de emergencia.
 [Interpretación MIDI](docs/MIDI_TOCABLE.md).
-El banco **RF-D Factory** agrega ocho programas para bajo,
-lead, brass, pluck y texturas. [Programas y controles](docs/PROGRAMAS_RF_D.md).
+El selector **Voices** parte en Mono y permite acordes de dos a seis
+voces como opción. [Polifonía y mediciones en Raspberry Pi](docs/POLIFONIA_RF_D.md).
+Los bancos de fábrica reúnen 40 programas. **Mono** incluye 24 bajos,
+leads, vientos y percusiones. **Poly** incluye 16 cuerdas, metales,
+teclados, plucks y pads que cargan en Poly 2.
+[Programas y controles](docs/PROGRAMAS_RF_D.md).
 
 `python -B tools/check_rf_d_playable_voice.py` prueba el motor en
 WASM y RackForge desde un directorio temporal y lo retira al terminar.

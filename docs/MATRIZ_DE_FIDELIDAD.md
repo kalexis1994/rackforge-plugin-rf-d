@@ -32,8 +32,9 @@ no significa identidad sonora con el hardware.
 | Realimentación de desarrollo | Retorno LO a EXT después de VCA y Output Level | [Lazo y contrastes en RackForge](REALIMENTACION_TOCABLE.md) | Calibración de salida y escucha con dispositivo físico |
 | Salida de desarrollo | C2, R20, SW18, divisor HI/LO, R21, C19/C21 y referencia A‑440 | [Puerto de salida, reducción AC y contraste](SALIDA_TOCABLE.md) | Carga dinámica reflejada a C2, etapa activa de auriculares en señal grande, calibración y escucha física |
 | Entradas de control de desarrollo | J1, J2, J3 y SO-1, suma de CV y segundo VCA | [CV y S‑Trigger en la voz tocable](ENTRADAS_CONTROL_TOCABLES.md) | Cargas de fuentes físicas, curva de señal grande y transitorio del gatillo |
+| Controlador izquierdo de desarrollo | Ruedas Pitch/Mod y jacks J1402/J1401, contactos NC y pedales resistivos | [Panel, MIDI y reducción RC del pedal](PANEL_RF_D.md#pedales-glide-y-decay) | Taper de pedal físico, carga conjunta de la rama de descarga y ensayo con hardware |
 | Interpretación MIDI de desarrollo | Prioridad monofónica clásica, notas 0–127 y canales MIDI | [Teclas, pedal y corte](MIDI_TOCABLE.md) | Escucha y respuesta del controlador en dispositivo |
-| Programas de fábrica | Ocho sonidos diseñados en la voz CA3046 de RF-D | [Catálogo, estado y contraste en RackForge](PROGRAMAS_RF_D.md) | Escucha y balance de nivel en dispositivo |
+| Programas de fábrica | 24 sonidos Mono y 16 Poly diseñados en la voz CA3046 de RF-D | [Catálogo, estado y contraste en RackForge](PROGRAMAS_RF_D.md) | Escucha y balance de nivel en dispositivo |
 
 El [VCO1 nativo ensamblado](VCO1_STAMP_RESULTADOS.md) conserva 134
 incógnitas, dos 741 completos, BJT/JFET, Schmitt/reset y cargas del panel.

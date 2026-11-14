@@ -1,0 +1,362 @@
+"""Build the RF-D PLAY surface from the public parameter schema."""
+from html import escape
+import json
+from math import cos, radians, sin
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+WEB = ROOT / "plugin/package/web"
+LIVE_PARAMETERS = {
+    "tuner_a440", "pitch_cv", "filter_cv", "loudness_cv", "external_s_trigger",
+    "pitch_wheel", "mod_wheel", "glide_pedal", "decay_pedal",
+    "glide_pedal_resistance", "decay_pedal_resistance",
+    "voice_mode",
+}
+
+
+def program_parameters(schema):
+    return [param for param in schema["parameters"]
+            if param["id"] not in LIVE_PARAMETERS and param["kind"]["type"] != "meter"]
+
+
+def hardware(shape, css_class=""):
+    return f'<svg class="{css_class}" viewBox="0 0 100 100" aria-hidden="true"><use href="#{shape}"/></svg>'
+
+
+WAVEFORM_MARKS = {
+    "Triangle": "M0 3 5 -3 10 3",
+    "Saw–Triangle": "M0 3 6 -3 6 0 10 3",
+    "Reverse Sawtooth": "M0 3V-3L10 3",
+    "Sawtooth": "M0 3 10 -3V3",
+    "Square": "M0 3V-3H5V3H10",
+    "Wide Pulse": "M0 3V-3H7V3H10",
+    "Narrow Pulse": "M0 3V-3H2V3H10",
+}
+
+
+def selector_scale(choices):
+    marks = []
+    for index, name in choices:
+        angle = radians(-135 + 270 * index / (len(choices) - 1))
+        x, y = 50 + 44 * sin(angle), 50 - 44 * cos(angle)
+        if name in WAVEFORM_MARKS:
+            marks.append(f'<path d="{WAVEFORM_MARKS[name]}" transform="translate({x - 5:.2f} {y:.2f})"/>')
+        else:
+            marks.append(f'<text x="{x:.2f}" y="{y:.2f}">{escape(name)}</text>')
+    return '<svg class="selector-scale" viewBox="0 0 100 100" aria-hidden="true">' + "".join(marks) + '</svg>'
+
+
+def link_target(param):
+    if param["kind"]["type"] == "meter" or param["flags"].get("read_only", False):
+        return ""
+    return f' data-rackforge-parameter-index="{param["index"]}"'
+
+
+def field(param, label=None, *, style=None, socket=False):
+    name = label or param["name"]
+    index = param["index"]
+    kind = param["kind"]
+    variant = kind["type"]
+    style = style or {"boolean": "rocker", "meter": "lamp"}.get(variant, "knob")
+    attrs = f'data-index="{index}" disabled'
+    number = '<output class="value" aria-hidden="true"></output>'
+    choices = ""
+    if variant == "enum":
+        values = [(choice["value"], choice["name"]) for choice in kind["choices"]]
+        assert [value for value, _ in values] == list(range(len(values)))
+        encoded = escape(json.dumps([name for _, name in values], ensure_ascii=False), quote=True)
+        choices = f' data-choices="{encoded}"'
+    link = link_target(param)
+    if style == "pedal":
+        return (f'<button class="control jack pedal" type="button" id="control-{param["id"]}"{link} '
+                f'aria-pressed="false" {attrs}>{hardware("jack")}<span>{escape(name)}</span></button>')
+    if style == "rocker":
+        assert variant != "enum" or len(values) == 2
+        checked = " checked" if kind["default"] else ""
+        widget = f'{hardware("rocker")}<input type="checkbox"{checked}{choices} {attrs}>'
+    elif style == "lamp":
+        widget = hardware("lamp") + f'<meter data-index="{index}" min="0" max="1" value="0"></meter>'
+        number = ""
+    elif variant == "enum":
+        scale = selector_scale(values) if len(values) == 6 else ""
+        widget = (hardware("selector") + scale + hardware("pointer", "pointer")
+                  + f'<input type="range" min="0" max="{len(values) - 1}" step="1"'
+                    f' value="{kind["default"]}"{choices} {attrs}>')
+    else:
+        scale = ' data-scale="log"' if kind.get("taper") == "logarithmic" else ""
+        unit = escape(kind.get("unit", ""), quote=True)
+        front = hardware("wheel") if style == "wheel" else hardware("pot") + hardware("pointer", "pointer")
+        wheel = f' data-wheel="{param["id"]}"' if style == "wheel" else ""
+        widget = (front + f'<input type="range" min="{kind["minimum"]}" max="{kind["maximum"]}"'
+                  f' step="{kind["step"]}" value="{kind["default"]}" data-unit="{unit}"{scale}{wheel} {attrs}>')
+    classes = f"rotary {style}" if style in ("knob", "wheel") else style
+    socket_icon = hardware("trigger-jack" if param["id"] == "external_s_trigger" else "jack", "socket") if socket else ""
+    return (f'<label class="control {classes}" id="control-{param["id"]}"{link}>'
+            f'<span class="label">{escape(name)}</span><span class="mechanism">{widget}</span>{socket_icon}{number}</label>')
+
+
+def group(title, controls, css_class=""):
+    return f'<div class="group {css_class}" role="group" aria-label="{title}">{"".join(controls)}</div>'
+
+
+def section(title, content, css_class=""):
+    return f'<section class="module {css_class}"><h2>{title}</h2><div class="module-body">{content}</div></section>'
+
+
+def render_panel(schema, bank, programs=False):
+    params = {item["id"]: item for item in schema["parameters"]}
+    used = set()
+
+    def control(name, label=None, *, style=None, socket=False):
+        if name not in params:
+            return ""
+        assert name not in used, name
+        used.add(name)
+        return field(params[name], label, style=style, socket=socket)
+
+    voices = ""
+    if "voice_mode" in params:
+        mode = params["voice_mode"]
+        used.add(mode["id"])
+        voices = (f'<label class="control voice-mode"{link_target(mode)}><span>Voices</span>'
+                  f'<select data-index="{mode["index"]}" disabled>'
+                  + "".join(f'<option value="{choice["value"]}">{escape(choice["name"])}</option>'
+                            for choice in mode["kind"]["choices"])
+                  + '</select></label>')
+
+    if not bank:
+        front = "".join(section(page["name"], group(page["name"], [
+            control(p["id"]) for p in sorted(params.values(), key=lambda p: p["order"]) if p["page"] == page["id"]
+        ])) for page in sorted(schema["pages"], key=lambda page: page["order"]))
+        rear = ""
+        left_hand = ""
+    else:
+        has_left_hand = "pitch_wheel" in params
+        hand_switches = ((control("glide_enabled", "Glide"), control("decay_enabled", "Decay", style="rocker"))
+                         if not has_left_hand else ())
+        controllers = section("Controllers", group("Tuning and performance", (
+            control("tune", "Tune"), control("oscillator_modulation", "Osc Mod"),
+            control("glide_time", "Glide Time"), control("modulation_mix", "Mod Mix"),
+            *hand_switches,
+        )), "controllers")
+        left_hand = ""
+        if has_left_hand:
+            left_hand = ('<section class="left-hand" id="left-hand" aria-label="Left-hand controller">'
+                         '<div class="pedal-switches">'
+                         + control("glide_pedal", "Glide Pedal", style="pedal")
+                         + control("glide_enabled", "Glide")
+                         + control("decay_pedal", "Decay Pedal", style="pedal")
+                         + control("decay_enabled", "Decay", style="rocker")
+                         + '</div><div class="wheels">'
+                         + control("pitch_wheel", "Pitch", style="wheel")
+                         + control("mod_wheel", "Mod", style="wheel")
+                         + '</div><details><summary>Resistive pedals</summary>'
+                         + group("Pedal resistance", (
+                             control("glide_pedal_resistance", "Glide"),
+                             control("decay_pedal_resistance", "Decay"),
+                         ))
+                         + '</details></section>')
+        oscillator_rows = ""
+        for index in range(1, 4):
+            oscillator_rows += (
+                f'<div class="osc-row" role="group" aria-label="Oscillator {index}">'
+                f'<h3>OSC {index}</h3>'
+                + control(f"osc{index}_range", f"OSC {index} Range")
+                + (control(f"osc{index}_frequency", f"OSC {index} Frequency") if index > 1 else '<span></span>')
+                + control(f"osc{index}_wave", f"OSC {index} Waveform")
+                + "</div>"
+            )
+        oscillators = section("Oscillator Bank", oscillator_rows + control("osc3_tracking"), "oscillators")
+
+        channels = (("saw_mix", "osc1_enabled", "OSC 1"), ("osc2_level", "osc2_enabled", "OSC 2"),
+                    ("osc3_level", "osc3_enabled", "OSC 3"), ("external_level", "external_enabled", "External"),
+                    ("noise_level", "noise_enabled", "Noise"))
+        def mixer_channel(level, enable, label):
+            return group(label, (control(level, f"{label} Level"), control(enable, f"{label} On")), "channel")
+
+        mixer = section("Mixer",
+            '<div class="mixer-oscillators">'
+            + "".join(mixer_channel(*channel) for channel in channels[:3])
+            + '</div><div class="mixer-sources">'
+            + "".join(mixer_channel(*channel) for channel in channels[3:] if channel[0] in params)
+            + group("Mixer indicators", (control("external_overload"), control("noise_color", "Noise Color", style="rocker")))
+            + '</div>', "mixer")
+
+
+        modifiers = section("Modifiers",
+            '<h3>Filter</h3>' + group("Filter", (control("cutoff"), control("emphasis"), control("contour_amount", "Contour Amount")), "three")
+            + group("Filter switches", (control("filter_modulation", "Filter Mod"),
+                                        control("filter_tracking_one_third", "Track ⅓"),
+                                        control("filter_tracking_two_thirds", "Track ⅔")), "three")
+            + '<h3>Filter Contour</h3>' + group("Filter Contour", (
+                control("filter_attack", "Filter Attack"), control("filter_decay", "Filter Decay"),
+                control("filter_sustain", "Filter Sustain")), "three")
+            + '<h3>Loudness Contour</h3>' + group("Loudness Contour", (
+                control("loudness_attack", "Loudness Attack"), control("loudness_decay", "Loudness Decay"),
+                control("loudness_sustain", "Loudness Sustain")), "three"), "modifiers")
+
+        output = section("Output", group("Output controls", (
+            control("output_level", "Volume"), control("main_output_enabled", "Main Out"),
+            control("headphones_level", "Phones Vol"), control("tuner_a440", "A-440"),
+        )), "output")
+        if has_left_hand:
+            controllers = f'<div class="left-column">{controllers}{left_hand}</div>'
+        front = controllers + oscillators + mixer + modifiers + output
+
+        rear_parts = []
+        has_feedback = "output_feedback" in params
+        if "output_jack" in params:
+            selector = params["output_jack"]
+            used.add("output_jack")
+            index = selector["index"]
+            choices = {entry["name"]: entry["value"] for entry in selector["kind"]["choices"]}
+            items = "".join(f'<button type="button" class="jack route" data-choice="{choices[name]}"{link_target(selector)} '
+                            f'aria-pressed="{str(choices[name] == selector["kind"]["default"]).lower()}" '
+                            f'aria-label="{name} output" disabled>{hardware("jack")}<span>{name}</span></button>'
+                            for name in ("LO", "HI", "Phones") if name in choices)
+            select_attr = "" if has_feedback else "hidden "
+            rear_parts.append(
+                '<section class="patch-block"><h3>Monitor Output</h3>'
+                f'<div class="control output-route"{link_target(selector)}>'
+                f'<select {select_attr}aria-label="Monitor Output" data-index="{index}" disabled>'
+                + "".join(f'<option value="{value}"{" selected" if value == selector["kind"]["default"] else ""}>'
+                          f'{escape(name)}</option>' for name, value in choices.items())
+                + '</select>'
+                + ("" if has_feedback else f'<div class="jacks">{items}</div>')
+                + '</div><p>RackForge main bus</p></section>'
+            )
+        if "external_enabled" in params and not has_feedback:
+            rear_parts.append('<section class="patch-block"><h3>Signal In</h3>'
+                              f'<a class="jack" href="#control-external_level"{link_target(params["external_level"])}>'
+                              f'{hardware("jack")}<span>External</span></a>'
+                              '<p>Rack audio input</p></section>')
+        if "pitch_cv" in params:
+            rear_parts.append('<section class="patch-block"><h3>Control Inputs</h3><div class="jacks cv">'
+                              + control("loudness_cv", "Loudness CV", socket=True)
+                              + control("filter_cv", "Filter CV", socket=True)
+                              + control("pitch_cv", "Oscillator CV", socket=True)
+                              + control("external_s_trigger", "S-Trigger", style="rocker", socket=True)
+                              + '</div></section>')
+        if has_feedback:
+            used.add("output_feedback")
+            rear_parts.insert(0, feedback_patch(params["output_feedback"]))
+        if "glide_enabled" in params and not has_left_hand:
+            rear_parts.append(
+                '<section class="patch-block"><h3>Pedal Controls</h3><div class="jacks">'
+                + "".join(f'<a class="jack" href="#control-{name}" '
+                          f'{link_target(params[name])}>'
+                          f'{hardware("jack")}<span>{label}</span></a>'
+                          for name, label in (("glide_enabled", "Glide"), ("decay_enabled", "Decay")))
+                + '</div><p>Link a MIDI pedal</p></section>'
+            )
+        rear = ('<details class="rear" id="connections"><summary>Connections</summary><div class="patch-panel">'
+                + "".join(rear_parts) + '</div></details>') if rear_parts else ""
+
+    assert used == params.keys(), sorted(params.keys() - used)
+    symbols = (WEB / "hardware.svg").read_text(encoding="utf8")
+    program_panel = program_toolbar("play", schema) if programs else "<rf-program-select></rf-program-select>"
+    program_script = '<script src="programs.js" defer></script>' if programs else ""
+    patch_script = '<script src="patch-cable.js" defer></script>' if "output_feedback" in params else ""
+    return f"""<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RF-D</title>
+  <link rel="stylesheet" href="voice.css">
+  {patch_script}
+  <script src="panel.js" defer></script>
+  {program_script}
+</head>
+<body>
+  {symbols}
+  <main class="instrument">
+    <header class="masthead">
+      <h1 class="nameplate"><small>Rackforge Instruments</small><span>RF-D</span></h1>
+      {program_panel}
+      {voices}
+      <p class="status" id="status" role="status">Connecting to RackForge…</p>
+    </header>
+    <div class="controls{' single' if not bank else ''}">{front}</div>
+    {rear}
+  </main>
+</body>
+</html>
+"""
+
+
+def feedback_patch(parameter):
+    index = parameter["index"]
+    return f"""<section class="patch-block feedback-patch" aria-labelledby="feedback-heading">
+      <h3 id="feedback-heading">Feedback</h3>
+      <div class="control feedback-controls">
+        <div class="patch-sockets">
+          <button type="button" class="jack" data-patch-port="lo"{link_target(parameter)} aria-label="LO output for feedback"
+            aria-pressed="false" aria-describedby="feedback-status" disabled>{hardware("jack")}<span>LO</span></button>
+          <button type="button" class="jack" data-patch-port="ext"{link_target(parameter)} aria-label="External audio input for feedback"
+            aria-pressed="false" aria-describedby="feedback-status" disabled>{hardware("jack")}<span>EXT</span></button>
+          <svg class="patch-cable" aria-hidden="true">
+            <defs><path id="feedback-curve"/><path id="feedback-highlight"/></defs>
+            <use href="#feedback-plug-seated" data-plug="start"/>
+            <use href="#feedback-plug-seated" data-plug="end"/>
+            <use href="#feedback-curve" class="cable-shadow"/>
+            <use href="#feedback-curve" class="cable-edge"/>
+            <use href="#feedback-curve" class="cable-body"/>
+            <use href="#feedback-highlight" class="cable-sheen"/>
+            <use href="#feedback-highlight" class="cable-glint"/>
+            <use href="#feedback-plug-loose" data-plug="loose" display="none"/>
+          </svg>
+        </div>
+        <input type="checkbox" data-index="{index}" data-patch-feedback hidden disabled>
+        <output class="value"></output>
+      </div>
+      <p id="feedback-status" role="status">Connect LO to EXT</p>
+    </section>"""
+
+
+
+def program_toolbar(surface, schema):
+    fields = json.dumps([{key: param[key] for key in ("id", "index", "kind")}
+                         for param in program_parameters(schema)], ensure_ascii=False).replace("<", "\\u003c")
+    save_program = ('''<label class="program-name"><span>Program name</span>
+          <input id="program-name" maxlength="64" placeholder="Program name" required disabled>
+        </label>
+        <button type="submit" disabled>Save new</button>''' if surface == "play" else "")
+    import_file = ('<label class="file-button">Import .rfd'
+                   '<input type="file" id="rfd-import" accept=".rfd" disabled></label>'
+                   if surface == "config" else "")
+    return f"""<section class="programs" aria-labelledby="programs-heading">
+      <h2 id="programs-heading">Programs</h2>
+      <script id="program-fields" type="application/json">{fields}</script>
+      <rf-program-select label="Programs"></rf-program-select>
+      <form id="program-actions">
+        {save_program}
+        <button type="button" id="rfd-export" disabled>Export .rfd</button>
+        {import_file}
+      </form>
+      <p id="program-status" role="status"></p>
+    </section>"""
+
+
+def render_program_config(schema):
+    return f"""<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RF-D Programs</title>
+  <link rel="stylesheet" href="voice.css">
+  <script src="panel.js" defer></script>
+  <script src="programs.js" defer></script>
+</head>
+<body>
+  <main class="instrument">
+    <header class="masthead">
+      <h1 class="nameplate"><small>Rackforge Instruments</small><span>RF-D</span></h1>
+      {program_toolbar("config", schema)}
+      <p class="status" id="status" role="status">Connecting to RackForge…</p>
+    </header>
+  </main>
+</body>
+</html>
+"""

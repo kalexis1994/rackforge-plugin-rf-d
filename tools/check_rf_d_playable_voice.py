@@ -1,6 +1,5 @@
 """Build and exercise the playable RF-D voice in WASM and RackForge."""
 import argparse
-from html import escape
 import json
 import os
 import re
@@ -17,22 +16,36 @@ from check_rf_d_playable_pilot import (
 from check_rf_d_pilot_returns import generate_pi_fir, generate_wave, pilot_wave_model
 from check_rf_d_playable_filter import emphasis_table, verify_filter
 from check_rf_d_playable_modulation import verify_modulation
-from check_rf_d_voice_keyboard import verify_keyboard
+from check_rf_d_voice_keyboard import verify_keyboard, verify_left_hand
 from check_rf_d_voice_external import verify_external, verify_host_capture
 from check_rf_d_voice_feedback import verify_feedback
 from check_rf_d_voice_output import verify_output
 from check_rf_d_voice_monitor import verify_monitor
 from check_rf_d_voice_control_inputs import loudness_table, verify_control_inputs
 from check_rf_d_voice_midi import HOST_SCORE, verify_midi
+from check_rf_d_voice_poly import verify_polyphony
 from check_rf_d_voice_presets import emit_program_table, prepare_catalog, verify_presets
 from rf_d_cutoff_calibration import calibrated_cutoff_table
+from rf_d_voice_panel import program_parameters, render_panel, render_program_config
 
 VERSION = "0.7.0"
 PLUGIN_ID = "org.rackforge.lab.rf-d-voice"
 SCHEMA = ROOT / "plugin/voice/parameters.json"
+CONTROL_LAYOUT = SCHEMA.with_name("control-layout.json")
 CAPACITY = 4096
 SAMPLE_RATE = 48_000
 MARGIN_NS = 128 * 1e9 / SAMPLE_RATE / 2
+CONTROL_ROLES = {
+    "synth.oscillator.noise.level": "noise_level",
+    "synth.filter.cutoff": "cutoff",
+    "synth.filter.resonance": "emphasis",
+    "synth.filter.envelope.amount": "contour_amount",
+    "synth.envelope.amp.attack": "loudness_attack",
+    "synth.envelope.amp.decay": "loudness_decay",
+    "synth.envelope.amp.sustain": "loudness_sustain",
+    "performance.modulation": "mod_wheel",
+    "performance.expression": "loudness_cv",
+}
 
 
 def oscillator_tables(report, *, calibrated=False, wide_pulse_duty=None):
@@ -82,7 +95,8 @@ def oscillator_tables(report, *, calibrated=False, wide_pulse_duty=None):
     return path
 
 
-def parameter_schema(bank, emphasis, modulation, performance, external, feedback, output, monitor, control_inputs):
+def parameter_schema(bank, emphasis, modulation, performance, external, feedback, output, monitor, control_inputs,
+                     left_hand=False, polyphony=False):
     schema = json.loads(SCHEMA.read_text(encoding="utf8"))
     if bank:
         extra = json.loads(SCHEMA.with_name("oscillators.json").read_text(encoding="utf8"))
@@ -123,97 +137,96 @@ def parameter_schema(bank, emphasis, modulation, performance, external, feedback
         extra = json.loads(SCHEMA.with_name("control_inputs.json").read_text(encoding="utf8"))
         schema["pages"].extend(extra["pages"])
         schema["parameters"].extend(extra["parameters"])
+    if left_hand:
+        extra = json.loads(SCHEMA.with_name("left_hand.json").read_text(encoding="utf8"))
+        schema["parameters"].extend(extra["parameters"])
+    if polyphony:
+        assert left_hand
+        extra = json.loads(SCHEMA.with_name("polyphony.json").read_text(encoding="utf8"))
+        schema["parameters"].extend(extra["parameters"])
+    parameters = {parameter["id"]: parameter for parameter in schema["parameters"]}
+    schema["schema_version"] = 2
+    schema["semantic_controls"] = [
+        dict(role=role, parameter_index=parameters[name]["index"])
+        for role, name in CONTROL_ROLES.items() if name in parameters
+    ]
+    for parameter in parameters.values():
+        if parameter["kind"].get("unit") == "ms":
+            parameter["kind"]["taper"] = "logarithmic"
     return schema
 
 
-def package_template(destination, schema, catalog, version, bank, external, midi):
+def package_template(destination, schema, catalog, version, bank, external, programs=False):
     shutil.copytree(PACKAGE, destination)
     write(destination / "metadata/parameters.json", schema)
     write(destination / "metadata/presets.json", catalog)
+    if programs:
+        layout = json.loads(CONTROL_LAYOUT.read_text(encoding="utf8"))
+        assert layout["plugin_id"] == PLUGIN_ID
+        parameters = {parameter["id"]: parameter for parameter in schema["parameters"]
+                      if not parameter["flags"].get("read_only", False)}
+        assert all(binding["parameter_id"] in parameters for binding in layout["slots"])
+        shutil.copyfile(CONTROL_LAYOUT, destination / "metadata/control-layout.json")
     for relative in ("rackforge-plugin.toml", "metadata/runtime.json"):
         path = destination / relative
         content = path.read_text(encoding="utf8")
         content = (content.replace("org.rackforge.lab.rf-d-pilot", PLUGIN_ID)
-                   .replace("0.3.0", version).replace("RF-D Pilot", "RF-D Voice"))
+                   .replace("0.3.0", version).replace('name = "RF-D Pilot"', 'name = "RF-D"'))
         if external and relative == "rackforge-plugin.toml":
             content = content.replace('"audio_output"', '"audio_input", "audio_output"', 1)
             content = content.replace("[audio]\n", '[audio]\ninput_buses = [{ id = "main", '
                                       'name = "External Input", channels = 1, layout = "mono" }]\n')
+        if programs and relative == "rackforge-plugin.toml":
+            content = content.replace("state_version = 1", "state_version = 1\nconfig_mode = true", 1)
+            content = content.replace("[component]", '[[web_ui.surfaces]]\nkind = "config"\n'
+                                      'entry = "web/config.html"\n\n[component]', 1)
         path.write_text(content, encoding="utf8", newline="\n")
-    if bank:
-        path = destination / "web/panel.css"
-        with path.open("a", encoding="utf8") as css:
-            css.write("""
-.choice .mechanism { width: 100%; height: auto; min-height: 42px; }
-.choice select {
-  width: min(100%, 135px);
-  color: inherit;
-  background: #242320;
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  padding: 4px;
-}
-.pair { row-gap: 12px; }
-.meter { width: 14px; height: 14px; border-radius: 50%; background: #522626; appearance: none; }
-.meter[data-active="true"] { background: #f66551; box-shadow: 0 0 10px #f6655166; }
-.meter::-webkit-meter-bar { background: transparent; border: 0; }
-.meter::-webkit-meter-optimum-value { background: transparent; }
-""")
+    if programs:
+        (destination / "web/config.html").write_text(render_program_config(schema), encoding="utf8", newline="\n")
     html = destination / "web/play.html"
-    header = html.read_text(encoding="utf8").split('    <div class="controls">')[0]
-    header = header.replace("RF-D Pilot", "RF-D Voice").replace("PILOT", "VOICE")
-    sections = []
-    for page in schema["pages"]:
-        controls = sorted((p for p in schema["parameters"] if p["page"] == page["id"]),
-                          key=lambda p: p["order"])
-        labels = []
-        for param in controls:
-            index, kind = param["index"], param["kind"]
-            unit = kind.get("unit", "")
-            if kind["type"] == "meter":
-                style = "indicator"
-                mechanism = f'<meter class="meter" min="0" max="1" value="0" data-index="{index}"></meter>'
-            elif param["id"] == "decay_enabled" or kind["type"] == "boolean":
-                style = "toggle"
-                checked = " checked" if kind["default"] else ""
-                control = f'<input type="checkbox" data-index="{index}"{checked} disabled>'
-                mechanism = control
-            elif kind["type"] == "enum":
-                style = "choice"
-                options = []
-                for choice in kind["choices"]:
-                    selected = " selected" if choice["value"] == kind["default"] else ""
-                    options.append(f'<option value="{choice["value"]}"{selected}>{escape(choice["name"])}</option>')
-                mechanism = f'<select data-index="{index}" disabled>{"".join(options)}</select>'
-            else:
-                style = "fader" if page["id"] == "mixer" else "rotary"
-                scale = ' data-scale="log"' if unit == "ms" else ""
-                control = (f'<input type="range" min="{kind["minimum"]}" max="{kind["maximum"]}" '
-                           f'step="{kind["step"]}" value="{kind["default"]}" '
-                           f'data-index="{index}" data-unit="{unit}"{scale} disabled>')
-                dial = '<span class="dial" aria-hidden="true"></span>' if style == "rotary" else ""
-                mechanism = dial + control
-            labels.append(f"""          <label class="control {style}">
-            <span class="label">{escape(param["name"])}</span>
-            <span class="mechanism">{mechanism}</span>
-            <span class="value" aria-hidden="true"></span>
-          </label>""")
-        sections.append(f"""      <section aria-labelledby="{page["id"]}">
-        <h2 id="{page["id"]}">{page["name"]}</h2>
-        <div class="pair">
-{chr(10).join(labels)}
-        </div>
-      </section>""")
-    voice_label = "THREE OSCILLATORS" if bank else "SINGLE SAW"
-    midi_label = "MIDI 0–127 · LOW-NOTE PRIORITY · SUSTAIN" if midi else "MIDI 36–72 · LOW-NOTE PRIORITY"
-    html.write_text(header + f"""    <div class="controls">
-{chr(10).join(sections)}
-    </div>
-    <footer><span>{midi_label}</span><span>{voice_label} · v{version}</span></footer>
-  </main>
-</body>
-</html>
-""", encoding="utf8", newline="\n")
+    html.write_text(render_panel(schema, bank, programs), encoding="utf8", newline="\n")
+
+
+def compile_program_voice(execute, compiler, folder, guest, cfg_flags):
+    manifest = folder / "Cargo.toml"
+    manifest.write_text(
+        '[package]\nname = "rf-d-voice"\nversion = "0.1.0"\nedition = "2021"\n'
+        '[workspace]\n[lib]\ncrate-type = ["cdylib"]\n'
+        f'path = "{guest.as_posix()}"\n[dependencies]\n'
+        f'rackforge-plugin-sdk = {{ path = "{(HOST / "crates/rackforge-plugin-sdk").as_posix()}" }}\n'
+        f'rackforge-program-api = {{ path = "{(HOST / "crates/rackforge-program-api").as_posix()}" }}\n'
+        'serde = "1.0"\nserde_json = { version = "1.0", features = ["float_roundtrip"] }\n'
+        '[profile.release]\nlto = "fat"\npanic = "abort"\ncodegen-units = 1\n',
+        encoding="utf8", newline="\n",
+    )
+    shutil.copyfile(HOST / "Cargo.lock", folder / "Cargo.lock")
+    target = folder / "target"
+    execute(compiler.with_name("cargo.exe"), "rustc", "--manifest-path", manifest,
+            "--config", 'target.wasm32-unknown-unknown.rustflags = ["-C", "target-feature=+simd128"]',
+            "--target-dir", target, "--release", "--target", "wasm32-unknown-unknown",
+            "--", "-A", "unexpected_cfgs", "-A", "dead_code",
+            "--cfg", "pilot_voice_programs", *cfg_flags)
+    return target / "wasm32-unknown-unknown/release/rf_d_voice.wasm"
+
+
+def verify_program_library(execute, component, schema, package, folder):
+    document = folder / "user-program.json"
+    result, _ = execute("node", ROOT / "tools/check_rf_d_voice_programs.js", component, schema, document)
+    print(result.decode().strip())
+    core = HOST / "target/release/rackforge-core.exe"
+    data = folder / "program-state"
+    program = json.loads(document.read_bytes())
+    program_id = program["id"]
+    result, _ = execute(core, "program-save", data, f"programs/{program_id}.rackforge-program.json", document)
+    assert f"PROGRAM_SAVED id={program_id}" in result.decode(), result
+    result, _ = execute(core, "smoke", package, "--data-root", data, "--preset", f"custom.{program_id}")
+    output = result.decode()
+    assert f"PRESET_LOADED id=custom.{program_id}" in output, output
+    assert f"PROGRAM_EDIT_READY source=Some(\"custom.{program_id}\")" in output, output
+    assert "PLUGIN_SMOKE_OK" in output, output
+    print("RackForge reopened the stored User program and validated its editor")
+    return dict(saved_parameters=len(program["payload"]["parameters"]), stored_program=f"custom.{program_id}",
+                guest_round_trip=True, rackforge_reload=True)
 
 
 def metrics(samples):
@@ -397,14 +410,22 @@ def main(argv=None, *, inspect_audio=None, legacy_timbre=False, wide_pulse_duty=
         parser.error("trapezoidal ladder requires calibrated MIDI audio inspection")
     profile_version = VERSION if modulation else "0.6.0" if emphasis else "0.5.0" if bank else "0.4.0"
     version = args.package or (f"{profile_version}-dev" if performance else profile_version)
-    schema = parameter_schema(bank, emphasis, modulation, performance, external, feedback, output, monitor, control_inputs)
+    schema = parameter_schema(bank, emphasis, modulation, performance, external, feedback, output, monitor,
+                              control_inputs, left_hand=midi, polyphony=midi)
     features = {name for name, enabled in (("oscillators", bank), ("filter", emphasis), ("modulation", modulation),
                                           ("external", external), ("feedback", feedback), ("factory", factory))
                 if enabled}
     catalog, programs = prepare_catalog(schema, features)
-    factory_names = [entry["id"] for entry in catalog["presets"] if entry["bank"] == "factory"]
+    if midi:
+        catalog["banks"].append(dict(id="user", name="User", order=2))
+    factory_programs = {entry["id"]: entry["bank"] for entry in catalog["presets"]} if factory else {}
+    compiler = Path(COMPILER)
+    if midi:
+        # Cargo also needs the native Rust standard library for build scripts and proc macros.
+        compiler = Path(os.environ.get("RF_D_RUSTC", compiler.parents[2] /
+                        "1.98.0-x86_64-pc-windows-gnu/bin/rustc.exe"))
     env = dict(os.environ, PATH="C:/msys64/mingw64/bin;C:/msys64/ucrt64/bin;" + os.environ["PATH"],
-               RACKFORGE_OPTIMIZE_PLUGINS="0")
+               RACKFORGE_OPTIMIZE_PLUGINS="0", RUSTC=str(compiler))
 
     def execute(*args):
         run = subprocess.run(list(map(str, args)), cwd=ROOT, env=env, capture_output=True, timeout=120)
@@ -420,15 +441,24 @@ def main(argv=None, *, inspect_audio=None, legacy_timbre=False, wide_pulse_duty=
         fir = generate_pi_fir(internal_rate)
         report["fir_sha256"] = sha(fir)
         modules = dict(voice=ROOT / "tools/rf_d_reduced_voice.rs", pi_coefficients=fir)
-        if bank:
+        if not bank:
+            wave, report["h128_sha256"] = generate_wave()
+            modules["wave"] = wave
+            report["wave_sha256"] = sha(wave)
+        else:
             modules["oscillator_tables"] = oscillator_tables(
                 report, calibrated=calibrated, wide_pulse_duty=wide_pulse_duty,
             )
             modules["voice_programs"] = emit_program_table(programs)
-        else:
-            wave, report["h128_sha256"] = generate_wave()
-            modules["wave"] = wave
-            report["wave_sha256"] = sha(wave)
+        if midi:
+            controls = [(p["index"], p["id"]) for p in program_parameters(schema)]
+            program_data = "pub const FIELDS: &[(u32, &str)] = &[\n"
+            program_data += "".join(f'    ({index}, "{name}"),\n' for index, name in controls)
+            program_data += "];\n"
+            program_data += f'pub const CATALOG: &str = r#"{json.dumps(catalog, ensure_ascii=False, separators=(",", ":"))}"#;\n'
+            program_data += f'pub const VERSION: &str = "{version}";\n'
+            modules["program_data"] = emit("voice-program-data.rs", program_data)
+            modules["program"] = ROOT / "tools/rf_d_voice_program.rs"
         if emphasis:
             modules["emphasis_coefficients"] = emphasis_table(report, calibrated=calibrated, rate=internal_rate)
         if calibrated:
@@ -444,10 +474,8 @@ def main(argv=None, *, inspect_audio=None, legacy_timbre=False, wide_pulse_duty=
             optimized = folder / "component.wasm"
             render_schema = folder / "parameters.json"
             write(render_schema, schema)
-            flags = [COMPILER, "--target", "wasm32-unknown-unknown", "-C", "target-feature=+simd128",
+            flags = [compiler, "--target", "wasm32-unknown-unknown", "-C", "target-feature=+simd128",
                      "-C", "opt-level=3", "-A", "dead_code"]
-            execute(*flags, "--edition=2024", "--crate-type", "rlib", "--crate-name", "rackforge_plugin_sdk",
-                    HOST / SDK_PATH, "-o", sdk)
             bank_flags = ("--cfg", "pilot_oscillator_bank") if bank else ()
             filter_flags = ("--cfg", "pilot_voice_filter") if emphasis else ()
             modulation_flags = ("--cfg", "pilot_voice_modulation") if modulation else ()
@@ -458,15 +486,21 @@ def main(argv=None, *, inspect_audio=None, legacy_timbre=False, wide_pulse_duty=
             monitor_flags = ("--cfg", "pilot_voice_monitor") if monitor else ()
             cv_flags = ("--cfg", "pilot_voice_control_inputs") if control_inputs else ()
             midi_flags = ("--cfg", "pilot_voice_midi") if midi else ()
+            poly_flags = ("--cfg", "pilot_voice_poly") if midi else ()
             calibrated_flags = ("--cfg", "pilot_calibrated_filter") if calibrated else ()
             oversampling_flags = ("--cfg", "pilot_oversample_4x") if oversampling == 4 else ()
             ladder_flags = ("--cfg", "pilot_ladder_trapezoidal") if trapezoidal_ladder else ()
-            execute(*flags, "--edition=2021", "--crate-type", "cdylib", "-C", "panic=abort", "-C", "lto=fat",
-                    "--cfg", "pilot_pi", "--cfg", "pilot_returns", "--cfg", "pilot_host_blocks",
-                    "--cfg", "pilot_voice_contours", *bank_flags, *filter_flags, *modulation_flags,
-                    *performance_flags, *external_flags, *feedback_flags, *output_flags, *monitor_flags, *cv_flags,
-                    *midi_flags, *calibrated_flags, *oversampling_flags, *ladder_flags, guest,
-                    "--extern", f"rackforge_plugin_sdk={sdk}", "-o", component)
+            cfg_flags = ("--cfg", "pilot_pi", "--cfg", "pilot_returns", "--cfg", "pilot_host_blocks",
+                         "--cfg", "pilot_voice_contours", *bank_flags, *filter_flags, *modulation_flags,
+                         *performance_flags, *external_flags, *feedback_flags, *output_flags, *monitor_flags,
+                         *cv_flags, *midi_flags, *poly_flags, *calibrated_flags, *oversampling_flags, *ladder_flags)
+            if midi:
+                component = compile_program_voice(execute, compiler, folder, guest, cfg_flags)
+            else:
+                execute(*flags, "--edition=2024", "--crate-type", "rlib", "--crate-name", "rackforge_plugin_sdk",
+                        HOST / SDK_PATH, "-o", sdk)
+                execute(*flags, "--edition=2021", "--crate-type", "cdylib", "-C", "panic=abort", "-C", "lto=fat",
+                        *cfg_flags, guest, "--extern", f"rackforge_plugin_sdk={sdk}", "-o", component)
             execute(WASM_OPT, component, "-O4", "-o", optimized)
 
             def render(score, block=128, frames=43200, samples=None, preset=None):
@@ -509,8 +543,10 @@ def main(argv=None, *, inspect_audio=None, legacy_timbre=False, wide_pulse_duty=
                 verify_control_inputs(render, report, cutoff=resonance_cutoff)
             if midi:
                 verify_midi(render, report)
+                verify_left_hand(render, report, cutoff=resonance_cutoff)
+                verify_polyphony(render, report)
             if factory:
-                verify_presets(render, programs, factory_names, report)
+                verify_presets(render, programs, factory_programs, report)
             template = folder / "package"
             package_template(template, schema, catalog, version, bank, external, midi)
             if args.package:
@@ -524,12 +560,15 @@ def main(argv=None, *, inspect_audio=None, legacy_timbre=False, wide_pulse_duty=
             else:
                 shutil.copyfile(optimized, template / "component.wasm")
                 host_package = template
+            if midi:
+                report["program_library"] = verify_program_library(execute, optimized, render_schema, host_package, folder)
             if external:
                 verify_host_capture(execute, render, folder, host_package, report, feedback,
                                     schema if monitor else None, control_inputs, HOST_SCORE if midi else None,
-                                    {name: programs[name] for name in factory_names})
+                                    {name: programs[name] for name in factory_programs})
             report["host_stress"] = {}
-            preset = ("loop_drive" if feedback else "wheel_motion" if modulation else "resonant_bass" if emphasis
+            preset = ("feedback_bass" if factory else "loop_drive" if feedback
+                      else "wheel_motion" if modulation else "resonant_bass" if emphasis
                       else "three_oscillators" if bank else "default")
             for frames in (128, 480, CAPACITY):
                 raw, _ = execute(HOST / "target/release/rackforge-core.exe", "stress", host_package,
@@ -561,7 +600,7 @@ def main(argv=None, *, inspect_audio=None, legacy_timbre=False, wide_pulse_duty=
                   "external_audio", "feedback_audio", "output_audio", "monitor_audio",
                   "loudness_cv_table", "control_inputs_audio", "host_capture", "host_feedback", "host_monitor",
                   "host_control_inputs", "midi_audio", "host_midi", "factory_audio", "host_factory",
-                  "node_128_ns", "host_stress")
+                  "node_128_ns", "host_stress", "left_hand_audio", "host_left_hand")
         print(json.dumps({key: report[key] for key in fields if key in report},
                          indent=2), flush=True)
         raise

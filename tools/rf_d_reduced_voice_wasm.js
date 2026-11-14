@@ -52,7 +52,7 @@ if (option === "--panel-state" || option === "--voice-state") {
         const value = minimum === initial ? maximum : minimum;
         check(wasm.rackforge_set_parameter(index, value));
         if (wasm.rackforge_set_parameter(index, NaN) === 0) throw new Error("Accepted invalid parameter");
-        if (["boolean", "enum"].includes(kind.type) && wasm.rackforge_set_parameter(index, 0.5) === 0) {
+        if (["boolean", "enum", "integer"].includes(kind.type) && wasm.rackforge_set_parameter(index, 0.5) === 0) {
             throw new Error("Accepted fractional discrete parameter");
         }
         return value;
@@ -79,7 +79,7 @@ if (option === "--panel-state" || option === "--voice-state") {
     checkValues();
     if (option === "--voice-state" && panel.length > 11) {
         // The original voice used the same header with just the first eleven controls.
-        for (const count of [11, 26, 29, 35, 37, 39, 40, 42, 44].filter((size) => size < panel.length)) {
+        for (const count of [11, 26, 29, 35, 37, 39, 40, 42, 44, 48, 54].filter((size) => size < panel.length)) {
             transfer().set(saved);
             // The previous output profile only stored HI or LO.
             if (count === 42) new DataView(transfer().buffer, transfer().byteOffset).setFloat64(4 + 41 * 8, 1, true);
@@ -126,10 +126,17 @@ if (option === "--panel-state" || option === "--voice-state") {
             throw new Error("Prepare lost the feedback connection");
         }
     }
+    const livePanel = panel.filter(({index}) => index >= 49);
+    const liveValues = livePanel.map(({index}) => wasm.rackforge_get_parameter(index));
     loadPreset("default");
-    if (panel.some(({index, kind}) => wasm.rackforge_get_parameter(index) !== Number(kind.default))) {
-        throw new Error("Pilot Saw preset did not restore defaults");
+    for (const {index, kind} of panel) {
+        const liveIndex = livePanel.findIndex((parameter) => parameter.index === index);
+        const expected = liveIndex >= 0 ? liveValues[liveIndex] : Number(kind.default);
+        if (wasm.rackforge_get_parameter(index) !== expected) {
+            throw new Error(`Pilot Saw preset lost the expected value for parameter ${index}`);
+        }
     }
+    for (const {index, kind} of livePanel) check(wasm.rackforge_set_parameter(index, Number(kind.default)));
     prepare();
 }
 let midi = new DataView(wasm.memory.buffer, wasm.rackforge_midi_ptr());

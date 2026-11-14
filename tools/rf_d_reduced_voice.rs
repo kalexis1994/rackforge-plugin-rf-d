@@ -17,6 +17,12 @@ pub mod keyboard;
 #[cfg(pilot_voice_midi)]
 #[path = "rf_d_voice_midi.rs"]
 pub mod midi;
+#[cfg(pilot_voice_poly)]
+#[path = "rf_d_voice_poly.rs"]
+pub mod poly;
+#[cfg(pilot_voice_midi)]
+#[path = "rf_d_voice_left_hand.rs"]
+pub mod left_hand;
 #[cfg(pilot_voice_external)]
 #[path = "rf_d_voice_external.rs"]
 pub mod external;
@@ -119,6 +125,8 @@ pub struct Panel {
     pub modulation: modulation::Controls,
     #[cfg(pilot_voice_performance)]
     pub keyboard: keyboard::Controls,
+    #[cfg(pilot_voice_midi)]
+    pub wheels: left_hand::Wheels,
     #[cfg(pilot_voice_external)]
     pub external: external::Controls,
     #[cfg(pilot_voice_feedback)]
@@ -137,6 +145,8 @@ pub struct Contours {
     pub cutoff: f64,
     pub amount: f64,
     pub decay_on: bool,
+    #[cfg(pilot_voice_midi)]
+    pub decay_pedal: left_hand::DecayPedal,
 }
 
 #[cfg(pilot_returns)]
@@ -161,6 +171,8 @@ impl Default for Panel {
             modulation: modulation::Controls::default(),
             #[cfg(pilot_voice_performance)]
             keyboard: keyboard::Controls::default(),
+            #[cfg(pilot_voice_midi)]
+            wheels: left_hand::Wheels::default(),
             #[cfg(pilot_voice_external)]
             external: external::Controls::default(),
             #[cfg(pilot_voice_feedback)]
@@ -233,6 +245,8 @@ pub struct Voice<const FACTOR: usize> {
     held: u64,
     #[cfg(pilot_voice_midi)]
     notes: midi::Notes,
+    #[cfg(pilot_voice_poly)]
+    poly_gate: Option<bool>,
     #[cfg(pilot_voice_filter)]
     last_note: u8,
     #[cfg(not(pilot_oscillator_bank))]
@@ -297,6 +311,8 @@ impl<const FACTOR: usize> Voice<FACTOR> {
             held: 0,
             #[cfg(pilot_voice_midi)]
             notes: midi::Notes::default(),
+            #[cfg(pilot_voice_poly)]
+            poly_gate: None,
             #[cfg(pilot_voice_filter)]
             last_note: INITIAL_NOTE,
             #[cfg(not(pilot_oscillator_bank))]
@@ -335,6 +351,10 @@ impl<const FACTOR: usize> Voice<FACTOR> {
     }
 
     fn keys_down(&self) -> bool {
+        #[cfg(pilot_voice_poly)]
+        if let Some(gate) = self.poly_gate {
+            return gate;
+        }
         #[cfg(not(pilot_voice_midi))]
         { self.held != 0 }
         #[cfg(pilot_voice_midi)]
@@ -374,7 +394,7 @@ impl<const FACTOR: usize> Voice<FACTOR> {
     }
 
     fn event(&mut self, message: Message) -> Result<(), Error> {
-        #[cfg(pilot_voice_modulation)]
+        #[cfg(all(pilot_voice_modulation, not(pilot_voice_midi)))]
         if let Message::ModWheel(value) = message {
             if value > 127 {
                 return Err(Error::Input);
@@ -382,13 +402,12 @@ impl<const FACTOR: usize> Voice<FACTOR> {
             self.modulation.set_wheel(value);
             return Ok(());
         }
-        #[cfg(pilot_voice_performance)]
+        #[cfg(all(pilot_voice_performance, not(pilot_voice_midi)))]
         match message {
             Message::PitchBend(value @ 0..=16383) => {
                 self.keyboard.set_bend(value);
                 return Ok(());
             }
-            #[cfg(not(pilot_voice_midi))]
             Message::ResetControllers => {
                 self.keyboard.set_bend(8192);
                 self.modulation.set_wheel(0);
@@ -407,15 +426,12 @@ impl<const FACTOR: usize> Voice<FACTOR> {
         }
         #[cfg(pilot_voice_midi)]
         {
-            let Message::Midi(channel, action) = message else {
-                return Err(Error::Input);
+            let (channel, action) = match message {
+                Message::Midi(channel, action) => (channel, action),
+                Message::PitchBend(_) | Message::ModWheel(_) => return Ok(()),
             };
             if !self.notes.apply(channel, action) {
                 return Err(Error::Input);
-            }
-            if matches!(action, midi::Action::ResetControllers) {
-                self.keyboard.set_bend(8192);
-                self.modulation.set_wheel(0);
             }
             if matches!(action, midi::Action::AllSoundOff) && !self.contour_gate() {
                 self.contours.fill(contour::Contour::default());
@@ -435,9 +451,20 @@ impl<const FACTOR: usize> Voice<FACTOR> {
             }
             #[cfg(pilot_voice_performance)]
             self.keyboard.select(note as u8);
-            self.increment = 440. * ((f64::from(note) - 69.) / 12.).exp2() / (FACTOR * RATE) as f64;
+            self.increment = Self::increment_for(note as u8);
         }
         Ok(())
+    }
+
+    fn increment_for(note: u8) -> f64 {
+        440. * ((f64::from(note) - 69.) / 12.).exp2() / (FACTOR * RATE) as f64
+    }
+
+    #[cfg(pilot_voice_poly)]
+    fn select_note(&mut self, note: u8) {
+        self.last_note = note;
+        self.keyboard.select(note);
+        self.increment = Self::increment_for(note);
     }
 
     fn next(&mut self, #[cfg(pilot_returns)] panel: Panel) -> Result<Frame, Error> {
@@ -467,6 +494,20 @@ impl<const FACTOR: usize> Voice<FACTOR> {
         #[cfg(all(pilot_returns, not(pilot_oscillator_bank)))]
         let input_peak = INPUT_PEAK_V * panel.mixer_gain;
         let mut last = Frame::default();
+        #[cfg(pilot_voice_midi)]
+        {
+            self.keyboard.set_bend(panel.wheels.pitch);
+            self.modulation.set_wheel(panel.wheels.modulation);
+        }
+        #[cfg(pilot_voice_contours)]
+        let settings = panel.contours;
+        #[cfg(pilot_voice_contours)]
+        let release_ms = [settings.volume.decay_ms, settings.filter.decay_ms].map(|decay_ms| {
+            #[cfg(pilot_voice_midi)]
+            { settings.decay_pedal.release_ms(decay_ms, settings.decay_on) }
+            #[cfg(not(pilot_voice_midi))]
+            { if settings.decay_on { decay_ms } else { 5. } }
+        });
         for _substep in 0..FACTOR {
             #[cfg(not(pilot_voice_contours))]
             let input_gain = {
@@ -541,9 +582,8 @@ impl<const FACTOR: usize> Voice<FACTOR> {
             #[cfg(pilot_voice_contours)]
             {
                 let rate = (RATE * FACTOR) as f64;
-                let settings = panel.contours;
-                let volume = self.contours[0].tick(settings.volume, settings.decay_on, rate);
-                let filter = self.contours[1].tick(settings.filter, settings.decay_on, rate);
+                let volume = self.contours[0].tick(settings.volume, release_ms[0], rate);
+                let filter = self.contours[1].tick(settings.filter, release_ms[1], rate);
                 let cutoff = settings.cutoff + (1. - settings.cutoff) * settings.amount * filter;
                 #[cfg(pilot_voice_modulation)]
                 let filter_modulation = if panel.modulation.filter {
@@ -663,6 +703,18 @@ impl<const FACTOR: usize> Voice<FACTOR> {
             return Err(Error::Input);
         }
         self.render_inner(events, frames, |i| panel[i])
+    }
+
+    #[cfg(pilot_voice_poly)]
+    pub fn render_frame(&mut self, events: impl Iterator<Item = Message>, panel: Panel) -> Result<Frame, Error> {
+        if panel.control_inputs.trigger_closed {
+            self.set_trigger(true);
+        }
+        for message in events {
+            self.event(message)?;
+        }
+        self.set_trigger(panel.control_inputs.trigger_closed);
+        self.next(panel)
     }
 
     fn render_inner(

@@ -39,11 +39,16 @@ pub struct Contour {
 }
 
 impl Contour {
+    #[cfg(pilot_voice_poly)]
+    pub fn idle(&self) -> bool {
+        self.stage == Stage::Idle
+    }
+
     pub fn gate(&mut self, high: bool) {
         self.stage = if high { Stage::Attack } else { Stage::Release };
     }
 
-    pub fn tick(&mut self, settings: Settings, decay_on: bool, rate: f64) -> f64 {
+    pub fn tick(&mut self, settings: Settings, release_ms: f64, rate: f64) -> f64 {
         const ATTACK_TARGET: f64 = 1.05;
         const LOG_21: f64 = 3.044_522_437_723_423;
         const LOG_100: f64 = std::f64::consts::LN_10 * 2.;
@@ -51,10 +56,7 @@ impl Contour {
             Stage::Idle => return 0.,
             Stage::Attack => (ATTACK_TARGET, LOG_21 / settings.attack_ms),
             Stage::Decay => (settings.sustain, LOG_100 / settings.decay_ms),
-            Stage::Release => {
-                let milliseconds = if decay_on { settings.decay_ms } else { 5. };
-                (0., LOG_100 / milliseconds)
-            }
+            Stage::Release => (0., LOG_100 / release_ms),
         };
         if self.exponent != exponent {
             self.exponent = exponent;

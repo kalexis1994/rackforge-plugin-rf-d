@@ -110,18 +110,29 @@ def verify_host_capture(execute, render, folder, package, report, feedback=False
             capture[block] = [{"capture_input": int(channel), "blocks": int(count), "max_ns": int(maximum),
                                "deadline_misses": int(misses)} for channel, count, maximum, misses, _ in measured]
 
-    compare("external_filter", PRESET, "host_capture", independent=False)
-    if feedback:
-        loop = [change(0, 78), change(2, 75), change(3, 90), change(26, 32),
-                change(37, 1), change(38, 72), change(40, 1)]
-        compare("loop_drive", loop, "host_feedback", independent=True)
-    def compare_state(name, overrides, receipt):
+    def fixture_state(name, overrides):
         values = [overrides.get(parameter["index"], parameter["kind"]["default"])
                   for parameter in monitor_schema["parameters"] if parameter["index"] != 39]
         state = folder / f"{name}-state.bin"
         state.write_bytes(b"RFDC" + np.asarray(values, dtype="<f8").tobytes())
+        return state
+
+    def compare_lab_preset(name, controls, receipt, independent, score=None):
+        # The full factory catalog retires the lab presets from RackForge's browser.
+        # Exercise the same signal path using an opaque slot state in that profile.
+        state = fixture_state(name, {event[2] - 20: event[3] for event in controls}) if factory_programs else None
+        compare(name, controls, receipt, independent, state=state, score=score)
+
+    compare_lab_preset("external_filter", PRESET, "host_capture", independent=False)
+    if feedback:
+        loop = [change(0, 78), change(2, 75), change(3, 90), change(26, 32),
+                change(37, 1), change(38, 72), change(40, 1)]
+        compare_lab_preset("loop_drive", loop, "host_feedback", independent=True)
+
+    def compare_state(name, overrides, receipt, score=None):
+        state = fixture_state(name, overrides)
         controls = [change(index, value) for index, value in overrides.items()]
-        compare(name, controls, receipt, independent=True, state=state)
+        compare(name, controls, receipt, independent=True, state=state, score=score)
         for result in report[receipt][128]:
             assert result["deadline_misses"] == 0 and result["max_ns"] < 128e9 / RATE / 2, result
 
@@ -129,8 +140,13 @@ def verify_host_capture(execute, render, folder, package, report, feedback=False
         compare_state("monitor", {41: 0., 42: 2., 43: 65., 44: 1.}, "host_monitor")
     if control_inputs:
         compare_state("control-inputs", {45: 0.5, 46: -0.5, 47: 3.2, 48: 1.}, "host_control_inputs")
+    if monitor_schema is not None and any(p["id"] == "pitch_wheel" for p in monitor_schema["parameters"]):
+        wheel_score = [KEY, [4001, 0x90, 45, 100], [8003, 0xb0, 1, 90], [18001, 0x80, 45, 0],
+                       [20003, 0xe0, 127, 127], [26003, 0xb0, 121, 0], [33001, 0x80, 57, 0]]
+        compare_state("left-hand", {5: 700, 8: 600, 33: 1, 34: 1, 49: 9000, 50: 20, 53: 0.125, 54: 0.001},
+                      "host_left_hand", score=wheel_score)
     if midi_score is not None:
-        compare("default", [], "host_midi", independent=True, score=midi_score)
+        compare_lab_preset("default", [], "host_midi", independent=True, score=midi_score)
         for result in report["host_midi"][128]:
             assert result["deadline_misses"] == 0 and result["max_ns"] < 128e9 / RATE / 2, result
     if factory_programs:

@@ -1,9 +1,11 @@
 # Realimentación LO en la voz de desarrollo
 
-**LO Feedback** conecta una salida de nivel bajo virtual al jack
-de entrada externa. **External On** conecta esa rama al bus.
+En **Connections**, tocá **LO** y **EXT** o arrastrá de un jack
+al otro para conectar la salida de nivel bajo a la entrada externa.
+Tocá una punta conectada o arrastrala fuera para quitar el cable.
+**External On** conecta esa rama al bus.
 **External Level** ajusta cuánto retorna y **Output Level** cambia
-la señal enviada a la salida y al lazo. **Loop Drive** deja la
+la señal enviada a la salida y al lazo. **Feedback Bass** y **Oxide Bass** dejan la
 conexión activa. Al abrir el cable virtual, el jack vuelve a
 recibir la captura de RackForge.
 
@@ -46,7 +48,7 @@ contrasta External On apagado y verifica la sustitución de
 captura al conectar el cable. Los cambios de cable y nivel
 reproducen por bits en particiones de 127, 128, 480 y 4096.
 
-El banco de RackForge compara **External Filter** y **Loop Drive**
+La prueba de RackForge compara los ajustes de laboratorio **External Filter** y **Loop Drive**
 con WASM directo a 128, 480 y 4096 frames. Loop Drive usa el
 mismo resultado con el canal de captura presente o ausente.
 El máximo observado para Loop Drive a 128 frames fue 0,237 ms,

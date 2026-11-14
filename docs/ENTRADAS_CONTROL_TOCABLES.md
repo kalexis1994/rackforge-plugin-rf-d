@@ -1,7 +1,7 @@
 # Entradas de control del Model D en RF-D
 
-La página **Control Inputs** ofrece los jacks traseros como parámetros
-de RackForge. Se pueden ajustar desde el panel, automatizar y enlazar
+La sección **Connections** del [panel de RF-D](PANEL_RF_D.md) ofrece
+los jacks traseros como parámetros de RackForge. Se pueden ajustar desde el panel, automatizar y enlazar
 a controles del host. Los valores continuos se expresan en voltios.
 **S‑Trigger** encendido representa el contacto cerrado a masa.
 
